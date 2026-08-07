@@ -248,6 +248,21 @@ def test_road_punctuation_variants_resolve_to_one_deterministic_point():
     assert len({item.signature for item in locations}) == 1
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Mặt tiền Dx120 Tân An", "dx 120"),
+        ("Mặt tiền DX096 giá tốt", "dx 96"),
+        ("Đường Dx 092 khu dân cư đông", "dx 92"),
+        ("Đất Đường 88 khu TĐC Phú Chánh D Phường Phú Tân", "duong so 88"),
+    ],
+)
+def test_map_context_extracts_common_broker_road_phrases(text, expected):
+    context = extract_map_location_context(text, "", "")
+
+    assert context.direct_road == expected
+
+
 def test_unknown_road_uses_ward_and_records_not_found_issue():
     result = _resolve(road_name="Đường chưa có")
 

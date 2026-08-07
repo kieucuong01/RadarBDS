@@ -37,6 +37,34 @@ def test_proximity_relations_are_map_only_and_keep_distance():
     )
 
 
+def test_named_road_keeps_phuong_when_it_is_part_of_street_name():
+    context = extract_map_location_context(
+        "Bán đất đường Nguyễn Tri Phương phường Chánh Nghĩa",
+        "",
+    )
+
+    assert context.direct_road == "nguyen tri phuong"
+
+
+def test_alley_parser_ignores_non_road_marketing_phrases():
+    context = extract_map_location_context(
+        "Nhà hẻm căn rẻ nhất P Hiệp An Thủ Dầu Một",
+        "",
+    )
+
+    assert context.nearby_road == ""
+    assert context.relation == ""
+
+
+def test_road_width_is_not_treated_as_numbered_road():
+    context = extract_map_location_context(
+        "1 sẹc đường 5m khu Mỹ Phước 3",
+        "",
+    )
+
+    assert context.nearby_road == ""
+
+
 def test_landmark_aliases_normalize_to_one_identity():
     values = [
         "TĐC Phú Chánh C",

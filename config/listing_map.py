@@ -3,12 +3,17 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260729-v3"
+LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260807-v4"
 LISTING_MAP_BOUNDS = (
     (10.75, 106.25),
     (11.65, 107.10),
 )
-LISTING_MAP_SUPPORTED_CITIES = ("THỦ DẦU MỘT", "BẾN CÁT")
+LISTING_MAP_SUPPORTED_CITIES = (
+    "THỦ DẦU MỘT",
+    "BẾN CÁT",
+    "THUẬN AN",
+    "DĨ AN",
+)
 
 LISTING_MAP_REGISTRY_DIR = (
     PROJECT_ROOT / "static" / "maps" / "listing-locations"
@@ -48,6 +53,14 @@ LISTING_MAP_WARD_BOUNDARY_PATHS = (
     / "config"
     / "map_products"
     / "ben_cat_legacy_boundaries.geojson",
+    PROJECT_ROOT
+    / "config"
+    / "map_products"
+    / "thuan_an_legacy_boundaries.geojson",
+    PROJECT_ROOT
+    / "config"
+    / "map_products"
+    / "di_an_legacy_boundaries.geojson",
 )
 
 LISTING_MAP_ALLOWED_PRECISIONS = frozenset(

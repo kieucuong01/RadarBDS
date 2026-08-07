@@ -1,8 +1,10 @@
 {
-  "resolver_version": "osm-binh-duong-20260729-v3",
+  "resolver_version": "osm-binh-duong-20260807-v4",
   "coverage_cities": [
     "THỦ DẦU MỘT",
-    "BẾN CÁT"
+    "BẾN CÁT",
+    "THUẬN AN",
+    "DĨ AN"
   ],
   "canonical_wards": [
     {
@@ -108,17 +110,83 @@
     {
       "city": "BẾN CÁT",
       "ward": "Hòa Lợi"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Thạnh"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Hòa"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Nhâm"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Hưng Định"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Lái Thiêu"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Vĩnh Phú"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Sơn"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "An Bình"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình Thắng"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp"
     }
   ],
   "osm_snapshot": {
-    "captured_at": "2026-07-29",
+    "captured_at": "2026-08-07",
     "license": "ODbL 1.0",
     "attribution": "OpenStreetMap contributors",
     "query_file": "config/listing_map_overpass.ql",
     "source_files": [
-      "osm-thu-dau-mot.json",
-      "osm-ben-cat-west.json",
-      "osm-ben-cat-east.json"
+      "osm-binh-duong-20260807-v4.json"
     ]
   },
   "wards": [
@@ -244,6 +312,176 @@
         "lng": 106.63282
       },
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "An Bình",
+      "point": {
+        "lat": 10.878579,
+        "lng": 106.755974
+      },
+      "source": "Radar BDS derived boundary",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "point": {
+        "lat": 10.892935,
+        "lng": 106.812694
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình Thắng",
+      "point": {
+        "lat": 10.906338,
+        "lng": 106.802871
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "point": {
+        "lat": 10.896978,
+        "lng": 106.754054
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "point": {
+        "lat": 10.886923,
+        "lng": 106.791004
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình",
+      "point": {
+        "lat": 10.948835,
+        "lng": 106.757826
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "point": {
+        "lat": 10.921211,
+        "lng": 106.770382
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "point": {
+        "lat": 10.948252,
+        "lng": 106.736425
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Sơn",
+      "point": {
+        "lat": 10.933694,
+        "lng": 106.661819
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Thạnh",
+      "point": {
+        "lat": 10.947544,
+        "lng": 106.681852
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "point": {
+        "lat": 10.981776,
+        "lng": 106.720178
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Hòa",
+      "point": {
+        "lat": 10.911615,
+        "lng": 106.726796
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Nhâm",
+      "point": {
+        "lat": 10.92569,
+        "lng": 106.691514
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Hưng Định",
+      "point": {
+        "lat": 10.940541,
+        "lng": 106.695296
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Lái Thiêu",
+      "point": {
+        "lat": 10.909762,
+        "lng": 106.701556
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "point": {
+        "lat": 10.950043,
+        "lng": 106.716334
+      },
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Vĩnh Phú",
+      "point": {
+        "lat": 10.88183,
+        "lng": 106.703401
+      },
+      "source": "Radar BDS derived boundary",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },
     {

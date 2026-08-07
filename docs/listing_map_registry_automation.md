@@ -76,12 +76,14 @@ Manual override luôn thắng và không thể bị auto override ghi đè.
 
 ```powershell
 & $py -X utf8 scripts\build_listing_location_registry.py `
-  --osm-json .local\listing-map\osm-binh-duong-20260729-v2.json `
+  --osm-json .local\listing-map\osm-binh-duong-20260807-v4.json `
   --sources config\listing_map_location_sources.json `
   --overrides config\listing_map_location_overrides.json `
   --auto-overrides config\listing_map_location_auto_overrides.json `
   --boundary config\map_products\thu_dau_mot_legacy_boundaries.geojson `
   --boundary config\map_products\ben_cat_legacy_boundaries.geojson `
+  --boundary config\map_products\thuan_an_legacy_boundaries.geojson `
+  --boundary config\map_products\di_an_legacy_boundaries.geojson `
   --output-dir static\maps\listing-locations
 ```
 

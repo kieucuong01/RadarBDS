@@ -187,6 +187,10 @@ def _boundary_city(payload: Mapping, path: Path) -> str:
         return "THỦ DẦU MỘT"
     if "ben cat" in token:
         return "BẾN CÁT"
+    if "thuan an" in token:
+        return "THUẬN AN"
+    if "di an" in token:
+        return "DĨ AN"
     raise ValueError(f"boundary city is missing for {path}")
 
 

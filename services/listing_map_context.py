@@ -29,7 +29,7 @@ _NEAR_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ALLEY_PREFIX_RE = re.compile(
-    r"\b(?:1\s*(?:x|s)(?:ec|et)|mot\s*(?:x|s)(?:ec|et)|nhanh|hem|1)\s+"
+    r"\b(?:1\s*(?:x|s)(?:ec|et)|mot\s*(?:x|s)(?:ec|et)|nhanh|hem)\s+"
     r"(?:duong\s+)?",
     re.IGNORECASE,
 )
@@ -72,6 +72,15 @@ _NON_ROAD_NAMES = {
     "o to",
     "xe hoi",
 }
+_ROAD_NAME_HINT_RE = re.compile(
+    r"^(?:"
+    r"dx|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
+    r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|"
+    r"hoang|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
+    r"my phuoc|phu loi|phu tan"
+    r")\b",
+    re.IGNORECASE,
+)
 
 
 def _bounded_evidence(title: str, description: str) -> str:
@@ -100,8 +109,13 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
+    if candidate.startswith("nguyen tri phuong"):
+        return normalize_road_token("nguyen tri phuong")
+
     code_match = _ROAD_CODE_RE.match(candidate)
     if code_match:
+        if code_match.group("suffix").lower() == "m":
+            return ""
         raw = (
             f"{code_match.group('prefix')} "
             f"{int(code_match.group('number'))}{code_match.group('suffix')}"
@@ -110,6 +124,8 @@ def _normalize_road_candidate(value: str) -> str:
 
     number_match = _NUMBERED_ROAD_RE.match(candidate)
     if number_match:
+        if number_match.group("suffix").lower() == "m":
+            return ""
         return (
             f"duong so {int(number_match.group('number'))}"
             f"{number_match.group('suffix').lower()}"
@@ -125,6 +141,14 @@ def _normalize_road_candidate(value: str) -> str:
     return normalize_road_token(candidate)
 
 
+def _looks_like_road_name(road: str) -> bool:
+    if not road:
+        return False
+    if _ROAD_NAME_HINT_RE.match(road):
+        return len(road.split()) >= 2 or re.match(r"^(?:dx|d|db|dh|dt|dl|tl|ql|nl|ni|n)\s+\d", road)
+    return False
+
+
 def _road_after(text: str, start: int) -> str:
     return _normalize_road_candidate(text[start : start + 100])
 
@@ -135,7 +159,8 @@ def _relation_road(
 ) -> tuple[str, re.Match[str] | None]:
     for match in prefix_re.finditer(text):
         road = _road_after(text, match.end())
-        if road:
+        has_explicit_road_word = "duong" in match.group(0).lower()
+        if road and (has_explicit_road_word or _looks_like_road_name(road)):
             return road, match
     return "", None
 
