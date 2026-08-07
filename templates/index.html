@@ -78,7 +78,7 @@
   {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=scope-status-chips-20260807' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
-  {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=area-risk-radar-20260605' %}
+  {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=market-analysis-p0-p2-20260807b' %}
   {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=radar-ask-launcher-20260805' %}
   {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=auth-modal-width-20260806' %}
   <link rel="stylesheet" href="{{ css_base }}">
@@ -98,7 +98,7 @@
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
     window.RADAR_ASSETS = {
       modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729",
-      market: "{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611",
+      market: "{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b",
       listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
@@ -754,43 +754,61 @@
       <!-- TAB: MARKET -->
       <div id="tab-market" class="tab-content">
         <div class="market-grid">
-          <div class="chart-card market-trend-card">
+          <div class="chart-card opportunity-card" id="marketHeatmapCard">
+            <div class="chart-header">
+              <h3 class="chart-title">Khu vực đang có deal tốt</h3>
+              <p class="chart-subtitle">Xếp theo biên an toàn, tỷ lệ signal và độ dày dữ liệu để chọn khu đáng xem trước</p>
+            </div>
+            <div class="market-scope-summary" id="marketScopeSummary" aria-live="polite"></div>
+            <div class="opportunity-summary" id="opportunitySummary"></div>
+            <div class="chart-body opportunity-list-wrap" id="opportunityListContainer">
+              <div id="opportunityList" class="opportunity-list"></div>
+              <button type="button" class="market-retry-btn" id="marketHeatmapRetry" hidden onclick="loadMarketCharts(false)">Tải lại dữ liệu</button>
+            </div>
+            <div class="opportunity-decision-wrap">
+              <table class="opportunity-decision-table" id="opportunityDecisionTable" aria-label="Bảng tóm tắt cơ hội khu vực">
+                <thead>
+                  <tr>
+                    <th data-market-sort-col="ward" aria-sort="none"><button type="button" class="market-sort-btn" onclick="sortOpportunityDecisionTable('ward')">Khu vực</button></th>
+                    <th data-market-sort-col="deal" aria-sort="none"><button type="button" class="market-sort-btn" onclick="sortOpportunityDecisionTable('deal')">Deal</button></th>
+                    <th data-market-sort-col="mos" aria-sort="none"><button type="button" class="market-sort-btn" onclick="sortOpportunityDecisionTable('mos')">Biên an toàn</button></th>
+                    <th data-market-sort-col="rate" aria-sort="none"><button type="button" class="market-sort-btn" onclick="sortOpportunityDecisionTable('rate')">Tỷ lệ</button></th>
+                    <th data-market-sort-col="price" aria-sort="none"><button type="button" class="market-sort-btn" onclick="sortOpportunityDecisionTable('price')">Giá trung vị</button></th>
+                    <th data-market-sort-col="sample" aria-sort="none"><button type="button" class="market-sort-btn" onclick="sortOpportunityDecisionTable('sample')">Mẫu</button></th>
+                  </tr>
+                </thead>
+                <tbody id="opportunityDecisionBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="chart-card market-trend-card" id="marketTrendCard">
             <div class="chart-header" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
                 <h3 class="chart-title">📉 Biểu đồ Xu hướng Giá</h3>
                 <p class="chart-subtitle">Median giá/m² theo thời gian; điểm nhạt là kỳ ít mẫu</p>
               </div>
               <div class="period-pills">
-                <button class="p-pill" data-period="day" onclick="updateTrendPeriod('day', this)">Ngày</button>
-                <button class="p-pill" data-period="week" onclick="updateTrendPeriod('week', this)">Tuần</button>
-                <button class="p-pill active" data-period="month"
+                <button class="p-pill" data-period="day" aria-pressed="false" onclick="updateTrendPeriod('day', this)">Ngày</button>
+                <button class="p-pill" data-period="week" aria-pressed="false" onclick="updateTrendPeriod('week', this)">Tuần</button>
+                <button class="p-pill active" data-period="month" aria-pressed="true"
                   onclick="updateTrendPeriod('month', this)">Tháng</button>
               </div>
             </div>
             <div class="chart-body market-trend-body" id="trendContainer">
-              <canvas id="trendChart"></canvas>
+              <canvas id="trendChart" role="img" aria-label="Biểu đồ xu hướng giá theo khu vực">Bảng tóm tắt cơ hội khu vực hiển thị ngay phía trên biểu đồ.</canvas>
+              <button type="button" class="market-retry-btn" id="trendRetry" hidden onclick="loadTrendData(false)">Tải lại xu hướng</button>
             </div>
           </div>
 
-          <div class="chart-card opportunity-card">
-            <div class="chart-header">
-              <h3 class="chart-title">Khu vực đang có deal tốt</h3>
-              <p class="chart-subtitle">Xếp theo số tin đang thấp hơn định giá AI và biên an toàn trung vị</p>
-            </div>
-            <div class="opportunity-summary" id="opportunitySummary"></div>
-            <div class="chart-body opportunity-list-wrap" id="opportunityListContainer">
-              <div id="opportunityList" class="opportunity-list"></div>
-            </div>
-          </div>
-
-          <div class="chart-card opportunity-matrix-card">
+          <div class="chart-card opportunity-matrix-card" id="opportunityMatrixCard">
             <div class="chart-header">
               <h3 class="chart-title">Ma trận Cơ hội Khu vực</h3>
               <p class="chart-subtitle">So sánh độ rẻ, độ dày deal và mẫu thị trường để chọn khu đáng xem trước</p>
             </div>
             <div id="opportunityMatrixInsight" class="opportunity-matrix-insight"></div>
             <div class="chart-body opportunity-matrix-body" id="opportunityMatrixContainer">
-              <canvas id="opportunityMatrixChart"></canvas>
+              <canvas id="opportunityMatrixChart" role="img" aria-label="Ma trận cơ hội khu vực">Bảng tóm tắt cơ hội khu vực hiển thị ngay phía trên ma trận.</canvas>
             </div>
             <div class="opportunity-matrix-legend" aria-label="Chú giải ma trận cơ hội">
               <span><i class="matrix-dot is-priority"></i>Ưu tiên xem trước</span>
@@ -808,6 +826,7 @@
               <div class="indicator-summary" id="areaRiskRadarSummary"></div>
               <div class="chart-body area-risk-radar-wrap" id="areaRiskRadarContainer">
                 <div class="area-risk-radar" id="areaRiskRadar"></div>
+                <button type="button" class="market-retry-btn" id="marketIndicatorsRetry" hidden onclick="loadMarketIndicators(false)">Tải lại chỉ báo</button>
               </div>
               {% if USER_TIER not in ['vip', 'admin'] %}
               <div class="tier-locked-overlay">
@@ -1524,7 +1543,7 @@
   <script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
-  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=mobile-scroll-lock-20260802"></script>
+  <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=market-analysis-drilldown-20260807"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=scope-status-chips-20260807"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=scope-filter-storage-20260807"></script>

@@ -1046,6 +1046,62 @@ def test_load_trend_data_includes_sample_count(monkeypatch):
     assert conn.closed is True
 
 
+def test_load_trend_data_applies_date_range_and_keyword(monkeypatch):
+    import services.market_data as market_data
+
+    class _TrendConnection:
+        def __init__(self):
+            self.closed = False
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params or []))
+            assert "CAST(" in sql
+            assert "% road %" in params
+            assert "-7 days" in params
+            return _FakeCursor(rows=[
+                {"time_key": "D-2026-08-07", "ward": "Ward A", "price_per_m2": 10.0},
+                {"time_key": "D-2026-08-07", "ward": "Ward A", "price_per_m2": 12.0},
+            ])
+
+        def close(self):
+            self.closed = True
+
+    conn = _TrendConnection()
+    monkeypatch.setattr(market_data, "_open_read_conn", lambda _db_path=None: conn)
+
+    result = market_data.load_trend_data(
+        None,
+        sources=["facebook"],
+        wards=["Ward A"],
+        keyword="Road",
+        date_range="1w",
+    )
+
+    assert result["Ward A"][0]["sample_count"] == 2
+    assert conn.closed is True
+
+
+def test_api_trends_passes_date_range_and_keyword_to_loader(monkeypatch):
+    import app as radar_app
+
+    captured = {}
+
+    def fake_trend(*_args, **kwargs):
+        captured.update(kwargs)
+        return {}
+
+    monkeypatch.setattr(radar_app, "load_trend_data", fake_trend)
+
+    response = radar_app.app.test_client().get(
+        "/api/trends?ward=Ward%20A&source=facebook&date_range=1w&q=Road"
+    )
+
+    assert response.status_code == 200
+    assert captured["date_range"] == "1w"
+    assert captured["keyword"] == "Road"
+
+
 def test_load_market_indicators_includes_area_risk_radar(monkeypatch):
     import services.market_data as market_data
 
@@ -1095,6 +1151,191 @@ def test_load_market_indicators_includes_area_risk_radar(monkeypatch):
     assert radar[0]["verdict_key"] == "selloff"
     assert result["summary"]["area_risk_hotspots"] == 1
     assert conn.closed is True
+
+
+def test_load_market_indicators_applies_date_keyword_and_mos_scope(monkeypatch):
+    import services.market_data as market_data
+
+    class _IndicatorConnection:
+        def __init__(self):
+            self.closed = False
+            self.queries = []
+
+        def execute(self, sql, params=None):
+            params = params or []
+            self.queries.append((sql, params))
+            assert "% road %" in params
+            assert "-1 months" in params
+            if "risk_deal_rows" in sql:
+                assert 15.0 in params
+                assert params[0] == 15.0
+                return _FakeCursor(rows=[
+                    {"ward": "Ward A", "mos_pct": 18.0, "is_signal": 1},
+                ])
+            if "SUM(has_price_drop)" in sql:
+                return _FakeCursor(rows=[
+                    {"ward": "Ward A", "total_count": 8, "distress_count": 2},
+                ])
+            if "strftime('%Y-%m'" in sql:
+                return _FakeCursor(rows=[])
+            return _FakeCursor(rows=[])
+
+        def close(self):
+            self.closed = True
+
+    conn = _IndicatorConnection()
+    monkeypatch.setattr(market_data, "_open_read_conn", lambda _db_path=None: conn)
+
+    result = market_data.load_market_indicators(
+        None,
+        sources=["facebook"],
+        wards=["Ward A"],
+        keyword="Road",
+        date_range="1m",
+        mos_min=10,
+        tier="guest",
+    )
+
+    assert result["distress_ratio"][0]["sample_confidence"] == "medium"
+    assert result["summary"]["date_range"] == "1m"
+    assert result["summary"]["mos_min"] == 15.0
+    assert conn.closed is True
+
+
+def test_api_heatmap_delegates_to_market_opportunity_loader_with_normalized_scope(
+    monkeypatch,
+):
+    import app as radar_app
+    import auth.core as auth_core
+
+    captured = {}
+
+    monkeypatch.setattr(auth_core, "current_tier", lambda: "guest")
+    monkeypatch.setattr(radar_app, "current_tier", lambda: "guest")
+
+    def fake_loader(*args, **kwargs):
+        captured["args"] = args
+        captured.update(kwargs)
+        return {
+            "rows": [],
+            "summary": {"total_wards": 0, "total_deals": 0},
+            "applied_filters": {},
+            "as_of": "2026-08-07T00:00:00",
+        }
+
+    def fail_fresh_connect(_db_path=None):
+        raise AssertionError("api_heatmap should not open a route-owned connection")
+
+    monkeypatch.setattr(radar_app, "load_market_opportunities", fake_loader)
+    monkeypatch.setattr(radar_app, "connect", fail_fresh_connect, raising=False)
+
+    response = radar_app.app.test_client().get(
+        "/api/heatmap?"
+        "ward=Ward%20A&source=facebook&prop_type=dat_nen"
+        "&mos_min=10&date_range=1w&q=Ring%20Road"
+        "&area_range=80:120&price_range=1:3"
+    )
+
+    assert response.status_code == 200
+    assert captured["wards"] == ["Ward A"]
+    assert captured["sources"] == ["facebook"]
+    assert captured["prop_types"] == ["dat_nen"]
+    assert captured["mos_min"] == 15.0
+    assert captured["tier"] == "guest"
+    assert captured["date_range"] == "1w"
+    assert captured["keyword"] == "Ring Road"
+    assert captured["area_ranges"] == [(80.0, 120.0)]
+    assert captured["price_ranges"] == [(1.0, 3.0)]
+
+
+def test_load_market_opportunities_uses_shared_scope_and_global_totals(monkeypatch):
+    import services.market_data as market_data
+
+    class _OpportunityConnection:
+        def __init__(self):
+            self.queries = []
+            self.closed = False
+
+        def execute(self, sql, params=None):
+            self.queries.append((sql, params or []))
+            assert "CAST(" in sql
+            assert "% ring %" in params
+            assert "% road %" in params
+            assert "-1 months" in params
+            assert 15.0 in params
+            assert params[0] == 15.0
+            return _FakeCursor(rows=[
+                {
+                    "ward": "Ward A",
+                    "total_count": 3,
+                    "deal_count": 2,
+                    "median_mos": 25.0,
+                    "avg_signal_mos": 25.0,
+                    "signal_rate": 66.7,
+                    "avg_price": 11.0,
+                    "median_price": 11.0,
+                    "avg_price_ty": 1.1,
+                    "avg_fair_ty": 1.4,
+                },
+                {
+                    "ward": "Ward B",
+                    "total_count": 4,
+                    "deal_count": 3,
+                    "median_mos": 18.0,
+                    "avg_signal_mos": 19.0,
+                    "signal_rate": 75.0,
+                    "avg_price": 9.0,
+                    "median_price": 9.0,
+                    "avg_price_ty": 0.9,
+                    "avg_fair_ty": 1.1,
+                },
+                {
+                    "ward": "Ward C",
+                    "total_count": 2,
+                    "deal_count": 0,
+                    "median_mos": 0.0,
+                    "avg_signal_mos": 0.0,
+                    "signal_rate": 0.0,
+                    "avg_price": 8.0,
+                    "median_price": 8.0,
+                    "avg_price_ty": 0.8,
+                    "avg_fair_ty": 0.0,
+                },
+            ])
+
+        def close(self):
+            self.closed = True
+            raise AssertionError("market opportunity loader should keep shared read connection open")
+
+    conn = _OpportunityConnection()
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield conn
+
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn, raising=False)
+
+    result = market_data.load_market_opportunities(
+        None,
+        sources=["facebook"],
+        wards=["Ward A", "Ward B"],
+        prop_types=["dat_nen"],
+        mos_min=10,
+        tier="guest",
+        date_range="1m",
+        keyword="Ring Road",
+    )
+
+    assert result["summary"]["total_wards"] == 3
+    assert result["summary"]["eligible_wards"] == 2
+    assert result["summary"]["total_deals"] == 5
+    assert result["summary"]["shown_wards"] == 2
+    assert [row["ward"] for row in result["rows"]] == ["Ward A", "Ward B"]
+    assert result["rows"][0]["rank_label"] == "Bien an toan tot"
+    assert result["rows"][1]["rank_label"] == "Nhieu deal nhat"
+    assert result["applied_filters"]["mos_min"] == 15.0
+    assert result["applied_filters"]["date_range"] == "1m"
+    assert conn.closed is False
 
 
 def test_schema_defines_feed_performance_indexes():

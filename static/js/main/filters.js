@@ -219,8 +219,12 @@ function setSignalSort(sortKey) {
 
 function updateTrendPeriod(p, btn) {
   trendPeriod = p;
-  document.querySelectorAll('.p-pill').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.p-pill').forEach((button) => {
+    button.classList.remove('active');
+    button.setAttribute('aria-pressed', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
 
   currentFilters = getFilterQuery();
   ensureDashboardScript('market').then(() => loadTrendData(false)).catch((err) => console.error(err));

@@ -60,7 +60,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
 
     assert "window.RADAR_ASSETS" in html
     assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
-    assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=mobile-perf-lazy-20260611\"" in html
+    assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805\"" in html
@@ -450,7 +450,7 @@ def test_signal_tab_mobile_scroll_container_is_stable():
     cards_css = _read("static/css/main/cards.css")
 
     for expected in [
-        "mobile-perf-lazy-20260611",
+        "market-analysis-p0-p2-20260807b",
         "ensureSignalScrollRoot",
         "refreshObserver",
         "signals-scroll-ready",
@@ -470,7 +470,7 @@ def test_mobile_sidebar_filters_are_compact_for_ward_selection():
     filters_css = _read("static/css/main/filters.css")
 
     for expected in [
-        "mobile-perf-lazy-20260611",
+        "scope-filter-storage-20260807",
         "ward-option-name",
         ".sidebar #wardFilters",
         "grid-template-columns: repeat(2, minmax(0, 1fr))",
@@ -631,7 +631,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "scope-filter-summary-20260806",
+        "scope-filter-storage-20260807",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -647,7 +647,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "scope-filter-summary-20260806",
+        "scope-filter-storage-20260807",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -1115,3 +1115,48 @@ def test_market_tab_has_vip_area_risk_radar():
         assert expected in html or expected in market_js or expected in market_css
 
     assert ".area-risk-radar" in market_css
+
+
+def test_market_tab_is_decision_first_and_accessible():
+    html = _read("templates/index.html")
+    market_js = _read("static/js/main/market.js")
+    market_css = _read("static/css/main/market.css")
+    filters_js = _read("static/js/main/filters.js")
+
+    assert html.index('class="chart-card opportunity-card"') < html.index('class="chart-card market-trend-card"')
+
+    for expected in [
+        'id="marketScopeSummary"',
+        'id="opportunityDecisionTable"',
+        'id="opportunityDecisionBody"',
+        'id="marketHeatmapRetry"',
+        'id="marketIndicatorsRetry"',
+        'role="img"',
+        'aria-label="Ma trận cơ hội khu vực"',
+        'aria-label="Biểu đồ xu hướng giá theo khu vực"',
+        'aria-pressed="true"',
+        'data-market-sort-col="mos"',
+        'onclick="sortOpportunityDecisionTable',
+        "Bảng tóm tắt cơ hội khu vực",
+    ]:
+        assert expected in html
+
+    for expected in [
+        "MARKET_TREND_MAX_SERIES",
+        "renderMarketScopeSummary",
+        "renderOpportunityDecisionTable",
+        "sortOpportunityDecisionTable",
+        "aria-sort",
+        "_marketPayloadRows",
+        "renderMarketErrorState",
+        "marketIndicatorsRetry",
+        "market_opportunity_drilldown",
+    ]:
+        assert expected in market_js
+
+    assert "button.setAttribute('aria-pressed'" in filters_js
+    assert ".market-scope-summary" in market_css
+    assert ".market-sort-btn" in market_css
+    assert ".opportunity-decision-table" in market_css
+    assert ".market-indicator-card.is-tier-locked:not(.area-risk-radar-card)" in market_css
+    assert "min-height: 44px" in market_css

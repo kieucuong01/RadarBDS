@@ -359,6 +359,14 @@
   margin: 0 0 14px;
 }
 
+.market-scope-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 12px;
+}
+
+.market-scope-summary span,
 .opportunity-summary span {
   display: inline-flex;
   align-items: center;
@@ -375,6 +383,105 @@
 .opportunity-summary strong {
   color: var(--text);
   margin: 0 4px;
+}
+
+.opportunity-decision-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.opportunity-decision-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.opportunity-decision-table th,
+.opportunity-decision-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-align: left;
+}
+
+.opportunity-decision-table th {
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.market-sort-btn {
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.market-sort-btn.active,
+.market-sort-btn:hover {
+  color: var(--primary);
+}
+
+.market-sort-btn.active::after {
+  content: " ↓";
+  font-size: 0.75em;
+}
+
+.opportunity-decision-table th[aria-sort="ascending"] .market-sort-btn.active::after {
+  content: " ↑";
+}
+
+.opportunity-decision-table strong,
+.market-link-btn {
+  color: var(--text);
+  font-weight: 850;
+}
+
+.market-link-btn {
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.market-link-btn:hover {
+  color: var(--primary);
+}
+
+.market-retry-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: var(--surface-solid);
+  color: var(--text);
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+  z-index: 12;
+}
+
+.market-retry-btn[hidden] {
+  display: none;
+}
+
+.market-indicator-card.is-tier-locked:not(.area-risk-radar-card) {
+  display: none;
 }
 
 .opportunity-matrix-insight {
@@ -875,6 +982,7 @@
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 700;
+  min-height: 44px;
   padding: 6px 14px;
   border-radius: 7px;
   cursor: pointer;

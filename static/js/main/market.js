@@ -1,25 +1,93 @@
 // Market opportunity, market indicators, and trend chart rendering.
 let opportunityMatrixInstance = null;
+let lastMarketOpportunityPayload = null;
+let marketDecisionSort = { key: 'opportunity_score', dir: 'desc' };
 const MATRIX_BUBBLE_MIN_RADIUS = 12;
 const MATRIX_BUBBLE_MAX_RADIUS = 38;
 const MATRIX_BUBBLE_BASE_RADIUS = 9;
 const MATRIX_BUBBLE_SCALE = 2.4;
+const MARKET_TREND_MAX_SERIES = 4;
 
 async function loadMarketCharts(useCache = true) {
   const opportunityContainer = document.getElementById('opportunityListContainer');
   const matrixContainer = document.getElementById('opportunityMatrixContainer');
+  const retryBtn = document.getElementById('marketHeatmapRetry');
   if (opportunityContainer) opportunityContainer.classList.add('loading');
   if (matrixContainer) matrixContainer.classList.add('loading');
+  if (retryBtn) retryBtn.hidden = true;
   try {
     const data = await fetchJSONCached('market', `/api/heatmap?${currentFilters}`, useCache);
+    lastMarketOpportunityPayload = data;
     renderOpportunityList(data);
+    renderOpportunityDecisionTable(data);
+    renderMarketScopeSummary(data);
     await ensureChartJs();
     renderOpportunityMatrix(data);
   } catch (err) {
-    if (err.name !== 'AbortError') console.error("Market charts error:", err);
+    if (err.name !== 'AbortError') {
+      console.error("Market charts error:", err);
+      renderMarketErrorState('Không tải được dữ liệu khu vực. Thử lại để lấy bản mới nhất.');
+    }
   } finally {
     if (opportunityContainer) opportunityContainer.classList.remove('loading');
     if (matrixContainer) matrixContainer.classList.remove('loading');
+  }
+}
+
+function _marketPayloadRows(data, preferAll = false) {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return [];
+  const rows = preferAll ? (data.all_rows || data.rows) : (data.rows || data.all_rows);
+  return Array.isArray(rows) ? rows : [];
+}
+
+function _marketPayloadSummary(data) {
+  return data && !Array.isArray(data) && typeof data === 'object' ? (data.summary || {}) : {};
+}
+
+function _marketPayloadFilters(data) {
+  return data && !Array.isArray(data) && typeof data === 'object' ? (data.applied_filters || {}) : {};
+}
+
+function renderMarketErrorState(message) {
+  const root = document.getElementById('opportunityList');
+  const decisionBody = document.getElementById('opportunityDecisionBody');
+  const retryBtn = document.getElementById('marketHeatmapRetry');
+  if (root) {
+    root.innerHTML = `
+      <div class="opportunity-empty market-error-state">
+        <strong>Chưa tải được dữ liệu phân tích</strong>
+        <span>${escHtml(message || 'Vui lòng thử lại.')}</span>
+      </div>
+    `;
+  }
+  if (decisionBody) {
+    decisionBody.innerHTML = `<tr><td colspan="6" class="indicator-empty-row">Chưa tải được bảng so sánh.</td></tr>`;
+  }
+  if (retryBtn) retryBtn.hidden = false;
+}
+
+function _marketDecisionSortValue(row, key) {
+  if (key === 'ward') return String(row.ward || '').toLocaleLowerCase('vi-VN');
+  if (key === 'price') return Number(row.median_price || row.avg_price || 0);
+  if (key === 'mos') return Number(row.median_mos || 0);
+  if (key === 'rate') return Number(row.signal_rate || 0);
+  if (key === 'sample') return Number(row.total_count || 0);
+  if (key === 'deal') return Number(row.deal_count || 0);
+  return Number(row.opportunity_score || 0);
+}
+
+function sortOpportunityDecisionTable(key) {
+  const nextKey = key || 'opportunity_score';
+  const defaultDir = nextKey === 'ward' ? 'asc' : 'desc';
+  marketDecisionSort = {
+    key: nextKey,
+    dir: marketDecisionSort.key === nextKey && marketDecisionSort.dir === defaultDir
+      ? (defaultDir === 'asc' ? 'desc' : 'asc')
+      : defaultDir
+  };
+  if (lastMarketOpportunityPayload) {
+    renderOpportunityDecisionTable(lastMarketOpportunityPayload);
   }
 }
 
@@ -73,6 +141,9 @@ function _sampleCountLabel(count) {
 function _viewOpportunityWard(ward) {
   const target = String(ward || '').trim();
   if (!target) return;
+  if (typeof window.track === 'function') {
+    window.track('market_opportunity_drilldown', { context: { ward: target } });
+  }
   const boxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
   let found = false;
   boxes.forEach((box) => {
@@ -93,21 +164,42 @@ function _viewOpportunityWard(ward) {
   hideSidebarMobile();
 }
 
+function renderMarketScopeSummary(data) {
+  const root = document.getElementById('marketScopeSummary');
+  if (!root) return;
+  const summary = _marketPayloadSummary(data);
+  const filters = _marketPayloadFilters(data);
+  const totalWards = Number(summary.total_wards || 0);
+  const eligibleWards = Number(summary.eligible_wards || 0);
+  const totalDeals = Number(summary.total_deals || 0);
+  const totalListings = Number(summary.total_listings || 0);
+  const mosMin = Number(filters.mos_min || 0);
+  const dateRange = filters.date_range || '3m';
+  root.innerHTML = `
+    <span><strong>${eligibleWards}/${totalWards}</strong> khu có deal</span>
+    <span><strong>${totalDeals}</strong> deal / ${totalListings} tin hợp lệ</span>
+    <span>MOS tối thiểu <strong>${mosMin ? mosMin.toFixed(0) + '%' : '-'}</strong></span>
+    <span>Khoảng dữ liệu <strong>${escHtml(dateRange)}</strong></span>
+  `;
+}
+
 function renderOpportunityList(data) {
   const root = document.getElementById('opportunityList');
   const summaryEl = document.getElementById('opportunitySummary');
   if (!root) return;
 
-  const rows = (data || [])
+  const rows = _marketPayloadRows(data)
     .filter(d => Number(d.deal_count || 0) > 0 && Number(d.median_mos || 0) > 0)
     .sort((a, b) => {
-      const scoreA = Number(a.deal_count || 0) * 100 + Number(a.median_mos || 0);
-      const scoreB = Number(b.deal_count || 0) * 100 + Number(b.median_mos || 0);
+      const scoreA = Number(a.opportunity_score || 0);
+      const scoreB = Number(b.opportunity_score || 0);
       return scoreB - scoreA;
-    })
-    .slice(0, 6);
+    });
 
-  const totalDeals = rows.reduce((sum, x) => sum + Number(x.deal_count || 0), 0);
+  const summary = _marketPayloadSummary(data);
+  const totalDeals = Number(summary.total_deals || rows.reduce((sum, x) => sum + Number(x.deal_count || 0), 0));
+  const shownDeals = Number(summary.shown_deals || rows.reduce((sum, x) => sum + Number(x.deal_count || 0), 0));
+  const eligibleWards = Number(summary.eligible_wards || rows.length);
   const best = rows[0];
   if (summaryEl) {
     summaryEl.innerHTML = rows.length
@@ -117,6 +209,13 @@ function renderOpportunityList(data) {
         <span>Tốt nhất: <strong>${escHtml(best.ward || '')}</strong> thấp hơn ${Number(best.median_mos || 0).toFixed(1)}%</span>
       `
       : '';
+  }
+  if (summaryEl && rows.length) {
+    summaryEl.innerHTML = `
+      <span>Hiển thị <strong>${rows.length}/${eligibleWards}</strong> khu ưu tiên</span>
+      <span><strong>${shownDeals}</strong> deal top / <strong>${totalDeals}</strong> deal tổng</span>
+      <span>Dẫn đầu: <strong>${escHtml(best.ward || '')}</strong> (${escHtml(best.rank_label || 'đáng xem')})</span>
+    `;
   }
 
   if (!rows.length) {
@@ -141,17 +240,64 @@ function renderOpportunityList(data) {
         <div class="opportunity-main">
           <div class="opportunity-top">
             <h4>${escHtml(ward)}</h4>
-            <span>${escHtml(_opportunityAction(mos, dealCount))}</span>
+            <span>${escHtml(x.rank_label || _opportunityAction(mos, dealCount))}</span>
           </div>
           <div class="opportunity-metrics">
             <div><strong>${dealCount}</strong><span>deal</span></div>
             <div><strong>-${mos.toFixed(1)}%</strong><span>so với định giá</span></div>
-            <div><strong>${_fmtMarketPrice(x.avg_price)}</strong><span>giá/m² TB</span></div>
+            <div><strong>${_fmtMarketPrice(x.median_price || x.avg_price)}</strong><span>giá/m² trung vị</span></div>
           </div>
           <p>${dealCount} / ${totalCount} tin hợp lệ đang là signal (${signalRate.toFixed(1)}%). Dùng để chọn khu đáng xem trước, không phải so giá tổng giữa các phường.</p>
         </div>
         <button type="button" class="opportunity-btn" data-ward="${escHtml(ward)}" onclick="_viewOpportunityWard(this.dataset.ward)">Xem deal</button>
       </article>
+    `;
+  }).join('');
+}
+
+function renderOpportunityDecisionTable(data) {
+  const body = document.getElementById('opportunityDecisionBody');
+  if (!body) return;
+  const sortKey = marketDecisionSort.key || 'opportunity_score';
+  const sortDir = marketDecisionSort.dir === 'asc' ? 'asc' : 'desc';
+  document.querySelectorAll('[data-market-sort-col]').forEach((th) => {
+    const isActive = th.dataset.marketSortCol === sortKey;
+    th.setAttribute('aria-sort', isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+    const button = th.querySelector('button');
+    if (button) button.classList.toggle('active', isActive);
+  });
+  const rows = _marketPayloadRows(data)
+    .filter(d => Number(d.total_count || 0) > 0)
+    .slice()
+    .sort((a, b) => {
+      const aVal = _marketDecisionSortValue(a, sortKey);
+      const bVal = _marketDecisionSortValue(b, sortKey);
+      if (typeof aVal === 'string' || typeof bVal === 'string') {
+        const result = String(aVal).localeCompare(String(bVal), 'vi-VN');
+        return sortDir === 'asc' ? result : -result;
+      }
+      const result = Number(aVal || 0) - Number(bVal || 0);
+      return sortDir === 'asc' ? result : -result;
+    })
+    .slice(0, 8);
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="6" class="indicator-empty-row">Chưa có dữ liệu so sánh khu vực.</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map((x) => {
+    const dealCount = Number(x.deal_count || 0);
+    const totalCount = Number(x.total_count || 0);
+    const mos = Number(x.median_mos || 0);
+    const signalRate = Number(x.signal_rate || 0);
+    return `
+      <tr>
+        <td><button type="button" class="market-link-btn" data-ward="${escHtml(x.ward || '')}" onclick="_viewOpportunityWard(this.dataset.ward)">${escHtml(x.ward || '')}</button></td>
+        <td><strong>${dealCount}</strong></td>
+        <td>${mos ? mos.toFixed(1) + '%' : '-'}</td>
+        <td>${signalRate.toFixed(1)}%</td>
+        <td>${_fmtMarketPrice(x.median_price || x.avg_price)}</td>
+        <td>${totalCount}</td>
+      </tr>
     `;
   }).join('');
 }
@@ -166,7 +312,7 @@ function renderOpportunityMatrix(data) {
     opportunityMatrixInstance = null;
   }
 
-  const rows = (data || [])
+  const rows = _marketPayloadRows(data, true)
     .filter(d => Number(d.total_count || 0) > 0)
     .map((d) => {
       const mos = Number(d.median_mos || 0);
@@ -180,7 +326,7 @@ function renderOpportunityMatrix(data) {
         ward: d.ward || '',
         totalCount,
         signalRate: Number(d.signal_rate || 0),
-        avgPrice: Number(d.avg_price || 0),
+        avgPrice: Number(d.median_price || d.avg_price || 0),
         tier
       };
     })
@@ -450,7 +596,9 @@ async function loadMarketIndicators(useCache = true) {
   const distressContainer = document.getElementById('distressRatioContainer');
   const supplyContainer = document.getElementById('supplyAnomalyContainer');
   const riskContainer = document.getElementById('areaRiskRadarContainer');
+  const retryBtn = document.getElementById('marketIndicatorsRetry');
   if (!distressContainer && !supplyContainer && !riskContainer) return;
+  if (retryBtn) retryBtn.hidden = true;
   if (!['vip', 'admin'].includes(window.USER_TIER || 'guest')) {
     renderAreaRiskRadar([], {});
     _renderDistressRatio([], {});
@@ -468,7 +616,10 @@ async function loadMarketIndicators(useCache = true) {
     _renderDistressRatio(data.distress_ratio || [], data.summary || {});
     _renderSupplyAnomaly(data.supply_anomaly || [], data.summary || {});
   } catch (err) {
-    if (err.name !== 'AbortError') console.error('Market indicators error:', err);
+    if (err.name !== 'AbortError') {
+      console.error('Market indicators error:', err);
+      if (retryBtn) retryBtn.hidden = false;
+    }
     renderAreaRiskRadar([], {});
     _renderDistressRatio([], {});
     _renderSupplyAnomaly([], {});
@@ -483,14 +634,19 @@ async function loadMarketIndicators(useCache = true) {
 
 async function loadTrendData(useCache = true) {
   const container = document.getElementById('trendContainer');
+  const retryBtn = document.getElementById('trendRetry');
   if (!container) return;
   container.classList.add('loading');
+  if (retryBtn) retryBtn.hidden = true;
   try {
     const data = await fetchJSONCached('trend', `/api/trends?${currentFilters}`, useCache);
     await ensureChartJs();
     renderTrendChart(data.trend_data || {});
   } catch (err) {
-    if (err.name !== 'AbortError') console.error('Trend chart error:', err);
+    if (err.name !== 'AbortError') {
+      console.error('Trend chart error:', err);
+      if (retryBtn) retryBtn.hidden = false;
+    }
   } finally {
     container.classList.remove('loading');
   }
@@ -507,19 +663,27 @@ function renderTrendChart(trendData) {
     return;
   }
 
+  const visibleTrendEntries = Object.entries(trendData)
+    .sort((a, b) => {
+      const totalA = (a[1] || []).reduce((sum, point) => sum + Number(point.sample_count || 0), 0);
+      const totalB = (b[1] || []).reduce((sum, point) => sum + Number(point.sample_count || 0), 0);
+      return totalB - totalA;
+    })
+    .slice(0, MARKET_TREND_MAX_SERIES);
+  const visibleTrendData = Object.fromEntries(visibleTrendEntries);
   const datasets = [];
   const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
   const allTimeKeys = new Set();
 
-  for (const w in trendData) {
-    trendData[w].forEach(d => allTimeKeys.add(d.week));
+  for (const w in visibleTrendData) {
+    visibleTrendData[w].forEach(d => allTimeKeys.add(d.week));
   }
   const sortedKeys = Array.from(allTimeKeys).sort();
   const labels = sortedKeys.map(w => w.replace('D-', '').replace('M-', ''));
 
   let i = 0;
-  for (const ward in trendData) {
-    const data = trendData[ward];
+  for (const ward in visibleTrendData) {
+    const data = visibleTrendData[ward];
     const dataMap = {};
     const sampleMap = {};
     data.forEach((d) => {

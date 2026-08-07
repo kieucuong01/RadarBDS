@@ -100,7 +100,7 @@ mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
-from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
+from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, load_market_opportunities, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
 from db.guland_publishers import (
     list_publishers,
     publisher_sort_rank_sql,
@@ -4957,6 +4957,8 @@ def api_trends():
             only_drops,
             trend_period,
             include_guland_high_activity=include_guland_high_activity,
+            date_range=_request_date_range(request),
+            keyword=_request_keyword(request),
             **range_kwargs,
         ),
         "trend_period": trend_period
@@ -5024,109 +5026,23 @@ def api_insights():
 def api_heatmap():
     active_city, wards, sources, prop_types, only_drops, trend_period, mos_min = get_base_filters(request)
     range_kwargs = _request_range_filter_kwargs(request)
-    db_path = _db_handle()
-    conn = connect(db_path)
-    
-    where_parts = [
-        "l.probably_sold = 0",
-        "COALESCE(l.is_blacklisted,0)=0",
-        "COALESCE(l.review_hidden,0)=0",
-        "l.price_per_m2 > 0",
-        "l.price_per_m2 < 1000",
-        publisher_visibility_sql(
-            "l",
-            include_high_activity=_include_guland_high_activity(
-                request,
-                current_tier(),
-            ),
-        ),
-    ]
-    if only_drops:
-        where_parts.append(group_price_drop_filter_sql("l."))
-    else:
-        where_parts.append("l.possibly_duplicate = 0")
-    params = []
-    
-    # Filter by city if no specific wards selected
-    if not wards and active_city and active_city in CITY_MAP:
+    if not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
-
-    if wards:
-        where_parts.append(f"l.ward IN ({','.join(['?']*len(wards))})")
-        params.extend(wards)
-    if sources:
-        where_parts.append(f"l.source IN ({','.join(['?']*len(sources))})")
-        params.extend(sources)
-    if prop_types:
-        where_parts.append(f"l.property_type IN ({','.join(['?']*len(prop_types))})")
-        params.extend(prop_types)
-    range_clauses, range_params = _range_filters(prefix="l.", **range_kwargs)
-    where_parts.extend(range_clauses)
-    params.extend(range_params)
-    where_sql = " AND ".join(where_parts)
-    
-    # Market fields use all valid listings; opportunity fields use signal deals only.
-    signal_condition = actionable_signal_sql("v")
-    query = f"""
-        WITH {LATEST_VALUATION_CTE}
-        SELECT l.ward,
-               l.price_per_m2,
-               l.price_ty,
-               l.area_m2,
-               v.fair_ppm2,
-               v.mos_pct,
-               CASE WHEN {signal_condition} THEN 1 ELSE 0 END as is_signal,
-               COALESCE(v.is_outlier, 0) as is_outlier
-        FROM listings l
-        LEFT JOIN latest_valuation v ON l.id = v.listing_id
-        WHERE {where_sql}
-          AND l.ward IS NOT NULL
-          AND l.ward != 'unknown'
-          AND COALESCE(v.is_outlier, 0) = 0
-    """
-    rows = conn.execute(query, params).fetchall()
-    conn.close()
-
-    grouped = {}
-    for r in rows:
-        ward = r["ward"]
-        item = grouped.setdefault(ward, {
-            "prices": [],
-            "price_tys": [],
-            "fair_tys": [],
-            "signal_mos": []
-        })
-        item["prices"].append(r["price_per_m2"])
-        if r["price_ty"]:
-            item["price_tys"].append(r["price_ty"])
-        if r["fair_ppm2"] and r["area_m2"]:
-            item["fair_tys"].append(r["fair_ppm2"] * r["area_m2"] / 1000)
-        if r["is_signal"] == 1 and r["mos_pct"] and r["mos_pct"] > 0:
-            item["signal_mos"].append(r["mos_pct"])
-
-    heatmap_data = []
-    for ward, g in grouped.items():
-        total_count = len(g["prices"])
-        deal_count = len(g["signal_mos"])
-        median_mos = round(statistics.median(g["signal_mos"]), 1) if g["signal_mos"] else 0
-        avg_signal_mos = round(sum(g["signal_mos"]) / deal_count, 1) if deal_count else 0
-        signal_rate = round((deal_count / total_count) * 100, 1) if total_count else 0
-        heatmap_data.append({
-            "ward": ward,
-            "total_count": total_count,
-            "deal_count": deal_count,
-            "median_mos": median_mos,
-            "avg_signal_mos": avg_signal_mos,
-            "signal_rate": signal_rate,
-            "count": deal_count,
-            "avg_price": round(sum(g["prices"]) / total_count, 1) if total_count else 0,
-            "avg_mos": median_mos,
-            "avg_price_ty": round(sum(g["price_tys"]) / len(g["price_tys"]), 2) if g["price_tys"] else 0,
-            "avg_fair_ty": round(sum(g["fair_tys"]) / len(g["fair_tys"]), 2) if g["fair_tys"] else 0
-        })
-
-    heatmap_data.sort(key=lambda x: (x["deal_count"], x["median_mos"]), reverse=True)
-    return jsonify(heatmap_data)
+    db_path = _db_handle()
+    tier = current_tier()
+    return jsonify(load_market_opportunities(
+        db_path,
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        mos_min=mos_min,
+        tier=tier,
+        date_range=_request_date_range(request),
+        keyword=_request_keyword(request),
+        include_guland_high_activity=_include_guland_high_activity(request, tier),
+        **range_kwargs,
+    ))
 
 
 @require_tier('vip')
@@ -5142,6 +5058,11 @@ def api_market_indicators():
         sources=sources,
         wards=wards,
         prop_types=prop_types,
+        only_drops=only_drops,
+        mos_min=mos_min,
+        tier=tier,
+        date_range=_request_date_range(request),
+        keyword=_request_keyword(request),
         include_guland_high_activity=_include_guland_high_activity(
             request,
             tier,

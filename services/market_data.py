@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -1546,6 +1546,7 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
             area_ranges=area_ranges,
             price_ranges=price_ranges,
             keyword=keyword,
+            date_range=date_range,
             include_guland_high_activity=include_guland_high_activity,
         )
 
@@ -1646,7 +1647,7 @@ def load_counts(db_path, sources=None, wards=None, prop_types=None, only_drops=F
     conn.close()
     return stats
 
-def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", include_guland_high_activity=False):
+def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_drops=False, trend_period='day', area_min=0, area_max=0, price_min=0, price_max=0, area_ranges=None, price_ranges=None, keyword="", date_range=None, include_guland_high_activity=False):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
     prop_types = normalize_property_types(prop_types)
@@ -1690,6 +1691,9 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     search_clauses, search_params = keyword_search_filter(keyword)
     where_parts.extend(search_clauses)
     params.extend(search_params)
+    date_clauses, date_params = listing_date_range_filter(date_range)
+    where_parts.extend(date_clauses)
+    params.extend(date_params)
     where_sql = " AND ".join(where_parts)
     target_wards = wards if wards else ["Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ"]
 
@@ -1741,6 +1745,165 @@ def load_trend_data(db_path, sources=None, wards=None, prop_types=None, only_dro
     return trend_data
 
 
+def _market_opportunity_rank(row):
+    deal_count = float(row.get("deal_count") or 0)
+    median_mos = float(row.get("median_mos") or 0)
+    signal_rate = float(row.get("signal_rate") or 0)
+    return median_mos * 10 + signal_rate + min(deal_count, 20) * 2
+
+
+def _market_opportunity_rank_label(row, max_deal_count):
+    median_mos = float(row.get("median_mos") or 0)
+    deal_count = int(row.get("deal_count") or 0)
+    if median_mos >= 25:
+        return "Bien an toan tot"
+    if deal_count > 0 and deal_count == max_deal_count:
+        return "Nhieu deal nhat"
+    if median_mos >= 15:
+        return "Can loc sau"
+    return "Theo doi them"
+
+
+def load_market_opportunities(
+    db_path,
+    sources=None,
+    wards=None,
+    prop_types=None,
+    only_drops=False,
+    mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT,
+    area_min=0,
+    area_max=0,
+    price_min=0,
+    price_max=0,
+    area_ranges=None,
+    price_ranges=None,
+    keyword="",
+    tier="guest",
+    date_range=None,
+    include_guland_high_activity=False,
+    limit=6,
+):
+    effective_mos = effective_signal_mos_min(
+        tier,
+        mos_min,
+        was_explicit=mos_min is not None,
+    )
+    normalized_date_range = normalize_date_range(date_range, default="3m") or "3m"
+    normalized_keyword = normalize_search_keyword(keyword)
+    where_sql, params = build_listing_filters(
+        sources=sources,
+        wards=wards,
+        prop_types=prop_types,
+        only_drops=only_drops,
+        prefix="l.",
+        area_min=area_min,
+        area_max=area_max,
+        price_min=price_min,
+        price_max=price_max,
+        area_ranges=area_ranges,
+        price_ranges=price_ranges,
+        keyword=normalized_keyword,
+        date_range=normalized_date_range,
+        include_guland_high_activity=include_guland_high_activity,
+    )
+    deal_sql = build_deal_sql(effective_mos)
+    signal_condition = f"({actionable_signal_sql('v')}) AND COALESCE(({deal_sql.mos_expr}), 0) >= ?"
+    query_params = [effective_mos] + list(params)
+
+    query = f"""
+        WITH {LATEST_VALUATION_CTE},
+             {LATEST_SHADOW_VALUATION_CTE},
+        opportunity_rows AS (
+            SELECT
+                l.ward,
+                l.price_per_m2,
+                l.price_ty,
+                l.area_m2,
+                {deal_sql.fair_expr} AS fair_ppm2,
+                {deal_sql.mos_expr} AS mos_pct,
+                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal
+            FROM listings l
+            LEFT JOIN latest_valuation v ON l.id = v.listing_id
+            LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
+            WHERE {where_sql}
+              AND l.ward IS NOT NULL
+              AND TRIM(l.ward) != ''
+              AND LOWER(l.ward) != 'unknown'
+              AND COALESCE(l.price_per_m2, 0) > 0
+              AND COALESCE(l.price_per_m2, 0) < 1000
+              AND COALESCE(v.is_outlier, 0) = 0
+        )
+        SELECT
+            ward,
+            COUNT(*) AS total_count,
+            SUM(is_signal) AS deal_count,
+            ROUND(AVG(price_per_m2)::numeric, 1) AS avg_price,
+            ROUND((percentile_cont(0.5) WITHIN GROUP (ORDER BY price_per_m2))::numeric, 1) AS median_price,
+            ROUND(AVG(price_ty)::numeric, 2) AS avg_price_ty,
+            ROUND(AVG(CASE WHEN fair_ppm2 IS NOT NULL AND area_m2 IS NOT NULL THEN fair_ppm2 * area_m2 / 1000 END)::numeric, 2) AS avg_fair_ty,
+            COALESCE(ROUND(AVG(CASE WHEN is_signal = 1 AND mos_pct > 0 THEN mos_pct END)::numeric, 1), 0) AS avg_signal_mos,
+            COALESCE(ROUND((percentile_cont(0.5) WITHIN GROUP (ORDER BY mos_pct) FILTER (WHERE is_signal = 1 AND mos_pct > 0))::numeric, 1), 0) AS median_mos,
+            ROUND((SUM(is_signal)::numeric / NULLIF(COUNT(*), 0)) * 100, 1) AS signal_rate
+        FROM opportunity_rows
+        GROUP BY ward
+        ORDER BY deal_count DESC, median_mos DESC, total_count DESC
+    """
+
+    with _read_conn(db_path) as conn:
+        raw_rows = conn.execute(query, query_params).fetchall()
+
+    all_rows = []
+    for row in raw_rows:
+        item = dict(row)
+        item["total_count"] = int(item.get("total_count") or 0)
+        item["deal_count"] = int(item.get("deal_count") or 0)
+        item["count"] = item["deal_count"]
+        item["median_mos"] = float(item.get("median_mos") or 0)
+        item["avg_signal_mos"] = float(item.get("avg_signal_mos") or 0)
+        item["avg_mos"] = item["median_mos"]
+        item["signal_rate"] = float(item.get("signal_rate") or 0)
+        item["avg_price"] = float(item.get("avg_price") or 0)
+        item["median_price"] = float(item.get("median_price") or 0)
+        item["avg_price_ty"] = float(item.get("avg_price_ty") or 0)
+        item["avg_fair_ty"] = float(item.get("avg_fair_ty") or 0)
+        item["opportunity_score"] = round(_market_opportunity_rank(item), 1)
+        all_rows.append(item)
+
+    eligible_rows = [row for row in all_rows if row["deal_count"] > 0 and row["median_mos"] > 0]
+    eligible_rows.sort(key=_market_opportunity_rank, reverse=True)
+    shown_limit = max(1, min(int(limit or 6), 12))
+    shown_rows = eligible_rows[:shown_limit]
+    max_deal_count = max((row["deal_count"] for row in eligible_rows), default=0)
+    for row in shown_rows:
+        row["rank_label"] = _market_opportunity_rank_label(row, max_deal_count)
+
+    total_deals = sum(row["deal_count"] for row in all_rows)
+    total_listings = sum(row["total_count"] for row in all_rows)
+    return {
+        "rows": shown_rows,
+        "all_rows": all_rows,
+        "summary": {
+            "total_wards": len(all_rows),
+            "eligible_wards": len(eligible_rows),
+            "shown_wards": len(shown_rows),
+            "total_deals": total_deals,
+            "shown_deals": sum(row["deal_count"] for row in shown_rows),
+            "total_listings": total_listings,
+            "ranking": "risk_adjusted_mos_rate_volume",
+        },
+        "applied_filters": {
+            "sources": normalize_sources_for_tier(sources, tier),
+            "wards": list(wards or []),
+            "prop_types": normalize_property_types(prop_types),
+            "only_drops": bool(only_drops),
+            "mos_min": effective_mos,
+            "date_range": normalized_date_range,
+            "keyword": normalized_keyword,
+        },
+        "as_of": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+    }
+
+
 def _shift_month(d: date, delta: int) -> date:
     month_idx = d.year * 12 + (d.month - 1) + delta
     return date(month_idx // 12, month_idx % 12 + 1, 1)
@@ -1749,6 +1912,7 @@ def _shift_month(d: date, delta: int) -> date:
 def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix="",
                               area_min=0, area_max=0, price_min=0, price_max=0,
                               area_ranges=None, price_ranges=None,
+                              only_drops=False, keyword="", date_range=None,
                               include_guland_high_activity=False):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
@@ -1775,6 +1939,8 @@ def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix=
     if prop_types:
         where_parts.append(f"{col('property_type')} IN ({','.join(['?']*len(prop_types))})")
         params.extend(prop_types)
+    if only_drops:
+        where_parts.append(group_price_drop_filter_sql(prefix))
 
     range_clauses, range_params = _range_filters(
         area_min,
@@ -1787,6 +1953,12 @@ def _market_indicator_filters(sources=None, wards=None, prop_types=None, prefix=
     )
     where_parts.extend(range_clauses)
     params.extend(range_params)
+    search_clauses, search_params = keyword_search_filter(keyword, prefix)
+    where_parts.extend(search_clauses)
+    params.extend(search_params)
+    date_clauses, date_params = listing_date_range_filter(date_range, prefix)
+    where_parts.extend(date_clauses)
+    params.extend(date_params)
     return " AND ".join(where_parts), params
 
 
@@ -1837,6 +2009,17 @@ def _area_risk_verdict(risk_score: int, median_mos: float, deal_count: int) -> t
     if risk_score >= 45:
         return "watch", "Cần soi kỹ", "Có tín hiệu rẻ nhưng nền cung/giảm giá chưa thật yên tâm."
     return "normal", "Rủi ro thấp", "Giữ kỷ luật giá và đối chiếu từng lô cụ thể."
+
+
+def _market_sample_confidence(total_count: int) -> str:
+    total = int(total_count or 0)
+    if total >= 20:
+        return "high"
+    if total >= 5:
+        return "medium"
+    if total > 0:
+        return "low"
+    return "none"
 
 
 def _build_area_risk_radar(distress, supply, deal_rows):
@@ -1896,7 +2079,16 @@ def _build_area_risk_radar(distress, supply, deal_rows):
 def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
                            area_min=0, area_max=0, price_min=0, price_max=0,
                            area_ranges=None, price_ranges=None,
+                           only_drops=False, keyword="", date_range=None,
+                           mos_min=DEFAULT_SIGNAL_MOS_MIN_PCT, tier="guest",
                            include_guland_high_activity=False):
+    effective_mos = effective_signal_mos_min(
+        tier,
+        mos_min,
+        was_explicit=mos_min is not None,
+    )
+    normalized_date_range = normalize_date_range(date_range, default=None)
+    normalized_keyword = normalize_search_keyword(keyword)
     conn = _open_read_conn(db_path)
     where_sql, params = _market_indicator_filters(
         sources=sources,
@@ -1909,6 +2101,9 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         price_max=price_max,
         area_ranges=area_ranges,
         price_ranges=price_ranges,
+        only_drops=only_drops,
+        keyword=normalized_keyword,
+        date_range=normalized_date_range,
         include_guland_high_activity=include_guland_high_activity,
     )
 
@@ -1974,7 +2169,7 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
             SELECT
                 l.ward,
                 v.mos_pct,
-                CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal
+                CASE WHEN ({signal_condition}) AND COALESCE(v.mos_pct, 0) >= ? THEN 1 ELSE 0 END AS is_signal
             FROM listings l
             LEFT JOIN latest_valuation v ON l.id = v.listing_id
             WHERE {where_sql}
@@ -1987,7 +2182,7 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         )
         SELECT ward, mos_pct, is_signal
         FROM risk_deal_rows
-    """, params).fetchall()
+    """, [effective_mos] + list(params)).fetchall()
     conn.close()
 
     distress = []
@@ -2001,6 +2196,7 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
             "total_count": total,
             "distress_count": distress_count,
             "ratio_pct": ratio_pct,
+            "sample_confidence": _market_sample_confidence(total),
             "level_key": level_key,
             "level": level,
             "action": action,
@@ -2040,6 +2236,8 @@ def load_market_indicators(db_path, sources=None, wards=None, prop_types=None,
         "summary": {
             "current_month": current_start.strftime("%Y-%m"),
             "previous_months": prev_keys,
+            "date_range": normalized_date_range or "all",
+            "mos_min": effective_mos,
             "distress_hotspots": sum(1 for x in distress if x["ratio_pct"] >= 25),
             "supply_hotspots": sum(1 for x in supply if x["level_key"] in ("danger", "warning")),
             "area_risk_hotspots": sum(1 for x in area_risk_radar if x["risk_score"] >= 70),
