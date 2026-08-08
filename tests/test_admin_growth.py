@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 import uuid
@@ -22,6 +23,8 @@ class AdminGrowthTest(unittest.TestCase):
         self.session_token = f"growth-session-{self.token}"
         self.listing_ids = []
         self.user_ids = []
+        self.extra_session_tokens = []
+        app_module.clear_admin_read_cache("growth")
 
         with get_conn() as conn:
             admin = conn.execute(
@@ -48,9 +51,12 @@ class AdminGrowthTest(unittest.TestCase):
 
     def tearDown(self):
         from db.connection import get_conn
+        import app as app_module
 
         with get_conn() as conn:
             conn.execute("DELETE FROM lead_captures WHERE note=?", (self.token,))
+            for token in self.extra_session_tokens:
+                conn.execute("DELETE FROM user_sessions WHERE token=?", (token,))
             if self.user_ids:
                 placeholders = ",".join("?" * len(self.user_ids))
                 conn.execute(f"DELETE FROM user_audit_log WHERE user_id IN ({placeholders})", self.user_ids)
@@ -63,6 +69,7 @@ class AdminGrowthTest(unittest.TestCase):
             conn.execute("DELETE FROM raw_listings WHERE url LIKE ?", (f"https://growth-{self.token}.example/%",))
             conn.execute("DELETE FROM user_sessions WHERE token=?", (self.session_token,))
             conn.execute("DELETE FROM users WHERE id=?", (self.admin_id,))
+        app_module.clear_admin_read_cache("growth")
 
     def _insert_listing(self, source, suffix, *, event_at=None, duplicate_of_id=None, signal=True):
         from db.connection import get_conn
@@ -195,10 +202,111 @@ class AdminGrowthTest(unittest.TestCase):
                 (self.current_at, self.token),
             )
 
+    def _seed_marketing_data(self):
+        from db.connection import get_conn
+
+        user_id = self._insert_user("marketing", active=False)
+        campaign_path = f"/campaign-{self.token}"
+        campaign = {
+            "utm_source": "facebook",
+            "utm_medium": "social",
+            "utm_campaign": "ward_launch",
+        }
+        with get_conn() as conn:
+            conn.execute(
+                """
+                INSERT INTO user_audit_log (user_id, tier, action, context, created_at)
+                VALUES (?, 'free', 'seo_landing_viewed', ?, ?)
+                """,
+                (
+                    user_id,
+                    json.dumps(
+                        {"path": campaign_path, "channel": "social", **campaign}
+                    ),
+                    self.current_at,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO user_audit_log (user_id, tier, action, context, created_at)
+                VALUES (?, 'free', 'cta_clicked', ?, ?)
+                """,
+                (
+                    user_id,
+                    json.dumps(
+                        {
+                            "cta_name": "signal_contact",
+                            "destination": "/?tab=signals",
+                            **campaign,
+                        }
+                    ),
+                    self.current_at,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO user_audit_log (user_id, tier, action, context, created_at)
+                VALUES (?, 'free', 'lead_capture_submit', ?, ?)
+                """,
+                (
+                    user_id,
+                    json.dumps({"page_path": campaign_path, **campaign}),
+                    self.current_at,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT INTO user_audit_log (user_id, tier, action, context, created_at)
+                VALUES (?, 'free', 'cta_clicked', '{malformed-json', ?)
+                """,
+                (user_id, self.current_at),
+            )
+            conn.execute(
+                """
+                INSERT INTO lead_captures (
+                    created_at, listing_id, listing_url, zalo_phone, source_context,
+                    note, status, tier, urgency
+                ) VALUES (?, NULL, ?, '0900000099', 'seo_report_lead', ?, 'new',
+                          'guest', 'standard')
+                """,
+                (
+                    self.current_at,
+                    (
+                        f"https://radarbds.vn{campaign_path}?utm_source=facebook"
+                        "&utm_medium=social&utm_campaign=ward_launch"
+                    ),
+                    self.token,
+                ),
+            )
+
     def test_growth_endpoint_requires_admin(self):
         client = self.client.application.test_client()
 
         response = client.get(f"/admin/api/growth?period=day&anchor={self.anchor}")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_growth_endpoint_rejects_authenticated_non_admin(self):
+        from auth.core import SESSION_COOKIE_NAME
+        from db.connection import get_conn
+
+        user_id = self._insert_user("non-admin", active=False)
+        token = f"growth-free-session-{self.token}"
+        self.extra_session_tokens.append(token)
+        with get_conn() as conn:
+            conn.execute(
+                "INSERT INTO user_sessions (token, user_id, expires_at) VALUES (?, ?, '2099-01-01T00:00:00')",
+                (token, user_id),
+            )
+        client = self.client.application.test_client()
+        try:
+            client.set_cookie(SESSION_COOKIE_NAME, token)
+        except TypeError:
+            client.set_cookie("localhost", SESSION_COOKIE_NAME, token)
+
+        response = client.get(
+            f"/admin/api/growth?period=day&anchor={self.anchor}"
+        )
 
         self.assertEqual(response.status_code, 403)
 
@@ -247,6 +355,33 @@ class AdminGrowthTest(unittest.TestCase):
         self.assertEqual(combined["ratios"]["lead_to_deposit_pct"], 50.0)
         self.assertEqual(len(facebook["series"]), 24)
         self.assertEqual(sum(row["price_drops"] for row in facebook["series"]), 1)
+
+    def test_growth_endpoint_exposes_marketing_independent_of_listing_source_toggle(self):
+        self._seed_marketing_data()
+
+        facebook = self.client.get(
+            f"/admin/api/growth?period=day&anchor={self.anchor}"
+        ).get_json()
+        combined = self.client.get(
+            f"/admin/api/growth?period=day&anchor={self.anchor}&include_guland=1"
+        ).get_json()
+
+        self.assertEqual(facebook["marketing"], combined["marketing"])
+        marketing = facebook["marketing"]
+        social = next(
+            row for row in marketing["channels"] if row["channel"] == "social"
+        )
+        self.assertEqual(social["current_views"], 1)
+        self.assertEqual(marketing["coverage"]["event_count"], 1)
+        self.assertEqual(
+            marketing["directly_attributed"]["lead_events_current"],
+            1,
+        )
+        self.assertEqual(
+            marketing["directly_attributed"]["lead_rows_current"],
+            1,
+        )
+        self.assertEqual(marketing["unattributed"]["lead_rows_current"], 0)
 
 
 if __name__ == "__main__":

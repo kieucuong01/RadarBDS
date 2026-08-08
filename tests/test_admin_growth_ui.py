@@ -120,6 +120,19 @@ def test_growth_backend_limits_event_queries_to_period_window():
     assert "SELECT created_at AS event_at FROM users" not in growth_source
 
 
+def test_growth_backend_builds_marketing_inside_existing_connection_scope():
+    growth_source = (ROOT / "services" / "admin_growth.py").read_text(
+        encoding="utf-8"
+    )
+    connection_start = growth_source.index("with db_mod.get_conn() as conn:")
+    aggregation_call = growth_source.index("build_marketing_source_view(")
+    connection_end = growth_source.index("raw_events =", connection_start)
+
+    assert connection_start < aggregation_call < connection_end
+    assert "build_marketing_source_view(\n            conn," in growth_source
+    assert growth_source.count("with db_mod.get_conn() as conn:") == 1
+
+
 def test_admin_performance_indexes_cover_growth_and_review_queries():
     schema_source = (ROOT / "db" / "schema.py").read_text(encoding="utf-8")
 
