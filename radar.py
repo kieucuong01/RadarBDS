@@ -87,6 +87,7 @@ from cli.data_import import (
     cmd_export_raw, cmd_import_raw_backup,
     cmd_import_facebook_json
 )
+from cli.data_trust import cmd_data_trust_audit
 from cli.crawlers import (
     cmd_crawl, cmd_crawl_facebook, cmd_repair_missing
 )
@@ -176,6 +177,18 @@ def build_parser():
     p_signal_read_model.add_argument("--compare", action="store_true")
     p_signal_read_model.add_argument("--compare-listings", action="store_true")
     p_signal_read_model.add_argument(
+        "--limit",
+        type=_bounded_signal_compare_limit,
+        default=200,
+    )
+
+    p_data_trust = sub.add_parser(
+        "data-trust-audit",
+        help="Run a bounded read-only PostgreSQL data trust audit",
+    )
+    p_data_trust.add_argument("--json", action="store_true", dest="as_json")
+    p_data_trust.add_argument("--deep", action="store_true")
+    p_data_trust.add_argument(
         "--limit",
         type=_bounded_signal_compare_limit,
         default=200,
@@ -499,6 +512,8 @@ def main():
         cmd_integrity_report(args)
     elif args.cmd == "signal-read-model":
         cmd_signal_read_model(args)
+    elif args.cmd == "data-trust-audit":
+        cmd_data_trust_audit(args)
     elif args.cmd == "map-locations":
         cmd_map_locations(args)
     elif args.cmd == "guland-coordinate-backfill":
