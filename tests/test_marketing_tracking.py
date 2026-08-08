@@ -12,7 +12,7 @@ def test_marketing_context_keeps_only_safe_bounded_fields():
         {
             "path": "/binh-duong/phuong-hiep-thanh?x=1#private",
             "page_slug": "binh-duong/phuong-hiep-thanh",
-            "page_title": "A" * 300,
+            "page_title": "private@example.test 0900000000",
             "channel": "social",
             "utm_source": " Facebook ",
             "utm_campaign": "ward_launch",
@@ -28,7 +28,7 @@ def test_marketing_context_keeps_only_safe_bounded_fields():
 
     assert safe["path"] == "/binh-duong/phuong-hiep-thanh"
     assert safe["page_slug"] == "binh-duong/phuong-hiep-thanh"
-    assert len(safe["page_title"]) == 160
+    assert "page_title" not in safe
     assert safe["channel"] == "social"
     assert safe["utm_source"] == "facebook"
     assert safe["utm_campaign"] == "ward_launch"
@@ -101,6 +101,26 @@ def test_marketing_context_drops_invalid_paths_enums_and_tokens():
     assert safe == {
         "utm_medium": "social",
         "utm_term": "dat-binh-duong",
+    }
+
+
+def test_marketing_tokens_reject_phone_and_ip_like_values():
+    safe = sanitize_marketing_context(
+        "seo_landing_viewed",
+        {
+            "channel": "social",
+            "utm_source": "facebook",
+            "utm_medium": "social",
+            "utm_campaign": "0900123456",
+            "utm_content": "127.0.0.1",
+            "utm_term": "+84900123456",
+        },
+    )
+
+    assert safe == {
+        "channel": "social",
+        "utm_source": "facebook",
+        "utm_medium": "social",
     }
 
 

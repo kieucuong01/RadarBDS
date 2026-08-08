@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from urllib.parse import unquote, urlsplit
 
@@ -29,26 +30,33 @@ _UTM_FIELDS = (
 _TOKEN_PATTERN = re.compile(r"[a-z0-9][a-z0-9._+-]*(?: [a-z0-9._+-]+)*")
 _SLUG_PATTERN = re.compile(r"[a-z0-9][a-z0-9/_-]*")
 _HOST_PATTERN = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?")
+_PHONE_LIKE_PATTERN = re.compile(r"(?:\+?84|0)\d{8,10}")
 
 
 def _has_control_characters(value: str) -> bool:
     return any(ord(character) < 32 or ord(character) == 127 for character in value)
 
 
-def _bounded_text(value: object, limit: int) -> str | None:
-    if not isinstance(value, str):
-        return None
-    normalized = re.sub(r"\s+", " ", value).strip()
-    if not normalized or _has_control_characters(normalized):
-        return None
-    return normalized[:limit]
+def _looks_sensitive_token(value: str) -> bool:
+    compact = re.sub(r"[\s().-]+", "", value)
+    if _PHONE_LIKE_PATTERN.fullmatch(compact) is not None:
+        return True
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        return False
+    return True
 
 
 def _bounded_token(value: object, limit: int = 80) -> str | None:
     if not isinstance(value, str) or _has_control_characters(value):
         return None
     normalized = re.sub(r"\s+", " ", value.strip().lower())[:limit]
-    if not normalized or _TOKEN_PATTERN.fullmatch(normalized) is None:
+    if (
+        not normalized
+        or _TOKEN_PATTERN.fullmatch(normalized) is None
+        or _looks_sensitive_token(normalized)
+    ):
         return None
     return normalized
 
@@ -188,11 +196,6 @@ def sanitize_marketing_context(
     safe: dict[str, object] = {}
     _copy_page_fields(safe, context)
     _copy_acquisition_fields(safe, context)
-
-    if action in {"seo_landing_viewed", "report_viewed", "social_utm_visit", "ai_referral_visit"}:
-        page_title = _bounded_text(context.get("page_title"), 160)
-        if page_title is not None:
-            safe["page_title"] = page_title
 
     if action == "cta_clicked":
         for field in ("cta_name", "location", "source_surface"):

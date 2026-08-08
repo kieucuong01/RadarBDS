@@ -61,7 +61,7 @@ def test_marketing_context_keeps_only_safe_bounded_fields():
     safe = sanitize_marketing_context("seo_landing_viewed", {
         "path": "/binh-duong/phuong-hiep-thanh?x=1",
         "page_slug": "binh-duong/phuong-hiep-thanh",
-        "page_title": "A" * 300,
+        "page_title": "private@example.test 0900000000",
         "channel": "social",
         "utm_source": "facebook",
         "utm_campaign": "ward_launch",
@@ -70,7 +70,7 @@ def test_marketing_context_keeps_only_safe_bounded_fields():
         "referrer": "https://external.test/private",
     })
     assert safe["path"] == "/binh-duong/phuong-hiep-thanh"
-    assert len(safe["page_title"]) == 160
+    assert "page_title" not in safe
     assert safe["channel"] == "social"
     assert "phone" not in safe
     assert "email" not in safe
@@ -106,7 +106,7 @@ CHANNELS = frozenset({"organic", "social", "ai", "direct_unknown"})
 AI_SOURCES = frozenset({"chatgpt", "gemini", "perplexity", "copilot"})
 ```
 
-Normalize `path`, `page_path`, and internal CTA destinations with `urllib.parse.urlsplit`; keep only an absolute internal path, strip query/fragment, require it to start with one `/`, and cap at 180 characters. Map recognized external hosts to non-identifying classes such as `external:zalo`, `external:facebook`, `external:telegram`, and otherwise `external:other`. Normalize UTM and CTA tokens to lowercase bounded text with a conservative character allowlist; cap title at 160, slug/path at 180, UTM/CTA/source fields at 80, and destination at 180.
+Normalize `path`, `page_path`, and internal CTA destinations with `urllib.parse.urlsplit`; keep only an absolute internal path, strip query/fragment, require it to start with one `/`, and cap at 180 characters. Map recognized external hosts to non-identifying classes such as `external:zalo`, `external:facebook`, `external:telegram`, and otherwise `external:other`. Normalize UTM and CTA tokens to lowercase bounded text with a conservative character allowlist; reject phone-like and IP-address values, omit client-supplied page titles entirely, and cap slug/path at 180, UTM/CTA/source fields at 80, and destination at 180.
 
 - [ ] **Step 4: Wire the sanitizer into `/api/track`**
 
