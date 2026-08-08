@@ -1265,8 +1265,9 @@ def test_load_market_opportunities_uses_shared_scope_and_global_totals(monkeypat
             assert 15.0 in params
             assert params[-1] == 15.0
             assert "filtered_listings AS MATERIALIZED" in sql
-            assert "JOIN filtered_listings fl ON fl.id = vr.listing_id" in sql
-            assert "JOIN filtered_listings fl ON fl.id = vsr.listing_id" in sql
+            assert "FROM filtered_listings l" in sql
+            assert "WHERE vr.listing_id = l.id" in sql
+            assert "WHERE vsr.listing_id = l.id" in sql
             return _FakeCursor(rows=[
                 {
                     "ward": "Ward A",
@@ -1339,6 +1340,47 @@ def test_load_market_opportunities_uses_shared_scope_and_global_totals(monkeypat
     assert result["applied_filters"]["mos_min"] == 15.0
     assert result["applied_filters"]["date_range"] == "1m"
     assert conn.closed is False
+
+
+def test_load_market_opportunities_uses_indexed_lateral_latest_rows(monkeypatch):
+    import services.market_data as market_data
+
+    captured = {}
+
+    class _CaptureConnection:
+        def execute(self, sql, params=None):
+            captured["sql"] = sql
+            captured["params"] = list(params or [])
+            return _FakeCursor(rows=[])
+
+    @contextmanager
+    def fake_read_conn(_db_path=None):
+        yield _CaptureConnection()
+
+    monkeypatch.setattr(market_data, "_read_conn", fake_read_conn)
+
+    result = market_data.load_market_opportunities(
+        None,
+        sources=["facebook"],
+        wards=["Ward A"],
+        mos_min=15,
+        tier="guest",
+        date_range="3m",
+    )
+
+    sql = captured["sql"]
+    assert result["rows"] == []
+    assert "filtered_listings AS MATERIALIZED" in sql
+    assert "latest_valuation AS MATERIALIZED" not in sql
+    assert "latest_shadow_valuation AS MATERIALIZED" not in sql
+    assert sql.count("LEFT JOIN LATERAL") == 2
+    assert "FROM valuation_results vr" in sql
+    assert "WHERE vr.listing_id = l.id" in sql
+    assert "ORDER BY vr.computed_at DESC, vr.id DESC" in sql
+    assert "FROM valuation_shadow_results vsr" in sql
+    assert "WHERE vsr.listing_id = l.id" in sql
+    assert "ORDER BY vsr.computed_at DESC, vsr.id DESC" in sql
+    assert sql.count("LIMIT 1") == 2
 
 
 def test_schema_defines_feed_performance_indexes():
