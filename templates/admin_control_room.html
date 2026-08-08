@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v43-dup-cluster-pairs">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v51-facebook-broker-guland-publisher-radar-ask-observability">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v52-marketing-funnel">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -919,6 +919,48 @@
       <div id="growthEmpty" class="growth-state" hidden>Chưa có dữ liệu nguồn đã chọn trong kỳ này.</div>
       <div class="growth-kpis" id="growthKpis" aria-live="polite"></div>
       <div class="growth-ratios" id="growthRatios"></div>
+      <section id="growthMarketing" class="surface growth-marketing" aria-labelledby="growthMarketingTitle">
+        <div class="growth-marketing-head">
+          <div>
+            <h2 id="growthMarketingTitle">Nguồn marketing và hành động trực tiếp</h2>
+            <p id="growthMarketingCoverage" aria-live="polite">Số liệu là lượt sự kiện, không phải số người duy nhất.</p>
+          </div>
+        </div>
+        <div id="growthMarketingEmpty" class="growth-state" hidden>Chưa có page-view marketing hoặc lead gán trực tiếp trong kỳ này.</div>
+        <div id="growthMarketingChannels" class="growth-marketing-channels" aria-label="Page-view theo kênh"></div>
+        <div class="growth-marketing-grid">
+          <section class="growth-marketing-panel" aria-labelledby="growthLandingTitle">
+            <h3 id="growthLandingTitle">Landing page</h3>
+            <div class="growth-marketing-table-wrap">
+              <table class="data-table">
+                <caption>Page-view và lead gán trực tiếp theo landing page</caption>
+                <thead><tr><th>Đường dẫn</th><th>View kỳ này</th><th>Kỳ trước</th><th>Lead event</th><th>Lead row</th></tr></thead>
+                <tbody id="growthLandingTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="growth-marketing-panel" aria-labelledby="growthCampaignTitle">
+            <h3 id="growthCampaignTitle">Campaign</h3>
+            <div class="growth-marketing-table-wrap">
+              <table class="data-table">
+                <caption>View, CTA và Lead gán trực tiếp theo UTM</caption>
+                <thead><tr><th>Source / medium / campaign</th><th>View</th><th>CTA</th><th>Lead event</th><th>Lead row</th></tr></thead>
+                <tbody id="growthCampaignTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="growth-marketing-panel" aria-labelledby="growthCtaTitle">
+            <h3 id="growthCtaTitle">CTA target</h3>
+            <div class="growth-marketing-table-wrap">
+              <table class="data-table">
+                <caption>Lượt click CTA theo tên và đích đã phân loại</caption>
+                <thead><tr><th>CTA</th><th>Đích</th><th>Kỳ này</th><th>Kỳ trước</th></tr></thead>
+                <tbody id="growthCtaTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
       <div class="growth-chart-grid">
         <section class="surface growth-chart growth-chart-wide"><h2>Tin cào và signal theo nguồn</h2><canvas id="growthSourceChart" role="img" aria-label="Biểu đồ tin cào và signal theo nguồn"></canvas></section>
         <section class="surface growth-chart"><h2>BĐS unique</h2><canvas id="growthUniqueChart" role="img" aria-label="Biểu đồ bất động sản unique"></canvas></section>
@@ -987,7 +1029,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-v2-broker-delete-ui"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v51-facebook-broker-guland-publisher-radar-ask-observability"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v52-marketing-funnel"></script>
   {% endif %}
 </body>
 </html>

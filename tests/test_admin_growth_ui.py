@@ -29,12 +29,46 @@ def test_growth_admin_ui_contract():
     assert "chart.js@4.4.4" in script
     user_select = template[template.index('id="userTierFilter"'):template.index('id="userTable"', template.index('id="userTierFilter"'))]
     assert "chart.js@4.4.4" not in user_select
-    assert "admin-v51-facebook-broker-guland-publisher" in template
+    assert "admin-v52-marketing-funnel" in template
     assert "/admin/api/growth?period=" in script
     assert "include_guland=" in script
     assert "prefers-reduced-motion" in script
     assert "Đăng ký · toàn hệ thống" in script
     assert ".growth-kpis" in styles
+    assert "@media (max-width: 600px)" in styles
+
+
+def test_growth_marketing_ui_is_truthful_accessible_and_responsive():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    script = (ROOT / "static" / "js" / "admin.js").read_text(encoding="utf-8")
+    styles = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+
+    for marker in (
+        'id="growthMarketing"',
+        'id="growthMarketingChannels"',
+        'id="growthMarketingCoverage"',
+        'id="growthLandingTableBody"',
+        'id="growthCampaignTableBody"',
+        'id="growthCtaTableBody"',
+        'id="growthMarketingEmpty"',
+    ):
+        assert marker in template
+    assert 'id="growthMarketingCoverage"' in template
+    assert 'aria-live="polite"' in template
+    assert "Lead gán trực tiếp" in template
+    assert "lượt sự kiện, không phải số người duy nhất" in template
+    assert "growthMarketingExport" not in template
+    assert "function renderGrowthMarketing" in script
+    assert "renderGrowthMarketing(data.marketing)" in script
+    assert "directly_attributed" in script
+    assert "esc(" in script[script.index("function renderGrowthMarketing"):]
+    assert "growthFmt(" in script[script.index("function renderGrowthMarketing"):]
+    assert ".growth-marketing-grid" in styles
+    assert ".growth-marketing-channels" in styles
+    assert "grid-template-columns: repeat(5" in styles
+    assert "@media (max-width: 1000px)" in styles
     assert "@media (max-width: 600px)" in styles
 
 
@@ -203,7 +237,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
     assert "?v=admin-facebook-crawl-v2-broker-delete-ui" in template
-    assert "css/admin.css') }}?v=admin-v51-facebook-broker-guland-publisher" in template
+    assert "css/admin.css') }}?v=admin-v52-marketing-funnel" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
