@@ -71,7 +71,7 @@ Marketing skills:
 - Production: Ubuntu Server 24.04 LTS, Python 3.12, systemd services, Nginx, domain `https://radarbds.vn`.
 - Production Git origin is the canonical HTTPS repository URL. The retired `github.com-radarbds` SSH alias no longer resolves; keep the guarded bundle fallback for future fetch outages.
 - Production public-read path uses guest-only Nginx microcache -> bounded Gunicorn `3x4` -> Redis cache/read model -> PostgreSQL pool max `4` per worker. Redis is loopback-only, disposable, persistence-off, and capped at 256 MB. Current exact settings, evidence, and rollback are in `docs/operations.md`.
-- Public DNS currently points directly to `103.90.226.230` on Vietnix nameservers; Cloudflare/CDN is not active. The direct external path is the measured capacity bottleneck. Do not rerun the distributed capacity branch until the authenticated CDN cutover and `-RequireCdn` verifier pass.
+- Cloudflare is now the active public edge. The authoritative production evidence, exact nameservers, origin-shield checks, and rollback procedure live in `docs/operations.md`. Definitive run `30762453173` passed the guest common-key 5,000-VU and mixed 50-key 1,000-VU gates; do not broaden that result to unique cold keys, authenticated traffic, 5,000 sustained RPS, or high availability.
 - Production env must set `PUBLIC_BASE_URL=https://radarbds.vn` and `DASHBOARD_BASE_URL=https://radarbds.vn`.
 - Local and production env must set a private `GULAND_PUBLISHER_KEY_SECRET` of at least 32 random characters before publisher identity capture/backfill.
 - Runtime data is ignored by git: DB dumps, `data/images/`, thumbnails, logs, reports, and backups must stay uncommitted.

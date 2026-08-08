@@ -65,3 +65,14 @@ def test_preflight_has_stable_failure_classes_and_never_echoes_database_urls():
     assert "$ExitCodeDependency = 30" in source
     assert "Write-Output $DatabaseUrl" not in source
     assert "Write-Host $DatabaseUrl" not in source
+
+
+def test_runtime_docs_agree_on_local_postgres_and_cloudflare():
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    architecture = (ROOT / "docs" / "architecture.md").read_text(encoding="utf-8")
+    commands = (ROOT / "docs" / "dev_commands.md").read_text(encoding="utf-8")
+
+    for text in (agents, architecture, commands):
+        assert "127.0.0.1:15432" in text
+    assert "Cloudflare is now the active public edge" in agents
+    assert "normally uses installed PostgreSQL 18" not in architecture

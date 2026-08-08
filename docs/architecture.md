@@ -20,9 +20,9 @@ Source crawlers
 ## Runtime Data
 
 - Canonical relational DB: PostgreSQL via `DATABASE_URL`.
-- Local dev normally uses installed PostgreSQL 18 service `postgresql-x64-18` on `127.0.0.1:5432`, database `radar_bds`, managed with pgAdmin4.
+- Local dev uses the repo portable PostgreSQL 17 instance on `127.0.0.1:15432`: database `radar_bds` for development and `radar_bds_test` for tests. Start or verify it with `scripts/local_postgres.ps1 start`, then run `scripts/dev_preflight.ps1`.
 - Remote Supabase project `ozdjzfiqcjnlfuihqqjy` is kept for sync/backup.
-- Portable PostgreSQL 17 in `tools/postgresql-17.10/` is legacy/fallback for isolated restore or recovery only.
+- The installed PostgreSQL 18 service on `127.0.0.1:5432` is an optional alternative whose credentials may drift; use it only when an ignored `.env.local` explicitly points there.
 - Legacy SQLite DB: `data/radar_bds.db` is read only by `scripts/migrate_sqlite_to_postgres.py`.
 - Local images: `data/images/`.
 - Card thumbnails: `data/images/thumbs/*.webp`.

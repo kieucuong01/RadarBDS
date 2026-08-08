@@ -10,10 +10,9 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 ## App and DB
 
-Local PostgreSQL setup:
-
-Normal local development uses the installed PostgreSQL 18 Windows service,
-Current local override uses the repo portable PostgreSQL instance:
+Local PostgreSQL setup uses the repo portable PostgreSQL 17 instance. The
+bootstrap is idempotent: it starts the server only when needed and ensures both
+development and test databases exist without dropping existing data.
 
 - start command: `.\scripts\local_postgres.ps1 start`
 - host/port: `127.0.0.1:15432`
@@ -27,6 +26,8 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 .\scripts\local_postgres.ps1 start
 # .env.local should set DATABASE_URL and RADAR_TEST_DATABASE_URL
+.\scripts\dev_preflight.ps1
+.\scripts\dev_preflight.ps1 -Json
 & $py -X utf8 radar.py inspect
 & $py -X utf8 radar.py integrity-report --json
 & $py -X utf8 app.py
@@ -625,14 +626,15 @@ Post-merger location resolver:
 & $py -X utf8 -m pytest tests\test_feature_extractor.py tests\test_dedup.py tests\test_price_history.py -q
 
 # Read-only DB audit before any reprocess.
-# Uses the current local PostgreSQL 18 DATABASE_URL from .env.
+# Uses the current local PostgreSQL 17 DATABASE_URL from .env.local.
 & $py -X utf8 scripts\audit_post_merger_locations.py --limit 2000 --samples 3
 ```
 
-Full pytest:
+Normal local/CI-equivalent gates (no production request):
 
 ```powershell
-& $py -X utf8 -m pytest tests
+& $py -X utf8 -m pytest tests --ignore=tests\test_guland.py --ignore=tests\sanity_test.py
+node --test tests/js/*.cjs tests/js/test_*.js
 ```
 
 Integration checks such as `tests\test_guland.py` and `tests\sanity_test.py` may touch live services or local app state. Run them only when the task needs that coverage.
