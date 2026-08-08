@@ -192,6 +192,27 @@ def test_tracking_separates_social_utm_and_ai_referrals_without_full_referrer():
     assert "page_referrer" not in template
 
 
+def test_canonical_page_views_attach_one_acquisition_context_before_send():
+    for template_name in ("partials/seo_tracking.html", "seo_landing.html"):
+        template = Path("templates", template_name).read_text(encoding="utf-8")
+        canonical_call = (
+            "sendRadarEvent(viewEvent, Object.assign({}, acquisitionContext))"
+            if "const viewEvent" in template
+            else "sendRadarEvent(canonicalViewEvent, Object.assign({}, acquisitionContext))"
+        )
+
+        assert template.count("const acquisitionContext") == 1
+        assert "channel:" in template
+        assert "utm_content" in template
+        assert "utm_term" in template
+        assert "direct_unknown" in template
+        assert "ai_referral_visit" in template
+        assert canonical_call in template
+        assert template.index("const acquisitionContext") < template.index(canonical_call)
+        assert "referrer: document.referrer" not in template
+        assert "page_referrer" not in template
+
+
 def test_ai_referral_event_is_accepted_by_tracking_endpoint(monkeypatch):
     import app as radar_app
 
