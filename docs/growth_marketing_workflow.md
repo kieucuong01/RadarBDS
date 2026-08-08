@@ -83,12 +83,61 @@ success metrics for this phase.
 ## Existing Admin Tracking Screen
 
 There is an admin growth panel at `/admin/tang-truong` backed by
-`/admin/api/growth`. It currently tracks crawl volume, signal count, unique lots,
-price drops, users, and leads. It is useful for product growth, but it is not yet
-a dedicated SEO/social marketing dashboard.
+`/admin/api/growth`. It tracks crawl volume, signal count, unique lots, price
+drops, users, leads, and a bounded marketing-source view. The marketing object
+is independent of the Facebook/Guland listing-source toggle and contains:
 
-The next tracking improvement should be small: add a marketing-source view for
-SEO/social/AI visits, CTA targets, and contact/lead outcomes by landing page.
+- `coverage`: canonical page-view coverage, scan counts, first/last event time,
+  legacy coverage, and the truncation flag;
+- `channels`: current/previous view counts in fixed channel order;
+- `landing_pages`, `campaigns`, and `cta_targets`: compact, deterministic top
+  tables, capped at 20 display rows by default;
+- `directly_attributed`: lead submit event counts and lead-table row counts kept
+  as separate measurements, plus statuses from directly attributed rows only;
+- `unattributed`: explicit current/previous counts for evidence that cannot be
+  assigned without inference.
+
+### Measurement definitions
+
+These are **event counts**, not unique visitors or people. The same person may
+produce several page views, CTA clicks, a `lead_capture_submit` event, and one
+`lead_captures` row. Never add those values together and label the sum as leads
+or users.
+
+Canonical page views use exactly one channel with this precedence:
+
+1. recognized AI UTM/referrer -> `ai`;
+2. recognized social source/medium -> `social`;
+3. organic UTM medium or recognized search hostname -> `organic`;
+4. everything else -> `direct_unknown`.
+
+Historical `seo_landing_viewed` or `report_viewed` records without a sanitized
+channel remain `legacy_unknown`. Compatibility events such as
+`social_utm_visit` and `ai_referral_visit` do not relabel a nearby canonical
+view.
+
+A lead event is **directly attributed** only when that same
+`lead_capture_submit` context contains a normalized page path or campaign
+fields. A lead row is directly attributed only when its own allowlisted
+`listing_url` or marketing `source_context` carries the landing/campaign
+evidence. Otherwise it remains `unattributed`. Never join anonymous records by
+IP, user-agent, or timestamp proximity; also never join by phone, email,
+fingerprint, free-form note, or guessed session continuity.
+
+Current means `[current_start, current_end)` and previous means
+`[previous_start, current_start)`, using the period boundaries returned by the
+growth endpoint. Queries read only that combined window. Audit reads stop at
+20,000 rows and lead reads stop at 5,000 rows; reaching either cap sets
+`coverage.truncated=true`. Malformed or non-object legacy JSON is treated as an
+empty context, never as an endpoint failure and never as inferred attribution.
+
+For a local/test diagnostic only, authenticate a local admin session first and
+inspect the existing admin endpoint (there is no public analytics endpoint):
+
+```powershell
+$radarGrowthUri = "http://127.0.0.1:5000/admin/api/growth?period=day&anchor=2026-08-08&include_guland=0"
+Invoke-RestMethod -Uri $radarGrowthUri -WebSession $radarAdminSession
+```
 
 ## Hermes Ownership
 

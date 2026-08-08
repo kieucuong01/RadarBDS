@@ -72,6 +72,23 @@ def test_growth_marketing_ui_is_truthful_accessible_and_responsive():
     assert "@media (max-width: 600px)" in styles
 
 
+def test_growth_marketing_workflow_defines_attribution_boundaries():
+    workflow = (ROOT / "docs" / "growth_marketing_workflow.md").read_text(
+        encoding="utf-8"
+    )
+
+    for marker in (
+        "legacy_unknown",
+        "directly attributed",
+        "event counts",
+        "unattributed",
+        "IP, user-agent, or timestamp proximity",
+        "20,000",
+        "5,000",
+    ):
+        assert marker in workflow
+
+
 def test_admin_review_items_batch_listing_images():
     app_source = (ROOT / "app.py").read_text(encoding="utf-8")
     response_fn = app_source[app_source.index("def _admin_review_items_response"):app_source.index("def admin_api_ai_training_disagreements")]
