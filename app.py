@@ -151,6 +151,10 @@ from services.digital_products import (
     get_digital_product,
     get_release_availability,
 )
+from services.marketing_tracking import (
+    MARKETING_TRACK_ACTIONS,
+    sanitize_marketing_context,
+)
 from services.public_content import (
     PostgresPublicContentRepository,
     public_pdf_url,
@@ -1653,6 +1657,8 @@ def api_track():
         ctx = _safe_listing_share_tracking_context(ctx)
     elif action.startswith("public_"):
         ctx = _safe_public_content_tracking_context(action, ctx)
+    elif action in MARKETING_TRACK_ACTIONS:
+        ctx = sanitize_marketing_context(action, ctx)
     elif not isinstance(ctx, dict):
         ctx = {"raw": str(ctx)[:200]}
     u = current_user()
