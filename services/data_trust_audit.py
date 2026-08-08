@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import math
+import os
 import re
 import time
 from typing import Callable, ContextManager, Iterable, Mapping
@@ -12,6 +13,7 @@ from urllib.parse import unquote, urlsplit
 
 from db import connection as db_connection
 from db.connection import DatabaseConfigurationError, connect
+from db.guland_publishers import publisher_effective_class_from_join_sql
 from services.market_data import (
     _signal_listing_data_sql,
     use_read_connection_factory,
@@ -21,6 +23,7 @@ from services.signal_quality import (
     actionable_listing_sql,
     actionable_signal_sql,
 )
+from services.signal_read_model import count_signals_from_read_model
 
 
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9_]{0,79}$")
@@ -109,6 +112,23 @@ _SOURCE_FRESHNESS_THRESHOLDS = {
     "guland": {"pass_hours": 96, "fail_hours": 168},
 }
 _SUCCESSFUL_CRAWL_STATUSES = ("done", "success", "completed")
+MAP_PRECISIONS = ("exact", "road", "landmark", "nearby", "ward")
+PUBLISHER_CLASSES = (
+    "unknown",
+    "low_manual",
+    "high_activity",
+    "automated_repost",
+)
+EXTRACTION_FIELDS = (
+    "price_ty",
+    "area_m2",
+    "ward",
+    "road_name",
+    "property_type",
+    "frontage_m",
+    "depth_m",
+    "tho_cu_m2",
+)
 
 
 def _safe_value(value, *, path="measurements"):
@@ -531,6 +551,315 @@ def _check_pipeline_invariants(conn) -> AuditCheck:
     )
 
 
+def _feature_flags() -> dict[str, bool]:
+    signal_enabled = (
+        os.getenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "0").strip() == "1"
+    )
+    return {
+        "signals": signal_enabled,
+        "listings": (
+            signal_enabled
+            and os.getenv("RADAR_LISTING_READ_MODEL_ENABLED", "1").strip()
+            != "0"
+        ),
+        "market": os.getenv("RADAR_PUBLIC_CACHE_ENABLED", "0").strip() == "1",
+    }
+
+
+def _check_dataset_versions(conn) -> tuple[AuditCheck, ...]:
+    rows = conn.execute(
+        """
+        SELECT dataset_name, version, updated_at
+        FROM public_dataset_versions
+        WHERE dataset_name = ANY(?)
+        ORDER BY dataset_name
+        """,
+        (list(("signals", "listings", "market")),),
+    ).fetchall()
+    found = {
+        str(_row_value(row, "dataset_name", "")): row
+        for row in rows
+        if str(_row_value(row, "dataset_name", ""))
+        in {"signals", "listings", "market"}
+    }
+    required = _feature_flags()
+    checks = []
+    for dataset in ("signals", "listings", "market"):
+        row = found.get(dataset)
+        invalid_version = False
+        try:
+            version = int(_row_value(row, "version", 0) or 0)
+        except (TypeError, ValueError, OverflowError):
+            version = 0
+            invalid_version = True
+        parsed_timestamp = _parse_timestamp(_row_value(row, "updated_at"))
+        is_required = required[dataset]
+        if invalid_version or version < 0:
+            status, reason = "fail", "dataset_version_invalid"
+            version = max(version, 0)
+        elif is_required and version <= 0:
+            status, reason = "fail", "dataset_version_missing"
+        elif is_required:
+            status, reason = "pass", "dataset_version_ready"
+        else:
+            status, reason = "skipped", "dataset_version_optional"
+        checks.append(
+            AuditCheck(
+                f"dataset_version_{dataset}",
+                status,
+                reason,
+                {
+                    "dataset": dataset,
+                    "version": version,
+                    "required": is_required,
+                },
+                source_timestamp=(
+                    parsed_timestamp.isoformat().replace("+00:00", "Z")
+                    if parsed_timestamp is not None
+                    else None
+                ),
+            )
+        )
+    return tuple(checks)
+
+
+def _check_public_signal_parity(conn) -> AuditCheck:
+    row = conn.execute(
+        """
+        SELECT COUNT(*) AS raw_actionable
+        FROM signal_card_read_model
+        WHERE is_actionable AND publisher_visible_public
+        """
+    ).fetchone()
+    raw_actionable = _bounded_count(row, "raw_actionable")
+    public_guest = int(count_signals_from_read_model(conn, tier="guest"))
+    if public_guest < 0:
+        raise ValueError("public signal count cannot be negative")
+    matches = raw_actionable == public_guest
+    return AuditCheck(
+        "public_signal_parity",
+        "pass" if matches else "fail",
+        "public_signal_count_match" if matches else "public_signal_count_mismatch",
+        {"raw_actionable": raw_actionable, "public_guest": public_guest},
+    )
+
+
+def _check_map_coverage(conn) -> AuditCheck:
+    precision_selects = ",\n".join(
+        f"""COUNT(*) FILTER (
+                WHERE ml.resolution_status='resolved'
+                  AND ml.location_precision='{precision}'
+            ) AS {precision}_count"""
+        for precision in MAP_PRECISIONS
+    )
+    allowed = ",".join(f"'{precision}'" for precision in MAP_PRECISIONS)
+    row = conn.execute(
+        f"""
+        SELECT
+            COUNT(*) AS candidates,
+            COUNT(*) FILTER (
+                WHERE ml.listing_id IS NOT NULL
+                  AND ml.resolution_status='resolved'
+                  AND ml.location_precision IN ({allowed})
+            ) AS mapped,
+            {precision_selects},
+            COUNT(*) FILTER (
+                WHERE ml.listing_id IS NOT NULL
+                  AND ml.resolution_status='resolved'
+                  AND (
+                    ml.location_precision IS NULL
+                    OR ml.location_precision NOT IN ({allowed})
+                  )
+            ) AS invalid_precision
+        FROM listings l
+        LEFT JOIN listing_map_locations ml ON ml.listing_id=l.id
+        WHERE COALESCE(l.probably_sold,0)=0
+          AND COALESCE(l.is_blacklisted,0)=0
+          AND COALESCE(l.review_hidden,0)=0
+        """
+    ).fetchone()
+    candidates = _bounded_count(row, "candidates")
+    mapped = _bounded_count(row, "mapped")
+    invalid_precision = _bounded_count(row, "invalid_precision")
+    precision = {
+        name: _bounded_count(row, f"{name}_count") for name in MAP_PRECISIONS
+    }
+    unmapped = max(candidates - mapped, 0)
+    measurements = {
+        "candidates": candidates,
+        "mapped": mapped,
+        "unmapped": unmapped,
+        "precision": precision,
+        "invalid_precision": invalid_precision,
+    }
+    if candidates == 0:
+        return AuditCheck(
+            "map_coverage", "skipped", "no_map_candidates", measurements
+        )
+    contradictory = (
+        mapped > candidates
+        or mapped + unmapped != candidates
+        or sum(precision.values()) != mapped
+        or invalid_precision > 0
+    )
+    return AuditCheck(
+        "map_coverage",
+        "fail" if contradictory else "pass",
+        "map_coverage_contradiction" if contradictory else "map_coverage_consistent",
+        measurements,
+    )
+
+
+def _check_publisher_policy(conn) -> AuditCheck:
+    effective = publisher_effective_class_from_join_sql("sp")
+    stored_counts_sql = ",\n".join(
+        f"COUNT(*) FILTER (WHERE sp.activity_class='{name}') AS stored_{name}"
+        for name in PUBLISHER_CLASSES
+    )
+    effective_counts_sql = ",\n".join(
+        f"COUNT(*) FILTER (WHERE ({effective})='{name}') AS effective_{name}"
+        for name in PUBLISHER_CLASSES
+    )
+    allowed_classes = ",".join(f"'{name}'" for name in PUBLISHER_CLASSES)
+    row = conn.execute(
+        f"""
+        SELECT
+            COUNT(*) AS total_publishers,
+            {stored_counts_sql},
+            {effective_counts_sql},
+            COUNT(*) FILTER (
+                WHERE sp.activity_class NOT IN ({allowed_classes})
+            ) AS invalid_class,
+            COUNT(*) FILTER (
+                WHERE sp.manual_override NOT IN ('','allow_manual','hide_high_activity')
+                   OR sp.manual_override IS NULL
+            ) AS invalid_override,
+            COUNT(*) FILTER (
+                WHERE ({effective}) NOT IN ({allowed_classes})
+            ) AS invalid_effective
+        FROM source_publishers sp
+        WHERE sp.source='guland'
+        """
+    ).fetchone()
+    total = _bounded_count(row, "total_publishers")
+    stored = {
+        name: min(_bounded_count(row, f"stored_{name}"), total)
+        for name in PUBLISHER_CLASSES
+    }
+    effective_counts = {
+        name: min(_bounded_count(row, f"effective_{name}"), total)
+        for name in PUBLISHER_CLASSES
+    }
+    invalid_class = _bounded_count(row, "invalid_class")
+    invalid_override = _bounded_count(row, "invalid_override")
+    invalid_effective = _bounded_count(row, "invalid_effective")
+    measurements = {
+        "total_publishers": total,
+        "stored_counts": stored,
+        "effective_counts": effective_counts,
+        "invalid_class_count": invalid_class,
+        "invalid_override_count": invalid_override,
+        "invalid_effective_count": invalid_effective,
+    }
+    if total == 0:
+        return AuditCheck(
+            "publisher_policy", "skipped", "no_guland_publishers", measurements
+        )
+    invalid = bool(invalid_class or invalid_override or invalid_effective)
+    contradictory = (
+        sum(stored.values()) + invalid_class != total
+        or sum(effective_counts.values()) + invalid_effective != total
+    )
+    return AuditCheck(
+        "publisher_policy",
+        "fail" if invalid or contradictory else "pass",
+        (
+            "publisher_policy_invalid"
+            if invalid
+            else "publisher_policy_contradiction"
+            if contradictory
+            else "publisher_policy_valid"
+        ),
+        measurements,
+    )
+
+
+def _check_extraction_quality(conn) -> AuditCheck:
+    row = conn.execute(
+        """
+        WITH inspected_rows AS MATERIALIZED (
+            SELECT l.id, l.price_ty, l.area_m2, l.ward, l.road_name,
+                   l.property_type, l.frontage_m, l.depth_m, l.tho_cu_m2,
+                   l.extraction_quality_flags, l.measurement_provenance
+            FROM listings l
+            WHERE l.duplicate_of_id IS NULL
+            ORDER BY l.id DESC
+            LIMIT ?
+        )
+        SELECT
+            COUNT(*) AS inspected,
+            COUNT(*) FILTER (
+                WHERE price_ty IS NULL OR price_ty <= 0
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%price%'
+            ) AS price_ty_flagged,
+            COUNT(*) FILTER (
+                WHERE area_m2 IS NULL OR area_m2 <= 0
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%area%'
+                   OR LOWER(COALESCE(measurement_provenance,''))
+                      ~ '"area_m2"[[:space:]]*:[[:space:]]*"unknown"'
+            ) AS area_m2_flagged,
+            COUNT(*) FILTER (
+                WHERE NULLIF(TRIM(COALESCE(ward,'')), '') IS NULL
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%ward%'
+            ) AS ward_flagged,
+            COUNT(*) FILTER (
+                WHERE NULLIF(TRIM(COALESCE(road_name,'')), '') IS NULL
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%road%'
+            ) AS road_name_flagged,
+            COUNT(*) FILTER (
+                WHERE NULLIF(TRIM(COALESCE(property_type,'')), '') IS NULL
+                   OR LOWER(COALESCE(property_type,''))='unknown'
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%category%'
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%property%'
+            ) AS property_type_flagged,
+            COUNT(*) FILTER (
+                WHERE frontage_m IS NULL OR frontage_m <= 0
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%frontage%'
+                   OR LOWER(COALESCE(measurement_provenance,''))
+                      ~ '"frontage_m"[[:space:]]*:[[:space:]]*"unknown"'
+            ) AS frontage_m_flagged,
+            COUNT(*) FILTER (
+                WHERE depth_m IS NULL OR depth_m <= 0
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%depth%'
+                   OR LOWER(COALESCE(measurement_provenance,''))
+                      ~ '"depth_m"[[:space:]]*:[[:space:]]*"unknown"'
+            ) AS depth_m_flagged,
+            COUNT(*) FILTER (
+                WHERE tho_cu_m2 IS NULL OR tho_cu_m2 < 0
+                   OR (area_m2 > 0 AND tho_cu_m2 > area_m2)
+                   OR LOWER(COALESCE(extraction_quality_flags,'')) LIKE '%tho_cu%'
+                   OR LOWER(COALESCE(measurement_provenance,''))
+                      ~ '"tho_cu_m2"[[:space:]]*:[[:space:]]*"unknown"'
+            ) AS tho_cu_m2_flagged
+        FROM inspected_rows
+        """,
+        (10_000,),
+    ).fetchone()
+    inspected = min(_bounded_count(row, "inspected"), 10_000)
+    flagged_counts = {
+        field: min(_bounded_count(row, f"{field}_flagged"), inspected)
+        for field in EXTRACTION_FIELDS
+    }
+    flagged = any(flagged_counts.values())
+    return AuditCheck(
+        "extraction_quality",
+        "warn" if flagged else "pass",
+        "extraction_flags_present" if flagged else "extraction_quality_clean",
+        {"inspected": inspected, "flagged_counts": flagged_counts},
+        threshold={"inspection_limit": 10_000},
+    )
+
+
 def _run_default_checks(conn, *, now: datetime, limit: int, deep: bool):
     del limit, deep
     schema = _check_schema_contract(conn)
@@ -540,6 +869,11 @@ def _run_default_checks(conn, *, now: datetime, limit: int, deep: bool):
     checks.extend(_check_source_freshness(conn, now))
     checks.append(_check_pipeline_counts(conn))
     checks.append(_check_pipeline_invariants(conn))
+    checks.extend(_check_dataset_versions(conn))
+    checks.append(_check_public_signal_parity(conn))
+    checks.append(_check_map_coverage(conn))
+    checks.append(_check_publisher_policy(conn))
+    checks.append(_check_extraction_quality(conn))
     return checks
 
 

@@ -6,11 +6,19 @@ import pytest
 
 from services.data_trust_audit import (
     AuditCheck,
+    EXTRACTION_FIELDS,
+    MAP_PRECISIONS,
+    PUBLISHER_CLASSES,
     REQUIRED_COLUMNS,
     REQUIRED_INDEXES,
     REQUIRED_TABLES,
+    _check_dataset_versions,
+    _check_extraction_quality,
+    _check_map_coverage,
     _check_pipeline_counts,
     _check_pipeline_invariants,
+    _check_public_signal_parity,
+    _check_publisher_policy,
     _check_schema_contract,
     _check_source_freshness,
     mask_database_target,
@@ -58,6 +66,28 @@ class FixtureConnection:
     def execute(self, sql, params=None):
         normalized = " ".join(sql.split())
         self.queries.append((normalized, params))
+        for marker, rows in self.responses:
+            if marker in normalized:
+                if isinstance(rows, list):
+                    return FixtureResult(rows)
+                return FixtureResult([rows])
+        raise AssertionError(f"unexpected query: {normalized}")
+
+
+class AuditFixtureConnection(RecordingConnection):
+    def __init__(self, responses):
+        super().__init__()
+        self.responses = responses
+
+    def execute(self, sql, params=None):
+        normalized = " ".join(sql.split())
+        if normalized in {
+            "BEGIN",
+            "SET TRANSACTION READ ONLY",
+            "SHOW transaction_read_only",
+        } or normalized.startswith("SELECT set_config"):
+            return super().execute(sql, params)
+        self.statements.append((normalized, params))
         for marker, rows in self.responses:
             if marker in normalized:
                 if isinstance(rows, list):
@@ -485,3 +515,333 @@ def test_actionable_pipeline_invariant_violation_fails(field):
     assert "latest_valuation AS MATERIALIZED" in sql
     assert "review_bad_extraction" in sql
     assert "review_hidden" in sql
+
+
+def _version_connection(rows):
+    return FixtureConnection([("FROM public_dataset_versions", rows)])
+
+
+@pytest.mark.parametrize(
+    ("flags", "required"),
+    [
+        ({}, {"signals": False, "listings": False, "market": False}),
+        (
+            {"RADAR_SIGNAL_READ_MODEL_ENABLED": "1"},
+            {"signals": True, "listings": True, "market": False},
+        ),
+        (
+            {
+                "RADAR_SIGNAL_READ_MODEL_ENABLED": "1",
+                "RADAR_LISTING_READ_MODEL_ENABLED": "0",
+                "RADAR_PUBLIC_CACHE_ENABLED": "1",
+            },
+            {"signals": True, "listings": False, "market": True},
+        ),
+    ],
+)
+def test_dataset_version_requirement_follows_feature_flags(monkeypatch, flags, required):
+    for name in (
+        "RADAR_SIGNAL_READ_MODEL_ENABLED",
+        "RADAR_LISTING_READ_MODEL_ENABLED",
+        "RADAR_PUBLIC_CACHE_ENABLED",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    for name, value in flags.items():
+        monkeypatch.setenv(name, value)
+    rows = [
+        {
+            "dataset_name": name,
+            "version": 4,
+            "updated_at": "2026-08-08T00:00:00Z",
+        }
+        for name in ("signals", "listings", "market")
+    ]
+
+    checks = {
+        check.measurements["dataset"]: check
+        for check in _check_dataset_versions(_version_connection(rows))
+    }
+
+    assert {name: check.measurements["required"] for name, check in checks.items()} == required
+    for name, check in checks.items():
+        assert check.status == ("pass" if required[name] else "skipped")
+
+
+@pytest.mark.parametrize("required_dataset", ["signals", "listings", "market"])
+def test_required_dataset_version_must_be_present_and_positive(
+    monkeypatch, required_dataset
+):
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_PUBLIC_CACHE_ENABLED", "1")
+    rows = [
+        {"dataset_name": name, "version": 2, "updated_at": None}
+        for name in ("signals", "listings", "market")
+        if name != required_dataset
+    ]
+
+    checks = {
+        check.measurements["dataset"]: check
+        for check in _check_dataset_versions(_version_connection(rows))
+    }
+
+    assert checks[required_dataset].status == "fail"
+    assert checks[required_dataset].reason == "dataset_version_missing"
+    assert checks[required_dataset].measurements["version"] == 0
+
+
+def test_public_signal_parity_compares_counts_only(monkeypatch):
+    connection = FixtureConnection(
+        [("FROM signal_card_read_model", {"raw_actionable": 7})]
+    )
+    calls = []
+
+    def fake_public_count(conn, **kwargs):
+        calls.append((conn, kwargs))
+        return 7
+
+    monkeypatch.setattr(
+        "services.data_trust_audit.count_signals_from_read_model",
+        fake_public_count,
+    )
+
+    check = _check_public_signal_parity(connection)
+
+    assert check.status == "pass"
+    assert check.measurements == {"raw_actionable": 7, "public_guest": 7}
+    assert calls == [(connection, {"tier": "guest"})]
+
+
+def test_public_signal_parity_mismatch_fails(monkeypatch):
+    connection = FixtureConnection(
+        [("FROM signal_card_read_model", {"raw_actionable": 7})]
+    )
+    monkeypatch.setattr(
+        "services.data_trust_audit.count_signals_from_read_model",
+        lambda conn, **kwargs: 6,
+    )
+
+    check = _check_public_signal_parity(connection)
+
+    assert check.status == "fail"
+    assert check.reason == "public_signal_count_mismatch"
+
+
+def _map_row(**updates):
+    row = {
+        "candidates": 10,
+        "mapped": 8,
+        "exact_count": 2,
+        "road_count": 2,
+        "landmark_count": 1,
+        "nearby_count": 1,
+        "ward_count": 2,
+        "invalid_precision": 0,
+    }
+    row.update(updates)
+    return row
+
+
+def test_map_coverage_reports_fixed_precision_buckets():
+    check = _check_map_coverage(
+        FixtureConnection([("AS candidates", _map_row())])
+    )
+
+    assert check.status == "pass"
+    assert check.measurements == {
+        "candidates": 10,
+        "mapped": 8,
+        "unmapped": 2,
+        "precision": {
+            "exact": 2,
+            "road": 2,
+            "landmark": 1,
+            "nearby": 1,
+            "ward": 2,
+        },
+        "invalid_precision": 0,
+    }
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"mapped": 11},
+        {"exact_count": 3},
+        {"invalid_precision": 1},
+    ],
+)
+def test_map_coverage_contradictions_fail(updates):
+    check = _check_map_coverage(
+        FixtureConnection([("AS candidates", _map_row(**updates))])
+    )
+
+    assert check.status == "fail"
+    assert check.reason == "map_coverage_contradiction"
+
+
+def test_no_map_candidates_is_explicitly_skipped():
+    check = _check_map_coverage(
+        FixtureConnection([("AS candidates", _map_row(candidates=0, mapped=0, exact_count=0, road_count=0, landmark_count=0, nearby_count=0, ward_count=0))])
+    )
+
+    assert check.status == "skipped"
+    assert check.reason == "no_map_candidates"
+
+
+def _publisher_row(**updates):
+    row = {
+        "total_publishers": 8,
+        "stored_unknown": 1,
+        "stored_low_manual": 3,
+        "stored_high_activity": 2,
+        "stored_automated_repost": 2,
+        "effective_unknown": 1,
+        "effective_low_manual": 4,
+        "effective_high_activity": 1,
+        "effective_automated_repost": 2,
+        "invalid_class": 0,
+        "invalid_override": 0,
+        "invalid_effective": 0,
+    }
+    row.update(updates)
+    return row
+
+
+def test_publisher_policy_returns_class_counts_without_identities():
+    check = _check_publisher_policy(
+        FixtureConnection([("AS total_publishers", _publisher_row())])
+    )
+
+    assert check.status == "pass"
+    assert set(check.measurements["stored_counts"]) == set(PUBLISHER_CLASSES)
+    assert set(check.measurements["effective_counts"]) == set(PUBLISHER_CLASSES)
+    rendered = json.dumps(check.as_dict())
+    assert "publisher_key" not in rendered
+    assert "display_name" not in rendered
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"invalid_class": 1},
+        {"invalid_override": 1},
+        {"invalid_effective": 1},
+    ],
+)
+def test_invalid_publisher_policy_fails(updates):
+    check = _check_publisher_policy(
+        FixtureConnection([("AS total_publishers", _publisher_row(**updates))])
+    )
+
+    assert check.status == "fail"
+    assert check.reason == "publisher_policy_invalid"
+
+
+def test_no_guland_publishers_is_explicitly_skipped():
+    check = _check_publisher_policy(
+        FixtureConnection(
+            [("AS total_publishers", _publisher_row(total_publishers=0))]
+        )
+    )
+
+    assert check.status == "skipped"
+    assert check.reason == "no_guland_publishers"
+
+
+def test_extraction_quality_is_bounded_ordered_and_never_returns_samples():
+    row = {"inspected": 3, **{f"{field}_flagged": 1 for field in EXTRACTION_FIELDS}}
+    row["price_ty_flagged"] = 9
+    connection = FixtureConnection([("AS inspected", row)])
+
+    check = _check_extraction_quality(connection)
+
+    assert check.status == "warn"
+    assert check.measurements["inspected"] == 3
+    assert list(check.measurements["flagged_counts"]) == list(EXTRACTION_FIELDS)
+    assert check.measurements["flagged_counts"]["price_ty"] == 3
+    assert connection.queries[0][1] == (10_000,)
+    assert "ORDER BY l.id DESC" in connection.queries[0][0]
+    assert "title" not in connection.queries[0][0].lower()
+    assert "description" not in connection.queries[0][0].lower()
+    assert "sample" not in json.dumps(check.as_dict()).lower()
+
+
+def test_complete_serialized_report_drops_ignored_pii_sentinels(monkeypatch):
+    sentinels = (
+        "https://secret.example/listing?token=publisher-secret",
+        "0900123456",
+        "person@example.test",
+        "203.0.113.42",
+        "PrivateBrowser/99.0",
+        "publisher-secret-key",
+    )
+    version_rows = [
+        {
+            "dataset_name": name,
+            "version": 1,
+            "updated_at": "2026-08-08T00:00:00Z",
+            "ignored_url": sentinels[0],
+        }
+        for name in ("signals", "listings", "market")
+    ]
+    responses = [
+        ("FROM public_dataset_versions", version_rows),
+        ("AS raw_actionable", {"raw_actionable": 2, "ignored_phone": sentinels[1]}),
+        ("AS candidates", _map_row()),
+        ("AS total_publishers", _publisher_row(ignored_email=sentinels[2])),
+        (
+            "AS inspected",
+            {
+                "inspected": 2,
+                **{f"{field}_flagged": 0 for field in EXTRACTION_FIELDS},
+                "ignored_ip": sentinels[3],
+                "ignored_user_agent": sentinels[4],
+                "ignored_publisher_key": sentinels[5],
+            },
+        ),
+    ]
+    connection = AuditFixtureConnection(responses)
+    monkeypatch.setattr(
+        "services.data_trust_audit.count_signals_from_read_model",
+        lambda conn, **kwargs: 2,
+    )
+
+    def safe_checks(conn):
+        return [
+            *_check_dataset_versions(conn),
+            _check_public_signal_parity(conn),
+            _check_map_coverage(conn),
+            _check_publisher_policy(conn),
+            _check_extraction_quality(conn),
+        ]
+
+    report = _run(connection, checks=(safe_checks,))
+    rendered = json.dumps(report)
+
+    for sentinel in sentinels:
+        assert sentinel not in rendered
+
+    forbidden_keys = {
+        "url",
+        "phone",
+        "email",
+        "ip",
+        "user_agent",
+        "title",
+        "description",
+        "publisher_key",
+        "raw_json",
+        "sample",
+    }
+
+    def walk_keys(value):
+        if isinstance(value, dict):
+            for key, nested in value.items():
+                yield key
+                yield from walk_keys(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                yield from walk_keys(nested)
+
+    assert forbidden_keys.isdisjoint(key.lower() for key in walk_keys(report))
