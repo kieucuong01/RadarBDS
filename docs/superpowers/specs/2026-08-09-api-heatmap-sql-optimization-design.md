@@ -58,7 +58,13 @@ An in-memory SQL candidate replaced the two latest-valuation CTEs with indexed
 | Default, 3 months | 1,354.5 ms | 64.3 ms | 21.1x | exact |
 | One ward, Facebook, 1 month | 16.9 ms | 14.3 ms | 1.2x | exact |
 | Property and area/price ranges | 56.1 ms | 29.8 ms | 1.9x | exact |
-| Price drops, 1 year | 44,071.6 ms | 257.2 ms | 171.3x | exact |
+| Default guest, 1 year | 44,071.6 ms | 257.2 ms | 171.3x | exact |
+| VIP price drops, 1 year | 173.5 ms | 54.5 ms | 3.2x | exact |
+
+The slow one-year guest sample was initially requested with `only_drops=1`,
+but the existing guest policy resets that flag to false. It is therefore
+reported as the default guest one-year scope. The separate VIP sample exercises
+the real price-drop predicate.
 
 The candidate used the existing indexes
 `idx_valuation_listing_computed` and
@@ -164,7 +170,7 @@ focused market performance tests and verify all existing response assertions.
 
 ### Real PostgreSQL verification
 
-On the local PostgreSQL database, run the same four filter scopes used for the
+On the local PostgreSQL database, run the same five filter scopes used for the
 baseline. For every scope:
 
 1. execute the old and new SQL against one read-only snapshot;
