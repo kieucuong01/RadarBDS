@@ -1,10 +1,18 @@
 import json
 import math
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from services.data_trust_audit import (
     AuditCheck,
+    REQUIRED_COLUMNS,
+    REQUIRED_INDEXES,
+    REQUIRED_TABLES,
+    _check_pipeline_counts,
+    _check_pipeline_invariants,
+    _check_schema_contract,
+    _check_source_freshness,
     mask_database_target,
     run_data_trust_audit,
 )
@@ -40,6 +48,33 @@ class RecordingConnection:
 
     def close(self):
         self.close_calls += 1
+
+
+class FixtureConnection:
+    def __init__(self, responses):
+        self.responses = responses
+        self.queries = []
+
+    def execute(self, sql, params=None):
+        normalized = " ".join(sql.split())
+        self.queries.append((normalized, params))
+        for marker, rows in self.responses:
+            if marker in normalized:
+                if isinstance(rows, list):
+                    return FixtureResult(rows)
+                return FixtureResult([rows])
+        raise AssertionError(f"unexpected query: {normalized}")
+
+
+class FixtureResult:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def fetchone(self):
+        return self.rows[0] if self.rows else None
+
+    def fetchall(self):
+        return self.rows
 
 
 @pytest.fixture(autouse=True)
@@ -223,3 +258,230 @@ def test_bounds_and_top_level_status_are_deterministic():
     assert report["duration_ms"] >= 0
     assert report["target"]["host"] == "db.example.test"
     assert fake.statements[2][1] == ("1000ms",)
+
+
+def _complete_schema_connection(*, missing_table=None, missing_column=None, missing_index=None):
+    tables = sorted(REQUIRED_TABLES - ({missing_table} if missing_table else set()))
+    columns = [
+        {"table_name": table, "column_name": column}
+        for table, names in REQUIRED_COLUMNS.items()
+        for column in sorted(names)
+        if f"{table}.{column}" != missing_column
+    ]
+    indexes = sorted(REQUIRED_INDEXES - ({missing_index} if missing_index else set()))
+    return FixtureConnection(
+        [
+            ("FROM information_schema.tables", [{"table_name": name} for name in tables]),
+            ("FROM information_schema.columns", columns),
+            ("FROM pg_indexes", [{"indexname": name} for name in indexes]),
+        ]
+    )
+
+
+def test_schema_contract_passes_with_all_required_metadata():
+    check = _check_schema_contract(_complete_schema_connection())
+
+    assert check.status == "pass"
+    assert check.reason == "schema_contract_ready"
+    assert check.measurements == {
+        "required_tables": len(REQUIRED_TABLES),
+        "required_columns": sum(map(len, REQUIRED_COLUMNS.values())),
+        "required_indexes": len(REQUIRED_INDEXES),
+        "missing_tables": [],
+        "missing_columns": [],
+        "missing_indexes": [],
+    }
+
+
+def test_schema_contract_fails_with_names_only_for_missing_metadata():
+    connection = _complete_schema_connection(
+        missing_table="listing_publishers",
+        missing_column="listings.price_ty",
+        missing_index="idx_signal_card_public_filter",
+    )
+
+    check = _check_schema_contract(connection)
+
+    assert check.status == "fail"
+    assert check.reason == "schema_contract_missing"
+    assert check.measurements["missing_tables"] == ["listing_publishers"]
+    assert check.measurements["missing_columns"] == ["listings.price_ty"]
+    assert check.measurements["missing_indexes"] == [
+        "idx_signal_card_public_filter"
+    ]
+    assert all("SELECT" not in value for value in json.dumps(check.as_dict()).split())
+
+
+@pytest.mark.parametrize(
+    ("source", "age_hours", "expected_status", "expected_reason"),
+    [
+        ("facebook", 36, "pass", "source_fresh"),
+        ("facebook", 36.1, "warn", "source_stale_warning"),
+        ("facebook", 72, "warn", "source_stale_warning"),
+        ("facebook", 72.1, "fail", "source_stale_failure"),
+        ("guland", 96, "pass", "source_fresh"),
+        ("guland", 96.1, "warn", "source_stale_warning"),
+        ("guland", 168, "warn", "source_stale_warning"),
+        ("guland", 168.1, "fail", "source_stale_failure"),
+    ],
+)
+def test_source_freshness_boundaries(source, age_hours, expected_status, expected_reason):
+    now = datetime(2026, 8, 8, 12, tzinfo=timezone.utc)
+    rows = [
+        {"source": "facebook", "latest_finished_at": now - timedelta(hours=1)},
+        {"source": "guland", "latest_finished_at": now - timedelta(hours=1)},
+        {"source": "batdongsan", "latest_finished_at": now},
+    ]
+    for row in rows:
+        if row["source"] == source:
+            row["latest_finished_at"] = now - timedelta(hours=age_hours)
+    connection = FixtureConnection([("FROM crawl_runs", rows)])
+
+    checks = {check.name: check for check in _check_source_freshness(connection, now)}
+    check = checks[f"source_freshness_{source}"]
+
+    assert check.status == expected_status
+    assert check.reason == expected_reason
+    assert set(checks) == {
+        "source_freshness_facebook",
+        "source_freshness_guland",
+    }
+    assert "batdongsan" not in connection.queries[0][0].lower()
+
+
+def test_missing_source_freshness_distinguishes_primary_and_secondary():
+    connection = FixtureConnection([("FROM crawl_runs", [])])
+
+    checks = {
+        check.name: check
+        for check in _check_source_freshness(
+            connection,
+            datetime(2026, 8, 8, tzinfo=timezone.utc),
+        )
+    }
+
+    assert checks["source_freshness_facebook"].status == "fail"
+    assert checks["source_freshness_facebook"].reason == "source_never_completed"
+    assert checks["source_freshness_guland"].status == "warn"
+    assert (
+        checks["source_freshness_guland"].reason
+        == "source_never_completed_secondary"
+    )
+
+
+def test_invalid_required_source_timestamp_fails_closed():
+    connection = FixtureConnection(
+        [
+            (
+                "FROM crawl_runs",
+                [
+                    {"source": "facebook", "latest_finished_at": "not-a-time"},
+                    {
+                        "source": "guland",
+                        "latest_finished_at": "2026-08-08T00:00:00Z",
+                    },
+                ],
+            )
+        ]
+    )
+
+    checks = {
+        check.name: check
+        for check in _check_source_freshness(
+            connection,
+            datetime(2026, 8, 8, 12, tzinfo=timezone.utc),
+        )
+    }
+
+    assert checks["source_freshness_facebook"].status == "fail"
+    assert checks["source_freshness_facebook"].reason == "source_timestamp_invalid"
+
+
+def _pipeline_connection(counts=None, violations=None):
+    default_counts = {
+        "raw_rows": 100,
+        "canonical_listings": 80,
+        "active_visible_base": 70,
+        "latest_valuations": 60,
+        "actionable_signals": 10,
+        "read_model_base_cards": 70,
+        "read_model_actionable_cards": 10,
+    }
+    default_counts.update(counts or {})
+    default_violations = {
+        "actionable_rows": 10,
+        "invalid_price": 0,
+        "invalid_area": 0,
+        "invalid_actual_ppm2": 0,
+        "suppressed_source_status": 0,
+        "hidden_or_suppressed_listing": 0,
+        "non_actionable_quality": 0,
+    }
+    default_violations.update(violations or {})
+    return FixtureConnection(
+        [
+            ("AS raw_rows", default_counts),
+            ("AS invalid_price", default_violations),
+        ]
+    )
+
+
+def test_pipeline_counts_reuse_current_actionable_sql_contracts():
+    connection = _pipeline_connection()
+
+    check = _check_pipeline_counts(connection)
+
+    assert check.status == "pass"
+    assert check.reason == "pipeline_counts_consistent"
+    assert check.measurements["actionable_signals"] == 10
+    sql = connection.queries[0][0]
+    assert "latest_valuation AS MATERIALIZED" in sql
+    assert "review_bad_extraction" in sql
+    assert "review_hidden" in sql
+
+
+def test_empty_dataset_is_warning_not_false_success():
+    check = _check_pipeline_counts(
+        _pipeline_connection(
+            counts={key: 0 for key in _pipeline_connection().responses[0][1]}
+        )
+    )
+
+    assert check.status == "warn"
+    assert check.reason == "empty_dataset"
+
+
+def test_pipeline_count_contradiction_is_failure():
+    check = _check_pipeline_counts(
+        _pipeline_connection(
+            counts={"latest_valuations": 4, "actionable_signals": 5}
+        )
+    )
+
+    assert check.status == "fail"
+    assert check.reason == "pipeline_count_contradiction"
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "invalid_price",
+        "invalid_area",
+        "invalid_actual_ppm2",
+        "suppressed_source_status",
+        "hidden_or_suppressed_listing",
+        "non_actionable_quality",
+    ],
+)
+def test_actionable_pipeline_invariant_violation_fails(field):
+    connection = _pipeline_connection(violations={field: 1})
+
+    check = _check_pipeline_invariants(connection)
+
+    assert check.status == "fail"
+    assert check.reason == "pipeline_invariant_violation"
+    assert check.measurements["violations"][field] == 1
+    sql = connection.queries[0][0]
+    assert "latest_valuation AS MATERIALIZED" in sql
+    assert "review_bad_extraction" in sql
+    assert "review_hidden" in sql
