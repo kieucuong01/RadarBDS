@@ -67,6 +67,9 @@
     const raw = String(city || '').trim();
     if (raw === 'THỦ DẦU MỘT') return 'Thủ Dầu Một';
     if (raw === 'BẾN CÁT') return 'Bến Cát';
+    if (raw === 'DĨ AN') return 'Dĩ An';
+    if (raw === 'THUẬN AN') return 'Thuận An';
+    if (raw === 'TÂN UYÊN') return 'Tân Uyên';
     return raw;
   }
 
@@ -635,6 +638,21 @@
     if (bar) bar.hidden = true;
   }
 
+  function defaultDismissedScope(doc) {
+    const documentRef = doc || root.document;
+    const wardsByCity = root.INITIAL_WARDS_BY_CITY || {};
+    const selected = selectedScopeFromControls(documentRef, wardsByCity);
+    if (selected) return selected;
+    const defaultCity = resolveCity('THỦ DẦU MỘT', wardsByCity) || Object.keys(wardsByCity)[0] || '';
+    if (!defaultCity) return null;
+    return validateScope({
+      version: 1,
+      city: defaultCity,
+      wards: [],
+      mode: 'city_all',
+    }, wardsByCity);
+  }
+
   function replaceUrlWithScope(scope, optionalFilters) {
     if (!root.location || !root.history || !scope) return;
     const params = new URLSearchParams(root.location.search || '');
@@ -754,7 +772,13 @@
   };
 
   root.closeAreaScopeChooser = function closeAreaScopeChooser() {
-    hideChooser(root.document);
+    const scope = defaultDismissedScope(root.document);
+    if (!scope) {
+      hideChooser(root.document);
+      return null;
+    }
+    if (typeof root.applyFilters === 'function') root.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE = true;
+    return applyDashboardScope(scope, { persist: false, updateUrl: false, apply: true });
   };
 
   root.openAreaScopeFilterSheet = function openAreaScopeFilterSheet() {

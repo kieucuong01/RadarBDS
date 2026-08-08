@@ -47,6 +47,7 @@ const inputs = {
   priceMax: { value: '2' },
   areaMin: { value: '0' },
   areaMax: { value: '150' },
+  filterForm: {},
 };
 const document = {
   querySelectorAll(selector) {
@@ -58,6 +59,9 @@ const document = {
       return true;
     });
   },
+  querySelector() {
+    return null;
+  },
   getElementById(id) {
     return inputs[id] || null;
   },
@@ -65,15 +69,44 @@ const document = {
 };
 const context = {
   document,
-  window: { RadarFilterRuntime: { canonicalize: (params) => params.toString() } },
+  window: {
+    RadarFilterRuntime: {
+      canonicalize: (params) => params.toString(),
+      runSignalFirst(signalLoader) {
+        signalLoader();
+        return { catch() {} };
+      },
+    },
+    RadarAreaScope: {
+      refreshCurrentScopeUi() {
+        context.refreshCalls += 1;
+      },
+    },
+    persistCurrentAreaScope() {
+      context.persistCalls += 1;
+    },
+    RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE: false,
+  },
   URLSearchParams,
+  FormData: class FormData {
+    entries() {
+      return [];
+    }
+  },
   Array,
   Set,
   String,
   Number,
+  activeTabId() {
+    return 'signals';
+  },
+  loadSignals() {},
   clearTimeout() {},
   setTimeout() {},
   console,
+  persistCalls: 0,
+  refreshCalls: 0,
+  trendPeriod: '30d',
 };
 vm.runInNewContext(source, context);
 
@@ -91,5 +124,15 @@ assert.equal(inputs.priceMax.value, '');
 
 context.applyRangeParamsFromUrl('area', []);
 assert.deepEqual(context.selectedRangeTokens('area'), []);
+
+context.window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE = true;
+context.applyFilters();
+assert.equal(context.persistCalls, 0);
+assert.equal(context.refreshCalls, 1);
+assert.equal(context.window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE, false);
+
+context.applyFilters();
+assert.equal(context.persistCalls, 1);
+assert.equal(context.refreshCalls, 1);
 
 console.log('range filters: ok');

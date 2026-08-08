@@ -241,7 +241,12 @@ function deferCountsRefresh(useCache = false) {
 
 function applyFilters() {
   currentFilters = getFilterQuery();
-  if (window.RadarAreaScope && typeof window.persistCurrentAreaScope === 'function') {
+  if (window.RadarAreaScope && window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE) {
+    window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE = false;
+    if (typeof window.RadarAreaScope.refreshCurrentScopeUi === 'function') {
+      window.RadarAreaScope.refreshCurrentScopeUi();
+    }
+  } else if (window.RadarAreaScope && typeof window.persistCurrentAreaScope === 'function') {
     window.persistCurrentAreaScope({ updateUrl: false });
   } else if (window.RadarAreaScope && typeof window.RadarAreaScope.refreshCurrentScopeUi === 'function') {
     window.RadarAreaScope.refreshCurrentScopeUi();

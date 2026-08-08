@@ -33,6 +33,7 @@ function plain(value) {
 const wardsByCity = {
   'THỦ DẦU MỘT': ['Tân An', 'Phú Tân', 'Hiệp Thành'],
   'BẾN CÁT': ['Mỹ Phước', 'Mỹ Phước 3'],
+  'TÂN UYÊN': ['Uyên Hưng', 'Tân Phước Khánh'],
 };
 
 assert.equal(api.STORAGE_KEY, 'radar_area_scope_v1');
@@ -59,6 +60,18 @@ assert.deepEqual(plain(cityScope), {
   wards: [],
   mode: 'city_all',
   label: 'Toàn Bến Cát',
+});
+
+const tanUyenCityScope = api.scopeFromSearchParams(
+  new URLSearchParams('tab=signals&city=T%C3%82N+UY%C3%8AN'),
+  wardsByCity
+);
+assert.deepEqual(plain(tanUyenCityScope), {
+  version: 1,
+  city: 'TÂN UYÊN',
+  wards: [],
+  mode: 'city_all',
+  label: 'Toàn Tân Uyên',
 });
 
 assert.equal(
@@ -272,6 +285,7 @@ const chooser = {
 };
 const bar = { hidden: false };
 const label = { textContent: '' };
+const cityInput = { value: 'THỦ DẦU MỘT' };
 const doc = {
   body: {
     classList: {
@@ -292,7 +306,23 @@ const doc = {
       areaScopeChooser: chooser,
       areaScopeBar: bar,
       areaScopeLabel: label,
+      cityInput,
     }[id] || null;
+  },
+  querySelectorAll(selector) {
+    if (selector === '#wardFilters input[name="ward"]') {
+      return [
+        { checked: true, value: 'Tân An' },
+        { checked: true, value: 'Phú Tân' },
+      ];
+    }
+    if (selector === '.range-chip.active[data-range-kind="price"]') return [];
+    if (selector === '.range-chip.active[data-range-kind="area"]') return [];
+    if (selector === '#filterForm input[name="prop_type"]') return [];
+    if (selector === '.area-scope-city-tab') return [];
+    if (selector === '.area-scope-city-group') return [];
+    if (selector === '.area-scope-ward-chip') return [];
+    return [];
   },
 };
 
@@ -303,6 +333,10 @@ assert.equal(chooser.focused, true);
 assert.equal(bodyClasses.has('area-scope-modal-open'), true);
 
 let savedByClose = false;
+let appliedByClose = 0;
+window.INITIAL_WARDS_BY_CITY = {
+  'THỦ DẦU MỘT': ['Tân An', 'Phú Tân'],
+};
 window.localStorage = {
   setItem() {
     savedByClose = true;
@@ -311,11 +345,17 @@ window.localStorage = {
     savedByClose = true;
   },
 };
+window.applyFilters = function applyFilters() {
+  appliedByClose += 1;
+};
 window.document = doc;
 window.closeAreaScopeChooser();
 assert.equal(chooser.hidden, true);
+assert.equal(bar.hidden, false);
+assert.equal(label.textContent, 'Toàn Thủ Dầu Một');
 assert.equal(bodyClasses.has('area-scope-modal-open'), false);
 assert.equal(savedByClose, false);
+assert.equal(appliedByClose, 1);
 
 api.showChooser(doc);
 api.hideChooser(doc);

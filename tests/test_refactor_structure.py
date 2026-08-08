@@ -182,6 +182,7 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     html = _read("templates/index.html")
     boot_js = _read("static/js/main/boot.js")
     area_scope_js = _read("static/js/main/area_scope.js")
+    filters_js = _read("static/js/main/filters.js")
 
     assert 'id="areaScopeChooser"' in html
     assert 'class="area-scope-modal"' in html
@@ -232,6 +233,9 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "openAreaScopeFilterSheet" in area_scope_js
     assert "closeAreaScopeChooser" in area_scope_js
     assert "root.closeAreaScopeChooser = function closeAreaScopeChooser()" in area_scope_js
+    assert "defaultDismissedScope" in area_scope_js
+    assert "RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE" in area_scope_js
+    assert "RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE" in filters_js
     assert "scopeStatusLabel" in area_scope_js
     assert "scopeStatusParts" in area_scope_js
     assert "renderScopeStatusChips" in area_scope_js
@@ -252,12 +256,13 @@ def test_sidebar_city_filter_exposes_supported_crawl_cities_only():
         "('BẾN CÁT', 'Bến Cát')",
         "('DĨ AN', 'Dĩ An')",
         "('THUẬN AN', 'Thuận An')",
+        "('TÂN UYÊN', 'Tân Uyên')",
         'class="city-pill {% if loop.first %}active{% endif %}"',
         'data-city="{{ city_value }}"',
     ]:
         assert expected in html
 
-    assert "('TÂN UYÊN'," not in html
+    assert html.index("('DĨ AN', 'Dĩ An')") < html.index("('THUẬN AN', 'Thuận An')") < html.index("('TÂN UYÊN', 'Tân Uyên')")
 
 
 def test_all_listings_tab_supports_table_and_grid_views():
@@ -815,8 +820,8 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
-        "js/main/filters.js') }}?v=scope-filter-storage-20260807",
-        "js/main/area_scope.js') }}?v=scope-status-chips-20260807",
+        "js/main/filters.js') }}?v=scope-dismiss-fallback-20260808",
+        "js/main/area_scope.js') }}?v=scope-dismiss-fallback-20260808",
         "toggleRangePreset",
         "selectedRangeTokens",
         "applyRangeParamsFromUrl",
