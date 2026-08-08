@@ -1,5 +1,6 @@
 import json
 import math
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -12,6 +13,8 @@ from services.data_trust_audit import (
     REQUIRED_COLUMNS,
     REQUIRED_INDEXES,
     REQUIRED_TABLES,
+    SAFE_DEEP_DIAGNOSTIC_KEYS,
+    _check_deep_read_models,
     _check_dataset_versions,
     _check_extraction_quality,
     _check_map_coverage,
@@ -845,3 +848,239 @@ def test_complete_serialized_report_drops_ignored_pii_sentinels(monkeypatch):
                 yield from walk_keys(nested)
 
     assert forbidden_keys.isdisjoint(key.lower() for key in walk_keys(report))
+
+
+def _read_scope(conn):
+    @contextmanager
+    def manager():
+        yield conn
+
+    return manager()
+
+
+def test_deep_false_never_calls_compare_functions(monkeypatch):
+    import cli.system as system
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("deep comparison must stay lazy")
+
+    monkeypatch.setattr(system, "compare_signal_read_model", forbidden)
+    monkeypatch.setattr(system, "compare_listing_read_model", forbidden)
+
+    checks = _check_deep_read_models(object(), deep=False, limit=20)
+
+    assert [check.status for check in checks] == ["skipped", "skipped"]
+    assert all(check.reason == "deep_not_requested" for check in checks)
+
+
+def test_deep_comparisons_share_verified_connection(monkeypatch):
+    import cli.system as system
+    from services import market_data
+
+    audit_conn = object()
+    observed = []
+
+    def compare_signal(limit):
+        with market_data._read_conn() as conn:
+            observed.append(("signals", conn, limit))
+        return {
+            "status": "ok",
+            "compared_cases": 3,
+            "difference_count": 0,
+            "differences": [],
+        }
+
+    def compare_listing(limit):
+        with market_data._read_conn() as conn:
+            observed.append(("listings", conn, limit))
+        return {
+            "status": "ok",
+            "compared_cases": 4,
+            "difference_count": 0,
+            "differences": [],
+        }
+
+    monkeypatch.setattr(system, "compare_signal_read_model", compare_signal)
+    monkeypatch.setattr(system, "compare_listing_read_model", compare_listing)
+
+    with market_data.use_read_connection_factory(lambda: _read_scope(audit_conn)):
+        checks = _check_deep_read_models(audit_conn, deep=True, limit=7)
+
+    assert observed == [
+        ("signals", audit_conn, 7),
+        ("listings", audit_conn, 7),
+    ]
+    assert [check.status for check in checks] == ["pass", "pass"]
+
+
+def test_deep_mismatch_keeps_only_bounded_safe_diagnostics(monkeypatch):
+    import cli.system as system
+
+    differences = [
+        {
+            "case": "default",
+            "tier": "guest",
+            "legacy_count": 4,
+            "read_model_count": 3,
+            "legacy_only_ids": [9, 8, 7, 6],
+            "read_model_only_ids": [5, 4, 3, 2],
+            "order_mismatch": True,
+            "field_names": ["price_ty", "ward", "title"],
+            "metadata_fields": ["total", "pages", "has_more"],
+            "url": "https://private.example/secret",
+        },
+        {
+            "case": "facebook",
+            "tier": "free",
+            "legacy_count": 2,
+            "read_model_count": 1,
+            "legacy_only_ids": [11],
+            "read_model_only_ids": [],
+            "order_mismatch": False,
+            "field_names": ["mos_pct"],
+        },
+        {"case": "third", "tier": "vip", "legacy_only_ids": [99]},
+    ]
+    monkeypatch.setattr(
+        system,
+        "compare_signal_read_model",
+        lambda limit: {
+            "status": "mismatch",
+            "compared_cases": 36,
+            "difference_count": 3,
+            "differences": differences,
+            "raw_rows": [{"phone": "0900123456"}],
+        },
+    )
+    monkeypatch.setattr(
+        system,
+        "compare_listing_read_model",
+        lambda limit: {
+            "status": "ok",
+            "compared_cases": 72,
+            "difference_count": 0,
+            "differences": [],
+        },
+    )
+
+    checks = _check_deep_read_models(object(), deep=True, limit=2)
+    signal_check = checks[0]
+    rendered = json.dumps(signal_check.as_dict())
+
+    assert signal_check.status == "fail"
+    assert signal_check.reason == "read_model_mismatch"
+    assert len(signal_check.measurements["differences"]) == 2
+    first = signal_check.measurements["differences"][0]
+    assert set(first) <= SAFE_DEEP_DIAGNOSTIC_KEYS
+    assert first["legacy_only_ids"] == [9, 8]
+    assert first["read_model_only_ids"] == [5, 4]
+    assert first["field_names"] == ["price_ty", "ward"]
+    assert "private.example" not in rendered
+    assert "0900123456" not in rendered
+
+
+def _production_audit_responses(now):
+    tables = [{"table_name": name} for name in sorted(REQUIRED_TABLES)]
+    columns = [
+        {"table_name": table, "column_name": column}
+        for table, names in REQUIRED_COLUMNS.items()
+        for column in sorted(names)
+    ]
+    indexes = [{"indexname": name} for name in sorted(REQUIRED_INDEXES)]
+    freshness = [
+        {"source": "facebook", "latest_finished_at": now - timedelta(hours=1)},
+        {"source": "guland", "latest_finished_at": now - timedelta(hours=2)},
+    ]
+    counts = _pipeline_connection().responses[0][1]
+    invariants = _pipeline_connection().responses[1][1]
+    versions = [
+        {
+            "dataset_name": name,
+            "version": 1,
+            "updated_at": now,
+        }
+        for name in ("signals", "listings", "market")
+    ]
+    extraction = {
+        "inspected": 2,
+        **{f"{field}_flagged": 0 for field in EXTRACTION_FIELDS},
+    }
+    return [
+        ("FROM information_schema.tables", tables),
+        ("FROM information_schema.columns", columns),
+        ("FROM pg_indexes", indexes),
+        ("FROM crawl_runs", freshness),
+        ("AS raw_rows", counts),
+        ("AS invalid_price", invariants),
+        ("FROM public_dataset_versions", versions),
+        ("AS raw_actionable", {"raw_actionable": 2}),
+        ("AS candidates", _map_row()),
+        ("AS total_publishers", _publisher_row()),
+        ("AS inspected", extraction),
+    ]
+
+
+@pytest.mark.parametrize("deep", [False, True])
+def test_default_and_deep_audits_have_no_mutation_path(monkeypatch, deep):
+    import cli.system as system
+    import db.schema as schema
+    import services.public_data_publish as public_data_publish
+    import services.public_prewarm as public_prewarm
+    import services.signal_read_model as signal_read_model
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("audit attempted a mutation entry point")
+
+    for module, name in (
+        (schema, "init_schema"),
+        (system, "init_schema"),
+        (public_data_publish, "publish_public_data"),
+        (signal_read_model, "refresh_signal_card_read_model"),
+        (public_prewarm, "prewarm_public_routes"),
+        (public_prewarm, "prewarm_configured_routes"),
+    ):
+        monkeypatch.setattr(module, name, forbidden)
+
+    observed_connections = []
+
+    def compare_report(limit):
+        from services import market_data
+
+        with market_data._read_conn() as conn:
+            observed_connections.append(conn)
+        return {
+            "status": "ok",
+            "compared_cases": 1,
+            "difference_count": 0,
+            "differences": [],
+        }
+
+    monkeypatch.setattr(system, "compare_signal_read_model", compare_report)
+    monkeypatch.setattr(system, "compare_listing_read_model", compare_report)
+    monkeypatch.setattr(
+        "services.data_trust_audit.count_signals_from_read_model",
+        lambda conn, **kwargs: 2,
+    )
+    now = datetime(2026, 8, 8, 12, tzinfo=timezone.utc)
+    connection = AuditFixtureConnection(_production_audit_responses(now))
+
+    report = _run(connection, deep=deep, limit=3, now=now)
+
+    assert report["overall_status"] == "pass"
+    assert len(observed_connections) == (2 if deep else 0)
+    assert all(conn is connection for conn in observed_connections)
+    forbidden_sql = {
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "ALTER",
+        "CREATE",
+        "DROP",
+        "TRUNCATE",
+        "REFRESH",
+        "VACUUM",
+        "CALL",
+    }
+    for sql, _params in connection.statements:
+        first_word = sql.lstrip().split(maxsplit=1)[0].upper()
+        assert first_word not in forbidden_sql

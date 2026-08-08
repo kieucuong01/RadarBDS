@@ -129,6 +129,19 @@ EXTRACTION_FIELDS = (
     "depth_m",
     "tho_cu_m2",
 )
+SAFE_DEEP_DIAGNOSTIC_KEYS = frozenset(
+    {
+        "case",
+        "tier",
+        "legacy_count",
+        "read_model_count",
+        "legacy_only_ids",
+        "read_model_only_ids",
+        "order_mismatch",
+        "field_names",
+        "metadata_fields",
+    }
+)
 
 
 def _safe_value(value, *, path="measurements"):
@@ -860,8 +873,132 @@ def _check_extraction_quality(conn) -> AuditCheck:
     )
 
 
+def _deep_token(value) -> str:
+    text = str(value or "").strip().lower()
+    return text if _IDENTIFIER_RE.fullmatch(text) else "invalid"
+
+
+def _deep_count(value) -> int:
+    try:
+        return max(int(value or 0), 0)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
+def _deep_ids(value, limit: int) -> list[int]:
+    if not isinstance(value, (list, tuple)):
+        return []
+    result = []
+    for item in value:
+        try:
+            listing_id = int(item)
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if listing_id >= 0:
+            result.append(listing_id)
+        if len(result) >= limit:
+            break
+    return result
+
+
+def _deep_fields(value, limit: int) -> list[str]:
+    if not isinstance(value, (list, tuple)):
+        return []
+    return [_deep_token(item) for item in value[:limit]]
+
+
+def _safe_deep_differences(value, limit: int) -> list[dict[str, object]]:
+    if not isinstance(value, (list, tuple)):
+        return []
+    safe = []
+    for raw in value[:limit]:
+        if not isinstance(raw, Mapping):
+            continue
+        diagnostic = {}
+        for key in (
+            "case",
+            "tier",
+            "legacy_count",
+            "read_model_count",
+            "legacy_only_ids",
+            "read_model_only_ids",
+            "order_mismatch",
+            "field_names",
+            "metadata_fields",
+        ):
+            if key not in raw:
+                continue
+            if key in {"case", "tier"}:
+                diagnostic[key] = _deep_token(raw[key])
+            elif key in {"legacy_count", "read_model_count"}:
+                diagnostic[key] = _deep_count(raw[key])
+            elif key in {"legacy_only_ids", "read_model_only_ids"}:
+                diagnostic[key] = _deep_ids(raw[key], limit)
+            elif key == "order_mismatch":
+                diagnostic[key] = bool(raw[key])
+            else:
+                diagnostic[key] = _deep_fields(raw[key], limit)
+        safe.append(diagnostic)
+    return safe
+
+
+def _deep_check(name: str, report: Mapping[str, object], limit: int) -> AuditCheck:
+    source_status = str(report.get("status") or "").strip().lower()
+    if source_status not in {"ok", "mismatch"}:
+        raise ValueError("deep comparison returned an unknown status")
+    differences = _safe_deep_differences(report.get("differences"), limit)
+    difference_count = _deep_count(report.get("difference_count"))
+    mismatch = (
+        source_status == "mismatch" or difference_count > 0 or bool(differences)
+    )
+    return AuditCheck(
+        name,
+        "fail" if mismatch else "pass",
+        "read_model_mismatch" if mismatch else "read_model_match",
+        {
+            "compared_cases": _deep_count(report.get("compared_cases")),
+            "difference_count": difference_count,
+            "differences": differences,
+        },
+        threshold={"diagnostic_limit": limit},
+    )
+
+
+def _check_deep_read_models(
+    _conn,
+    *,
+    deep: bool,
+    limit: int,
+) -> tuple[AuditCheck, AuditCheck]:
+    bounded_limit = min(max(int(limit), 1), 1_000)
+    if not deep:
+        measurements = {"diagnostic_limit": bounded_limit}
+        return (
+            AuditCheck(
+                "deep_signal_read_model",
+                "skipped",
+                "deep_not_requested",
+                measurements,
+            ),
+            AuditCheck(
+                "deep_listing_read_model",
+                "skipped",
+                "deep_not_requested",
+                measurements,
+            ),
+        )
+
+    from cli.system import compare_listing_read_model, compare_signal_read_model
+
+    signal_report = compare_signal_read_model(bounded_limit)
+    listing_report = compare_listing_read_model(bounded_limit)
+    return (
+        _deep_check("deep_signal_read_model", signal_report, bounded_limit),
+        _deep_check("deep_listing_read_model", listing_report, bounded_limit),
+    )
+
+
 def _run_default_checks(conn, *, now: datetime, limit: int, deep: bool):
-    del limit, deep
     schema = _check_schema_contract(conn)
     checks = [schema]
     if schema.status == "fail":
@@ -874,6 +1011,7 @@ def _run_default_checks(conn, *, now: datetime, limit: int, deep: bool):
     checks.append(_check_map_coverage(conn))
     checks.append(_check_publisher_policy(conn))
     checks.append(_check_extraction_quality(conn))
+    checks.extend(_check_deep_read_models(conn, deep=deep, limit=limit))
     return checks
 
 
