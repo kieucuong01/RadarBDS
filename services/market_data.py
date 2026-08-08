@@ -1,6 +1,7 @@
 from datetime import datetime, date, timezone
 from collections import defaultdict
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 import os
 import re
@@ -37,6 +38,12 @@ latest_shadow_valuation AS MATERIALIZED (
     ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
 )
 """
+
+
+_READ_CONNECTION_FACTORY = ContextVar(
+    "radar_read_connection_factory",
+    default=None,
+)
 
 RELATED_PRICE_DROP_CTE = """
 related_price_drops AS MATERIALIZED (
@@ -791,9 +798,21 @@ LEGAL_DOC_IMAGE_SELECT_SQL = (
 
 
 @contextmanager
+def use_read_connection_factory(factory):
+    """Temporarily route service reads through a task-local connection scope."""
+    token = _READ_CONNECTION_FACTORY.set(factory)
+    try:
+        yield
+    finally:
+        _READ_CONNECTION_FACTORY.reset(token)
+
+
+@contextmanager
 def _read_conn(_db_path=None):
     """Reuse the per-thread PostgreSQL connection for hot read models."""
-    with get_conn() as conn:
+    factory = _READ_CONNECTION_FACTORY.get()
+    scope = factory() if factory is not None else get_conn()
+    with scope as conn:
         yield conn
 
 
