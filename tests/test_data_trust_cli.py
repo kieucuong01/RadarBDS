@@ -187,3 +187,32 @@ def test_unexpected_service_exception_is_masked_from_both_streams(monkeypatch, c
     assert "secret" not in captured.out
     assert "secret" not in captured.err
     assert "audit_execution_error" in captured.out
+
+
+def test_data_trust_operations_are_documented_with_fail_closed_boundaries():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    documents = {
+        name: (root / "docs" / name).read_text(encoding="utf-8").lower()
+        for name in ("operations.md", "dev_commands.md")
+    }
+    common_markers = (
+        "data-trust-audit",
+        "exit 0",
+        "exit 1",
+        "exit 2",
+        "set transaction read only",
+        "statement timeout",
+        "no automatic remediation",
+        "outside the repository",
+    )
+    for name, document in documents.items():
+        for marker in common_markers:
+            assert marker in document, f"{name} is missing {marker!r}"
+
+    operations = documents["operations.md"]
+    assert "deployed sha" in operations
+    assert "systemctl is-active radar-bds.service" in operations
+    assert "credential previously exposed" in operations
+    assert "rotated before" in operations

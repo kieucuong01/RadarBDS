@@ -40,6 +40,34 @@ not change schema, listing data, valuation snapshots, read models, dataset
 versions, or caches. Review `invariant_violations_remaining`; it must be zero
 before applying the result of a full reprocess to production.
 
+### Read-only data trust audit
+
+Use the bounded PostgreSQL audit for schema, crawl freshness, pipeline
+invariants, durable versions, public parity, map coverage, publisher policy,
+and extraction coverage:
+
+```powershell
+& $py -X utf8 radar.py data-trust-audit --json
+& $py -X utf8 radar.py data-trust-audit --json --deep --limit 200
+$auditExit = $LASTEXITCODE
+```
+
+The command proves `SET TRANSACTION READ ONLY` on its fresh connection before
+domain queries, applies a bounded statement timeout, and always rolls back and
+closes. There is no automatic remediation: it does not call schema init,
+reprocess, refresh, publish, prewarm, feature-flag changes, or any data repair.
+
+Exit 0 means a verified pass or warning, exit 1 means a verified trust failure,
+and exit 2 means configuration, connection, read-only state, statement timeout,
+or execution remained unverified. Treat a timeout as unverified and keep a
+warning visible; neither result grants permission to mutate data.
+
+Production execution needs a separately authorized, already deployed SHA and
+verified `radar-bds.service`. Store production JSON outside the repository,
+never under a tracked checkout or `reports/`. The exact production sequence,
+credential-rotation stop gate, evidence path, and service checks are in
+`docs/operations.md`.
+
 After deploying a revision that changes measurement reconciliation or
 valuation snapshots, run an explicit production `reprocess --full` before
 considering the data migration complete. If main or shadow valuation fails,
