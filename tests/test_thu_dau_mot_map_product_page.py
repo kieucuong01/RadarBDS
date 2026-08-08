@@ -6,6 +6,7 @@ import json
 import os
 import re
 import subprocess
+import time
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -290,6 +291,9 @@ def test_release_validation_cache_reuses_stable_zip_fingerprint_and_reads_small_
     first = digital_products.get_release_availability(test_product, tmp_path, True)
     second = digital_products.get_release_availability(test_product, tmp_path, True)
     original_stat = package.stat()
+    # Windows may quantize NTFS ChangeTime updates to the current clock tick.
+    # Cross that boundary so the mutation assertion is deterministic.
+    time.sleep(0.05)
     with package.open("r+b") as package_file:
         package_file.seek(-1, os.SEEK_END)
         original_byte = package_file.read(1)
