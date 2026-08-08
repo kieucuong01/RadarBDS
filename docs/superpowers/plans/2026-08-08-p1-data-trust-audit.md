@@ -298,12 +298,17 @@ Only return dataset names, integer versions, required booleans, and safe updated
 Inside the scoped connection override, compare:
 
 ```python
-raw_actionable = conn.execute(
+raw_public_guest = conn.execute(
     "SELECT COUNT(*) AS n FROM signal_card_read_model "
-    "WHERE is_actionable AND publisher_visible_public"
+    "WHERE is_actionable AND publisher_visible_public "
+    "AND COALESCE(mos_pct, 0) >= %s "
+    "AND NOT possibly_duplicate AND source = ANY(%s)",
+    (DEFAULT_SIGNAL_MOS_MIN_PCT, list(DEFAULT_VISIBLE_SOURCES)),
 ).fetchone()["n"]
 public_count = count_signals_from_read_model(tier="guest")
 ```
+
+The independent SQL must reproduce the complete default guest scope, including the public MOS floor, duplicate exclusion, and default Facebook/Guland source allowlist. Comparing the guest helper against all raw actionable rows would report a false mismatch for intentionally hidden cards.
 
 Equality passes; mismatch fails with both counts only. A required table missing or query timeout is a failure/unverified boundary, never zero-parity success.
 

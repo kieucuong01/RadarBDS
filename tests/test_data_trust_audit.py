@@ -595,7 +595,7 @@ def test_required_dataset_version_must_be_present_and_positive(
 
 def test_public_signal_parity_compares_counts_only(monkeypatch):
     connection = FixtureConnection(
-        [("FROM signal_card_read_model", {"raw_actionable": 7})]
+        [("FROM signal_card_read_model", {"raw_public_guest": 7})]
     )
     calls = []
 
@@ -611,13 +611,18 @@ def test_public_signal_parity_compares_counts_only(monkeypatch):
     check = _check_public_signal_parity(connection)
 
     assert check.status == "pass"
-    assert check.measurements == {"raw_actionable": 7, "public_guest": 7}
+    assert check.measurements == {"raw_public_guest": 7, "public_guest": 7}
     assert calls == [(connection, {"tier": "guest"})]
+    sql, params = connection.queries[0]
+    assert "COALESCE(mos_pct,0) >= ?" in sql
+    assert "NOT possibly_duplicate" in sql
+    assert "source = ANY(?)" in sql
+    assert params == (15.0, ["facebook", "guland"])
 
 
 def test_public_signal_parity_mismatch_fails(monkeypatch):
     connection = FixtureConnection(
-        [("FROM signal_card_read_model", {"raw_actionable": 7})]
+        [("FROM signal_card_read_model", {"raw_public_guest": 7})]
     )
     monkeypatch.setattr(
         "services.data_trust_audit.count_signals_from_read_model",
@@ -790,7 +795,7 @@ def test_complete_serialized_report_drops_ignored_pii_sentinels(monkeypatch):
     ]
     responses = [
         ("FROM public_dataset_versions", version_rows),
-        ("AS raw_actionable", {"raw_actionable": 2, "ignored_phone": sentinels[1]}),
+        ("AS raw_public_guest", {"raw_public_guest": 2, "ignored_phone": sentinels[1]}),
         ("AS candidates", _map_row()),
         ("AS total_publishers", _publisher_row(ignored_email=sentinels[2])),
         (
@@ -1013,7 +1018,7 @@ def _production_audit_responses(now):
         ("AS raw_rows", counts),
         ("AS invalid_price", invariants),
         ("FROM public_dataset_versions", versions),
-        ("AS raw_actionable", {"raw_actionable": 2}),
+        ("AS raw_public_guest", {"raw_public_guest": 2}),
         ("AS candidates", _map_row()),
         ("AS total_publishers", _publisher_row()),
         ("AS inspected", extraction),

@@ -15,10 +15,12 @@ from db import connection as db_connection
 from db.connection import DatabaseConfigurationError, connect
 from db.guland_publishers import publisher_effective_class_from_join_sql
 from services.market_data import (
+    DEFAULT_VISIBLE_SOURCES,
     _signal_listing_data_sql,
     use_read_connection_factory,
 )
 from services.signal_quality import (
+    DEFAULT_SIGNAL_MOS_MIN_PCT,
     LATEST_VALUATION_CTE,
     actionable_listing_sql,
     actionable_signal_sql,
@@ -639,21 +641,26 @@ def _check_dataset_versions(conn) -> tuple[AuditCheck, ...]:
 def _check_public_signal_parity(conn) -> AuditCheck:
     row = conn.execute(
         """
-        SELECT COUNT(*) AS raw_actionable
-        FROM signal_card_read_model
-        WHERE is_actionable AND publisher_visible_public
-        """
+        SELECT COUNT(*) AS raw_public_guest
+        FROM signal_card_read_model rm
+        WHERE is_actionable
+          AND publisher_visible_public
+          AND COALESCE(mos_pct,0) >= ?
+          AND NOT possibly_duplicate
+          AND source = ANY(?)
+        """,
+        (float(DEFAULT_SIGNAL_MOS_MIN_PCT), list(DEFAULT_VISIBLE_SOURCES)),
     ).fetchone()
-    raw_actionable = _bounded_count(row, "raw_actionable")
+    raw_public_guest = _bounded_count(row, "raw_public_guest")
     public_guest = int(count_signals_from_read_model(conn, tier="guest"))
     if public_guest < 0:
         raise ValueError("public signal count cannot be negative")
-    matches = raw_actionable == public_guest
+    matches = raw_public_guest == public_guest
     return AuditCheck(
         "public_signal_parity",
         "pass" if matches else "fail",
         "public_signal_count_match" if matches else "public_signal_count_mismatch",
-        {"raw_actionable": raw_actionable, "public_guest": public_guest},
+        {"raw_public_guest": raw_public_guest, "public_guest": public_guest},
     )
 
 
