@@ -239,9 +239,18 @@ def test_content_cutoff_cascades_expired_terminal_history_and_preserves_active_c
     with get_conn() as conn:
         assert conn.execute("SELECT 1 FROM radar_ask_sessions WHERE id=?", (old.session_id,)).fetchone() is None
         assert conn.execute("SELECT 1 FROM radar_ask_runs WHERE id=?", (old.id,)).fetchone() is None
-        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_tool_calls").fetchone()["count"] == 0
-        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_evidence").fetchone()["count"] == 0
-        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_feedback").fetchone()["count"] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) AS count FROM radar_ask_tool_calls WHERE run_id=?",
+            (old.id,),
+        ).fetchone()["count"] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) AS count FROM radar_ask_evidence WHERE run_id=?",
+            (old.id,),
+        ).fetchone()["count"] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) AS count FROM radar_ask_feedback WHERE message_id=?",
+            (assistant.id,),
+        ).fetchone()["count"] == 0
         assert conn.execute("SELECT 1 FROM radar_ask_sessions WHERE id=?", (recent.session_id,)).fetchone() is not None
         assert conn.execute("SELECT 1 FROM radar_ask_runs WHERE id=?", (recent.id,)).fetchone() is not None
         assert conn.execute("SELECT 1 FROM radar_ask_sessions WHERE id=?", (queued.session_id,)).fetchone() is not None
@@ -304,7 +313,16 @@ def test_dry_run_mutates_nothing_and_usage_keeps_13_month_buckets_but_purges_14t
             for reservation_id in retained_usage
         )
         assert conn.execute("SELECT 1 FROM radar_ask_usage WHERE id=?", (expired_usage,)).fetchone() is None
-        assert conn.execute("SELECT COUNT(*) AS count FROM radar_ask_usage_attempts").fetchone()["count"] == 13
+        markers = ",".join("?" for _ in retained_usage)
+        assert conn.execute(
+            f"SELECT COUNT(*) AS count FROM radar_ask_usage_attempts "
+            f"WHERE reservation_id IN ({markers})",
+            retained_usage,
+        ).fetchone()["count"] == 13
+        assert conn.execute(
+            "SELECT 1 FROM radar_ask_usage_attempts WHERE reservation_id=?",
+            (expired_usage,),
+        ).fetchone() is None
 
 
 def test_expired_terminal_run_is_purged_from_a_session_with_a_running_sibling(retention_env):

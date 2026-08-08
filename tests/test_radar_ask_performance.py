@@ -195,7 +195,11 @@ def _client_for(monkeypatch, decision: RouteDecision):
     monkeypatch.setenv("RADAR_ASK_ALLOWED_TIERS", "free,vip,admin")
     monkeypatch.setattr(ask_api, "current_user", lambda: {"id": 17, "tier": "vip"})
     monkeypatch.setattr(ask_api, "current_tier", lambda: "vip")
-    monkeypatch.setattr(ask_service, "_dependencies", lambda: dependencies)
+    monkeypatch.setattr(
+        ask_service,
+        "_dependencies",
+        lambda _repository=None: dependencies,
+    )
     return radar_app.app.test_client(), repository, provider
 
 

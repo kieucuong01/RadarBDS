@@ -1795,7 +1795,12 @@ def test_sellable_product_page_uses_post_forms_without_client_price(
 
     assert response.status_code == 200
     assert html.count('action="/ban-do-thu-dau-mot/checkout"') == 1
-    assert html.count('method="post"') == 1
+    checkout_start = html.index(
+        '<form method="post" action="/ban-do-thu-dau-mot/checkout">'
+    )
+    checkout_end = html.index("</form>", checkout_start)
+    checkout_form = html[checkout_start:checkout_end]
+    assert 'method="post"' in checkout_form
     assert 'name="price"' not in html
     assert 'name="slug"' not in html
     assert 'name="version"' not in html

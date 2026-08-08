@@ -239,13 +239,17 @@ def test_order_insert_adapter_returns_generated_ids():
 def test_order_migrations_are_forward_only_and_postgres_idempotent(monkeypatch):
     import db.schema as schema
 
+    class FakeResult:
+        def fetchone(self):
+            return None
+
     class FakeConn:
         def __init__(self):
             self.executed = []
 
         def execute(self, sql, params=None):
             self.executed.append(sql)
-            return None
+            return FakeResult()
 
     conn = FakeConn()
     monkeypatch.setattr(schema, "_table_columns", lambda _conn, _table: set())

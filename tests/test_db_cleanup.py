@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -220,8 +221,17 @@ class DbCleanupTest(unittest.TestCase):
         self.assertEqual(before, after)
 
     def test_sold_listings_older_than_90d_deleted(self):
-        old = self._insert_listing(url="u-old", probably_sold=1, last_seen_at="2024-01-01T00:00:00")
-        recent = self._insert_listing(url="u-recent", probably_sold=1, last_seen_at="2026-05-10T00:00:00")
+        now = datetime.now(timezone.utc)
+        old = self._insert_listing(
+            url="u-old",
+            probably_sold=1,
+            last_seen_at=(now - timedelta(days=91)).isoformat(),
+        )
+        recent = self._insert_listing(
+            url="u-recent",
+            probably_sold=1,
+            last_seen_at=(now - timedelta(days=89)).isoformat(),
+        )
         active = self._insert_listing(url="u-active", probably_sold=0, last_seen_at="2024-01-01T00:00:00")
 
         self._run_cleanup(apply=True, vacuum=False)

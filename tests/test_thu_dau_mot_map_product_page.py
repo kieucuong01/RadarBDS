@@ -425,7 +425,7 @@ def test_product_page_is_indexable_but_checkout_is_disabled_without_sales_flag(m
     assert "Sắp mở bán" in html
     assert html.count("Sắp mở bán") == 1
     assert 'action="/ban-do-thu-dau-mot/checkout"' not in html
-    assert "<form" not in html
+    assert 'action="/api/leads"' in html
     disabled_purchase_buttons = re.findall(
         r"<button\b[^>]*data-product-purchase[^>]*>.*?</button>",
         html,
