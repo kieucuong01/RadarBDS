@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlsplit
 
-from config.settings import PUBLIC_BASE_URL
+from config import settings
 from services.marketing_tracking import (
     CHANNELS,
     MARKETING_TRACK_ACTIONS,
@@ -98,7 +98,7 @@ def _campaign_key(
 
 
 def _public_hosts() -> frozenset[str]:
-    configured = (urlsplit(PUBLIC_BASE_URL).hostname or "radarbds.vn").lower()
+    configured = (urlsplit(settings.PUBLIC_BASE_URL).hostname or "radarbds.vn").lower()
     bare = configured[4:] if configured.startswith("www.") else configured
     return frozenset({bare, f"www.{bare}"})
 
