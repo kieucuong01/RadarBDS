@@ -89,6 +89,34 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
                 "sort": "score_desc",
             },
             "guest_rules": _guest_rules(),
+            "handoff": {
+                "filtered_dashboard": {
+                    "uri_template": (
+                        f"{base}/?tab=signals"
+                        "{&city,ward*,source*,prop_type*,area_min,area_max,"
+                        "price_min,price_max,q,date_range}"
+                    ),
+                    "template_format": "RFC 6570",
+                    "parameter_map": {
+                        "city": "city",
+                        "ward": "ward",
+                        "source": "source",
+                        "prop_type": "prop_type",
+                        "area_min": "area_min",
+                        "area_max": "area_max",
+                        "price_min": "price_min",
+                        "price_max": "price_max",
+                        "q": "q",
+                        "date_range": "date_range",
+                    },
+                    "repeatable_parameters": [
+                        "ward",
+                        "source",
+                        "prop_type",
+                    ],
+                },
+                "listing_detail_uri_template": f"{base}/listing/{{id}}",
+            },
         },
         "freshness": {
             "dataset_header": "X-Radar-Dataset-Version",
@@ -219,6 +247,35 @@ def _filter_parameters() -> list[dict[str, Any]]:
     ]
 
 
+def _dataset_version_header() -> dict[str, Any]:
+    return {
+        "description": (
+            "Durable public dataset version used to judge response freshness."
+        ),
+        "schema": {"type": "string"},
+    }
+
+
+def _busy_response() -> dict[str, Any]:
+    return {
+        "description": (
+            "Temporary public-read backpressure; retry with bounded "
+            "exponential backoff."
+        ),
+        "headers": {
+            "Retry-After": {
+                "description": "Minimum seconds to wait before retrying.",
+                "schema": {"type": "integer", "minimum": 1},
+            }
+        },
+        "content": {
+            "application/json": {
+                "schema": {"$ref": "#/components/schemas/BusyResponse"}
+            }
+        },
+    }
+
+
 def build_agent_openapi_document(*, base_url: str) -> dict[str, Any]:
     base = _base_url(base_url)
     signal_parameters = _filter_parameters() + [
@@ -298,6 +355,11 @@ def build_agent_openapi_document(*, base_url: str) -> dict[str, Any]:
                             "description": (
                                 "Paginated, redacted public signal cards."
                             ),
+                            "headers": {
+                                "X-Radar-Dataset-Version": (
+                                    _dataset_version_header()
+                                )
+                            },
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -308,12 +370,7 @@ def build_agent_openapi_document(*, base_url: str) -> dict[str, Any]:
                                 }
                             },
                         },
-                        "503": {
-                            "description": (
-                                "Temporary public-read backpressure; retry "
-                                "with bounded exponential backoff."
-                            )
-                        },
+                        "503": _busy_response(),
                     },
                 }
             },
@@ -329,6 +386,11 @@ def build_agent_openapi_document(*, base_url: str) -> dict[str, Any]:
                     "responses": {
                         "200": {
                             "description": "Public filtered counters.",
+                            "headers": {
+                                "X-Radar-Dataset-Version": (
+                                    _dataset_version_header()
+                                )
+                            },
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -339,12 +401,7 @@ def build_agent_openapi_document(*, base_url: str) -> dict[str, Any]:
                                 }
                             },
                         },
-                        "503": {
-                            "description": (
-                                "Temporary public-read backpressure; retry "
-                                "with bounded exponential backoff."
-                            )
-                        },
+                        "503": _busy_response(),
                     },
                 }
             },
@@ -394,7 +451,82 @@ def build_agent_openapi_document(*, base_url: str) -> dict[str, Any]:
                 },
                 "CountSummary": {
                     "type": "object",
+                    "required": [
+                        "stats",
+                        "active_city",
+                        "active_wards",
+                        "active_sources",
+                        "active_props",
+                        "trend_period",
+                        "tier",
+                    ],
+                    "properties": {
+                        "stats": {
+                            "$ref": "#/components/schemas/CountStats"
+                        },
+                        "active_city": {"type": "string"},
+                        "active_wards": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "active_sources": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "active_props": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "trend_period": {
+                            "type": "string",
+                            "enum": ["day", "week", "month"],
+                        },
+                        "tier": {
+                            "type": "string",
+                            "enum": ["guest", "free", "vip", "admin"],
+                        },
+                    },
                     "additionalProperties": True,
+                },
+                "CountStats": {
+                    "type": "object",
+                    "required": ["signals"],
+                    "properties": {
+                        "signals": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": (
+                                "Exact actionable signal count for the "
+                                "filters."
+                            ),
+                        },
+                        "total": {"type": "integer", "minimum": 0},
+                        "hot": {"type": "integer", "minimum": 0},
+                        "new_recent_days_7": {
+                            "type": "integer",
+                            "minimum": 0,
+                        },
+                        "price_drops": {
+                            "type": "integer",
+                            "minimum": 0,
+                        },
+                    },
+                    "additionalProperties": True,
+                },
+                "BusyResponse": {
+                    "type": "object",
+                    "required": ["error", "retry_after"],
+                    "properties": {
+                        "error": {
+                            "type": "string",
+                            "const": "temporarily_busy",
+                        },
+                        "retry_after": {
+                            "type": "integer",
+                            "minimum": 1,
+                        },
+                    },
+                    "additionalProperties": False,
                 },
             }
         },

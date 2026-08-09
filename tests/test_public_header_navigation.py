@@ -162,6 +162,23 @@ def test_dashboard_task_tabs_and_signal_results_expose_agent_readable_state():
     assert 'role="status"' in signal_script
 
 
+def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
+    markup = DASHBOARD.read_text(encoding="utf-8")
+    version = "agent-readonly-20260810"
+
+    for asset in (
+        "css/main/cards.css",
+        "js/main/core.js",
+        "js/main/signal_card.js",
+        "js/main/signals.js",
+    ):
+        matching_lines = [
+            line for line in markup.splitlines() if asset in line
+        ]
+        assert len(matching_lines) == 1
+        assert f"?v={version}" in matching_lines[0]
+
+
 def test_news_article_path_marks_news_navigation_active():
     import app as radar_app
 
