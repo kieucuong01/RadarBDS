@@ -160,6 +160,29 @@ def _commerce_migration_sql():
     return "\n".join(conn.executed)
 
 
+def test_schema_exposes_commerce_domain_migration_as_compatibility_alias():
+    import db.schema as schema
+    from db.migrations.commerce import migrate_digital_product_order_schema
+
+    assert (
+        schema._migrate_digital_product_order_schema
+        is migrate_digital_product_order_schema
+    )
+
+
+def test_commerce_domain_migration_uses_only_the_supplied_connection():
+    from db.migrations.commerce import migrate_digital_product_order_schema
+
+    conn = _RecordingConn()
+    migrate_digital_product_order_schema(conn)
+
+    assert conn.executed
+    assert any(
+        "CREATE TABLE IF NOT EXISTS digital_product_orders" in sql
+        for sql in conn.executed
+    )
+
+
 def test_order_schema_contains_security_and_expiry_fields():
     migration_sql = _commerce_migration_sql()
 
