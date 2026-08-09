@@ -32,13 +32,14 @@ boundary without changing its product behavior.
 ## Goals
 
 - Create `services/admin_duplicate_qc.py` as the single owner of duplicate-QC
-  queries, grouping, heuristics, auto-reconciliation, canonical hydration, and
-  explicit merge/split mutations.
+  queries, grouping, suppression heuristics, canonical hydration, and explicit
+  merge/split mutations.
 - Keep the four Flask handlers as thin transport, transaction, and cache
   adapters.
 - Preserve all current response fields, status codes, SQL predicates, audit
   action names, and mutation semantics.
-- Preserve the current GET-side auto-merge/auto-split reconciliation behavior.
+- Preserve the current GET-side safe-pair suppression without introducing
+  writes, overrides, or audit events.
 - Ensure the service has no Flask or `app.py` dependency and introduces no
   import cycle.
 - Remove the moved helper implementations from `app.py` after all callers use
@@ -77,7 +78,7 @@ Flask handler in app.py
   -> authenticate and parse request
   -> open db.connection.get_conn() scope
   -> call services.admin_duplicate_qc with the existing connection
-  -> service reads/writes PostgreSQL and emits audit through an injected writer
+  -> service reads PostgreSQL; explicit mutations write and emit injected audit
   -> connection scope commits or rolls back
   -> handler clears admin read caches after a successful mutation
   -> handler converts the plain result to jsonify()
@@ -96,7 +97,6 @@ the current transaction boundary and keeps rollback behavior under the existing
 - suppressing or reconciling safe pairs with the existing rules;
 - converting rows into duplicate-QC items and grouped review clusters;
 - producing duplicate reason labels and canonical/member payloads;
-- applying existing automatic merge and split overrides during queue loading;
 - hydrating a canonical listing from richer duplicate rows;
 - applying explicit pair merge, group merge, and split operations;
 - validating that bulk-merge members belong to the same visible review group;
@@ -119,7 +119,7 @@ the current transaction boundary and keeps rollback behavior under the existing
 The new module exposes these entry points:
 
 ```python
-def load_duplicate_review_payload(conn, *, audit_writer) -> dict:
+def load_duplicate_review_payload(conn) -> dict:
     """Return {'items': [...], 'groups': [...]} using current QC semantics."""
 
 
@@ -180,8 +180,9 @@ continues to return `{"ok": False, "error": "invalid_ids"}` from the route.
   `jsonify`, the admin response cache, or route modules.
 - Stable helpers remain imported from their owning modules, including image
   resolution and existing dedup/text helpers.
-- The existing app-local audit writer is injected as `audit_writer`; the
-  service does not relocate the broader admin audit subsystem.
+- The existing app-local audit writer is injected into the three explicit
+  mutation entry points; the GET loader has no audit dependency. The service
+  does not relocate the broader admin audit subsystem.
 - Internal duplicate-QC helpers become private functions inside the service.
 - No compatibility aliases remain in `app.py` after source and test searches
   prove that the old private helpers have no consumers.
@@ -190,9 +191,13 @@ continues to return `{"ok": False, "error": "invalid_ids"}` from the route.
 
 The extraction preserves the following behavior exactly:
 
-- Queue loading may write automatic merge/split overrides and audit rows while
-  resolving safe pairs. Those writes remain in the queue loader's connection
-  scope.
+- Queue loading is read-only. Safe and near-identical pairs may be hidden by the
+  existing predicates, but the GET path does not create overrides, change
+  duplicate pointers, or write audit rows.
+- `_admin_apply_auto_duplicate_merge()` and
+  `_admin_apply_auto_duplicate_split()` have no call sites in the current
+  source. They are dead helpers and are deleted rather than activated or copied
+  into the service.
 - Pair merge inserts a `merge` override, marks the listing as a duplicate,
   hydrates the canonical listing, and emits `dedup_merge`.
 - Bulk merge verifies visible review-group membership, inserts one override per
@@ -222,8 +227,9 @@ codes, HTTP status codes, cache namespace, or cache TTL.
 1. Add characterization coverage for service delegation and the import
    boundary while retaining all existing route-level duplicate-QC tests.
 2. Create the service module and move queue loading, shaping, grouping,
-   heuristics, auto-reconciliation, hydration, and mutation helpers without
-   altering their bodies except for explicit dependencies.
+   suppression heuristics, hydration, and mutation helpers without altering
+   their bodies except for explicit dependencies. Delete, rather than move, the
+   two uncalled automatic mutation helpers.
 3. Switch the GET route to `load_duplicate_review_payload()` and verify the
    complete duplicate queue test group.
 4. Switch pair merge, bulk merge, and split routes one at a time and verify the
@@ -240,8 +246,8 @@ Tests must prove behavior rather than only prove that code moved:
 - observe a failing delegation/import-boundary test before implementation;
 - keep the existing database-backed route tests as payload, mutation, audit,
   and grouping characterization coverage;
-- add focused service tests for plain-result behavior and
-  `DuplicateQcError.code`;
+- add focused service tests for plain-result behavior,
+  `DuplicateQcError.code`, and the GET path's no-write contract;
 - assert that the service source has no Flask or `app.py` import;
 - run all duplicate-QC tests in `tests/test_admin_control_room.py`;
 - run the entire admin control-room test module;
