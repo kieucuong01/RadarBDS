@@ -7928,32 +7928,17 @@ def admin_api_qc_duplicates_merge():
     if not listing_id or not target_id or listing_id == target_id:
         return jsonify({"ok": False, "error": "invalid_ids"}), 400
     with db_mod.get_conn() as conn:
-        before = conn.execute(
-            "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
-            (listing_id,),
-        ).fetchone()
-        conn.execute("""
-            INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
-            VALUES ('merge', ?, ?, ?, 1, datetime('now'))
-        """, (listing_id, target_id, note or None))
-        conn.execute(
-            "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
-            (target_id, listing_id),
-        )
-        _hydrate_duplicate_canonical(conn, target_id, [listing_id])
-        _write_admin_audit(
+        result = admin_duplicate_qc.merge_duplicate(
             conn,
-            "dedup_merge",
-            "listing",
-            listing_id,
-            before=dict(before) if before else None,
-            after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
-            reason=note or "merge",
+            listing_id=listing_id,
+            target_id=target_id,
+            note=note,
+            audit_writer=_write_admin_audit,
         )
     clear_admin_read_cache("duplicates")
     clear_admin_read_cache("data_quality_summary")
     clear_admin_read_cache("qc_signals")
-    return jsonify({"ok": True})
+    return jsonify(result)
 
 
 @require_admin_auth
@@ -7969,48 +7954,21 @@ def admin_api_qc_duplicates_merge_bulk():
     if not target_id or not listing_ids:
         return jsonify({"ok": False, "error": "invalid_ids"}), 400
 
-    with db_mod.get_conn() as conn:
-        groups = _admin_duplicate_review_groups(_admin_duplicate_review_items(conn))
-        group = None
-        for candidate in groups:
-            member_ids = {int(member["id"]) for member in candidate.get("members") or [] if member.get("id")}
-            if target_id in member_ids and set(listing_ids).issubset(member_ids):
-                group = candidate
-                break
-        if not group:
-            return jsonify({"ok": False, "error": "not_in_duplicate_review_group"}), 400
-
-        merged = 0
-        for listing_id in listing_ids:
-            before = conn.execute(
-                "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
-                (listing_id,),
-            ).fetchone()
-            if not before:
-                continue
-            conn.execute("""
-                INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
-                VALUES ('merge', ?, ?, ?, 1, datetime('now'))
-            """, (listing_id, target_id, note or None))
-            conn.execute(
-                "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
-                (target_id, listing_id),
-            )
-            _write_admin_audit(
+    try:
+        with db_mod.get_conn() as conn:
+            result = admin_duplicate_qc.merge_duplicate_group(
                 conn,
-                "dedup_bulk_merge",
-                "listing",
-                listing_id,
-                before=dict(before) if before else None,
-                after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
-                reason=note or "bulk_merge",
+                target_id=target_id,
+                listing_ids=listing_ids,
+                note=note,
+                audit_writer=_write_admin_audit,
             )
-            merged += 1
-        _hydrate_duplicate_canonical(conn, target_id, listing_ids)
+    except admin_duplicate_qc.DuplicateQcError as exc:
+        return jsonify({"ok": False, "error": exc.code}), 400
     clear_admin_read_cache("duplicates")
     clear_admin_read_cache("data_quality_summary")
     clear_admin_read_cache("qc_signals")
-    return jsonify({"ok": True, "merged": merged, "target_listing_id": target_id, "listing_ids": listing_ids})
+    return jsonify(result)
 
 
 @require_admin_auth
@@ -8022,28 +7980,17 @@ def admin_api_qc_duplicates_split():
     if not listing_id or not target_id or listing_id == target_id:
         return jsonify({"ok": False, "error": "invalid_ids"}), 400
     with db_mod.get_conn() as conn:
-        before = conn.execute(
-            "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
-            (listing_id,),
-        ).fetchone()
-        conn.execute("""
-            INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
-            VALUES ('split', ?, ?, ?, 1, datetime('now'))
-        """, (listing_id, target_id, note or None))
-        conn.execute("UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL WHERE id=?", (listing_id,))
-        _write_admin_audit(
+        result = admin_duplicate_qc.split_duplicate(
             conn,
-            "dedup_split",
-            "listing",
-            listing_id,
-            before=dict(before) if before else None,
-            after={"id": listing_id, "possibly_duplicate": 0, "duplicate_of_id": None},
-            reason=note or "split",
+            listing_id=listing_id,
+            target_id=target_id,
+            note=note,
+            audit_writer=_write_admin_audit,
         )
     clear_admin_read_cache("duplicates")
     clear_admin_read_cache("data_quality_summary")
     clear_admin_read_cache("qc_signals")
-    return jsonify({"ok": True})
+    return jsonify(result)
 
 
 @require_admin_auth

@@ -766,3 +766,204 @@ def _safe_float(value):
 def load_duplicate_review_payload(conn) -> dict:
     items = _admin_duplicate_review_items(conn)
     return {"items": items, "groups": _admin_duplicate_review_groups(items)}
+
+
+def _hydrate_duplicate_canonical(conn, target_id: int, listing_ids: list[int]) -> None:
+    source_ids = [int(value) for value in listing_ids if value and int(value) != int(target_id)]
+    if not target_id or not source_ids:
+        return
+
+    fields = [
+        "title",
+        "description",
+        "ward",
+        "property_type",
+        "area_m2",
+        "frontage_m",
+        "depth_m",
+        "tho_cu_m2",
+        "road_name",
+        "road_type",
+        "road_width_m",
+        "price_ty",
+        "price_per_m2",
+        "price_first_ty",
+    ]
+    select_fields = ", ".join(fields)
+    target = conn.execute(
+        f"SELECT id, {select_fields} FROM listings WHERE id=?",
+        (target_id,),
+    ).fetchone()
+    if not target:
+        return
+    placeholders = ",".join("?" for _ in source_ids)
+    sources = conn.execute(
+        f"""
+        SELECT id, {select_fields}, COALESCE(posted_at, crawled_at, updated_at) AS dt
+        FROM listings
+        WHERE id IN ({placeholders})
+        ORDER BY COALESCE(posted_at, crawled_at, updated_at) DESC, id DESC
+        """,
+        source_ids,
+    ).fetchall()
+
+    def has_value(value):
+        if value is None:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        try:
+            return float(value) != 0
+        except (TypeError, ValueError):
+            return True
+
+    updates = {}
+    for field in fields:
+        if has_value(target[field]):
+            continue
+        for source in sources:
+            value = source[field]
+            if has_value(value):
+                updates[field] = value
+                break
+
+    if "price_per_m2" not in updates and not has_value(target["price_per_m2"]):
+        price = updates.get("price_ty", target["price_ty"])
+        area = updates.get("area_m2", target["area_m2"])
+        if has_value(price) and has_value(area):
+            updates["price_per_m2"] = round(float(price) * 1000 / float(area), 3)
+
+    if not updates:
+        return
+    set_sql = ", ".join(f"{field}=?" for field in updates)
+    conn.execute(
+        f"UPDATE listings SET {set_sql}, updated_at=datetime('now') WHERE id=?",
+        [*updates.values(), target_id],
+    )
+
+
+def merge_duplicate(
+    conn,
+    *,
+    listing_id: int,
+    target_id: int,
+    note: str,
+    audit_writer: AuditWriter,
+) -> dict:
+    before = conn.execute(
+        "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+        (listing_id,),
+    ).fetchone()
+    conn.execute(
+        """
+        INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+        VALUES ('merge', ?, ?, ?, 1, datetime('now'))
+        """,
+        (listing_id, target_id, note or None),
+    )
+    conn.execute(
+        "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+        (target_id, listing_id),
+    )
+    _hydrate_duplicate_canonical(conn, target_id, [listing_id])
+    audit_writer(
+        conn,
+        "dedup_merge",
+        "listing",
+        listing_id,
+        before=dict(before) if before else None,
+        after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
+        reason=note or "merge",
+    )
+    return {"ok": True}
+
+
+def merge_duplicate_group(
+    conn,
+    *,
+    target_id: int,
+    listing_ids: list[int],
+    note: str,
+    audit_writer: AuditWriter,
+) -> dict:
+    groups = load_duplicate_review_payload(conn)["groups"]
+    group = None
+    for candidate in groups:
+        member_ids = {int(member["id"]) for member in candidate.get("members") or [] if member.get("id")}
+        if target_id in member_ids and set(listing_ids).issubset(member_ids):
+            group = candidate
+            break
+    if not group:
+        raise DuplicateQcError("not_in_duplicate_review_group")
+
+    merged = 0
+    for listing_id in listing_ids:
+        before = conn.execute(
+            "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+            (listing_id,),
+        ).fetchone()
+        if not before:
+            continue
+        conn.execute(
+            """
+            INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+            VALUES ('merge', ?, ?, ?, 1, datetime('now'))
+            """,
+            (listing_id, target_id, note or None),
+        )
+        conn.execute(
+            "UPDATE listings SET possibly_duplicate=1, duplicate_of_id=? WHERE id=?",
+            (target_id, listing_id),
+        )
+        audit_writer(
+            conn,
+            "dedup_bulk_merge",
+            "listing",
+            listing_id,
+            before=dict(before),
+            after={"id": listing_id, "possibly_duplicate": 1, "duplicate_of_id": target_id},
+            reason=note or "bulk_merge",
+        )
+        merged += 1
+    _hydrate_duplicate_canonical(conn, target_id, listing_ids)
+    return {
+        "ok": True,
+        "merged": merged,
+        "target_listing_id": target_id,
+        "listing_ids": listing_ids,
+    }
+
+
+def split_duplicate(
+    conn,
+    *,
+    listing_id: int,
+    target_id: int,
+    note: str,
+    audit_writer: AuditWriter,
+) -> dict:
+    before = conn.execute(
+        "SELECT id, possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+        (listing_id,),
+    ).fetchone()
+    conn.execute(
+        """
+        INSERT INTO dedup_overrides (action, listing_id, target_listing_id, note, active, updated_at)
+        VALUES ('split', ?, ?, ?, 1, datetime('now'))
+        """,
+        (listing_id, target_id, note or None),
+    )
+    conn.execute(
+        "UPDATE listings SET possibly_duplicate=0, duplicate_of_id=NULL WHERE id=?",
+        (listing_id,),
+    )
+    audit_writer(
+        conn,
+        "dedup_split",
+        "listing",
+        listing_id,
+        before=dict(before) if before else None,
+        after={"id": listing_id, "possibly_duplicate": 0, "duplicate_of_id": None},
+        reason=note or "split",
+    )
+    return {"ok": True}
