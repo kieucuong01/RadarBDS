@@ -12376,6 +12376,304 @@ SEO_ARTICLES = {
                 "url": "https://radarbds.vn/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc"
             }
         ]
+    },
+
+    "phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "title": "Phú Lợi hay Hiệp Thành: nên lọc đất nền hay nhà đất trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 09/08/2026: nếu anh đang so Phú Lợi và Hiệp Thành, nên tách riêng đất nền với nhà đất. Phú Lợi đang dày tín hiệu ở đất nền, còn Hiệp Thành lại nhiều nhà đất dưới 4 tỷ hơn.",
+        "keywords": "Phú Lợi hay Hiệp Thành, giá đất Phú Lợi, giá đất Hiệp Thành, nhà đất Phú Lợi, nhà đất Hiệp Thành, Radar BDS",
+        "breadcrumb_label": "Phú Lợi hay Hiệp Thành",
+        "hero_badge": "So sánh theo loại hình",
+        "hero_title": "Phú Lợi hay Hiệp Thành: nên lọc đất nền hay nhà đất trước?",
+        "hero_text": "Câu trả lời ngắn là: nếu anh ưu tiên đất nền và muốn mở nhóm có nhiều tín hiệu hơn, nên vào Phú Lợi trước. Nếu anh tìm nhà đất xây sẵn dưới 4 tỷ, Hiệp Thành đáng mở trước vì nguồn hàng dày hơn rõ. Cùng một câu hỏi nhưng thứ tự mở thay đổi theo loại hình BĐS.",
+        "scope_label": "Thủ Dầu Một · Phú Lợi / Hiệp Thành",
+        "hero_checks": [
+            "Đất nền: Phú Lợi có 299 tin, Hiệp Thành có 234 tin",
+            "Nhà đất: Hiệp Thành có 546 tin, Phú Lợi có 353 tin",
+            "Đất nền Phú Lợi có 52 dấu hiệu; Hiệp Thành có 26 dấu hiệu",
+            "Nhà đất dưới 4 tỷ: Hiệp Thành có 288 tin, cao hơn 160 tin ở Phú Lợi"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Lợi",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20L%E1%BB%A3i&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_hiep_thanh_type_split",
+        "secondary_cta": "Mở công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_hiep_thanh_type_split",
+        "map_label": "Tin tức / Phú Lợi · Hiệp Thành",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "1.480 tin",
+            "delta": "Phú Lợi 678 · Hiệp Thành 802",
+            "note": "Nguồn Facebook live, lọc ngày 09/08/2026 với is_active=1"
+        },
+        "property_card": {
+            "status": "Cập nhật 09/08/2026",
+            "title": "Đừng gộp Phú Lợi và Hiệp Thành vào một mặt bằng giá chung",
+            "price": "Đây là giá rao đang theo dõi, không phải giá chốt giao dịch",
+            "metric_a": "Đất nền trung vị",
+            "metric_a_value": "28,7 vs 23,4 tr/m²",
+            "metric_b": "Nhà đất dưới 4 tỷ",
+            "metric_b_value": "160 vs 288 tin"
+        },
+        "value_cards": [
+            {
+                "title": "Phú Lợi hợp hơn nếu anh đi từ bài toán đất nền",
+                "body": "Phú Lợi đang có 299 tin đất nền, 184 tin đất nền dưới 4 tỷ và 52 dấu hiệu đáng chú ý. Nếu anh muốn mở nhóm đất nền có nhiều mẫu và nhiều tin cần soi trước, Phú Lợi nên đứng đầu danh sách."
+            },
+            {
+                "title": "Hiệp Thành đáng mở trước nếu anh tìm nhà đất xây sẵn dưới 4 tỷ",
+                "body": "Hiệp Thành có 546 tin nhà đất đang theo dõi, trong đó 288 tin nằm dưới 4 tỷ. Đây là khác biệt khá lớn so với 160 tin ở Phú Lợi, nên người mua nhà ở sẵn sẽ tiết kiệm thời gian hơn khi bắt đầu từ Hiệp Thành."
+            },
+            {
+                "title": "Giá/m² chưa đủ để quyết định nếu anh chưa tách đúng loại hình",
+                "body": "Đất nền Phú Lợi cao hơn Hiệp Thành về giá trung vị/m², nhưng nhà đất hai bên lại khá gần nhau về mặt bằng giá/m². Vì vậy nên khóa loại hình trước, rồi mới so giá rao trung vị và số lượng tin phù hợp ngân sách."
+            }
+        ],
+        "local_links_title": "Đọc tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Lợi",
+                "href": "/binh-duong/phuong-phu-loi",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Phú Lợi."
+            },
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Hiệp Thành."
+            },
+            {
+                "label": "Giá đất Phú Lợi hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu",
+                "description": "Đọc sâu riêng Phú Lợi theo từng loại hình BĐS."
+            },
+            {
+                "label": "Định Hòa hay Hiệp Thành: nên xem khu nào trước?",
+                "href": "/tin-tuc/dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+                "description": "Đặt Hiệp Thành vào một bài so sánh khác theo nhu cầu mở rộng nguồn hàng."
+            },
+            {
+                "label": "Phú Lợi, Phú Hòa, Chánh Nghĩa: khu nào nhiều tin đáng kiểm tra?",
+                "href": "/tin-tuc/phu-loi-phu-hoa-chanh-nghia-khu-nao-nhieu-tin-dang-kiem-tra",
+                "description": "Xem thêm bối cảnh tín hiệu ở nhóm trung tâm hơn."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt Phú Lợi và Hiệp Thành vào mặt bằng chung của toàn Thủ Dầu Một."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu đang tìm đất nền thì nên mở Phú Lợi hay Hiệp Thành trước?",
+                "a": "Nên mở Phú Lợi trước nếu anh ưu tiên đất nền. Dữ liệu Radar BDS ngày 09/08/2026 cho thấy Phú Lợi có 299 tin đất nền, 184 tin dưới 4 tỷ và 52 dấu hiệu đáng chú ý, đều cao hơn Hiệp Thành ở nhóm đất nền."
+            },
+            {
+                "q": "Nếu đang tìm nhà đất dưới 4 tỷ thì bên nào dễ lọc hơn?",
+                "a": "Hiệp Thành dễ lọc hơn ở bài toán này. Phường này có 288 tin nhà đất dưới 4 tỷ, trong khi Phú Lợi có 160 tin."
+            },
+            {
+                "q": "Giá nhà đất Phú Lợi và Hiệp Thành có chênh nhiều không?",
+                "a": "Không chênh quá mạnh về giá rao trung vị/m² nhà đất. Phú Lợi đang khoảng 39,1 tr/m² còn Hiệp Thành khoảng 38,9 tr/m². Tuy nhiên tổng giá trung vị nhà đất ở Hiệp Thành thấp hơn, khoảng 3,27 tỷ so với 3,95 tỷ ở Phú Lợi."
+            },
+            {
+                "q": "Dấu hiệu đáng chú ý có phải là khuyến nghị mua ngay không?",
+                "a": "Không. Dấu hiệu chỉ giúp anh ưu tiên tin nên mở ra kiểm tra trước. Sau đó vẫn phải xem pháp lý, quy hoạch, hiện trạng, đường vào và mức độ phù hợp thực tế."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-09",
+            "modified_at": "2026-08-09",
+            "intro": [
+                "Nếu anh đang phân vân giữa Phú Lợi và Hiệp Thành, câu trả lời ngắn là: đất nền nên mở Phú Lợi trước, còn nhà đất dưới 4 tỷ nên mở Hiệp Thành trước. Dữ liệu live trên Radar BDS ngày 09/08/2026 cho thấy hai phường này khác nhau chủ yếu ở cơ cấu loại hình và số lượng tin còn trong vùng ngân sách phổ biến.",
+                "Điểm quan trọng là đây là giá rao từ tin Facebook đang theo dõi với is_active=1, không phải giá chốt giao dịch. Anh nên xem đồng thời số tin đang theo dõi, số tin lọt ngân sách và giá trung vị theo đúng loại hình BĐS trước khi gọi môi giới."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "1.480 tin",
+                    "note": "Phú Lợi 678 · Hiệp Thành 802"
+                },
+                {
+                    "label": "Đất nền đang theo dõi",
+                    "value": "299 vs 234 tin",
+                    "note": "Phú Lợi nhiều mẫu hơn ở nhóm đất nền"
+                },
+                {
+                    "label": "Nhà đất dưới 4 tỷ",
+                    "value": "160 vs 288 tin",
+                    "note": "Hiệp Thành rộng lựa chọn hơn ở nhóm nhà đất dưới 4 tỷ"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "92 vs 95 tin",
+                    "note": "Tổng tín hiệu gần nhau nhưng phân bổ khác nhau theo loại hình"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Lợi và Hiệp Thành đang khác nhau thế nào theo loại hình?",
+                    "note": "Nguồn Facebook live ngày 09/08/2026, chỉ lấy tin đang theo dõi với is_active=1, is_blacklisted=0, review_hidden=0. Đây là giá rao, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "total", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "dat_nen", "label": "Đất nền"},
+                        {"key": "nha_dat", "label": "Nhà đất"}
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Phú Lợi",
+                            "total": "678",
+                            "signals": "92",
+                            "dat_nen": "299 tin · 28,7 tr/m² · 3,37 tỷ",
+                            "nha_dat": "353 tin · 39,1 tr/m² · 3,95 tỷ"
+                        },
+                        {
+                            "ward": "Hiệp Thành",
+                            "total": "802",
+                            "signals": "95",
+                            "dat_nen": "234 tin · 23,4 tr/m² · 3,40 tỷ",
+                            "nha_dat": "546 tin · 38,9 tr/m² · 3,27 tỷ"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Khóa đúng loại hình trước, rồi mới quyết định thứ tự mở phường và so giá trung vị cùng loại hình.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {
+                            "need": "Muốn lọc đất nền có nhiều tín hiệu hơn",
+                            "open_first": "Phú Lợi",
+                            "why": "299 tin đất nền và 52 dấu hiệu, cao hơn 234 tin và 26 dấu hiệu ở Hiệp Thành"
+                        },
+                        {
+                            "need": "Tìm nhà đất dưới 4 tỷ",
+                            "open_first": "Hiệp Thành",
+                            "why": "288 tin nhà đất dưới 4 tỷ, cao hơn 160 tin ở Phú Lợi"
+                        },
+                        {
+                            "need": "Ưu tiên giá đất nền mềm hơn theo m²",
+                            "open_first": "Hiệp Thành",
+                            "why": "Giá trung vị đất nền 23,4 tr/m², thấp hơn 28,7 tr/m² ở Phú Lợi"
+                        },
+                        {
+                            "need": "Muốn xem nhà đất tổng giá mềm hơn",
+                            "open_first": "Hiệp Thành",
+                            "why": "Tổng giá trung vị nhà đất khoảng 3,27 tỷ, thấp hơn 3,95 tỷ ở Phú Lợi"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền: Phú Lợi đang dày tín hiệu hơn Hiệp Thành",
+                    "note": "So số lượng tin đất nền và số dấu hiệu ở hai phường.",
+                    "alt": "Biểu đồ số tin đất nền và dấu hiệu của Phú Lợi và Hiệp Thành",
+                    "rows": [
+                        {
+                            "label": "Phú Lợi",
+                            "value_label": "299 tin · 52 dấu hiệu",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Hiệp Thành",
+                            "value_label": "234 tin · 26 dấu hiệu",
+                            "width": 78,
+                            "color": "#16a34a"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất dưới 4 tỷ: Hiệp Thành rộng lựa chọn hơn rõ",
+                    "note": "So số tin nhà đất còn trong vùng ngân sách phổ biến.",
+                    "alt": "Biểu đồ số tin nhà đất dưới 4 tỷ ở Phú Lợi và Hiệp Thành",
+                    "rows": [
+                        {
+                            "label": "Hiệp Thành",
+                            "value_label": "288 tin",
+                            "width": 100,
+                            "color": "#dc2626"
+                        },
+                        {
+                            "label": "Phú Lợi",
+                            "value_label": "160 tin",
+                            "width": 56,
+                            "color": "#f59e0b"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "dat-nen-phu-loi",
+                    "heading": "1. Đất nền: Phú Lợi hợp hơn nếu anh muốn mở nhóm tin cần soi trước",
+                    "paragraphs": [
+                        "Phú Lợi hiện có 299 tin đất nền đang theo dõi, cao hơn 234 tin ở Hiệp Thành. Không chỉ nhiều mẫu hơn, Phú Lợi còn có 52 dấu hiệu đáng chú ý trong nhóm đất nền, gấp đôi 26 dấu hiệu ở Hiệp Thành.",
+                        "Điều này phù hợp với người mua đang ở bước lọc đầu: mở dashboard để xem nhanh mặt bằng, khoanh nhóm nên kiểm tra trước, rồi mới gọi sâu. Đổi lại, mặt bằng giá rao đất nền Phú Lợi đang cao hơn, ở mức 28,7 tr/m² so với 23,4 tr/m² ở Hiệp Thành."
+                    ],
+                    "bullets": [
+                        "Phú Lợi: 299 tin đất nền · 184 tin dưới 4 tỷ · 52 dấu hiệu",
+                        "Hiệp Thành: 234 tin đất nền · 125 tin dưới 4 tỷ · 26 dấu hiệu",
+                        "Giá trung vị đất nền: 28,7 vs 23,4 tr/m²",
+                        "Tổng giá trung vị đất nền: 3,37 vs 3,40 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-hiep-thanh",
+                    "heading": "2. Nhà đất: Hiệp Thành nên được mở trước nếu anh giữ ngân sách dưới 4 tỷ",
+                    "paragraphs": [
+                        "Ở nhóm nhà đất xây sẵn, Hiệp Thành đang có lợi thế rõ hơn về số lượng. Phường này có 546 tin nhà đất đang theo dõi, trong đó 288 tin nằm dưới 4 tỷ. Phú Lợi có 353 tin nhà đất và 160 tin dưới 4 tỷ.",
+                        "Giá rao trung vị/m² nhà đất hai bên gần nhau, quanh 39 tr/m². Nhưng tổng giá trung vị nhà đất Hiệp Thành thấp hơn, khoảng 3,27 tỷ so với 3,95 tỷ ở Phú Lợi. Vì vậy nếu anh mua để ở và muốn lọc nhanh nhóm còn trong tầm tiền, Hiệp Thành dễ vào việc hơn."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành: 546 tin nhà đất · 288 tin dưới 4 tỷ · 69 dấu hiệu",
+                        "Phú Lợi: 353 tin nhà đất · 160 tin dưới 4 tỷ · 39 dấu hiệu",
+                        "Giá trung vị nhà đất: 38,9 vs 39,1 tr/m²",
+                        "Tổng giá trung vị nhà đất: 3,27 vs 3,95 tỷ"
+                    ]
+                },
+                {
+                    "id": "cach-loc-dashboard",
+                    "heading": "3. Cách dùng dashboard để không đọc sai hai phường này",
+                    "paragraphs": [
+                        "Bước đầu tiên là khóa loại hình. Nếu anh đang tìm đất nền, đừng để nhà đất chen vào mặt bằng so sánh. Nếu anh đang tìm nhà ở sẵn, đừng lấy giá đất nền làm chuẩn vì cấu trúc giá hoàn toàn khác.",
+                        "Sau đó hãy lọc theo phường, nhìn giá trung vị cùng loại hình, rồi mở trước nhóm có nhiều tin còn trong vùng ngân sách và nhiều dấu hiệu đáng chú ý hơn. Cách này giúp anh đỡ gọi dàn trải và tránh cảm giác phường nào cũng giống nhau chỉ vì nhìn một con số giá chung."
+                    ],
+                    "bullets": [
+                        "Khóa đúng loại hình trước khi so giá",
+                        "So giá rao trung vị cùng loại hình, không gộp chung",
+                        "Ưu tiên phường có nhiều tin lọt ngân sách hơn",
+                        "Dùng dấu hiệu như bộ lọc ưu tiên, không phải nhãn quyết định mua"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã đối chiếu giá rao trung vị với đúng loại hình ở từng phường chưa?",
+                "Đã mở dashboard theo phường để xem số tin còn trong vùng ngân sách chưa?",
+                "Đã kiểm tra pháp lý, quy hoạch, vị trí và hiện trạng sau bước lọc ban đầu chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Phú Lợi và Hiệp Thành đúng loại hình",
+            "body": "Bắt đầu bằng phường phù hợp với nhu cầu của anh: Phú Lợi nếu ưu tiên đất nền, Hiệp Thành nếu ưu tiên nhà đất dưới 4 tỷ. Sau đó dùng dashboard và công cụ định giá để soi từng tin cụ thể.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_hiep_thanh_type_split"
+        }
     }
 
 }

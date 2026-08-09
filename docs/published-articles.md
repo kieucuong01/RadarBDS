@@ -27,3 +27,10 @@
   - Score gate: 94/100
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-07, filtered for đất nền and compared with the dưới-3-tỷ lens
   - Funnel: `/binh-duong/phuong-phu-tan`, `/binh-duong/phuong-phu-my`, dashboard ward filters, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong`
+
+## 2026-08-09
+- `/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc` — **Phú Lợi hay Hiệp Thành: nên lọc đất nền hay nhà đất trước?**
+  - Pillar: So sánh phường / loại hình
+  - Score gate: 96/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-09, split by `dat_nen` vs `nha_dat`, with dưới-4-tỷ counts for the nhà đất lens
+  - Funnel: `/binh-duong/phuong-phu-loi`, `/binh-duong/phuong-hiep-thanh`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu`
