@@ -26,9 +26,11 @@
 - Create `services/admin_duplicate_qc.py`: duplicate review queries, payload
   shaping, suppression heuristics, canonical hydration, and explicit merge/split
   mutations.
-- Create `tests/test_admin_duplicate_qc_service.py`: service import-boundary and final extraction-boundary tests.
+- Create `tests/test_admin_duplicate_qc_service.py`: service import side-effect test.
 - Modify `app.py`: import the service and reduce the four duplicate-QC handlers to transport/transaction/cache adapters.
-- Modify `tests/test_admin_control_room.py`: route delegation, error mapping, and cache-clearing regression tests while retaining the existing database-backed characterization suite.
+- Modify `tests/test_admin_control_room.py`: real service behavior and route
+  error-mapping characterization tests while retaining the existing
+  database-backed route suite.
 
 ---
 
@@ -45,61 +47,80 @@
 - Consumes: the active DB connection, `LEGAL_IMAGE_EVIDENCE_ENABLED`, `services.image_assets.resolve_image_url`, and existing private dedup helpers from `cleansing.dedup`.
 - Produces: `DuplicateQcError(code: str)` and `load_duplicate_review_payload(conn) -> dict` returning exactly `{"items": list[dict], "groups": list[dict]}`.
 
-- [ ] **Step 1: Add failing import-boundary and GET-delegation tests**
+- [ ] **Step 1: Add failing import-side-effect and real GET service tests**
 
-Create `tests/test_admin_duplicate_qc_service.py` with the transport-boundary test:
+Create `tests/test_admin_duplicate_qc_service.py` with a subprocess test that
+exercises the real import boundary:
 
 ```python
-import ast
-from pathlib import Path
+import subprocess
+import sys
 
 
-ROOT = Path(__file__).resolve().parent.parent
-SERVICE_PATH = ROOT / "services" / "admin_duplicate_qc.py"
-
-
-def _imported_modules(path: Path) -> set[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    modules = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            modules.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            modules.add(node.module)
-    return modules
-
-
-def test_admin_duplicate_qc_service_has_no_transport_imports():
-    assert SERVICE_PATH.exists()
-    imports = _imported_modules(SERVICE_PATH)
-    assert "app" not in imports
-    assert not any(name == "flask" or name.startswith("flask.") for name in imports)
-    assert not any(name == "routes" or name.startswith("routes.") for name in imports)
+def test_admin_duplicate_qc_import_does_not_load_flask_transport():
+    script = """
+import sys
+import services.admin_duplicate_qc
+assert "app" not in sys.modules
+assert not any(name == "flask" or name.startswith("flask.") for name in sys.modules)
+"""
+    completed = subprocess.run(
+        [sys.executable, "-X", "utf8", "-c", script],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
 ```
 
-Add this method to `AdminControlRoomGateTest` in
+Add these methods to `AdminControlRoomGateTest` in
 `tests/test_admin_control_room.py` immediately before the first existing
 duplicate queue test:
 
 ```python
-def test_data_quality_duplicate_queue_delegates_to_service(self):
-    import app as app_module
+def test_duplicate_service_loads_real_review_payload(self):
+    from db.connection import get_conn
+    from services import admin_duplicate_qc
 
-    self._login_as_admin()
-    expected = {"items": [{"id": 77, "title": "service-sentinel"}], "groups": []}
-    with mock.patch.object(
-        app_module.admin_duplicate_qc,
-        "load_duplicate_review_payload",
-        return_value=expected,
-    ) as loader:
-        response = self.client.get("/admin/api/qc/duplicates")
+    canonical_id, duplicate_id = self._insert_review_duplicate_pair(
+        area_old=100.0,
+        area_new=112.0,
+    )
+    with get_conn() as conn:
+        payload = admin_duplicate_qc.load_duplicate_review_payload(conn)
 
-    self.assertEqual(response.status_code, 200)
-    self.assertEqual(response.get_json(), expected)
-    loader.assert_called_once()
-    args, kwargs = loader.call_args
-    self.assertEqual(len(args), 1)
-    self.assertEqual(kwargs, {})
+    pairs = {(item["id"], item["duplicate_of_id"]) for item in payload["items"]}
+    self.assertIn((duplicate_id, canonical_id), pairs)
+    self.assertTrue(payload["groups"])
+
+
+def test_duplicate_service_hides_near_identical_pair_without_writing(self):
+    from db.connection import get_conn
+    from services import admin_duplicate_qc
+
+    listing_id, target_id = self._insert_near_identical_dx132_pair()
+    with get_conn() as conn:
+        payload = admin_duplicate_qc.load_duplicate_review_payload(conn)
+
+    pairs = {(item["id"], item["duplicate_of_id"]) for item in payload["items"]}
+    self.assertNotIn((listing_id, target_id), pairs)
+    with get_conn() as conn:
+        listing = conn.execute(
+            "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+            (listing_id,),
+        ).fetchone()
+        override_count = conn.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM dedup_overrides
+            WHERE listing_id=? AND target_listing_id=? AND active=1
+            """,
+            (listing_id, target_id),
+        ).fetchone()["count"]
+
+    self.assertEqual(listing["possibly_duplicate"], 0)
+    self.assertIsNone(listing["duplicate_of_id"])
+    self.assertEqual(override_count, 0)
 ```
 
 - [ ] **Step 2: Run the new tests and observe RED**
@@ -109,12 +130,13 @@ Run:
 ```powershell
 $env:RADAR_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:15432/radar_bds_test'
 $py="$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m pytest tests\test_admin_duplicate_qc_service.py::test_admin_duplicate_qc_service_has_no_transport_imports tests\test_admin_control_room.py::AdminControlRoomGateTest::test_data_quality_duplicate_queue_delegates_to_service -q
+& $py -X utf8 -m pytest tests\test_admin_duplicate_qc_service.py::test_admin_duplicate_qc_import_does_not_load_flask_transport tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_service_loads_real_review_payload tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_service_hides_near_identical_pair_without_writing -q
 ```
 
-Expected: FAIL because `services/admin_duplicate_qc.py` and
-`app_module.admin_duplicate_qc` do not exist. A database/auth/setup failure is
-not the expected RED.
+Expected: FAIL because `services.admin_duplicate_qc` does not exist. The
+subprocess returns a `ModuleNotFoundError`, and the two database tests fail on
+the same missing service import. A database/setup failure is not the expected
+RED.
 
 - [ ] **Step 3: Create the service module and transplant the GET dependency graph**
 
@@ -233,11 +255,11 @@ Run:
 ```powershell
 $env:RADAR_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:15432/radar_bds_test'
 $py="$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m pytest tests\test_admin_duplicate_qc_service.py tests\test_admin_control_room.py -k "transport_imports or duplicate_queue or duplicate_review_ui" -q
+& $py -X utf8 -m pytest tests\test_admin_duplicate_qc_service.py tests\test_admin_control_room.py -k "import_does_not_load_flask_transport or duplicate_service or duplicate_queue or duplicate_review_ui" -q
 ```
 
 Expected: PASS, including queue grouping, hidden-safe-pair rules, suspected
-pairs, the existing no-write behavior, and the new delegation sentinel.
+pairs, the existing no-write behavior, and the new direct service contract.
 
 - [ ] **Step 6: Compile and inspect the bounded diff**
 
@@ -273,76 +295,126 @@ git commit -m "refactor: extract admin duplicate review service"
 - Consumes: `DuplicateQcError`, the active connection, and the injected audit writer from Task 1.
 - Produces: `merge_duplicate(conn, *, listing_id: int, target_id: int, note: str, audit_writer: AuditWriter) -> dict`, `merge_duplicate_group(conn, *, target_id: int, listing_ids: list[int], note: str, audit_writer: AuditWriter) -> dict`, and `split_duplicate(conn, *, listing_id: int, target_id: int, note: str, audit_writer: AuditWriter) -> dict` with the exact response keys defined in the design.
 
-- [ ] **Step 1: Add failing mutation delegation and error-mapping tests**
+- [ ] **Step 1: Add failing real service mutation tests**
 
 Add these methods beside the existing duplicate mutation tests:
 
 ```python
-def test_duplicate_merge_and_split_routes_delegate_and_clear_caches(self):
+def test_duplicate_service_merge_updates_listing_override_and_audit(self):
     import app as app_module
+    from db.connection import get_conn
+    from services import admin_duplicate_qc
 
-    self._login_as_admin()
-    cases = [
-        (
-            "/admin/api/qc/duplicates/merge",
-            "merge_duplicate",
-            {"listing_id": 91, "target_listing_id": 90, "note": "pair"},
-        ),
-        (
-            "/admin/api/qc/duplicates/split",
-            "split_duplicate",
-            {"listing_id": 91, "target_listing_id": 90, "note": "split"},
-        ),
-    ]
-    for path, function_name, payload in cases:
-        app_module.clear_admin_read_cache()
-        with self.subTest(path=path), mock.patch.object(
-            app_module.admin_duplicate_qc,
-            function_name,
-            return_value={"ok": True},
-        ) as operation, mock.patch.object(
-            app_module,
-            "clear_admin_read_cache",
-        ) as clear_cache:
-            response = self.client.post(path, json=payload)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {"ok": True})
-        operation.assert_called_once()
-        _, kwargs = operation.call_args
-        self.assertEqual(kwargs["listing_id"], 91)
-        self.assertEqual(kwargs["target_id"], 90)
-        self.assertEqual(kwargs["note"], payload["note"])
-        self.assertIs(kwargs["audit_writer"], app_module._write_admin_audit)
-        self.assertEqual(
-            [call.args[0] for call in clear_cache.call_args_list],
-            ["duplicates", "data_quality_summary", "qc_signals"],
-        )
-
-
-def test_duplicate_bulk_merge_maps_service_validation_error(self):
-    import app as app_module
-
-    self._login_as_admin()
-    error = app_module.admin_duplicate_qc.DuplicateQcError(
-        "not_in_duplicate_review_group"
+    canonical_id, duplicate_id = self._insert_review_duplicate_pair(
+        area_old=100.0,
+        area_new=112.0,
     )
-    with mock.patch.object(
-        app_module.admin_duplicate_qc,
-        "merge_duplicate_group",
-        side_effect=error,
-    ) as operation:
-        response = self.client.post(
-            "/admin/api/qc/duplicates/merge-bulk",
-            json={"target_listing_id": 90, "listing_ids": [91, 92]},
+    with get_conn() as conn:
+        result = admin_duplicate_qc.merge_duplicate(
+            conn,
+            listing_id=duplicate_id,
+            target_id=canonical_id,
+            note="service_pair_merge",
+            audit_writer=app_module._write_admin_audit,
         )
+
+    self.assertEqual(result, {"ok": True})
+    with get_conn() as conn:
+        listing = conn.execute(
+            "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+            (duplicate_id,),
+        ).fetchone()
+        override_count = conn.execute(
+            """
+            SELECT COUNT(*) AS count FROM dedup_overrides
+            WHERE action='merge' AND listing_id=? AND target_listing_id=?
+              AND note='service_pair_merge' AND active=1
+            """,
+            (duplicate_id, canonical_id),
+        ).fetchone()["count"]
+        audit_count = conn.execute(
+            """
+            SELECT COUNT(*) AS count FROM admin_audit_log
+            WHERE action='dedup_merge' AND entity_type='listing' AND entity_id=?
+            """,
+            (duplicate_id,),
+        ).fetchone()["count"]
+
+    self.assertEqual((listing["possibly_duplicate"], listing["duplicate_of_id"]), (1, canonical_id))
+    self.assertEqual(override_count, 1)
+    self.assertEqual(audit_count, 1)
+
+
+def test_duplicate_service_split_clears_pointer_and_writes_override(self):
+    import app as app_module
+    from db.connection import get_conn
+    from services import admin_duplicate_qc
+
+    canonical_id, duplicate_id = self._insert_review_duplicate_pair()
+    with get_conn() as conn:
+        result = admin_duplicate_qc.split_duplicate(
+            conn,
+            listing_id=duplicate_id,
+            target_id=canonical_id,
+            note="service_split",
+            audit_writer=app_module._write_admin_audit,
+        )
+
+    self.assertEqual(result, {"ok": True})
+    with get_conn() as conn:
+        listing = conn.execute(
+            "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+            (duplicate_id,),
+        ).fetchone()
+        override_count = conn.execute(
+            """
+            SELECT COUNT(*) AS count FROM dedup_overrides
+            WHERE action='split' AND listing_id=? AND target_listing_id=?
+              AND note='service_split' AND active=1
+            """,
+            (duplicate_id, canonical_id),
+        ).fetchone()["count"]
+
+    self.assertEqual((listing["possibly_duplicate"], listing["duplicate_of_id"]), (0, None))
+    self.assertEqual(override_count, 1)
+
+
+def test_duplicate_service_bulk_merge_rejects_nonmember(self):
+    import app as app_module
+    from db.connection import get_conn
+    from services import admin_duplicate_qc
+
+    canonical_id, child_ids = self._insert_review_duplicate_cluster()
+    with self.assertRaises(admin_duplicate_qc.DuplicateQcError) as raised:
+        with get_conn() as conn:
+            admin_duplicate_qc.merge_duplicate_group(
+                conn,
+                target_id=canonical_id,
+                listing_ids=[child_ids[0], 999999999],
+                note="invalid_group",
+                audit_writer=app_module._write_admin_audit,
+            )
+
+    self.assertEqual(raised.exception.code, "not_in_duplicate_review_group")
+
+
+def test_duplicate_bulk_merge_route_preserves_nonmember_error(self):
+    self._login_as_admin()
+    canonical_id, child_ids = self._insert_review_duplicate_cluster()
+
+    response = self.client.post(
+        "/admin/api/qc/duplicates/merge-bulk",
+        json={
+            "target_listing_id": canonical_id,
+            "listing_ids": [child_ids[0], 999999999],
+        },
+    )
 
     self.assertEqual(response.status_code, 400)
     self.assertEqual(
         response.get_json(),
         {"ok": False, "error": "not_in_duplicate_review_group"},
     )
-    operation.assert_called_once()
 ```
 
 - [ ] **Step 2: Run the new mutation tests and observe RED**
@@ -352,11 +424,14 @@ Run:
 ```powershell
 $env:RADAR_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:15432/radar_bds_test'
 $py="$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m pytest tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_merge_and_split_routes_delegate_and_clear_caches tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_bulk_merge_maps_service_validation_error -q
+& $py -X utf8 -m pytest tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_bulk_merge_route_preserves_nonmember_error -q
+& $py -X utf8 -m pytest tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_service_merge_updates_listing_override_and_audit tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_service_split_clears_pointer_and_writes_override tests\test_admin_control_room.py::AdminControlRoomGateTest::test_duplicate_service_bulk_merge_rejects_nonmember -q
 ```
 
-Expected: FAIL because the service does not expose the mutation functions and
-the routes still execute their inline implementations.
+Expected: the first command passes as characterization of the current route.
+The second command fails because the service does not expose the three mutation
+functions. Each service test exercises the desired contract against the real
+database and real audit writer; no route or service mock is involved.
 
 - [ ] **Step 3: Implement the three mutation entry points**
 
@@ -557,10 +632,10 @@ Run:
 ```powershell
 $env:RADAR_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:15432/radar_bds_test'
 $py="$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m pytest tests\test_admin_control_room.py -k "duplicate_bulk_merge or duplicate_merge or duplicate_pair_disappears or duplicate_group_disappears or after_admin_split or delegates_and_clear_caches or maps_service_validation_error" -q
+& $py -X utf8 -m pytest tests\test_admin_control_room.py -k "duplicate_bulk_merge or duplicate_merge or duplicate_pair_disappears or duplicate_group_disappears or after_admin_split or duplicate_service_merge or duplicate_service_split or duplicate_service_bulk_merge_rejects_nonmember" -q
 ```
 
-Expected: PASS for delegation, validation mapping, pair and bulk writes,
+Expected: PASS for direct service behavior, route validation mapping, pair and bulk writes,
 canonical hydration, queue disappearance, split override, audit, and cache
 clearing behavior.
 
@@ -589,63 +664,26 @@ git commit -m "refactor: delegate admin duplicate qc mutations"
 
 **Files:**
 - Modify: `app.py:7029-7915`
-- Modify: `tests/test_admin_duplicate_qc_service.py`
 
 **Interfaces:**
 - Consumes: the four service entry points completed in Tasks 1 and 2.
-- Produces: an enforced source boundary where `app.py` contains only the four duplicate route adapters and none of the moved business helpers.
+- Produces: `app.py` containing only the four duplicate route adapters and none
+  of the moved or dead business helpers.
 
-- [ ] **Step 1: Add a failing source-boundary regression test**
+- [ ] **Step 1: Establish a GREEN behavioral baseline before cleanup**
 
-Append this test to `tests/test_admin_duplicate_qc_service.py`:
-
-```python
-def test_app_contains_no_legacy_duplicate_qc_helpers():
-    tree = ast.parse((ROOT / "app.py").read_text(encoding="utf-8"))
-    definitions = {
-        node.name
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-    }
-    moved_helpers = {
-        "_admin_duplicate_review_items",
-        "_admin_duplicate_qc_item",
-        "_admin_duplicate_member_from_item",
-        "_admin_duplicate_review_groups",
-        "_admin_same_listing_identity",
-        "_has_listing_column",
-        "_admin_listing_from_duplicate_item",
-        "_admin_near_value",
-        "_admin_phone_tail",
-        "_admin_distinctive_area",
-        "_admin_road_conflict",
-        "_admin_should_auto_split_duplicate_pair",
-        "_admin_should_auto_merge_duplicate_pair",
-        "_admin_should_hide_safe_duplicate_review_pair",
-        "_admin_apply_auto_duplicate_merge",
-        "_admin_apply_auto_duplicate_split",
-        "_admin_is_suspected_duplicate_pair",
-        "_admin_suspected_duplicate_items",
-        "_duplicate_qc_reasons",
-        "_safe_float",
-        "_hydrate_duplicate_canonical",
-    }
-    assert definitions.isdisjoint(moved_helpers)
-```
-
-- [ ] **Step 2: Run the boundary test and observe RED**
-
-Run:
+Run the real service and route characterization tests before deleting any code:
 
 ```powershell
+$env:RADAR_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:15432/radar_bds_test'
 $py="$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
-& $py -X utf8 -m pytest tests\test_admin_duplicate_qc_service.py::test_app_contains_no_legacy_duplicate_qc_helpers -q
+& $py -X utf8 -m pytest tests\test_admin_duplicate_qc_service.py tests\test_admin_control_room.py -k "duplicate" -q
 ```
 
-Expected: FAIL and list the helper definitions still retained temporarily in
-`app.py`.
+Expected: PASS. This is the REFACTOR checkpoint of the TDD cycles from Tasks 1
+and 2; helper deletion must keep the same behavior tests green.
 
-- [ ] **Step 3: Delete only the now-unused helper definitions**
+- [ ] **Step 2: Delete only the now-unused helper definitions**
 
 Remove the old function definitions listed by the test from `app.py`. Preserve:
 
@@ -661,7 +699,7 @@ _admin_review_items_response
 Do not remove `_image_order_sql`; the generic admin review query outside this
 subproject still calls it near the current line 6787.
 
-- [ ] **Step 4: Prove there are no old calls or compatibility aliases**
+- [ ] **Step 3: Prove there are no old calls or compatibility aliases**
 
 Run:
 
@@ -682,7 +720,7 @@ Expected: approximately `850-900` lines removed from `app.py`. A result outside
 that range requires diff inspection; do not delete unrelated code to meet the
 number.
 
-- [ ] **Step 5: Run boundary, duplicate, and full admin tests**
+- [ ] **Step 4: Run duplicate and full admin tests after cleanup**
 
 Run:
 
@@ -699,10 +737,10 @@ git diff --check
 Expected: all tests and static checks pass. Warnings that already exist are not
 new failures, but record any new warning introduced by this extraction.
 
-- [ ] **Step 6: Commit the legacy-helper removal**
+- [ ] **Step 5: Commit the legacy-helper removal**
 
 ```powershell
-git add app.py tests/test_admin_duplicate_qc_service.py
+git add app.py
 git commit -m "refactor: remove duplicate qc helpers from app"
 ```
 
