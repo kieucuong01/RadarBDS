@@ -890,6 +890,19 @@
   overflow: hidden;
 }
 
+.sc-title-link,
+.sc-title-link:visited,
+.sc-title-link:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.sc-title-link:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
 /* Price Section */
 .price-container {
   display: grid;

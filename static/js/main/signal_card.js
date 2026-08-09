@@ -256,8 +256,8 @@
       : '';
     var wrapperOpen = openMode === 'link'
       ? '<a class="scard signal-shared-card ' + (newListing ? 'is-new-signal' : '') + '" href="' + href + '"'
-      : `<div class="scard signal-shared-card ${newListing ? 'is-new-signal' : ''}" role="button" tabindex="0" onclick="${handler}(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${handler}(this);}"`;
-    var wrapperClose = openMode === 'link' ? '</a>' : '</div>';
+      : `<article class="scard signal-shared-card ${newListing ? 'is-new-signal' : ''}" onclick="${handler}(this)"`;
+    var wrapperClose = openMode === 'link' ? '</a>' : '</article>';
     var favorite = showFavorite
       ? '<button type="button" class="favorite-btn" data-listing-id="' + esc(item.id) + '" aria-pressed="false" title="Lưu lô này" onclick="event.stopPropagation();toggleFavoriteListing(this.dataset.listingId,event)">'
         + favoriteIconSvg() + '<span>Lưu</span></button>'
@@ -267,6 +267,10 @@
     var contact = showContact
       ? `<a href="#" class="btn-zalo" onclick="event.preventDefault();event.stopPropagation();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'${contactContext}')">${ctaLabel}</a>`
       : '';
+    var titleText = esc(item.title || '-');
+    var titleHtml = openMode === 'modal'
+      ? `<a class="sc-title sc-title-link" href="${href}" title="${esc(item.title || '')}" onclick="event.preventDefault();event.stopPropagation();${handler}(this.closest('.scard'))">${titleText}</a>`
+      : `<div class="sc-title" title="${esc(item.title || '')}">${titleText}</div>`;
     return wrapperOpen + ' ' + dataAttrs(item, computedFair, timeText, road) + ' aria-label="Xem chi tiết ' + esc(item.title || ('tin #' + item.id)) + '">'
       + '<div class="sc-img-wrap' + (isDefaultImage ? ' sc-img-wrap-empty' : '') + '">'
       + '<img class="sc-img' + (isDefaultImage ? ' is-default' : '') + '" src="' + esc(imageSource)
@@ -286,7 +290,7 @@
       + qualityBadges(item)
       + '</div>'
       + '</div>'
-      + '<div class="sc-body"><div class="sc-title" title="' + esc(item.title || '') + '">' + esc(item.title || '-') + '</div>'
+      + '<div class="sc-body">' + titleHtml
       + '<div class="price-container"><div class="price-actual"><span class="price-label price-label-actual ' + actualClass + '">THỰC TẾ</span>'
       + '<div class="price-val ' + actualClass + '">' + (price ? esc(format(price, 2)) + ' tỷ' : '-') + '</div>'
       + '<div class="price-m2">' + (actual ? esc(format(actual)) + ' tr/m²' : '-') + '</div></div>'

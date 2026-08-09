@@ -79,7 +79,12 @@ const feed = api.render(item, {
   showFavorite: true,
   showContact: true,
 });
-assert.match(feed, /role="button"/);
+assert.match(feed, /<article class="scard[^>]*signal-shared-card/);
+assert.match(feed, /class="sc-title sc-title-link"/);
+assert.match(feed, /href="\/listing\/42"/);
+assert.doesNotMatch(feed, /role="button"/);
+assert.doesNotMatch(feed, /tabindex="0"/);
+assert.doesNotMatch(feed, /onkeydown=/);
 assert.match(feed, /favorite-btn/);
 assert.match(feed, /Ráp mối/);
 
@@ -154,5 +159,11 @@ const signalsSource = fs.readFileSync(path.join(
   'signals.js',
 ), 'utf8');
 assert.doesNotMatch(signalsSource, /Đã lưu/);
+assert.match(signalsSource, /<article class="scard/);
+assert.match(signalsSource, /class="sc-title sc-title-link"/);
+assert.doesNotMatch(
+  signalsSource,
+  /<div class="scard[^`]*role="button" tabindex="0"/,
+);
 
 console.log('shared signal card renderer: ok');

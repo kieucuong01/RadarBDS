@@ -726,6 +726,7 @@ function renderSignalDealCard(x, opts = {}) {
   const roadStr = x.road_label || x.roadLabel || roadTiers[x.road_tier] || x.road_type || x.road || 'Chưa rõ';
   const metaChipsHtml = renderSignalMetaChips(x, areaLabel, roadStr);
   const safeTitle = escHtml(x.title || '');
+  const detailHref = x.detail_href || x.detail_url || `/listing/${encodeURIComponent(x.id)}`;
   const imgSrc = signalDealImageSrc(x);
   const dataAttr = signalDealDataAttrs(x, fairPrice, imgSrc, timeStr, roadStr, profit);
   const isPriceUpdated = x.card_date_reason === 'price_updated';
@@ -758,12 +759,12 @@ function renderSignalDealCard(x, opts = {}) {
   const cardLabel = `Mở chi tiết ${safeTitle || 'tin đăng'}`;
 
   return `
-  <div class="scard ${newCardClass} ${cardContext === 'all' ? 'listing-grid-card' : ''}" role="button" tabindex="0"
-    aria-label="${escHtml(cardLabel)}" onclick="${openHandler}(this)"
-    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${openHandler}(this);}" ${dataAttr}>
+  <article class="scard ${newCardClass} ${cardContext === 'all' ? 'listing-grid-card' : ''}"
+    aria-label="${escHtml(cardLabel)}" onclick="${openHandler}(this)" ${dataAttr}>
     ${mediaHtml}
     <div class="sc-body">
-      <div class="sc-title" title="${safeTitle}">${safeTitle || '-'}</div>
+      <a class="sc-title sc-title-link" href="${escHtml(detailHref)}" title="${safeTitle}"
+        onclick="event.preventDefault();event.stopPropagation();${openHandler}(this.closest('.scard'))">${safeTitle || '-'}</a>
 
       <div class="price-container">
         <div class="price-actual">
@@ -786,7 +787,7 @@ function renderSignalDealCard(x, opts = {}) {
         <a href="#" onclick="event.preventDefault();const c=this.closest('.scard').dataset;tierCTA(c.id,c.url,'${contactContext}');" class="btn-zalo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${ctaLabel}</a>
       </div>
     </div>
-  </div>
+  </article>
 `;
 }
 
