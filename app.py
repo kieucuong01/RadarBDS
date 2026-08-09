@@ -173,6 +173,11 @@ from services.public_cache import (
     get_durable_dataset_versions,
     get_or_load_public_payload,
 )
+from services.agent_resources import (
+    AGENT_CACHE_CONTROL,
+    build_agent_openapi_document,
+    build_agent_site_manifest,
+)
 
 # RBAC (4-tier auth)
 from auth.core import (
@@ -3867,6 +3872,24 @@ Allow: /
 Sitemap: {_public_url('/sitemap.xml')}
 """
     return Response(body, mimetype="text/plain")
+
+
+def _agent_json_response(payload):
+    response = jsonify(payload)
+    response.headers["Cache-Control"] = AGENT_CACHE_CONTROL
+    return response
+
+
+def agent_site_json():
+    return _agent_json_response(
+        build_agent_site_manifest(base_url=PUBLIC_BASE_URL)
+    )
+
+
+def agent_openapi_json():
+    return _agent_json_response(
+        build_agent_openapi_document(base_url=PUBLIC_BASE_URL)
+    )
 
 
 def llms_txt():

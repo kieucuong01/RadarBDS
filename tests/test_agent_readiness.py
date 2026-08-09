@@ -112,3 +112,33 @@ def test_discovery_documents_do_not_advertise_private_or_write_surfaces():
         "/api/favorites",
     ):
         assert forbidden not in combined
+
+
+def test_agent_json_routes_are_public_cacheable_and_database_free(monkeypatch):
+    import app as radar_app
+
+    def fail_if_database_is_touched(*args, **kwargs):
+        raise AssertionError("agent discovery must not touch the database")
+
+    monkeypatch.setattr(radar_app, "get_conn", fail_if_database_is_touched)
+    client = radar_app.app.test_client()
+
+    site_response = client.get("/agent/site.json")
+    openapi_response = client.get("/agent/openapi.json")
+
+    for response in (site_response, openapi_response):
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+        assert response.headers["Cache-Control"] == (
+            "public, max-age=300, stale-while-revalidate=86400"
+        )
+        assert "Set-Cookie" not in response.headers
+        assert response.headers.get("X-Radar-Public-Cache") != "1"
+
+    assert site_response.get_json()["discovery"]["openapi"].endswith(
+        "/agent/openapi.json"
+    )
+    assert set(openapi_response.get_json()["paths"]) == {
+        "/api/signals",
+        "/api/counts",
+    }

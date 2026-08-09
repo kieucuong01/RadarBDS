@@ -173,6 +173,16 @@ def seo_article(article_slug, **kwargs):
     return _impl("seo_knowledge_legacy_redirect", article_slug=article_slug, **kwargs)
 
 
+@bp.route("/agent/site.json")
+def agent_site_json(**kwargs):
+    return _impl("agent_site_json", **kwargs)
+
+
+@bp.route("/agent/openapi.json")
+def agent_openapi_json(**kwargs):
+    return _impl("agent_openapi_json", **kwargs)
+
+
 @bp.route("/robots.txt")
 def robots_txt(**kwargs):
     return _impl("robots_txt", **kwargs)
