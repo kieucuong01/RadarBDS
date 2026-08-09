@@ -114,6 +114,54 @@ def test_dashboard_tools_link_to_new_public_hubs_without_replacing_task_tabs():
     )
 
 
+def test_dashboard_task_tabs_and_signal_results_expose_agent_readable_state():
+    markup = DASHBOARD.read_text(encoding="utf-8")
+    core_script = DASHBOARD_JS.read_text(encoding="utf-8")
+    signal_script = Path("static/js/main/signals.js").read_text(
+        encoding="utf-8"
+    )
+
+    for tab_id in ("signals", "all", "market", "insights"):
+        assert markup.count(f'aria-controls="tab-{tab_id}"') == 2
+
+    assert markup.count('data-tab-target="signals"') == 2
+    assert markup.count(
+        'data-tab-target="signals" aria-controls="tab-signals" '
+        'aria-pressed="true"'
+    ) == 2
+    for tab_id in ("all", "market", "insights"):
+        assert markup.count(
+            f'data-tab-target="{tab_id}" aria-controls="tab-{tab_id}" '
+            'aria-pressed="false"'
+        ) == 2
+
+    assert (
+        'id="tab-signals" class="tab-content active" aria-hidden="false"'
+        in markup
+    )
+    for tab_id in ("all", "market", "insights"):
+        assert (
+            f'id="tab-{tab_id}" class="tab-content" aria-hidden="true"'
+            in markup
+        )
+
+    assert (
+        'id="signalsGrid" role="region" '
+        'aria-label="Danh sách signal phù hợp" aria-busy="true"'
+    ) in markup
+    assert "function syncDashboardTabState(tabId)" in core_script
+    assert (
+        "control.setAttribute('aria-pressed', isActive ? 'true' : 'false')"
+        in core_script
+    )
+    assert (
+        "panel.setAttribute('aria-hidden', isActive ? 'false' : 'true')"
+        in core_script
+    )
+    assert "syncDashboardTabState(tabId);" in core_script
+    assert 'role="status"' in signal_script
+
+
 def test_news_article_path_marks_news_navigation_active():
     import app as radar_app
 

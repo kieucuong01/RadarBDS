@@ -555,6 +555,17 @@ document.addEventListener('keydown', function (event) {
   }
 });
 
+function syncDashboardTabState(tabId) {
+  document.querySelectorAll('[data-tab-target]').forEach((control) => {
+    const isActive = control.dataset.tabTarget === tabId;
+    control.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+  document.querySelectorAll('.tab-content').forEach((panel) => {
+    const isActive = panel.id === `tab-${tabId}`;
+    panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+  });
+}
+
 async function switchTab(tabId, btn) {
   const sheet = document.getElementById('toolsSheet');
   if (sheet) sheet.hidden = true;
@@ -566,6 +577,7 @@ async function switchTab(tabId, btn) {
   const tab = document.getElementById(`tab-${tabId}`);
   if (!tab) return;
   tab.classList.add('active');
+  syncDashboardTabState(tabId);
   const mobileTitle = document.getElementById('mobileActiveTabTitle');
   if (mobileTitle) mobileTitle.textContent = TAB_TITLES[tabId] || 'Radar BDS';
   hideSidebarMobile();

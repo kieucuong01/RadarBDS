@@ -416,7 +416,7 @@ function renderSignalError(message) {
   const grid = document.getElementById('signalsGrid');
   if (!grid) return;
   grid.innerHTML = `
-    <div style="grid-column: 1/-1; padding: 48px 20px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; margin-top: 20px; color: var(--text-muted);">
+    <div role="status" style="grid-column: 1/-1; padding: 48px 20px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; margin-top: 20px; color: var(--text-muted);">
       ${message}
     </div>
   `;

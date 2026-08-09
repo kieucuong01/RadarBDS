@@ -363,7 +363,7 @@
         <strong id="mobileActiveTabTitle">{% if saved_page %}BDS đã lưu{% else %}Săn Deal{% endif %}</strong>
       </div>
       <nav class="header-nav">
-        <button class="nav-link active" data-tab-target="signals" onclick="switchTab('signals', this)">
+        <button type="button" class="nav-link active" data-tab-target="signals" aria-controls="tab-signals" aria-pressed="true" onclick="switchTab('signals', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
               d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -371,7 +371,7 @@
           Săn Deal
           <span id="badgeSignals" class="nav-count-badge">…</span>
         </button>
-        <button class="nav-link" data-tab-target="all" onclick="switchTab('all', this)">
+        <button type="button" class="nav-link" data-tab-target="all" aria-controls="tab-all" aria-pressed="false" onclick="switchTab('all', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
               d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -379,7 +379,7 @@
           Tin rao
           <span id="badgeTotal" class="nav-count-badge">…</span>
         </button>
-        <button class="nav-link" data-tab-target="market" onclick="switchTab('market', this)">
+        <button type="button" class="nav-link" data-tab-target="market" aria-controls="tab-market" aria-pressed="false" onclick="switchTab('market', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -418,7 +418,7 @@
           </nav>
         </details>
         {% if SHOW_INSIGHTS %}
-        <button class="nav-link" data-tab-target="insights" onclick="switchTab('insights', this)">
+        <button type="button" class="nav-link" data-tab-target="insights" aria-controls="tab-insights" aria-pressed="false" onclick="switchTab('insights', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12h4l3 8 4-16 3 8h4" />
           </svg>
@@ -581,7 +581,7 @@
       </section>
 
       <!-- TAB: SIGNALS -->
-      <div id="tab-signals" class="tab-content active">
+      <div id="tab-signals" class="tab-content active" aria-hidden="false">
         <div class="area-scope-modal" id="areaScopeChooser" hidden role="dialog" aria-modal="true" aria-labelledby="areaScopeChooserTitle">
           <section class="area-scope-modal-panel">
             <button type="button" class="area-scope-close" aria-label="Đóng chọn khu vực" onclick="closeAreaScopeChooser()">&times;</button>
@@ -746,13 +746,13 @@
           <span class="mini-spinner" aria-hidden="true"></span>
           <span id="signalsLoadingText">Đang lọc signal...</span>
         </div>
-        <div class="cards-grid" id="signalsGrid">
+        <div class="cards-grid" id="signalsGrid" role="region" aria-label="Danh sách signal phù hợp" aria-busy="true">
           <!-- Rendered via JS -->
         </div>
       </div>
 
       <!-- TAB: MARKET -->
-      <div id="tab-market" class="tab-content">
+      <div id="tab-market" class="tab-content" aria-hidden="true">
         <div class="market-grid">
           <div class="chart-card opportunity-card" id="marketHeatmapCard">
             <div class="chart-header">
@@ -909,7 +909,7 @@
 
       {% if SHOW_INSIGHTS %}
       <!-- TAB: INSIGHTS -->
-      <div id="tab-insights" class="tab-content">
+      <div id="tab-insights" class="tab-content" aria-hidden="true">
         <div class="insights-wrap">
           <section class="insight-panel">
             <div class="insight-head">
@@ -930,7 +930,7 @@
       {% endif %}
 
       <!-- TAB: ALL LISTINGS -->
-      <div id="tab-all" class="tab-content">
+      <div id="tab-all" class="tab-content" aria-hidden="true">
         <!-- <div class="table-filters">
           <div class="tf-group">
             <label class="tf-label">Diện tích (m²)</label>
@@ -1462,7 +1462,7 @@
   </div>
 
   <nav class="mobile-bottom-nav" aria-label="Điều hướng chính">
-    <button class="bottom-nav-item active" type="button" data-tab-target="signals" onclick="switchTab('signals', this)">
+    <button class="bottom-nav-item active" type="button" data-tab-target="signals" aria-controls="tab-signals" aria-pressed="true" onclick="switchTab('signals', this)">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path
           d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -1470,7 +1470,7 @@
       <span>Săn Deal</span>
       <small id="mobileBadgeSignals">…</small>
     </button>
-    <button class="bottom-nav-item" type="button" data-tab-target="all" onclick="switchTab('all', this)">
+    <button class="bottom-nav-item" type="button" data-tab-target="all" aria-controls="tab-all" aria-pressed="false" onclick="switchTab('all', this)">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path
           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -1478,7 +1478,7 @@
       <span>Tin rao</span>
       <small id="mobileBadgeTotal">…</small>
     </button>
-    <button class="bottom-nav-item" type="button" data-tab-target="market" onclick="switchTab('market', this)">
+    <button class="bottom-nav-item" type="button" data-tab-target="market" aria-controls="tab-market" aria-pressed="false" onclick="switchTab('market', this)">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h16a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
@@ -1493,7 +1493,7 @@
       <span>Công cụ</span>
     </button>
     {% if SHOW_INSIGHTS %}
-    <button class="bottom-nav-item" type="button" data-tab-target="insights" onclick="switchTab('insights', this)">
+    <button class="bottom-nav-item" type="button" data-tab-target="insights" aria-controls="tab-insights" aria-pressed="false" onclick="switchTab('insights', this)">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M3 12h4l3 8 4-16 3 8h4" />
       </svg>
