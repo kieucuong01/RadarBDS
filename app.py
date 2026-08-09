@@ -3866,7 +3866,10 @@ def seo_article_page(slug):
 
 
 def robots_txt():
-    body = f"""User-agent: *
+    body = f"""User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: *
 Allow: /
 
 Sitemap: {_public_url('/sitemap.xml')}
@@ -3916,6 +3919,13 @@ def llms_txt():
     body = f"""# Radar BDS
 
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
+
+## Dành cho AI agent
+- Phạm vi: chỉ đọc, tìm, lọc, so sánh signal công khai và dẫn người dùng đến trang chi tiết phù hợp.
+- Hướng dẫn máy đọc: {_public_url('/agent/site.json')}
+- OpenAPI chỉ đọc: {_public_url('/agent/openapi.json')}
+- Tìm signal: GET {_public_url('/api/signals')}?include_total=0&limit=30
+- Khi dẫn nguồn, dùng detail_href của signal; không suy đoán số điện thoại hoặc URL tin gốc.
 
 ## Phạm vi ưu tiên
 - Thủ Dầu Một: {_public_url('/binh-duong/thu-dau-mot')}

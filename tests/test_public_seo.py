@@ -51,6 +51,8 @@ def test_robots_and_sitemap_use_public_domain():
         sitemap = radar_app.sitemap_xml().get_data(as_text=True)
 
     assert "Sitemap: https://radarbds.vn/sitemap.xml" in robots
+    assert "User-agent: OAI-SearchBot\nAllow: /" in robots
+    assert "User-agent: *\nAllow: /" in robots
     assert "<loc>https://radarbds.vn/</loc>" in sitemap
     assert "<loc>https://radarbds.vn/binh-duong</loc>" in sitemap
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap

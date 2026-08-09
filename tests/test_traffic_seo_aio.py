@@ -161,6 +161,11 @@ def test_llms_txt_is_stable_and_links_priority_ward_sources():
         assert f"https://radarbds.vn/binh-duong/phuong-{slug}" in body
     assert "pháp lý" in body
     assert "không thay thế" in body
+    assert "https://radarbds.vn/agent/site.json" in body
+    assert "https://radarbds.vn/agent/openapi.json" in body
+    assert "chỉ đọc" in body.lower()
+    assert "/api/signals" in body
+    assert "detail_href" in body
     assert "204 tin" not in body
     assert "36 tín hiệu" not in body
 

@@ -142,3 +142,20 @@ def test_agent_json_routes_are_public_cacheable_and_database_free(monkeypatch):
         "/api/signals",
         "/api/counts",
     }
+
+
+def test_agent_resources_are_linked_from_llms_and_allowed_for_search_crawlers():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    robots = client.get("/robots.txt").get_data(as_text=True)
+    llms = client.get("/llms.txt").get_data(as_text=True)
+
+    assert "User-agent: OAI-SearchBot\nAllow: /" in robots
+    assert "User-agent: *\nAllow: /" in robots
+    assert "https://radarbds.vn/sitemap.xml" in robots
+    assert "https://radarbds.vn/agent/site.json" in llms
+    assert "https://radarbds.vn/agent/openapi.json" in llms
+    assert "chỉ đọc" in llms.lower()
+    assert "/api/signals" in llms
+    assert "detail_href" in llms
