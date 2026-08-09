@@ -907,6 +907,49 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".nav-item.active .nav-icon", css)
         self.assertIn(".btn-icon-label", css)
 
+    def test_duplicate_service_loads_real_review_payload(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        canonical_id, duplicate_id = self._insert_review_duplicate_pair(
+            area_old=100.0,
+            area_new=112.0,
+        )
+        with get_conn() as conn:
+            payload = admin_duplicate_qc.load_duplicate_review_payload(conn)
+
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in payload["items"]}
+        self.assertIn((duplicate_id, canonical_id), pairs)
+        self.assertTrue(payload["groups"])
+
+    def test_duplicate_service_hides_near_identical_pair_without_writing(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        listing_id, target_id = self._insert_near_identical_dx132_pair()
+        with get_conn() as conn:
+            payload = admin_duplicate_qc.load_duplicate_review_payload(conn)
+
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in payload["items"]}
+        self.assertNotIn((listing_id, target_id), pairs)
+        with get_conn() as conn:
+            listing = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+            override_count = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM dedup_overrides
+                WHERE listing_id=? AND target_listing_id=? AND active=1
+                """,
+                (listing_id, target_id),
+            ).fetchone()["count"]
+
+        self.assertEqual(listing["possibly_duplicate"], 0)
+        self.assertIsNone(listing["duplicate_of_id"])
+        self.assertEqual(override_count, 0)
+
     def test_data_quality_duplicate_queue_loads_duplicate_pairs(self):
         from db.connection import get_conn
 

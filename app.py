@@ -128,7 +128,13 @@ from services.signal_quality import (
     split_quality_flags,
 )
 from services.advisory_memo import build_admin_valuation_workflow_markdown
-from services import admin_growth, admin_leads, admin_quality, admin_users
+from services import (
+    admin_duplicate_qc,
+    admin_growth,
+    admin_leads,
+    admin_quality,
+    admin_users,
+)
 from services import admin_jobs as admin_job_service
 from db.admin_jobs import AdminJobAlreadyActive
 from services.valuation_tool import (
@@ -7019,9 +7025,7 @@ def admin_api_ai_training_disagreements():
 def admin_api_qc_duplicates():
     def _load_payload():
         with db_mod.get_conn() as conn:
-            items = _admin_duplicate_review_items(conn)
-            groups = _admin_duplicate_review_groups(items)
-        return {"items": items, "groups": groups}
+            return admin_duplicate_qc.load_duplicate_review_payload(conn)
 
     return jsonify(_cached_admin_read_payload("duplicates", "review", _load_payload, ttl_seconds=15))
 
