@@ -10,10 +10,9 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 ## App and DB
 
-Local PostgreSQL setup:
-
-Normal local development uses the installed PostgreSQL 18 Windows service,
-Current local override uses the repo portable PostgreSQL instance:
+Local PostgreSQL setup uses the repo portable PostgreSQL 17 instance. The
+bootstrap is idempotent: it starts the server only when needed and ensures both
+development and test databases exist without dropping existing data.
 
 - start command: `.\scripts\local_postgres.ps1 start`
 - host/port: `127.0.0.1:15432`
@@ -27,6 +26,8 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 
 .\scripts\local_postgres.ps1 start
 # .env.local should set DATABASE_URL and RADAR_TEST_DATABASE_URL
+.\scripts\dev_preflight.ps1
+.\scripts\dev_preflight.ps1 -Json
 & $py -X utf8 radar.py inspect
 & $py -X utf8 radar.py integrity-report --json
 & $py -X utf8 app.py
@@ -38,6 +39,34 @@ $py = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
 not change schema, listing data, valuation snapshots, read models, dataset
 versions, or caches. Review `invariant_violations_remaining`; it must be zero
 before applying the result of a full reprocess to production.
+
+### Read-only data trust audit
+
+Use the bounded PostgreSQL audit for schema, crawl freshness, pipeline
+invariants, durable versions, public parity, map coverage, publisher policy,
+and extraction coverage:
+
+```powershell
+& $py -X utf8 radar.py data-trust-audit --json
+& $py -X utf8 radar.py data-trust-audit --json --deep --limit 200
+$auditExit = $LASTEXITCODE
+```
+
+The command proves `SET TRANSACTION READ ONLY` on its fresh connection before
+domain queries, applies a bounded statement timeout, and always rolls back and
+closes. There is no automatic remediation: it does not call schema init,
+reprocess, refresh, publish, prewarm, feature-flag changes, or any data repair.
+
+Exit 0 means a verified pass or warning, exit 1 means a verified trust failure,
+and exit 2 means configuration, connection, read-only state, statement timeout,
+or execution remained unverified. Treat a timeout as unverified and keep a
+warning visible; neither result grants permission to mutate data.
+
+Production execution needs a separately authorized, already deployed SHA and
+verified `radar-bds.service`. Store production JSON outside the repository,
+never under a tracked checkout or `reports/`. The exact production sequence,
+credential-rotation stop gate, evidence path, and service checks are in
+`docs/operations.md`.
 
 After deploying a revision that changes measurement reconciliation or
 valuation snapshots, run an explicit production `reprocess --full` before
@@ -625,14 +654,15 @@ Post-merger location resolver:
 & $py -X utf8 -m pytest tests\test_feature_extractor.py tests\test_dedup.py tests\test_price_history.py -q
 
 # Read-only DB audit before any reprocess.
-# Uses the current local PostgreSQL 18 DATABASE_URL from .env.
+# Uses the current local PostgreSQL 17 DATABASE_URL from .env.local.
 & $py -X utf8 scripts\audit_post_merger_locations.py --limit 2000 --samples 3
 ```
 
-Full pytest:
+Normal local/CI-equivalent gates (no production request):
 
 ```powershell
-& $py -X utf8 -m pytest tests
+& $py -X utf8 -m pytest tests --ignore=tests\test_guland.py --ignore=tests\sanity_test.py
+node --test tests/js/*.cjs tests/js/test_*.js
 ```
 
 Integration checks such as `tests\test_guland.py` and `tests\sanity_test.py` may touch live services or local app state. Run them only when the task needs that coverage.

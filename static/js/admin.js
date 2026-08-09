@@ -2674,6 +2674,72 @@ function renderGrowthCharts(data) {
   ] }, options: growthOptions() });
 }
 
+function renderGrowthMarketing(marketing) {
+  const safeMarketing = marketing && typeof marketing === 'object' ? marketing : {};
+  const coverage = safeMarketing.coverage && typeof safeMarketing.coverage === 'object' ? safeMarketing.coverage : {};
+  const channels = Array.isArray(safeMarketing.channels) ? safeMarketing.channels : [];
+  const landingPages = Array.isArray(safeMarketing.landing_pages) ? safeMarketing.landing_pages : [];
+  const campaigns = Array.isArray(safeMarketing.campaigns) ? safeMarketing.campaigns : [];
+  const ctaTargets = Array.isArray(safeMarketing.cta_targets) ? safeMarketing.cta_targets : [];
+  const directlyAttributed = safeMarketing.directly_attributed && typeof safeMarketing.directly_attributed === 'object' ? safeMarketing.directly_attributed : {};
+  const unattributed = safeMarketing.unattributed && typeof safeMarketing.unattributed === 'object' ? safeMarketing.unattributed : {};
+  const channelLabels = {
+    organic: 'Organic', social: 'Social', ai: 'AI referral',
+    direct_unknown: 'Direct / chưa rõ', legacy_unknown: 'Legacy chưa gắn kênh'
+  };
+  const channelRoot = document.getElementById('growthMarketingChannels');
+  const coverageRoot = document.getElementById('growthMarketingCoverage');
+  const emptyRoot = document.getElementById('growthMarketingEmpty');
+  const landingRoot = document.getElementById('growthLandingTableBody');
+  const campaignRoot = document.getElementById('growthCampaignTableBody');
+  const ctaRoot = document.getElementById('growthCtaTableBody');
+  if (!channelRoot || !coverageRoot || !emptyRoot || !landingRoot || !campaignRoot || !ctaRoot) return;
+
+  channelRoot.innerHTML = channels.map(row => (
+    '<article class="growth-marketing-channel"><span>' + esc(channelLabels[row.channel] || row.channel || 'Chưa rõ') + '</span>' +
+    '<strong>' + growthFmt(row.current_views) + '</strong>' +
+    '<small>Kỳ trước ' + growthFmt(row.previous_views) + '</small></article>'
+  )).join('');
+
+  const directLeadEvents = Number(directlyAttributed.lead_events_current || 0);
+  const directLeadRows = Number(directlyAttributed.lead_rows_current || 0);
+  const unattributedEvents = Number(unattributed.lead_events_current || 0);
+  const unattributedRows = Number(unattributed.lead_rows_current || 0);
+  const coverageParts = [
+    'Số liệu là lượt sự kiện, không phải số người duy nhất.',
+    'Page-view có kênh: ' + growthFmt(coverage.with_stable_channel) + '/' + growthFmt(coverage.event_count) + '.',
+    'Lead gán trực tiếp: ' + growthFmt(directLeadEvents) + ' event submit và ' + growthFmt(directLeadRows) + ' dòng lead.',
+    'Chưa gán: ' + growthFmt(unattributedEvents) + ' event và ' + growthFmt(unattributedRows) + ' dòng lead.'
+  ];
+  if (Number(coverage.without_stable_channel || 0) > 0) {
+    coverageParts.push(growthFmt(coverage.without_stable_channel) + ' page-view cũ được giữ là legacy_unknown.');
+  }
+  if (coverage.truncated) coverageParts.push('Kết quả đã chạm giới hạn đọc an toàn; số liệu có thể chưa đầy đủ.');
+  coverageRoot.textContent = coverageParts.join(' ');
+
+  const emptyRow = columns => '<tr><td colspan="' + columns + '">Chưa có dữ liệu trực tiếp trong kỳ này.</td></tr>';
+  landingRoot.innerHTML = landingPages.length ? landingPages.map(row => (
+    '<tr><td>' + esc(row.path || '-') + '</td><td>' + growthFmt(row.current_views) + '</td>' +
+    '<td>' + growthFmt(row.previous_views) + '</td><td>' + growthFmt(row.direct_lead_events) + '</td>' +
+    '<td>' + growthFmt(row.direct_lead_rows) + '</td></tr>'
+  )).join('') : emptyRow(5);
+  campaignRoot.innerHTML = campaigns.length ? campaigns.map(row => {
+    const key = [row.utm_source || '-', row.utm_medium || '-', row.utm_campaign || '-'].join(' / ');
+    return '<tr><td>' + esc(key) + '</td><td>' + growthFmt(row.current_views) + '</td>' +
+      '<td>' + growthFmt(row.cta_clicks) + '</td><td>' + growthFmt(row.direct_lead_events) + '</td>' +
+      '<td>' + growthFmt(row.direct_lead_rows) + '</td></tr>';
+  }).join('') : emptyRow(5);
+  ctaRoot.innerHTML = ctaTargets.length ? ctaTargets.map(row => (
+    '<tr><td>' + esc(row.cta_name || '-') + '</td><td>' + esc(row.destination || '-') + '</td>' +
+    '<td>' + growthFmt(row.current_clicks) + '</td><td>' + growthFmt(row.previous_clicks) + '</td></tr>'
+  )).join('') : emptyRow(4);
+
+  emptyRoot.hidden = Boolean(
+    Number(coverage.event_count || 0) || landingPages.length || campaigns.length ||
+    ctaTargets.length || directLeadEvents || directLeadRows || unattributedEvents || unattributedRows
+  );
+}
+
 function renderGrowth(data) {
   const metrics = [['crawled','Tin cào','Nguồn đã chọn'],['signals','Signal','Actionable hiện tại'],['price_drops','Tin giảm giá','Lần giảm tin cậy đầu tiên'],['unique_lots','BĐS unique','Không tính repost'],['signups','Người dùng đăng ký','Toàn hệ thống · không phụ thuộc nguồn'],['leads','Lead hỏi đất','Nguồn đã chọn']];
   growthKpis.innerHTML = metrics.map(([key,label,note]) => {
@@ -2684,6 +2750,7 @@ function renderGrowth(data) {
   }).join('');
   const ratios = [['Signal yield',data.ratios.signal_yield_pct,'%','Nguồn đã chọn'],['Unique-lot yield',data.ratios.unique_lot_yield_pct,'%','Nguồn đã chọn'],['Active users',data.ratios.active_users,'','Toàn hệ thống · không phụ thuộc nguồn'],['Lead → đặt cọc',data.ratios.lead_to_deposit_pct,'%','Lead gắn nguồn đã chọn']];
   growthRatios.innerHTML = ratios.map(([label,value,suffix,note]) => '<article class="surface growth-ratio"><span>' + esc(label) + '</span><strong>' + (value == null ? '?' : growthFmt(value) + suffix) + '</strong><small>' + esc(note) + '</small></article>').join('');
+  renderGrowthMarketing(data.marketing);
   growthTableBody.innerHTML = data.series.map(row => '<tr><td>' + esc(row.label) + '</td><td>' + growthFmt(row.crawled) + '</td><td>' + growthFmt(row.signals) + '</td><td>' + growthFmt(row.unique_lots) + '</td><td>' + growthFmt(row.price_drops) + '</td><td>' + growthFmt(row.signups) + '</td><td>' + growthFmt(row.leads) + '</td></tr>').join('');
   growthEmpty.hidden = !data.series.every(row => !row.crawled && !row.signals && !row.unique_lots && !row.price_drops && !row.leads);
   ensureGrowthChartLibrary()

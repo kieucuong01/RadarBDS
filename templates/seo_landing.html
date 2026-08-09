@@ -689,16 +689,14 @@
       const params = new URLSearchParams(window.location.search);
       const utmSource = (params.get('utm_source') || '').trim().toLowerCase();
       const utmMedium = (params.get('utm_medium') || '').trim().toLowerCase();
+      const utmCampaign = (params.get('utm_campaign') || '').trim().slice(0, 80);
+      const utmContent = (params.get('utm_content') || '').trim().slice(0, 80);
+      const utmTerm = (params.get('utm_term') || '').trim().slice(0, 80);
       const socialSources = ['facebook', 'fb', 'instagram', 'linkedin', 'tiktok', 'twitter', 'x'];
-      const socialMediums = ['social', 'organic_social', 'social_organic', 'paid_social'];
-      if (socialSources.indexOf(utmSource) !== -1 || socialMediums.indexOf(utmMedium) !== -1) {
-        sendRadarEvent('social_utm_visit', {
-          utm_source: utmSource,
-          utm_medium: utmMedium,
-          utm_campaign: params.get('utm_campaign') || '',
-          utm_content: params.get('utm_content') || '',
-        });
-      }
+      const socialMediums = [
+        'social', 'organic_social', 'social_organic', 'paid_social',
+        'pinned_comment', 'group_post', 'comment'
+      ];
 
       const aiUtmSources = {
         'chatgpt': 'chatgpt',
@@ -717,29 +715,63 @@
       try {
         referrerHost = new URL(document.referrer).hostname.toLowerCase().replace(/^www\./, '');
       } catch (err) {}
-      let aiSource = aiUtmSources[utmSource] || '';
-      if (!aiSource && referrerHost) {
-        if (referrerHost === 'chatgpt.com' || referrerHost.endsWith('.chatgpt.com') ||
-            referrerHost === 'chat.openai.com' || referrerHost.endsWith('.openai.com')) {
-          aiSource = 'chatgpt';
-        } else if (referrerHost === 'gemini.google.com') {
-          aiSource = 'gemini';
-        } else if (referrerHost === 'perplexity.ai' || referrerHost.endsWith('.perplexity.ai')) {
-          aiSource = 'perplexity';
-        } else if (referrerHost === 'copilot.microsoft.com') {
-          aiSource = 'copilot';
-        }
+      let referrerAiSource = '';
+      if (referrerHost === 'chatgpt.com' || referrerHost.endsWith('.chatgpt.com') ||
+          referrerHost === 'chat.openai.com' || referrerHost.endsWith('.openai.com')) {
+        referrerAiSource = 'chatgpt';
+      } else if (referrerHost === 'gemini.google.com') {
+        referrerAiSource = 'gemini';
+      } else if (referrerHost === 'perplexity.ai' || referrerHost.endsWith('.perplexity.ai')) {
+        referrerAiSource = 'perplexity';
+      } else if (referrerHost === 'copilot.microsoft.com') {
+        referrerAiSource = 'copilot';
+      }
+      const aiSource = aiUtmSources[utmSource] || referrerAiSource;
+      const isSocial = socialSources.indexOf(utmSource) !== -1 ||
+        socialMediums.indexOf(utmMedium) !== -1;
+      const searchHosts = ['google.com', 'bing.com', 'duckduckgo.com', 'coccoc.com'];
+      const isSearchReferrer = searchHosts.some((host) => (
+        referrerHost === host || referrerHost.endsWith('.' + host)
+      ));
+      let acquisitionChannel = 'direct_unknown';
+      if (aiSource) {
+        acquisitionChannel = 'ai';
+      } else if (isSocial) {
+        acquisitionChannel = 'social';
+      } else if (utmMedium === 'organic' || isSearchReferrer) {
+        acquisitionChannel = 'organic';
+      }
+      const acquisitionContext = {
+        channel: acquisitionChannel,
+        utm_source: utmSource.slice(0, 80),
+        utm_medium: utmMedium.slice(0, 80),
+        utm_campaign: utmCampaign,
+        utm_content: utmContent,
+        utm_term: utmTerm,
+      };
+      if (aiSource) acquisitionContext.ai_source = aiSource;
+      if (referrerAiSource) acquisitionContext.referrer_host = referrerHost;
+
+      if (isSocial) {
+        sendRadarEvent('social_utm_visit', {
+          utm_source: utmSource,
+          utm_medium: utmMedium,
+          utm_campaign: utmCampaign,
+          utm_content: utmContent,
+          utm_term: utmTerm,
+        });
       }
       if (aiSource) {
         sendRadarEvent('ai_referral_visit', {
           ai_source: aiSource,
-          referrer_host: referrerHost,
+          referrer_host: referrerAiSource ? referrerHost : '',
           path: pageMeta.path,
           page_slug: pageMeta.page_slug,
         });
       }
 
-      sendRadarEvent(pageMeta.path.indexOf('/bao-cao/') === 0 ? 'report_viewed' : 'seo_landing_viewed');
+      const canonicalViewEvent = pageMeta.path.indexOf('/bao-cao/') === 0 ? 'report_viewed' : 'seo_landing_viewed';
+      sendRadarEvent(canonicalViewEvent, Object.assign({}, acquisitionContext));
 
       // Init Chart.js charts from page data
       document.addEventListener('DOMContentLoaded', function() {

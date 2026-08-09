@@ -907,6 +907,164 @@ class AdminControlRoomGateTest(unittest.TestCase):
         self.assertIn(".nav-item.active .nav-icon", css)
         self.assertIn(".btn-icon-label", css)
 
+    def test_duplicate_service_loads_real_review_payload(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        canonical_id, duplicate_id = self._insert_review_duplicate_pair(
+            area_old=100.0,
+            area_new=112.0,
+        )
+        with get_conn() as conn:
+            payload = admin_duplicate_qc.load_duplicate_review_payload(conn)
+
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in payload["items"]}
+        self.assertIn((duplicate_id, canonical_id), pairs)
+        self.assertTrue(payload["groups"])
+
+    def test_duplicate_service_hides_near_identical_pair_without_writing(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        listing_id, target_id = self._insert_near_identical_dx132_pair()
+        with get_conn() as conn:
+            payload = admin_duplicate_qc.load_duplicate_review_payload(conn)
+
+        pairs = {(item["id"], item["duplicate_of_id"]) for item in payload["items"]}
+        self.assertNotIn((listing_id, target_id), pairs)
+        with get_conn() as conn:
+            listing = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+            override_count = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM dedup_overrides
+                WHERE listing_id=? AND target_listing_id=? AND active=1
+                """,
+                (listing_id, target_id),
+            ).fetchone()["count"]
+
+        self.assertEqual(listing["possibly_duplicate"], 0)
+        self.assertIsNone(listing["duplicate_of_id"])
+        self.assertEqual(override_count, 0)
+
+    def test_duplicate_service_merge_updates_listing_override_and_audit(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        target_id, listing_id = self._insert_review_duplicate_pair(
+            area_old=100.0,
+            area_new=112.0,
+        )
+        audits = []
+
+        def audit_writer(conn, action, entity_type, entity_id, **details):
+            audits.append((action, entity_type, entity_id, details))
+
+        with get_conn() as conn:
+            result = admin_duplicate_qc.merge_duplicate(
+                conn,
+                listing_id=listing_id,
+                target_id=target_id,
+                note="service_merge",
+                audit_writer=audit_writer,
+            )
+            listing = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+            override = conn.execute(
+                """
+                SELECT action, note, active
+                FROM dedup_overrides
+                WHERE listing_id=? AND target_listing_id=?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (listing_id, target_id),
+            ).fetchone()
+
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual((listing["possibly_duplicate"], listing["duplicate_of_id"]), (1, target_id))
+        self.assertEqual((override["action"], override["note"], override["active"]), ("merge", "service_merge", 1))
+        self.assertEqual(audits[0][:3], ("dedup_merge", "listing", listing_id))
+        self.assertEqual(audits[0][3]["reason"], "service_merge")
+
+    def test_duplicate_service_split_clears_pointer_and_writes_override(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        target_id, listing_id = self._insert_review_duplicate_pair()
+        audits = []
+
+        def audit_writer(conn, action, entity_type, entity_id, **details):
+            audits.append((action, entity_type, entity_id, details))
+
+        with get_conn() as conn:
+            result = admin_duplicate_qc.split_duplicate(
+                conn,
+                listing_id=listing_id,
+                target_id=target_id,
+                note="service_split",
+                audit_writer=audit_writer,
+            )
+            listing = conn.execute(
+                "SELECT possibly_duplicate, duplicate_of_id FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+            override = conn.execute(
+                """
+                SELECT action, note, active
+                FROM dedup_overrides
+                WHERE listing_id=? AND target_listing_id=?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (listing_id, target_id),
+            ).fetchone()
+
+        self.assertEqual(result, {"ok": True})
+        self.assertEqual(listing["possibly_duplicate"], 0)
+        self.assertIsNone(listing["duplicate_of_id"])
+        self.assertEqual((override["action"], override["note"], override["active"]), ("split", "service_split", 1))
+        self.assertEqual(audits[0][:3], ("dedup_split", "listing", listing_id))
+        self.assertEqual(audits[0][3]["reason"], "service_split")
+
+    def test_duplicate_service_bulk_merge_rejects_nonmember(self):
+        from db.connection import get_conn
+        from services import admin_duplicate_qc
+
+        target_id, _ = self._insert_review_duplicate_cluster()
+        with get_conn() as conn:
+            with self.assertRaises(admin_duplicate_qc.DuplicateQcError) as raised:
+                admin_duplicate_qc.merge_duplicate_group(
+                    conn,
+                    target_id=target_id,
+                    listing_ids=[987654321],
+                    note="invalid_group",
+                    audit_writer=lambda *args, **kwargs: None,
+                )
+
+        self.assertEqual(raised.exception.code, "not_in_duplicate_review_group")
+
+    def test_duplicate_bulk_merge_route_preserves_nonmember_error(self):
+        self._login_as_admin()
+        target_id, _ = self._insert_review_duplicate_cluster()
+
+        response = self.client.post(
+            "/admin/api/qc/duplicates/merge-bulk",
+            json={
+                "target_listing_id": target_id,
+                "listing_ids": [987654321],
+                "note": "invalid_group",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"ok": False, "error": "not_in_duplicate_review_group"})
+
     def test_data_quality_duplicate_queue_loads_duplicate_pairs(self):
         from db.connection import get_conn
 

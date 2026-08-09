@@ -146,6 +146,25 @@ def test_google_site_tags_reach_report_article_and_hubs(monkeypatch):
         assert "cta_clicked" in html
 
 
+def test_rendered_landing_and_report_include_canonical_acquisition_tracking():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    landing_html = client.get(
+        "/binh-duong/phuong-phu-my?utm_source=facebook&utm_medium=social"
+    ).get_data(as_text=True)
+    report_html = client.get(
+        "/bao-cao/bds-binh-duong-thang-06-2026?utm_source=chatgpt"
+    ).get_data(as_text=True)
+
+    for html in (landing_html, report_html):
+        assert "const acquisitionContext" in html
+        assert "social_utm_visit" in html
+        assert "ai_referral_visit" in html
+        assert "cta_clicked" in html
+        assert "referrer: document.referrer" not in html
+
+
 def test_report_hub_prefers_master_report_and_news_hub_is_reader_facing():
     import app as radar_app
 

@@ -459,6 +459,68 @@ ssh -i "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa" deploy@103.90.226.230 "set -
 ssh -i "$env:USERPROFILE\.ssh\radar_bds_deploy_rsa" deploy@103.90.226.230 "cd /opt/radar-bds/current && curl -fsS http://127.0.0.1:5000/api/dashboard >/dev/null && curl -fsS 'http://127.0.0.1:5000/api/signals?page=1&limit=3' >/dev/null && curl -fsS 'http://127.0.0.1:5000/api/dashboard?cache_refresh=1' >/dev/null"
 ```
 
+## Read-Only Data Trust Audit
+
+`data-trust-audit` is an operator diagnostic, not a migration or repair command.
+It opens one fresh PostgreSQL connection, issues `SET TRANSACTION READ ONLY`,
+verifies that state on the same transaction, applies a bounded statement
+timeout, and always rolls back and closes. There is no automatic remediation:
+it never initializes schema, refreshes a read model, publishes/prewarms data,
+bumps a dataset version, reprocesses rows, changes a feature flag, or acquires a
+write-oriented advisory lock.
+
+Run the local/test forms against the explicitly configured
+`RADAR_TEST_DATABASE_URL` first:
+
+```powershell
+& $py -X utf8 radar.py data-trust-audit --json
+& $py -X utf8 radar.py data-trust-audit --json --deep --limit 200
+```
+
+The exit contract is stable: exit 0 means verified `pass` or `warn`; exit 1
+means one or more verified data-trust checks failed; exit 2 means configuration,
+connection, read-only state, statement timeout, or execution could not be
+verified. A timeout is unverified, never success. A warning remains visible but
+does not authorize a repair. The report contains bounded counts, reason codes,
+timestamps, field names, and safe comparison IDs only; it contains no URL,
+title, description, phone, email, IP, user-agent, publisher key, raw JSON, or
+credential.
+
+A production run requires separate authorization. Before that authorization is
+used, the local credential previously exposed during audit preparation must be
+rotated before any production release; never copy its old or replacement value
+into a command, report, or commit. Then deploy the already pushed revision and
+verify the exact deployed SHA plus service state before running the audit:
+
+```bash
+cd /opt/radar-bds/current
+test "$(git rev-parse HEAD)" = "<40-character-deployed-sha>"
+systemctl is-active radar-bds.service
+```
+
+Only after both checks pass, load the protected runtime environment and retain
+the production JSON outside the repository. Use a private operator path and
+preserve the command's exit code:
+
+```bash
+umask 077
+audit_path="/var/tmp/radar-data-trust-<40-character-deployed-sha>.json"
+set -a
+. /etc/radar-bds/radar.env
+set +a
+cd /opt/radar-bds/current
+/opt/radar-bds/.venv/bin/python -X utf8 radar.py data-trust-audit \
+  --json --deep --limit 200 > "$audit_path"
+audit_exit=$?
+printf 'data-trust exit=%s evidence=%s\n' "$audit_exit" "$audit_path"
+exit "$audit_exit"
+```
+
+Do not redirect production evidence into the checkout, `reports/`, or another
+tracked path. Review a verified failure or warning as evidence only. Credential
+rotation, deploy, service restart, reprocess, refresh, cache changes, browser
+smoke, and any data correction remain separate explicitly authorized actions.
+
 ## Production Reprocess
 
 Use the deploy user and production env file:

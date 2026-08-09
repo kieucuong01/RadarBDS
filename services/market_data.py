@@ -1,6 +1,7 @@
 from datetime import datetime, date, timezone
 from collections import defaultdict
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 import os
 import re
@@ -37,6 +38,12 @@ latest_shadow_valuation AS MATERIALIZED (
     ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
 )
 """
+
+
+_READ_CONNECTION_FACTORY = ContextVar(
+    "radar_read_connection_factory",
+    default=None,
+)
 
 RELATED_PRICE_DROP_CTE = """
 related_price_drops AS MATERIALIZED (
@@ -791,9 +798,21 @@ LEGAL_DOC_IMAGE_SELECT_SQL = (
 
 
 @contextmanager
+def use_read_connection_factory(factory):
+    """Temporarily route service reads through a task-local connection scope."""
+    token = _READ_CONNECTION_FACTORY.set(factory)
+    try:
+        yield
+    finally:
+        _READ_CONNECTION_FACTORY.reset(token)
+
+
+@contextmanager
 def _read_conn(_db_path=None):
     """Reuse the per-thread PostgreSQL connection for hot read models."""
-    with get_conn() as conn:
+    factory = _READ_CONNECTION_FACTORY.get()
+    scope = factory() if factory is not None else get_conn()
+    with scope as conn:
         yield conn
 
 
@@ -1826,23 +1845,6 @@ def load_market_opportunities(
               AND COALESCE(l.price_per_m2, 0) > 0
               AND COALESCE(l.price_per_m2, 0) < 1000
         ),
-        latest_valuation AS MATERIALIZED (
-            SELECT DISTINCT ON (vr.listing_id) vr.*
-            FROM valuation_results vr
-            JOIN filtered_listings fl ON fl.id = vr.listing_id
-            ORDER BY vr.listing_id, vr.computed_at DESC, vr.id DESC
-        ),
-        latest_shadow_valuation AS MATERIALIZED (
-            SELECT DISTINCT ON (vsr.listing_id)
-                   vsr.listing_id, vsr.is_signal, vsr.actual_ppm2,
-                   vsr.fair_ppm2, vsr.mos_pct, vsr.signal_score,
-                   vsr.trust_tier, vsr.trust_score,
-                   vsr.legal_status, vsr.legal_flags,
-                   vsr.source_quality_flags, vsr.source_quality_recheck
-            FROM valuation_shadow_results vsr
-            JOIN filtered_listings fl ON fl.id = vsr.listing_id
-            ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
-        ),
         opportunity_rows AS (
             SELECT
                 l.ward,
@@ -1852,12 +1854,34 @@ def load_market_opportunities(
                 {deal_sql.fair_expr} AS fair_ppm2,
                 {deal_sql.mos_expr} AS mos_pct,
                 CASE WHEN {signal_condition} THEN 1 ELSE 0 END AS is_signal
-            FROM listings l
-            LEFT JOIN latest_valuation v ON l.id = v.listing_id
-            LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
-            JOIN filtered_listings fl ON fl.id = l.id
-            WHERE 1=1
-              AND COALESCE(v.is_outlier, 0) = 0
+            FROM filtered_listings l
+            LEFT JOIN LATERAL (
+                SELECT vr.*
+                FROM valuation_results vr
+                WHERE vr.listing_id = l.id
+                ORDER BY vr.computed_at DESC, vr.id DESC
+                LIMIT 1
+            ) v ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT
+                    vsr.listing_id,
+                    vsr.is_signal,
+                    vsr.actual_ppm2,
+                    vsr.fair_ppm2,
+                    vsr.mos_pct,
+                    vsr.signal_score,
+                    vsr.trust_tier,
+                    vsr.trust_score,
+                    vsr.legal_status,
+                    vsr.legal_flags,
+                    vsr.source_quality_flags,
+                    vsr.source_quality_recheck
+                FROM valuation_shadow_results vsr
+                WHERE vsr.listing_id = l.id
+                ORDER BY vsr.computed_at DESC, vsr.id DESC
+                LIMIT 1
+            ) sv ON TRUE
+            WHERE COALESCE(v.is_outlier, 0) = 0
         )
         SELECT
             ward,
