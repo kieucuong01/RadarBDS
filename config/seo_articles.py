@@ -12667,6 +12667,268 @@ SEO_ARTICLES = {
         }
     }
 
+,
+    "phu-my-vs-hiep-an-so-gia-dat": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/phu-my-vs-hiep-an-so-gia-dat",
+        "title": "Phú Mỹ vs Hiệp An: khác nhau thế nào khi đọc giá/m²? | Radar BDS",
+        "description": "So Phú Mỹ và Hiệp An bằng dữ liệu Facebook live của Radar BDS ngày 10/08/2026: tách đất nền với nhà đất, nhìn thêm tổng giá và số tin còn trong tầm 3-4 tỷ để khỏi so sai.",
+        "keywords": "Phú Mỹ vs Hiệp An, giá đất Phú Mỹ, giá đất Hiệp An, đất nền Phú Mỹ, nhà đất Hiệp An, Radar BDS",
+        "breadcrumb_label": "Phú Mỹ vs Hiệp An: đọc giá/m² thế nào để không so sai",
+        "hero_badge": "So sánh khu vực",
+        "hero_title": "Phú Mỹ vs Hiệp An: khác nhau thế nào khi đọc giá/m²?",
+        "hero_text": "Nếu anh chỉ nhìn một con số giá/m² chung, Phú Mỹ sẽ trông đắt hơn Hiệp An. Nhưng khi tách đúng loại hình, chênh lệch lại cho hai bài toán khác: đất nền Phú Mỹ khoảng 22,7 tr/m² so với 15,9 tr/m² ở Hiệp An, còn nhà đất là 38,7 tr/m² so với 21,1 tr/m². Tổng giá và số tin trong ngân sách cũng khác rất xa.",
+        "scope_label": "Thủ Dầu Một · Phú Mỹ / Hiệp An",
+        "hero_checks": [
+            "Snapshot live từ tin Facebook đang theo dõi, cập nhật đến 09/08/2026 11:03",
+            "Đất nền: Phú Mỹ 22,7 tr/m² và Hiệp An 15,9 tr/m²",
+            "Nhà đất: Phú Mỹ 38,7 tr/m² và Hiệp An 21,1 tr/m²",
+            "Hiệp An có nhiều tin dưới 3 tỷ hơn rõ ở cả đất nền lẫn nhà đất"
+        ],
+        "primary_cta": "Mở Radar để lọc Phú Mỹ và Hiệp An",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_hiep_an_price_read",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / So Phú Mỹ và Hiệp An",
+        "hero_metric": {
+            "label": "Tin đang theo dõi",
+            "value": "1.361 vs 1.619",
+            "delta": "Phú Mỹ vs Hiệp An",
+            "note": "Facebook live snapshot ngày 10/08/2026, max crawled_at 09/08/2026 11:03"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Hiệp An mềm hơn rõ, nhưng đừng dừng ở giá/m²",
+            "price": "Đất nền: 22,7 vs 15,9 tr/m² · Nhà đất: 38,7 vs 21,1 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "448 vs 1.448",
+            "metric_b": "Dấu hiệu đáng chú ý",
+            "metric_b_value": "229 vs 119"
+        },
+        "local_links_title": "Đọc tiếp theo phường và công cụ liên quan",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Mở trang khu vực để lọc riêng nguồn tin Phú Mỹ."
+            },
+            {
+                "label": "Trang phường Hiệp An",
+                "href": "/binh-duong/phuong-hiep-an",
+                "description": "Mở trang khu vực để xem riêng nhóm tin Hiệp An."
+            },
+            {
+                "label": "Giá đất Phú Mỹ hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất Phú Mỹ."
+            },
+            {
+                "label": "Giá đất Hiệp An hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất Hiệp An."
+            },
+            {
+                "label": "Giá rao khác giá giao dịch thế nào?",
+                "href": "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",
+                "description": "Hiểu giới hạn của giá rao trước khi gọi môi giới."
+            },
+            {
+                "label": "Báo cáo thị trường Bình Dương",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh toàn Thủ Dầu Một."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Phú Mỹ hay Hiệp An đang mềm hơn nếu nhìn giá rao?",
+                "a": "Nếu tách đúng loại hình, Hiệp An đang mềm hơn ở cả hai nhóm chính. Đất nền Hiệp An có giá rao trung vị 15,9 tr/m², thấp hơn Phú Mỹ 22,7 tr/m². Nhà đất Hiệp An là 21,1 tr/m², thấp hơn Phú Mỹ 38,7 tr/m². Đây là giá rao, không phải giá chốt."
+            },
+            {
+                "q": "Vì sao không nên chỉ nhìn giá/m² khi so Phú Mỹ với Hiệp An?",
+                "a": "Vì cùng một mức giá/m² có thể đi với diện tích và tổng giá rất khác. Đất nền Phú Mỹ đang có tổng giá trung vị khoảng 3,0 tỷ, còn Hiệp An khoảng 2,15 tỷ. Với nhà đất, Phú Mỹ khoảng 3,55 tỷ và Hiệp An khoảng 2,39 tỷ."
+            },
+            {
+                "q": "Dưới 3 tỷ nên mở phường nào trước?",
+                "a": "Nếu anh đang cần nhiều lựa chọn dưới 3 tỷ, Hiệp An nên mở trước. Hiệp An hiện có 759 tin đất nền dưới 3 tỷ và 689 tin nhà đất dưới 3 tỷ, đều cao hơn rõ so với Phú Mỹ."
+            },
+            {
+                "q": "Nhiều dấu hiệu ở Phú Mỹ có nghĩa là nên mua ngay không?",
+                "a": "Không. Dấu hiệu đáng chú ý chỉ giúp ưu tiên thứ tự kiểm tra như giảm giá hoặc tín hiệu dữ liệu. Người mua vẫn phải kiểm tra pháp lý, quy hoạch, vị trí, đường vào và hiện trạng thực tế trước khi quyết định."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-10",
+            "modified_at": "2026-08-10",
+            "intro": [
+                "Nếu anh đang so Phú Mỹ với Hiệp An, câu trả lời ngắn là: Hiệp An đang mềm hơn rõ ở cả đất nền lẫn nhà đất, nhưng không nên chốt chỉ bằng một con số giá/m². Cần nhìn thêm tổng giá và số tin còn trong vùng ngân sách.",
+                "Bài này dùng snapshot live của Radar BDS từ tin Facebook đang theo dõi, lọc các tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu cập nhật đến 09/08/2026 11:03, nên đây là giá rao để lọc ban đầu chứ không phải giá giao dịch đã chốt."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Phú Mỹ tổng tin",
+                    "value": "1.361",
+                    "note": "229 dấu hiệu đáng chú ý trong snapshot live"
+                },
+                {
+                    "label": "Hiệp An tổng tin",
+                    "value": "1.619",
+                    "note": "119 dấu hiệu đáng chú ý trong snapshot live"
+                },
+                {
+                    "label": "Đất nền trung vị",
+                    "value": "22,7 vs 15,9 tr/m²",
+                    "note": "Phú Mỹ vs Hiệp An"
+                },
+                {
+                    "label": "Nhà đất trung vị",
+                    "value": "38,7 vs 21,1 tr/m²",
+                    "note": "Phú Mỹ vs Hiệp An"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook live snapshot",
+                    "title": "So Phú Mỹ và Hiệp An theo đúng loại hình BĐS",
+                    "note": "Truy vấn ngày 10/08/2026, max crawled_at 09/08/2026 11:03. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường / loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Mỹ · đất nền", "tracked": "591", "signals": "138", "under3": "248", "under4": "380", "median_m2": "22,7 tr/m²", "median_total": "3,0 tỷ", "mid_range": "20,3-26,7 tr/m²"},
+                        {"ward_type": "Phú Mỹ · nhà đất", "tracked": "759", "signals": "89", "under3": "200", "under4": "564", "median_m2": "38,7 tr/m²", "median_total": "3,55 tỷ", "mid_range": "28,7-43,0 tr/m²"},
+                        {"ward_type": "Hiệp An · đất nền", "tracked": "814", "signals": "75", "under3": "759", "under4": "781", "median_m2": "15,9 tr/m²", "median_total": "2,15 tỷ", "mid_range": "12,3-18,5 tr/m²"},
+                        {"ward_type": "Hiệp An · nhà đất", "tracked": "800", "signals": "44", "under3": "689", "under4": "721", "median_m2": "21,1 tr/m²", "median_total": "2,39 tỷ", "mid_range": "21,1-28,8 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Chọn phường theo nhu cầu",
+                    "title": "Nên mở Phú Mỹ hay Hiệp An trước?",
+                    "note": "Bảng này giúp chọn bộ lọc mở trước trên Radar, không thay cho việc đọc từng tin cụ thể.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Đất nền dưới 3 tỷ", "open_first": "Hiệp An", "why": "759 tin dưới 3 tỷ và tổng giá trung vị khoảng 2,15 tỷ, cao hơn rất nhiều so với 248 tin ở Phú Mỹ."},
+                        {"need": "Nhà đất dưới 3 tỷ", "open_first": "Hiệp An", "why": "689 tin dưới 3 tỷ, trong khi Phú Mỹ có 200 tin. Nếu ưu tiên ngân sách gọn, Hiệp An dễ mở trước hơn."},
+                        {"need": "Muốn săn dấu hiệu đáng chú ý", "open_first": "Phú Mỹ", "why": "Tổng snapshot live cho thấy Phú Mỹ có 229 dấu hiệu, cao hơn 119 ở Hiệp An."},
+                        {"need": "Muốn có mặt bằng giá mềm để làm mốc", "open_first": "Hiệp An", "why": "Cả đất nền lẫn nhà đất ở Hiệp An đều có giá rao trung vị thấp hơn rõ so với Phú Mỹ."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Hiệp An thấp hơn rõ về giá rao trung vị đất nền",
+                    "note": "Chỉ so đất nền với đất nền để tránh đọc sai mặt bằng giá.",
+                    "alt": "Biểu đồ so giá rao trung vị đất nền Phú Mỹ và Hiệp An",
+                    "rows": [
+                        {"label": "Phú Mỹ", "value_label": "22,7 tr/m²", "width": 100, "color": "#2563eb"},
+                        {"label": "Hiệp An", "value_label": "15,9 tr/m²", "width": 70, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Hiệp An cũng mềm hơn, nhưng Phú Mỹ có nhiều dấu hiệu hơn",
+                    "note": "Giá nhà đất và số dấu hiệu là hai chuyện khác nhau; đừng gộp làm một.",
+                    "alt": "Biểu đồ so nhà đất và dấu hiệu Phú Mỹ Hiệp An",
+                    "rows": [
+                        {"label": "Nhà đất Phú Mỹ", "value_label": "38,7 tr/m²", "width": 100, "color": "#dc2626"},
+                        {"label": "Nhà đất Hiệp An", "value_label": "21,1 tr/m²", "width": 55, "color": "#f59e0b"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "dat-nen-phu-my-hiep-an",
+                    "heading": "1. Đất nền: Hiệp An đang mềm hơn cả giá/m² lẫn tổng giá",
+                    "paragraphs": [
+                        "Ở snapshot live hiện tại, đất nền Phú Mỹ có giá rao trung vị 22,7 tr/m² và tổng giá trung vị khoảng 3,0 tỷ. Hiệp An thấp hơn rõ: 15,9 tr/m² và khoảng 2,15 tỷ. Nếu anh đang lọc đất nền thực chiến, đây là khác biệt đủ lớn để đổi thứ tự mở phường.",
+                        "Điểm cần nhớ là Hiệp An không chỉ thấp hơn về giá/m² mà còn dày hàng trong ngân sách hơn. Hiệp An đang có 759 tin đất nền dưới 3 tỷ và 781 tin dưới 4 tỷ, trong khi Phú Mỹ là 248 và 380. Nếu ngân sách chưa quá rộng, Hiệp An dễ tạo danh sách xem trước hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Mỹ: 591 tin · 138 dấu hiệu · 248 tin dưới 3 tỷ",
+                        "Đất nền Hiệp An: 814 tin · 75 dấu hiệu · 759 tin dưới 3 tỷ",
+                        "Giá trung vị đất nền: 22,7 vs 15,9 tr/m²",
+                        "Tổng giá trung vị: 3,0 vs 2,15 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-phu-my-hiep-an",
+                    "heading": "2. Nhà đất: chênh lệch còn lớn hơn nếu anh đang tìm nhà ở sẵn",
+                    "paragraphs": [
+                        "Nhóm nhà đất cho thấy khoảng cách còn rộng hơn: Phú Mỹ ở mức 38,7 tr/m² và tổng giá trung vị 3,55 tỷ, còn Hiệp An là 21,1 tr/m² và 2,39 tỷ. Nghĩa là nếu anh tìm nhà ở sẵn tầm 2-3 tỷ, Hiệp An có nhiều cơ hội lọt khung hơn ngay từ bước đầu.",
+                        "Số lượng cũng ủng hộ cách đọc đó. Hiệp An có 689 tin nhà đất dưới 3 tỷ và 721 tin dưới 4 tỷ; Phú Mỹ tương ứng là 200 và 564. Chỉ riêng việc tách đúng nhà đất ra khỏi đất nền đã đủ giúp anh tránh kết luận sai rằng hai phường chỉ chênh nhau vừa phải."
+                    ],
+                    "bullets": [
+                        "Nhà đất Phú Mỹ: 759 tin · 89 dấu hiệu · 200 tin dưới 3 tỷ",
+                        "Nhà đất Hiệp An: 800 tin · 44 dấu hiệu · 689 tin dưới 3 tỷ",
+                        "Giá trung vị nhà đất: 38,7 vs 21,1 tr/m²",
+                        "Tổng giá trung vị: 3,55 vs 2,39 tỷ"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-ngan-sach",
+                    "heading": "3. Vì sao Phú Mỹ nhiều dấu hiệu hơn nhưng vẫn không phải lựa chọn rẻ hơn",
+                    "paragraphs": [
+                        "Phú Mỹ hiện có 229 dấu hiệu đáng chú ý, cao hơn Hiệp An 119. Điều đó cho thấy phường này có nhiều tin cần mở ra kiểm tra tiếp, nhưng không hề phủ nhận rằng mặt bằng giá đang cao hơn. Dấu hiệu là một bộ lọc ưu tiên, còn giá và ngân sách là bộ lọc khả năng mua được.",
+                        "Cách dùng an toàn là tách hai lớp quyết định. Nếu mục tiêu của anh là tìm mặt bằng mềm và nhiều mẫu còn trong tầm tiền, mở Hiệp An trước. Nếu anh muốn săn thêm nhóm tin có dấu hiệu dữ liệu dày hơn để soi sâu, mở tiếp Phú Mỹ sau."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu tổng Phú Mỹ: 229",
+                        "Dấu hiệu tổng Hiệp An: 119",
+                        "Dấu hiệu không đồng nghĩa với giá rẻ hơn",
+                        "Luôn kiểm tra thêm pháp lý, quy hoạch, đường vào và hiện trạng"
+                    ]
+                },
+                {
+                    "id": "cach-loc-dashboard",
+                    "heading": "4. Cách dùng dashboard để không đọc sai hai phường này",
+                    "paragraphs": [
+                        "Bước đầu tiên là khóa loại hình: đất nền hoặc nhà đất. Sau đó mới chọn Phú Mỹ hoặc Hiệp An, nhìn giá trung vị cùng loại hình rồi giới hạn tổng giá theo túi tiền. Chỉ khi qua ba bước này anh mới nên gọi môi giới hoặc đi xem thực địa.",
+                        "Nếu anh muốn có mốc tham chiếu nhanh, hãy mở thêm công cụ định giá BĐS sau khi lọc vài tin phù hợp. Cách này giúp đặt từng tin vào đúng bối cảnh của phường thay vì nghe một mức giá kể miệng rồi suy ra cả khu."
+                    ],
+                    "bullets": [
+                        "Khóa loại hình trước khi so",
+                        "So giá rao trung vị cùng loại hình",
+                        "Giới hạn tổng giá 3-4 tỷ nếu cần khoanh nhanh",
+                        "Dùng công cụ định giá để soi từng tin cụ thể"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá rao trung vị và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong vùng ngân sách 3-4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Phú Mỹ và Hiệp An theo đúng loại hình",
+            "body": "Bắt đầu bằng phường phù hợp với mục tiêu của anh: Hiệp An nếu cần mặt bằng mềm và nhiều lựa chọn dưới 3 tỷ, Phú Mỹ nếu muốn soi thêm nhóm tin có dấu hiệu đáng chú ý. Sau đó dùng dashboard và công cụ định giá để kiểm tra từng tin cụ thể.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_hiep_an_price_read"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Mỹ vs Hiệp An: đọc giá/m² thế nào để không so sai", "href": "/tin-tuc/phu-my-vs-hiep-an-so-gia-dat", "url": "https://radarbds.vn/tin-tuc/phu-my-vs-hiep-an-so-gia-dat"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
