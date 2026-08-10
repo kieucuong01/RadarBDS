@@ -44,25 +44,18 @@ def test_site_manifest_is_read_only_and_points_to_canonical_resources():
     ]
     assert dashboard_handoff["uri_template"] == (
         f"{BASE_URL}/?tab=signals"
-        "{&city,ward*,source*,prop_type*,area_min,area_max,"
-        "price_min,price_max,q,date_range}"
+        "{&city,ward*,prop_type*,q,date_range}"
     )
     assert dashboard_handoff["template_format"] == "RFC 6570"
     assert dashboard_handoff["parameter_map"] == {
         "city": "city",
         "ward": "ward",
-        "source": "source",
         "prop_type": "prop_type",
-        "area_min": "area_min",
-        "area_max": "area_max",
-        "price_min": "price_min",
-        "price_max": "price_max",
         "q": "q",
         "date_range": "date_range",
     }
     assert dashboard_handoff["repeatable_parameters"] == [
         "ward",
-        "source",
         "prop_type",
     ]
     assert manifest["usage"]["handoff"]["listing_detail_uri_template"] == (
@@ -188,25 +181,34 @@ def test_filtered_dashboard_handoff_matches_frontend_query_contract():
     frontend_boot = open(
         "static/js/main/boot.js", encoding="utf-8"
     ).read()
-    frontend_runtime = open(
-        "static/js/main/filter_runtime.js", encoding="utf-8"
-    ).read()
-    frontend_scope = open(
-        "static/js/main/area_scope.js", encoding="utf-8"
-    ).read()
+    for hydration_step in (
+        "searchParams.get('tab')",
+        "searchParams.get('q') || searchParams.get('keyword')",
+        "searchParams.get('city')",
+        "searchParams.get('date_range')",
+        "searchParams.getAll('prop_type')",
+        "searchParams.getAll('ward')",
+    ):
+        assert hydration_step in frontend_boot
 
-    assert "searchParams.get('tab')" in frontend_boot
-    for api_name, dashboard_name in handoff["parameter_map"].items():
-        assert api_name == dashboard_name
-        assert (
-            dashboard_name in frontend_boot
-            or dashboard_name in frontend_runtime
-            or dashboard_name in frontend_scope
-        )
-
-    assert "mos_min" not in handoff["parameter_map"]
-    assert "only_drops" not in handoff["parameter_map"]
-    assert "sort" not in handoff["parameter_map"]
+    assert set(handoff["parameter_map"]) == {
+        "city",
+        "ward",
+        "prop_type",
+        "q",
+        "date_range",
+    }
+    for unsupported in (
+        "source",
+        "area_min",
+        "area_max",
+        "price_min",
+        "price_max",
+        "mos_min",
+        "only_drops",
+        "sort",
+    ):
+        assert unsupported not in handoff["parameter_map"]
 
 
 def test_discovery_documents_do_not_advertise_private_or_write_surfaces():

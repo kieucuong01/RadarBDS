@@ -164,6 +164,9 @@ def test_dashboard_task_tabs_and_signal_results_expose_agent_readable_state():
 
 def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
     markup = DASHBOARD.read_text(encoding="utf-8")
+    detail_markup = Path("templates/listing_detail.html").read_text(
+        encoding="utf-8"
+    )
     version = "agent-readonly-20260810"
 
     for asset in (
@@ -174,6 +177,13 @@ def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
     ):
         matching_lines = [
             line for line in markup.splitlines() if asset in line
+        ]
+        assert len(matching_lines) == 1
+        assert f"?v={version}" in matching_lines[0]
+
+    for asset in ("css/main/cards.css", "js/main/signal_card.js"):
+        matching_lines = [
+            line for line in detail_markup.splitlines() if asset in line
         ]
         assert len(matching_lines) == 1
         assert f"?v={version}" in matching_lines[0]

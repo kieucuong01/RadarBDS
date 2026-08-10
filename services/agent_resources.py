@@ -93,25 +93,18 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
                 "filtered_dashboard": {
                     "uri_template": (
                         f"{base}/?tab=signals"
-                        "{&city,ward*,source*,prop_type*,area_min,area_max,"
-                        "price_min,price_max,q,date_range}"
+                        "{&city,ward*,prop_type*,q,date_range}"
                     ),
                     "template_format": "RFC 6570",
                     "parameter_map": {
                         "city": "city",
                         "ward": "ward",
-                        "source": "source",
                         "prop_type": "prop_type",
-                        "area_min": "area_min",
-                        "area_max": "area_max",
-                        "price_min": "price_min",
-                        "price_max": "price_max",
                         "q": "q",
                         "date_range": "date_range",
                     },
                     "repeatable_parameters": [
                         "ward",
-                        "source",
                         "prop_type",
                     ],
                 },

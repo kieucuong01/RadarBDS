@@ -1035,6 +1035,7 @@ def test_dashboard_accessibility_controls_have_names_and_keyboard_paths():
     core_js = _read("static/js/main/core.js")
     modal_js = _read("static/js/main/modal.js")
     signals_js = _read("static/js/main/signals.js")
+    signal_card_js = _read("static/js/main/signal_card.js")
     filters_css = _read("static/css/main/filters.css")
     cards_css = _read("static/css/main/cards.css")
 
@@ -1062,8 +1063,9 @@ def test_dashboard_accessibility_controls_have_names_and_keyboard_paths():
     assert 'role="tabpanel"' in html
     assert "tab.setAttribute('aria-selected'" in modal_js
     assert "section.setAttribute('aria-hidden'" in modal_js
-    assert 'role="button" tabindex="0"' in signals_js
-    assert "event.key==='Enter'||event.key===' '" in signals_js
+    assert 'role="button" tabindex="0"' not in signal_card_js
+    assert '<article class="scard' in signal_card_js
+    assert 'class="sc-title sc-title-link"' in signal_card_js
     assert 'alt="Ảnh tin đăng ${i + 1}"' in modal_js
     assert ".filter-title:focus-visible" in filters_css
     assert ".scard:focus-visible" in cards_css

@@ -42,10 +42,10 @@ def test_signal_detail_assets_share_current_release_identity():
     modal = _read("templates/index.html")
     detail = _read("templates/listing_detail.html")
     release = "signal-detail-regression-20260729"
+    agent_release = "agent-readonly-20260810"
 
     for asset in (
         "detail_location_map.js",
-        "signal_card.js",
         "comparable_carousel.js",
         "listing_detail_actions.js",
     ):
@@ -53,14 +53,24 @@ def test_signal_detail_assets_share_current_release_identity():
         assert needle in modal
         assert needle in detail
 
+    signal_card_needle = "signal_card.js') }}?v=" + agent_release
+    assert signal_card_needle in modal
+    assert signal_card_needle in detail
+
     assert "modal.js') }}?v=" + release in modal
     assert "modal.js') }}?v=favorite-listings-20260715" not in modal
 
     for html in (modal, detail):
-        for asset in ("modal.css", "cards.css"):
-            matching_lines = [line for line in html.splitlines() if asset in line]
-            assert matching_lines
-            assert any(release in line for line in matching_lines)
+        modal_lines = [
+            line for line in html.splitlines() if "modal.css" in line
+        ]
+        cards_lines = [
+            line for line in html.splitlines() if "cards.css" in line
+        ]
+        assert modal_lines and any(release in line for line in modal_lines)
+        assert cards_lines and any(
+            agent_release in line for line in cards_lines
+        )
 
 
 def test_modal_open_synchronizes_listing_state_and_uses_shared_adapters():
