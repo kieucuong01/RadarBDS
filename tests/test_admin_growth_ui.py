@@ -253,8 +253,8 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "<details" in template
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
-    assert "?v=admin-facebook-crawl-brokers-v2" in template
-    assert "css/admin.css') }}?v=admin-v57-facebook-crawl-compact-roster" in template
+    assert "?v=admin-facebook-crawl-brokers-v3" in template
+    assert "css/admin.css') }}?v=admin-v58-facebook-crawl-broker-table-compact" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -466,18 +466,19 @@ def test_facebook_broker_roster_has_compact_ordinal_area_and_safe_name_link():
     )
     css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
 
-    assert '<th scope="col">STT</th>' in template
-    assert '<th scope="col">Khu vực</th>' in template
-    assert "admin-v57-facebook-crawl-compact-roster" in template
-    assert "brokerCell('STT', 'crawl-broker-ordinal')" in source
-    assert "brokerCell('Khu vực', 'crawl-broker-area')" in source
+    assert '<th scope="col">Vận hành</th>' in template
+    assert '<th scope="col">Kế hoạch</th>' in template
+    assert "admin-v58-facebook-crawl-broker-table-compact" in template
+    assert "brokerCell('Vận hành', 'crawl-broker-ops')" in source
+    assert "brokerCell('Kế hoạch', 'crawl-broker-plan')" in source
+    assert "urlNode.className = 'crawl-broker-url'" in source
     assert "brokerName.className = 'crawl-broker-name'" in source
-    assert "cell.colSpan = 9" in source
+    assert "cell.colSpan = 6" in source
     for selector in (
-        ".crawl-broker-ordinal",
-        ".crawl-broker-area",
+        ".crawl-broker-city-chip",
+        ".crawl-broker-ops",
         ".crawl-broker-name",
-        ".crawl-broker-table { min-width: 1120px;",
+        ".crawl-broker-table { min-width: 900px;",
         "table-layout: fixed;",
     ):
         assert selector in css

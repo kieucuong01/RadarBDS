@@ -737,7 +737,7 @@
       clear(rows);
       const row = document.createElement('tr');
       const cell = brokerCell('Trạng thái', 'crawl-broker-empty state-' + kind);
-      cell.colSpan = 9;
+      cell.colSpan = 6;
       const title = document.createElement('strong');
       title.textContent = titleText;
       const detail = document.createElement('span');
@@ -783,13 +783,10 @@
         return;
       }
 
-      viewModel.filteredProfiles.forEach((profile, position) => {
+      viewModel.filteredProfiles.forEach((profile) => {
         const index = state.draft.indexOf(profile);
         const row = document.createElement('tr');
         row.dataset.profileUrl = profile.url;
-
-        const ordinal = brokerCell('STT', 'crawl-broker-ordinal');
-        ordinal.textContent = String(position + 1);
 
         const identity = brokerCell('Môi giới', 'crawl-broker-identity-cell');
         const identityStack = document.createElement('div');
@@ -803,28 +800,43 @@
           brokerName.target = '_blank';
           brokerName.rel = 'noopener noreferrer';
         }
-        identityStack.appendChild(brokerName);
+        const identityMeta = document.createElement('div');
+        identityMeta.className = 'crawl-broker-identity-meta';
+        const city = document.createElement('span');
+        city.className = 'crawl-broker-city-chip';
+        city.textContent = profile.city || 'Chưa có khu vực';
+        identityMeta.appendChild(city);
+        const urlNode = document.createElement(safeLink ? 'a' : 'span');
+        urlNode.className = 'crawl-broker-url';
+        urlNode.textContent = safeLink ? safeLink.display : (profile.url || 'Chưa có URL');
+        if (safeLink) {
+          urlNode.href = safeLink.href;
+          urlNode.target = '_blank';
+          urlNode.rel = 'noopener noreferrer';
+        }
+        identityMeta.appendChild(urlNode);
+        identityStack.append(brokerName, identityMeta);
         identity.appendChild(identityStack);
 
-        const area = brokerCell('Khu vực', 'crawl-broker-area');
-        area.textContent = profile.city || 'Chưa có khu vực';
-
         const statusState = brokerStatusState(profile);
-        const statusCell = brokerCell('Trạng thái', 'crawl-broker-state');
-        statusCell.appendChild(renderBrokerBadge(statusState, 'status'));
-
         const scheduleState = brokerScheduleState(profile);
-        const scheduleCell = brokerCell('Lịch kế tiếp', 'crawl-broker-schedule');
-        scheduleCell.appendChild(renderBrokerBadge(scheduleState, 'schedule'));
+        const opsCell = brokerCell('Vận hành', 'crawl-broker-ops');
+        opsCell.append(
+          renderBrokerBadge(statusState, 'status'),
+          renderBrokerBadge(scheduleState, 'schedule'),
+        );
         const scheduleDetail = document.createElement('small');
         scheduleDetail.textContent = scheduleState.detail;
-        scheduleCell.appendChild(scheduleDetail);
+        opsCell.appendChild(scheduleDetail);
 
-        const planCell = brokerCell('Quota / chu kỳ', 'crawl-broker-plan');
+        const planCell = brokerCell('Kế hoạch', 'crawl-broker-plan');
         const quota = document.createElement('strong');
         quota.textContent = String(Number(profile.daily_limit || 20)) + ' bài/ngày';
         const cadence = document.createElement('small');
-        cadence.textContent = String(Number(profile.crawl_every_days || 1)) + ' ngày/lần';
+        cadence.textContent = String(Number(profile.crawl_every_days || 1))
+          + ' ngày/lần · lấy '
+          + String(Number(profile.range_days || 7))
+          + ' ngày';
         planCell.append(quota, cadence);
 
         const qualityState = brokerQualityState(profile);
@@ -874,11 +886,8 @@
             && (profile.due_today === true || qualityState.key === 'needs_attention'),
         );
         row.append(
-          ordinal,
           identity,
-          area,
-          statusCell,
-          scheduleCell,
+          opsCell,
           planCell,
           qualityCell,
           latestCell,
