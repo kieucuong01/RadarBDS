@@ -189,6 +189,11 @@ def test_llms_txt_is_stable_and_links_priority_ward_sources():
     assert "detail_href" in body
     assert "204 tin" not in body
     assert "36 tín hiệu" not in body
+    report_block = body.split("## Báo cáo mới", 1)[1].split("## Bài phân tích ưu tiên", 1)[0]
+    article_block = body.split("## Bài phân tích ưu tiên", 1)[1].split("##", 1)[0]
+    assert report_block.count("\n-") <= 8
+    assert article_block.count("\n-") <= 12
+    assert body == radar_app.app.test_client().get("/llms.txt").get_data(as_text=True)
 
 
 def test_sitemap_has_unique_hub_and_only_canonical_priority_ward_urls():

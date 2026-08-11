@@ -3936,6 +3936,30 @@ def agent_openapi_json():
     )
 
 
+def _llms_priority_reports(limit: int = 8) -> list[dict]:
+    bounded = max(1, min(int(limit), 20))
+    return sorted(_published_report_pages(), key=_report_sort_key, reverse=True)[:bounded]
+
+
+def _llms_priority_articles(limit: int = 12) -> list[dict]:
+    bounded = max(1, min(int(limit), 30))
+    articles = [
+        dict(page)
+        for page in SEO_ARTICLES.values()
+        if str(page.get("path") or "").startswith("/tin-tuc/")
+    ]
+    return sorted(
+        articles,
+        key=lambda page: (
+            int(page.get("ai_priority") or 0),
+            str((page.get("article") or {}).get("modified_at") or ""),
+            str((page.get("article") or {}).get("published_at") or ""),
+            str(page.get("path") or ""),
+        ),
+        reverse=True,
+    )[:bounded]
+
+
 def llms_txt():
     ward_lines = "\n".join(
         f"- {name}: {_public_url(f'/binh-duong/phuong-{slug}')}"
@@ -3957,6 +3981,14 @@ def llms_txt():
         f"- {page['heading']}: {_public_url(page['path'])}"
         for page in PLANNING_CATEGORY_PAGES.values()
     )
+    priority_report_lines = "\n".join(
+        f"- {page['hero_title']}: {_public_url(page['path'])}"
+        for page in _llms_priority_reports()
+    )
+    priority_article_lines = "\n".join(
+        f"- {page['hero_title']}: {_public_url(page['path'])}"
+        for page in _llms_priority_articles()
+    )
     body = f"""# Radar BDS
 
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
@@ -3971,6 +4003,12 @@ def llms_txt():
 ## Phạm vi ưu tiên
 - Thủ Dầu Một: {_public_url('/binh-duong/thu-dau-mot')}
 {ward_lines}
+
+## Báo cáo mới
+{priority_report_lines}
+
+## Bài phân tích ưu tiên
+{priority_article_lines}
 
 ## Cách đọc dữ liệu
 - Số tin là lượng tin rao công khai Radar BDS đang theo dõi trong bộ lọc hiện hành.
@@ -4064,6 +4102,7 @@ def sitemap_xml():
     for page in [
         REPORT_HUB,
         news_hub,
+        {"path": "/llms.txt", "updated_at": max(news_lastmod, content_lastmod.get("radar_article", ""))},
         *sitemap_news_hubs,
         *CITY_MAP_PRODUCTS.values(),
         BINH_DUONG_MAP_PAGE,
