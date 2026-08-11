@@ -672,33 +672,6 @@
       }
     }
 
-    function qualityLabel(profile) {
-      const quality = profile.data_quality || {};
-      if (quality.score == null) return 'Chưa đủ mẫu';
-      return `${quality.label || 'Chất lượng'} · ${quality.score}/100`;
-    }
-
-    function filteredProfiles() {
-      const search = String(byId('crawlBrokerSearch') && byId('crawlBrokerSearch').value || '').trim().toLocaleLowerCase('vi');
-      const city = String(byId('crawlBrokerCityFilter') && byId('crawlBrokerCityFilter').value || '');
-      const active = String(byId('crawlBrokerActiveFilter') && byId('crawlBrokerActiveFilter').value || '');
-      const cadence = String(byId('crawlBrokerCadenceFilter') && byId('crawlBrokerCadenceFilter').value || '');
-      const due = String(byId('crawlBrokerDueFilter') && byId('crawlBrokerDueFilter').value || '');
-      const quality = String(byId('crawlBrokerQualityFilter') && byId('crawlBrokerQualityFilter').value || '');
-      return state.draft.filter((profile) => {
-        const haystack = `${profile.broker_name || ''} ${profile.url || ''}`.toLocaleLowerCase('vi');
-        if (search && !haystack.includes(search)) return false;
-        if (city && profile.city !== city) return false;
-        if (active && String(profile.active !== false) !== active) return false;
-        if (cadence && String(profile.crawl_every_days || 1) !== cadence) return false;
-        if (due && String(Boolean(profile.due_today)) !== due) return false;
-        const score = profile.data_quality && profile.data_quality.score;
-        if (quality === 'good' && !(score >= 68)) return false;
-        if (quality === 'needs_attention' && !(score == null || score < 68)) return false;
-        return true;
-      });
-    }
-
     function fillCityFilter() {
       const select = byId('crawlBrokerCityFilter');
       if (!select) return;
@@ -717,81 +690,6 @@
           select.appendChild(option);
         });
       select.value = selected;
-    }
-
-    function renderLegacyProfiles() {
-      fillCityFilter();
-      const rows = byId('crawlBrokerRows');
-      clear(rows);
-      const profiles = filteredProfiles();
-      text(byId('crawlBrokerCount'), `${profiles.length} / ${state.draft.length} môi giới`);
-      if (!profiles.length) {
-        const row = document.createElement('tr');
-        const cell = document.createElement('td');
-        cell.colSpan = 8;
-        cell.className = 'empty';
-        cell.textContent = 'Không có môi giới phù hợp bộ lọc.';
-        row.appendChild(cell);
-        rows.appendChild(row);
-        return;
-      }
-      profiles.forEach((profile) => {
-        const index = state.draft.indexOf(profile);
-        const row = document.createElement('tr');
-        row.dataset.profileUrl = profile.url;
-        const cells = [
-          `${profile.broker_name || 'Chưa đặt tên'}\n${profile.city || 'Chưa có khu vực'}`,
-          profile.active !== false ? 'Đang bật' : 'Đã tắt',
-          profile.due_today ? 'Đến lịch hôm nay' : `Kế tiếp ${profile.next_due_date || '—'}`,
-          `${Number(profile.daily_limit || 20)} bài · ${Number(profile.crawl_every_days || 1)} ngày/lần`,
-          qualityLabel(profile),
-          profile.latest_crawled_at || 'Chưa crawl',
-        ];
-        cells.forEach((value, cellIndex) => {
-          const cell = document.createElement('td');
-          if (cellIndex === 0) {
-            const [name, city] = value.split('\n');
-            const identity = document.createElement('div');
-            identity.className = 'crawl-broker-identity';
-            const brokerName = document.createElement('strong');
-            brokerName.textContent = name;
-            const brokerCity = document.createElement('small');
-            brokerCity.textContent = city;
-            identity.append(brokerName, brokerCity);
-            cell.appendChild(identity);
-          } else {
-            cell.className = 'crawl-broker-metric';
-            cell.textContent = value;
-          }
-          row.appendChild(cell);
-        });
-        const actions = document.createElement('td');
-        actions.className = 'crawl-row-actions crawl-broker-actions';
-        actions.append(
-          button('Sửa', 'secondary-btn', () => openDrawer(index)),
-          button('Chạy', 'secondary-btn', async () => {
-            const selected = preselectRun(state, profile);
-            state.runProfileUrl = selected.runProfileUrl;
-            await setView('run', {force: true});
-            applyRunDefaults();
-          }),
-          button('Xóa', 'secondary-btn danger-btn', () => {
-            const label = profile.broker_name || profile.url;
-            if (!confirmAction(
-              `Xóa ${label} khỏi danh sách crawl? Tin đã crawl vẫn được giữ nguyên.`,
-            )) return;
-            state.draft = removeProfileFromDraft(state.draft, profile.url);
-            if (state.runProfileUrl === profile.url) state.runProfileUrl = '';
-            renderProfiles();
-            renderRunProfiles();
-            if (state.duplicates) renderDuplicates(state.duplicates, false);
-            syncDirty();
-            text(byId('crawlBrokerStatus'), 'Đã bỏ môi giới khỏi bản nháp. Bấm Lưu thay đổi để áp dụng.');
-          }),
-        );
-        row.appendChild(actions);
-        rows.appendChild(row);
-      });
     }
 
     function readBrokerFilters() {
