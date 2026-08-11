@@ -79,6 +79,7 @@ from config.settings import (
     get_digital_product_commerce_settings,
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
 from config.planning_pages import (
     PLANNING_CATEGORY_LABELS,
@@ -96,6 +97,7 @@ from config.city_map_products import (
     get_city_map_page,
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
+from services.public_marketing import build_public_entities, build_trust_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -237,6 +239,11 @@ def inject_google_site_tags():
         "google_analytics_id": analytics_id,
         "google_search_console_verification": GOOGLE_SEARCH_CONSOLE_VERIFICATION,
     }
+
+
+@app.context_processor
+def inject_public_schema_entities():
+    return {"public_entities": build_public_entities(PUBLIC_BASE_URL)}
 
 
 @app.context_processor
@@ -1722,6 +1729,25 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
     }
 
 
+def _public_schema_graph(graph: dict) -> dict:
+    """Add the shared public entities to app-built JSON-LD graphs once."""
+    nodes = [dict(node) for node in graph.get("@graph", [])]
+    entities = build_public_entities(PUBLIC_BASE_URL)
+    public_types = {"Article", "CollectionPage", "Dataset", "Report", "WebApplication", "WebPage"}
+    for node in nodes:
+        node_type = node.get("@type")
+        if node_type in public_types:
+            node.setdefault("inLanguage", "vi-VN")
+            node.setdefault("isPartOf", dict(entities["website_ref"]))
+        if node_type == "Dataset":
+            node.setdefault("creator", dict(entities["organization_ref"]))
+        if node_type in {"Article", "Report"}:
+            node.setdefault("author", dict(entities["organization_ref"]))
+            node.setdefault("publisher", dict(entities["organization_ref"]))
+    nodes.extend((entities["organization"], entities["website"]))
+    return {"@context": "https://schema.org", "@graph": nodes}
+
+
 def _load_tphcm_land_price_data() -> dict:
     mtime = _TPHCM_LAND_PRICE_DATA.stat().st_mtime
     if _TPHCM_LAND_PRICE_CACHE["mtime"] != mtime:
@@ -2524,7 +2550,7 @@ def planning_hub_page():
         pages=pages,
         trending_pages=trending_pages,
         site_meta=site_meta,
-        schema_graph=_planning_hub_schema(page, pages),
+        schema_graph=_public_schema_graph(_planning_hub_schema(page, pages)),
         active_nav="quy-hoach",
         dashboard_signal_href="/?tab=signals",
     )
@@ -2559,11 +2585,11 @@ def binh_duong_map_page():
         current_areas=[dict(area) for area in BINH_DUONG_CURRENT_AREAS],
         current_groups=current_groups,
         site_meta=site_meta,
-        schema_graph=_binh_duong_map_schema(
+        schema_graph=_public_schema_graph(_binh_duong_map_schema(
             page,
             BINH_DUONG_LEGACY_AREAS,
             BINH_DUONG_CURRENT_AREAS,
-        ),
+        )),
         active_nav="ban-do-binh-duong",
         dashboard_signal_href="/?tab=signals",
     )
@@ -2683,13 +2709,13 @@ def city_map_product_page(city_slug: str):
         current_areas=current_areas,
         display_price=f"{product.price_vnd:,}".replace(",", "."),
         site_meta=site_meta,
-        schema_graph=city_map_product_schema(
+        schema_graph=_public_schema_graph(city_map_product_schema(
             page,
             product,
             availability,
             legacy_areas,
             current_areas,
-        ),
+        )),
         active_nav="ban-do-binh-duong",
         dashboard_signal_href=page["dashboard_signal_href"],
     )
@@ -2741,7 +2767,7 @@ def planning_detail_page(slug: str):
                 description=page["description"],
                 keywords=f"{page['heading']}, quy hoạch Bình Dương",
             ),
-            schema_graph=schema_graph,
+            schema_graph=_public_schema_graph(schema_graph),
             active_nav="quy-hoach",
         )
 
@@ -2762,7 +2788,7 @@ def planning_detail_page(slug: str):
         "planning_detail.html",
         page=page,
         site_meta=site_meta,
-        schema_graph=_planning_detail_schema(page),
+        schema_graph=_public_schema_graph(_planning_detail_schema(page)),
         active_nav="quy-hoach",
         dashboard_signal_href=page.get("dashboard_href") or "/?tab=signals",
     )
@@ -2791,17 +2817,6 @@ def _active_public_nav(path: str) -> str:
 
 
 _BANGKOK_TZ = timezone(timedelta(hours=7))
-_PRIORITY_TDM_WARDS = {
-    "hiep-thanh": "Hiệp Thành",
-    "phu-hoa": "Phú Hòa",
-    "phu-my": "Phú Mỹ",
-    "dinh-hoa": "Định Hòa",
-    "phu-loi": "Phú Lợi",
-    "tan-an": "Tân An",
-    "hiep-an": "Hiệp An",
-    "chanh-nghia": "Chánh Nghĩa",
-}
-
 _REPORT_TDM_WARDS = {
     "Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường",
     "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú",
@@ -3153,6 +3168,11 @@ def _hydrate_live_location_page(page: dict) -> dict:
     return page
 
 
+def _with_public_trust(page: dict, page_type: str) -> dict:
+    page["trust"] = build_trust_context(page, page_type=page_type)
+    return page
+
+
 def _render_public_page(page: dict):
     page = dict(page)
     page = _hydrate_live_location_page(page)
@@ -3194,6 +3214,10 @@ def _render_public_page(page: dict):
             "ward_slug": _report_safe_slug(scope),
             "period": f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or ""),
         }
+    page = _with_public_trust(
+        page,
+        "report" if page.get("variant") == "report" else "location" if page.get("live_ward") else "landing",
+    )
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
@@ -3225,6 +3249,14 @@ def seo_report_hub_page():
             "lead_scope_label": "Thủ Dầu Một",
         })
     page["breadcrumbs"] = _page_breadcrumbs(page)
+    page["latest_modified_at"] = max(
+        (
+            str((report.get("report") or {}).get("data_as_of") or (report.get("report") or {}).get("published_at") or "")
+            for report in reports
+        ),
+        default="",
+    )
+    page = _with_public_trust(page, "report")
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 
@@ -3402,6 +3434,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     )
     page["latest_modified_at"] = latest_modified_at
     page["latest_modified_label"] = _format_news_date(latest_modified_at)
+    page = _with_public_trust(page, "hub")
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template(
         "seo_knowledge_hub.html",
@@ -3572,6 +3605,11 @@ def seo_news_hub_page():
                 )
                 item["is_external"] = section["item_type"] == "hot_topic"
         sections.append(section)
+    page["latest_modified_at"] = max(
+        (str((item.get("article") or {}).get("modified_at") or "") for item in SEO_ARTICLES.values()),
+        default="",
+    )
+    page = _with_public_trust(page, "hub")
     return render_template(
         "news_portal.html",
         page=page,
@@ -3582,13 +3620,13 @@ def seo_news_hub_page():
             description=page["description"],
             keywords="tin tức Bình Dương, bất động sản Bình Dương, văn bản quy hoạch",
         ),
-        schema_graph=_collection_schema(
+        schema_graph=_public_schema_graph(_collection_schema(
             page,
             [
                 {"title": section["heading"], "url": section["path"]}
                 for section in sections
             ],
-        ),
+        )),
         active_nav="tin-tuc",
     )
 
@@ -3638,6 +3676,8 @@ def public_content_hub_page(kind: str):
         ),
         key=lambda topic: topic["label"],
     )
+    page["latest_modified_at"] = max((str(item.get("published_iso") or "") for item in items), default="")
+    page = _with_public_trust(page, "hub")
     return render_template(
         "public_content_hub.html",
         page=page,
@@ -3650,7 +3690,7 @@ def public_content_hub_page(kind: str):
             description=page["description"],
             keywords=f"{page['heading']}, Radar BDS",
         ),
-        schema_graph=_collection_schema(
+        schema_graph=_public_schema_graph(_collection_schema(
             page,
             [
                 {
@@ -3663,7 +3703,7 @@ def public_content_hub_page(kind: str):
                 }
                 for item in items
             ],
-        ),
+        )),
         active_nav="tin-tuc",
     )
 
@@ -3718,10 +3758,10 @@ def legal_document_page(slug: str):
             description=page["description"],
             keywords=f"{item.get('document_number', '')}, văn bản Bình Dương",
         ),
-        schema_graph={
+        schema_graph=_public_schema_graph({
             "@context": "https://schema.org",
             "@graph": [legislation, _breadcrumb_schema(page["breadcrumbs"])],
-        },
+        }),
         active_nav="tin-tuc",
     )
 
@@ -3834,7 +3874,7 @@ def seo_landing_page(slug):
 
 
 def seo_tdm_ward_redirect(ward_slug: str):
-    if ward_slug not in _PRIORITY_TDM_WARDS:
+    if ward_slug not in TDM_LIVE_WARDS:
         abort(404)
     target = f"/binh-duong/phuong-{ward_slug}"
     query = request.query_string.decode("ascii", errors="ignore")
@@ -3856,6 +3896,7 @@ def seo_article_page(slug):
         return redirect(target, code=301)
     page = dict(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
+    page = _with_public_trust(page, "article")
     site_meta = _site_meta(
         page["path"],
         title=page["title"],
@@ -3895,10 +3936,34 @@ def agent_openapi_json():
     )
 
 
+def _llms_priority_reports(limit: int = 8) -> list[dict]:
+    bounded = max(1, min(int(limit), 20))
+    return sorted(_published_report_pages(), key=_report_sort_key, reverse=True)[:bounded]
+
+
+def _llms_priority_articles(limit: int = 12) -> list[dict]:
+    bounded = max(1, min(int(limit), 30))
+    articles = [
+        dict(page)
+        for page in SEO_ARTICLES.values()
+        if str(page.get("path") or "").startswith("/tin-tuc/")
+    ]
+    return sorted(
+        articles,
+        key=lambda page: (
+            int(page.get("ai_priority") or 0),
+            str((page.get("article") or {}).get("modified_at") or ""),
+            str((page.get("article") or {}).get("published_at") or ""),
+            str(page.get("path") or ""),
+        ),
+        reverse=True,
+    )[:bounded]
+
+
 def llms_txt():
     ward_lines = "\n".join(
         f"- {name}: {_public_url(f'/binh-duong/phuong-{slug}')}"
-        for slug, name in _PRIORITY_TDM_WARDS.items()
+        for slug, name in TDM_LIVE_WARDS.items()
     )
     planning_lines = "\n".join(
         f"- {page['breadcrumb_label']}: {_public_url(page['path'])}"
@@ -3916,6 +3981,14 @@ def llms_txt():
         f"- {page['heading']}: {_public_url(page['path'])}"
         for page in PLANNING_CATEGORY_PAGES.values()
     )
+    priority_report_lines = "\n".join(
+        f"- {page['hero_title']}: {_public_url(page['path'])}"
+        for page in _llms_priority_reports()
+    )
+    priority_article_lines = "\n".join(
+        f"- {page['hero_title']}: {_public_url(page['path'])}"
+        for page in _llms_priority_articles()
+    )
     body = f"""# Radar BDS
 
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
@@ -3930,6 +4003,12 @@ def llms_txt():
 ## Phạm vi ưu tiên
 - Thủ Dầu Một: {_public_url('/binh-duong/thu-dau-mot')}
 {ward_lines}
+
+## Báo cáo mới
+{priority_report_lines}
+
+## Bài phân tích ưu tiên
+{priority_article_lines}
 
 ## Cách đọc dữ liệu
 - Số tin là lượng tin rao công khai Radar BDS đang theo dõi trong bộ lọc hiện hành.
@@ -4023,6 +4102,7 @@ def sitemap_xml():
     for page in [
         REPORT_HUB,
         news_hub,
+        {"path": "/llms.txt", "updated_at": max(news_lastmod, content_lastmod.get("radar_article", ""))},
         *sitemap_news_hubs,
         *CITY_MAP_PRODUCTS.values(),
         BINH_DUONG_MAP_PAGE,

@@ -65,6 +65,21 @@ Keep AI SEO practical:
 - Run a monthly manual check for 10-20 key queries in ChatGPT, Gemini,
   Perplexity, and Google AI results. Daily AI-visibility checking is noise.
 
+### Deterministic public-page audit
+
+Run this config-only gate before a marketing release:
+
+```powershell
+& $py -X utf8 scripts\audit_marketing_pages.py --strict
+& $py -X utf8 scripts\audit_marketing_pages.py --json --limit 200
+```
+
+Hard failures cover canonical definitions, dashboard query contracts, dates,
+FAQ completeness, required discovery documents, and live-ward coverage.
+Metadata length, answer-first length, duplicate intent, and optional
+visual/link gaps are warnings only. This audit does not prove production
+indexing, rankings, or traffic.
+
 ## Analytics Questions
 
 Track only what drives decisions:

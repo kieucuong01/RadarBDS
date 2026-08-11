@@ -58,11 +58,23 @@ def test_robots_and_sitemap_use_public_domain():
     assert "<loc>https://radarbds.vn/san-deal-bds</loc>" in sitemap
     assert "<loc>https://radarbds.vn/bang-gia-dat-tphcm</loc>" in sitemap
     assert "<loc>https://radarbds.vn/bao-cao</loc>" in sitemap
+    assert sitemap.count("<loc>https://radarbds.vn/llms.txt</loc>") == 1
+    assert "/agent/site.json" not in sitemap
+    assert "/agent/openapi.json" not in sitemap
     assert "<loc>https://radarbds.vn/kien-thuc</loc>" not in sitemap
     for article in SEO_ARTICLES.values():
         assert f"<loc>https://radarbds.vn{article['path']}</loc>" in sitemap
     assert "localhost" not in robots + sitemap
     assert "127.0.0.1" not in robots + sitemap
+
+
+def test_public_report_copy_uses_signal_contact_funnel_not_vip_matching():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/bao-cao/phu-my-thang-07-2026").get_data(as_text=True)
+
+    assert "Ráp mối VIP" not in html
+    assert "Xem tin phù hợp" in html
 
 
 def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():

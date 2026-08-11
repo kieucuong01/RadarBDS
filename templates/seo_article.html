@@ -19,6 +19,8 @@
         </div>
       </header>
 
+      {% include "partials/seo_trust.html" %}
+
       <div class="article-reading-column">
         <section class="article-intro" aria-label="Mở đầu">
           {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
@@ -193,8 +195,10 @@
         "datePublished": {{ page.article.published_at|tojson }},
         "dateModified": {{ page.article.modified_at|tojson }},
         "image": {{ site_meta.og_image|tojson }},
-        "author": {"@type": "Organization", "name": "Radar BDS"},
-        "publisher": {"@type": "Organization", "name": "Radar BDS"}
+        "inLanguage": "vi-VN",
+        "isPartOf": {{ public_entities.website_ref|tojson }},
+        "author": {{ public_entities.organization_ref|tojson }},
+        "publisher": {{ public_entities.organization_ref|tojson }}
       },
       {
         "@type": "BreadcrumbList",
@@ -207,7 +211,9 @@
         "mainEntity": [
           {% for item in page.faq %}{"@type": "Question", "name": {{ item.q|tojson }}, "acceptedAnswer": {"@type": "Answer", "text": {{ item.a|tojson }}}}{% if not loop.last %},{% endif %}{% endfor %}
         ]
-      }
+      },
+      {{ public_entities.organization|tojson }},
+      {{ public_entities.website|tojson }}
     ]
   }
   </script>

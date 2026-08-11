@@ -30,6 +30,8 @@
       </aside>
     </section>
 
+    {% include "partials/seo_trust.html" %}
+
     <section
       class="hub-featured"
       aria-labelledby="featured-article"
@@ -190,14 +192,16 @@
   {
     "@context": "https://schema.org",
     "@graph": [
-      {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}},
+      {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}, "inLanguage": "vi-VN", "isPartOf": {{ public_entities.website_ref|tojson }}},
       {"@type": "ItemList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": {{ featured.hero_title|tojson }}, "url": {{ (site_origin ~ featured.path)|tojson }}}
         {% for article in articles %},{"@type": "ListItem", "position": {{ loop.index + 1 }}, "name": {{ article.hero_title|tojson }}, "url": {{ (site_origin ~ article.path)|tojson }}}{% endfor %}
       ]},
       {"@type": "BreadcrumbList", "itemListElement": [
         {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
-      ]}
+      ]},
+      {{ public_entities.organization|tojson }},
+      {{ public_entities.website|tojson }}
     ]
   }
   </script>

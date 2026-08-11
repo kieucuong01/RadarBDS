@@ -240,7 +240,7 @@ def generate_ward_report(ward, month, year):
         "hero_title": f"Báo cáo thị trường phường {ward}, Thủ Dầu Một {m_label}",
         "hero_text": f"Báo cáo chi tiết thị trường BĐS phường {ward}, {tagline}. Radar thu thập {stats['raw_total']} tin và dùng {stats['basis_count']} mẫu canonical hợp lệ.",
         "hero_checks": ch,
-        "primary_cta": "Mở dashboard để lọc watchlist",
+        "primary_cta": "Mở dashboard để lọc signal",
         "secondary_cta": "Xem báo cáo tổng quan",
         "secondary_href": f"/bao-cao/bds-binh-duong-thang-{m_str}-{year}",
         "map_label": f"Report / {ward}",

@@ -1,0 +1,13 @@
+{% if page.trust %}
+<aside class="seo-trust-panel" aria-label="Thông tin biên tập và nguồn dữ liệu">
+  <p class="seo-eyebrow">Thông tin biên tập</p>
+  <dl>
+    <div><dt>Biên tập</dt><dd><a href="{{ page.trust.owner_url }}">{{ page.trust.owner_name }}</a></dd></div>
+    {% if page.trust.published_at %}<div><dt>Xuất bản</dt><dd><time datetime="{{ page.trust.published_at }}">{{ page.trust.published_at }}</time></dd></div>{% endif %}
+    {% if page.trust.modified_at %}<div><dt>Cập nhật</dt><dd><time datetime="{{ page.trust.modified_at }}">{{ page.trust.modified_at }}</time></dd></div>{% endif %}
+    {% if page.trust.source_label %}<div><dt>Nguồn dữ liệu</dt><dd>{{ page.trust.source_label }}</dd></div>{% endif %}
+  </dl>
+  <p><a href="{{ page.trust.method_url }}">{{ page.trust.method_label }}</a></p>
+  <p class="seo-trust-caveat">{{ page.trust.caveat }}</p>
+</aside>
+{% endif %}

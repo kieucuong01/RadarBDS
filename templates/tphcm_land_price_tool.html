@@ -18,14 +18,11 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "Tra cứu bảng giá đất TP.HCM mới 2026",
-    "url": {{ site_meta.canonical_url|tojson }},
-    "applicationCategory": "FinanceApplication",
-    "description": {{ site_meta.description|tojson }},
-    "dateModified": {{ land_price_data_as_of|tojson }},
-    "isBasedOn": {{ land_price_source_url|tojson }},
-    "provider": {"@type": "Organization", "name": "Radar BDS", "url": {{ site_meta.base_url|tojson }}}
+    "@graph": [
+      {"@type": "WebApplication", "name": "Tra cứu bảng giá đất TP.HCM mới 2026", "url": {{ site_meta.canonical_url|tojson }}, "applicationCategory": "FinanceApplication", "description": {{ site_meta.description|tojson }}, "dateModified": {{ land_price_data_as_of|tojson }}, "isBasedOn": {{ land_price_source_url|tojson }}, "inLanguage": "vi-VN", "isPartOf": {{ public_entities.website_ref|tojson }}, "provider": {{ public_entities.organization_ref|tojson }}},
+      {{ public_entities.organization|tojson }},
+      {{ public_entities.website|tojson }}
+    ]
   }
   </script>
   <script>
