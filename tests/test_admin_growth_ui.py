@@ -300,6 +300,22 @@ def test_facebook_crawl_overview_has_command_center_semantics():
     assert 'aria-labelledby="crawlProblemsTitle"' in template
 
 
+def test_facebook_crawl_overview_command_center_is_asymmetric_and_mobile_first():
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+    overview_css = css[css.index(".crawl-command-layout"):]
+
+    assert 'grid-template-areas: "health rail" "attention attention";' in overview_css
+    assert '.crawl-health-panel[data-health="healthy"]' in overview_css
+    assert '.crawl-health-panel[data-health="warning"]' in overview_css
+    assert '.crawl-health-panel[data-health="critical"]' in overview_css
+    assert ".crawl-resource-rail" in overview_css
+    assert ".crawl-attention-panel" in overview_css
+    assert ".crawl-overview-error" in overview_css
+    mobile_css = overview_css[overview_css.index("@media (max-width: 760px)"):]
+    assert 'grid-template-areas: "health" "attention" "rail";' in mobile_css
+    assert ".crawl-health-actions > button { width: 100%; min-height: 44px; }" in mobile_css
+
+
 def test_facebook_broker_actions_have_explicit_safe_delete_and_responsive_styles():
     source = (ROOT / "static" / "js" / "admin" / "facebook-crawl.js").read_text(encoding="utf-8")
     css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
