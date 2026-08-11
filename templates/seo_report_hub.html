@@ -32,6 +32,8 @@
       </aside>
     </section>
 
+    {% include "partials/seo_trust.html" %}
+
     {% if reports %}
     {% set latest = reports[0] %}
     <section class="hub-featured report-hub-featured" aria-labelledby="latest-report" data-featured-report="{{ latest.path }}">

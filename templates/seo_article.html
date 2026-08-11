@@ -19,6 +19,8 @@
         </div>
       </header>
 
+      {% include "partials/seo_trust.html" %}
+
       <div class="article-reading-column">
         <section class="article-intro" aria-label="Mở đầu">
           {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}

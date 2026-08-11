@@ -97,6 +97,7 @@ from config.city_map_products import (
     get_city_map_page,
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
+from services.public_marketing import build_trust_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -3143,6 +3144,11 @@ def _hydrate_live_location_page(page: dict) -> dict:
     return page
 
 
+def _with_public_trust(page: dict, page_type: str) -> dict:
+    page["trust"] = build_trust_context(page, page_type=page_type)
+    return page
+
+
 def _render_public_page(page: dict):
     page = dict(page)
     page = _hydrate_live_location_page(page)
@@ -3184,6 +3190,10 @@ def _render_public_page(page: dict):
             "ward_slug": _report_safe_slug(scope),
             "period": f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or ""),
         }
+    page = _with_public_trust(
+        page,
+        "report" if page.get("variant") == "report" else "location" if page.get("live_ward") else "landing",
+    )
     page["breadcrumbs"] = _page_breadcrumbs(page)
     site_meta = _site_meta(
         page["path"],
@@ -3215,6 +3225,14 @@ def seo_report_hub_page():
             "lead_scope_label": "Thủ Dầu Một",
         })
     page["breadcrumbs"] = _page_breadcrumbs(page)
+    page["latest_modified_at"] = max(
+        (
+            str((report.get("report") or {}).get("data_as_of") or (report.get("report") or {}).get("published_at") or "")
+            for report in reports
+        ),
+        default="",
+    )
+    page = _with_public_trust(page, "report")
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
 
@@ -3392,6 +3410,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     )
     page["latest_modified_at"] = latest_modified_at
     page["latest_modified_label"] = _format_news_date(latest_modified_at)
+    page = _with_public_trust(page, "hub")
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
     return render_template(
         "seo_knowledge_hub.html",
@@ -3562,6 +3581,11 @@ def seo_news_hub_page():
                 )
                 item["is_external"] = section["item_type"] == "hot_topic"
         sections.append(section)
+    page["latest_modified_at"] = max(
+        (str((item.get("article") or {}).get("modified_at") or "") for item in SEO_ARTICLES.values()),
+        default="",
+    )
+    page = _with_public_trust(page, "hub")
     return render_template(
         "news_portal.html",
         page=page,
@@ -3628,6 +3652,8 @@ def public_content_hub_page(kind: str):
         ),
         key=lambda topic: topic["label"],
     )
+    page["latest_modified_at"] = max((str(item.get("published_iso") or "") for item in items), default="")
+    page = _with_public_trust(page, "hub")
     return render_template(
         "public_content_hub.html",
         page=page,
@@ -3846,6 +3872,7 @@ def seo_article_page(slug):
         return redirect(target, code=301)
     page = dict(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
+    page = _with_public_trust(page, "article")
     site_meta = _site_meta(
         page["path"],
         title=page["title"],
