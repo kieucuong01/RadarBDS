@@ -448,6 +448,13 @@
   animation: spin 0.8s linear infinite;
 }
 
+@media (min-width: 1025px) {
+  body[data-active-dashboard-tab="signals"] #signalsGrid,
+  body[data-active-dashboard-tab="all"] .listings-grid {
+    gap: 18px;
+  }
+}
+
 .signal-skeleton-card {
   min-height: 420px;
   opacity: 0.72;

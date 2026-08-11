@@ -508,6 +508,20 @@
   text-decoration: none;
 }
 
+@media (min-width: 1025px) {
+  body[data-active-dashboard-tab="signals"] .dashboard-promise,
+  body[data-active-dashboard-tab="signals"] .traffic-priority-proof,
+  body[data-active-dashboard-tab="all"] .dashboard-promise,
+  body[data-active-dashboard-tab="all"] .traffic-priority-proof {
+    display: none;
+  }
+
+  body[data-active-dashboard-tab="signals"] .content,
+  body[data-active-dashboard-tab="all"] .content {
+    padding-top: 18px;
+  }
+}
+
 @media (max-width: 720px) {
   .dashboard-promise {
     align-items: flex-start;

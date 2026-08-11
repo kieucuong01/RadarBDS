@@ -159,7 +159,22 @@ def test_dashboard_task_tabs_and_signal_results_expose_agent_readable_state():
         in core_script
     )
     assert "syncDashboardTabState(tabId);" in core_script
+    assert "document.body.dataset.activeDashboardTab = tabId" in core_script
     assert 'role="status"' in signal_script
+
+
+def test_listing_workspace_hides_promise_banners_on_desktop_card_tabs():
+    markup = DASHBOARD.read_text(encoding="utf-8")
+    layout_css = Path("static/css/main/layout.css").read_text(encoding="utf-8")
+    cards_css = Path("static/css/main/cards.css").read_text(encoding="utf-8")
+
+    assert 'data-active-dashboard-tab="signals"' in markup
+    assert 'body[data-active-dashboard-tab="signals"] .dashboard-promise' in layout_css
+    assert 'body[data-active-dashboard-tab="signals"] .traffic-priority-proof' in layout_css
+    assert 'body[data-active-dashboard-tab="all"] .dashboard-promise' in layout_css
+    assert 'body[data-active-dashboard-tab="all"] .traffic-priority-proof' in layout_css
+    assert 'body[data-active-dashboard-tab="signals"] #signalsGrid' in cards_css
+    assert 'body[data-active-dashboard-tab="all"] .listings-grid' in cards_css
 
 
 def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
@@ -167,20 +182,21 @@ def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
     detail_markup = Path("templates/listing_detail.html").read_text(
         encoding="utf-8"
     )
-    version = "agent-readonly-20260810"
+    dashboard_versions = {
+        "css/main/cards.css": "listing-workspace-20260811",
+        "js/main/core.js": "listing-workspace-20260811",
+        "js/main/signal_card.js": "agent-readonly-20260810",
+        "js/main/signals.js": "agent-readonly-20260810",
+    }
 
-    for asset in (
-        "css/main/cards.css",
-        "js/main/core.js",
-        "js/main/signal_card.js",
-        "js/main/signals.js",
-    ):
+    for asset, version in dashboard_versions.items():
         matching_lines = [
             line for line in markup.splitlines() if asset in line
         ]
         assert len(matching_lines) == 1
         assert f"?v={version}" in matching_lines[0]
 
+    version = "agent-readonly-20260810"
     for asset in ("css/main/cards.css", "js/main/signal_card.js"):
         matching_lines = [
             line for line in detail_markup.splitlines() if asset in line

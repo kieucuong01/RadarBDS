@@ -556,6 +556,7 @@ document.addEventListener('keydown', function (event) {
 });
 
 function syncDashboardTabState(tabId) {
+  document.body.dataset.activeDashboardTab = tabId;
   document.querySelectorAll('[data-tab-target]').forEach((control) => {
     const isActive = control.dataset.tabTarget === tabId;
     control.setAttribute('aria-pressed', isActive ? 'true' : 'false');
