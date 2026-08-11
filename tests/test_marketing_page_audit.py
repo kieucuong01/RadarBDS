@@ -70,6 +70,15 @@ def test_dashboard_contract_and_article_boundaries_are_hard_failures():
     assert "answer_first_length" in {item.code for item in result.warnings}
 
 
+def test_legacy_watchlist_or_default_vip_copy_is_a_hard_failure():
+    result = _audit_candidate_records(
+        (("fixture", "/x", {"path": "/x", "title": "A suitably descriptive fixture page title", "description": "A sufficiently long fixture description for this deterministic marketing audit test case.", "body": "Mở dashboard để lọc watchlist hoặc thông báo VIP."}),),
+        strict=False,
+    )
+
+    assert "legacy_funnel_copy" in {item.code for item in result.hard_failures}
+
+
 def test_warning_only_result_exits_zero():
     result = MarketingAuditResult(
         checked_path_count=1,
@@ -102,3 +111,12 @@ def test_cli_supports_bounded_json_output(capsys):
     assert exit_code == 1
     assert len(payload["hard_failures"]) <= 1
     assert payload["summary"]["checked_path_count"] >= 124
+
+
+def test_real_marketing_ctas_have_no_contract_failures():
+    from services.marketing_page_audit import audit_marketing_pages
+
+    result = audit_marketing_pages(strict=False)
+    forbidden = {"invalid_dashboard_query_key", "invalid_dashboard_tab"}
+
+    assert not [item for item in result.hard_failures if item.code in forbidden]

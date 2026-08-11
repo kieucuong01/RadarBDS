@@ -59,6 +59,11 @@ STATIC_TOOL_PAGES = (
     {"path": "/bang-gia-dat-tphcm", "title": "Bảng giá đất TP.HCM"},
 )
 MACHINE_DISCOVERY_SURFACES = frozenset({"/robots.txt", "/sitemap.xml", "/llms.txt"})
+LEGACY_DEFAULT_FUNNEL_PHRASES = (
+    "lọc watchlist",
+    "thông báo VIP",
+    "ráp mối VIP",
+)
 REQUIRED_REGISTRY_FAMILIES = frozenset(
     {
         "static_tools",
@@ -261,6 +266,19 @@ def _audit_candidate_records(
         for value in _iter_strings(payload):
             if any(ord(char) < 32 for char in value):
                 hard_failures.append(AuditFinding("error", "control_character", path, "Configured text contains a control character."))
+            legacy_phrase = next(
+                (phrase for phrase in LEGACY_DEFAULT_FUNNEL_PHRASES if phrase.casefold() in value.casefold()),
+                None,
+            )
+            if legacy_phrase:
+                hard_failures.append(
+                    AuditFinding(
+                        "error",
+                        "legacy_funnel_copy",
+                        path,
+                        f"Replace legacy default funnel copy containing '{legacy_phrase}'.",
+                    ),
+                )
             if value.startswith("//"):
                 hard_failures.append(AuditFinding("error", "protocol_relative_url", path, "Protocol-relative URLs are not allowed."))
             if value.startswith("/?"):

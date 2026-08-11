@@ -83,6 +83,16 @@ def test_report_scripts_delegate_to_shared_data_service_without_legacy_signal_ga
     assert "mos_pct >= 5" not in enhancer
 
 
+def test_public_report_generation_uses_signal_contact_funnel_copy():
+    generator = Path("scripts/generate_monthly_report.py").read_text(encoding="utf-8")
+    enhancer = Path("scripts/enhance_monthly_report_rich.py").read_text(encoding="utf-8")
+
+    for source in (generator, enhancer):
+        assert "lọc watchlist" not in source
+        assert "thông báo VIP" not in source
+        assert "Ráp mối VIP" not in source
+
+
 def test_report_snapshots_expose_raw_basis_actionable_contract_in_user_copy():
     generator = Path("scripts/generate_monthly_report.py").read_text(encoding="utf-8")
     enhancer = Path("scripts/enhance_monthly_report_rich.py").read_text(encoding="utf-8")
