@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 
+import services.marketing_page_audit as marketing_page_audit
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_articles import SEO_ARTICLES
 from scripts.audit_marketing_pages import main
@@ -29,6 +30,20 @@ def test_canonical_ward_registry_has_all_thirteen_wards():
     assert len(TDM_LIVE_WARDS) == 13
     assert TDM_LIVE_WARDS["phu-tan"] == "Phú Tân"
     assert TDM_LIVE_WARDS["hiep-thanh"] == "Hiệp Thành"
+
+
+def test_strict_audit_requires_all_machine_discovery_surfaces(monkeypatch):
+    monkeypatch.setattr(
+        marketing_page_audit,
+        "MACHINE_DISCOVERY_SURFACES",
+        frozenset({"/robots.txt", "/sitemap.xml"}),
+    )
+
+    result = marketing_page_audit.audit_marketing_pages(strict=True)
+
+    assert {
+        item.path for item in result.hard_failures if item.code == "missing_discovery_surface"
+    } == {"/llms.txt"}
 
 
 def test_identical_aliases_are_deduplicated_but_conflicts_are_hard_failures():

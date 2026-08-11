@@ -58,7 +58,8 @@ STATIC_TOOL_PAGES = (
     {"path": "/dinh-gia-bds", "title": "Định giá BĐS"},
     {"path": "/bang-gia-dat-tphcm", "title": "Bảng giá đất TP.HCM"},
 )
-MACHINE_DISCOVERY_SURFACES = frozenset({"/robots.txt", "/sitemap.xml", "/llms.txt"})
+REQUIRED_MACHINE_DISCOVERY_SURFACES = frozenset({"/robots.txt", "/sitemap.xml", "/llms.txt"})
+MACHINE_DISCOVERY_SURFACES = REQUIRED_MACHINE_DISCOVERY_SURFACES
 LEGACY_DEFAULT_FUNNEL_PHRASES = (
     "lọc watchlist",
     "thông báo VIP",
@@ -334,9 +335,8 @@ def _audit_candidate_records(
         present_sources = {source for source, _path, _payload in raw}
         for source in sorted(REQUIRED_REGISTRY_FAMILIES - present_sources):
             hard_failures.append(AuditFinding("error", "missing_registry_family", "/", f"Required registry family '{source}' is unavailable."))
-        for surface in sorted(MACHINE_DISCOVERY_SURFACES):
-            if surface not in MACHINE_DISCOVERY_SURFACES:
-                hard_failures.append(AuditFinding("error", "missing_discovery_surface", surface, "Required discovery surface is unavailable."))
+        for surface in sorted(REQUIRED_MACHINE_DISCOVERY_SURFACES - MACHINE_DISCOVERY_SURFACES):
+            hard_failures.append(AuditFinding("error", "missing_discovery_surface", surface, "Required discovery surface is unavailable."))
 
     return MarketingAuditResult(
         checked_path_count=len({path for _source, path, _payload in deduplicated if path}),
