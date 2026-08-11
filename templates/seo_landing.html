@@ -51,11 +51,8 @@
           "name": {{ (page.live_ward ~ ", Thủ Dầu Một – Bình Dương cũ") | tojson }}
         },
         {% endif %}
-        "isPartOf": {
-          "@type": "WebSite",
-          "name": "Radar BDS",
-          "url": "https://radarbds.vn/"
-        }
+        "inLanguage": "vi-VN",
+        "isPartOf": {{ public_entities.website_ref | tojson }}
       }{% if page.live_snapshot and page.live_snapshot.available %},
       {
         "@type": "Dataset",
@@ -63,11 +60,8 @@
         "description": {{ page.hero_text | tojson }},
         "url": {{ site_meta.canonical_url | tojson }},
         "dateModified": {{ page.live_snapshot.updated_iso | tojson }},
-        "creator": {
-          "@type": "Organization",
-          "name": "Radar BDS",
-          "url": "https://radarbds.vn/"
-        },
+        "inLanguage": "vi-VN",
+        "creator": {{ public_entities.organization_ref | tojson }},
         "spatialCoverage": {
           "@type": "Place",
           "name": {{ (page.live_ward ~ ", Thủ Dầu Một – Bình Dương cũ") | tojson }}
@@ -86,20 +80,8 @@
         ]
       }
       {% endif %},
-      {
-        "@type": "Organization",
-        "name": "Radar BDS",
-        "url": "https://radarbds.vn/",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://radarbds.vn/static/images/app-icon-512.png"
-        }
-      },
-      {
-        "@type": "WebSite",
-        "name": "Radar BDS",
-        "url": "https://radarbds.vn/"
-      },
+      {{ public_entities.organization | tojson }},
+      {{ public_entities.website | tojson }},
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
@@ -134,15 +116,10 @@
         "description": {{ site_meta.description | tojson }},
         "datePublished": {{ (page.article.published_at if page.article else page.report.published_at) | tojson }},
         "dateModified": {{ (page.article.modified_at if page.article else page.report.published_at) | tojson }},
-        "author": {
-          "@type": "Organization",
-          "name": "Radar BDS"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "name": "Radar BDS",
-          "url": "https://radarbds.vn/"
-        },
+        "inLanguage": "vi-VN",
+        "isPartOf": {{ public_entities.website_ref | tojson }},
+        "author": {{ public_entities.organization_ref | tojson }},
+        "publisher": {{ public_entities.organization_ref | tojson }},
         "mainEntityOfPage": {{ site_meta.canonical_url | tojson }}
       }
       {% endif %}

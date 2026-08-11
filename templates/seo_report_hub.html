@@ -162,13 +162,15 @@
   {
     "@context": "https://schema.org",
     "@graph": [
-      {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}},
+      {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}, "inLanguage": "vi-VN", "isPartOf": {{ public_entities.website_ref|tojson }}},
       {"@type": "ItemList", "itemListElement": [
         {% for report in reports %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ report.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ report.path)|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
       ]},
       {"@type": "BreadcrumbList", "itemListElement": [
         {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
-      ]}
+      ]},
+      {{ public_entities.organization|tojson }},
+      {{ public_entities.website|tojson }}
     ]
   }
   </script>

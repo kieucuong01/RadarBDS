@@ -10,6 +10,7 @@ DEFAULT_CAVEAT = (
     "Dữ liệu dùng để sàng lọc ban đầu, không thay thế kiểm tra thực địa, "
     "quy hoạch, pháp lý hoặc định giá chính thức."
 )
+PUBLIC_LANGUAGE = "vi-VN"
 
 
 def _mapping(value: object) -> Mapping[str, object]:
@@ -48,3 +49,29 @@ def build_trust_context(page: Mapping[str, object], *, page_type: str) -> dict[s
     else:
         values["source_label"] = str(page.get("source_note") or "Nội dung và dữ liệu biên tập bởi Radar BDS.")
     return {key: value for key, value in values.items() if value}
+
+
+def build_public_entities(base_url: str) -> dict[str, dict[str, object]]:
+    """Return fresh, stable schema entities for a public rendering context."""
+    root = f"{str(base_url).rstrip('/')}/"
+    organization_id = f"{root}#organization"
+    website_id = f"{root}#website"
+    return {
+        "organization": {
+            "@type": "Organization",
+            "@id": organization_id,
+            "name": "Radar BDS",
+            "url": root,
+            "logo": {"@type": "ImageObject", "url": f"{root}static/images/app-icon-512.png"},
+        },
+        "website": {
+            "@type": "WebSite",
+            "@id": website_id,
+            "name": "Radar BDS",
+            "url": root,
+            "inLanguage": PUBLIC_LANGUAGE,
+            "publisher": {"@id": organization_id},
+        },
+        "organization_ref": {"@id": organization_id},
+        "website_ref": {"@id": website_id},
+    }

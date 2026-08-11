@@ -373,7 +373,9 @@
         "url": {{ site_meta.canonical_url|tojson }},
         "datePublished": {{ page.report.published_at|tojson }},
         "dateModified": {{ page.report.published_at|tojson }},
-        "publisher": {"@type": "Organization", "name": "Radar BDS"},
+        "inLanguage": "vi-VN",
+        "isPartOf": {{ public_entities.website_ref|tojson }},
+        "publisher": {{ public_entities.organization_ref|tojson }},
         "spatialCoverage": {{ page.scope_label|tojson }}
       },
       {
@@ -381,7 +383,9 @@
         "itemListElement": [
           {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
         ]
-      }
+      },
+      {{ public_entities.organization|tojson }},
+      {{ public_entities.website|tojson }}
     ]
   }
   </script>

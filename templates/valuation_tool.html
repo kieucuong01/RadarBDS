@@ -32,12 +32,10 @@
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Web",
         "description": "{{ site_meta.description }}",
+        "inLanguage": "vi-VN",
+        "isPartOf": {{ public_entities.website_ref|tojson }},
         "isAccessibleForFree": true,
-        "publisher": {
-          "@type": "Organization",
-          "name": "Radar BDS",
-          "url": "{{ site_meta.base_url }}"
-        },
+        "publisher": {{ public_entities.organization_ref|tojson }},
         "areaServed": [
           {"@type": "AdministrativeArea", "name": "Thủ Dầu Một, Bình Dương"},
           {"@type": "AdministrativeArea", "name": "Bến Cát, Bình Dương"}
@@ -90,7 +88,9 @@
             "item": "{{ site_meta.canonical_url }}"
           }
         ]
-      }
+      },
+      {{ public_entities.organization|tojson }},
+      {{ public_entities.website|tojson }}
     ]
   }
   </script>

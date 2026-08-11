@@ -97,7 +97,7 @@ from config.city_map_products import (
     get_city_map_page,
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
-from services.public_marketing import build_trust_context
+from services.public_marketing import build_public_entities, build_trust_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -239,6 +239,11 @@ def inject_google_site_tags():
         "google_analytics_id": analytics_id,
         "google_search_console_verification": GOOGLE_SEARCH_CONSOLE_VERIFICATION,
     }
+
+
+@app.context_processor
+def inject_public_schema_entities():
+    return {"public_entities": build_public_entities(PUBLIC_BASE_URL)}
 
 
 @app.context_processor
@@ -1724,6 +1729,25 @@ def _site_meta(path="/", *, title=None, description=None, keywords=None):
     }
 
 
+def _public_schema_graph(graph: dict) -> dict:
+    """Add the shared public entities to app-built JSON-LD graphs once."""
+    nodes = [dict(node) for node in graph.get("@graph", [])]
+    entities = build_public_entities(PUBLIC_BASE_URL)
+    public_types = {"Article", "CollectionPage", "Dataset", "Report", "WebApplication", "WebPage"}
+    for node in nodes:
+        node_type = node.get("@type")
+        if node_type in public_types:
+            node.setdefault("inLanguage", "vi-VN")
+            node.setdefault("isPartOf", dict(entities["website_ref"]))
+        if node_type == "Dataset":
+            node.setdefault("creator", dict(entities["organization_ref"]))
+        if node_type in {"Article", "Report"}:
+            node.setdefault("author", dict(entities["organization_ref"]))
+            node.setdefault("publisher", dict(entities["organization_ref"]))
+    nodes.extend((entities["organization"], entities["website"]))
+    return {"@context": "https://schema.org", "@graph": nodes}
+
+
 def _load_tphcm_land_price_data() -> dict:
     mtime = _TPHCM_LAND_PRICE_DATA.stat().st_mtime
     if _TPHCM_LAND_PRICE_CACHE["mtime"] != mtime:
@@ -2526,7 +2550,7 @@ def planning_hub_page():
         pages=pages,
         trending_pages=trending_pages,
         site_meta=site_meta,
-        schema_graph=_planning_hub_schema(page, pages),
+        schema_graph=_public_schema_graph(_planning_hub_schema(page, pages)),
         active_nav="quy-hoach",
         dashboard_signal_href="/?tab=signals",
     )
@@ -2561,11 +2585,11 @@ def binh_duong_map_page():
         current_areas=[dict(area) for area in BINH_DUONG_CURRENT_AREAS],
         current_groups=current_groups,
         site_meta=site_meta,
-        schema_graph=_binh_duong_map_schema(
+        schema_graph=_public_schema_graph(_binh_duong_map_schema(
             page,
             BINH_DUONG_LEGACY_AREAS,
             BINH_DUONG_CURRENT_AREAS,
-        ),
+        )),
         active_nav="ban-do-binh-duong",
         dashboard_signal_href="/?tab=signals",
     )
@@ -2685,13 +2709,13 @@ def city_map_product_page(city_slug: str):
         current_areas=current_areas,
         display_price=f"{product.price_vnd:,}".replace(",", "."),
         site_meta=site_meta,
-        schema_graph=city_map_product_schema(
+        schema_graph=_public_schema_graph(city_map_product_schema(
             page,
             product,
             availability,
             legacy_areas,
             current_areas,
-        ),
+        )),
         active_nav="ban-do-binh-duong",
         dashboard_signal_href=page["dashboard_signal_href"],
     )
@@ -2743,7 +2767,7 @@ def planning_detail_page(slug: str):
                 description=page["description"],
                 keywords=f"{page['heading']}, quy hoạch Bình Dương",
             ),
-            schema_graph=schema_graph,
+            schema_graph=_public_schema_graph(schema_graph),
             active_nav="quy-hoach",
         )
 
@@ -2764,7 +2788,7 @@ def planning_detail_page(slug: str):
         "planning_detail.html",
         page=page,
         site_meta=site_meta,
-        schema_graph=_planning_detail_schema(page),
+        schema_graph=_public_schema_graph(_planning_detail_schema(page)),
         active_nav="quy-hoach",
         dashboard_signal_href=page.get("dashboard_href") or "/?tab=signals",
     )
@@ -3596,13 +3620,13 @@ def seo_news_hub_page():
             description=page["description"],
             keywords="tin tức Bình Dương, bất động sản Bình Dương, văn bản quy hoạch",
         ),
-        schema_graph=_collection_schema(
+        schema_graph=_public_schema_graph(_collection_schema(
             page,
             [
                 {"title": section["heading"], "url": section["path"]}
                 for section in sections
             ],
-        ),
+        )),
         active_nav="tin-tuc",
     )
 
@@ -3666,7 +3690,7 @@ def public_content_hub_page(kind: str):
             description=page["description"],
             keywords=f"{page['heading']}, Radar BDS",
         ),
-        schema_graph=_collection_schema(
+        schema_graph=_public_schema_graph(_collection_schema(
             page,
             [
                 {
@@ -3679,7 +3703,7 @@ def public_content_hub_page(kind: str):
                 }
                 for item in items
             ],
-        ),
+        )),
         active_nav="tin-tuc",
     )
 
@@ -3734,10 +3758,10 @@ def legal_document_page(slug: str):
             description=page["description"],
             keywords=f"{item.get('document_number', '')}, văn bản Bình Dương",
         ),
-        schema_graph={
+        schema_graph=_public_schema_graph({
             "@context": "https://schema.org",
             "@graph": [legislation, _breadcrumb_schema(page["breadcrumbs"])],
-        },
+        }),
         active_nav="tin-tuc",
     )
 
