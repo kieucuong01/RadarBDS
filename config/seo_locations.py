@@ -5,6 +5,25 @@ enough local intent and internal links to avoid thin doorway pages.
 """
 from __future__ import annotations
 
+from types import MappingProxyType
+
+
+TDM_LIVE_WARDS = MappingProxyType({
+    "tan-an": "Tân An",
+    "hiep-an": "Hiệp An",
+    "tuong-binh-hiep": "Tương Bình Hiệp",
+    "dinh-hoa": "Định Hòa",
+    "chanh-my": "Chánh Mỹ",
+    "phu-my": "Phú Mỹ",
+    "phu-cuong": "Phú Cường",
+    "phu-hoa": "Phú Hòa",
+    "phu-loi": "Phú Lợi",
+    "hiep-thanh": "Hiệp Thành",
+    "chanh-nghia": "Chánh Nghĩa",
+    "phu-tan": "Phú Tân",
+    "hoa-phu": "Hòa Phú",
+})
+
 
 LOCATION_DEFINITIONS = [
     {
