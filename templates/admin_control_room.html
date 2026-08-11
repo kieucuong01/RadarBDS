@@ -415,25 +415,75 @@
         </nav>
 
         <section id="crawlView-overview" class="crawl-view-panel" data-crawl-view-panel="overview">
-          <div class="crawl-view-heading">
+          <div class="crawl-overview-toolbar">
             <div>
-              <h2>Tình trạng hôm nay</h2>
-              <p>Bốn thông tin cần nhìn trước khi quyết định can thiệp.</p>
+              <p class="crawl-overview-kicker">Trạng thái vận hành</p>
+              <h2>Điều hành Facebook Crawl</h2>
             </div>
-            <span id="crawlOverviewStatus" class="crawl-inline-status" aria-live="polite">Đang tải…</span>
+            <span id="crawlOverviewStatus" class="crawl-inline-status" aria-live="polite">Đang tải tổng quan</span>
           </div>
-          <div id="crawlOverviewCards" class="crawl-overview-grid"></div>
-          <section class="surface crawl-action-needed" aria-labelledby="crawlProblemsTitle">
-            <div class="crawl-section-head">
-              <div>
-                <h3 id="crawlProblemsTitle">Việc cần xử lý</h3>
-                <p>Chỉ hiện cảnh báo đang hoạt động; trạng thái khỏe được thu gọn.</p>
+
+          <div id="crawlOverviewCommand" class="crawl-command-layout" aria-busy="true">
+            <section id="crawlOverviewHealth" class="surface crawl-health-panel state-loading"
+                     aria-labelledby="crawlOverviewHealthLabel">
+              <div class="crawl-health-copy">
+                <span id="crawlOverviewHealthBadge" class="crawl-status-badge">Đang tải</span>
+                <h3 id="crawlOverviewHealthLabel">Đang kiểm tra hệ thống</h3>
+                <p id="crawlOverviewHealthSummary">Đang lấy lịch crawl, lần chạy gần nhất và tài nguyên Apify.</p>
               </div>
+              <dl class="crawl-health-facts">
+                <div>
+                  <dt>Lịch kế tiếp</dt>
+                  <dd id="crawlOverviewNextRun">Đang tải</dd>
+                </div>
+                <div>
+                  <dt>Facebook gần nhất</dt>
+                  <dd id="crawlOverviewLastRun">Đang tải</dd>
+                </div>
+              </dl>
+              <div class="crawl-command-actions">
+                <button class="primary-btn" id="crawlOverviewRunBtn" type="button">Chạy tác vụ</button>
+                <button class="secondary-btn" id="crawlOverviewBrokersBtn" type="button">Quản lý môi giới</button>
+              </div>
+            </section>
+
+            <section class="surface crawl-attention-panel" aria-labelledby="crawlProblemsTitle">
+              <div class="crawl-section-head">
+                <div>
+                  <h3 id="crawlProblemsTitle">Việc cần xử lý</h3>
+                  <p>Ưu tiên điều kiện có thể làm gián đoạn crawl.</p>
+                </div>
+              </div>
+              <div id="crawlProblems" class="crawl-problem-skeleton" aria-live="polite">Đang kiểm tra cảnh báo</div>
+            </section>
+
+            <aside class="crawl-resource-rail" aria-label="Tài nguyên và hoạt động">
+              <article id="crawlOverviewApify" class="surface crawl-resource-card">
+                <span>Tài nguyên Apify</span>
+                <strong id="crawlOverviewApifyValue">Đang tải</strong>
+                <p id="crawlOverviewApifyNote">Đang kiểm tra key khả dụng</p>
+              </article>
+              <article id="crawlOverviewLatestJob" class="surface crawl-resource-card">
+                <span>Tác vụ gần nhất</span>
+                <strong id="crawlOverviewJobStatus">Đang tải</strong>
+                <p id="crawlOverviewJobLabel">Đang kiểm tra lịch sử tác vụ</p>
+              </article>
+            </aside>
+          </div>
+
+          <section id="crawlOverviewError" class="crawl-overview-error" role="alert" hidden>
+            <div>
+              <strong>Không tải được tổng quan</strong>
+              <p>Dữ liệu gần nhất được giữ lại nếu có. Hãy thử tải lại.</p>
             </div>
-            <div id="crawlProblems" aria-live="polite"></div>
+            <button class="secondary-btn" id="crawlOverviewRetryBtn" type="button">Thử lại</button>
           </section>
+
           <details class="surface crawl-token-details" id="crawlTokenDetails">
-            <summary>Quản lý Apify key</summary>
+            <summary>
+              <span>Quản lý Apify key</span>
+              <span id="crawlTokenSummaryCount" class="crawl-token-summary-count">Đang tải tài nguyên</span>
+            </summary>
             <p>Key chỉ được gửi khi thêm mới; giá trị token không bao giờ được trả lại từ API.</p>
             <div class="crawl-token-form">
               <label>Tên key<input id="crawlTokenLabel" autocomplete="off" placeholder="Key dự phòng"></label>

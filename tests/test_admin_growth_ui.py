@@ -274,6 +274,32 @@ def test_facebook_crawl_mobile_drawer_stays_in_viewport_with_touch_sized_actions
     assert ".crawl-drawer-actions button { min-height: 44px; }" in mobile_css
 
 
+def test_facebook_crawl_overview_has_command_center_semantics():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(encoding="utf-8")
+
+    required_ids = (
+        "crawlOverviewCommand",
+        "crawlOverviewHealth",
+        "crawlOverviewHealthBadge",
+        "crawlOverviewHealthLabel",
+        "crawlOverviewHealthSummary",
+        "crawlOverviewNextRun",
+        "crawlOverviewLastRun",
+        "crawlOverviewLatestJob",
+        "crawlOverviewApify",
+        "crawlProblems",
+        "crawlOverviewError",
+        "crawlOverviewRetryBtn",
+        "crawlOverviewRunBtn",
+        "crawlOverviewBrokersBtn",
+    )
+    for element_id in required_ids:
+        assert f'id="{element_id}"' in template
+    assert 'aria-live="polite"' in template
+    assert 'aria-labelledby="crawlOverviewHealthLabel"' in template
+    assert 'aria-labelledby="crawlProblemsTitle"' in template
+
+
 def test_facebook_broker_actions_have_explicit_safe_delete_and_responsive_styles():
     source = (ROOT / "static" / "js" / "admin" / "facebook-crawl.js").read_text(encoding="utf-8")
     css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
