@@ -98,6 +98,7 @@ from config.city_map_products import (
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
 from services.public_marketing import build_public_entities, build_trust_context
+from services.traffic_priority import build_traffic_priority_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -1837,6 +1838,7 @@ def index():
             wards_by_city=CITY_MAP,
             site_meta=_site_meta("/"),
             saved_page=False,
+            traffic_priority=build_traffic_priority_context("/"),
         )
     )
     is_anonymous = (
@@ -1873,6 +1875,7 @@ def valuation_tool_page():
         wards_by_city=VALUATION_TOOL_CITY_MAP,
         required_tier=VALUATION_TOOL_MIN_TIER,
         active_nav="dinh-gia",
+        traffic_priority=build_traffic_priority_context("/dinh-gia-bds"),
         site_meta=_site_meta(
             "/dinh-gia-bds",
             title="Định giá đất Bình Dương online | Radar BDS",
@@ -2777,6 +2780,7 @@ def planning_detail_page(slug: str):
     page = deepcopy(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     page["local_links"] = page.get("related_links", [])[:3]
+    page["traffic_priority"] = build_traffic_priority_context(page["path"], page=page)
     site_meta = _site_meta(
         page["path"],
         title=page["title"],
@@ -3170,6 +3174,10 @@ def _hydrate_live_location_page(page: dict) -> dict:
 
 def _with_public_trust(page: dict, page_type: str) -> dict:
     page["trust"] = build_trust_context(page, page_type=page_type)
+    page["traffic_priority"] = build_traffic_priority_context(
+        page.get("path", ""),
+        page=page,
+    )
     return page
 
 

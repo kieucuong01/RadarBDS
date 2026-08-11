@@ -8,6 +8,7 @@ from config.traffic_priority import (
     traffic_priority_by_path,
 )
 from services.marketing_page_audit import audit_marketing_pages
+from services.traffic_priority import build_traffic_priority_context
 
 
 def test_priority_registry_has_exact_twenty_unique_active_paths():
@@ -55,3 +56,61 @@ def test_saved_page_keeps_one_saved_listings_h1():
     html = radar_app.app.test_client().get("/bds-da-luu").get_data(as_text=True)
 
     assert _h1_texts(html) == ["BDS đã lưu"]
+
+
+def test_priority_proof_uses_available_live_snapshot_date():
+    context = build_traffic_priority_context(
+        "/binh-duong/phuong-phu-tan",
+        page={
+            "live_snapshot": {
+                "available": True,
+                "updated_iso": "2026-08-11T09:00:00+07:00",
+            }
+        },
+    )
+
+    assert context["proof"]["updated_at"] == "2026-08-11T09:00:00+07:00"
+    assert context["proof"]["mode"] == "live_snapshot"
+
+
+def test_priority_proof_falls_back_without_inventing_date_or_count():
+    context = build_traffic_priority_context(
+        "/binh-duong/phuong-phu-tan",
+        page={"live_snapshot": {"available": False}},
+    )
+
+    assert context["proof"]["mode"] == "method_only"
+    assert "updated_at" not in context["proof"]
+    assert "count" not in context["proof"]
+
+
+def test_priority_links_are_bounded_unique_and_never_self_link():
+    context = build_traffic_priority_context("/binh-duong/phuong-phu-tan")
+    paths = [
+        item["href"].split("?", 1)[0]
+        for item in context["related_links"]
+    ]
+
+    assert len(paths) <= 4
+    assert len(paths) == len(set(paths))
+    assert "/binh-duong/phuong-phu-tan" not in paths
+
+
+def test_non_priority_path_has_no_priority_context():
+    assert build_traffic_priority_context("/tin-tuc") == {}
+
+
+def test_representative_priority_pages_render_one_shared_proof_block():
+    client = radar_app.app.test_client()
+    paths = (
+        "/",
+        "/dinh-gia-bds",
+        "/binh-duong/phuong-phu-tan",
+        "/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu",
+        "/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong",
+    )
+
+    for path in paths:
+        response = client.get(path)
+        assert response.status_code == 200, path
+        assert response.get_data(as_text=True).count("data-traffic-priority-proof") == 1, path
