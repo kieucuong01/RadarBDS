@@ -349,45 +349,92 @@
       return true;
     }
 
+    function setOverviewLoading(loading, statusLabel) {
+      const command = byId('crawlOverviewCommand');
+      const health = byId('crawlOverviewHealth');
+      const refresh = byId('crawlRefreshViewBtn');
+      if (command) {
+        command.setAttribute('aria-busy', loading ? 'true' : 'false');
+        command.classList.toggle('is-loading', loading);
+      }
+      if (health) health.classList.toggle('state-loading', loading);
+      if (refresh) refresh.disabled = loading;
+      if (statusLabel) text(byId('crawlOverviewStatus'), statusLabel);
+    }
+
+    function renderOverviewProblem(problem) {
+      const item = document.createElement('article');
+      item.className = `crawl-problem-item severity-${problem.severity}`;
+
+      const marker = document.createElement('span');
+      marker.className = 'crawl-problem-marker';
+      marker.setAttribute('aria-hidden', 'true');
+
+      const copy = document.createElement('div');
+      const label = document.createElement('strong');
+      label.textContent = problem.label;
+      const severity = document.createElement('span');
+      severity.className = 'crawl-problem-severity';
+      severity.textContent = problem.severity === 'critical' ? 'Cần xử lý ngay' : 'Cần kiểm tra';
+      copy.append(label, severity);
+
+      item.append(marker, copy);
+      if (problem.count > 1) {
+        const count = document.createElement('span');
+        count.className = 'crawl-problem-count';
+        count.textContent = `×${problem.count}`;
+        count.setAttribute('aria-label', `${problem.count} cảnh báo giống nhau`);
+        item.appendChild(count);
+      }
+      return item;
+    }
+
     function renderOverview(payload) {
-      const cards = byId('crawlOverviewCards');
-      clear(cards);
-      const values = [
-        ['Lịch crawl', payload.schedule && payload.schedule.installed
-          ? (payload.schedule.next_run_time || 'Đã bật')
-          : 'Chưa hoạt động'],
-        ['Lần Facebook gần nhất', payload.last_facebook_run
-          ? (payload.last_facebook_run.finished_at || payload.last_facebook_run.status || 'Đã chạy')
-          : 'Chưa có dữ liệu'],
-        ['Tác vụ gần nhất', payload.latest_job
-          ? (payload.latest_job.progress_label || payload.latest_job.status)
-          : 'Chưa có tác vụ'],
-        ['Apify khả dụng', `${Number(payload.apify && payload.apify.enabled_tokens || 0)} / ${Number(payload.apify && payload.apify.total_tokens || 0)} key`],
-      ];
-      values.forEach(([label, value]) => {
-        const card = document.createElement('article');
-        card.className = 'surface crawl-overview-card';
-        const small = document.createElement('span');
-        small.textContent = label;
-        const strong = document.createElement('strong');
-        strong.textContent = value;
-        card.append(small, strong);
-        cards.appendChild(card);
-      });
+      const model = buildOverviewViewModel(payload);
+      const health = byId('crawlOverviewHealth');
+      const badge = byId('crawlOverviewHealthBadge');
+      health.classList.remove('state-loading', 'state-healthy', 'state-warning', 'state-critical');
+      health.classList.add(`state-${model.health}`);
+      health.dataset.health = model.health;
+      badge.dataset.health = model.health;
+      text(badge, model.healthLabel);
+      text(byId('crawlOverviewHealthLabel'), model.healthLabel);
+      text(byId('crawlOverviewHealthSummary'), model.healthSummary);
+      text(byId('crawlOverviewNextRun'), model.nextRun);
+      text(byId('crawlOverviewLastRun'), model.lastFacebookRun);
+
+      text(byId('crawlOverviewApifyValue'), model.apify.ratioLabel);
+      text(
+        byId('crawlOverviewApifyNote'),
+        model.apify.enabled
+          ? `${model.apify.enabled} key đang sẵn sàng cho tác vụ crawl.`
+          : 'Không có key khả dụng cho tác vụ mới.',
+      );
+      text(byId('crawlTokenSummaryCount'), `${model.apify.enabled}/${model.apify.total} key khả dụng`);
+
+      const jobStatus = byId('crawlOverviewJobStatus');
+      jobStatus.className = `crawl-job-status status-${model.latestJob.status}`;
+      text(jobStatus, model.latestJob.statusLabel);
+      const jobLabel = byId('crawlOverviewJobLabel');
+      jobLabel.title = model.latestJob.fullLabel;
+      text(jobLabel, model.latestJob.label);
+
       const problems = byId('crawlProblems');
       clear(problems);
-      if (!payload.problems || !payload.problems.length) {
+      if (!model.problems.length) {
         problems.className = 'crawl-healthy-state';
-        text(problems, 'Không có việc cần xử lý. Lịch crawl và tài nguyên đang ổn.');
+        const title = document.createElement('strong');
+        title.textContent = 'Không có việc cần xử lý';
+        const note = document.createElement('span');
+        note.textContent = 'Lịch crawl và tài nguyên đang ổn.';
+        problems.append(title, note);
       } else {
         problems.className = 'crawl-problem-list';
-        payload.problems.forEach((problem) => {
-          const item = document.createElement('div');
-          item.className = 'crawl-problem-item';
-          item.textContent = problem.label;
-          problems.appendChild(item);
+        model.problems.forEach((problem) => {
+          problems.appendChild(renderOverviewProblem(problem));
         });
       }
+      byId('crawlOverviewError').hidden = true;
     }
 
     async function loadOverview(force) {
@@ -396,14 +443,15 @@
         renderOverview(state.overview);
         return;
       }
-      text(byId('crawlOverviewStatus'), 'Đang tải tổng quan…');
+      setOverviewLoading(true, 'Đang tải tổng quan…');
       try {
         state.overview = await fetchJSON('/admin/api/facebook-crawl/overview');
         state.overviewLoadedAt = Date.now();
         renderOverview(state.overview);
-        text(byId('crawlOverviewStatus'), 'Đã cập nhật');
+        setOverviewLoading(false, 'Đã cập nhật');
       } catch (_error) {
-        text(byId('crawlOverviewStatus'), 'Không tải được tổng quan. Hãy thử lại.');
+        byId('crawlOverviewError').hidden = false;
+        setOverviewLoading(false, 'Không tải được tổng quan');
       }
     }
 
@@ -977,6 +1025,9 @@
         control.addEventListener('click', () => setView(control.dataset.crawlView));
       });
       byId('crawlRefreshViewBtn').addEventListener('click', refreshCurrentView);
+      byId('crawlOverviewRunBtn').addEventListener('click', () => setView('run'));
+      byId('crawlOverviewBrokersBtn').addEventListener('click', () => setView('brokers'));
+      byId('crawlOverviewRetryBtn').addEventListener('click', () => loadOverview(true));
       byId('crawlTokenDetails').addEventListener('toggle', (event) => {
         if (event.target.open) loadTokens(false);
       });

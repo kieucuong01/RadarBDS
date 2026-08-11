@@ -104,6 +104,13 @@ const conflict = api.profileSaveFailure(
 assert.deepEqual(conflict.draft, changed);
 assert.equal(conflict.conflict.revision, 'new-revision');
 assert.match(source, /facebook-crawl\/tokens/);
+assert.match(source, /function setOverviewLoading/);
+assert.match(source, /function renderOverviewProblem/);
+assert.match(source, /crawlOverviewRunBtn/);
+assert.match(source, /crawlOverviewBrokersBtn/);
+assert.match(source, /crawlOverviewRetryBtn/);
+assert.match(source, /dataset\.health/);
+assert.match(source, /aria-busy/);
 assert.doesNotMatch(source, /\.innerHTML\s*=/);
 
 const groupedProblems = api.groupOverviewProblems([
