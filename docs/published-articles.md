@@ -34,3 +34,11 @@
   - Score gate: 96/100
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-09, split by `dat_nen` vs `nha_dat`, with dưới-4-tỷ counts for the nhà đất lens
   - Funnel: `/binh-duong/phuong-phu-loi`, `/binh-duong/phuong-hiep-thanh`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu`
+
+## 2026-08-11
+- `/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so` — **MOS là gì? Cách lọc tin dưới giá cơ sở trên Radar BDS**
+  - Pillar: Hướng dẫn đọc dữ liệu / bộ lọc tín hiệu
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-11, joined to latest `valuation_results` and sliced by `mos_pct` thresholds 10/15/20 for Thủ Dầu Một
+  - Funnel: `/binh-duong`, dashboard `/?tab=signals&mos_min=15`, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu`, `/tin-tuc/bang-gia-dat-va-gia-rao-khac-nhau-the-nao`
+

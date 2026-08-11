@@ -12928,7 +12928,297 @@ SEO_ARTICLES = {
             {"name": "Phú Mỹ vs Hiệp An: đọc giá/m² thế nào để không so sai", "href": "/tin-tuc/phu-my-vs-hiep-an-so-gia-dat", "url": "https://radarbds.vn/tin-tuc/phu-my-vs-hiep-an-so-gia-dat"}
         ]
     }
-
+,
+    "mos-la-gi-loc-tin-duoi-gia-co-so": {
+        "variant": "knowledge",
+        "category": {
+            "key": "huong-dan-doc-du-lieu",
+            "label": "Hướng dẫn đọc dữ liệu"
+        },
+        "path": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+        "title": "MOS là gì? Cách lọc tin dưới giá cơ sở trên Radar BDS | Radar BDS",
+        "description": "Giải thích MOS trên Radar BDS bằng dữ liệu live ngày 11/08/2026: khi nào nên dùng mốc 10%, 15%, 20%, và vì sao vẫn phải tách đất nền với nhà đất trước khi gọi hỏi tin.",
+        "keywords": "MOS là gì, lọc tin dưới giá cơ sở, Radar BDS, mos_min, tín hiệu bất động sản Bình Dương, đất nền nhà đất Bình Dương",
+        "breadcrumb_label": "MOS là gì và cách lọc tin dưới giá cơ sở",
+        "hero_badge": "Hướng dẫn lọc tin",
+        "hero_title": "MOS là gì? Cách lọc tin dưới giá cơ sở trên Radar BDS",
+        "hero_text": "MOS là phần chênh giữa giá rao và giá cơ sở Radar ước tính. Nói ngắn gọn: MOS càng cao thì tin càng đáng mở ra kiểm tra trước. Nhưng MOS không thay cho pháp lý hay hiện trạng. Nó chỉ giúp anh xếp thứ tự xem tin nhanh hơn.",
+        "scope_label": "Bình Dương · Bộ lọc MOS",
+        "hero_checks": [
+            "Snapshot live ngày 11/08/2026, max crawled_at 11/08/2026 11:05",
+            "Thủ Dầu Một hiện có 2.250 tin đáng chú ý; 1.684 tin còn MOS từ 15% trở lên",
+            "Nhà đất MOS ≥10% có giá rao trung vị 21,5 tr/m²; đất nền là 13,0 tr/m²",
+            "MOS giúp ưu tiên thứ tự mở tin, không phải kết luận nên mua ngay"
+        ],
+        "primary_cta": "Mở Radar với bộ lọc MOS từ 15%",
+        "primary_href": "/?tab=signals&mos_min=15&utm_source=seo&utm_medium=article&utm_campaign=mos_filter_explainer",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Hướng dẫn dùng MOS",
+        "hero_metric": {
+            "label": "Tin đáng kiểm tra ở Thủ Dầu Một",
+            "value": "2.250",
+            "delta": "1.684 tin có MOS ≥15%",
+            "note": "Facebook live snapshot ngày 11/08/2026, giá rao công khai chứ không phải giá chốt"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Mốc 15% thường gọn hơn để mở trước, rồi mới nới rộng nếu thiếu hàng",
+            "price": "Nhà đất MOS ≥10%: 21,5 tr/m² · Đất nền MOS ≥10%: 13,0 tr/m²",
+            "metric_a": "MOS ≥20%",
+            "metric_a_value": "1.262 tin",
+            "metric_b": "MOS trung vị nhóm tín hiệu",
+            "metric_b_value": "21,3%"
+        },
+        "local_links_title": "Đi tiếp từ bài này",
+        "local_links": [
+            {
+                "label": "Mở dashboard với MOS từ 15%",
+                "href": "/?tab=signals&mos_min=15&utm_source=seo&utm_medium=article&utm_campaign=mos_filter_explainer",
+                "description": "Vào thẳng nhóm tin đáng kiểm tra trước khi lọc thêm phường và loại hình."
+            },
+            {
+                "label": "Trang tổng quan Bình Dương",
+                "href": "/binh-duong",
+                "description": "Xem hub khu vực để đi tiếp vào từng phường và báo cáo liên quan."
+            },
+            {
+                "label": "Báo cáo thị trường Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt bộ lọc MOS vào bối cảnh cung cầu toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Giá đất Phú Tân hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+                "description": "Đọc thêm một ví dụ phường có nhiều tín hiệu trong snapshot gần đây."
+            },
+            {
+                "label": "Bảng giá đất và giá rao khác nhau thế nào?",
+                "href": "/tin-tuc/bang-gia-dat-va-gia-rao-khac-nhau-the-nao",
+                "description": "Hiểu vì sao tin có MOS cao vẫn cần nhìn như giá rao tham khảo."
+            },
+            {
+                "label": "Cách định giá nhà đất Bình Dương bằng giá rao theo phường",
+                "href": "/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong",
+                "description": "Kết hợp MOS với mốc giá theo phường để đọc tin sát nhu cầu hơn."
+            }
+        ],
+        "faq": [
+            {
+                "q": "MOS trên Radar BDS nghĩa là gì?",
+                "a": "MOS là phần chênh giữa giá rao và giá cơ sở Radar ước tính cho tin đó. MOS càng cao thì tin càng đáng mở ra kiểm tra trước, nhưng đây vẫn chỉ là bộ lọc dữ liệu ban đầu chứ không phải kết luận mua được hay lời hơn chắc chắn."
+            },
+            {
+                "q": "Nên bắt đầu với mốc MOS 10%, 15% hay 20%?",
+                "a": "Nếu muốn xem rộng, anh có thể bắt đầu với 10%. Nếu cần danh sách gọn hơn để gọi và đi xem trước, mốc 15% thường dễ dùng hơn. Mốc 20% dành cho lúc anh muốn siết mạnh tay hơn nữa và chấp nhận ít tin hơn. Snapshot Thủ Dầu Một ngày 11/08/2026 có 2.250 tin ở mốc 10%, 1.684 tin ở mốc 15% và 1.262 tin ở mốc 20%."
+            },
+            {
+                "q": "MOS cao có nghĩa là nên mua ngay không?",
+                "a": "Không. MOS chỉ cho biết giá rao đang thấp hơn giá cơ sở Radar ước tính. Người mua vẫn phải kiểm tra pháp lý, quy hoạch, đường vào, vị trí thực tế, hiện trạng tài sản và độ tin cậy của tin đăng trước khi xuống tiền."
+            },
+            {
+                "q": "Vì sao vẫn phải tách đất nền với nhà đất khi đã có MOS?",
+                "a": "Vì MOS chỉ là một lớp ưu tiên. Khi anh gọi hoặc so giá tiếp, đất nền và nhà đất vẫn có nhịp giá rất khác nhau. Trong snapshot live hiện tại, nhóm nhà đất MOS ≥10% ở Thủ Dầu Một có giá rao trung vị 21,5 tr/m², còn đất nền là 13,0 tr/m²."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-11",
+            "modified_at": "2026-08-11",
+            "intro": [
+                "Nếu anh chỉ muốn biết cách mở đúng nhóm tin trước, câu trả lời ngắn là: MOS là bộ lọc ưu tiên. Mở mốc 15% trước cho gọn, rồi mới nới xuống 10% nếu thiếu hàng. Nhưng sau đó vẫn phải tách đất nền với nhà đất và kiểm tra thực địa.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS, lọc các tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu cập nhật đến 11/08/2026 11:05 nên đây là giá rao công khai để lọc ban đầu, không phải giá chốt giao dịch."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tín hiệu Thủ Dầu Một",
+                    "value": "2.250 tin",
+                    "note": "Đều đang ở mốc MOS từ 10% trở lên trong snapshot live"
+                },
+                {
+                    "label": "Siết lên MOS 15%",
+                    "value": "1.684 tin",
+                    "note": "Giảm 566 tin so với mốc 10% để danh sách gọn hơn"
+                },
+                {
+                    "label": "Siết lên MOS 20%",
+                    "value": "1.262 tin",
+                    "note": "Phù hợp khi anh muốn lọc tay mạnh hơn trước khi gọi"
+                },
+                {
+                    "label": "MOS trung vị nhóm tín hiệu",
+                    "value": "21,3%",
+                    "note": "Snapshot tín hiệu live ở Thủ Dầu Một ngày 11/08/2026"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Snapshot live Radar BDS",
+                    "title": "MOS 10%, 15%, 20% khác nhau ở độ rộng danh sách",
+                    "note": "Dữ liệu Facebook live ở Thủ Dầu Một, truy vấn ngày 11/08/2026. Đây là số tin đáng chú ý để mở ra kiểm tra trước, không phải số giao dịch đã chốt.",
+                    "columns": [
+                        {"key": "threshold", "label": "Mốc MOS"},
+                        {"key": "count", "label": "Số tin"},
+                        {"key": "change", "label": "So với mốc trước"},
+                        {"key": "use_case", "label": "Khi nào nên dùng"}
+                    ],
+                    "rows": [
+                        {"threshold": "MOS ≥10%", "count": "2.250", "change": "Mốc nền", "use_case": "Muốn xem đủ rộng rồi mới lọc tiếp theo phường, loại hình và ngân sách."},
+                        {"threshold": "MOS ≥15%", "count": "1.684", "change": "Giảm 566 tin", "use_case": "Danh sách gọn hơn để gọi và đi xem trước; phù hợp làm mốc mở đầu hằng ngày."},
+                        {"threshold": "MOS ≥20%", "count": "1.262", "change": "Giảm 422 tin", "use_case": "Siết chặt hơn khi anh muốn rà nhanh nhóm nổi bật nhất trước."}
+                    ]
+                },
+                {
+                    "eyebrow": "Đừng gộp loại hình",
+                    "title": "Nhóm MOS ≥10% vẫn phải tách đất nền với nhà đất",
+                    "note": "Giá trung vị dưới đây đều là giá rao. Tách loại hình trước để tránh gọi nhầm nhóm tin.",
+                    "columns": [
+                        {"key": "property_type", "label": "Loại hình"},
+                        {"key": "count", "label": "Số tin MOS ≥10%"},
+                        {"key": "median_mos", "label": "MOS trung vị"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"}
+                    ],
+                    "rows": [
+                        {"property_type": "Nhà đất", "count": "1.289", "median_mos": "22,5%", "median_m2": "21,5 tr/m²", "median_total": "2,69 tỷ"},
+                        {"property_type": "Đất nền", "count": "920", "median_mos": "20,5%", "median_m2": "13,0 tr/m²", "median_total": "2,65 tỷ"}
+                    ]
+                },
+                {
+                    "eyebrow": "Theo phường",
+                    "title": "Các phường đang có nhiều tin MOS ≥10% nhất trong snapshot này",
+                    "note": "Bảng này chỉ để chọn nơi mở trước trên dashboard. Sau khi chọn phường, anh vẫn nên khóa loại hình và vùng giá.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "count", "label": "Số tin MOS ≥10%"},
+                        {"key": "median_mos", "label": "MOS trung vị"},
+                        {"key": "how_to_use", "label": "Gợi ý mở trước"}
+                    ],
+                    "rows": [
+                        {"ward": "Tân An", "count": "289", "median_mos": "25,3%", "how_to_use": "Hợp cho buổi lọc đầu ngày nếu anh muốn nhiều tín hiệu hơn và mặt bằng MOS cao."},
+                        {"ward": "Định Hòa", "count": "281", "median_mos": "25,2%", "how_to_use": "Mở cùng Tân An khi muốn rà nhóm đáng chú ý theo cụm giá vừa phải hơn."},
+                        {"ward": "Phú Tân", "count": "268", "median_mos": "19,4%", "how_to_use": "Phù hợp khi anh đang theo dõi thêm nhóm dưới 3 tỷ và muốn có nhiều tín hiệu mới."},
+                        {"ward": "Tương Bình Hiệp", "count": "262", "median_mos": "15,5%", "how_to_use": "Nên siết thêm loại hình trước khi gọi để tránh danh sách quá rộng."},
+                        {"ward": "Phú Mỹ", "count": "242", "median_mos": "20,0%", "how_to_use": "Mở khi cần xem song song nhóm tín hiệu ở mặt bằng giá cao hơn."},
+                        {"ward": "Hiệp An", "count": "207", "median_mos": "21,3%", "how_to_use": "Hợp để soi thêm nhóm giá mềm hơn sau khi đã khóa đúng loại hình."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Mốc 15% là điểm cắt gọn hơn nhưng chưa quá hẹp",
+                    "note": "Lấy mốc 10% làm 100 để nhìn nhanh phần danh sách còn lại.",
+                    "alt": "Biểu đồ so số tin còn lại ở các mốc MOS 10, 15 và 20 phần trăm",
+                    "rows": [
+                        {"label": "MOS ≥10%", "value_label": "2.250 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "MOS ≥15%", "value_label": "1.684 tin", "width": 75, "color": "#16a34a"},
+                        {"label": "MOS ≥20%", "value_label": "1.262 tin", "width": 56, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất và đất nền có MOS gần nhau nhưng giá/m² khác nhau rõ",
+                    "note": "MOS chỉ là lớp ưu tiên; bước gọi hỏi vẫn phải bám loại hình BĐS.",
+                    "alt": "Biểu đồ giá rao trung vị theo loại hình trong nhóm MOS cao",
+                    "rows": [
+                        {"label": "Nhà đất MOS ≥10%", "value_label": "21,5 tr/m²", "width": 100, "color": "#dc2626"},
+                        {"label": "Đất nền MOS ≥10%", "value_label": "13,0 tr/m²", "width": 60, "color": "#0f766e"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mos-la-gi",
+                    "heading": "1. MOS là gì và nên hiểu nó theo cách nào cho đúng",
+                    "paragraphs": [
+                        "MOS là viết tắt của margin of safety, tức phần chênh giữa giá rao hiện tại và giá cơ sở Radar ước tính cho chính tin đó. Khi MOS dương và càng cao, tin đó càng đáng được mở ra xem trước trong một danh sách dài.",
+                        "Điểm quan trọng là MOS không thay cho thẩm định pháp lý, quy hoạch hay hiện trạng. Nó chỉ giải quyết bài toán đầu tiên: giữa hàng trăm tin mới, nên mở tin nào trước để đỡ tốn thời gian lọc tay."
+                    ],
+                    "bullets": [
+                        "MOS là bộ lọc ưu tiên, không phải nhãn nên mua",
+                        "MOS cao vẫn có thể đi kèm tin thiếu thông tin hoặc vị trí kém",
+                        "Sau khi lọc MOS, vẫn phải nhìn phường, loại hình và ngân sách",
+                        "Giá dùng trong bài là giá rao công khai, không phải giá chốt"
+                    ]
+                },
+                {
+                    "id": "chon-moc-10-15-20",
+                    "heading": "2. Khi nào nên dùng mốc 10%, 15% hay 20%",
+                    "paragraphs": [
+                        "Nếu anh mới vào dashboard và chưa biết nên bắt đầu từ đâu, mốc 15% thường là điểm cắt dễ dùng nhất. Ở snapshot live ngày 11/08/2026, Thủ Dầu Một có 2.250 tín hiệu ở mốc 10%, nhưng khi nâng lên 15% thì còn 1.684 tin. Danh sách gọn đi 566 tin mà vẫn còn đủ dày để rà thực tế.",
+                        "Mốc 20% tiếp tục siết thêm 422 tin, còn 1.262 tin. Mốc này phù hợp khi anh chỉ muốn xem nhóm nổi bật hơn trước. Ngược lại, nếu đang theo dõi một phường ít hàng hoặc cần quét rộng để tìm đất nền, anh có thể nới lại 10% rồi thêm bộ lọc phường và ngân sách."
+                    ],
+                    "bullets": [
+                        "MOS ≥10%: rộng hơn, hợp để quét thị trường trước",
+                        "MOS ≥15%: điểm mở đầu gọn hơn cho phần lớn buổi lọc",
+                        "MOS ≥20%: siết mạnh hơn khi muốn ưu tiên nhóm nổi bật nhất",
+                        "Nên thay đổi theo phường và loại hình, không giữ một mốc cho mọi trường hợp"
+                    ]
+                },
+                {
+                    "id": "tach-loai-hinh",
+                    "heading": "3. Vì sao đã có MOS rồi vẫn phải tách đất nền với nhà đất",
+                    "paragraphs": [
+                        "MOS không làm mất đi khác biệt giá giữa hai loại hình chính. Ngay trong nhóm MOS ≥10% của Thủ Dầu Một, nhà đất có giá rao trung vị 21,5 tr/m², còn đất nền là 13,0 tr/m². Tổng giá trung vị cũng khác nhẹ: 2,69 tỷ so với 2,65 tỷ.",
+                        "Nói cách khác, MOS giúp anh chọn thứ tự mở tin; còn việc tin đó có hợp nhu cầu hay không vẫn phụ thuộc vào loại hình, vị trí, diện tích và tổng giá. Nếu bỏ qua bước tách loại hình, anh rất dễ gọi nhầm nhóm tin không đúng nhu cầu thật."
+                    ],
+                    "bullets": [
+                        "Nhà đất MOS ≥10%: 1.289 tin · MOS trung vị 22,5% · 21,5 tr/m²",
+                        "Đất nền MOS ≥10%: 920 tin · MOS trung vị 20,5% · 13,0 tr/m²",
+                        "Luôn khóa loại hình trước khi so tiếp theo giá/m²",
+                        "Sau đó mới thêm ngân sách, diện tích và phường"
+                    ]
+                },
+                {
+                    "id": "mo-phuong-nao-truoc",
+                    "heading": "4. Nên mở phường nào trước khi dùng bộ lọc MOS",
+                    "paragraphs": [
+                        "Nếu anh muốn bắt đầu từ nơi đang có nhiều tín hiệu hơn, Tân An và Định Hòa đang đứng đầu snapshot này với 289 và 281 tin MOS ≥10%. Nếu cần theo dõi thêm nhóm giá dễ thở hơn và lượng tin vẫn khá dày, Phú Tân và Tương Bình Hiệp cũng là hai nơi nên ghim sẵn trong dashboard.",
+                        "Phú Mỹ và Hiệp An vẫn đáng mở, nhưng mỗi phường lại hợp một bài toán khác. Phú Mỹ hợp khi anh muốn soi thêm nhóm tín hiệu ở mặt bằng giá cao hơn, còn Hiệp An hợp khi muốn kiểm tra thêm nhóm giá mềm hơn sau khi đã khóa đúng loại hình."
+                    ],
+                    "bullets": [
+                        "Tân An: 289 tin · MOS trung vị 25,3%",
+                        "Định Hòa: 281 tin · MOS trung vị 25,2%",
+                        "Phú Tân: 268 tin · MOS trung vị 19,4%",
+                        "Hiệp An: 207 tin · MOS trung vị 21,3%"
+                    ]
+                },
+                {
+                    "id": "quy-trinh-loc-dashboard",
+                    "heading": "5. Quy trình lọc thực tế trên Radar để đỡ tốn thời gian gọi hỏi",
+                    "paragraphs": [
+                        "Cách nhanh nhất là mở mốc MOS 15% trước, khóa loại hình anh đang cần, rồi chọn 1-2 phường đang có nhiều tín hiệu. Sau đó mới nhìn vùng tổng giá và giá/m² để bỏ bớt các tin quá lệch nhu cầu. Khi danh sách đã gọn, anh mới mở từng tin và đối chiếu bằng công cụ định giá BĐS.",
+                        "Nếu sau vài phút mà danh sách quá ít, hạ mốc xuống 10%. Nếu danh sách vẫn quá dày, nâng lên 20% hoặc siết thêm ngân sách. Đi theo thứ tự này sẽ nhanh hơn nhiều so với việc mở ngẫu nhiên từng tin rồi mới phát hiện không đúng phường hoặc sai loại hình."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở MOS 15%",
+                        "Bước 2: khóa đất nền hoặc nhà đất",
+                        "Bước 3: chọn 1-2 phường ưu tiên",
+                        "Bước 4: siết thêm ngân sách và đối chiếu bằng công cụ định giá",
+                        "Bước 5: chỉ đi xem sau khi kiểm tra pháp lý, quy hoạch và hiện trạng"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn mốc MOS mở đầu phù hợp: 10%, 15% hay 20% chưa?",
+                "Đã khóa đúng loại hình đất nền hoặc nhà đất chưa?",
+                "Đã nhớ rằng MOS chỉ là dấu hiệu ưu tiên, không phải cam kết nên mua chưa?",
+                "Đã nhìn lại tổng giá, giá/m² và phường trước khi gọi hỏi chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar với MOS 15% rồi lọc tiếp theo đúng nhu cầu",
+            "body": "Nếu anh muốn danh sách đủ gọn để bắt đầu, hãy mở mốc MOS 15% trước. Sau đó khóa loại hình, chọn phường ưu tiên và dùng công cụ định giá để kiểm tra từng tin. Radar BDS là bộ lọc dữ liệu ban đầu, không thay cho thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&mos_min=15&utm_source=seo&utm_medium=article&utm_campaign=mos_filter_explainer"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "MOS là gì và cách lọc tin dưới giá cơ sở", "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so", "url": "https://radarbds.vn/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so"}
+        ]
+    },
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
