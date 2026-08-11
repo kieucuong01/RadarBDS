@@ -1,3 +1,4 @@
+import json
 import re
 
 import app as radar_app
@@ -114,3 +115,34 @@ def test_representative_priority_pages_render_one_shared_proof_block():
         response = client.get(path)
         assert response.status_code == 200, path
         assert response.get_data(as_text=True).count("data-traffic-priority-proof") == 1, path
+
+
+def test_all_priority_pages_render_indexable_canonical_proven_contracts():
+    client = radar_app.app.test_client()
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+
+    for page in active_traffic_priority_pages():
+        response = client.get(page.path)
+        html = response.get_data(as_text=True)
+        canonical = "https://radarbds.vn" + (page.path if page.path != "/" else "/")
+
+        assert response.status_code == 200, page.path
+        assert _h1_texts(html) and len(_h1_texts(html)) == 1, page.path
+        assert html.count(f'<link rel="canonical" href="{canonical}">') == 1, page.path
+        assert not re.search(
+            r'<meta[^>]+name=["\']robots["\'][^>]+content=["\'][^"\']*noindex',
+            html,
+            re.I,
+        ), page.path
+        assert "noindex" not in response.headers.get("X-Robots-Tag", "").casefold(), page.path
+        assert html.count("data-traffic-priority-proof") == 1, page.path
+        assert f"<loc>{canonical}</loc>" in sitemap, page.path
+
+        schema_blocks = re.findall(
+            r'<script type="application/ld\+json">\s*(.*?)\s*</script>',
+            html,
+            re.S,
+        )
+        assert schema_blocks, page.path
+        for block in schema_blocks:
+            json.loads(block)
