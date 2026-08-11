@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v43-dup-cluster-pairs">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v55-facebook-crawl-brokers">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v56-facebook-crawl-ops-clarity">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -415,7 +415,7 @@
         </nav>
 
         <section id="crawlView-overview" class="crawl-view-panel" data-crawl-view-panel="overview">
-          <div class="crawl-overview-toolbar">
+          <div class="crawl-overview-toolbar crawl-ops-context">
             <div>
               <p class="crawl-overview-kicker">Trạng thái vận hành</p>
               <h2>Điều hành Facebook Crawl</h2>
@@ -423,7 +423,7 @@
             <span id="crawlOverviewStatus" class="crawl-inline-status" aria-live="polite">Đang tải tổng quan</span>
           </div>
 
-          <div id="crawlOverviewCommand" class="crawl-command-layout" aria-busy="true">
+          <div id="crawlOverviewCommand" class="crawl-command-layout crawl-overview-command-grid" aria-busy="true">
             <section id="crawlOverviewHealth" class="surface crawl-health-panel state-loading"
                      aria-labelledby="crawlOverviewHealthLabel">
               <div class="crawl-health-copy">
@@ -513,7 +513,7 @@
             <span id="crawlConflictText"></span>
             <button class="secondary-btn" id="crawlConflictReloadBtn" type="button">Tải bản mới từ máy chủ</button>
           </div>
-          <dl id="crawlBrokerSummary" class="crawl-broker-summary" aria-label="Tóm tắt danh sách môi giới">
+          <dl id="crawlBrokerSummary" class="crawl-broker-summary crawl-broker-summary-rail" aria-label="Tóm tắt danh sách môi giới">
             <div><dt>Tổng số</dt><dd id="crawlBrokerTotal">0</dd></div>
             <div><dt>Đang bật</dt><dd id="crawlBrokerActive">0</dd></div>
             <div><dt>Đến lịch</dt><dd id="crawlBrokerDue">0</dd></div>
@@ -524,17 +524,22 @@
               <input id="crawlBrokerSearch" type="search" placeholder="Nhập tên hoặc facebook.com/…">
             </label>
             <div class="crawl-filter-head">
-              <strong>Bộ lọc</strong>
-              <span id="crawlBrokerFilterCount" class="crawl-filter-count">0 đang áp dụng</span>
+              <strong>Lọc danh sách</strong>
               <button class="secondary-btn crawl-filter-reset" id="crawlBrokerResetBtn" type="button" disabled>Đặt lại</button>
             </div>
-            <div class="crawl-filter-rail">
-              <label>Thành phố<select id="crawlBrokerCityFilter"><option value="">Tất cả thành phố</option></select></label>
-              <label>Trạng thái<select id="crawlBrokerActiveFilter"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đã tắt</option></select></label>
-              <label>Chu kỳ<select id="crawlBrokerCadenceFilter"><option value="">Tất cả</option><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
-              <label>Đến lịch<select id="crawlBrokerDueFilter"><option value="">Tất cả</option><option value="true">Hôm nay</option><option value="false">Chưa đến lịch</option></select></label>
-              <label>Chất lượng<select id="crawlBrokerQualityFilter"><option value="">Tất cả</option><option value="good">Ổn</option><option value="needs_attention">Cần xem</option></select></label>
-            </div>
+            <details id="crawlBrokerFilterDetails" class="crawl-broker-filter-details">
+              <summary>
+                <span>Bộ lọc nâng cao</span>
+                <span id="crawlBrokerFilterCount" class="crawl-filter-count">0 đang áp dụng</span>
+              </summary>
+              <div class="crawl-filter-rail">
+                <label>Thành phố<select id="crawlBrokerCityFilter"><option value="">Tất cả thành phố</option></select></label>
+                <label>Trạng thái<select id="crawlBrokerActiveFilter"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đã tắt</option></select></label>
+                <label>Chu kỳ<select id="crawlBrokerCadenceFilter"><option value="">Tất cả</option><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+                <label>Đến lịch<select id="crawlBrokerDueFilter"><option value="">Tất cả</option><option value="true">Hôm nay</option><option value="false">Chưa đến lịch</option></select></label>
+                <label>Chất lượng<select id="crawlBrokerQualityFilter"><option value="">Tất cả</option><option value="good">Ổn</option><option value="needs_attention">Cần xem</option></select></label>
+              </div>
+            </details>
           </section>
           <div class="crawl-broker-meta">
             <span id="crawlBrokerCount">0 / 0 môi giới</span>

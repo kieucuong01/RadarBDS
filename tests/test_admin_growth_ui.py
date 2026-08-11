@@ -254,7 +254,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
     assert "?v=admin-facebook-crawl-brokers-v2" in template
-    assert "css/admin.css') }}?v=admin-v55-facebook-crawl-brokers" in template
+    assert "css/admin.css') }}?v=admin-v56-facebook-crawl-ops-clarity" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -314,6 +314,32 @@ def test_facebook_crawl_overview_command_center_is_asymmetric_and_mobile_first()
     mobile_css = overview_css[overview_css.index("@media (max-width: 760px)"):]
     assert 'grid-template-areas: "health" "attention" "rail";' in mobile_css
     assert ".crawl-command-actions > button { width: 100%; min-height: 44px; }" in mobile_css
+
+
+def test_facebook_crawl_uses_the_operational_clarity_layout_contract():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+
+    assert "crawl-ops-context" in template
+    assert 'class="crawl-command-layout crawl-overview-command-grid"' in template
+    assert 'class="crawl-broker-summary crawl-broker-summary-rail"' in template
+    assert (
+        '<details id="crawlBrokerFilterDetails" class="crawl-broker-filter-details">'
+        in template
+    )
+    for marker in (
+        "--crawl-bg:",
+        "--crawl-primary:",
+        "--crawl-z-context: 10",
+        ".crawl-ops-context",
+        ".crawl-overview-command-grid",
+        ".crawl-broker-summary-rail",
+        ".crawl-broker-filter-details",
+        "@media (prefers-reduced-motion: reduce)",
+    ):
+        assert marker in css
 
 
 def test_facebook_broker_actions_have_explicit_safe_delete_and_responsive_styles():
