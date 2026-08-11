@@ -12949,6 +12949,20 @@ for _rb_slug in (
         SEO_ARTICLES[_rb_slug] = _rb_normalize_median_wording(SEO_ARTICLES[_rb_slug])
 
 
+_RB_ANSWER_FIRST_INTROS = {
+    "duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc": "Với ngân sách dưới 3 tỷ, nên mở Phú Tân trước khi tìm đất nền; nếu ưu tiên nhà xây sẵn, hãy xem Hiệp Thành song song. Dữ liệu Radar BDS cho thấy Phú Tân có nguồn đất nền dưới 3 tỷ dày hơn, còn Hiệp Thành nhỉnh hơn về số tin nhà đất cùng ngân sách.",
+    "dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc": "Nếu cần nhiều lựa chọn và ngân sách dễ thở hơn, nên mở Định Hòa trước; nếu muốn xem thêm nhà đất ở mặt bằng giá cao hơn, hãy so song song với Hiệp Thành. Kết luận chỉ có ý nghĩa khi tách riêng đất nền và nhà đất.",
+    "hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc": "Nếu cần nhiều lựa chọn, nên mở Tân An trước; nếu ưu tiên tin đáng kiểm tra hoặc đất nền có giá/m² thấp hơn, hãy xem Hiệp Thành song song. Dữ liệu là giá rao Facebook Radar BDS theo dõi ngày 01/08/2026, không phải giá giao dịch.",
+    "tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc": "Nếu cần nguồn hàng dày, giá mềm và lọc nhanh dưới 4 tỷ, nên mở Tân An trước; nếu muốn xem khu có nhịp giá và nguồn nhà đất cao hơn, hãy mở Phú Hòa sau. Dữ liệu là giá rao Facebook Radar BDS theo dõi ngày 05/08/2026.",
+    "bang-gia-dat-va-gia-rao-khac-nhau-the-nao": "Bảng giá đất thấp hơn giá rao thị trường không phải lỗi dữ liệu: bảng giá là mốc nhà nước, còn giá rao là mức người bán đang chào. Khi lọc tin Bình Dương, nên ưu tiên giá rao cùng phường, cùng loại hình và dùng bảng giá như một lớp tham chiếu pháp lý.",
+    "dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon": "Nếu lọc đất nền dưới 3 tỷ giữa Phú Tân và Phú Mỹ, nên mở Phú Tân trước. Dữ liệu Radar BDS ngày 07/08/2026 ghi nhận 299 tin phù hợp tại Phú Tân và 210 tin tại Phú Mỹ. Đây là giá rao Facebook công khai, không phải giá chốt giao dịch.",
+    "duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc": "Với trần 3 tỷ, nên mở Định Hòa trước để có nhiều lựa chọn hơn, rồi xem Phú Tân khi muốn soi nhóm đất nền đáng chú ý. Dữ liệu trong bài là giá rao Facebook Radar BDS theo dõi ngày 08/08/2026, không phải giá chốt giao dịch.",
+    "phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc": "Nếu ưu tiên đất nền, nên mở Phú Lợi trước; nếu tìm nhà đất dưới 4 tỷ, nên mở Hiệp Thành trước. Dữ liệu Radar BDS ngày 09/08/2026 cho thấy khác biệt chính giữa hai phường nằm ở cơ cấu loại hình và số tin còn trong vùng ngân sách phổ biến.",
+}
+for _rb_slug, _rb_intro in _RB_ANSWER_FIRST_INTROS.items():
+    SEO_ARTICLES[_rb_slug]["article"]["intro"][0] = _rb_intro
+
+
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'title': 'Tin tức BĐS Bình Dương | Radar BDS',
  'description': 'Tin tức BĐS Bình Dương từ dữ liệu Radar: giá đất theo phường, so sánh khu vực, hướng dẫn đọc giá rao và dấu hiệu đáng kiểm tra.',

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from config.seo_locations import TDM_LIVE_WARDS
+from config.seo_articles import SEO_ARTICLES
 from scripts.audit_marketing_pages import main
 from services.marketing_page_audit import (
     AuditFinding,
@@ -120,3 +121,22 @@ def test_real_marketing_ctas_have_no_contract_failures():
     forbidden = {"invalid_dashboard_query_key", "invalid_dashboard_tab"}
 
     assert not [item for item in result.hard_failures if item.code in forbidden]
+
+
+ANSWER_FIRST_REWRITE_SLUGS = (
+    "duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc",
+    "dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+    "hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc",
+    "tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc",
+    "bang-gia-dat-va-gia-rao-khac-nhau-the-nao",
+    "dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon",
+    "duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc",
+    "phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc",
+)
+
+
+def test_selected_answer_first_intros_are_bounded():
+    assert len(ANSWER_FIRST_REWRITE_SLUGS) == 8
+    for slug in ANSWER_FIRST_REWRITE_SLUGS:
+        first = SEO_ARTICLES[slug]["article"]["intro"][0]
+        assert 40 <= len(first.split()) <= 60
