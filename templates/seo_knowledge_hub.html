@@ -32,6 +32,47 @@
 
     {% include "partials/seo_trust.html" %}
 
+    {% if page.methodology %}
+    <section class="radar-methodology" aria-labelledby="radar-methodology-title">
+      <div class="section-heading">
+        <p class="seo-eyebrow">Nguồn có thể kiểm tra</p>
+        <h2 id="radar-methodology-title">{{ page.methodology.heading }}</h2>
+        <p>{{ page.methodology.intro }}</p>
+      </div>
+      <div class="radar-methodology-grid">
+        <div class="radar-methodology-card">
+          <h3>Nguồn dữ liệu</h3>
+          {% for source in page.methodology.sources %}
+          <div class="radar-methodology-source">
+            <strong>{{ source.label }}</strong>
+            <p>{{ source.body }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="radar-methodology-card">
+          <h3>Từ tin rao đến signal</h3>
+          <ol>{% for step in page.methodology.steps %}<li>{{ step }}</li>{% endfor %}</ol>
+        </div>
+        <div class="radar-methodology-card radar-methodology-limits">
+          <h3>Nhịp cập nhật và giới hạn</h3>
+          <p>{{ page.methodology.cadence }}</p>
+          <ul>{% for item in page.methodology.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+      <div class="radar-methodology-links">
+        <div>
+          <strong>13 phường Thủ Dầu Một</strong>
+          <nav aria-label="Dữ liệu 13 phường Thủ Dầu Một">
+            {% for link in page.methodology.ward_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
+          </nav>
+        </div>
+        <nav class="radar-methodology-next" aria-label="Công cụ và báo cáo liên quan">
+          {% for link in page.methodology.next_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
+        </nav>
+      </div>
+    </section>
+    {% endif %}
+
     <section
       class="hub-featured"
       aria-labelledby="featured-article"
@@ -193,6 +234,7 @@
     "@context": "https://schema.org",
     "@graph": [
       {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}, "inLanguage": "vi-VN", "isPartOf": {{ public_entities.website_ref|tojson }}},
+      {% if page.methodology %}{"@type": "Dataset", "name": "Phương pháp và dữ liệu Radar BDS", "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.methodology.intro|tojson }}, "inLanguage": "vi-VN", "creator": {{ public_entities.organization_ref|tojson }}, "spatialCoverage": "13 phường Thủ Dầu Một, Bình Dương cũ", "variableMeasured": ["Giá rao", "Giá/m²", "Fair value tham khảo", "MOS", "Cảnh báo nguồn"]},{% endif %}
       {"@type": "ItemList", "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": {{ featured.hero_title|tojson }}, "url": {{ (site_origin ~ featured.path)|tojson }}}
         {% for article in articles %},{"@type": "ListItem", "position": {{ loop.index + 1 }}, "name": {{ article.hero_title|tojson }}, "url": {{ (site_origin ~ article.path)|tojson }}}{% endfor %}
