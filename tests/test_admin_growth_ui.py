@@ -254,7 +254,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
     assert "?v=admin-facebook-crawl-brokers-v2" in template
-    assert "css/admin.css') }}?v=admin-v56-facebook-crawl-ops-clarity" in template
+    assert "css/admin.css') }}?v=admin-v57-facebook-crawl-compact-roster" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -455,4 +455,30 @@ def test_facebook_broker_roster_is_dense_semantic_and_mobile_safe():
     mobile_css = roster_css[roster_css.index("@media (max-width: 760px)"):]
     assert "grid-template-columns: 1fr 1fr;" in mobile_css
     assert "min-height: 44px" in mobile_css
+
+
+def test_facebook_broker_roster_has_compact_ordinal_area_and_safe_name_link():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    source = (ROOT / "static" / "js" / "admin" / "facebook-crawl.js").read_text(
+        encoding="utf-8"
+    )
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+
+    assert '<th scope="col">STT</th>' in template
+    assert '<th scope="col">Khu vực</th>' in template
+    assert "admin-v57-facebook-crawl-compact-roster" in template
+    assert "brokerCell('STT', 'crawl-broker-ordinal')" in source
+    assert "brokerCell('Khu vực', 'crawl-broker-area')" in source
+    assert "brokerName.className = 'crawl-broker-name'" in source
+    assert "cell.colSpan = 9" in source
+    for selector in (
+        ".crawl-broker-ordinal",
+        ".crawl-broker-area",
+        ".crawl-broker-name",
+        ".crawl-broker-table { min-width: 1120px;",
+        "table-layout: fixed;",
+    ):
+        assert selector in css
 

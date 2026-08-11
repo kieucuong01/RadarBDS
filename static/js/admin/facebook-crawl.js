@@ -737,7 +737,7 @@
       clear(rows);
       const row = document.createElement('tr');
       const cell = brokerCell('Trạng thái', 'crawl-broker-empty state-' + kind);
-      cell.colSpan = 7;
+      cell.colSpan = 9;
       const title = document.createElement('strong');
       title.textContent = titleText;
       const detail = document.createElement('span');
@@ -783,32 +783,31 @@
         return;
       }
 
-      viewModel.filteredProfiles.forEach((profile) => {
+      viewModel.filteredProfiles.forEach((profile, position) => {
         const index = state.draft.indexOf(profile);
         const row = document.createElement('tr');
         row.dataset.profileUrl = profile.url;
 
+        const ordinal = brokerCell('STT', 'crawl-broker-ordinal');
+        ordinal.textContent = String(position + 1);
+
         const identity = brokerCell('Môi giới', 'crawl-broker-identity-cell');
         const identityStack = document.createElement('div');
         identityStack.className = 'crawl-broker-identity';
-        const brokerName = document.createElement('strong');
-        brokerName.textContent = profile.broker_name || 'Chưa đặt tên';
-        const brokerCity = document.createElement('small');
-        brokerCity.textContent = profile.city || 'Chưa có khu vực';
         const safeLink = safeFacebookProfileLink(profile.url);
-        const brokerUrl = document.createElement(safeLink ? 'a' : 'span');
-        brokerUrl.className = 'crawl-broker-url';
-        brokerUrl.textContent = safeLink
-          ? safeLink.display
-          : String(profile.url || 'URL chưa hợp lệ');
-        brokerUrl.title = String(profile.url || '');
+        const brokerName = document.createElement(safeLink ? 'a' : 'strong');
+        brokerName.className = 'crawl-broker-name';
+        brokerName.textContent = profile.broker_name || 'Chưa đặt tên';
         if (safeLink) {
-          brokerUrl.href = safeLink.href;
-          brokerUrl.target = '_blank';
-          brokerUrl.rel = 'noopener noreferrer';
+          brokerName.href = safeLink.href;
+          brokerName.target = '_blank';
+          brokerName.rel = 'noopener noreferrer';
         }
-        identityStack.append(brokerName, brokerCity, brokerUrl);
+        identityStack.appendChild(brokerName);
         identity.appendChild(identityStack);
+
+        const area = brokerCell('Khu vực', 'crawl-broker-area');
+        area.textContent = profile.city || 'Chưa có khu vực';
 
         const statusState = brokerStatusState(profile);
         const statusCell = brokerCell('Trạng thái', 'crawl-broker-state');
@@ -874,7 +873,17 @@
           profile.active !== false
             && (profile.due_today === true || qualityState.key === 'needs_attention'),
         );
-        row.append(identity, statusCell, scheduleCell, planCell, qualityCell, latestCell, actions);
+        row.append(
+          ordinal,
+          identity,
+          area,
+          statusCell,
+          scheduleCell,
+          planCell,
+          qualityCell,
+          latestCell,
+          actions,
+        );
         rows.appendChild(row);
       });
     }
