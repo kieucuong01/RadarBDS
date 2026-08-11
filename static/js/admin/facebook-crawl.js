@@ -178,6 +178,109 @@
     return ['/admin/api/facebook-crawl/overview'];
   }
 
+  const BROKER_QUALITY_GOOD_THRESHOLD = 68;
+
+  function brokerQualityState(profile) {
+    const quality = profile && profile.data_quality && typeof profile.data_quality === 'object'
+      ? profile.data_quality
+      : {};
+    const rawScore = quality.score;
+    const hasScore = rawScore !== null
+      && rawScore !== undefined
+      && rawScore !== ''
+      && Number.isFinite(Number(rawScore));
+    if (!hasScore) {
+      return {key: 'needs_attention', score: null, label: 'Chưa đủ mẫu'};
+    }
+    const score = Math.max(0, Math.min(100, Math.round(Number(rawScore))));
+    const key = score >= BROKER_QUALITY_GOOD_THRESHOLD ? 'good' : 'needs_attention';
+    return {
+      key,
+      score,
+      label: String(quality.label || (key === 'good' ? 'Ổn' : 'Cần xem')),
+    };
+  }
+
+  function brokerStatusState(profile) {
+    return profile && profile.active === false
+      ? {key: 'paused', label: 'Đã tắt'}
+      : {key: 'active', label: 'Đang bật'};
+  }
+
+  function brokerScheduleState(profile) {
+    if (profile && profile.due_today === true) {
+      return {
+        key: 'due',
+        label: 'Đến lịch hôm nay',
+        detail: String(profile.next_due_date || 'Sẵn sàng chạy'),
+      };
+    }
+    return {
+      key: 'scheduled',
+      label: 'Kế tiếp',
+      detail: String(profile && profile.next_due_date || 'Chưa có lịch'),
+    };
+  }
+
+  function safeFacebookProfileLink(rawUrl) {
+    const value = String(rawUrl || '').trim();
+    if (!value) return null;
+    try {
+      const parsed = new URL(value);
+      const hostname = parsed.hostname.toLowerCase();
+      const allowedHost = hostname === 'facebook.com' || hostname.endsWith('.facebook.com');
+      if (!['http:', 'https:'].includes(parsed.protocol) || !allowedHost) return null;
+      const pathname = parsed.pathname.replace(/\/+$/, '');
+      return {
+        href: parsed.href,
+        display: 'facebook.com' + pathname,
+      };
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function buildBrokerRosterViewModel(profiles, filters) {
+    const source = Array.isArray(profiles) ? profiles : [];
+    const selected = {
+      search: String(filters && filters.search || '').trim().toLocaleLowerCase('vi'),
+      city: String(filters && filters.city || ''),
+      active: String(filters && filters.active || ''),
+      cadence: String(filters && filters.cadence || ''),
+      due: String(filters && filters.due || ''),
+      quality: String(filters && filters.quality || ''),
+    };
+    const activeFilterCount = Object.values(selected).filter(Boolean).length;
+    const activeProfiles = source.filter((profile) => profile.active !== false);
+    const filteredProfiles = source.filter((profile) => {
+      const haystack = String(profile.broker_name || '') + ' ' + String(profile.url || '');
+      const normalizedHaystack = haystack.toLocaleLowerCase('vi');
+      if (selected.search && !normalizedHaystack.includes(selected.search)) return false;
+      if (selected.city && profile.city !== selected.city) return false;
+      if (selected.active && String(profile.active !== false) !== selected.active) return false;
+      if (selected.cadence
+        && String(Number(profile.crawl_every_days || 1)) !== selected.cadence) return false;
+      if (selected.due && String(Boolean(profile.due_today)) !== selected.due) return false;
+      if (selected.quality && brokerQualityState(profile).key !== selected.quality) return false;
+      return true;
+    });
+    const needsAttention = activeProfiles.filter((profile) => (
+      profile.due_today === true || brokerQualityState(profile).key === 'needs_attention'
+    )).length;
+    return {
+      summary: {
+        total: source.length,
+        active: activeProfiles.length,
+        due: activeProfiles.filter((profile) => profile.due_today === true).length,
+        needsAttention,
+      },
+      filteredProfiles,
+      resultCount: filteredProfiles.length,
+      activeFilterCount,
+      emptyState: source.length === 0 ? 'empty' : (filteredProfiles.length === 0 ? 'filtered' : ''),
+    };
+  }
+
   function buildRunPreview(input) {
     const mode = MODE_LABELS[input.mode] || MODE_LABELS.daily;
     const broker = String(input.broker_name || 'Môi giới chưa chọn');
@@ -1135,6 +1238,11 @@
     isDraftDirty,
     removeProfileFromDraft,
     requestsForView,
+    brokerQualityState,
+    brokerStatusState,
+    brokerScheduleState,
+    safeFacebookProfileLink,
+    buildBrokerRosterViewModel,
     groupOverviewProblems,
     buildOverviewViewModel,
     buildRunPreview,

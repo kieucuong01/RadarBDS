@@ -103,6 +103,93 @@ const conflict = api.profileSaveFailure(
 );
 assert.deepEqual(conflict.draft, changed);
 assert.equal(conflict.conflict.revision, 'new-revision');
+
+const rosterProfiles = [
+  {
+    url: 'https://www.facebook.com/broker-a/',
+    broker_name: 'Broker A',
+    city: 'Thủ Dầu Một',
+    active: true,
+    crawl_every_days: 1,
+    due_today: true,
+    next_due_date: '2026-08-11',
+    data_quality: {score: 82, label: 'Tốt'},
+  },
+  {
+    url: 'https://m.facebook.com/broker-b',
+    broker_name: 'Broker B',
+    city: 'Bến Cát',
+    active: true,
+    crawl_every_days: 3,
+    due_today: false,
+    next_due_date: '2026-08-13',
+    data_quality: {score: 50, label: 'Cần xem'},
+  },
+  {
+    url: 'https://www.facebook.com/broker-c',
+    broker_name: 'Broker C',
+    city: 'Bến Cát',
+    active: false,
+    crawl_every_days: 7,
+    due_today: true,
+    data_quality: {score: null},
+  },
+];
+const rosterSnapshot = JSON.stringify(rosterProfiles);
+const roster = api.buildBrokerRosterViewModel(rosterProfiles, {});
+assert.deepEqual(roster.summary, {
+  total: 3,
+  active: 2,
+  due: 1,
+  needsAttention: 2,
+});
+assert.equal(roster.resultCount, 3);
+assert.equal(roster.activeFilterCount, 0);
+assert.equal(roster.emptyState, '');
+assert.equal(JSON.stringify(rosterProfiles), rosterSnapshot);
+
+const filteredRoster = api.buildBrokerRosterViewModel(rosterProfiles, {
+  search: 'broker-b',
+  city: 'Bến Cát',
+  active: 'true',
+  cadence: '3',
+  due: 'false',
+  quality: 'needs_attention',
+});
+assert.deepEqual(filteredRoster.filteredProfiles, [rosterProfiles[1]]);
+assert.equal(filteredRoster.activeFilterCount, 6);
+assert.equal(
+  api.buildBrokerRosterViewModel([], {}).emptyState,
+  'empty',
+);
+assert.equal(
+  api.buildBrokerRosterViewModel(rosterProfiles, {search: 'không tồn tại'}).emptyState,
+  'filtered',
+);
+
+assert.deepEqual(api.brokerStatusState(rosterProfiles[0]), {
+  key: 'active',
+  label: 'Đang bật',
+});
+assert.deepEqual(api.brokerStatusState(rosterProfiles[2]), {
+  key: 'paused',
+  label: 'Đã tắt',
+});
+assert.equal(api.brokerScheduleState(rosterProfiles[0]).key, 'due');
+assert.equal(api.brokerScheduleState(rosterProfiles[1]).detail, '2026-08-13');
+assert.equal(api.brokerQualityState(rosterProfiles[0]).key, 'good');
+assert.equal(api.brokerQualityState(rosterProfiles[1]).key, 'needs_attention');
+assert.equal(api.brokerQualityState(rosterProfiles[2]).score, null);
+
+assert.deepEqual(
+  api.safeFacebookProfileLink('https://www.facebook.com/broker-a/'),
+  {
+    href: 'https://www.facebook.com/broker-a/',
+    display: 'facebook.com/broker-a',
+  },
+);
+assert.equal(api.safeFacebookProfileLink('javascript:alert(1)'), null);
+assert.equal(api.safeFacebookProfileLink('https://example.com/broker-a'), null);
 assert.match(source, /facebook-crawl\/tokens/);
 assert.match(source, /function setOverviewLoading/);
 assert.match(source, /function renderOverviewProblem/);
