@@ -3444,8 +3444,8 @@ p { margin: 6px 0 0; color: var(--muted); }
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
-.crawl-health-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
-.crawl-health-actions > button { min-height: 44px; }
+.crawl-command-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+.crawl-command-actions > button { min-height: 44px; }
 .crawl-resource-rail { grid-area: rail; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .crawl-resource-card {
   display: grid;
@@ -3684,8 +3684,8 @@ p { margin: 6px 0 0; color: var(--muted); }
   .crawl-health-panel::after { width: 54px; height: 54px; }
   .crawl-health-copy { padding-right: 48px; }
   .crawl-health-facts { grid-template-columns: 1fr; }
-  .crawl-health-actions { align-items: stretch; flex-direction: column; }
-  .crawl-health-actions > button { width: 100%; min-height: 44px; }
+  .crawl-command-actions { align-items: stretch; flex-direction: column; }
+  .crawl-command-actions > button { width: 100%; min-height: 44px; }
   .crawl-resource-rail { grid-template-columns: 1fr; grid-template-rows: none; }
   .crawl-attention-panel { padding: 17px; }
   .crawl-problem-item { grid-template-columns: 10px minmax(0, 1fr) auto; }

@@ -253,8 +253,8 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "<details" in template
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
-    assert "?v=admin-facebook-crawl-v2-broker-delete-ui" in template
-    assert "css/admin.css') }}?v=admin-v52-marketing-funnel" in template
+    assert "?v=admin-facebook-crawl-command-center-v1" in template
+    assert "css/admin.css') }}?v=admin-v54-facebook-crawl-command-center" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -313,7 +313,7 @@ def test_facebook_crawl_overview_command_center_is_asymmetric_and_mobile_first()
     assert ".crawl-overview-error" in overview_css
     mobile_css = overview_css[overview_css.index("@media (max-width: 760px)"):]
     assert 'grid-template-areas: "health" "attention" "rail";' in mobile_css
-    assert ".crawl-health-actions > button { width: 100%; min-height: 44px; }" in mobile_css
+    assert ".crawl-command-actions > button { width: 100%; min-height: 44px; }" in mobile_css
 
 
 def test_facebook_broker_actions_have_explicit_safe_delete_and_responsive_styles():
