@@ -80,6 +80,33 @@ Metadata length, answer-first length, duplicate intent, and optional
 visual/link gaps are warnings only. This audit does not prove production
 indexing, rankings, or traffic.
 
+### Priority visibility and Search Console evidence
+
+The P1-P3 traffic registry is bounded to 20 pages. Verify their live or local
+HTTP visibility separately from the config audit:
+
+```powershell
+& $py -X utf8 scripts\verify_traffic_visibility.py --base-url http://127.0.0.1:5000 --json
+& $py -X utf8 scripts\verify_traffic_visibility.py --base-url https://radarbds.vn --timeout 10 --json
+```
+
+The command checks robots, sitemap coverage, status, `X-Robots-Tag`, meta
+robots, self-canonical, and one-H1 rendering. Fetch, authentication, and network
+failures are `unknown`; they are never relabeled as passes.
+
+To add query evidence, export the Search Console Performance table as CSV and
+pass the file explicitly:
+
+```powershell
+& $py -X utf8 scripts\verify_traffic_visibility.py --base-url https://radarbds.vn --gsc-csv .\scratch\gsc-pages-queries.csv --json
+```
+
+The importer accepts English or Vietnamese GSC column headers and aggregates
+only canonical priority paths. It reports clicks, impressions, recalculated
+CTR, and impression-weighted position. Dashboard/contact clicks remain
+`unknown` unless a separate compatible analytics export is supplied; GSC
+clicks must not be treated as product conversions.
+
 ## Analytics Questions
 
 Track only what drives decisions:
