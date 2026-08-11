@@ -3,17 +3,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-
-PRIORITY_WARDS = {
-    "hiep-thanh": "Hiệp Thành",
-    "phu-hoa": "Phú Hòa",
-    "phu-my": "Phú Mỹ",
-    "dinh-hoa": "Định Hòa",
-    "phu-loi": "Phú Lợi",
-    "tan-an": "Tân An",
-    "hiep-an": "Hiệp An",
-    "chanh-nghia": "Chánh Nghĩa",
-}
+from config.seo_locations import SEO_LOCATION_PAGES, TDM_LIVE_WARDS
 
 
 def _json_ld_graph(html):
@@ -128,11 +118,42 @@ def test_priority_ward_page_degrades_without_database(monkeypatch):
     assert not any(item.get("@type") == "Dataset" for item in _json_ld_graph(html))
 
 
+def test_all_thirteen_tdm_pages_have_live_contract():
+    for slug, ward in TDM_LIVE_WARDS.items():
+        page = SEO_LOCATION_PAGES[f"binh-duong/phuong-{slug}"]
+        assert page["live_ward"] == ward
+        assert page["ward_slug"] == slug
+    assert "tdc" not in TDM_LIVE_WARDS
+    assert "kdc-hiep-thanh" not in TDM_LIVE_WARDS
+
+
+def test_new_live_ward_uses_canonical_ward_and_degrades_without_database(monkeypatch):
+    import app as radar_app
+
+    calls = _patch_live_snapshot(monkeypatch, radar_app)
+    response = radar_app.app.test_client().get("/binh-duong/phuong-phu-tan")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert calls["summary"]["wards"] == ["Phú Tân"]
+    assert calls["signals"]["wards"] == ["Phú Tân"]
+    assert 'href="/?tab=signals&amp;ward=Ph%C3%BA+T%C3%A2n"' in html
+
+    def unavailable(*args, **kwargs):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(radar_app, "load_dashboard_summary", unavailable)
+    monkeypatch.setattr(radar_app, "load_signals", unavailable)
+    unavailable_html = radar_app.app.test_client().get("/binh-duong/phuong-phu-tan").get_data(as_text=True)
+    assert "Dữ liệu trực tiếp tạm thời chưa khả dụng" in unavailable_html
+    assert not any(item.get("@type") == "Dataset" for item in _json_ld_graph(unavailable_html))
+
+
 def test_natural_thu_dau_mot_ward_paths_redirect_to_canonical_pages():
     import app as radar_app
 
     client = radar_app.app.test_client()
-    for slug in PRIORITY_WARDS:
+    for slug in TDM_LIVE_WARDS:
         response = client.get(f"/binh-duong/thu-dau-mot/{slug}")
         assert response.status_code == 301
         assert response.headers["Location"].endswith(f"/binh-duong/phuong-{slug}")
@@ -157,7 +178,7 @@ def test_llms_txt_is_stable_and_links_priority_ward_sources():
     assert response.status_code == 200
     assert response.content_type == "text/plain; charset=utf-8"
     assert "https://radarbds.vn/binh-duong/thu-dau-mot" in body
-    for slug in PRIORITY_WARDS:
+    for slug in TDM_LIVE_WARDS:
         assert f"https://radarbds.vn/binh-duong/phuong-{slug}" in body
     assert "pháp lý" in body
     assert "không thay thế" in body
@@ -178,7 +199,7 @@ def test_sitemap_has_unique_hub_and_only_canonical_priority_ward_urls():
 
     assert locations.count("https://radarbds.vn/bao-cao") == 1
     assert len(locations) == len(set(locations))
-    for slug in PRIORITY_WARDS:
+    for slug in TDM_LIVE_WARDS:
         assert f"https://radarbds.vn/binh-duong/phuong-{slug}" in locations
         assert f"https://radarbds.vn/binh-duong/thu-dau-mot/{slug}" not in locations
 

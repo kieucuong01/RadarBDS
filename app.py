@@ -79,6 +79,7 @@ from config.settings import (
     get_digital_product_commerce_settings,
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
 from config.planning_pages import (
     PLANNING_CATEGORY_LABELS,
@@ -2791,17 +2792,6 @@ def _active_public_nav(path: str) -> str:
 
 
 _BANGKOK_TZ = timezone(timedelta(hours=7))
-_PRIORITY_TDM_WARDS = {
-    "hiep-thanh": "Hiệp Thành",
-    "phu-hoa": "Phú Hòa",
-    "phu-my": "Phú Mỹ",
-    "dinh-hoa": "Định Hòa",
-    "phu-loi": "Phú Lợi",
-    "tan-an": "Tân An",
-    "hiep-an": "Hiệp An",
-    "chanh-nghia": "Chánh Nghĩa",
-}
-
 _REPORT_TDM_WARDS = {
     "Tân An", "Hiệp An", "Tương Bình Hiệp", "Định Hòa", "Chánh Mỹ", "Phú Mỹ", "Phú Cường",
     "Phú Hòa", "Phú Lợi", "Hiệp Thành", "Chánh Nghĩa", "Phú Tân", "Hòa Phú",
@@ -3834,7 +3824,7 @@ def seo_landing_page(slug):
 
 
 def seo_tdm_ward_redirect(ward_slug: str):
-    if ward_slug not in _PRIORITY_TDM_WARDS:
+    if ward_slug not in TDM_LIVE_WARDS:
         abort(404)
     target = f"/binh-duong/phuong-{ward_slug}"
     query = request.query_string.decode("ascii", errors="ignore")
@@ -3898,7 +3888,7 @@ def agent_openapi_json():
 def llms_txt():
     ward_lines = "\n".join(
         f"- {name}: {_public_url(f'/binh-duong/phuong-{slug}')}"
-        for slug, name in _PRIORITY_TDM_WARDS.items()
+        for slug, name in TDM_LIVE_WARDS.items()
     )
     planning_lines = "\n".join(
         f"- {page['breadcrumb_label']}: {_public_url(page['path'])}"

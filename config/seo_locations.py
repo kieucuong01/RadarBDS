@@ -135,6 +135,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-tuong-binh-hiep",
+        "live_ward": "Tương Bình Hiệp",
+        "ward_slug": "tuong-binh-hiep",
         "kind": "phường",
         "name": "Tương Bình Hiệp",
         "context": "phường có nhiều tin đất dân cư, đất vườn và nhà ở ven trục kết nối Thủ Dầu Một.",
@@ -155,6 +157,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-chanh-my",
+        "live_ward": "Chánh Mỹ",
+        "ward_slug": "chanh-my",
         "kind": "phường",
         "name": "Chánh Mỹ",
         "context": "phường ven sông, gần trung tâm Thủ Dầu Một, phù hợp theo dõi nhà ở thật và đất hẻm.",
@@ -164,6 +168,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-phu-cuong",
+        "live_ward": "Phú Cường",
+        "ward_slug": "phu-cuong",
         "kind": "phường",
         "name": "Phú Cường",
         "context": "phường trung tâm có mặt bằng giá cao, nhiều tin nhà phố và đất hẻm cần so đúng phân khúc.",
@@ -206,6 +212,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-phu-tan",
+        "live_ward": "Phú Tân",
+        "ward_slug": "phu-tan",
         "kind": "phường",
         "name": "Phú Tân",
         "context": "phường đô thị mới, phù hợp theo dõi đất nền, nhà phố và nguồn hàng quanh khu dân cư mới.",
@@ -215,6 +223,8 @@ LOCATION_DEFINITIONS = [
     },
     {
         "slug": "phuong-hoa-phu",
+        "live_ward": "Hòa Phú",
+        "ward_slug": "hoa-phu",
         "kind": "phường",
         "name": "Hòa Phú",
         "context": "phường đô thị mới của Thủ Dầu Một, có nhiều tin nhà phố, đất nền và khu dân cư quy hoạch.",

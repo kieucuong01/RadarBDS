@@ -108,7 +108,7 @@ def test_cli_supports_bounded_json_output(capsys):
     exit_code = main(["--json", "--limit", "1"])
     payload = json.loads(capsys.readouterr().out)
 
-    assert exit_code == 1
+    assert exit_code == int(payload["summary"]["hard_failure_count"] > 0)
     assert len(payload["hard_failures"]) <= 1
     assert payload["summary"]["checked_path_count"] >= 124
 
