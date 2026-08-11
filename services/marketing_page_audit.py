@@ -20,6 +20,7 @@ from config.planning_pages import PLANNING_HUB, PLANNING_PAGE_LIST
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from config.seo_locations import SEO_LOCATION_PAGES, TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
+from config.traffic_priority import active_traffic_priority_pages
 
 
 MAX_JSON_FINDINGS = 200
@@ -85,6 +86,11 @@ REQUIRED_REGISTRY_FAMILIES = frozenset(
 # legacy seed record for generator compatibility, but it is not a second public
 # definition and must not mask the route-owned canonical payload in this audit.
 ROUTE_OWNED_SEO_PAGE_PATHS = frozenset({"/bao-cao"})
+TRAFFIC_PRIORITY_BUYER_STAGES = frozenset({"discover", "compare", "decide"})
+TRAFFIC_PRIORITY_PROOF_MODES = frozenset(
+    {"live_snapshot", "published_dataset", "method_only"}
+)
+TRAFFIC_PRIORITY_TOOL_PATHS = frozenset({"/dinh-gia-bds"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,6 +244,136 @@ def _validate_dashboard_url(path: str, value: str) -> list[AuditFinding]:
     return findings
 
 
+def _traffic_priority_findings(canonical_paths: set[str]) -> list[AuditFinding]:
+    pages = active_traffic_priority_pages()
+    findings: list[AuditFinding] = []
+    paths = [page.path for page in pages]
+
+    if len(pages) != 20:
+        findings.append(
+            AuditFinding(
+                "error",
+                "traffic_priority_count",
+                "/",
+                "Traffic priority registry must contain exactly 20 active pages.",
+            )
+        )
+    if len(set(paths)) != len(paths):
+        findings.append(
+            AuditFinding(
+                "error",
+                "traffic_priority_duplicate_path",
+                "/",
+                "Traffic priority paths must be unique.",
+            )
+        )
+
+    for page in pages:
+        if page.path not in canonical_paths:
+            findings.append(
+                AuditFinding(
+                    "error",
+                    "traffic_priority_missing_canonical",
+                    page.path,
+                    "Priority path is absent from the canonical marketing inventory.",
+                )
+            )
+        if page.buyer_stage not in TRAFFIC_PRIORITY_BUYER_STAGES:
+            findings.append(
+                AuditFinding(
+                    "error",
+                    "traffic_priority_buyer_stage",
+                    page.path,
+                    "Buyer stage must be discover, compare, or decide.",
+                )
+            )
+        if page.proof_mode not in TRAFFIC_PRIORITY_PROOF_MODES:
+            findings.append(
+                AuditFinding(
+                    "error",
+                    "traffic_priority_proof_mode",
+                    page.path,
+                    "Proof mode must be live_snapshot, published_dataset, or method_only.",
+                )
+            )
+        if not page.proof_source.strip() or not page.distribution_angle.strip():
+            findings.append(
+                AuditFinding(
+                    "error",
+                    "traffic_priority_missing_evidence_contract",
+                    page.path,
+                    "Proof source and distribution angle are required.",
+                )
+            )
+
+        parsed = urlsplit(page.dashboard_href)
+        if parsed.scheme or parsed.netloc or parsed.fragment:
+            findings.append(
+                AuditFinding(
+                    "error",
+                    "traffic_priority_invalid_dashboard_href",
+                    page.path,
+                    "Priority CTA must be a fragment-free internal URL.",
+                )
+            )
+        elif parsed.path == "/":
+            for finding in _validate_dashboard_url(page.path, page.dashboard_href):
+                findings.append(
+                    AuditFinding(
+                        finding.severity,
+                        f"traffic_priority_{finding.code}",
+                        finding.path,
+                        finding.message,
+                    )
+                )
+        elif parsed.path in TRAFFIC_PRIORITY_TOOL_PATHS:
+            for key, values in parse_qs(parsed.query, keep_blank_values=True).items():
+                if key not in SUPPORTED_DASHBOARD_QUERY_KEYS or not key.startswith("utm_"):
+                    findings.append(
+                        AuditFinding(
+                            "error",
+                            "traffic_priority_invalid_tool_query",
+                            page.path,
+                            f"Tool CTA query key '{key}' is not supported.",
+                        )
+                    )
+                elif any(len(value) > 80 for value in values):
+                    findings.append(
+                        AuditFinding(
+                            "error",
+                            "traffic_priority_utm_value_too_long",
+                            page.path,
+                            f"Tool CTA {key} values must be at most 80 characters.",
+                        )
+                    )
+        else:
+            findings.append(
+                AuditFinding(
+                    "error",
+                    "traffic_priority_invalid_dashboard_href",
+                    page.path,
+                    "Priority CTA must target the root dashboard or valuation tool.",
+                )
+            )
+
+    expected_wards = set(TDM_LIVE_WARDS)
+    actual_wards = {
+        page.path.removeprefix("/binh-duong/phuong-")
+        for page in pages
+        if page.cluster == "ward"
+    }
+    if actual_wards != expected_wards:
+        findings.append(
+            AuditFinding(
+                "error",
+                "traffic_priority_ward_parity",
+                "/binh-duong",
+                "Priority ward paths must exactly match TDM_LIVE_WARDS.",
+            )
+        )
+    return findings
+
+
 def _title_for(payload: Mapping[str, object]) -> str:
     return str(payload.get("title") or payload.get("hero_title") or "")
 
@@ -330,6 +466,7 @@ def _audit_candidate_records(
 
     if strict:
         active_paths = {path for _source, path, _payload in deduplicated if path}
+        hard_failures.extend(_traffic_priority_findings(active_paths))
         if len(active_paths) < MIN_APPROVED_STATIC_PATHS:
             hard_failures.append(AuditFinding("error", "approved_inventory_below_baseline", "/", f"Expected at least {MIN_APPROVED_STATIC_PATHS} active public paths."))
         present_sources = {source for source, _path, _payload in raw}
