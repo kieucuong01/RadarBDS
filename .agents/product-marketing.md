@@ -1,9 +1,9 @@
 # Product Marketing Context
 
-*Last updated: 2026-06-23*
+*Last updated: 2026-08-11*
 
 ## Product Overview
-**One-liner:** Radar BDS helps investors and serious buyers find Bình Dương real-estate deals worth checking by filtering real listings through normalized local data, fair value, MOS, price history, and source-quality warnings.
+**One-liner:** Radar BDS helps serious Bình Dương buyers compare public listings and find the signals worth checking before they call a broker or visit a property.
 
 **What it does:** Radar BDS crawls and normalizes public real-estate listings, prioritizes Facebook as the primary source, estimates fair value by local segment, and surfaces actionable signal cards for users. The product reduces manual reading across noisy broker posts by showing price, area, ward/sub-zone, MOS, price drops, comparable context, and a direct contact path for suitable deals.
 
@@ -20,10 +20,15 @@
 
 **Primary use case:** Quickly decide which Bình Dương listings deserve a call, site visit, or deeper due diligence.
 
-**Jobs to be done:**
-- Filter noisy Facebook/Guland listings into a short list of deals worth checking.
-- Compare an asking price against local fair value and price-per-m2 context.
-- Save target areas and receive alerts when new matching opportunities appear.
+**Primary job to be done:** When a buyer finds a Bình Dương listing or starts with a budget/ward question, help them compare it with the right local segment, inspect evidence and warnings, and decide whether it deserves a call, site visit, or deeper due diligence.
+
+**Decision steps:**
+1. Enter through an exact ward, budget, report, valuation, or signal-first page.
+2. Compare asking price, price/m2, fair value/MOS, recency, and source warnings within the correct local segment.
+3. Open the filtered signal feed or valuation tool.
+4. Contact only when the listing remains worth checking after the evidence and caveats are reviewed.
+
+**Secondary jobs:** Save target areas, use history, or receive available alerts after the user has identified a repeatable search. These capabilities support retention; they are not the primary acquisition promise.
 
 **Use cases:**
 - An investor follows Bến Cát or Mỹ Phước and wants new MOS-positive listings before they are stale.
@@ -35,7 +40,7 @@
 |---------|-------------|-----------|------------------|
 | Bình Dương deal hunter | Speed, MOS, price drops, source quality | Too many noisy broker posts and reposts | A compact feed of listings worth checking first |
 | Serious owner-buyer | Avoiding overpaying and wasting site visits | Hard to know local fair value by ward/sub-zone | A clearer reference point before calling or visiting |
-| Small investor group lead | Repeatable sourcing workflow | Manual screening does not scale | Watchlists, alerts, history, and advisory notes |
+| Small investor group lead | Repeatable sourcing workflow | Manual screening does not scale | Consistent filters, evidence, history, and reviewable notes |
 | Trusted local broker | Better-qualified buyer conversations | Good listings get lost in noise | A data-backed way to show why a listing deserves attention |
 
 ## Problems & Pain Points
@@ -51,11 +56,15 @@
 **Emotional tension:** Users are afraid of missing a good deal, but also afraid of chasing fake cheap listings or overpaying because they lack local context.
 
 ## Competitive Landscape
-**Direct:** Generic listing portals and local deal dashboards - often broad listing catalogs, not a Bình Dương-first signal workflow.
+| Alternative | What it is good at | Gap Radar BDS addresses |
+|-------------|--------------------|-------------------------|
+| Batdongsan.com.vn | Broad portal inventory, familiar search behavior, nationwide reach | Does not lead with a Bình Dương-first MOS/source-warning signal workflow |
+| Nhà Tốt | High-volume classifieds and quick seller/broker discovery | Buyers still need local normalization, comparable segments, and evidence before calling |
+| Thư Viện Pháp Luật | Authoritative legal-document lookup | Not a listing comparison or deal-screening workflow; use it as a legal-source complement |
+| Local broker pages, Facebook and Zalo groups | Fast local supply and relationship access | Noisy reposts, incomplete fields, inconsistent place names, and weak cross-listing comparison |
+| Manual Facebook scanning and spreadsheets | Flexible and familiar for experienced buyers | Slow to repeat, hard to audit, and prone to stale or incomparable rows |
 
-**Secondary:** Facebook/Zalo broker groups - fast supply, but weak filtering, weak deduplication, and no fair-value/MOS layer.
-
-**Indirect:** Manual broker networks and spreadsheets - useful for relationships, but hard to audit, repeat, or turn into alerts.
+Radar BDS should not claim to replace portals, official legal sources, brokers, site visits, or professional appraisal. It connects discovery to a locally comparable, evidence-led first screening.
 
 ## Differentiation
 **Key differentiators:**
@@ -120,8 +129,22 @@
 
 **Personality:** Sharp, grounded, transparent, investor-minded, anti-hype.
 
-## Proof Points
-**Metrics:** Use only verified live or internal-run numbers. Acceptable examples include current listings normalized, signal counts, SEO/report visits, filtered dashboard visits, CTA clicks, and lead/contact events.
+## Proof Inventory
+### Verified
+- The public product renders a signal-first dashboard, ward/report/article pages, a valuation tool, source warnings, fair-value/MOS context, and contact/lead CTAs.
+- Canonical Thủ Dầu Một coverage is defined by the current 13-ward registry, with ward-specific public pages and filtered dashboard handoff.
+- Deterministic local audits and focused tests can verify page, CTA, trust, schema, and tracking contracts. These are product-quality proofs, not traffic or revenue proofs.
+
+### Needs live verification
+- Google index coverage, query impressions, CTR, average position, and sitemap processing in Search Console.
+- Production landing-to-dashboard clicks, contact/lead events, and source/campaign contribution for the current measurement window.
+- Current listing, signal, or normalized-row counts before using them in copy; every number needs its actual query time and scope.
+
+### Unavailable
+- A verified conversion-rate benchmark, revenue attribution, market share, guaranteed savings, or causal traffic lift from the current work.
+- Approved customer logos, publishable testimonials, or a validated ROI claim.
+
+**Metrics rule:** Use only verified live or internal-run numbers with scope and timestamp. Suitable measurements include GSC clicks/impressions, landing/report views, filtered dashboard visits, CTA clicks, lead/contact events, and current dataset counts when queried from the canonical environment.
 
 **Customers:** Early investors, serious buyers, and local Bình Dương watchers. Do not invent logos or testimonials.
 
@@ -141,4 +164,6 @@
 
 **Conversion action:** SEO/social/AI visitor opens the dashboard with the right ward or cluster filter, reviews signal cards, and clicks contact/lead CTA on a suitable deal.
 
-**Current metrics:** Track from internal audit logs and analytics: landing/report visits, social UTM visits, AI referral visits, CTA clicks, filtered dashboard targets, lead_vip_click, vip_cta_click, and lead rows.
+**Current conversion path:** SEO/social/AI/referral visitor -> exact priority page -> filtered signal dashboard or valuation tool -> signal evidence -> contact/lead CTA.
+
+**Current measurement status:** Event contracts exist for landing/report views and CTA clicks, with sanitized marketing context. GSC indexing/query evidence, current production funnel totals, and conversion rate remain unverified until a live session or explicit export is inspected. Watchlist, Telegram, and VIP events are secondary product signals and must not be reported as the default acquisition conversion.

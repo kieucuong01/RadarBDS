@@ -1,3 +1,7 @@
+import re
+
+import app as radar_app
+
 from config.seo_locations import TDM_LIVE_WARDS
 from config.traffic_priority import (
     active_traffic_priority_pages,
@@ -32,3 +36,22 @@ def test_strict_marketing_audit_accepts_priority_registry():
         for item in result.hard_failures
         if item.code.startswith("traffic_priority_")
     ]
+
+
+def _h1_texts(html: str) -> list[str]:
+    return [
+        re.sub(r"<[^>]+>", "", item).strip()
+        for item in re.findall(r"<h1\b[^>]*>(.*?)</h1>", html, re.S)
+    ]
+
+
+def test_homepage_has_one_signal_first_h1():
+    html = radar_app.app.test_client().get("/").get_data(as_text=True)
+
+    assert _h1_texts(html) == ["Săn deal nhà đất Bình Dương bằng dữ liệu"]
+
+
+def test_saved_page_keeps_one_saved_listings_h1():
+    html = radar_app.app.test_client().get("/bds-da-luu").get_data(as_text=True)
+
+    assert _h1_texts(html) == ["BDS đã lưu"]

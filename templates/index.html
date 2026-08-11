@@ -551,6 +551,15 @@
     </header>
 
     <div class="content">
+      {% if not saved_page %}
+      <section class="dashboard-promise" aria-labelledby="dashboardPromiseTitle">
+        <div>
+          <p class="dashboard-promise-kicker">Radar BDS Bình Dương</p>
+          <h1 id="dashboardPromiseTitle">Săn deal nhà đất Bình Dương bằng dữ liệu</h1>
+        </div>
+        <p>So giá theo phường, xem MOS và cảnh báo nguồn để chọn tin đáng kiểm tra trước.</p>
+      </section>
+      {% endif %}
       <section class="saved-listings-page" id="savedListingsPage" aria-labelledby="savedListingsTitle">
         <div class="saved-page-head">
           <div>
@@ -562,7 +571,7 @@
               </svg>
               Về Săn Deal
             </a>
-            <h1 id="savedListingsTitle">BDS đã lưu</h1>
+            {% if saved_page %}<h1 id="savedListingsTitle">BDS đã lưu</h1>{% else %}<h2 id="savedListingsTitle">BDS đã lưu</h2>{% endif %}
             <p>Các lô đất bạn đã lưu trong tài khoản.</p>
           </div>
           <button class="saved-page-refresh" type="button" onclick="loadSavedListingsPage(true)">
