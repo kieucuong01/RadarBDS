@@ -20,7 +20,111 @@
     daily: 'Hằng ngày',
     range: 'Theo số ngày gần đây',
   };
+  const OVERVIEW_CRITICAL_CODES = new Set([
+    'schedule_missing',
+    'apify_unavailable',
+  ]);
+  const OVERVIEW_JOB_STATUS_LABELS = {
+    queued: 'Đang chờ',
+    running: 'Đang chạy',
+    succeeded: 'Đã hoàn tất',
+    failed: 'Thất bại',
+    empty: 'Chưa có tác vụ',
+    unknown: 'Chưa rõ',
+  };
   let currentInstance = null;
+
+  function overviewText(value, fallback) {
+    const normalized = String(value == null ? '' : value).trim();
+    return normalized || fallback;
+  }
+
+  function overviewCount(value) {
+    const normalized = Number(value);
+    return Number.isFinite(normalized) ? Math.max(0, Math.trunc(normalized)) : 0;
+  }
+
+  function groupOverviewProblems(problems) {
+    const grouped = new Map();
+    (Array.isArray(problems) ? problems : []).forEach((problem) => {
+      const code = overviewText(problem && problem.code, 'unknown').toLowerCase();
+      const label = overviewText(problem && problem.label, 'Có vấn đề cần kiểm tra');
+      const key = `${code}:${label.toLocaleLowerCase('vi')}`;
+      const existing = grouped.get(key);
+      if (existing) {
+        existing.count += 1;
+        return;
+      }
+      grouped.set(key, {
+        key,
+        code,
+        label,
+        severity: OVERVIEW_CRITICAL_CODES.has(code) ? 'critical' : 'warning',
+        count: 1,
+      });
+    });
+    return [...grouped.values()];
+  }
+
+  function buildOverviewViewModel(payload) {
+    const source = payload && typeof payload === 'object' ? payload : {};
+    const problems = groupOverviewProblems(source.problems);
+    const critical = problems.some((problem) => problem.severity === 'critical');
+    const health = critical ? 'critical' : (problems.length ? 'warning' : 'healthy');
+    const healthLabels = {
+      critical: 'Cần xử lý ngay',
+      warning: 'Cần theo dõi',
+      healthy: 'Hệ thống ổn định',
+    };
+    const summaries = {
+      critical: 'Có điều kiện đang chặn hoặc làm gián đoạn lịch crawl.',
+      warning: 'Hệ thống vẫn hoạt động nhưng có cảnh báo cần kiểm tra.',
+      healthy: 'Lịch crawl và tài nguyên hiện không có cảnh báo hoạt động.',
+    };
+    const schedule = source.schedule && typeof source.schedule === 'object'
+      ? source.schedule
+      : {};
+    const lastRun = source.last_facebook_run && typeof source.last_facebook_run === 'object'
+      ? source.last_facebook_run
+      : null;
+    const latestJob = source.latest_job && typeof source.latest_job === 'object'
+      ? source.latest_job
+      : null;
+    const apify = source.apify && typeof source.apify === 'object' ? source.apify : {};
+    const enabled = overviewCount(apify.enabled_tokens);
+    const total = overviewCount(apify.total_tokens);
+    const fullJobLabel = latestJob
+      ? overviewText(latestJob.progress_label || latestJob.status, 'Chưa có tác vụ gần đây')
+      : 'Chưa có tác vụ gần đây';
+    const latestJobStatus = latestJob
+      ? overviewText(latestJob.status, 'unknown').toLowerCase()
+      : 'empty';
+
+    return {
+      health,
+      healthLabel: healthLabels[health],
+      healthSummary: summaries[health],
+      nextRun: schedule.installed
+        ? overviewText(schedule.next_run_time, 'Lịch đã bật, chưa có thời gian kế tiếp')
+        : 'Lịch crawl chưa hoạt động',
+      lastFacebookRun: lastRun
+        ? overviewText(lastRun.finished_at || lastRun.status, 'Đã có lần chạy Facebook')
+        : 'Chưa có dữ liệu lần chạy Facebook',
+      latestJob: {
+        status: latestJobStatus,
+        statusLabel: OVERVIEW_JOB_STATUS_LABELS[latestJobStatus]
+          || OVERVIEW_JOB_STATUS_LABELS.unknown,
+        label: fullJobLabel,
+        fullLabel: fullJobLabel,
+      },
+      apify: {
+        enabled,
+        total,
+        ratioLabel: `${enabled} / ${total} key`,
+      },
+      problems,
+    };
+  }
 
   function normalizeView(value) {
     return VIEWS.has(String(value || '').toLowerCase())
@@ -74,6 +178,109 @@
     return ['/admin/api/facebook-crawl/overview'];
   }
 
+  const BROKER_QUALITY_GOOD_THRESHOLD = 68;
+
+  function brokerQualityState(profile) {
+    const quality = profile && profile.data_quality && typeof profile.data_quality === 'object'
+      ? profile.data_quality
+      : {};
+    const rawScore = quality.score;
+    const hasScore = rawScore !== null
+      && rawScore !== undefined
+      && rawScore !== ''
+      && Number.isFinite(Number(rawScore));
+    if (!hasScore) {
+      return {key: 'needs_attention', score: null, label: 'Chưa đủ mẫu'};
+    }
+    const score = Math.max(0, Math.min(100, Math.round(Number(rawScore))));
+    const key = score >= BROKER_QUALITY_GOOD_THRESHOLD ? 'good' : 'needs_attention';
+    return {
+      key,
+      score,
+      label: String(quality.label || (key === 'good' ? 'Ổn' : 'Cần xem')),
+    };
+  }
+
+  function brokerStatusState(profile) {
+    return profile && profile.active === false
+      ? {key: 'paused', label: 'Đã tắt'}
+      : {key: 'active', label: 'Đang bật'};
+  }
+
+  function brokerScheduleState(profile) {
+    if (profile && profile.due_today === true) {
+      return {
+        key: 'due',
+        label: 'Đến lịch hôm nay',
+        detail: String(profile.next_due_date || 'Sẵn sàng chạy'),
+      };
+    }
+    return {
+      key: 'scheduled',
+      label: 'Kế tiếp',
+      detail: String(profile && profile.next_due_date || 'Chưa có lịch'),
+    };
+  }
+
+  function safeFacebookProfileLink(rawUrl) {
+    const value = String(rawUrl || '').trim();
+    if (!value) return null;
+    try {
+      const parsed = new URL(value);
+      const hostname = parsed.hostname.toLowerCase();
+      const allowedHost = hostname === 'facebook.com' || hostname.endsWith('.facebook.com');
+      if (!['http:', 'https:'].includes(parsed.protocol) || !allowedHost) return null;
+      const pathname = parsed.pathname.replace(/\/+$/, '');
+      return {
+        href: parsed.href,
+        display: 'facebook.com' + pathname,
+      };
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function buildBrokerRosterViewModel(profiles, filters) {
+    const source = Array.isArray(profiles) ? profiles : [];
+    const selected = {
+      search: String(filters && filters.search || '').trim().toLocaleLowerCase('vi'),
+      city: String(filters && filters.city || ''),
+      active: String(filters && filters.active || ''),
+      cadence: String(filters && filters.cadence || ''),
+      due: String(filters && filters.due || ''),
+      quality: String(filters && filters.quality || ''),
+    };
+    const activeFilterCount = Object.values(selected).filter(Boolean).length;
+    const activeProfiles = source.filter((profile) => profile.active !== false);
+    const filteredProfiles = source.filter((profile) => {
+      const haystack = String(profile.broker_name || '') + ' ' + String(profile.url || '');
+      const normalizedHaystack = haystack.toLocaleLowerCase('vi');
+      if (selected.search && !normalizedHaystack.includes(selected.search)) return false;
+      if (selected.city && profile.city !== selected.city) return false;
+      if (selected.active && String(profile.active !== false) !== selected.active) return false;
+      if (selected.cadence
+        && String(Number(profile.crawl_every_days || 1)) !== selected.cadence) return false;
+      if (selected.due && String(Boolean(profile.due_today)) !== selected.due) return false;
+      if (selected.quality && brokerQualityState(profile).key !== selected.quality) return false;
+      return true;
+    });
+    const needsAttention = activeProfiles.filter((profile) => (
+      profile.due_today === true || brokerQualityState(profile).key === 'needs_attention'
+    )).length;
+    return {
+      summary: {
+        total: source.length,
+        active: activeProfiles.length,
+        due: activeProfiles.filter((profile) => profile.due_today === true).length,
+        needsAttention,
+      },
+      filteredProfiles,
+      resultCount: filteredProfiles.length,
+      activeFilterCount,
+      emptyState: source.length === 0 ? 'empty' : (filteredProfiles.length === 0 ? 'filtered' : ''),
+    };
+  }
+
   function buildRunPreview(input) {
     const mode = MODE_LABELS[input.mode] || MODE_LABELS.daily;
     const broker = String(input.broker_name || 'Môi giới chưa chọn');
@@ -100,6 +307,12 @@
   function nextDuplicateOffset(page) {
     return Math.max(0, Number(page && page.offset || 0))
       + (Array.isArray(page && page.items) ? page.items.length : 0);
+  }
+
+  function duplicatePresentationState(page, error) {
+    if (error) return 'error';
+    if (!page) return 'loading';
+    return Array.isArray(page.items) && page.items.length ? 'ready' : 'empty';
   }
 
   function preselectRun(state, profile) {
@@ -194,6 +407,7 @@
       tokensLoaded: false,
       runProfileUrl: '',
       drawerIndex: null,
+      drawerReturnFocus: null,
       pollTimer: null,
     };
 
@@ -245,45 +459,92 @@
       return true;
     }
 
+    function setOverviewLoading(loading, statusLabel) {
+      const command = byId('crawlOverviewCommand');
+      const health = byId('crawlOverviewHealth');
+      const refresh = byId('crawlRefreshViewBtn');
+      if (command) {
+        command.setAttribute('aria-busy', loading ? 'true' : 'false');
+        command.classList.toggle('is-loading', loading);
+      }
+      if (health) health.classList.toggle('state-loading', loading);
+      if (refresh) refresh.disabled = loading;
+      if (statusLabel) text(byId('crawlOverviewStatus'), statusLabel);
+    }
+
+    function renderOverviewProblem(problem) {
+      const item = document.createElement('article');
+      item.className = `crawl-problem-item severity-${problem.severity}`;
+
+      const marker = document.createElement('span');
+      marker.className = 'crawl-problem-marker';
+      marker.setAttribute('aria-hidden', 'true');
+
+      const copy = document.createElement('div');
+      const label = document.createElement('strong');
+      label.textContent = problem.label;
+      const severity = document.createElement('span');
+      severity.className = 'crawl-problem-severity';
+      severity.textContent = problem.severity === 'critical' ? 'Cần xử lý ngay' : 'Cần kiểm tra';
+      copy.append(label, severity);
+
+      item.append(marker, copy);
+      if (problem.count > 1) {
+        const count = document.createElement('span');
+        count.className = 'crawl-problem-count';
+        count.textContent = `×${problem.count}`;
+        count.setAttribute('aria-label', `${problem.count} cảnh báo giống nhau`);
+        item.appendChild(count);
+      }
+      return item;
+    }
+
     function renderOverview(payload) {
-      const cards = byId('crawlOverviewCards');
-      clear(cards);
-      const values = [
-        ['Lịch crawl', payload.schedule && payload.schedule.installed
-          ? (payload.schedule.next_run_time || 'Đã bật')
-          : 'Chưa hoạt động'],
-        ['Lần Facebook gần nhất', payload.last_facebook_run
-          ? (payload.last_facebook_run.finished_at || payload.last_facebook_run.status || 'Đã chạy')
-          : 'Chưa có dữ liệu'],
-        ['Tác vụ gần nhất', payload.latest_job
-          ? (payload.latest_job.progress_label || payload.latest_job.status)
-          : 'Chưa có tác vụ'],
-        ['Apify khả dụng', `${Number(payload.apify && payload.apify.enabled_tokens || 0)} / ${Number(payload.apify && payload.apify.total_tokens || 0)} key`],
-      ];
-      values.forEach(([label, value]) => {
-        const card = document.createElement('article');
-        card.className = 'surface crawl-overview-card';
-        const small = document.createElement('span');
-        small.textContent = label;
-        const strong = document.createElement('strong');
-        strong.textContent = value;
-        card.append(small, strong);
-        cards.appendChild(card);
-      });
+      const model = buildOverviewViewModel(payload);
+      const health = byId('crawlOverviewHealth');
+      const badge = byId('crawlOverviewHealthBadge');
+      health.classList.remove('state-loading', 'state-healthy', 'state-warning', 'state-critical');
+      health.classList.add(`state-${model.health}`);
+      health.dataset.health = model.health;
+      badge.dataset.health = model.health;
+      text(badge, model.healthLabel);
+      text(byId('crawlOverviewHealthLabel'), model.healthLabel);
+      text(byId('crawlOverviewHealthSummary'), model.healthSummary);
+      text(byId('crawlOverviewNextRun'), model.nextRun);
+      text(byId('crawlOverviewLastRun'), model.lastFacebookRun);
+
+      text(byId('crawlOverviewApifyValue'), model.apify.ratioLabel);
+      text(
+        byId('crawlOverviewApifyNote'),
+        model.apify.enabled
+          ? `${model.apify.enabled} key đang sẵn sàng cho tác vụ crawl.`
+          : 'Không có key khả dụng cho tác vụ mới.',
+      );
+      text(byId('crawlTokenSummaryCount'), `${model.apify.enabled}/${model.apify.total} key khả dụng`);
+
+      const jobStatus = byId('crawlOverviewJobStatus');
+      jobStatus.className = `crawl-job-status status-${model.latestJob.status}`;
+      text(jobStatus, model.latestJob.statusLabel);
+      const jobLabel = byId('crawlOverviewJobLabel');
+      jobLabel.title = model.latestJob.fullLabel;
+      text(jobLabel, model.latestJob.label);
+
       const problems = byId('crawlProblems');
       clear(problems);
-      if (!payload.problems || !payload.problems.length) {
+      if (!model.problems.length) {
         problems.className = 'crawl-healthy-state';
-        text(problems, 'Không có việc cần xử lý. Lịch crawl và tài nguyên đang ổn.');
+        const title = document.createElement('strong');
+        title.textContent = 'Không có việc cần xử lý';
+        const note = document.createElement('span');
+        note.textContent = 'Lịch crawl và tài nguyên đang ổn.';
+        problems.append(title, note);
       } else {
         problems.className = 'crawl-problem-list';
-        payload.problems.forEach((problem) => {
-          const item = document.createElement('div');
-          item.className = 'crawl-problem-item';
-          item.textContent = problem.label;
-          problems.appendChild(item);
+        model.problems.forEach((problem) => {
+          problems.appendChild(renderOverviewProblem(problem));
         });
       }
+      byId('crawlOverviewError').hidden = true;
     }
 
     async function loadOverview(force) {
@@ -292,14 +553,15 @@
         renderOverview(state.overview);
         return;
       }
-      text(byId('crawlOverviewStatus'), 'Đang tải tổng quan…');
+      setOverviewLoading(true, 'Đang tải tổng quan…');
       try {
         state.overview = await fetchJSON('/admin/api/facebook-crawl/overview');
         state.overviewLoadedAt = Date.now();
         renderOverview(state.overview);
-        text(byId('crawlOverviewStatus'), 'Đã cập nhật');
+        setOverviewLoading(false, 'Đã cập nhật');
       } catch (_error) {
-        text(byId('crawlOverviewStatus'), 'Không tải được tổng quan. Hãy thử lại.');
+        byId('crawlOverviewError').hidden = false;
+        setOverviewLoading(false, 'Không tải được tổng quan');
       }
     }
 
@@ -410,33 +672,6 @@
       }
     }
 
-    function qualityLabel(profile) {
-      const quality = profile.data_quality || {};
-      if (quality.score == null) return 'Chưa đủ mẫu';
-      return `${quality.label || 'Chất lượng'} · ${quality.score}/100`;
-    }
-
-    function filteredProfiles() {
-      const search = String(byId('crawlBrokerSearch') && byId('crawlBrokerSearch').value || '').trim().toLocaleLowerCase('vi');
-      const city = String(byId('crawlBrokerCityFilter') && byId('crawlBrokerCityFilter').value || '');
-      const active = String(byId('crawlBrokerActiveFilter') && byId('crawlBrokerActiveFilter').value || '');
-      const cadence = String(byId('crawlBrokerCadenceFilter') && byId('crawlBrokerCadenceFilter').value || '');
-      const due = String(byId('crawlBrokerDueFilter') && byId('crawlBrokerDueFilter').value || '');
-      const quality = String(byId('crawlBrokerQualityFilter') && byId('crawlBrokerQualityFilter').value || '');
-      return state.draft.filter((profile) => {
-        const haystack = `${profile.broker_name || ''} ${profile.url || ''}`.toLocaleLowerCase('vi');
-        if (search && !haystack.includes(search)) return false;
-        if (city && profile.city !== city) return false;
-        if (active && String(profile.active !== false) !== active) return false;
-        if (cadence && String(profile.crawl_every_days || 1) !== cadence) return false;
-        if (due && String(Boolean(profile.due_today)) !== due) return false;
-        const score = profile.data_quality && profile.data_quality.score;
-        if (quality === 'good' && !(score >= 68)) return false;
-        if (quality === 'needs_attention' && !(score == null || score < 68)) return false;
-        return true;
-      });
-    }
-
     function fillCityFilter() {
       const select = byId('crawlBrokerCityFilter');
       if (!select) return;
@@ -457,54 +692,158 @@
       select.value = selected;
     }
 
+    function readBrokerFilters() {
+      return {
+        search: byId('crawlBrokerSearch').value,
+        city: byId('crawlBrokerCityFilter').value,
+        active: byId('crawlBrokerActiveFilter').value,
+        cadence: byId('crawlBrokerCadenceFilter').value,
+        due: byId('crawlBrokerDueFilter').value,
+        quality: byId('crawlBrokerQualityFilter').value,
+      };
+    }
+
+    function resetBrokerFilters() {
+      [
+        'crawlBrokerSearch',
+        'crawlBrokerCityFilter',
+        'crawlBrokerActiveFilter',
+        'crawlBrokerCadenceFilter',
+        'crawlBrokerDueFilter',
+        'crawlBrokerQualityFilter',
+      ].forEach((id) => {
+        byId(id).value = '';
+      });
+      renderProfiles();
+      byId('crawlBrokerSearch').focus();
+    }
+
+    function brokerCell(label, className) {
+      const cell = document.createElement('td');
+      cell.dataset.label = label;
+      if (className) cell.className = className;
+      return cell;
+    }
+
+    function renderBrokerBadge(stateValue, prefix) {
+      const badge = document.createElement('span');
+      badge.className = 'crawl-broker-badge ' + prefix + '-' + stateValue.key;
+      badge.textContent = stateValue.label;
+      return badge;
+    }
+
+    function renderBrokerSystemRow(kind, titleText, detailText, actionLabel, onAction) {
+      const rows = byId('crawlBrokerRows');
+      clear(rows);
+      const row = document.createElement('tr');
+      const cell = brokerCell('Trạng thái', 'crawl-broker-empty state-' + kind);
+      cell.colSpan = 7;
+      const title = document.createElement('strong');
+      title.textContent = titleText;
+      const detail = document.createElement('span');
+      detail.textContent = detailText;
+      cell.append(title, detail);
+      if (actionLabel && onAction) {
+        cell.appendChild(button(actionLabel, 'secondary-btn', onAction));
+      }
+      row.appendChild(cell);
+      rows.appendChild(row);
+    }
+
     function renderProfiles() {
       fillCityFilter();
       const rows = byId('crawlBrokerRows');
       clear(rows);
-      const profiles = filteredProfiles();
-      text(byId('crawlBrokerCount'), `${profiles.length} / ${state.draft.length} môi giới`);
-      if (!profiles.length) {
-        const row = document.createElement('tr');
-        const cell = document.createElement('td');
-        cell.colSpan = 8;
-        cell.className = 'empty';
-        cell.textContent = 'Không có môi giới phù hợp bộ lọc.';
-        row.appendChild(cell);
-        rows.appendChild(row);
+      const viewModel = buildBrokerRosterViewModel(state.draft, readBrokerFilters());
+      text(byId('crawlBrokerTotal'), viewModel.summary.total);
+      text(byId('crawlBrokerActive'), viewModel.summary.active);
+      text(byId('crawlBrokerDue'), viewModel.summary.due);
+      text(byId('crawlBrokerAttention'), viewModel.summary.needsAttention);
+      text(
+        byId('crawlBrokerCount'),
+        String(viewModel.resultCount) + ' / ' + String(viewModel.summary.total) + ' môi giới',
+      );
+      text(
+        byId('crawlBrokerFilterCount'),
+        String(viewModel.activeFilterCount) + ' đang áp dụng',
+      );
+      byId('crawlBrokerResetBtn').disabled = viewModel.activeFilterCount === 0;
+
+      if (viewModel.emptyState) {
+        const empty = viewModel.emptyState === 'empty';
+        renderBrokerSystemRow(
+          viewModel.emptyState,
+          empty ? 'Chưa có môi giới trong danh sách' : 'Không có môi giới phù hợp bộ lọc',
+          empty
+            ? 'Thêm môi giới đầu tiên để cấu hình lịch crawl.'
+            : 'Đặt lại bộ lọc hoặc thử một từ khóa khác.',
+          empty ? 'Thêm môi giới' : 'Đặt lại bộ lọc',
+          empty ? () => openDrawer(null) : resetBrokerFilters,
+        );
         return;
       }
-      profiles.forEach((profile) => {
+
+      viewModel.filteredProfiles.forEach((profile) => {
         const index = state.draft.indexOf(profile);
         const row = document.createElement('tr');
         row.dataset.profileUrl = profile.url;
-        const cells = [
-          `${profile.broker_name || 'Chưa đặt tên'}\n${profile.city || 'Chưa có khu vực'}`,
-          profile.active !== false ? 'Đang bật' : 'Đã tắt',
-          profile.due_today ? 'Đến lịch hôm nay' : `Kế tiếp ${profile.next_due_date || '—'}`,
-          `${Number(profile.daily_limit || 20)} bài · ${Number(profile.crawl_every_days || 1)} ngày/lần`,
-          qualityLabel(profile),
-          profile.latest_crawled_at || 'Chưa crawl',
-        ];
-        cells.forEach((value, cellIndex) => {
-          const cell = document.createElement('td');
-          if (cellIndex === 0) {
-            const [name, city] = value.split('\n');
-            const identity = document.createElement('div');
-            identity.className = 'crawl-broker-identity';
-            const brokerName = document.createElement('strong');
-            brokerName.textContent = name;
-            const brokerCity = document.createElement('small');
-            brokerCity.textContent = city;
-            identity.append(brokerName, brokerCity);
-            cell.appendChild(identity);
-          } else {
-            cell.className = 'crawl-broker-metric';
-            cell.textContent = value;
-          }
-          row.appendChild(cell);
-        });
-        const actions = document.createElement('td');
-        actions.className = 'crawl-row-actions crawl-broker-actions';
+
+        const identity = brokerCell('Môi giới', 'crawl-broker-identity-cell');
+        const identityStack = document.createElement('div');
+        identityStack.className = 'crawl-broker-identity';
+        const brokerName = document.createElement('strong');
+        brokerName.textContent = profile.broker_name || 'Chưa đặt tên';
+        const brokerCity = document.createElement('small');
+        brokerCity.textContent = profile.city || 'Chưa có khu vực';
+        const safeLink = safeFacebookProfileLink(profile.url);
+        const brokerUrl = document.createElement(safeLink ? 'a' : 'span');
+        brokerUrl.className = 'crawl-broker-url';
+        brokerUrl.textContent = safeLink
+          ? safeLink.display
+          : String(profile.url || 'URL chưa hợp lệ');
+        brokerUrl.title = String(profile.url || '');
+        if (safeLink) {
+          brokerUrl.href = safeLink.href;
+          brokerUrl.target = '_blank';
+          brokerUrl.rel = 'noopener noreferrer';
+        }
+        identityStack.append(brokerName, brokerCity, brokerUrl);
+        identity.appendChild(identityStack);
+
+        const statusState = brokerStatusState(profile);
+        const statusCell = brokerCell('Trạng thái', 'crawl-broker-state');
+        statusCell.appendChild(renderBrokerBadge(statusState, 'status'));
+
+        const scheduleState = brokerScheduleState(profile);
+        const scheduleCell = brokerCell('Lịch kế tiếp', 'crawl-broker-schedule');
+        scheduleCell.appendChild(renderBrokerBadge(scheduleState, 'schedule'));
+        const scheduleDetail = document.createElement('small');
+        scheduleDetail.textContent = scheduleState.detail;
+        scheduleCell.appendChild(scheduleDetail);
+
+        const planCell = brokerCell('Quota / chu kỳ', 'crawl-broker-plan');
+        const quota = document.createElement('strong');
+        quota.textContent = String(Number(profile.daily_limit || 20)) + ' bài/ngày';
+        const cadence = document.createElement('small');
+        cadence.textContent = String(Number(profile.crawl_every_days || 1)) + ' ngày/lần';
+        planCell.append(quota, cadence);
+
+        const qualityState = brokerQualityState(profile);
+        const qualityCell = brokerCell(
+          'Chất lượng',
+          'crawl-broker-quality quality-' + qualityState.key,
+        );
+        qualityCell.appendChild(renderBrokerBadge(qualityState, 'quality'));
+        const qualityScore = document.createElement('small');
+        qualityScore.textContent = qualityState.score == null
+          ? 'Chưa có điểm'
+          : String(qualityState.score) + '/100';
+        qualityCell.appendChild(qualityScore);
+
+        const latestCell = brokerCell('Crawl cuối', 'crawl-broker-latest');
+        latestCell.textContent = profile.latest_crawled_at || 'Chưa crawl';
+
+        const actions = brokerCell('Thao tác', 'crawl-row-actions crawl-broker-actions');
         actions.append(
           button('Sửa', 'secondary-btn', () => openDrawer(index)),
           button('Chạy', 'secondary-btn', async () => {
@@ -516,7 +855,7 @@
           button('Xóa', 'secondary-btn danger-btn', () => {
             const label = profile.broker_name || profile.url;
             if (!confirmAction(
-              `Xóa ${label} khỏi danh sách crawl? Tin đã crawl vẫn được giữ nguyên.`,
+              'Xóa ' + label + ' khỏi danh sách crawl? Tin đã crawl vẫn được giữ nguyên.',
             )) return;
             state.draft = removeProfileFromDraft(state.draft, profile.url);
             if (state.runProfileUrl === profile.url) state.runProfileUrl = '';
@@ -524,10 +863,18 @@
             renderRunProfiles();
             if (state.duplicates) renderDuplicates(state.duplicates, false);
             syncDirty();
-            text(byId('crawlBrokerStatus'), 'Đã bỏ môi giới khỏi bản nháp. Bấm Lưu thay đổi để áp dụng.');
+            text(
+              byId('crawlBrokerStatus'),
+              'Đã bỏ môi giới khỏi bản nháp. Bấm Lưu thay đổi để áp dụng.',
+            );
           }),
         );
-        row.appendChild(actions);
+        row.classList.toggle(
+          'needs-attention',
+          profile.active !== false
+            && (profile.due_today === true || qualityState.key === 'needs_attention'),
+        );
+        row.append(identity, statusCell, scheduleCell, planCell, qualityCell, latestCell, actions);
         rows.appendChild(row);
       });
     }
@@ -545,6 +892,7 @@
     }
 
     function openDrawer(index) {
+      state.drawerReturnFocus = root.ownerDocument.activeElement;
       state.drawerIndex = index;
       const profile = index == null ? {
         broker_name: '',
@@ -561,6 +909,8 @@
         if (key === 'active') field.checked = profile[key] !== false;
         else field.value = profile[key] == null ? '' : profile[key];
       });
+      text(byId('crawlDrawerError'), '');
+      byId('crawlBrokerDrawerBackdrop').hidden = false;
       const drawer = byId('crawlBrokerDrawer');
       drawer.hidden = false;
       byId('crawlDrawerName').focus();
@@ -568,7 +918,11 @@
 
     function closeDrawer() {
       byId('crawlBrokerDrawer').hidden = true;
+      byId('crawlBrokerDrawerBackdrop').hidden = true;
       state.drawerIndex = null;
+      const returnFocus = state.drawerReturnFocus;
+      state.drawerReturnFocus = null;
+      if (returnFocus && typeof returnFocus.focus === 'function') returnFocus.focus();
     }
 
     function saveDrawer() {
@@ -595,8 +949,22 @@
       syncDirty();
     }
 
+    function setDuplicateState(kind, message) {
+      const stateNode = byId('crawlDuplicateState');
+      if (!stateNode) return;
+      stateNode.dataset.state = kind;
+      stateNode.hidden = kind === 'ready';
+      text(stateNode, message);
+    }
+
     function renderDuplicates(page, append) {
       state.duplicates = page;
+      setDuplicateState(
+        duplicatePresentationState(page, false),
+        Array.isArray(page.items) && page.items.length
+          ? ''
+          : 'Không có cặp môi giới phù hợp phạm vi đang xem.',
+      );
       text(
         byId('crawlDuplicateSummary'),
         `${Number(page.actionable || 0)} cặp cần xử lý / ${Number(page.total || 0)} cặp đã phân tích`,
@@ -633,6 +1001,10 @@
     }
 
     async function loadDuplicates(append) {
+      setDuplicateState(
+        'loading',
+        append ? 'Đang tải thêm cặp trùng…' : 'Đang tải phân tích trùng…',
+      );
       const offset = append && state.duplicates
         ? nextDuplicateOffset(state.duplicates)
         : 0;
@@ -646,7 +1018,12 @@
         }
         renderDuplicates(page, false);
       } catch (_error) {
-        text(byId('crawlDuplicateSummary'), 'Không tải được phân tích trùng.');
+        setDuplicateState(
+          'error',
+          'Không tải được phân tích trùng. Thử lại bằng nút chuyển phạm vi.',
+        );
+        text(byId('crawlDuplicateSummary'), 'Phân tích trùng tạm thời chưa khả dụng.');
+        byId('crawlDuplicateMoreBtn').hidden = true;
       }
     }
 
@@ -655,7 +1032,16 @@
         renderProfiles();
         return;
       }
+      const workbench = byId('crawlBrokerWorkbench');
+      if (workbench) workbench.setAttribute('aria-busy', 'true');
       text(byId('crawlBrokerStatus'), 'Đang tải danh sách môi giới…');
+      if (!state.profilesLoaded) {
+        renderBrokerSystemRow(
+          'loading',
+          'Đang tải danh sách môi giới',
+          'Dữ liệu sẽ xuất hiện ngay khi máy chủ phản hồi.',
+        );
+      }
       try {
         const payload = await fetchJSON('/admin/api/facebook-crawl/profiles');
         state.baseline = clone(payload.profiles || []);
@@ -666,10 +1052,27 @@
         renderProfiles();
         renderRunProfiles();
         syncDirty();
+        if (workbench) workbench.setAttribute('aria-busy', 'false');
         text(byId('crawlBrokerStatus'), 'Đã cập nhật');
         await loadDuplicates(false);
       } catch (_error) {
-        text(byId('crawlBrokerStatus'), 'Không tải được danh sách môi giới.');
+        if (workbench) workbench.setAttribute('aria-busy', 'false');
+        if (state.profilesLoaded) {
+          renderProfiles();
+          text(
+            byId('crawlBrokerStatus'),
+            'Không thể làm mới. Danh sách đang hiển thị là dữ liệu gần nhất.',
+          );
+        } else {
+          renderBrokerSystemRow(
+            'error',
+            'Không tải được danh sách môi giới',
+            'Kiểm tra kết nối rồi thử lại.',
+            'Thử lại',
+            () => loadProfiles(true),
+          );
+          text(byId('crawlBrokerStatus'), 'Không tải được danh sách môi giới.');
+        }
       }
     }
 
@@ -873,6 +1276,9 @@
         control.addEventListener('click', () => setView(control.dataset.crawlView));
       });
       byId('crawlRefreshViewBtn').addEventListener('click', refreshCurrentView);
+      byId('crawlOverviewRunBtn').addEventListener('click', () => setView('run'));
+      byId('crawlOverviewBrokersBtn').addEventListener('click', () => setView('brokers'));
+      byId('crawlOverviewRetryBtn').addEventListener('click', () => loadOverview(true));
       byId('crawlTokenDetails').addEventListener('toggle', (event) => {
         if (event.target.open) loadTokens(false);
       });
@@ -882,6 +1288,29 @@
       byId('crawlDrawerCloseBtn').addEventListener('click', closeDrawer);
       byId('crawlDrawerCancelBtn').addEventListener('click', closeDrawer);
       byId('crawlDrawerSaveBtn').addEventListener('click', saveDrawer);
+      byId('crawlBrokerDrawerBackdrop').addEventListener('click', closeDrawer);
+      root.addEventListener('keydown', (event) => {
+        const drawer = byId('crawlBrokerDrawer');
+        if (drawer.hidden) return;
+        if (event.key === 'Escape') {
+          closeDrawer();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const controls = [...drawer.querySelectorAll(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled])',
+        )].filter((control) => !control.hidden);
+        if (!controls.length) return;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && root.ownerDocument.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && root.ownerDocument.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
       byId('crawlConflictReloadBtn').addEventListener('click', async () => {
         state.draft = clone(state.baseline);
         state.conflict = null;
@@ -900,6 +1329,7 @@
         const control = byId(id);
         control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', renderProfiles);
       });
+      byId('crawlBrokerResetBtn').addEventListener('click', resetBrokerFilters);
       byId('crawlDuplicateAllBtn').addEventListener('click', async () => {
         state.duplicateActionable = !state.duplicateActionable;
         text(
@@ -980,10 +1410,18 @@
     isDraftDirty,
     removeProfileFromDraft,
     requestsForView,
+    brokerQualityState,
+    brokerStatusState,
+    brokerScheduleState,
+    safeFacebookProfileLink,
+    buildBrokerRosterViewModel,
+    groupOverviewProblems,
+    buildOverviewViewModel,
     buildRunPreview,
     buildMaintenancePreview,
     runLimitForMode,
     nextDuplicateOffset,
+    duplicatePresentationState,
     preselectRun,
     profileSaveFailure,
     create,

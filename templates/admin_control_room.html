@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/admin-favicon-16.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/admin-apple-touch-icon.png') }}?v=admin-v43-dup-cluster-pairs">
   <link rel="manifest" href="{{ url_for('static', filename='admin.webmanifest') }}?v=admin-v43-dup-cluster-pairs">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v52-marketing-funnel">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=admin-v55-facebook-crawl-brokers">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=admin-login-gate">
   <script>
     window.USER_TIER = {{ USER_TIER | tojson }};
@@ -415,25 +415,75 @@
         </nav>
 
         <section id="crawlView-overview" class="crawl-view-panel" data-crawl-view-panel="overview">
-          <div class="crawl-view-heading">
+          <div class="crawl-overview-toolbar">
             <div>
-              <h2>Tình trạng hôm nay</h2>
-              <p>Bốn thông tin cần nhìn trước khi quyết định can thiệp.</p>
+              <p class="crawl-overview-kicker">Trạng thái vận hành</p>
+              <h2>Điều hành Facebook Crawl</h2>
             </div>
-            <span id="crawlOverviewStatus" class="crawl-inline-status" aria-live="polite">Đang tải…</span>
+            <span id="crawlOverviewStatus" class="crawl-inline-status" aria-live="polite">Đang tải tổng quan</span>
           </div>
-          <div id="crawlOverviewCards" class="crawl-overview-grid"></div>
-          <section class="surface crawl-action-needed" aria-labelledby="crawlProblemsTitle">
-            <div class="crawl-section-head">
-              <div>
-                <h3 id="crawlProblemsTitle">Việc cần xử lý</h3>
-                <p>Chỉ hiện cảnh báo đang hoạt động; trạng thái khỏe được thu gọn.</p>
+
+          <div id="crawlOverviewCommand" class="crawl-command-layout" aria-busy="true">
+            <section id="crawlOverviewHealth" class="surface crawl-health-panel state-loading"
+                     aria-labelledby="crawlOverviewHealthLabel">
+              <div class="crawl-health-copy">
+                <span id="crawlOverviewHealthBadge" class="crawl-status-badge">Đang tải</span>
+                <h3 id="crawlOverviewHealthLabel">Đang kiểm tra hệ thống</h3>
+                <p id="crawlOverviewHealthSummary">Đang lấy lịch crawl, lần chạy gần nhất và tài nguyên Apify.</p>
               </div>
+              <dl class="crawl-health-facts">
+                <div>
+                  <dt>Lịch kế tiếp</dt>
+                  <dd id="crawlOverviewNextRun">Đang tải</dd>
+                </div>
+                <div>
+                  <dt>Facebook gần nhất</dt>
+                  <dd id="crawlOverviewLastRun">Đang tải</dd>
+                </div>
+              </dl>
+              <div class="crawl-command-actions">
+                <button class="primary-btn" id="crawlOverviewRunBtn" type="button">Chạy tác vụ</button>
+                <button class="secondary-btn" id="crawlOverviewBrokersBtn" type="button">Quản lý môi giới</button>
+              </div>
+            </section>
+
+            <section class="surface crawl-attention-panel" aria-labelledby="crawlProblemsTitle">
+              <div class="crawl-section-head">
+                <div>
+                  <h3 id="crawlProblemsTitle">Việc cần xử lý</h3>
+                  <p>Ưu tiên điều kiện có thể làm gián đoạn crawl.</p>
+                </div>
+              </div>
+              <div id="crawlProblems" class="crawl-problem-skeleton" aria-live="polite">Đang kiểm tra cảnh báo</div>
+            </section>
+
+            <aside class="crawl-resource-rail" aria-label="Tài nguyên và hoạt động">
+              <article id="crawlOverviewApify" class="surface crawl-resource-card">
+                <span>Tài nguyên Apify</span>
+                <strong id="crawlOverviewApifyValue">Đang tải</strong>
+                <p id="crawlOverviewApifyNote">Đang kiểm tra key khả dụng</p>
+              </article>
+              <article id="crawlOverviewLatestJob" class="surface crawl-resource-card">
+                <span>Tác vụ gần nhất</span>
+                <strong id="crawlOverviewJobStatus">Đang tải</strong>
+                <p id="crawlOverviewJobLabel">Đang kiểm tra lịch sử tác vụ</p>
+              </article>
+            </aside>
+          </div>
+
+          <section id="crawlOverviewError" class="crawl-overview-error" role="alert" hidden>
+            <div>
+              <strong>Không tải được tổng quan</strong>
+              <p>Dữ liệu gần nhất được giữ lại nếu có. Hãy thử tải lại.</p>
             </div>
-            <div id="crawlProblems" aria-live="polite"></div>
+            <button class="secondary-btn" id="crawlOverviewRetryBtn" type="button">Thử lại</button>
           </section>
+
           <details class="surface crawl-token-details" id="crawlTokenDetails">
-            <summary>Quản lý Apify key</summary>
+            <summary>
+              <span>Quản lý Apify key</span>
+              <span id="crawlTokenSummaryCount" class="crawl-token-summary-count">Đang tải tài nguyên</span>
+            </summary>
             <p>Key chỉ được gửi khi thêm mới; giá trị token không bao giờ được trả lại từ API.</p>
             <div class="crawl-token-form">
               <label>Tên key<input id="crawlTokenLabel" autocomplete="off" placeholder="Key dự phòng"></label>
@@ -446,10 +496,12 @@
         </section>
 
         <section id="crawlView-brokers" class="crawl-view-panel" data-crawl-view-panel="brokers" hidden>
-          <div class="crawl-view-heading">
+          <div id="crawlBrokerWorkbench" class="crawl-broker-workbench">
+          <div class="crawl-view-heading crawl-broker-heading">
             <div>
+              <span class="crawl-section-kicker">Roster vận hành</span>
               <h2>Danh sách môi giới</h2>
-              <p>Lọc nhanh, sửa từng môi giới trong ngăn bên và chỉ lưu một lần.</p>
+              <p>Tìm nhanh, kiểm tra lịch crawl và chỉnh bản nháp trước khi lưu.</p>
             </div>
             <div class="crawl-view-actions">
               <span id="crawlUnsavedBadge" class="crawl-unsaved-badge" hidden>Chưa lưu</span>
@@ -461,31 +513,45 @@
             <span id="crawlConflictText"></span>
             <button class="secondary-btn" id="crawlConflictReloadBtn" type="button">Tải bản mới từ máy chủ</button>
           </div>
-          <div class="surface crawl-broker-toolbar">
+          <dl id="crawlBrokerSummary" class="crawl-broker-summary" aria-label="Tóm tắt danh sách môi giới">
+            <div><dt>Tổng số</dt><dd id="crawlBrokerTotal">0</dd></div>
+            <div><dt>Đang bật</dt><dd id="crawlBrokerActive">0</dd></div>
+            <div><dt>Đến lịch</dt><dd id="crawlBrokerDue">0</dd></div>
+            <div class="is-attention"><dt>Cần chú ý</dt><dd id="crawlBrokerAttention">0</dd></div>
+          </dl>
+          <section id="crawlBrokerFilters" class="surface crawl-broker-filters" aria-label="Tìm và lọc môi giới">
             <label class="crawl-search-field">Tìm môi giới hoặc URL
               <input id="crawlBrokerSearch" type="search" placeholder="Nhập tên hoặc facebook.com/…">
             </label>
-            <label>Thành phố<select id="crawlBrokerCityFilter"><option value="">Tất cả thành phố</option></select></label>
-            <label>Trạng thái<select id="crawlBrokerActiveFilter"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đã tắt</option></select></label>
-            <label>Chu kỳ<select id="crawlBrokerCadenceFilter"><option value="">Tất cả</option><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
-            <label>Đến lịch<select id="crawlBrokerDueFilter"><option value="">Tất cả</option><option value="true">Hôm nay</option><option value="false">Chưa đến lịch</option></select></label>
-            <label>Chất lượng<select id="crawlBrokerQualityFilter"><option value="">Tất cả</option><option value="good">Ổn</option><option value="needs_attention">Cần xem</option></select></label>
-          </div>
+            <div class="crawl-filter-head">
+              <strong>Bộ lọc</strong>
+              <span id="crawlBrokerFilterCount" class="crawl-filter-count">0 đang áp dụng</span>
+              <button class="secondary-btn crawl-filter-reset" id="crawlBrokerResetBtn" type="button" disabled>Đặt lại</button>
+            </div>
+            <div class="crawl-filter-rail">
+              <label>Thành phố<select id="crawlBrokerCityFilter"><option value="">Tất cả thành phố</option></select></label>
+              <label>Trạng thái<select id="crawlBrokerActiveFilter"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đã tắt</option></select></label>
+              <label>Chu kỳ<select id="crawlBrokerCadenceFilter"><option value="">Tất cả</option><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+              <label>Đến lịch<select id="crawlBrokerDueFilter"><option value="">Tất cả</option><option value="true">Hôm nay</option><option value="false">Chưa đến lịch</option></select></label>
+              <label>Chất lượng<select id="crawlBrokerQualityFilter"><option value="">Tất cả</option><option value="good">Ổn</option><option value="needs_attention">Cần xem</option></select></label>
+            </div>
+          </section>
           <div class="crawl-broker-meta">
-            <span id="crawlBrokerCount"></span>
-            <span id="crawlBrokerStatus" aria-live="polite"></span>
+            <span id="crawlBrokerCount">0 / 0 môi giới</span>
+            <span id="crawlBrokerStatus" role="status" aria-live="polite"></span>
           </div>
+          <p id="crawlBrokerTableHelp" class="sr-only">Bảng môi giới. Các thao tác sửa, chạy và xóa nằm ở cuối mỗi dòng.</p>
           <div class="surface crawl-broker-table-wrap">
-            <table class="data-table crawl-broker-table">
+            <table class="data-table crawl-broker-table" aria-describedby="crawlBrokerTableHelp">
               <thead>
                 <tr>
-                  <th>Môi giới / thành phố</th>
-                  <th>Trạng thái</th>
-                  <th>Lịch kế tiếp</th>
-                  <th>Quota / chu kỳ</th>
-                  <th>Chất lượng</th>
-                  <th>Lần crawl cuối</th>
-                  <th>Thao tác</th>
+                  <th scope="col">Môi giới</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col">Lịch kế tiếp</th>
+                  <th scope="col">Quota / chu kỳ</th>
+                  <th scope="col">Chất lượng</th>
+                  <th scope="col">Lần crawl cuối</th>
+                  <th scope="col">Thao tác</th>
                 </tr>
               </thead>
               <tbody id="crawlBrokerRows"></tbody>
@@ -500,23 +566,37 @@
               </div>
               <button class="secondary-btn" id="crawlDuplicateAllBtn" type="button">Xem toàn bộ phân tích</button>
             </div>
+            <p id="crawlDuplicateState" class="crawl-duplicate-state" role="status" aria-live="polite">Đang tải phân tích trùng…</p>
             <div id="crawlDuplicateList" class="crawl-duplicate-list"></div>
             <button class="secondary-btn crawl-load-more" id="crawlDuplicateMoreBtn" type="button" hidden>Xem thêm 20 cặp</button>
           </section>
 
-          <aside id="crawlBrokerDrawer" class="crawl-broker-drawer" aria-labelledby="crawlDrawerTitle" hidden>
+          <button id="crawlBrokerDrawerBackdrop" class="crawl-drawer-backdrop" type="button" tabindex="-1" aria-label="Đóng ngăn chỉnh sửa" hidden></button>
+          <aside id="crawlBrokerDrawer" class="crawl-broker-drawer" role="dialog" aria-modal="true" aria-labelledby="crawlDrawerTitle" hidden>
             <div class="crawl-drawer-head">
-              <h3 id="crawlDrawerTitle">Thông tin môi giới</h3>
+              <div>
+                <span class="crawl-section-kicker">Bản nháp môi giới</span>
+                <h3 id="crawlDrawerTitle">Thông tin môi giới</h3>
+              </div>
               <button class="icon-btn" id="crawlDrawerCloseBtn" type="button" aria-label="Đóng">×</button>
             </div>
             <div class="crawl-drawer-fields">
-              <label>Tên môi giới<input id="crawlDrawerName" maxlength="160"></label>
-              <label>URL Facebook<input id="crawlDrawerUrl" inputmode="url" placeholder="https://www.facebook.com/…"></label>
-              <label>Thành phố<input id="crawlDrawerCity" maxlength="100"></label>
-              <label class="toggle-line"><input id="crawlDrawerActive" type="checkbox"><span>Bật crawl tự động</span></label>
-              <label>Giới hạn bài/ngày<input id="crawlDrawerLimit" type="number" min="1" max="500"></label>
-              <label>Số ngày khi chạy range<input id="crawlDrawerRange" type="number" min="1" max="60"></label>
-              <label>Chu kỳ<select id="crawlDrawerCadence"><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+              <fieldset id="crawlDrawerIdentity" class="crawl-drawer-group">
+                <legend>Nhận diện</legend>
+                <label>Tên môi giới<input id="crawlDrawerName" maxlength="160"></label>
+                <label>URL Facebook<input id="crawlDrawerUrl" inputmode="url" placeholder="https://www.facebook.com/…"></label>
+                <label>Thành phố<input id="crawlDrawerCity" maxlength="100"></label>
+              </fieldset>
+              <fieldset id="crawlDrawerSchedule" class="crawl-drawer-group">
+                <legend>Lịch crawl</legend>
+                <label class="toggle-line"><input id="crawlDrawerActive" type="checkbox"><span>Bật crawl tự động</span></label>
+                <label>Chu kỳ<select id="crawlDrawerCadence"><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+              </fieldset>
+              <fieldset id="crawlDrawerLimits" class="crawl-drawer-group">
+                <legend>Giới hạn thu thập</legend>
+                <label>Giới hạn bài/ngày<input id="crawlDrawerLimit" type="number" min="1" max="500"></label>
+                <label>Số ngày khi chạy range<input id="crawlDrawerRange" type="number" min="1" max="60"></label>
+              </fieldset>
               <p id="crawlDrawerError" class="crawl-field-error" aria-live="polite"></p>
             </div>
             <div class="crawl-drawer-actions">
@@ -524,6 +604,7 @@
               <button class="secondary-btn" id="crawlDrawerSaveBtn" type="button">Áp dụng vào bản nháp</button>
             </div>
           </aside>
+          </div>
         </section>
 
         <section id="crawlView-run" class="crawl-view-panel" data-crawl-view-panel="run" hidden>
@@ -1028,7 +1109,7 @@
     <div id="trnGalleryCounter" class="trn-g-counter"></div>
   </div>
 
-  <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-v2-broker-delete-ui"></script>
+  <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-brokers-v2"></script>
   <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v52-marketing-funnel"></script>
   {% endif %}
 </body>

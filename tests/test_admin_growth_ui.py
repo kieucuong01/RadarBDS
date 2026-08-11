@@ -253,8 +253,8 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "<details" in template
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
-    assert "?v=admin-facebook-crawl-v2-broker-delete-ui" in template
-    assert "css/admin.css') }}?v=admin-v52-marketing-funnel" in template
+    assert "?v=admin-facebook-crawl-brokers-v2" in template
+    assert "css/admin.css') }}?v=admin-v55-facebook-crawl-brokers" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -272,6 +272,48 @@ def test_facebook_crawl_mobile_drawer_stays_in_viewport_with_touch_sized_actions
 
     assert ".crawl-broker-drawer { width: 100%; max-width: 440px; }" in mobile_css
     assert ".crawl-drawer-actions button { min-height: 44px; }" in mobile_css
+
+
+def test_facebook_crawl_overview_has_command_center_semantics():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(encoding="utf-8")
+
+    required_ids = (
+        "crawlOverviewCommand",
+        "crawlOverviewHealth",
+        "crawlOverviewHealthBadge",
+        "crawlOverviewHealthLabel",
+        "crawlOverviewHealthSummary",
+        "crawlOverviewNextRun",
+        "crawlOverviewLastRun",
+        "crawlOverviewLatestJob",
+        "crawlOverviewApify",
+        "crawlProblems",
+        "crawlOverviewError",
+        "crawlOverviewRetryBtn",
+        "crawlOverviewRunBtn",
+        "crawlOverviewBrokersBtn",
+    )
+    for element_id in required_ids:
+        assert f'id="{element_id}"' in template
+    assert 'aria-live="polite"' in template
+    assert 'aria-labelledby="crawlOverviewHealthLabel"' in template
+    assert 'aria-labelledby="crawlProblemsTitle"' in template
+
+
+def test_facebook_crawl_overview_command_center_is_asymmetric_and_mobile_first():
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+    overview_css = css[css.index(".crawl-command-layout"):]
+
+    assert 'grid-template-areas: "health rail" "attention attention";' in overview_css
+    assert '.crawl-health-panel[data-health="healthy"]' in overview_css
+    assert '.crawl-health-panel[data-health="warning"]' in overview_css
+    assert '.crawl-health-panel[data-health="critical"]' in overview_css
+    assert ".crawl-resource-rail" in overview_css
+    assert ".crawl-attention-panel" in overview_css
+    assert ".crawl-overview-error" in overview_css
+    mobile_css = overview_css[overview_css.index("@media (max-width: 760px)"):]
+    assert 'grid-template-areas: "health" "attention" "rail";' in mobile_css
+    assert ".crawl-command-actions > button { width: 100%; min-height: 44px; }" in mobile_css
 
 
 def test_facebook_broker_actions_have_explicit_safe_delete_and_responsive_styles():
@@ -303,4 +345,88 @@ def test_data_quality_qc_queues_skip_redundant_pending_count():
     qc_fast_path = 'if queue in ("source_qc", "needs_valuation", "legal_qc"):'
     assert qc_fast_path in review_fn
     assert review_fn.index(qc_fast_path) < review_fn.index("AND f.id IS NULL")
+
+
+def test_facebook_brokers_has_roster_workbench_semantics():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    source = (
+        ROOT / "static" / "js" / "admin" / "facebook-crawl.js"
+    ).read_text(encoding="utf-8")
+
+    required_ids = (
+        "crawlBrokerWorkbench",
+        "crawlBrokerSummary",
+        "crawlBrokerTotal",
+        "crawlBrokerActive",
+        "crawlBrokerDue",
+        "crawlBrokerAttention",
+        "crawlBrokerFilters",
+        "crawlBrokerFilterCount",
+        "crawlBrokerResetBtn",
+        "crawlBrokerTableHelp",
+    )
+    for element_id in required_ids:
+        assert f'id="{element_id}"' in template
+    assert 'aria-describedby="crawlBrokerTableHelp"' in template
+    assert "function readBrokerFilters" in source
+    assert "buildBrokerRosterViewModel(state.draft, readBrokerFilters())" in source
+    assert "safeFacebookProfileLink(profile.url)" in source
+    assert "noopener noreferrer" in source
+    assert "cell.dataset.label = label" in source
+    assert ".innerHTML =" not in source
+    assert "function renderBrokerSystemRow" in source
+    assert "Danh sách đang hiển thị là dữ liệu gần nhất" in source
+    assert "workbench.setAttribute('aria-busy', 'true')" in source
+
+
+def test_facebook_brokers_duplicate_queue_and_drawer_expose_states():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    source = (
+        ROOT / "static" / "js" / "admin" / "facebook-crawl.js"
+    ).read_text(encoding="utf-8")
+
+    for element_id in (
+        "crawlDuplicateState",
+        "crawlBrokerDrawerBackdrop",
+        "crawlDrawerIdentity",
+        "crawlDrawerSchedule",
+        "crawlDrawerLimits",
+    ):
+        assert f'id="{element_id}"' in template
+    drawer_start = template.index('id="crawlBrokerDrawer"')
+    drawer_end = template.index("</aside>", drawer_start)
+    drawer = template[drawer_start:drawer_end]
+    assert 'role="dialog"' in drawer
+    assert 'aria-modal="true"' in drawer
+    assert "function setDuplicateState" in source
+    assert "duplicatePresentationState" in source
+    assert "drawerReturnFocus" in source
+
+
+def test_facebook_broker_roster_is_dense_semantic_and_mobile_safe():
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+    roster_css = css[css.index(".crawl-broker-workbench"):]
+
+    for selector in (
+        ".crawl-broker-summary",
+        ".crawl-broker-filters",
+        ".crawl-filter-rail",
+        ".crawl-broker-badge",
+        ".crawl-broker-url",
+        ".crawl-broker-empty",
+        ".crawl-duplicate-state",
+        ".crawl-drawer-backdrop",
+        ".crawl-drawer-group",
+    ):
+        assert selector in roster_css
+    assert '[data-label]::before' in roster_css
+    assert ".crawl-broker-metric:nth-child" not in roster_css
+    assert '[data-theme="dark"] .crawl-broker-badge' in roster_css
+    mobile_css = roster_css[roster_css.index("@media (max-width: 760px)"):]
+    assert "grid-template-columns: 1fr 1fr;" in mobile_css
+    assert "min-height: 44px" in mobile_css
 
