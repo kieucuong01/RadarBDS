@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-11
 **Route:** `/admin/facebook-crawl?view=brokers`
-**Status:** Approved direction, pending written-spec review
+**Status:** Approved
 
 ## Goal
 
