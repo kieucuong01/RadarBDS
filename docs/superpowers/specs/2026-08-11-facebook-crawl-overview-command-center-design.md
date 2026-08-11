@@ -344,4 +344,3 @@ When the initial overview request fails, the view shows:
 9. The page has explicit loading, healthy, empty, and request-error states.
 10. Desktop, mobile, light theme, dark theme, keyboard focus, and reduced motion are verified.
 11. No unrelated files are staged or committed.
-
