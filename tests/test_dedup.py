@@ -64,6 +64,36 @@ def _normalize_fb(text, source_id="test", posted_at="2026-05-08"):
     return normalize_record(raw)
 
 
+def test_road_tokens_detect_real_vietnamese_duong_prefix():
+    assert "d104" in _road_tokens("Đường 104 TĐC Phú Chánh D")
+    assert "d104" in _road_tokens("Đường 104_ TĐC Phú Chánh D")
+    assert "d9" in _road_tokens("Đường D9 khu TĐC Phú Mỹ")
+    assert "db7b" in _road_tokens("Đường DB7B, KP Phú Tân 1")
+
+
+def test_facebook_same_dimensions_conflicting_vietnamese_roads_not_duplicate():
+    road_104 = _listing(
+        source="facebook", source_id="fb-duong-104", posted_at="2026-08-01",
+        ward="Phú Tân", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0, price_ty=2.6,
+        contact_phone="0988893838",
+        description=(
+            "Đường 104_ TĐC Phú Chánh D, DT 5x30m thổ cư 100%, giá 2ty6."
+        ),
+    )
+    d9 = _listing(
+        source="facebook", source_id="fb-d9", posted_at="2026-08-11",
+        ward="Phú Tân", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0, price_ty=2.8,
+        contact_phone="0889799995",
+        description=(
+            "Đường D9 khu TĐC Phú Mỹ, DT 5x30m thổ cư 100%, giá 2ty8."
+        ),
+    )
+
+    assert not _is_duplicate(road_104, d9)
+
+
 def test_resolve_duplicate_targets_flattens_nested_canonical_chain():
     parent_by_id = {
         635: 51480,

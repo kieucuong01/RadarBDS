@@ -17,15 +17,15 @@ _PRICE_PAT = re.compile(
 )
 _PHONE_PAT = re.compile(r"(?:0|\+84)\d{8,10}")
 _ROAD_TOKEN_PAT = re.compile(
-    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
+    r"\b(?:dx|dj|dh|dl|ql|tl|ni|nj|dk|nk|nl|nh|db|d|n)\s*0*(\d{1,4}\s*[a-d]?)(?=$|[^\w]|_)",
     re.IGNORECASE,
 )
 _NUMBERED_ROAD_PAT = re.compile(
-    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{2,4}\s*[a-d]?)\b",
+    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{2,4}\s*[a-d]?)(?=$|[^\w]|_)",
     re.IGNORECASE,
 )
 _STANDALONE_NUMBERED_ROAD_PAT = re.compile(
-    r"\b(\d{2,4}\s*[a-d])\b",
+    r"\b(\d{2,4}\s*[a-d])(?=$|[^\w]|_)",
     re.IGNORECASE,
 )
 _BLOCK_TOKEN_PAT = re.compile(
@@ -84,7 +84,11 @@ def _normalize_road_token(raw: str, number: str | None = None) -> str | None:
         prefix_match = re.match(r"[a-z]+", raw)
         if not prefix_match:
             return None
-        return f"{prefix_match.group(0)}{int(number)}"
+        number_match = re.fullmatch(r"0*(\d{1,4})([a-d]?)", re.sub(r"\s+", "", number.lower()))
+        if not number_match:
+            return None
+        suffix = number_match.group(2)
+        return f"{prefix_match.group(0)}{int(number_match.group(1))}{suffix}"
     if re.fullmatch(r"\d{2,4}", raw):
         return f"d{int(raw)}"
     if re.fullmatch(r"\d{2,4}[a-d]", raw):
