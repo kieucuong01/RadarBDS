@@ -254,7 +254,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
     assert "?v=admin-facebook-crawl-brokers-v3" in template
-    assert "css/admin.css') }}?v=admin-v58-facebook-crawl-broker-table-compact" in template
+    assert "css/admin.css') }}?v=admin-v59-facebook-crawl-broker-align-fix" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -468,7 +468,7 @@ def test_facebook_broker_roster_has_compact_ordinal_area_and_safe_name_link():
 
     assert '<th scope="col">Vận hành</th>' in template
     assert '<th scope="col">Kế hoạch</th>' in template
-    assert "admin-v58-facebook-crawl-broker-table-compact" in template
+    assert "admin-v59-facebook-crawl-broker-align-fix" in template
     assert "brokerCell('Vận hành', 'crawl-broker-ops')" in source
     assert "brokerCell('Kế hoạch', 'crawl-broker-plan')" in source
     assert "urlNode.className = 'crawl-broker-url'" in source
@@ -480,6 +480,10 @@ def test_facebook_broker_roster_has_compact_ordinal_area_and_safe_name_link():
         ".crawl-broker-name",
         ".crawl-broker-table { min-width: 900px;",
         "table-layout: fixed;",
+        ".crawl-broker-table td.crawl-broker-actions",
+        "display: table-cell;",
+        "tr.needs-attention > td:first-child::before",
     ):
         assert selector in css
+    assert "tr.needs-attention::before" not in css
 

@@ -3769,7 +3769,11 @@ p { margin: 6px 0 0; color: var(--muted); }
 .crawl-broker-table th:nth-child(6) { width: 154px; }
 .crawl-broker-table tbody tr { position: relative; transition: background-color .18s ease; }
 .crawl-broker-table tbody tr:hover { background: #f2fbf9; }
-.crawl-broker-table tbody tr.needs-attention::before {
+.crawl-broker-table tbody tr.needs-attention > td:first-child {
+  position: relative;
+  padding-left: 12px;
+}
+.crawl-broker-table tbody tr.needs-attention > td:first-child::before {
   position: absolute; inset: 7px auto 7px 0; width: 3px;
   border-radius: 0 3px 3px 0; background: #f59e0b; content: "";
 }
@@ -3808,6 +3812,10 @@ a.crawl-broker-name:hover { text-decoration: underline; }
 .crawl-broker-badge.schedule-due, .crawl-broker-badge.quality-needs_attention { color: #92400e; background: #fef3c7; }
 .crawl-broker-badge.schedule-scheduled { color: #1d4ed8; background: #dbeafe; }
 .crawl-broker-latest { color: #475569; font-size: 11.5px; font-weight: 700; line-height: 1.35; }
+.crawl-broker-table td.crawl-broker-actions {
+  display: table-cell;
+  white-space: nowrap;
+}
 @media (min-width: 761px) {
   .crawl-broker-table tbody tr { height: 46px; }
   .crawl-broker-actions .secondary-btn { min-height: 30px; padding: 4px 7px; font-size: 11.5px; }
