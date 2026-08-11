@@ -286,5 +286,12 @@ assert.match(source, /crawlBrokerResetBtn/);
 assert.match(source, /buildBrokerRosterViewModel\(state\.draft, readBrokerFilters\(\)\)/);
 assert.match(source, /safeFacebookProfileLink\(profile\.url\)/);
 assert.match(source, /noopener noreferrer/);
+assert.equal(api.duplicatePresentationState(null, false), 'loading');
+assert.equal(api.duplicatePresentationState(null, true), 'error');
+assert.equal(api.duplicatePresentationState({items: []}, false), 'empty');
+assert.equal(api.duplicatePresentationState({items: [{}]}, false), 'ready');
+assert.match(source, /crawlBrokerDrawerBackdrop/);
+assert.match(source, /event\.key === 'Escape'/);
+assert.match(source, /event\.key !== 'Tab'/);
 
 console.log('facebook crawl admin contracts: ok');

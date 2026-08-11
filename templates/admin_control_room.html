@@ -566,23 +566,37 @@
               </div>
               <button class="secondary-btn" id="crawlDuplicateAllBtn" type="button">Xem toàn bộ phân tích</button>
             </div>
+            <p id="crawlDuplicateState" class="crawl-duplicate-state" role="status" aria-live="polite">Đang tải phân tích trùng…</p>
             <div id="crawlDuplicateList" class="crawl-duplicate-list"></div>
             <button class="secondary-btn crawl-load-more" id="crawlDuplicateMoreBtn" type="button" hidden>Xem thêm 20 cặp</button>
           </section>
 
-          <aside id="crawlBrokerDrawer" class="crawl-broker-drawer" aria-labelledby="crawlDrawerTitle" hidden>
+          <button id="crawlBrokerDrawerBackdrop" class="crawl-drawer-backdrop" type="button" tabindex="-1" aria-label="Đóng ngăn chỉnh sửa" hidden></button>
+          <aside id="crawlBrokerDrawer" class="crawl-broker-drawer" role="dialog" aria-modal="true" aria-labelledby="crawlDrawerTitle" hidden>
             <div class="crawl-drawer-head">
-              <h3 id="crawlDrawerTitle">Thông tin môi giới</h3>
+              <div>
+                <span class="crawl-section-kicker">Bản nháp môi giới</span>
+                <h3 id="crawlDrawerTitle">Thông tin môi giới</h3>
+              </div>
               <button class="icon-btn" id="crawlDrawerCloseBtn" type="button" aria-label="Đóng">×</button>
             </div>
             <div class="crawl-drawer-fields">
-              <label>Tên môi giới<input id="crawlDrawerName" maxlength="160"></label>
-              <label>URL Facebook<input id="crawlDrawerUrl" inputmode="url" placeholder="https://www.facebook.com/…"></label>
-              <label>Thành phố<input id="crawlDrawerCity" maxlength="100"></label>
-              <label class="toggle-line"><input id="crawlDrawerActive" type="checkbox"><span>Bật crawl tự động</span></label>
-              <label>Giới hạn bài/ngày<input id="crawlDrawerLimit" type="number" min="1" max="500"></label>
-              <label>Số ngày khi chạy range<input id="crawlDrawerRange" type="number" min="1" max="60"></label>
-              <label>Chu kỳ<select id="crawlDrawerCadence"><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+              <fieldset id="crawlDrawerIdentity" class="crawl-drawer-group">
+                <legend>Nhận diện</legend>
+                <label>Tên môi giới<input id="crawlDrawerName" maxlength="160"></label>
+                <label>URL Facebook<input id="crawlDrawerUrl" inputmode="url" placeholder="https://www.facebook.com/…"></label>
+                <label>Thành phố<input id="crawlDrawerCity" maxlength="100"></label>
+              </fieldset>
+              <fieldset id="crawlDrawerSchedule" class="crawl-drawer-group">
+                <legend>Lịch crawl</legend>
+                <label class="toggle-line"><input id="crawlDrawerActive" type="checkbox"><span>Bật crawl tự động</span></label>
+                <label>Chu kỳ<select id="crawlDrawerCadence"><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+              </fieldset>
+              <fieldset id="crawlDrawerLimits" class="crawl-drawer-group">
+                <legend>Giới hạn thu thập</legend>
+                <label>Giới hạn bài/ngày<input id="crawlDrawerLimit" type="number" min="1" max="500"></label>
+                <label>Số ngày khi chạy range<input id="crawlDrawerRange" type="number" min="1" max="60"></label>
+              </fieldset>
               <p id="crawlDrawerError" class="crawl-field-error" aria-live="polite"></p>
             </div>
             <div class="crawl-drawer-actions">

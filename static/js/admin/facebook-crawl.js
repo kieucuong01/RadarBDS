@@ -309,6 +309,12 @@
       + (Array.isArray(page && page.items) ? page.items.length : 0);
   }
 
+  function duplicatePresentationState(page, error) {
+    if (error) return 'error';
+    if (!page) return 'loading';
+    return Array.isArray(page.items) && page.items.length ? 'ready' : 'empty';
+  }
+
   function preselectRun(state, profile) {
     return {
       ...state,
@@ -401,6 +407,7 @@
       tokensLoaded: false,
       runProfileUrl: '',
       drawerIndex: null,
+      drawerReturnFocus: null,
       pollTimer: null,
     };
 
@@ -987,6 +994,7 @@
     }
 
     function openDrawer(index) {
+      state.drawerReturnFocus = root.ownerDocument.activeElement;
       state.drawerIndex = index;
       const profile = index == null ? {
         broker_name: '',
@@ -1003,6 +1011,8 @@
         if (key === 'active') field.checked = profile[key] !== false;
         else field.value = profile[key] == null ? '' : profile[key];
       });
+      text(byId('crawlDrawerError'), '');
+      byId('crawlBrokerDrawerBackdrop').hidden = false;
       const drawer = byId('crawlBrokerDrawer');
       drawer.hidden = false;
       byId('crawlDrawerName').focus();
@@ -1010,7 +1020,11 @@
 
     function closeDrawer() {
       byId('crawlBrokerDrawer').hidden = true;
+      byId('crawlBrokerDrawerBackdrop').hidden = true;
       state.drawerIndex = null;
+      const returnFocus = state.drawerReturnFocus;
+      state.drawerReturnFocus = null;
+      if (returnFocus && typeof returnFocus.focus === 'function') returnFocus.focus();
     }
 
     function saveDrawer() {
@@ -1037,8 +1051,22 @@
       syncDirty();
     }
 
+    function setDuplicateState(kind, message) {
+      const stateNode = byId('crawlDuplicateState');
+      if (!stateNode) return;
+      stateNode.dataset.state = kind;
+      stateNode.hidden = kind === 'ready';
+      text(stateNode, message);
+    }
+
     function renderDuplicates(page, append) {
       state.duplicates = page;
+      setDuplicateState(
+        duplicatePresentationState(page, false),
+        Array.isArray(page.items) && page.items.length
+          ? ''
+          : 'Không có cặp môi giới phù hợp phạm vi đang xem.',
+      );
       text(
         byId('crawlDuplicateSummary'),
         `${Number(page.actionable || 0)} cặp cần xử lý / ${Number(page.total || 0)} cặp đã phân tích`,
@@ -1075,6 +1103,10 @@
     }
 
     async function loadDuplicates(append) {
+      setDuplicateState(
+        'loading',
+        append ? 'Đang tải thêm cặp trùng…' : 'Đang tải phân tích trùng…',
+      );
       const offset = append && state.duplicates
         ? nextDuplicateOffset(state.duplicates)
         : 0;
@@ -1088,7 +1120,12 @@
         }
         renderDuplicates(page, false);
       } catch (_error) {
-        text(byId('crawlDuplicateSummary'), 'Không tải được phân tích trùng.');
+        setDuplicateState(
+          'error',
+          'Không tải được phân tích trùng. Thử lại bằng nút chuyển phạm vi.',
+        );
+        text(byId('crawlDuplicateSummary'), 'Phân tích trùng tạm thời chưa khả dụng.');
+        byId('crawlDuplicateMoreBtn').hidden = true;
       }
     }
 
@@ -1353,6 +1390,29 @@
       byId('crawlDrawerCloseBtn').addEventListener('click', closeDrawer);
       byId('crawlDrawerCancelBtn').addEventListener('click', closeDrawer);
       byId('crawlDrawerSaveBtn').addEventListener('click', saveDrawer);
+      byId('crawlBrokerDrawerBackdrop').addEventListener('click', closeDrawer);
+      root.addEventListener('keydown', (event) => {
+        const drawer = byId('crawlBrokerDrawer');
+        if (drawer.hidden) return;
+        if (event.key === 'Escape') {
+          closeDrawer();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const controls = [...drawer.querySelectorAll(
+          'button:not([disabled]), input:not([disabled]), select:not([disabled])',
+        )].filter((control) => !control.hidden);
+        if (!controls.length) return;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && root.ownerDocument.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && root.ownerDocument.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
       byId('crawlConflictReloadBtn').addEventListener('click', async () => {
         state.draft = clone(state.baseline);
         state.conflict = null;
@@ -1463,6 +1523,7 @@
     buildMaintenancePreview,
     runLimitForMode,
     nextDuplicateOffset,
+    duplicatePresentationState,
     preselectRun,
     profileSaveFailure,
     create,

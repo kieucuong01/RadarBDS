@@ -380,3 +380,29 @@ def test_facebook_brokers_has_roster_workbench_semantics():
     assert "Danh sách đang hiển thị là dữ liệu gần nhất" in source
     assert "workbench.setAttribute('aria-busy', 'true')" in source
 
+
+def test_facebook_brokers_duplicate_queue_and_drawer_expose_states():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    source = (
+        ROOT / "static" / "js" / "admin" / "facebook-crawl.js"
+    ).read_text(encoding="utf-8")
+
+    for element_id in (
+        "crawlDuplicateState",
+        "crawlBrokerDrawerBackdrop",
+        "crawlDrawerIdentity",
+        "crawlDrawerSchedule",
+        "crawlDrawerLimits",
+    ):
+        assert f'id="{element_id}"' in template
+    drawer_start = template.index('id="crawlBrokerDrawer"')
+    drawer_end = template.index("</aside>", drawer_start)
+    drawer = template[drawer_start:drawer_end]
+    assert 'role="dialog"' in drawer
+    assert 'aria-modal="true"' in drawer
+    assert "function setDuplicateState" in source
+    assert "duplicatePresentationState" in source
+    assert "drawerReturnFocus" in source
+
