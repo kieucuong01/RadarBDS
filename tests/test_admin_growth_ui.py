@@ -253,8 +253,8 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "<details" in template
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
-    assert "?v=admin-facebook-crawl-command-center-v1" in template
-    assert "css/admin.css') }}?v=admin-v54-facebook-crawl-command-center" in template
+    assert "?v=admin-facebook-crawl-brokers-v2" in template
+    assert "css/admin.css') }}?v=admin-v55-facebook-crawl-brokers" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -405,4 +405,28 @@ def test_facebook_brokers_duplicate_queue_and_drawer_expose_states():
     assert "function setDuplicateState" in source
     assert "duplicatePresentationState" in source
     assert "drawerReturnFocus" in source
+
+
+def test_facebook_broker_roster_is_dense_semantic_and_mobile_safe():
+    css = (ROOT / "static" / "css" / "admin.css").read_text(encoding="utf-8")
+    roster_css = css[css.index(".crawl-broker-workbench"):]
+
+    for selector in (
+        ".crawl-broker-summary",
+        ".crawl-broker-filters",
+        ".crawl-filter-rail",
+        ".crawl-broker-badge",
+        ".crawl-broker-url",
+        ".crawl-broker-empty",
+        ".crawl-duplicate-state",
+        ".crawl-drawer-backdrop",
+        ".crawl-drawer-group",
+    ):
+        assert selector in roster_css
+    assert '[data-label]::before' in roster_css
+    assert ".crawl-broker-metric:nth-child" not in roster_css
+    assert '[data-theme="dark"] .crawl-broker-badge' in roster_css
+    mobile_css = roster_css[roster_css.index("@media (max-width: 760px)"):]
+    assert "grid-template-columns: 1fr 1fr;" in mobile_css
+    assert "min-height: 44px" in mobile_css
 
