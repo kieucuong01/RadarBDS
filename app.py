@@ -98,6 +98,7 @@ from config.city_map_products import (
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
 from services.public_marketing import build_public_entities, build_trust_context
+from services.traffic_priority import build_traffic_priority_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
@@ -1837,6 +1838,7 @@ def index():
             wards_by_city=CITY_MAP,
             site_meta=_site_meta("/"),
             saved_page=False,
+            traffic_priority=build_traffic_priority_context("/"),
         )
     )
     is_anonymous = (
@@ -1873,6 +1875,7 @@ def valuation_tool_page():
         wards_by_city=VALUATION_TOOL_CITY_MAP,
         required_tier=VALUATION_TOOL_MIN_TIER,
         active_nav="dinh-gia",
+        traffic_priority=build_traffic_priority_context("/dinh-gia-bds"),
         site_meta=_site_meta(
             "/dinh-gia-bds",
             title="Định giá đất Bình Dương online | Radar BDS",
@@ -2777,6 +2780,7 @@ def planning_detail_page(slug: str):
     page = deepcopy(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     page["local_links"] = page.get("related_links", [])[:3]
+    page["traffic_priority"] = build_traffic_priority_context(page["path"], page=page)
     site_meta = _site_meta(
         page["path"],
         title=page["title"],
@@ -3170,6 +3174,10 @@ def _hydrate_live_location_page(page: dict) -> dict:
 
 def _with_public_trust(page: dict, page_type: str) -> dict:
     page["trust"] = build_trust_context(page, page_type=page_type)
+    page["traffic_priority"] = build_traffic_priority_context(
+        page.get("path", ""),
+        page=page,
+    )
     return page
 
 
@@ -3374,6 +3382,51 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
         page["hero_title"] = "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS"
         page["hero_text"] = "Phân tích giá rao, so sánh phường và cách kiểm tra tin từ dữ liệu Radar BDS để người mua biết nên mở khu vực nào tiếp theo."
         page["lead_scope_label"] = "Bình Dương"
+        page["methodology"] = {
+            "heading": "Phương pháp dữ liệu Radar BDS",
+            "intro": (
+                "Radar BDS tổng hợp tin rao công khai tại Bình Dương cũ, hiện ưu tiên "
+                "13 phường Thủ Dầu Một. Mục tiêu là giúp người mua so đúng khu vực và "
+                "nhận ra tin đáng kiểm tra, không dự đoán giá chốt giao dịch."
+            ),
+            "sources": [
+                {
+                    "label": "Facebook — nguồn chính",
+                    "body": "Tin rao công khai được chuẩn hóa địa bàn, giá, diện tích và loại tài sản trước khi so sánh.",
+                },
+                {
+                    "label": "Guland — nguồn phụ",
+                    "body": "Dùng bổ sung khi có dữ liệu phù hợp; chính sách publisher và cảnh báo nguồn vẫn được giữ riêng.",
+                },
+            ],
+            "steps": [
+                "Chuẩn hóa địa danh, giá, diện tích, loại tài sản và các đặc điểm có thể đối chiếu.",
+                "Gom danh tính tin canonical để hạn chế repost làm dày giả nguồn cung và lịch sử giá.",
+                "So trong phân khúc địa phương tương đồng để ước tính fair value tham khảo.",
+                "Tính MOS, áp dụng cảnh báo chất lượng và actionable gate trước khi đưa vào signal feed.",
+            ],
+            "cadence": (
+                "Dữ liệu được làm mới theo lịch crawl và kỳ báo cáo của Radar BDS. "
+                "Mỗi trang dùng ngày truy vấn hoặc kỳ dữ liệu thực tế khi có; không cam kết thời gian thực."
+            ),
+            "limitations": [
+                "Giá rao không phải giá chốt giao dịch và có thể thay đổi sau khi liên hệ.",
+                "Fair value và MOS là chỉ báo sàng lọc, không thay thế thẩm định giá chính thức.",
+                "Trang không thay thế kiểm tra thực địa, quy hoạch, pháp lý, giấy tờ hoặc tư vấn chuyên môn.",
+            ],
+            "ward_links": [
+                {
+                    "label": f"Dữ liệu phường {name}",
+                    "href": f"/binh-duong/phuong-{slug}",
+                }
+                for slug, name in TDM_LIVE_WARDS.items()
+            ],
+            "next_links": [
+                {"label": "Báo cáo thị trường", "href": "/bao-cao"},
+                {"label": "Công cụ định giá", "href": "/dinh-gia-bds"},
+                {"label": "Mở signal feed", "href": "/?tab=signals"},
+            ],
+        }
         page["breadcrumbs"] = [
             {"name": "Trang chủ", "href": "/", "url": _public_url("/")},
             {"name": "Tin tức", "href": "/tin-tuc", "url": _public_url("/tin-tuc")},

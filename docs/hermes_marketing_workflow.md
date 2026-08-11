@@ -116,13 +116,29 @@ Default UTM:
 
 ```text
 utm_source=facebook
-utm_medium=organic_social
-utm_campaign=radarbds_daily_traffic
-utm_content=<short_slug>
+utm_medium=social
+utm_campaign=traffic_p1_p3_<yyyymmdd>
+utm_content=<cluster_stage_index>
 ```
 
-Do not auto-post until a separate Meta publisher service exists with a Page ID
-allowlist, token isolation, duplicate guard, and daily post cap.
+Generate the bounded P1-P3 review pack from the 20-page traffic registry:
+
+```powershell
+& $py -X utf8 scripts\generate_traffic_distribution_pack.py `
+  --date 2026-08-11 `
+  --channel all `
+  --output-dir artifacts\marketing\traffic-p1-p3 `
+  --format both
+```
+
+The command creates deterministic JSON and Markdown for Facebook, brokers,
+local media, and communities. Every item must remain `review_required`; stable
+queue IDs prevent duplicate entries when the same date/channel pack is rebuilt.
+Generated artifacts are drafts and stay ignored until a human reviews them.
+
+Do not auto-post or send these drafts. External distribution still requires a
+separate explicit authorization, an allowlisted destination, isolated tokens,
+duplicate guards, and a bounded daily cap.
 
 ## Tracking QA
 

@@ -105,6 +105,7 @@
 <body class="seo-page valuation-page">
   {% set tier_display = 'Gói Free' if USER_TIER == 'free' else ('VIP' if USER_TIER == 'vip' else ('Admin' if USER_TIER == 'admin' else 'Khách')) %}
   {% include "partials/seo_header.html" %}
+  <div class="seo-shell valuation-priority-proof">{% include "partials/traffic_priority_proof.html" %}</div>
 
   <main id="main-content">
     <section class="hero-band">

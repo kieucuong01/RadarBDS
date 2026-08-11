@@ -1,0 +1,16 @@
+{% set priority = page.traffic_priority if page is defined and page.traffic_priority else traffic_priority %}
+{% if priority %}
+<div class="traffic-priority-proof" data-traffic-priority-proof data-proof-mode="{{ priority.proof.mode }}">
+  <div class="traffic-priority-proof-copy">
+    <strong>Phạm vi và bằng chứng</strong>
+    <span>{{ priority.proof.scope_label }} · {{ priority.proof.source_label }}</span>
+    {% if priority.proof.updated_at %}<time datetime="{{ priority.proof.updated_at }}">Dữ liệu ghi nhận {{ priority.proof.updated_at }}</time>{% endif %}
+    <small>{{ priority.proof.limitation }}</small>
+  </div>
+  {% if priority.related_links %}
+  <nav class="traffic-priority-links" aria-label="Trang ưu tiên liên quan">
+    {% for link in priority.related_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
+  </nav>
+  {% endif %}
+</div>
+{% endif %}

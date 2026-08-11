@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+from config.seo_locations import TDM_LIVE_WARDS
 
 
 NEWS_CATEGORY_LABELS = {
@@ -62,6 +63,60 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
 
     assert "Đang phủ 13 phường Thủ Dầu Một" in report_html
     assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in radar_news_html
+
+
+def test_radar_data_hub_explains_scope_method_cadence_and_limits():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/tin-tuc/du-lieu-radarbds"
+    ).get_data(as_text=True)
+
+    for text in (
+        "Facebook",
+        "Guland",
+        "13 phường Thủ Dầu Một",
+        "fair value",
+        "MOS",
+        "giá rao",
+        "không thay thế",
+        "Bình Dương cũ",
+    ):
+        assert text in html
+    assert html.index("Phương pháp dữ liệu Radar BDS") < html.index("Bài nổi bật")
+
+
+def test_radar_data_hub_links_all_priority_wards_and_keeps_archive():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/tin-tuc/du-lieu-radarbds"
+    ).get_data(as_text=True)
+
+    assert all(
+        f'/binh-duong/phuong-{slug}' in html
+        for slug in TDM_LIVE_WARDS
+    )
+    assert "data-news-grid" in html
+
+
+def test_radar_data_hub_schema_describes_visible_dataset_method():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/tin-tuc/du-lieu-radarbds"
+    ).get_data(as_text=True)
+    blocks = re.findall(
+        r'<script type="application/ld\+json">\s*(.*?)\s*</script>',
+        html,
+        re.S,
+    )
+    payload = json.loads(blocks[-1])
+    dataset = next(item for item in payload["@graph"] if item["@type"] == "Dataset")
+
+    assert dataset["name"] == "Phương pháp và dữ liệu Radar BDS"
+    assert "Giá rao" in dataset["variableMeasured"]
+    assert "MOS" in dataset["variableMeasured"]
 
 
 def test_seo_lead_form_fails_closed_to_post_when_javascript_is_unavailable():
