@@ -712,7 +712,7 @@
       select.value = selected;
     }
 
-    function renderProfiles() {
+    function renderLegacyProfiles() {
       fillCityFilter();
       const rows = byId('crawlBrokerRows');
       clear(rows);
@@ -783,6 +783,193 @@
           }),
         );
         row.appendChild(actions);
+        rows.appendChild(row);
+      });
+    }
+
+    function readBrokerFilters() {
+      return {
+        search: byId('crawlBrokerSearch').value,
+        city: byId('crawlBrokerCityFilter').value,
+        active: byId('crawlBrokerActiveFilter').value,
+        cadence: byId('crawlBrokerCadenceFilter').value,
+        due: byId('crawlBrokerDueFilter').value,
+        quality: byId('crawlBrokerQualityFilter').value,
+      };
+    }
+
+    function resetBrokerFilters() {
+      [
+        'crawlBrokerSearch',
+        'crawlBrokerCityFilter',
+        'crawlBrokerActiveFilter',
+        'crawlBrokerCadenceFilter',
+        'crawlBrokerDueFilter',
+        'crawlBrokerQualityFilter',
+      ].forEach((id) => {
+        byId(id).value = '';
+      });
+      renderProfiles();
+      byId('crawlBrokerSearch').focus();
+    }
+
+    function brokerCell(label, className) {
+      const cell = document.createElement('td');
+      cell.dataset.label = label;
+      if (className) cell.className = className;
+      return cell;
+    }
+
+    function renderBrokerBadge(stateValue, prefix) {
+      const badge = document.createElement('span');
+      badge.className = 'crawl-broker-badge ' + prefix + '-' + stateValue.key;
+      badge.textContent = stateValue.label;
+      return badge;
+    }
+
+    function renderBrokerSystemRow(kind, titleText, detailText, actionLabel, onAction) {
+      const rows = byId('crawlBrokerRows');
+      clear(rows);
+      const row = document.createElement('tr');
+      const cell = brokerCell('Trạng thái', 'crawl-broker-empty state-' + kind);
+      cell.colSpan = 7;
+      const title = document.createElement('strong');
+      title.textContent = titleText;
+      const detail = document.createElement('span');
+      detail.textContent = detailText;
+      cell.append(title, detail);
+      if (actionLabel && onAction) {
+        cell.appendChild(button(actionLabel, 'secondary-btn', onAction));
+      }
+      row.appendChild(cell);
+      rows.appendChild(row);
+    }
+
+    function renderProfiles() {
+      fillCityFilter();
+      const rows = byId('crawlBrokerRows');
+      clear(rows);
+      const viewModel = buildBrokerRosterViewModel(state.draft, readBrokerFilters());
+      text(byId('crawlBrokerTotal'), viewModel.summary.total);
+      text(byId('crawlBrokerActive'), viewModel.summary.active);
+      text(byId('crawlBrokerDue'), viewModel.summary.due);
+      text(byId('crawlBrokerAttention'), viewModel.summary.needsAttention);
+      text(
+        byId('crawlBrokerCount'),
+        String(viewModel.resultCount) + ' / ' + String(viewModel.summary.total) + ' môi giới',
+      );
+      text(
+        byId('crawlBrokerFilterCount'),
+        String(viewModel.activeFilterCount) + ' đang áp dụng',
+      );
+      byId('crawlBrokerResetBtn').disabled = viewModel.activeFilterCount === 0;
+
+      if (viewModel.emptyState) {
+        const empty = viewModel.emptyState === 'empty';
+        renderBrokerSystemRow(
+          viewModel.emptyState,
+          empty ? 'Chưa có môi giới trong danh sách' : 'Không có môi giới phù hợp bộ lọc',
+          empty
+            ? 'Thêm môi giới đầu tiên để cấu hình lịch crawl.'
+            : 'Đặt lại bộ lọc hoặc thử một từ khóa khác.',
+          empty ? 'Thêm môi giới' : 'Đặt lại bộ lọc',
+          empty ? () => openDrawer(null) : resetBrokerFilters,
+        );
+        return;
+      }
+
+      viewModel.filteredProfiles.forEach((profile) => {
+        const index = state.draft.indexOf(profile);
+        const row = document.createElement('tr');
+        row.dataset.profileUrl = profile.url;
+
+        const identity = brokerCell('Môi giới', 'crawl-broker-identity-cell');
+        const identityStack = document.createElement('div');
+        identityStack.className = 'crawl-broker-identity';
+        const brokerName = document.createElement('strong');
+        brokerName.textContent = profile.broker_name || 'Chưa đặt tên';
+        const brokerCity = document.createElement('small');
+        brokerCity.textContent = profile.city || 'Chưa có khu vực';
+        const safeLink = safeFacebookProfileLink(profile.url);
+        const brokerUrl = document.createElement(safeLink ? 'a' : 'span');
+        brokerUrl.className = 'crawl-broker-url';
+        brokerUrl.textContent = safeLink
+          ? safeLink.display
+          : String(profile.url || 'URL chưa hợp lệ');
+        brokerUrl.title = String(profile.url || '');
+        if (safeLink) {
+          brokerUrl.href = safeLink.href;
+          brokerUrl.target = '_blank';
+          brokerUrl.rel = 'noopener noreferrer';
+        }
+        identityStack.append(brokerName, brokerCity, brokerUrl);
+        identity.appendChild(identityStack);
+
+        const statusState = brokerStatusState(profile);
+        const statusCell = brokerCell('Trạng thái', 'crawl-broker-state');
+        statusCell.appendChild(renderBrokerBadge(statusState, 'status'));
+
+        const scheduleState = brokerScheduleState(profile);
+        const scheduleCell = brokerCell('Lịch kế tiếp', 'crawl-broker-schedule');
+        scheduleCell.appendChild(renderBrokerBadge(scheduleState, 'schedule'));
+        const scheduleDetail = document.createElement('small');
+        scheduleDetail.textContent = scheduleState.detail;
+        scheduleCell.appendChild(scheduleDetail);
+
+        const planCell = brokerCell('Quota / chu kỳ', 'crawl-broker-plan');
+        const quota = document.createElement('strong');
+        quota.textContent = String(Number(profile.daily_limit || 20)) + ' bài/ngày';
+        const cadence = document.createElement('small');
+        cadence.textContent = String(Number(profile.crawl_every_days || 1)) + ' ngày/lần';
+        planCell.append(quota, cadence);
+
+        const qualityState = brokerQualityState(profile);
+        const qualityCell = brokerCell(
+          'Chất lượng',
+          'crawl-broker-quality quality-' + qualityState.key,
+        );
+        qualityCell.appendChild(renderBrokerBadge(qualityState, 'quality'));
+        const qualityScore = document.createElement('small');
+        qualityScore.textContent = qualityState.score == null
+          ? 'Chưa có điểm'
+          : String(qualityState.score) + '/100';
+        qualityCell.appendChild(qualityScore);
+
+        const latestCell = brokerCell('Crawl cuối', 'crawl-broker-latest');
+        latestCell.textContent = profile.latest_crawled_at || 'Chưa crawl';
+
+        const actions = brokerCell('Thao tác', 'crawl-row-actions crawl-broker-actions');
+        actions.append(
+          button('Sửa', 'secondary-btn', () => openDrawer(index)),
+          button('Chạy', 'secondary-btn', async () => {
+            const selected = preselectRun(state, profile);
+            state.runProfileUrl = selected.runProfileUrl;
+            await setView('run', {force: true});
+            applyRunDefaults();
+          }),
+          button('Xóa', 'secondary-btn danger-btn', () => {
+            const label = profile.broker_name || profile.url;
+            if (!confirmAction(
+              'Xóa ' + label + ' khỏi danh sách crawl? Tin đã crawl vẫn được giữ nguyên.',
+            )) return;
+            state.draft = removeProfileFromDraft(state.draft, profile.url);
+            if (state.runProfileUrl === profile.url) state.runProfileUrl = '';
+            renderProfiles();
+            renderRunProfiles();
+            if (state.duplicates) renderDuplicates(state.duplicates, false);
+            syncDirty();
+            text(
+              byId('crawlBrokerStatus'),
+              'Đã bỏ môi giới khỏi bản nháp. Bấm Lưu thay đổi để áp dụng.',
+            );
+          }),
+        );
+        row.classList.toggle(
+          'needs-attention',
+          profile.active !== false
+            && (profile.due_today === true || qualityState.key === 'needs_attention'),
+        );
+        row.append(identity, statusCell, scheduleCell, planCell, qualityCell, latestCell, actions);
         rows.appendChild(row);
       });
     }
@@ -910,7 +1097,16 @@
         renderProfiles();
         return;
       }
+      const workbench = byId('crawlBrokerWorkbench');
+      if (workbench) workbench.setAttribute('aria-busy', 'true');
       text(byId('crawlBrokerStatus'), 'Đang tải danh sách môi giới…');
+      if (!state.profilesLoaded) {
+        renderBrokerSystemRow(
+          'loading',
+          'Đang tải danh sách môi giới',
+          'Dữ liệu sẽ xuất hiện ngay khi máy chủ phản hồi.',
+        );
+      }
       try {
         const payload = await fetchJSON('/admin/api/facebook-crawl/profiles');
         state.baseline = clone(payload.profiles || []);
@@ -921,10 +1117,27 @@
         renderProfiles();
         renderRunProfiles();
         syncDirty();
+        if (workbench) workbench.setAttribute('aria-busy', 'false');
         text(byId('crawlBrokerStatus'), 'Đã cập nhật');
         await loadDuplicates(false);
       } catch (_error) {
-        text(byId('crawlBrokerStatus'), 'Không tải được danh sách môi giới.');
+        if (workbench) workbench.setAttribute('aria-busy', 'false');
+        if (state.profilesLoaded) {
+          renderProfiles();
+          text(
+            byId('crawlBrokerStatus'),
+            'Không thể làm mới. Danh sách đang hiển thị là dữ liệu gần nhất.',
+          );
+        } else {
+          renderBrokerSystemRow(
+            'error',
+            'Không tải được danh sách môi giới',
+            'Kiểm tra kết nối rồi thử lại.',
+            'Thử lại',
+            () => loadProfiles(true),
+          );
+          text(byId('crawlBrokerStatus'), 'Không tải được danh sách môi giới.');
+        }
       }
     }
 
@@ -1158,6 +1371,7 @@
         const control = byId(id);
         control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', renderProfiles);
       });
+      byId('crawlBrokerResetBtn').addEventListener('click', resetBrokerFilters);
       byId('crawlDuplicateAllBtn').addEventListener('click', async () => {
         state.duplicateActionable = !state.duplicateActionable;
         text(

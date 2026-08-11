@@ -282,4 +282,9 @@ assert.equal(malformedOverview.apify.enabled, 0);
 assert.equal(malformedOverview.apify.total, 0);
 assert.deepEqual(malformedOverview.problems, []);
 
+assert.match(source, /crawlBrokerResetBtn/);
+assert.match(source, /buildBrokerRosterViewModel\(state\.draft, readBrokerFilters\(\)\)/);
+assert.match(source, /safeFacebookProfileLink\(profile\.url\)/);
+assert.match(source, /noopener noreferrer/);
+
 console.log('facebook crawl admin contracts: ok');

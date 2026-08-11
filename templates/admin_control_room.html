@@ -496,10 +496,12 @@
         </section>
 
         <section id="crawlView-brokers" class="crawl-view-panel" data-crawl-view-panel="brokers" hidden>
-          <div class="crawl-view-heading">
+          <div id="crawlBrokerWorkbench" class="crawl-broker-workbench">
+          <div class="crawl-view-heading crawl-broker-heading">
             <div>
+              <span class="crawl-section-kicker">Roster vận hành</span>
               <h2>Danh sách môi giới</h2>
-              <p>Lọc nhanh, sửa từng môi giới trong ngăn bên và chỉ lưu một lần.</p>
+              <p>Tìm nhanh, kiểm tra lịch crawl và chỉnh bản nháp trước khi lưu.</p>
             </div>
             <div class="crawl-view-actions">
               <span id="crawlUnsavedBadge" class="crawl-unsaved-badge" hidden>Chưa lưu</span>
@@ -511,31 +513,45 @@
             <span id="crawlConflictText"></span>
             <button class="secondary-btn" id="crawlConflictReloadBtn" type="button">Tải bản mới từ máy chủ</button>
           </div>
-          <div class="surface crawl-broker-toolbar">
+          <dl id="crawlBrokerSummary" class="crawl-broker-summary" aria-label="Tóm tắt danh sách môi giới">
+            <div><dt>Tổng số</dt><dd id="crawlBrokerTotal">0</dd></div>
+            <div><dt>Đang bật</dt><dd id="crawlBrokerActive">0</dd></div>
+            <div><dt>Đến lịch</dt><dd id="crawlBrokerDue">0</dd></div>
+            <div class="is-attention"><dt>Cần chú ý</dt><dd id="crawlBrokerAttention">0</dd></div>
+          </dl>
+          <section id="crawlBrokerFilters" class="surface crawl-broker-filters" aria-label="Tìm và lọc môi giới">
             <label class="crawl-search-field">Tìm môi giới hoặc URL
               <input id="crawlBrokerSearch" type="search" placeholder="Nhập tên hoặc facebook.com/…">
             </label>
-            <label>Thành phố<select id="crawlBrokerCityFilter"><option value="">Tất cả thành phố</option></select></label>
-            <label>Trạng thái<select id="crawlBrokerActiveFilter"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đã tắt</option></select></label>
-            <label>Chu kỳ<select id="crawlBrokerCadenceFilter"><option value="">Tất cả</option><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
-            <label>Đến lịch<select id="crawlBrokerDueFilter"><option value="">Tất cả</option><option value="true">Hôm nay</option><option value="false">Chưa đến lịch</option></select></label>
-            <label>Chất lượng<select id="crawlBrokerQualityFilter"><option value="">Tất cả</option><option value="good">Ổn</option><option value="needs_attention">Cần xem</option></select></label>
-          </div>
+            <div class="crawl-filter-head">
+              <strong>Bộ lọc</strong>
+              <span id="crawlBrokerFilterCount" class="crawl-filter-count">0 đang áp dụng</span>
+              <button class="secondary-btn crawl-filter-reset" id="crawlBrokerResetBtn" type="button" disabled>Đặt lại</button>
+            </div>
+            <div class="crawl-filter-rail">
+              <label>Thành phố<select id="crawlBrokerCityFilter"><option value="">Tất cả thành phố</option></select></label>
+              <label>Trạng thái<select id="crawlBrokerActiveFilter"><option value="">Tất cả</option><option value="true">Đang bật</option><option value="false">Đã tắt</option></select></label>
+              <label>Chu kỳ<select id="crawlBrokerCadenceFilter"><option value="">Tất cả</option><option value="1">Mỗi ngày</option><option value="3">3 ngày/lần</option><option value="7">7 ngày/lần</option></select></label>
+              <label>Đến lịch<select id="crawlBrokerDueFilter"><option value="">Tất cả</option><option value="true">Hôm nay</option><option value="false">Chưa đến lịch</option></select></label>
+              <label>Chất lượng<select id="crawlBrokerQualityFilter"><option value="">Tất cả</option><option value="good">Ổn</option><option value="needs_attention">Cần xem</option></select></label>
+            </div>
+          </section>
           <div class="crawl-broker-meta">
-            <span id="crawlBrokerCount"></span>
-            <span id="crawlBrokerStatus" aria-live="polite"></span>
+            <span id="crawlBrokerCount">0 / 0 môi giới</span>
+            <span id="crawlBrokerStatus" role="status" aria-live="polite"></span>
           </div>
+          <p id="crawlBrokerTableHelp" class="sr-only">Bảng môi giới. Các thao tác sửa, chạy và xóa nằm ở cuối mỗi dòng.</p>
           <div class="surface crawl-broker-table-wrap">
-            <table class="data-table crawl-broker-table">
+            <table class="data-table crawl-broker-table" aria-describedby="crawlBrokerTableHelp">
               <thead>
                 <tr>
-                  <th>Môi giới / thành phố</th>
-                  <th>Trạng thái</th>
-                  <th>Lịch kế tiếp</th>
-                  <th>Quota / chu kỳ</th>
-                  <th>Chất lượng</th>
-                  <th>Lần crawl cuối</th>
-                  <th>Thao tác</th>
+                  <th scope="col">Môi giới</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col">Lịch kế tiếp</th>
+                  <th scope="col">Quota / chu kỳ</th>
+                  <th scope="col">Chất lượng</th>
+                  <th scope="col">Lần crawl cuối</th>
+                  <th scope="col">Thao tác</th>
                 </tr>
               </thead>
               <tbody id="crawlBrokerRows"></tbody>
@@ -574,6 +590,7 @@
               <button class="secondary-btn" id="crawlDrawerSaveBtn" type="button">Áp dụng vào bản nháp</button>
             </div>
           </aside>
+          </div>
         </section>
 
         <section id="crawlView-run" class="crawl-view-panel" data-crawl-view-panel="run" hidden>

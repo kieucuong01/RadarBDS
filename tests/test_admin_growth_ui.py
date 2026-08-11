@@ -346,3 +346,37 @@ def test_data_quality_qc_queues_skip_redundant_pending_count():
     assert qc_fast_path in review_fn
     assert review_fn.index(qc_fast_path) < review_fn.index("AND f.id IS NULL")
 
+
+def test_facebook_brokers_has_roster_workbench_semantics():
+    template = (ROOT / "templates" / "admin_control_room.html").read_text(
+        encoding="utf-8"
+    )
+    source = (
+        ROOT / "static" / "js" / "admin" / "facebook-crawl.js"
+    ).read_text(encoding="utf-8")
+
+    required_ids = (
+        "crawlBrokerWorkbench",
+        "crawlBrokerSummary",
+        "crawlBrokerTotal",
+        "crawlBrokerActive",
+        "crawlBrokerDue",
+        "crawlBrokerAttention",
+        "crawlBrokerFilters",
+        "crawlBrokerFilterCount",
+        "crawlBrokerResetBtn",
+        "crawlBrokerTableHelp",
+    )
+    for element_id in required_ids:
+        assert f'id="{element_id}"' in template
+    assert 'aria-describedby="crawlBrokerTableHelp"' in template
+    assert "function readBrokerFilters" in source
+    assert "buildBrokerRosterViewModel(state.draft, readBrokerFilters())" in source
+    assert "safeFacebookProfileLink(profile.url)" in source
+    assert "noopener noreferrer" in source
+    assert "cell.dataset.label = label" in source
+    assert ".innerHTML =" not in source
+    assert "function renderBrokerSystemRow" in source
+    assert "Danh sách đang hiển thị là dữ liệu gần nhất" in source
+    assert "workbench.setAttribute('aria-busy', 'true')" in source
+
