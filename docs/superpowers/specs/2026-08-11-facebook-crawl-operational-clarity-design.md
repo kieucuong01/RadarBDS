@@ -1,7 +1,8 @@
 # Facebook Crawl Operational Clarity Design
 
-**Status:** Approved direction; awaiting written-spec review  
-**Routes:** `/admin/facebook-crawl?view=overview` and `/admin/facebook-crawl?view=brokers`  
+**Status:** Approved direction; awaiting written-spec review
+
+**Routes:** `/admin/facebook-crawl?view=overview` and `/admin/facebook-crawl?view=brokers`
 **Scope:** Rebuild the visual hierarchy and responsive interaction surface of the Facebook Crawl admin views without changing crawl, profile, job, duplicate, or API behavior.
 
 ## Goal
