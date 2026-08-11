@@ -544,6 +544,19 @@ def _strong_numeric_lot_signature(l1: dict, l2: dict) -> bool:
     same_tc = _same_tho_cu(l1, l2)
     same_price = _same_price_level(l1, l2)
     road_match = bool(_road_tokens(text1).intersection(_road_tokens(text2)))
+    named_location_match = bool(
+        _named_location_tokens(text1).intersection(_named_location_tokens(text2))
+    )
+    block_match = bool(blocks1.intersection(blocks2))
+    has_specific_location_match = road_match or named_location_match or block_match
+    small_facebook_land_without_location = (
+        (l1.get("source") or "").lower() == "facebook"
+        and (l2.get("source") or "").lower() == "facebook"
+        and (l1.get("property_type") or "") == "dat_nen"
+        and (l2.get("property_type") or "") == "dat_nen"
+        and max(a1 or 0, a2 or 0) < 500
+        and not has_specific_location_match
+    )
     medium_land_same_road = (
         (l1.get("source") or "").lower() == "facebook"
         and (l2.get("source") or "").lower() == "facebook"
@@ -558,7 +571,12 @@ def _strong_numeric_lot_signature(l1: dict, l2: dict) -> bool:
         and same_price
     )
 
-    if front_depth_match and (area_match or same_tc) and same_price:
+    if (
+        front_depth_match
+        and (area_match or same_tc)
+        and same_price
+        and not small_facebook_land_without_location
+    ):
         return True
     if medium_land_same_road:
         return True

@@ -94,6 +94,30 @@ def test_facebook_same_dimensions_conflicting_vietnamese_roads_not_duplicate():
     assert not _is_duplicate(road_104, d9)
 
 
+def test_facebook_small_lot_without_location_does_not_merge_by_dimensions_only():
+    generic_tdc = _listing(
+        source="facebook", source_id="fb-tdc-generic", posted_at="2026-06-01",
+        ward="Phú Tân", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0, price_ty=2.66,
+        contact_phone="0935792868",
+        description=(
+            "Đất TĐC Phú Chánh - Phú Tân, vị trí đẹp gần trung tâm. "
+            "Diện tích 5m x 30m, thổ cư 100%, giá 2ty66."
+        ),
+    )
+    d9 = _listing(
+        source="facebook", source_id="fb-d9-current", posted_at="2026-08-11",
+        ward="Phú Tân", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0, price_ty=2.8,
+        contact_phone="0889799995",
+        description=(
+            "Đường D9 khu TĐC Phú Mỹ, DT 5x30m thổ cư 100%, giá 2ty8."
+        ),
+    )
+
+    assert not _is_duplicate(generic_tdc, d9)
+
+
 def test_resolve_duplicate_targets_flattens_nested_canonical_chain():
     parent_by_id = {
         635: 51480,
