@@ -106,4 +106,86 @@ assert.equal(conflict.conflict.revision, 'new-revision');
 assert.match(source, /facebook-crawl\/tokens/);
 assert.doesNotMatch(source, /\.innerHTML\s*=/);
 
+const groupedProblems = api.groupOverviewProblems([
+  {code: 'source_error', label: 'Nguồn guland đang lỗi'},
+  {code: 'source_error', label: 'Nguồn guland đang lỗi'},
+  {code: 'schedule_missing', label: 'Lịch crawl chưa hoạt động'},
+  {code: '', label: ''},
+]);
+assert.deepEqual(groupedProblems, [
+  {
+    key: 'source_error:nguồn guland đang lỗi',
+    code: 'source_error',
+    label: 'Nguồn guland đang lỗi',
+    severity: 'warning',
+    count: 2,
+  },
+  {
+    key: 'schedule_missing:lịch crawl chưa hoạt động',
+    code: 'schedule_missing',
+    label: 'Lịch crawl chưa hoạt động',
+    severity: 'critical',
+    count: 1,
+  },
+  {
+    key: 'unknown:có vấn đề cần kiểm tra',
+    code: 'unknown',
+    label: 'Có vấn đề cần kiểm tra',
+    severity: 'warning',
+    count: 1,
+  },
+]);
+
+const warningOverview = api.buildOverviewViewModel({
+  schedule: {installed: true, next_run_time: '2026-08-11 21:00'},
+  last_facebook_run: null,
+  latest_job: {
+    status: 'succeeded',
+    progress_label: 'Recovered: crawl/reprocess done, images recovered',
+  },
+  apify: {enabled_tokens: 5, total_tokens: 12},
+  problems: [
+    {code: 'source_error', label: 'Nguồn facebook đang lỗi'},
+  ],
+});
+assert.equal(warningOverview.health, 'warning');
+assert.equal(warningOverview.healthLabel, 'Cần theo dõi');
+assert.equal(warningOverview.nextRun, '2026-08-11 21:00');
+assert.equal(warningOverview.lastFacebookRun, 'Chưa có dữ liệu lần chạy Facebook');
+assert.equal(warningOverview.latestJob.status, 'succeeded');
+assert.equal(warningOverview.latestJob.statusLabel, 'Đã hoàn tất');
+assert.equal(warningOverview.latestJob.label, 'Recovered: crawl/reprocess done, images recovered');
+assert.equal(warningOverview.apify.ratioLabel, '5 / 12 key');
+
+const criticalOverview = api.buildOverviewViewModel({
+  schedule: {installed: false},
+  apify: {enabled_tokens: 0, total_tokens: 2},
+  problems: [
+    {code: 'schedule_missing', label: 'Lịch crawl chưa hoạt động'},
+    {code: 'apify_unavailable', label: 'Không có Apify token khả dụng'},
+  ],
+});
+assert.equal(criticalOverview.health, 'critical');
+assert.equal(criticalOverview.healthLabel, 'Cần xử lý ngay');
+assert.equal(criticalOverview.problems.length, 2);
+
+const healthyOverview = api.buildOverviewViewModel({
+  schedule: {installed: true},
+  apify: {enabled_tokens: 1, total_tokens: 1},
+  problems: [],
+});
+assert.equal(healthyOverview.health, 'healthy');
+assert.equal(healthyOverview.healthLabel, 'Hệ thống ổn định');
+
+const malformedOverview = api.buildOverviewViewModel({
+  latest_job: {status: 'unexpected'},
+  apify: {enabled_tokens: 'bad', total_tokens: -4},
+  problems: 'not-an-array',
+});
+assert.equal(malformedOverview.latestJob.status, 'unexpected');
+assert.equal(malformedOverview.latestJob.statusLabel, 'Chưa rõ');
+assert.equal(malformedOverview.apify.enabled, 0);
+assert.equal(malformedOverview.apify.total, 0);
+assert.deepEqual(malformedOverview.problems, []);
+
 console.log('facebook crawl admin contracts: ok');

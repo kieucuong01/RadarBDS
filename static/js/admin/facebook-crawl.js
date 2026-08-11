@@ -20,7 +20,111 @@
     daily: 'Hằng ngày',
     range: 'Theo số ngày gần đây',
   };
+  const OVERVIEW_CRITICAL_CODES = new Set([
+    'schedule_missing',
+    'apify_unavailable',
+  ]);
+  const OVERVIEW_JOB_STATUS_LABELS = {
+    queued: 'Đang chờ',
+    running: 'Đang chạy',
+    succeeded: 'Đã hoàn tất',
+    failed: 'Thất bại',
+    empty: 'Chưa có tác vụ',
+    unknown: 'Chưa rõ',
+  };
   let currentInstance = null;
+
+  function overviewText(value, fallback) {
+    const normalized = String(value == null ? '' : value).trim();
+    return normalized || fallback;
+  }
+
+  function overviewCount(value) {
+    const normalized = Number(value);
+    return Number.isFinite(normalized) ? Math.max(0, Math.trunc(normalized)) : 0;
+  }
+
+  function groupOverviewProblems(problems) {
+    const grouped = new Map();
+    (Array.isArray(problems) ? problems : []).forEach((problem) => {
+      const code = overviewText(problem && problem.code, 'unknown').toLowerCase();
+      const label = overviewText(problem && problem.label, 'Có vấn đề cần kiểm tra');
+      const key = `${code}:${label.toLocaleLowerCase('vi')}`;
+      const existing = grouped.get(key);
+      if (existing) {
+        existing.count += 1;
+        return;
+      }
+      grouped.set(key, {
+        key,
+        code,
+        label,
+        severity: OVERVIEW_CRITICAL_CODES.has(code) ? 'critical' : 'warning',
+        count: 1,
+      });
+    });
+    return [...grouped.values()];
+  }
+
+  function buildOverviewViewModel(payload) {
+    const source = payload && typeof payload === 'object' ? payload : {};
+    const problems = groupOverviewProblems(source.problems);
+    const critical = problems.some((problem) => problem.severity === 'critical');
+    const health = critical ? 'critical' : (problems.length ? 'warning' : 'healthy');
+    const healthLabels = {
+      critical: 'Cần xử lý ngay',
+      warning: 'Cần theo dõi',
+      healthy: 'Hệ thống ổn định',
+    };
+    const summaries = {
+      critical: 'Có điều kiện đang chặn hoặc làm gián đoạn lịch crawl.',
+      warning: 'Hệ thống vẫn hoạt động nhưng có cảnh báo cần kiểm tra.',
+      healthy: 'Lịch crawl và tài nguyên hiện không có cảnh báo hoạt động.',
+    };
+    const schedule = source.schedule && typeof source.schedule === 'object'
+      ? source.schedule
+      : {};
+    const lastRun = source.last_facebook_run && typeof source.last_facebook_run === 'object'
+      ? source.last_facebook_run
+      : null;
+    const latestJob = source.latest_job && typeof source.latest_job === 'object'
+      ? source.latest_job
+      : null;
+    const apify = source.apify && typeof source.apify === 'object' ? source.apify : {};
+    const enabled = overviewCount(apify.enabled_tokens);
+    const total = overviewCount(apify.total_tokens);
+    const fullJobLabel = latestJob
+      ? overviewText(latestJob.progress_label || latestJob.status, 'Chưa có tác vụ gần đây')
+      : 'Chưa có tác vụ gần đây';
+    const latestJobStatus = latestJob
+      ? overviewText(latestJob.status, 'unknown').toLowerCase()
+      : 'empty';
+
+    return {
+      health,
+      healthLabel: healthLabels[health],
+      healthSummary: summaries[health],
+      nextRun: schedule.installed
+        ? overviewText(schedule.next_run_time, 'Lịch đã bật, chưa có thời gian kế tiếp')
+        : 'Lịch crawl chưa hoạt động',
+      lastFacebookRun: lastRun
+        ? overviewText(lastRun.finished_at || lastRun.status, 'Đã có lần chạy Facebook')
+        : 'Chưa có dữ liệu lần chạy Facebook',
+      latestJob: {
+        status: latestJobStatus,
+        statusLabel: OVERVIEW_JOB_STATUS_LABELS[latestJobStatus]
+          || OVERVIEW_JOB_STATUS_LABELS.unknown,
+        label: fullJobLabel,
+        fullLabel: fullJobLabel,
+      },
+      apify: {
+        enabled,
+        total,
+        ratioLabel: `${enabled} / ${total} key`,
+      },
+      problems,
+    };
+  }
 
   function normalizeView(value) {
     return VIEWS.has(String(value || '').toLowerCase())
@@ -980,6 +1084,8 @@
     isDraftDirty,
     removeProfileFromDraft,
     requestsForView,
+    groupOverviewProblems,
+    buildOverviewViewModel,
     buildRunPreview,
     buildMaintenancePreview,
     runLimitForMode,
