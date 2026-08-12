@@ -461,6 +461,11 @@ def test_phu_tan_context_named_road_is_used_when_stored_road_name_is_noise():
         ("Ph\u00fa Th\u1ecd", "30/4", "ba-muoi-thang-tu"),
         ("Hi\u1ec7p An", "Bui Ngoc Thu", "bui-ngoc-thu"),
         ("Hi\u1ec7p An", "Le Chi Dan", "le-chi-dan"),
+        ("Ph\u00fa C\u01b0\u1eddng", "CMT8", "cach-mang-thang-tam"),
+        ("Ph\u00fa C\u01b0\u1eddng", "Huynh Van Cu", "huynh-van-cu"),
+        ("Ph\u00fa C\u01b0\u1eddng", "Nguyen An Ninh", "nguyen-an-ninh"),
+        ("Ph\u00fa C\u01b0\u1eddng", "Yersin", "bac-si-yersin"),
+        ("H\u00f2a Ph\u00fa", "D8", "d-8"),
     ],
 )
 def test_common_thu_dau_mot_multi_segment_roads_use_aggregate_road(

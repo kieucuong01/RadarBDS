@@ -461,6 +461,25 @@ def test_hiep_an_common_short_road_phrases_map_to_known_roads():
     assert dai_lo_binh_duong.nearby_road == "dai lo binh duong"
 
 
+def test_phu_cuong_common_road_phrases_map_to_known_roads():
+    nguyen_an_ninh = extract_map_location_context(
+        "Mat tien Nguyen An Ninh Phu Cuong",
+        "",
+    )
+    yersin = extract_map_location_context(
+        "Nha Phu Cuong hem duong Yesin sau lung The Gioi Di Dong",
+        "",
+    )
+    huynh_van_cu = extract_map_location_context(
+        "Dat Phu Cuong cach Huynh Van Cu 50m",
+        "",
+    )
+
+    assert nguyen_an_ninh.direct_road == "nguyen an ninh"
+    assert yersin.nearby_road == "bac si yersin"
+    assert huynh_van_cu.nearby_road == "huynh van cu"
+
+
 def test_hiep_thanh_pham_ngoc_short_name_maps_to_pham_ngoc_thach():
     context = extract_map_location_context(
         "Đất Hiệp Thành cách Phạm Ngọc vòng xoay 500m",

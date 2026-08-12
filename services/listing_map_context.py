@@ -84,7 +84,7 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"dx|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
-    r"dai lo|"
+    r"dai lo|bac si|yersin|yesin|"
     r"my phuoc|phu loi|phu tan"
     r")\b",
     re.IGNORECASE,
@@ -122,6 +122,8 @@ _KNOWN_ROAD_PREFIXES = (
     "phan boi chau",
     "tran binh trong",
     "bui ngoc thu",
+    "nguyen an ninh",
+    "bac si yersin",
     "nguyen van linh",
     "nguyen duc thuan",
     "pham ngu lao",
@@ -171,6 +173,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):
         return "dai lo binh duong"
+    if candidate.startswith(("yersin", "yesin", "bac si yersin")):
+        return "bac si yersin"
     if candidate.startswith("ho van con"):
         return "ho van cong"
     if candidate.startswith("nguyen chi than"):

@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v20",
+  "resolver_version": "osm-binh-duong-20260807-v22",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -86,6 +86,29 @@
         "CMT 8",
         "Cach Mang Thang 8",
         "Duong Cach Mang Thang 8"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "canonical": "Cách Mạng Tháng Tám",
+      "aliases": [
+        "CMT8",
+        "CMT 8",
+        "Cach Mang Thang 8",
+        "Duong Cach Mang Thang 8"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "canonical": "Bác sĩ Yersin",
+      "aliases": [
+        "Yersin",
+        "Yesin",
+        "Bac si Yersin",
+        "Duong Yersin",
+        "Duong Yesin"
       ]
     }
   ],
