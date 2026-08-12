@@ -13219,6 +13219,383 @@ SEO_ARTICLES = {
             {"name": "MOS là gì và cách lọc tin dưới giá cơ sở", "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so", "url": "https://radarbds.vn/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so"}
         ]
     },
+    "tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc",
+        "title": "Tân An vs Tương Bình Hiệp: nên lọc đất nền hay nhà đất trước? | Radar BDS",
+        "description": "So Tân An và Tương Bình Hiệp bằng dữ liệu Facebook live của Radar BDS ngày 12/08/2026: tách đất nền với nhà đất, nhìn giá rao trung vị, tổng giá và số tin dưới 3 tỷ để chọn phường cần mở trước.",
+        "keywords": "Tân An vs Tương Bình Hiệp, giá đất Tân An, giá đất Tương Bình Hiệp, đất nền Tân An, nhà đất Tương Bình Hiệp, Radar BDS",
+        "breadcrumb_label": "Tân An vs Tương Bình Hiệp: nên lọc đất nền hay nhà đất trước",
+        "hero_badge": "So sánh khu vực",
+        "hero_title": "Tân An vs Tương Bình Hiệp: nên lọc đất nền hay nhà đất trước?",
+        "hero_text": "Nếu anh ưu tiên đất nền dưới 3 tỷ, Tân An đang dễ mở trước vì tổng giá trung vị thấp hơn một chút và số tin vẫn dày. Nếu tìm nhà đất dưới 3 tỷ để ở sớm, Tương Bình Hiệp đáng mở song song vì nguồn nhà đất nhiều hơn và vẫn giữ mặt bằng tổng giá còn trong tầm.",
+        "scope_label": "Thủ Dầu Một · Tân An / Tương Bình Hiệp",
+        "hero_checks": [
+            "Snapshot live từ tin Facebook đang theo dõi, cập nhật đến 12/08/2026 11:03",
+            "Đất nền: Tân An 16,2 tr/m² và Tương Bình Hiệp 17,5 tr/m²",
+            "Nhà đất: Tân An 22,9 tr/m² và Tương Bình Hiệp 30,0 tr/m²",
+            "Cả hai phường đều còn nguồn tin dưới 3 tỷ dày, nhưng thế mạnh nằm ở hai loại hình khác nhau"
+        ],
+        "primary_cta": "Mở Radar để lọc Tân An và Tương Bình Hiệp",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=tan_an_vs_tuong_binh_hiep_type_split",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / So Tân An và Tương Bình Hiệp",
+        "hero_metric": {
+            "label": "Tin đang theo dõi",
+            "value": "1.273 vs 938",
+            "delta": "Tân An vs Tương Bình Hiệp",
+            "note": "Facebook live snapshot ngày 12/08/2026, max crawled_at 12/08/2026 11:03"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Tân An hợp lọc đất nền trước; Tương Bình Hiệp mạnh hơn ở nhà đất",
+            "price": "Đất nền: 16,2 vs 17,5 tr/m² · Nhà đất: 22,9 vs 30,0 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "1.103 vs 819",
+            "metric_b": "Dấu hiệu đáng chú ý",
+            "metric_b_value": "79 vs 63"
+        },
+        "local_links_title": "Đi tiếp từ bài so sánh này",
+        "local_links": [
+            {
+                "label": "Trang phường Tân An",
+                "href": "/binh-duong/phuong-tan-an",
+                "description": "Mở trang khu vực để lọc riêng nguồn tin Tân An."
+            },
+            {
+                "label": "Trang phường Tương Bình Hiệp",
+                "href": "/binh-duong/phuong-tuong-binh-hiep",
+                "description": "Mở trang khu vực để xem riêng nhóm tin Tương Bình Hiệp."
+            },
+            {
+                "label": "Giá đất Tân An hiện nay",
+                "href": "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất Tân An."
+            },
+            {
+                "label": "Giá đất Tương Bình Hiệp hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất Tương Bình Hiệp."
+            },
+            {
+                "label": "Báo cáo thị trường Bình Dương",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh toàn Thủ Dầu Một."
+            },
+            {
+                "label": "MOS là gì? Cách lọc tin dưới giá cơ sở",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Kết hợp bài so sánh phường với bộ lọc tín hiệu trên Radar BDS."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu đang tìm đất nền dưới 3 tỷ thì nên mở Tân An hay Tương Bình Hiệp trước?",
+                "a": "Nên mở Tân An trước. Đất nền Tân An có giá rao trung vị 16,2 tr/m², tổng giá trung vị khoảng 1,79 tỷ và có 710 tin dưới 3 tỷ. Tương Bình Hiệp là 17,5 tr/m², khoảng 1,95 tỷ và có 340 tin dưới 3 tỷ."
+            },
+            {
+                "q": "Nếu đang tìm nhà đất để ở sớm thì phường nào đáng mở hơn?",
+                "a": "Tương Bình Hiệp nên được mở song song hoặc mở trước nếu anh ưu tiên nhiều mẫu nhà đất để xem. Phường này có 533 tin nhà đất và 479 tin dưới 3 tỷ, cao hơn Tân An ở số lượng. Nhưng giá rao trung vị nhà đất của Tương Bình Hiệp cũng cao hơn: 30,0 tr/m² so với 22,9 tr/m² ở Tân An."
+            },
+            {
+                "q": "Vì sao không nên gộp chung đất nền và nhà đất khi so hai phường này?",
+                "a": "Vì mỗi phường có cơ cấu loại hình khác nhau. Tân An mạnh hơn ở đất nền giá mềm, còn Tương Bình Hiệp nhiều nhà đất hơn. Nếu gộp chung, anh dễ bỏ lỡ chuyện một phường hợp để lọc đất nền nhưng phường kia lại hợp để tìm nhà ở sẵn."
+            },
+            {
+                "q": "Dữ liệu trong bài là giá chốt hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook đang theo dõi trên Radar BDS ngày 12/08/2026, đã lọc source=facebook, is_active=1, is_blacklisted=0 và review_hidden=0. Bài dùng để lọc ban đầu, không phải giá giao dịch đã chốt."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-12",
+            "modified_at": "2026-08-12",
+            "intro": [
+                "Nếu anh đang phân vân giữa Tân An và Tương Bình Hiệp, câu trả lời ngắn là: lọc đất nền thì mở Tân An trước; lọc nhà đất để ở thì mở Tương Bình Hiệp song song. Khác biệt chỉ rõ ra khi tách riêng từng loại hình và nhìn thêm tổng giá dưới 3 tỷ.",
+                "Bài này dùng snapshot live từ tin Facebook Radar BDS đang theo dõi, lọc các tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu cập nhật đến 12/08/2026 11:03 nên đây là giá rao công khai để lọc ban đầu, không phải giá chốt giao dịch."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tân An tổng tin",
+                    "value": "1.273",
+                    "note": "79 dấu hiệu đáng chú ý trong snapshot live"
+                },
+                {
+                    "label": "Tương Bình Hiệp tổng tin",
+                    "value": "938",
+                    "note": "63 dấu hiệu đáng chú ý trong snapshot live"
+                },
+                {
+                    "label": "Đất nền trung vị",
+                    "value": "16,2 vs 17,5 tr/m²",
+                    "note": "Tân An vs Tương Bình Hiệp"
+                },
+                {
+                    "label": "Nhà đất trung vị",
+                    "value": "22,9 vs 30,0 tr/m²",
+                    "note": "Tân An vs Tương Bình Hiệp"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook live snapshot",
+                    "title": "So Tân An và Tương Bình Hiệp theo đúng loại hình BĐS",
+                    "note": "Truy vấn ngày 12/08/2026, max crawled_at 12/08/2026 11:03. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {
+                            "key": "ward_type",
+                            "label": "Phường / loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đang theo dõi"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "under3",
+                            "label": "Dưới 3 tỷ"
+                        },
+                        {
+                            "key": "under4",
+                            "label": "Dưới 4 tỷ"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        },
+                        {
+                            "key": "mid_range",
+                            "label": "Vùng 25-75%"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward_type": "Tân An · đất nền",
+                            "tracked": "790",
+                            "signals": "79",
+                            "under3": "710",
+                            "under4": "717",
+                            "median_m2": "16,2 tr/m²",
+                            "median_total": "1,79 tỷ",
+                            "mid_range": "12,4-19,5 tr/m²"
+                        },
+                        {
+                            "ward_type": "Tân An · nhà đất",
+                            "tracked": "465",
+                            "signals": "79",
+                            "under3": "393",
+                            "under4": "428",
+                            "median_m2": "22,9 tr/m²",
+                            "median_total": "2,5 tỷ",
+                            "mid_range": "18,9-29,8 tr/m²"
+                        },
+                        {
+                            "ward_type": "Tương Bình Hiệp · đất nền",
+                            "tracked": "401",
+                            "signals": "63",
+                            "under3": "340",
+                            "under4": "347",
+                            "median_m2": "17,5 tr/m²",
+                            "median_total": "1,95 tỷ",
+                            "mid_range": "14,0-20,5 tr/m²"
+                        },
+                        {
+                            "ward_type": "Tương Bình Hiệp · nhà đất",
+                            "tracked": "533",
+                            "signals": "63",
+                            "under3": "479",
+                            "under4": "514",
+                            "median_m2": "30,0 tr/m²",
+                            "median_total": "2,59 tỷ",
+                            "mid_range": "21,3-31,5 tr/m²"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Chọn phường theo nhu cầu",
+                    "title": "Nên mở Tân An hay Tương Bình Hiệp trước?",
+                    "note": "Bảng này giúp chọn bộ lọc mở trước trên Radar, không thay cho việc đọc từng tin cụ thể.",
+                    "columns": [
+                        {
+                            "key": "need",
+                            "label": "Nhu cầu"
+                        },
+                        {
+                            "key": "open_first",
+                            "label": "Nên mở trước"
+                        },
+                        {
+                            "key": "why",
+                            "label": "Vì sao"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "need": "Đất nền dưới 3 tỷ",
+                            "open_first": "Tân An",
+                            "why": "710 tin dưới 3 tỷ và tổng giá trung vị khoảng 1,79 tỷ, mềm hơn Tương Bình Hiệp ở cùng loại hình."
+                        },
+                        {
+                            "need": "Nhà đất dưới 3 tỷ",
+                            "open_first": "Tương Bình Hiệp",
+                            "why": "479 tin dưới 3 tỷ, nhiều hơn Tân An 393 tin nên dễ lập danh sách xem nhà ở sẵn hơn."
+                        },
+                        {
+                            "need": "Muốn mặt bằng nhà đất thấp hơn",
+                            "open_first": "Tân An",
+                            "why": "Nhà đất Tân An có giá rao trung vị 22,9 tr/m² và tổng giá trung vị 2,5 tỷ, thấp hơn Tương Bình Hiệp."
+                        },
+                        {
+                            "need": "Muốn nhiều mẫu nhà đất để so",
+                            "open_first": "Tương Bình Hiệp",
+                            "why": "Nguồn nhà đất 533 tin, cao hơn Tân An 465 tin trong snapshot live hiện tại."
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền Tân An đang mềm hơn một nhịp",
+                    "note": "Chỉ so đất nền với đất nền để tránh đọc sai mặt bằng giá.",
+                    "alt": "Biểu đồ so giá rao trung vị đất nền Tân An và Tương Bình Hiệp",
+                    "rows": [
+                        {
+                            "label": "Tân An",
+                            "value_label": "16,2 tr/m²",
+                            "width": 93,
+                            "color": "#16a34a"
+                        },
+                        {
+                            "label": "Tương Bình Hiệp",
+                            "value_label": "17,5 tr/m²",
+                            "width": 100,
+                            "color": "#2563eb"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Tương Bình Hiệp nhiều hơn, nhưng mặt bằng giá cao hơn",
+                    "note": "Số lượng mẫu và giá rao là hai lớp quyết định khác nhau.",
+                    "alt": "Biểu đồ so giá nhà đất Tân An và Tương Bình Hiệp",
+                    "rows": [
+                        {
+                            "label": "Tân An",
+                            "value_label": "22,9 tr/m²",
+                            "width": 76,
+                            "color": "#f59e0b"
+                        },
+                        {
+                            "label": "Tương Bình Hiệp",
+                            "value_label": "30,0 tr/m²",
+                            "width": 100,
+                            "color": "#dc2626"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "dat-nen-tan-an-tuong-binh-hiep",
+                    "heading": "1. Đất nền: Tân An hợp mở trước nếu anh giữ trần dưới 3 tỷ",
+                    "paragraphs": [
+                        "Ở snapshot live hiện tại, đất nền Tân An có giá rao trung vị 16,2 tr/m² và tổng giá trung vị khoảng 1,79 tỷ. Tương Bình Hiệp là 17,5 tr/m² và khoảng 1,95 tỷ. Khoảng cách không quá xa, nhưng đủ để Tân An thuận tay hơn nếu anh đang cần lọc nhanh nhóm đất nền còn vừa túi tiền.",
+                        "Số lượng cũng ủng hộ cách đọc này. Tân An có 710 tin đất nền dưới 3 tỷ, trong khi Tương Bình Hiệp có 340 tin. Nghĩa là nếu mục tiêu là gom danh sách đất nền để gọi hỏi trước, Tân An đang cho nhiều mẫu hơn trong cùng vùng ngân sách phổ biến."
+                    ],
+                    "bullets": [
+                        "Đất nền Tân An: 790 tin · 710 tin dưới 3 tỷ",
+                        "Đất nền Tương Bình Hiệp: 401 tin · 340 tin dưới 3 tỷ",
+                        "Giá trung vị đất nền: 16,2 vs 17,5 tr/m²",
+                        "Tổng giá trung vị: 1,79 vs 1,95 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-tan-an-tuong-binh-hiep",
+                    "heading": "2. Nhà đất: Tương Bình Hiệp có nguồn dày hơn, nhưng mặt bằng giá cao hơn",
+                    "paragraphs": [
+                        "Nếu anh mua để ở sớm và muốn xem nhà đất trước, Tương Bình Hiệp đáng mở song song vì có 533 tin nhà đất, cao hơn Tân An 465 tin. Nhóm dưới 3 tỷ cũng dày hơn: 479 tin so với 393 tin của Tân An. Điều này giúp người mua có nhiều mẫu để so hiện trạng, hẻm và công năng sử dụng hơn.",
+                        "Nhưng số lượng nhiều hơn không có nghĩa là rẻ hơn. Nhà đất Tương Bình Hiệp đang có giá rao trung vị 30,0 tr/m² và tổng giá trung vị khoảng 2,59 tỷ, cao hơn Tân An ở mức 22,9 tr/m² và 2,5 tỷ. Vì vậy nếu ưu tiên mặt bằng nhà đất mềm hơn, Tân An vẫn là mốc tham chiếu dễ chịu hơn."
+                    ],
+                    "bullets": [
+                        "Nhà đất Tân An: 465 tin · 393 tin dưới 3 tỷ",
+                        "Nhà đất Tương Bình Hiệp: 533 tin · 479 tin dưới 3 tỷ",
+                        "Giá trung vị nhà đất: 22,9 vs 30,0 tr/m²",
+                        "Không nên lấy số lượng nhiều hơn để kết luận rẻ hơn"
+                    ]
+                },
+                {
+                    "id": "tach-loai-hinh-truoc-khi-chon-phuong",
+                    "heading": "3. Vì sao bài toán của hai phường này nằm ở loại hình, không chỉ ở tên phường",
+                    "paragraphs": [
+                        "Tân An đang cho cảm giác dễ thở hơn ở đất nền và cả mặt bằng nhà đất. Trong khi đó, Tương Bình Hiệp nổi bật ở chuyện nhà đất có nguồn hàng dày hơn. Nếu anh gộp hai loại hình lại rồi chỉ nhìn một con số chung, rất dễ bỏ lỡ điểm mạnh thật của từng phường.",
+                        "Cách đọc an toàn là chốt mục tiêu trước: mua đất nền để giữ tiền hay tìm nhà ở sẵn để vào ở sớm. Sau khi tách mục tiêu như vậy, thứ tự mở phường mới có ý nghĩa thực tế hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền: nên mở Tân An trước nếu ưu tiên giá mềm",
+                        "Nhà đất: nên mở Tương Bình Hiệp song song nếu cần nhiều mẫu để xem",
+                        "Phường nào cũng phải kiểm tra pháp lý, quy hoạch, đường vào và hiện trạng",
+                        "Giá rao chỉ là bộ lọc ban đầu, không phải giá chốt"
+                    ]
+                },
+                {
+                    "id": "cach-loc-dashboard",
+                    "heading": "4. Cách dùng dashboard để tránh so sai Tân An với Tương Bình Hiệp",
+                    "paragraphs": [
+                        "Bước đầu tiên là khóa loại hình: đất nền hoặc nhà đất. Sau đó chọn một phường, nhìn giá rao trung vị cùng loại hình rồi giới hạn tổng giá theo túi tiền, ví dụ dưới 3 tỷ hoặc dưới 4 tỷ. Chỉ sau ba bước đó anh mới nên đi sâu vào từng tin cụ thể.",
+                        "Nếu cần thêm mốc tham chiếu, hãy mở công cụ định giá BĐS sau khi đã lọc được vài tin phù hợp. Cách này giúp đặt từng tin vào đúng bối cảnh của phường, thay vì nghe một mức giá kể miệng rồi suy ra cả khu."
+                    ],
+                    "bullets": [
+                        "Khóa loại hình trước khi so",
+                        "So giá rao trung vị và tổng giá cùng loại hình",
+                        "Giới hạn tổng giá 3-4 tỷ nếu cần khoanh nhanh",
+                        "Dùng công cụ định giá để soi từng tin cụ thể"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá rao trung vị và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong vùng ngân sách dưới 3 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Tân An và Tương Bình Hiệp đúng loại hình",
+            "body": "Bắt đầu bằng loại hình anh đang cần: Tân An nếu ưu tiên đất nền dưới 3 tỷ, Tương Bình Hiệp nếu cần nhiều mẫu nhà đất để xem trước. Sau đó dùng dashboard và công cụ định giá để kiểm tra từng tin cụ thể.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=tan_an_vs_tuong_binh_hiep_type_split"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Tân An vs Tương Bình Hiệp: nên lọc đất nền hay nhà đất trước",
+                "href": "/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc",
+                "url": "https://radarbds.vn/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc"
+            }
+        ]
+    }
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
