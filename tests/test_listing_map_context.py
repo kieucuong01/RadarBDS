@@ -313,3 +313,21 @@ def test_known_phu_my_stored_road_name_stops_before_marketing_words():
     )
 
     assert context.direct_road == "hung vuong"
+
+
+def test_known_phu_loi_nearby_road_stops_before_distance_words():
+    context = extract_map_location_context(
+        "Nhà Phú Lợi cách đường Nguyễn Bình 50 mét diện nhà 3 tầng",
+        "",
+    )
+
+    assert context.nearby_road == "nguyen binh"
+
+
+def test_known_phu_loi_direct_road_stops_before_extra_words():
+    context = extract_map_location_context(
+        "Nhà mặt tiền Hồ Văn Cống mới xây phù hợp định cư lâu dài",
+        "",
+    )
+
+    assert context.direct_road == "ho van cong"

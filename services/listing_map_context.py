@@ -107,6 +107,15 @@ _KNOWN_ROAD_PREFIXES = (
     "dong cay viet",
     "my phuoc tan van",
     "le loi",
+    "nguyen binh",
+    "ho van cong",
+    "pham thi tan",
+    "le thi trung",
+    "huynh van nghe",
+    "nguyen van troi",
+    "nguyen duc thuan",
+    "pham ngu lao",
+    "nguyen binh khiem",
 )
 
 
