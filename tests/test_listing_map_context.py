@@ -356,6 +356,25 @@ def test_known_phu_loi_direct_road_stops_before_extra_words():
     assert context.direct_road == "ho van cong"
 
 
+def test_tuong_binh_hiep_common_street_typos_map_to_known_roads():
+    ho_van_cong = extract_map_location_context(
+        "Dat Tuong Binh Hiep cach Ho Van Con 80m",
+        "",
+    )
+    nguyen_chi_thanh = extract_map_location_context(
+        "Dat Tuong Binh Hiep sat Nguyen Chi Than",
+        "",
+    )
+    le_van_tach = extract_map_location_context(
+        "Mat tien Le Van Tach P Tuong Binh Hiep",
+        "",
+    )
+
+    assert ho_van_cong.nearby_road == "ho van cong"
+    assert nguyen_chi_thanh.nearby_road == "nguyen chi thanh"
+    assert le_van_tach.direct_road == "le van tach"
+
+
 def test_hiep_thanh_pham_ngoc_short_name_maps_to_pham_ngoc_thach():
     context = extract_map_location_context(
         "Đất Hiệp Thành cách Phạm Ngọc vòng xoay 500m",
