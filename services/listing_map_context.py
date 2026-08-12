@@ -153,6 +153,11 @@ _NON_LOCATION_RELATION_PREFIXES = (
     "le c dat",
     "nguyen ch hang",
     "nguyen chi dat",
+    "ho va dat",
+    "le dat",
+    "phan ho van",
+    "ho ca san",
+    "ho van long",
 )
 
 _GENERIC_LANDMARK_PREFIXES = (
@@ -160,6 +165,14 @@ _GENERIC_LANDMARK_PREFIXES = (
     "dong dan",
     "hien huu",
     "on dinh",
+    "an ninh",
+    "yen tinh",
+    "kin",
+    "van minh",
+    "song",
+    "thiet ke",
+    "ten tinh",
+    "moi trung tam",
 )
 
 
@@ -444,6 +457,8 @@ def _landmark(text: str) -> str:
         kind = "tdc"
     elif kind == "khu dan cu":
         kind = "kdc"
+    if normalized_name.startswith("tuong binh hiep"):
+        normalized_name = "tuong binh hiep"
     return normalize_location_token(f"{kind} {normalized_name}")
 
 

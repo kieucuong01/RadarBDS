@@ -587,6 +587,40 @@ def test_hiep_an_evidence_backed_roads_resolve_out_of_ward_center(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_precision", "expected_slug"),
+    [
+        ("Dat TDC Tuong Binh Hiep", "landmark", "tdc-tuong-binh-hiep"),
+        ("Dat KDC Tuong Binh Hiep", "landmark", "tdc-tuong-binh-hiep"),
+        ("Mat tien DX144 Tuong Binh Hiep", "road", "dx-144"),
+        ("Mat tien DX146 Tuong Binh Hiep", "road", "dx-146"),
+        ("Mat tien DX149 Tuong Binh Hiep", "road", "dx-149"),
+        ("Mat tien DX150 Tuong Binh Hiep", "road", "dx-150"),
+        ("Mat tien Phan Dang Luu Tuong Binh Hiep", "road", "phan-dang-luu"),
+        ("Cach Dai Lo Binh Duong 200m Tuong Binh Hiep", "road", "dai-lo-binh-duong"),
+    ],
+)
+def test_tuong_binh_hiep_evidence_backed_locations_resolve(
+    title, expected_precision, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920103,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Tương Bình Hiệp",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

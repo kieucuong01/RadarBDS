@@ -655,6 +655,41 @@ def test_hiep_an_road_width_and_dense_neighborhood_are_not_locations():
     assert stable_neighborhood.landmark == ""
 
 
+@pytest.mark.parametrize(
+    ("misleading_phrase", "real_road", "expected"),
+    [
+        ("mot sec lo lu", "Le Chi Dan", "le chi dan"),
+        ("gan ho va dat dep phuong", "Ho Van Cong", "ho van cong"),
+        ("mot sec le dat", "Le Chi Dan", "le chi dan"),
+        ("gan phan Ho Van Cong Thu Dau Mot", "Ho Van Cong", "ho van cong"),
+        ("mat tien Ho Van Long 1 tret 1 lau", "Nguyen Chi Thanh", "nguyen chi thanh"),
+    ],
+)
+def test_tuong_binh_hiep_false_phrases_defer_to_known_roads(
+    misleading_phrase, real_road, expected
+):
+    context = extract_map_location_context(
+        f"Dat Tuong Binh Hiep {misleading_phrase}",
+        f"Cach {real_road} 70m",
+    )
+
+    assert context.nearby_road == expected or context.direct_road == expected
+
+
+def test_tuong_binh_hiep_named_landmark_stops_marketing_copy():
+    named = extract_map_location_context(
+        "Dat TDC Tuong Binh Hiep dong dan cu",
+        "",
+    )
+    generic = extract_map_location_context(
+        "Nha KDC an ninh yen tinh hang xom than thien",
+        "",
+    )
+
+    assert named.landmark == "tdc tuong binh hiep"
+    assert generic.landmark == ""
+
+
 def test_phu_cuong_common_road_phrases_map_to_known_roads():
     nguyen_an_ninh = extract_map_location_context(
         "Mat tien Nguyen An Ninh Phu Cuong",

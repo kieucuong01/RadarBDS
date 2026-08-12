@@ -1134,6 +1134,14 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert "duc canh" in indexed_roads[
         ("Hi\u1ec7p An", "duong nguyen duc canh")
     ]["aliases"]
+    assert {
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "dx 144"),
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "dx 146"),
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "dx 149"),
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "dx 150"),
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "phan dang luu"),
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "dai lo binh duong"),
+    }.issubset(indexed_roads)
 
     assert {
         ("T\u00e2n An", "dx 140"),
@@ -1157,6 +1165,9 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         (row["ward"], row["normalized_landmark"]): row
         for row in landmarks["landmarks"]
     }
+    assert "kdc tuong binh hiep" in indexed_landmarks[
+        ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "tdc tuong binh hiep")
+    ]["aliases"]
     assert indexed_landmarks[("T\u00e2n An", "tdc tan an")]["source"].startswith(
         "Google Maps"
     )

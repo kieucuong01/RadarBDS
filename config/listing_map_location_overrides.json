@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v27",
+  "resolver_version": "osm-binh-duong-20260807-v28",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -350,6 +350,76 @@
     },
     {
       "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 144",
+      "lat": 11.0164953,
+      "lng": 106.6353517,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public address on DX144 and official Bình Dương project evidence",
+      "source_url": "https://www.google.com/maps/place/C%C3%B4ng+Ty+Tnhh+M%E1%BB%99t+Th%C3%A0nh+Vi%C3%AAn+V%E1%BA%A1n+Giai/@11.0164953,106.6353517,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 146",
+      "lat": 11.0076211,
+      "lng": 106.6309661,
+      "accuracy_radius_m": 1400,
+      "source": "Multiple public DX146 addresses and Google Maps neighborhood search anchor",
+      "source_url": "https://bds68.com.vn/ban-dat-mat-tien/binh-duong/thu-dau-mot/duong-dx-146/dat-ngop-gia-dau-tu-mat-tien-dx146-phuong-tuong-binh-hiep-duong-nhua-6m-thong-dan-o-kin-gia-re-pr26631911",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 149",
+      "lat": 11.0028222,
+      "lng": 106.6290834,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public address at 82 DX149",
+      "source_url": "https://www.google.com/maps/place/T%C6%B0%C6%A1ng+b%C3%ACnh+hi%E1%BB%87p/@11.0028222,106.6290834,15z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 150",
+      "lat": 11.0044891,
+      "lng": 106.6308206,
+      "accuracy_radius_m": 1600,
+      "source": "Multiple public DX150 business addresses and Google Maps neighborhood search anchor",
+      "source_url": "https://hsve.vn/en/binh-duong-top10-dich-vu-dam-cuoi",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "Phan Đăng Lưu",
+      "lat": 11.0238607,
+      "lng": 106.640499,
+      "accuracy_radius_m": 1500,
+      "source": "OpenStreetMap road geometry and official/public Tương Bình Hiệp address evidence",
+      "source_url": "https://www.openstreetmap.org/way/1238200067",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Phan Đăng Lưu follows the retained Tương Bình Hiệp boundary; road geometry and public addresses are stronger than the coarse polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "Đại lộ Bình Dương",
+      "lat": 11.0146705,
+      "lng": 106.6476277,
+      "accuracy_radius_m": 2400,
+      "source": "OpenStreetMap QL13 geometry at the Tương Bình Hiệp edge",
+      "source_url": "https://www.openstreetmap.org/way/1222885430",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "QL13 lies along the retained Tương Bình Hiệp edge; road geometry is stronger than the coarse historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
       "ward": "Hiệp An",
       "road_name": "Huỳnh Thị Chấu",
       "lat": 11.0236662,
@@ -616,6 +686,16 @@
       ]
     },
     {
+      "canonical": "TĐC Tương Bình Hiệp",
+      "aliases": [
+        "TDC Tuong Binh Hiep",
+        "Khu tái định cư Tương Bình Hiệp",
+        "tái định cư Tương Bình Hiệp",
+        "KDC Tương Bình Hiệp",
+        "KDC Tuong Binh Hiep"
+      ]
+    },
+    {
       "canonical": "TĐC Tân An",
       "aliases": [
         "TDC Tan An",
@@ -633,6 +713,17 @@
     }
   ],
   "landmarks": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "landmark_name": "TĐC Tương Bình Hiệp",
+      "lat": 11.0120468,
+      "lng": 106.6347589,
+      "accuracy_radius_m": 950,
+      "source": "Google Maps exact public housing-development result and official city address evidence",
+      "source_url": "https://www.google.com/maps/place/T%C6%B0%C6%A1ng+b%C3%ACnh+hi%E1%BB%87p+th%E1%BB%A7+d%E1%BA%A7u+m%C3%B4t/@11.0120468,106.6347589,14z/",
+      "verified_at": "2026-08-12"
+    },
     {
       "city": "THỦ DẦU MỘT",
       "ward": "Tân An",

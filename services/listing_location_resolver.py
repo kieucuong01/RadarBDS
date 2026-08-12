@@ -90,6 +90,13 @@ def _entry_road_key(entry: Mapping[str, object], fallback: str) -> str:
     return canonical or fallback
 
 
+def _entry_landmark_key(entry: Mapping[str, object], fallback: str) -> str:
+    canonical = normalize_location_token(
+        str(entry.get("normalized_landmark") or "")
+    )
+    return canonical or fallback
+
+
 def _value(listing: Mapping, key: str, default=None):
     try:
         return listing.get(key, default)
@@ -693,19 +700,23 @@ def resolve_listing_location(
         if landmark_ambiguous:
             status, reason = "ambiguous", "ambiguous_landmark"
         if landmark_entry:
+            canonical_landmark = _entry_landmark_key(
+                landmark_entry,
+                landmark_key,
+            )
             resolved = _resolved_from_entry(
                 listing_id=listing_id,
                 precision="landmark",
                 location_key=(
                     f"landmark:{_slug(city)}:{_slug(ward)}:"
-                    f"{_slug(landmark_key)}"
+                    f"{_slug(canonical_landmark)}"
                 ),
                 entry=landmark_entry,
                 resolver_version=registry.resolver_version,
                 signature=signature,
                 relation=relation or "near",
                 reference_road=nearby_road,
-                landmark_key=landmark_key,
+                landmark_key=canonical_landmark,
                 resolution_status=status,
                 resolution_reason=reason,
             )
@@ -737,17 +748,22 @@ def resolve_listing_location(
         )
 
     if landmark_entry:
+        canonical_landmark = _entry_landmark_key(
+            landmark_entry,
+            landmark_key,
+        )
         resolved = _resolved_from_entry(
             listing_id=listing_id,
             precision="landmark",
             location_key=(
-                f"landmark:{_slug(city)}:{_slug(ward)}:{_slug(landmark_key)}"
+                f"landmark:{_slug(city)}:{_slug(ward)}:"
+                f"{_slug(canonical_landmark)}"
             ),
             entry=landmark_entry,
             resolver_version=registry.resolver_version,
             signature=signature,
             relation="at",
-            landmark_key=landmark_key,
+            landmark_key=canonical_landmark,
         )
         if resolved:
             issue = None
