@@ -24,7 +24,15 @@ _NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
 
 def normalize_location_token(value: str) -> str:
-    folded = unicodedata.normalize("NFD", str(value or "").strip().lower())
+    raw = (
+        str(value or "")
+        .strip()
+        .replace("Đ", "D")
+        .replace("đ", "d")
+        .replace("Ð", "D")
+        .replace("ð", "d")
+    )
+    folded = unicodedata.normalize("NFD", raw.lower())
     ascii_text = "".join(
         character
         for character in folded.replace("đ", "d")

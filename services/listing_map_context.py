@@ -29,7 +29,7 @@ _NEAR_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ALLEY_PREFIX_RE = re.compile(
-    r"\b(?:1\s*(?:x|s)(?:ec|et)|mot\s*(?:x|s)(?:ec|et)|nhanh|hem)\s+"
+    r"\b(?:\d+\s*/|1\s*(?:x|s)(?:ec|et)|mot\s*(?:x|s)(?:ec|et)|nhanh|hem)\s+"
     r"(?:duong\s+)?",
     re.IGNORECASE,
 )
@@ -53,11 +53,12 @@ _LANDMARK_RE = re.compile(
     re.IGNORECASE,
 )
 _ROAD_STOP_RE = re.compile(
-    r"\b(?:khoang|chi|tam|khu|phuong|xa|thi tran|thanh pho|tp|"
+    r"\b(?:khoang|tam|khu|phuong|xa|thi tran|thanh pho|tp|"
     r"tphcm|hcm|tdc|tai dinh cu|dan cu|o to|xe hoi|"
     r"duong nhua|duong be tong|duong dat|"
     r"gia|dien tich|dt|ban|can ban|chinh chu|chu gui|gui|"
-    r"vi tri|kinh doanh|thong|gan|sat|cach)\b",
+    r"vi tri|kinh doanh|thong|gan|sat|cach|ngay|doi dien)\b|"
+    r"\b\d{1,4}(?:[.,]\d+)?\s*m\b",
     re.IGNORECASE,
 )
 _LANDMARK_STOP_RE = re.compile(
@@ -78,7 +79,7 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
     r"dx|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|"
-    r"hoang|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
+    r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"my phuoc|phu loi|phu tan"
     r")\b",
     re.IGNORECASE,
@@ -118,6 +119,11 @@ def _normalize_road_candidate(value: str) -> str:
     if code_match:
         if code_match.group("suffix").lower() == "m":
             return ""
+        if (
+            code_match.group("prefix").lower() == "dt"
+            and int(code_match.group("number")) < 100
+        ):
+            return ""
         raw = (
             f"{code_match.group('prefix')} "
             f"{int(code_match.group('number'))}{code_match.group('suffix')}"
@@ -152,7 +158,14 @@ def _looks_like_road_name(road: str) -> bool:
 
 
 def _road_after(text: str, start: int) -> str:
-    return _normalize_road_candidate(text[start : start + 100])
+    value = text[start : start + 100]
+    value = re.sub(
+        r"^\s*\d{1,4}(?:[.,]\d+)?\s*m\b\s*",
+        "",
+        value,
+        flags=re.IGNORECASE,
+    )
+    return _normalize_road_candidate(value)
 
 
 def _relation_road(
@@ -215,8 +228,15 @@ def extract_map_location_context(
     stored_road_name: str = "",
 ) -> MapLocationContext:
     """Extract map-only location clues without mutating canonical listing data."""
+    combined = " ".join(part for part in (title or "", description or "") if part)
+    combined = re.sub(
+        r"\b\d+\s*/\s*(?=[^\W\d_])",
+        " hem ",
+        combined,
+        flags=re.IGNORECASE,
+    )
     folded = normalize_location_token(
-        " ".join(part for part in (title or "", description or "") if part)
+        combined
     )
     evidence = _bounded_evidence(title, description)
     landmark = _landmark(folded)

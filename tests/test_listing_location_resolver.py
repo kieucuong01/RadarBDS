@@ -357,6 +357,41 @@ def test_ambiguous_phu_tan_duong_so_84_uses_aggregate_road():
 
 
 @pytest.mark.parametrize(
+    ("ward", "road", "expected_slug"),
+    [
+        ("T\u00e2n An", "Nguyen Chi Thanh", "nguyen-chi-thanh"),
+        ("Ph\u00fa M\u1ef9", "Huynh Van Luy", "huynh-van-luy"),
+        ("Hi\u1ec7p Th\u00e0nh", "Pham Ngoc Thach", "pham-ngoc-thach"),
+        ("Ph\u00fa H\u00f2a", "Le Hong Phong", "le-hong-phong"),
+        ("Ch\u00e1nh Ngh\u0129a", "Bui Quoc Khanh", "bui-quoc-khanh"),
+        ("\u0110\u1ecbnh H\u00f2a", "DX 71", "dx-71"),
+    ],
+)
+def test_common_thu_dau_mot_multi_segment_roads_use_aggregate_road(
+    ward, road, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920000,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": ward,
+        "title": f"M\u1eb7t ti\u1ec1n {road}",
+        "description": "",
+        "road_name": road,
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),
@@ -417,6 +452,11 @@ def test_signature_and_coordinates_are_stable_without_randomness():
     assert normalize_road_token("DX0143") == "dx 143"
     assert normalize_road_token("Đường ĐX 143") == "dx 143"
     assert normalize_road_token("Đường 88") == "duong so 88"
+
+
+def test_location_normalizer_handles_vietnamese_d_variants():
+    assert normalize_location_token("Phan \u0110\u0103ng L\u01b0u") == "phan dang luu"
+    assert normalize_location_token("Phan \u00d0\u0103ng L\u01b0u") == "phan dang luu"
 
 
 def test_registry_loader_preserves_road_ambiguity_and_landmark_aliases(tmp_path):

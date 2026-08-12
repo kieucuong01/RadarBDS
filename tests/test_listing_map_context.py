@@ -88,3 +88,46 @@ def test_stored_road_does_not_turn_a_nearby_reference_into_frontage():
     assert context.direct_road == ""
     assert context.nearby_road == "dx 120"
     assert context.relation == "near"
+
+
+def test_area_abbreviation_dt_is_not_treated_as_provincial_road_width():
+    context = extract_map_location_context(
+        "Nhà Tân An",
+        "DT 5 x 20 thổ cư 60m, đường bê tông 5m thông",
+    )
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+    assert context.relation == ""
+
+
+def test_alley_distance_before_named_road_is_extracted():
+    context = extract_map_location_context(
+        "Hiệp An TDM hạ giá",
+        "Dat 1 xec 50m Nguyen Chi Thanh ngay nga tu Vo Cai",
+    )
+
+    assert context.nearby_road == "nguyen chi thanh"
+    assert context.relation == "alley"
+    assert context.distance_m == 50.0
+
+
+def test_slash_alley_before_named_road_is_extracted():
+    context = extract_map_location_context(
+        "Đất Tân An",
+        "2/ Mac Dinh Chi doi dien truong THCS Tran Binh Trong",
+    )
+
+    assert context.nearby_road == "mac dinh chi"
+    assert context.relation == "alley"
+
+
+def test_nearby_named_road_stops_before_distance_suffix():
+    context = extract_map_location_context(
+        "Bán đất Tân An",
+        "cách Huỳnh Thị Hiếu 150m, đường bê tông 3,5m",
+    )
+
+    assert context.nearby_road == "huynh thi hieu"
+    assert context.relation == "near"
+    assert context.distance_m == 150.0
