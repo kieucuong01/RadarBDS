@@ -518,13 +518,16 @@ def resolve_listing_location(
     context_direct_road = normalize_road_token(
         getattr(context, "direct_road", "")
     )
+    nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
+    generic_stored_road = stored_road == ward
     direct_roads = tuple(
         dict.fromkeys(
-            road for road in (stored_road, context_direct_road) if road
+            road
+            for road in (stored_road, context_direct_road)
+            if road and not (nearby_road and generic_stored_road and road == stored_road)
         )
     )
     direct_road = context_direct_road or stored_road
-    nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
     landmark_key = normalize_location_token(getattr(context, "landmark", ""))
     relation = str(getattr(context, "relation", "") or "")
     candidate_road = direct_road or nearby_road

@@ -130,6 +130,39 @@ def test_nearby_and_direct_references_share_one_road_location_key():
     assert alley.location.relation == "alley"
 
 
+def test_explicit_nearby_road_beats_ambiguous_generic_stored_ward_road():
+    registry = _registry()
+    registry = LocationRegistry(
+        resolver_version=registry.resolver_version,
+        roads={
+            **registry.roads,
+            ("THỦ DẦU MỘT", "phu loi", "phu loi"): (
+                _road(lat=10.98, lng=106.66),
+                _road(lat=10.99, lng=106.67),
+            ),
+        },
+        landmarks=registry.landmarks,
+        wards=registry.wards,
+    )
+    listing = {
+        "id": 11,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Lợi",
+        "title": "Nhà 1 sẹc đường DX43",
+        "description": "",
+        "road_name": "Phú Lợi",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    result = resolve_listing_location(listing, registry, context)
+
+    assert result.location.precision == "road"
+    assert result.location.reference_road == "dx 43"
+    assert result.location.relation == "alley"
+
+
 def test_nearby_road_keeps_landmark_scope_without_creating_nearby_key():
     result = _resolve(
         text="Cách Đường số 35 100m, TĐC Phú Chánh B"

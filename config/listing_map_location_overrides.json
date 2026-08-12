@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v36",
+  "resolver_version": "osm-binh-duong-20260807-v37",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -1143,6 +1143,58 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "current Phu Loi listings explicitly identify Duong so 15 in KDC Hiep Thanh 3"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Nguyễn Thái Bình",
+      "lat": 10.9855405,
+      "lng": 106.6915038,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap aggregate named-road geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/146070991",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Phu Hoa scope and explicitly name Nguyen Thai Binh"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Phạm Ngũ Lão",
+      "lat": 10.9858725,
+      "lng": 106.6551728,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap named-road geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/234901540",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Hiep Thanh scope and explicitly name Pham Ngu Lao"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Thích Quảng Đức",
+      "lat": 10.9810087,
+      "lng": 106.6710782,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public address and OpenStreetMap named-road geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.google.com/maps/place/S%E1%BB%91+4a+th%C3%ADch+qu%C3%A3ng+%C4%90%E1%BB%A9c+Ph%C3%BA+ho%C3%A0/@10.9810087,106.6710782,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Phu Hoa scope and explicitly name Thich Quang Duc"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Nguyễn Văn Tiết",
+      "lat": 10.9897832,
+      "lng": 106.6539613,
+      "accuracy_radius_m": 750,
+      "source": "OpenStreetMap named-road geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/786257572",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Hiep Thanh scope and explicitly name Nguyen Van Tiet"
     }
   ],
   "landmark_aliases": [

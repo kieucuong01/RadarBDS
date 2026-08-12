@@ -161,6 +161,7 @@ _NON_LOCATION_RELATION_PREFIXES = (
     "le kip",
     "le con kip",
     "le nua kip",
+    "le cho kip",
     "phan giap",
     "phan nha",
     "vo nha",
