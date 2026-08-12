@@ -437,6 +437,30 @@ def test_phu_tho_known_roads_drop_suffixes_and_aliases():
     assert dai_lo_binh_duong.nearby_road == "dai lo binh duong"
 
 
+def test_hiep_an_common_short_road_phrases_map_to_known_roads():
+    bui_ngoc_thu = extract_map_location_context(
+        "Dat Hiep An cach Bui Ngoc Thu xec",
+        "",
+    )
+    nguyen_chi_thanh = extract_map_location_context(
+        "Nha Hiep An 1 sec Nguyen Chi T dat",
+        "",
+    )
+    le_chi_dan = extract_map_location_context(
+        "Dat Hiep An 1 sec Le Ch",
+        "",
+    )
+    dai_lo_binh_duong = extract_map_location_context(
+        "Dat Hiep An cach Quoc Lo 13 thuan tien ket noi",
+        "",
+    )
+
+    assert bui_ngoc_thu.nearby_road == "bui ngoc thu"
+    assert nguyen_chi_thanh.nearby_road == "nguyen chi thanh"
+    assert le_chi_dan.nearby_road == "le chi dan"
+    assert dai_lo_binh_duong.nearby_road == "dai lo binh duong"
+
+
 def test_hiep_thanh_pham_ngoc_short_name_maps_to_pham_ngoc_thach():
     context = extract_map_location_context(
         "Đất Hiệp Thành cách Phạm Ngọc vòng xoay 500m",
