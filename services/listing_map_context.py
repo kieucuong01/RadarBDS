@@ -145,8 +145,16 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
+    if candidate.startswith(("dai lo bd", "dai lo b d")):
+        return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):
         return "dai lo binh duong"
+    if candidate.startswith("d "):
+        stripped_candidate = _normalize_road_candidate(candidate[2:])
+        if _looks_like_road_name(stripped_candidate):
+            return stripped_candidate
+    if candidate.startswith("pham ngoc"):
+        return normalize_road_token("pham ngoc thach")
     for known_name in _KNOWN_ROAD_PREFIXES:
         if candidate.startswith(known_name):
             return normalize_road_token(known_name)

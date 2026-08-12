@@ -331,3 +331,30 @@ def test_known_phu_loi_direct_road_stops_before_extra_words():
     )
 
     assert context.direct_road == "ho van cong"
+
+
+def test_hiep_thanh_pham_ngoc_short_name_maps_to_pham_ngoc_thach():
+    context = extract_map_location_context(
+        "Đất Hiệp Thành cách Phạm Ngọc vòng xoay 500m",
+        "",
+    )
+
+    assert context.nearby_road == "pham ngoc thach"
+
+
+def test_hiep_thanh_abbreviated_d_prefix_uses_named_road():
+    context = extract_map_location_context(
+        "Nhà Hiệp Thành 1/ Đ.Nguyễn Bình gần vòng xoay",
+        "",
+    )
+
+    assert context.nearby_road == "nguyen binh"
+
+
+def test_hiep_thanh_dai_lo_bd_alias_maps_to_dai_lo_binh_duong():
+    context = extract_map_location_context(
+        "Nhà Hiệp Thành sát Đại lộ BD, gần siêu thị",
+        "",
+    )
+
+    assert context.nearby_road == "dai lo binh duong"
