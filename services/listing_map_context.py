@@ -118,6 +118,9 @@ _KNOWN_ROAD_PREFIXES = (
     "huynh van cu",
     "huynh thi hieu",
     "phan dang luu",
+    "nguyen huu canh",
+    "phan boi chau",
+    "tran binh trong",
     "nguyen van linh",
     "nguyen duc thuan",
     "pham ngu lao",
@@ -160,6 +163,8 @@ def _normalize_road_candidate(value: str) -> str:
     if candidate.startswith(("cmt8", "cmt 8", "cach mang thang 8")):
         return "cach mang thang tam"
     if candidate.startswith(("dai lo bd", "dai lo b d")):
+        return "dai lo binh duong"
+    if candidate.startswith(("dl binh duong", "dl bd")):
         return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):
         return "dai lo binh duong"
