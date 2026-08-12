@@ -1169,6 +1169,20 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("Hiệp Thành", "bac si yersin"),
         ("Hiệp Thành", "nguyen van troi"),
         ("Phú Tân", "db 6"),
+        ("Phú Tân", "duong so 41"),
+        ("Phú Tân", "duong so 57"),
+        ("Phú Tân", "duong so 59"),
+        ("Phú Tân", "duong so 63"),
+        ("Phú Tân", "duong so 66"),
+        ("Phú Tân", "duong so 76"),
+        ("Phú Tân", "d 5"),
+        ("Phú Tân", "db 7 a"),
+        ("Phú Tân", "db 7 b"),
+        ("Phú Tân", "n 16"),
+        ("Phú Tân", "n 25"),
+        ("Phú Tân", "huynh van luy"),
+        ("Phú Tân", "dx 5"),
+        ("Phú Tân", "dx 76"),
     }.issubset(indexed_roads)
     assert indexed_roads[("Hiệp An", "dx 106")][
         "boundary_mismatch_reason"
