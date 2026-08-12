@@ -587,6 +587,27 @@ def test_phu_hoa_numbered_alley_prefers_explicit_parent_road(text, expected):
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
+        (
+            "Đất Phú Hòa nhựa 4m thông hẻm 167 qua hẻm 189 "
+            "Nguyễn Thị Minh Khai, DT 5x26m",
+            "nguyen thi minh khai",
+        ),
+        (
+            "Đất Phú Hòa MT nhựa lớn, 10 mấy tr/m2; vị trí 1 xẹt "
+            "Lê Hồng Phong cách 200m",
+            "le hong phong",
+        ),
+    ],
+)
+def test_phu_hoa_named_parent_road_beats_area_and_price_numbers(text, expected):
+    context = extract_map_location_context(text, "")
+    assert context.nearby_road == expected
+    assert context.relation == "alley"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
         ("Nhà KDC Phú Hòa 1 full nội thất", "kdc phu hoa 1"),
         ("Nhà KDC Phú Hòa 2 khu dân cư hiện hữu", "kdc phu hoa 2"),
         ("Nhà KDC Hoàng Nam 2 Phú Hòa", "kdc hoang nam 2"),

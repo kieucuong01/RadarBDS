@@ -446,6 +446,29 @@ def _relation_road(
     return "", None
 
 
+def _known_named_road(text: str) -> str:
+    if re.search(r"\bntmk\b", text, re.IGNORECASE):
+        return normalize_road_token("nguyen thi minh khai")
+    for known_name in _KNOWN_ROAD_PREFIXES:
+        known_match = re.search(
+            rf"\b{re.escape(known_name)}\b",
+            text,
+            re.IGNORECASE,
+        )
+        if not known_match:
+            continue
+        prefix_context = text[
+            max(0, known_match.start() - 35) : known_match.start()
+        ]
+        if re.search(
+            r"\b(?:truong|thcs|thpt|tieu hoc|mam non)(?:\s+\w+){0,2}\s*$",
+            prefix_context,
+        ):
+            continue
+        return normalize_road_token(known_name)
+    return ""
+
+
 def _direct_road(text: str) -> str:
     for match in _DIRECT_PREFIX_RE.finditer(text):
         prefix_context = text[max(0, match.start() - 20) : match.start()]
@@ -479,25 +502,7 @@ def _direct_road(text: str) -> str:
             prefix_context,
         ):
             return _normalize_road_candidate(code_match.group(0))
-    if re.search(r"\bntmk\b", text, re.IGNORECASE):
-        return normalize_road_token("nguyen thi minh khai")
-    for known_name in _KNOWN_ROAD_PREFIXES:
-        known_match = re.search(
-            rf"\b{re.escape(known_name)}\b",
-            text,
-            re.IGNORECASE,
-        )
-        if known_match:
-            prefix_context = text[
-                max(0, known_match.start() - 35) : known_match.start()
-            ]
-            if re.search(
-                r"\b(?:truong|thcs|thpt|tieu hoc|mam non)(?:\s+\w+){0,2}\s*$",
-                prefix_context,
-            ):
-                continue
-            return normalize_road_token(known_name)
-    return ""
+    return _known_named_road(text)
 
 
 def _landmark(text: str) -> str:
@@ -556,9 +561,11 @@ def extract_map_location_context(
     direct_road = _direct_road(folded)
     alley_road, _ = _relation_road(folded, _ALLEY_PREFIX_RE)
     if alley_road:
-        if direct_road and direct_road != alley_road:
+        named_parent_road = _known_named_road(folded)
+        parent_road = named_parent_road or direct_road
+        if parent_road and parent_road != alley_road:
             return MapLocationContext(
-                nearby_road=direct_road,
+                nearby_road=parent_road,
                 landmark=landmark,
                 relation="alley",
                 distance_m=_distance(folded),
