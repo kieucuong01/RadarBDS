@@ -45,6 +45,15 @@ def normalize_road_token(value: str) -> str:
     normalized = normalize_location_token(value)
     normalized = re.sub(r"(?<=[a-z])(?=\d)|(?<=\d)(?=[a-z])", " ", normalized)
     normalized = " ".join(normalized.split())
+    if normalized in {
+        "30 4",
+        "30 thang 4",
+        "duong 30 4",
+        "duong 30 thang 4",
+        "duong so 30 4",
+        "duong so 30 thang 4",
+    }:
+        return "duong so 30 thang 4"
     bare_number_letter = re.match(r"^(\d{1,4})\s+([a-z])$", normalized)
     if bare_number_letter and bare_number_letter.group(2) != "m":
         normalized = f"duong so {normalized}"

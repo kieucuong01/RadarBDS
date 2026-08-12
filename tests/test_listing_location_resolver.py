@@ -363,6 +363,8 @@ def test_ambiguous_phu_tan_duong_so_84_uses_aggregate_road():
         ("Ph\u00fa M\u1ef9", "Huynh Van Luy", "huynh-van-luy"),
         ("Hi\u1ec7p Th\u00e0nh", "Pham Ngoc Thach", "pham-ngoc-thach"),
         ("Ph\u00fa H\u00f2a", "Le Hong Phong", "le-hong-phong"),
+        ("Ph\u00fa H\u00f2a", "Nguyen Thi Minh Khai", "nguyen-thi-minh-khai"),
+        ("Ph\u00fa H\u00f2a", "30/4", "duong-so-30-thang-4"),
         ("Ch\u00e1nh Ngh\u0129a", "Bui Quoc Khanh", "bui-quoc-khanh"),
         ("\u0110\u1ecbnh H\u00f2a", "DX 71", "dx-71"),
         ("\u0110\u1ecbnh H\u00f2a", "Dai Lo Binh Duong", "dai-lo-binh-duong"),

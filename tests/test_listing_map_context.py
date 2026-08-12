@@ -238,3 +238,50 @@ def test_stored_ql13_alias_becomes_dai_lo_binh_duong():
     )
 
     assert context.direct_road == "dai lo binh duong"
+
+
+def test_alley_number_with_named_road_uses_named_road_not_numbered_road():
+    context = extract_map_location_context(
+        "Bán nhà 1 xẹc hẻm 269 đường Nguyễn Thị Minh Khai khu 9 Phú Hoà",
+        "",
+    )
+
+    assert context.nearby_road == "nguyen thi minh khai"
+
+
+def test_bare_alley_number_is_not_treated_as_numbered_road():
+    context = extract_map_location_context(
+        "Bán nhà hẻm 385 khu 8 Phú Hòa TDM",
+        "",
+    )
+
+    assert context.nearby_road == ""
+    assert context.direct_road == ""
+
+
+def test_explicit_near_road_wins_after_bare_alley_number():
+    context = extract_map_location_context(
+        "Lô góc hẻm 453, cách đường Lê Hồng Phong 90m Phú Hòa",
+        "",
+    )
+
+    assert context.nearby_road == "le hong phong"
+
+
+def test_known_phu_hoa_road_name_stops_before_house_words():
+    context = extract_map_location_context(
+        "Bán nhà Lê Hồng Phong nhà 1 trệt 2 lầu Phú Hòa",
+        "",
+    )
+
+    assert context.direct_road == "le hong phong"
+
+
+def test_stored_non_road_marketing_phrase_is_ignored():
+    context = extract_map_location_context(
+        "Nhà Phú Hòa gần chợ",
+        "",
+        "Lam Moi Kip Nhe Khach",
+    )
+
+    assert context.direct_road == ""

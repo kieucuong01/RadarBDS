@@ -89,6 +89,16 @@ _ROAD_NAME_HINT_RE = re.compile(
     r")\b",
     re.IGNORECASE,
 )
+_KNOWN_ROAD_PREFIXES = (
+    "nguyen thi minh khai",
+    "le hong phong",
+    "thich quang duc",
+    "tran van on",
+    "nguyen chi thanh",
+    "le chi dan",
+    "mac dinh chi",
+    "nguyen tri phuong",
+)
 
 
 def _bounded_evidence(title: str, description: str) -> str:
@@ -119,11 +129,21 @@ def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
     if candidate.startswith("dai lo binh"):
         return "dai lo binh duong"
-    if candidate.startswith("nguyen tri phuong"):
-        return normalize_road_token("nguyen tri phuong")
-    for known_name in ("nguyen chi thanh", "le chi dan", "mac dinh chi"):
+    for known_name in _KNOWN_ROAD_PREFIXES:
         if candidate.startswith(known_name):
             return normalize_road_token(known_name)
+
+    alley_named_road = re.match(
+        r"^(?:hem|nhanh)\s+\d{1,4}\s+(?:duong\s+)?"
+        r"(?P<road>[a-z][a-z0-9\s]{2,80})",
+        candidate,
+        re.IGNORECASE,
+    )
+    if alley_named_road:
+        named_road = _normalize_road_candidate(alley_named_road.group("road"))
+        if _looks_like_road_name(named_road):
+            return named_road
+        return ""
 
     code_match = _ROAD_CODE_RE.match(candidate)
     if code_match:
@@ -207,6 +227,13 @@ def _relation_road(
     for match in prefix_re.finditer(text):
         road = _road_after(text, match.end())
         has_explicit_road_word = "duong" in match.group(0).lower()
+        is_bare_alley_number = (
+            prefix_re is _ALLEY_PREFIX_RE
+            and not has_explicit_road_word
+            and re.fullmatch(r"duong so \d{1,4}[a-z]?", road or "")
+        )
+        if is_bare_alley_number:
+            continue
         if road and (has_explicit_road_word or _looks_like_road_name(road)):
             return road, match
     return "", None
@@ -236,6 +263,9 @@ def _direct_road(text: str) -> str:
             prefix_context,
         ):
             return _normalize_road_candidate(code_match.group(0))
+    for known_name in _KNOWN_ROAD_PREFIXES:
+        if re.search(rf"\b{re.escape(known_name)}\b", text, re.IGNORECASE):
+            return normalize_road_token(known_name)
     return ""
 
 
@@ -296,9 +326,11 @@ def extract_map_location_context(
 
     direct_road = _direct_road(folded)
     if not direct_road and stored_road_name:
-        direct_road = _normalize_road_candidate(
+        stored_candidate = _normalize_road_candidate(
             normalize_location_token(stored_road_name)
         )
+        if _looks_like_road_name(stored_candidate):
+            direct_road = stored_candidate
 
     return MapLocationContext(
         direct_road=direct_road,
