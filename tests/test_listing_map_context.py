@@ -606,6 +606,44 @@ def test_phu_hoa_named_parent_road_beats_area_and_price_numbers(text, expected):
 
 
 @pytest.mark.parametrize(
+    ("title", "description", "expected"),
+    [
+        (
+            "Đất Phú Lợi thông ra đường Huỳn",
+            "Đất Phú Lợi thông ra đường Huỳnh Văn Lũy, cạnh Chợ Đình",
+            "huynh van luy",
+        ),
+        (
+            "Đất hẻm 182 Lê Hồng",
+            "Đất hẻm 182 Lê Hồng Phong, cách LHP 30m",
+            "le hong phong",
+        ),
+        (
+            "Nhà MT Nguyễn Thị Minh",
+            "Nhà MT Nguyễn Thị Minh Khai mới hoàn công",
+            "nguyen thi minh khai",
+        ),
+        (
+            "Đất cách đường HVL 30 mét",
+            "Hẻm 275 Huỳnh Văn Lũy",
+            "huynh van luy",
+        ),
+        (
+            "Nhà hẻm 109 Nguyễn Thái",
+            "Nhà hẻm 109 Nguyễn Thái Bình nhựa 8m",
+            "nguyen thai binh",
+        ),
+    ],
+)
+def test_phu_loi_truncated_titles_defer_to_complete_road_names(
+    title, description, expected
+):
+    context = extract_map_location_context(title, description)
+    assert (context.direct_road or context.nearby_road) == expected
+    assert context.relation in {"on", "near", "alley"}
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Nhà KDC Phú Hòa 1 full nội thất", "kdc phu hoa 1"),

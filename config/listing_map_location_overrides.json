@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v35",
+  "resolver_version": "osm-binh-duong-20260807-v36",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -121,6 +121,72 @@
         "Duong Yersin",
         "Duong Yesin"
       ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Hẻm 288 Huỳnh Văn Lũy",
+      "aliases": ["Hẻm 288", "Đường số 288", "Đường 288"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Hẻm 220 Huỳnh Văn Lũy",
+      "aliases": ["Hẻm 220", "Đường số 220", "Đường 220"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Hẻm 322 Huỳnh Văn Lũy",
+      "aliases": ["Hẻm 322", "Đường số 322", "Đường 322"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Hẻm 178 Huỳnh Văn Lũy",
+      "aliases": ["Hẻm 178", "Đường số 178", "Đường 178"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Hẻm 121 Phạm Ngọc Thạch",
+      "aliases": ["Hẻm 121", "Đường số 121", "Đường 121"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Hẻm 85 đường Phú Lợi",
+      "aliases": ["Hẻm 85", "Đường số 85", "Đường 85"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Đường Nguyễn Văn Trỗi",
+      "aliases": ["Nguyễn Văn Trỗi", "Nguyen Van Troi"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Đường tỉnh 743A",
+      "aliases": ["ĐT 743", "ĐT743", "DT 743", "DT743", "Đường Phú Lợi", "Phú Lợi"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Huỳnh Văn Lũy",
+      "aliases": ["HVL", "Huynh Van Luy"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Lê Hồng Phong",
+      "aliases": ["LHP", "Le Hong Phong"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "canonical": "Nguyễn Thị Minh Khai",
+      "aliases": ["NTMK", "Nguyen Thi Minh Khai"]
     }
   ],
   "roads": [
@@ -977,6 +1043,106 @@
       "source": "Google Maps exact public Hẻm 269 Nguyễn Thị Minh Khai result verified with isolated browser-use",
       "source_url": "https://www.google.com/maps/place/H%E1%BA%BBm+269+Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.975699,106.6924591,17z/",
       "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hẻm 288 Huỳnh Văn Lũy",
+      "lat": 10.9965889,
+      "lng": 106.6763881,
+      "accuracy_radius_m": 750,
+      "source": "Google Maps exact public road result verified with isolated browser-use and public address evidence",
+      "source_url": "https://www.google.com/maps/place/H%E1%BA%BBm+288+Hu%E1%BB%B3nh+V%C4%83n+L%C5%A9y,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9965889,106.6763881,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hẻm 85 đường Phú Lợi",
+      "lat": 10.984724,
+      "lng": 106.668888,
+      "accuracy_radius_m": 550,
+      "source": "Google Maps exact public address at 85/28 Hem 85 Duong Phu Loi verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Ng%C5%A9+c%E1%BB%91c+B%C3%ACnh+D%C6%B0%C6%A1ng/@10.984724,106.668888,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hẻm 121 Phạm Ngọc Thạch",
+      "lat": 11.0027764,
+      "lng": 106.6584274,
+      "accuracy_radius_m": 650,
+      "source": "OpenStreetMap named alley geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/146075740",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Hiep Thanh scope and explicitly name Hem 121 Pham Ngoc Thach"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Phạm Ngọc Thạch",
+      "lat": 11.0014528,
+      "lng": 106.6620348,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap aggregate named-road geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/146071043",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Hiep Thanh scope and explicitly name Pham Ngoc Thach"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Trần Văn Ơn",
+      "lat": 10.9782977,
+      "lng": 106.6756397,
+      "accuracy_radius_m": 850,
+      "source": "OpenStreetMap aggregate named-road geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/146071019",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include the former Phu Hoa scope and explicitly name Tran Van On"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Đường số 453",
+      "lat": 10.9742924,
+      "lng": 106.6899288,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public intersection result reused under the current Phu Loi listing label",
+      "source_url": "https://www.google.com/maps/place/Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai+%26+453,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9742924,106.6899288,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps now labels the exact Hem 453 result as Phu Loi while legacy listings also retain Phu Hoa"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Đường số 8",
+      "lat": 11.0014196,
+      "lng": 106.6672582,
+      "accuracy_radius_m": 550,
+      "source": "OpenStreetMap named road geometry in KDC Hiep Thanh reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/653733544",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings explicitly identify Duong so 8 in KDC Hiep Thanh 1"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Đường số 15",
+      "lat": 11.0025903,
+      "lng": 106.6722231,
+      "accuracy_radius_m": 500,
+      "source": "OpenStreetMap named road geometry in KDC Hiep Thanh reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/146071037",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings explicitly identify Duong so 15 in KDC Hiep Thanh 3"
     }
   ],
   "landmark_aliases": [
@@ -1083,6 +1249,36 @@
         "TĐC Phú Mỹ KP1",
         "TĐC Phú Mỹ Phú Tân"
       ]
+    },
+    {
+      "canonical": "KDC Phúc Đạt",
+      "aliases": [
+        "KDC Phuc Dat",
+        "Khu dân cư Phúc Đạt",
+        "KDC Phúc Đạt 4PN"
+      ]
+    },
+    {
+      "canonical": "KDC Hiệp Thành 1",
+      "aliases": ["KDC Hiep Thanh 1", "Khu dân cư Hiệp Thành 1", "KDC HT1"]
+    },
+    {
+      "canonical": "KDC Hiệp Thành 3",
+      "aliases": ["KDC Hiep Thanh 3", "Khu dân cư Hiệp Thành 3", "KDC HT3"]
+    },
+    {
+      "canonical": "KDC Phú Lợi",
+      "aliases": [
+        "KDC Phu Loi",
+        "Khu dân cư Phú Lợi",
+        "TĐC Phú Lợi",
+        "TDC Phu Loi",
+        "Khu tái định cư Phú Lợi"
+      ]
+    },
+    {
+      "canonical": "KDC Hoàng Nam 2",
+      "aliases": ["KDC Hoang Nam 2", "KDC Hoàng Nam Phú Lợi"]
     }
   ],
   "landmarks": [
@@ -1257,6 +1453,67 @@
       "accuracy_radius_m": 650,
       "source": "Google Maps exact public housing-development result verified with isolated browser-use",
       "source_url": "https://www.google.com/maps/place/Khu+D%C3%A2n+C%C6%B0+Ho%C3%A0ng+Nam+2/@10.9859657,106.6939251,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "landmark_name": "KDC Phúc Đạt",
+      "lat": 10.9996893,
+      "lng": 106.6718336,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public KDC Phuc Dat results verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/KDC+Ph%C3%BAc+%C4%90%E1%BA%A1t/@10.9996883,106.6718662,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "landmark_name": "KDC Hiệp Thành 1",
+      "lat": 11.0007252,
+      "lng": 106.6546353,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public housing-development result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Hiep+Thanh+residential+area+1/@11.0007252,106.6546353,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings explicitly identify KDC Hiep Thanh 1 in the former Hiep Thanh scope"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "landmark_name": "KDC Hiệp Thành 3",
+      "lat": 11.0028782,
+      "lng": 106.6685638,
+      "accuracy_radius_m": 700,
+      "source": "OpenStreetMap housing-development geometry reused under the current Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/410566717",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings explicitly identify KDC Hiep Thanh 3 in the former Hiep Thanh scope"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "landmark_name": "KDC Hoàng Nam 2",
+      "lat": 10.9859657,
+      "lng": 106.6939251,
+      "accuracy_radius_m": 750,
+      "source": "Google Maps exact public housing-development result reused under the current Phu Loi listing label",
+      "source_url": "https://www.google.com/maps/place/Khu+D%C3%A2n+C%C6%B0+Ho%C3%A0ng+Nam+2/@10.9859657,106.6939251,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps now labels this former Phu Hoa development inside the current Phu Loi ward"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "landmark_name": "KDC Phú Lợi",
+      "lat": 10.9901449,
+      "lng": 106.6704555,
+      "accuracy_radius_m": 1100,
+      "source": "Repeated current KDC Phu Loi listings anchored to the exact Google Maps De Tuoi Ninh Binh reference named in those listings",
+      "source_url": "https://www.google.com/maps/place/Qu%C3%A1n+D%C3%AA+T%C6%B0%C6%A1i+Ninh+B%C3%ACnh/@10.9901449,106.6704555,17z/",
       "verified_at": "2026-08-13"
     }
   ]

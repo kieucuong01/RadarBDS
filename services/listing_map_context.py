@@ -127,6 +127,8 @@ _KNOWN_ROAD_PREFIXES = (
     "le thi trung",
     "huynh van nghe",
     "nguyen van troi",
+    "nguyen thai binh",
+    "nguyen van tiet",
     "nguyen van cu",
     "le van tach",
     "nguyen van long",
@@ -266,6 +268,10 @@ def _normalize_road_candidate(value: str) -> str:
         return "dai lo binh duong"
     if candidate.startswith("mptv"):
         return "my phuoc tan van"
+    if candidate.startswith("hvl"):
+        return "huynh van luy"
+    if candidate.startswith("lhp"):
+        return "le hong phong"
     if candidate.startswith("quoc lo 13"):
         return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):
@@ -309,6 +315,12 @@ def _normalize_road_candidate(value: str) -> str:
         return "le chi dan"
     if candidate.startswith("nguyen chi t"):
         return "nguyen chi thanh"
+    if candidate.startswith("nguyen thi minh "):
+        return "nguyen thi minh khai"
+    if candidate.startswith("nguyen thai "):
+        return "nguyen thai binh"
+    if candidate.startswith("le hong "):
+        return "le hong phong"
     if candidate.startswith("d "):
         stripped_candidate = _normalize_road_candidate(candidate[2:])
         if _looks_like_road_name(stripped_candidate):
@@ -318,6 +330,9 @@ def _normalize_road_candidate(value: str) -> str:
     for known_name in _KNOWN_ROAD_PREFIXES:
         if candidate.startswith(known_name):
             return normalize_road_token(known_name)
+
+    if re.match(r"^huyn(?:\s|$)", candidate):
+        return ""
 
     alley_named_road = re.match(
         r"^(?:hem|nhanh)\s+\d{1,4}\s+(?:duong\s+)?"
