@@ -179,7 +179,14 @@ def _normalize_road_candidate(value: str) -> str:
         return "ho van cong"
     if candidate.startswith("nguyen chi than"):
         return "nguyen chi thanh"
-    for leading_noise in ("duong lon ", "lon ", "nhua "):
+    for leading_noise in (
+        "hem duong ",
+        "hem ",
+        "duong lon ",
+        "duong ",
+        "lon ",
+        "nhua ",
+    ):
         if candidate.startswith(leading_noise):
             stripped_candidate = _normalize_road_candidate(
                 candidate[len(leading_noise) :]

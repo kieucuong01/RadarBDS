@@ -467,7 +467,7 @@ def test_phu_cuong_common_road_phrases_map_to_known_roads():
         "",
     )
     yersin = extract_map_location_context(
-        "Nha Phu Cuong hem duong Yesin sau lung The Gioi Di Dong",
+        "Nha Phu Cuong Nhanh duong 1/ duong Yesin sau lung The Gioi Di Dong",
         "",
     )
     huynh_van_cu = extract_map_location_context(
