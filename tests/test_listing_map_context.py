@@ -375,6 +375,20 @@ def test_tuong_binh_hiep_common_street_typos_map_to_known_roads():
     assert le_van_tach.direct_road == "le van tach"
 
 
+def test_chanh_my_known_roads_drop_marketing_and_area_suffixes():
+    nguyen_van_long = extract_map_location_context(
+        "Mat tien Nguyen Van Long KP 5 Chanh Loc",
+        "",
+    )
+    huynh_van_cu = extract_map_location_context(
+        "Dat Huynh Van Cu vua o vua dau tu",
+        "",
+    )
+
+    assert nguyen_van_long.direct_road == "nguyen van long"
+    assert huynh_van_cu.direct_road == "huynh van cu"
+
+
 def test_hiep_thanh_pham_ngoc_short_name_maps_to_pham_ngoc_thach():
     context = extract_map_location_context(
         "Đất Hiệp Thành cách Phạm Ngọc vòng xoay 500m",
