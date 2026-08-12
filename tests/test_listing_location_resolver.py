@@ -621,6 +621,45 @@ def test_tuong_binh_hiep_evidence_backed_locations_resolve(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_precision", "expected_slug"),
+    [
+        ("Mat tien DX74 Dinh Hoa", "road", "dx-74"),
+        ("Mat tien DX77 Dinh Hoa", "road", "dx-77"),
+        ("Mat tien DX84 Dinh Hoa", "road", "dx-84"),
+        ("Duong so 11B TDC Dinh Hoa", "road", "duong-so-11-b"),
+        ("Duong so 5B TDC Dinh Hoa", "road", "duong-so-5-b"),
+        ("Duong so 36 TDC Dinh Hoa", "road", "duong-so-36"),
+        ("Dat TDC Dinh Hoa lien ke khu hanh chinh", "landmark", "tdc-dinh-hoa"),
+        ("Dat TDC Thanh Le gan BV 1500", "landmark", "tdc-thanh-le"),
+        (
+            "Du an Becamex Dinh Hoa tong 11.500 can ho",
+            "landmark",
+            "noxh-becamex-dinh-hoa",
+        ),
+    ],
+)
+def test_dinh_hoa_evidence_backed_locations_resolve(
+    title, expected_precision, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920104,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "\u0110\u1ecbnh H\u00f2a",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

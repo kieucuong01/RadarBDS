@@ -1142,6 +1142,14 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "phan dang luu"),
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "dai lo binh duong"),
     }.issubset(indexed_roads)
+    assert {
+        ("\u0110\u1ecbnh H\u00f2a", "dx 74"),
+        ("\u0110\u1ecbnh H\u00f2a", "dx 77"),
+        ("\u0110\u1ecbnh H\u00f2a", "dx 84"),
+        ("\u0110\u1ecbnh H\u00f2a", "duong so 11 b"),
+        ("\u0110\u1ecbnh H\u00f2a", "duong so 5 b"),
+        ("\u0110\u1ecbnh H\u00f2a", "duong so 36"),
+    }.issubset(indexed_roads)
 
     assert {
         ("T\u00e2n An", "dx 140"),
@@ -1167,6 +1175,16 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     }
     assert "kdc tuong binh hiep" in indexed_landmarks[
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "tdc tuong binh hiep")
+    ]["aliases"]
+    assert "kdc dinh hoa" in indexed_landmarks[
+        ("\u0110\u1ecbnh H\u00f2a", "tdc dinh hoa")
+    ]["aliases"]
+    assert (
+        "\u0110\u1ecbnh H\u00f2a",
+        "tdc thanh le",
+    ) in indexed_landmarks
+    assert "du an becamex dinh hoa" in indexed_landmarks[
+        ("\u0110\u1ecbnh H\u00f2a", "noxh becamex dinh hoa")
     ]["aliases"]
     assert indexed_landmarks[("T\u00e2n An", "tdc tan an")]["source"].startswith(
         "Google Maps"

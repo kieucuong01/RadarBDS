@@ -690,6 +690,92 @@ def test_tuong_binh_hiep_named_landmark_stops_marketing_copy():
     assert generic.landmark == ""
 
 
+def test_dinh_hoa_known_roads_stop_before_marketing_copy():
+    vo_van_kiet = extract_map_location_context(
+        "Dat Dinh Hoa cach Vo Van Kiet vai chuc met",
+        "",
+    )
+    nguyen_van_thanh = extract_map_location_context(
+        "Mat tien Nguyen Van Thanh Vo Van Kiet My Phuoc",
+        "",
+    )
+
+    assert vo_van_kiet.nearby_road == "vo van kiet"
+    assert nguyen_van_thanh.direct_road == "nguyen van thanh"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Dat TDC Dinh Hoa lien ke khu hanh chinh va TTTM", "tdc dinh hoa"),
+        ("Dat TDC Dinh Hoa Hoa Phu", "tdc dinh hoa"),
+        ("Dat TDC P Dinh Hoa khu nha o", "tdc dinh hoa"),
+        ("Dat TDC Thanh Le khu BV 1500 giuong", "tdc thanh le"),
+    ],
+)
+def test_dinh_hoa_named_landmarks_drop_marketing_and_legacy_suffixes(
+    text, expected
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected
+
+
+def test_dinh_hoa_generic_kdc_dong_is_not_a_landmark():
+    generic = extract_map_location_context("Dat Dinh Hoa KDC dong", "")
+    real = extract_map_location_context("Dat TDC Dong Hoa", "")
+
+    assert generic.landmark == ""
+    assert real.landmark == "tdc dong hoa"
+
+
+def test_dinh_hoa_short_road_aliases_map_to_existing_registry_roads():
+    mptv = extract_map_location_context("Dat Dinh Hoa cach MPTV 100m", "")
+    tran_ngoc_len = extract_map_location_context(
+        "Dat Dinh Hoa cach Tran Ngoc Lien 80m",
+        "",
+    )
+
+    assert mptv.nearby_road == "my phuoc tan van"
+    assert tran_ngoc_len.nearby_road == "tran ngoc len"
+
+
+def test_dinh_hoa_false_relation_phrases_defer_to_real_road():
+    vo_van_kiet = extract_map_location_context(
+        "Dat Dinh Hoa gan vo va mat tien nhua",
+        "Cach Vo Van Kiet 60m",
+    )
+    dx84 = extract_map_location_context(
+        "Dat Dinh Hoa gan do khong ro",
+        "Cach DX84 70m",
+    )
+
+    assert vo_van_kiet.nearby_road == "vo van kiet"
+    assert dx84.nearby_road == "dx 84"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Dat Dinh Hoa KDC o kin",
+        "Dat Dinh Hoa KDC van phong truong hoc",
+        "Dat Dinh Hoa du an xay dung nha o",
+        "Dat Dinh Hoa du an abc nao do",
+    ],
+)
+def test_dinh_hoa_generic_marketing_phrases_are_not_landmarks(text):
+    assert extract_map_location_context(text, "").landmark == ""
+
+
+def test_dinh_hoa_becamex_landmark_stops_inventory_suffix():
+    context = extract_map_location_context(
+        "Du an Becamex Dinh Hoa tong 11.500 can ho",
+        "",
+    )
+
+    assert context.landmark == "du an becamex dinh hoa"
+
+
 def test_phu_cuong_common_road_phrases_map_to_known_roads():
     nguyen_an_ninh = extract_map_location_context(
         "Mat tien Nguyen An Ninh Phu Cuong",

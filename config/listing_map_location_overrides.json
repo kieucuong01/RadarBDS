@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v28",
+  "resolver_version": "osm-binh-duong-20260807-v29",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -675,6 +675,81 @@
       "verified_at": "2026-08-12",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "the source listing labels KDC Hiep Phat 1 as Tan An while public project and road evidence places it on Nguyen Duc Thuan in adjacent Hiep Thanh"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX 74",
+      "lat": 11.0299,
+      "lng": 106.6548,
+      "accuracy_radius_m": 900,
+      "source": "Official DX74 address evidence and midpoint of adjacent OpenStreetMap DX73/DX75 geometry",
+      "source_url": "https://vpcp.dichvucong.gov.vn/p/phananhkiennghi/jsp/pakn_answer_byid.jsp?pakn_id=2D7B777B14850CAAE063490AA8C07866",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX 77",
+      "lat": 11.022,
+      "lng": 106.6548,
+      "accuracy_radius_m": 1300,
+      "source": "Multiple public DX77 addresses and adjacent OpenStreetMap DX76/DX78 geometry",
+      "source_url": "https://duan24h.net/2018/can-ban-lo-dat-mat-tien-dx77-phuong-dinh-hoa-duong-8m-xe-container-di-duoc.html",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX 84",
+      "lat": 11.0121257,
+      "lng": 106.6474622,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps public DX84 address result and public listing evidence",
+      "source_url": "https://www.google.com/maps/place/136%2F1.+Dx+84.+Khu+1.+%C4%90%E1%BB%8Bnh+h%C3%B2a.+Th%E1%BB%A7+d%E1%BA%A7u+m%E1%BB%99t.+B%C3%ACnh+d%C6%B0%C6%A1ng/@11.0121257,106.6474622,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Đường số 11B",
+      "landmark_keys": ["TĐC Định Hòa"],
+      "lat": 11.0444259,
+      "lng": 106.6596302,
+      "accuracy_radius_m": 900,
+      "source": "Repeated TDC Dinh Hoa listing evidence and adjacent OpenStreetMap road 11A anchor",
+      "source_url": "https://www.openstreetmap.org/way/1173904109",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Dinh Hoa is stored in the legacy Dinh Hoa listing scope while public addresses and the numbered-road cluster are labelled Hoa Phu"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Đường số 5B",
+      "landmark_keys": ["TĐC Định Hòa"],
+      "lat": 11.0421,
+      "lng": 106.65835,
+      "accuracy_radius_m": 1100,
+      "source": "Public road 5B TDC Dinh Hoa listings and adjacent OpenStreetMap road 5A/5C anchors",
+      "source_url": "https://batdongsan.com.vn/ban-dat-duong-so-5b-phuong-hoa-phu-2-163/can-ban-lo-goc-tdc-dinh-gan-tp-moi-binh-duong-pr44270354",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Dinh Hoa is stored in the legacy Dinh Hoa listing scope while public road 5B addresses use Hoa Phu"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "Đường số 36",
+      "landmark_keys": ["TĐC Định Hòa"],
+      "lat": 11.0375,
+      "lng": 106.657,
+      "accuracy_radius_m": 1400,
+      "source": "Public road 36 TDC Dinh Hoa listings and OpenStreetMap numbered-road cluster anchor",
+      "source_url": "https://www.nhaban.com/chitiet/nha-dep-gia-tot-chinh-chu-ban-nhanh-can-nha-pho-so-20-khu-tdc-dinh-hoa-thanh-pho-thu-dau/8826400_nid/",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Dinh Hoa is stored in the legacy Dinh Hoa listing scope while public road 36 addresses use Hoa Phu"
     }
   ],
   "landmark_aliases": [
@@ -709,6 +784,40 @@
         "KDC Hiep Phat 1",
         "Khu dân cư Hiệp Phát 1",
         "KDC Hiệp Phát"
+      ]
+    },
+    {
+      "canonical": "TĐC Định Hòa",
+      "aliases": [
+        "TDC Dinh Hoa",
+        "tái định cư Định Hòa",
+        "Khu tái định cư Định Hòa",
+        "KDC Định Hòa",
+        "KDC Dinh Hoa",
+        "TDC Định Hòa Hòa Phú",
+        "TDC Dinh Hoa Hoa Phu",
+        "TDC P Định Hòa",
+        "TDC P Dinh Hoa",
+        "TDC Dinh"
+      ]
+    },
+    {
+      "canonical": "TĐC Thành Lễ",
+      "aliases": [
+        "TDC Thanh Le",
+        "tái định cư Thành Lễ",
+        "Khu tái định cư Thành Lễ"
+      ]
+    },
+    {
+      "canonical": "NOXH Becamex Định Hòa",
+      "aliases": [
+        "Nhà ở xã hội Becamex Định Hòa",
+        "Nha o xa hoi Becamex Dinh Hoa",
+        "Becamex Định Hòa",
+        "Becamex Dinh Hoa",
+        "Dự án Becamex Định Hòa",
+        "Du an Becamex Dinh Hoa"
       ]
     }
   ],
@@ -747,6 +856,41 @@
       "verified_at": "2026-08-12",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "the source listing uses Tan An while public project evidence places KDC Hiep Phat on Nguyen Duc Thuan in adjacent Hiep Thanh"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "landmark_name": "TĐC Định Hòa",
+      "lat": 11.042,
+      "lng": 106.66,
+      "accuracy_radius_m": 1800,
+      "source": "Public TDC Dinh Hoa numbered-road listings and OpenStreetMap internal-road cluster anchor",
+      "source_url": "https://diaocthanhpho.com/ban-lo-goc-khu-tai-dinh-cu-dinh-hoa-14816.html",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Dinh Hoa is retained in the legacy Dinh Hoa listing scope while public project addresses use Hoa Phu"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "landmark_name": "TĐC Thành Lễ",
+      "lat": 11.0121257,
+      "lng": 106.6474622,
+      "accuracy_radius_m": 1100,
+      "source": "Public TDC Thanh Le and DX84 address evidence near the 1500-bed hospital",
+      "source_url": "https://bds68.com.vn/ban-dat/binh-duong/thu-dau-mot/phuong-dinh-hoa/ban-dat-tdc-thanh-le-p-dinh-hoa-khu-bv-1500g-5x20-tho-cu-100-pr26660161",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "landmark_name": "NOXH Becamex Định Hòa",
+      "lat": 11.052196,
+      "lng": 106.6615538,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public housing result verified with isolated browser-use and official project evidence",
+      "source_url": "https://www.google.com/maps/place/Khu+cao+t%E1%BA%A7ng+Nh%C3%A0+%E1%BB%9F+x%C3%A3+h%E1%BB%99i+Becamex+%C4%90%E1%BB%8Bnh+H%C3%B2a+-+Th%C3%A0nh+Ph%E1%BB%91+M%E1%BB%9Bi+B%C3%ACnh+D%C6%B0%C6%A1ng+(%C4%90%E1%BA%A1i+h%E1%BB%8Dc+qu%E1%BB%91c+t%E1%BA%BF+Mi%E1%BB%81n+%C4%90%C3%B4ng+EIU)/@11.052196,106.6615538,17z/",
+      "verified_at": "2026-08-12"
     }
   ]
 }

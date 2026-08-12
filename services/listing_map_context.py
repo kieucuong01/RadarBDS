@@ -90,7 +90,7 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"dai lo|bac si|yersin|yesin|"
-    r"my phuoc|phu loi|phu tan"
+    r"my phuoc|mptv|phu loi|phu tan"
     r")\b",
     re.IGNORECASE,
 )
@@ -132,6 +132,7 @@ _KNOWN_ROAD_PREFIXES = (
     "nguyen an ninh",
     "bac si yersin",
     "nguyen van linh",
+    "nguyen van thanh",
     "nguyen duc thuan",
     "pham ngu lao",
     "nguyen binh khiem",
@@ -141,6 +142,7 @@ _KNOWN_ROAD_PREFIXES = (
     "ngo gia tu",
     "hoang van thu",
     "thich quang duc",
+    "vo van kiet",
 )
 
 _NON_LOCATION_RELATION_PREFIXES = (
@@ -158,6 +160,8 @@ _NON_LOCATION_RELATION_PREFIXES = (
     "phan ho van",
     "ho ca san",
     "ho van long",
+    "vo va mat tien nhua",
+    "do khong",
 )
 
 _GENERIC_LANDMARK_PREFIXES = (
@@ -173,6 +177,22 @@ _GENERIC_LANDMARK_PREFIXES = (
     "thiet ke",
     "ten tinh",
     "moi trung tam",
+    "o kin",
+    "van phong",
+    "xay dung",
+    "abc",
+)
+
+_GENERIC_LANDMARK_NAMES = {
+    "dong",
+}
+
+_KNOWN_LANDMARK_PREFIXES = (
+    ("tuong binh hiep", "tuong binh hiep"),
+    ("p dinh hoa", "dinh hoa"),
+    ("dinh hoa", "dinh hoa"),
+    ("thanh le", "thanh le"),
+    ("becamex dinh hoa", "becamex dinh hoa"),
 )
 
 
@@ -217,6 +237,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "dai lo binh duong"
     if candidate.startswith(("dl binh duong", "dl bd")):
         return "dai lo binh duong"
+    if candidate.startswith("mptv"):
+        return "my phuoc tan van"
     if candidate.startswith("quoc lo 13"):
         return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):
@@ -227,6 +249,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "ho van cong"
     if candidate.startswith("nguyen chi than"):
         return "nguyen chi thanh"
+    if candidate.startswith("tran ngoc lien"):
+        return "tran ngoc len"
     if candidate.startswith("duc canh"):
         return "nguyen duc canh"
     if candidate == "huynh thi" or candidate.startswith("huynh thi nha"):
@@ -450,15 +474,20 @@ def _landmark(text: str) -> str:
     if not name:
         return ""
     normalized_name = normalize_location_token(name)
-    if normalized_name.startswith(_GENERIC_LANDMARK_PREFIXES):
+    if (
+        normalized_name in _GENERIC_LANDMARK_NAMES
+        or normalized_name.startswith(_GENERIC_LANDMARK_PREFIXES)
+    ):
         return ""
     kind = match.group("kind").lower()
     if kind == "tai dinh cu":
         kind = "tdc"
     elif kind == "khu dan cu":
         kind = "kdc"
-    if normalized_name.startswith("tuong binh hiep"):
-        normalized_name = "tuong binh hiep"
+    for prefix, canonical in _KNOWN_LANDMARK_PREFIXES:
+        if normalized_name.startswith(prefix):
+            normalized_name = canonical
+            break
     return normalize_location_token(f"{kind} {normalized_name}")
 
 
