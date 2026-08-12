@@ -665,6 +665,7 @@ def test_dinh_hoa_evidence_backed_locations_resolve(
         ("Mặt tiền Đường số 1 Chánh Mỹ", "road", "duong-so-1"),
         ("Mặt tiền Đường số 4 Chánh Mỹ", "road", "duong-so-4"),
         ("Mặt tiền Đường số 5 KĐT Chánh Mỹ", "road", "duong-so-5"),
+        ("Đường số 5 gần Chợ Chánh Mỹ", "road", "duong-so-5"),
         ("Đường N3 KĐT sinh thái Chánh Mỹ", "road", "n-3"),
         ("Cách Cách Mạng Tháng Tám 100m", "road", "cach-mang-thang-tam"),
         ("Đất TĐC Chánh Mỹ", "landmark", "tdc-chanh-my"),
