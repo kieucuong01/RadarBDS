@@ -138,6 +138,39 @@ def test_area_abbreviation_dt_is_not_treated_as_provincial_road_width():
     assert context.relation == ""
 
 
+def test_tan_an_school_and_dimensions_are_not_roads():
+    school = extract_map_location_context(
+        "Gan truong THCS Tran Binh Trong",
+        "",
+    )
+    area = extract_map_location_context("Dat dep", "DT: 100m2")
+    large_area = extract_map_location_context("Dat dep", "DT 2062m2")
+    surface = extract_map_location_context("Duong DX nhua 5m", "")
+    implausible_number = extract_map_location_context("Duong so 1350", "")
+
+    assert school.direct_road == ""
+    assert school.nearby_road == ""
+    assert area.direct_road == ""
+    assert large_area.direct_road == ""
+    assert surface.direct_road == ""
+    assert implausible_number.direct_road == ""
+
+
+def test_explicit_binh_duong_provincial_road_remains_a_road():
+    context = extract_map_location_context("Mat tien duong DT 741", "")
+
+    assert context.direct_road == "dt 741"
+
+
+def test_tan_an_landmark_stops_before_city_copy():
+    context = extract_map_location_context(
+        "TDC Tan An Thu Dau Mot Binh Duong",
+        "",
+    )
+
+    assert context.landmark == "tdc tan an"
+
+
 def test_alley_distance_before_named_road_is_extracted():
     context = extract_map_location_context(
         "Hiệp An TDM hạ giá",
@@ -448,6 +481,47 @@ def test_tan_an_common_road_phrases_map_to_known_roads():
     assert huynh_thi_hieu.nearby_road == "huynh thi hieu"
     assert phan_dang_luu.nearby_road == "phan dang luu"
     assert le_chi_dan.nearby_road == "le chi dan"
+
+
+def test_tan_an_truncated_known_road_names_are_recovered():
+    huynh_thi_hieu = extract_map_location_context(
+        "Nha Tan An cach Huynh Thi",
+        "Vi tri cach Huynh Thi Hieu 50m",
+    )
+    phan_dang_luu = extract_map_location_context(
+        "Nha mat tien Phan Dang L nha mat tien",
+        "Vi tri mat tien Phan Dang Luu gan nga tu Vo Cai",
+    )
+
+    assert huynh_thi_hieu.nearby_road == "huynh thi hieu"
+    assert phan_dang_luu.direct_road == "phan dang luu"
+
+
+def test_tan_an_marketing_and_listing_codes_are_not_roads():
+    construction = extract_map_location_context(
+        "Nha pho lien ke dang thi cong tai phuong Tan An",
+        "",
+    )
+    generic_large_road = extract_map_location_context(
+        "Nha hem cach duong lon vao 50m",
+        "",
+    )
+    listing_code = extract_map_location_context(
+        "Nha dat Tan An D713",
+        "To 10 thua 558",
+        stored_road_name="D713",
+    )
+    one_minute = extract_map_location_context(
+        "Mat tien Bui Ngoc Thu",
+        "Cach quoc lo 1 phut",
+    )
+
+    assert construction.direct_road == ""
+    assert construction.nearby_road == ""
+    assert generic_large_road.direct_road == ""
+    assert generic_large_road.nearby_road == ""
+    assert listing_code.direct_road == ""
+    assert one_minute.nearby_road == ""
 
 
 def test_phu_tho_known_roads_drop_suffixes_and_aliases():

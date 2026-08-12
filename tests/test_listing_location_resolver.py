@@ -493,6 +493,66 @@ def test_common_thu_dau_mot_multi_segment_roads_use_aggregate_road(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_slug"),
+    [
+        ("Mat tien DX140 Tan An", "dx-140"),
+        ("Mat tien DX120 Tan An", "dx-120"),
+        ("Mat tien DX135 Tan An", "dx-135"),
+        ("Mat tien DX141 Tan An", "dx-141"),
+        ("Mat tien DX108 Tan An", "dx-108"),
+        ("Mat tien DX117 Tan An", "dx-117"),
+        ("Mat tien DX109 Tan An", "dx-109"),
+        ("Mat tien Dai lo Binh Duong Tan An", "dai-lo-binh-duong"),
+        ("Duong so 1 Khu tai dinh cu Tan An", "duong-so-1"),
+        ("Duong so 2 Khu tai dinh cu Tan An", "duong-so-2"),
+        ("Duong so 3 Khu tai dinh cu Tan An", "duong-so-3"),
+        ("Duong so 5 Khu tai dinh cu Tan An", "duong-so-5"),
+        ("Duong so 18 Khu tai dinh cu Tan An", "duong-so-18"),
+        ("Duong so 8 Phuong Phu An", "duong-so-8"),
+        ("Mat tien Bui Ngoc Thu Tan An", "bui-ngoc-thu"),
+    ],
+)
+def test_tan_an_evidence_backed_roads_resolve_out_of_ward_center(
+    title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920100,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "T\u00e2n An",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+def test_tan_an_resettlement_landmark_resolves_out_of_ward_center():
+    registry = load_location_registry()
+    listing = {
+        "id": 920101,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "T\u00e2n An",
+        "title": "Khu tai dinh cu Tan An Thu Dau Mot",
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(listing["title"], "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert "tdc-tan-an" in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

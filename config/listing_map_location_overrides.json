@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v25",
+  "resolver_version": "osm-binh-duong-20260807-v26",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -330,6 +330,192 @@
       "verified_at": "2026-08-12",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "public DB6 addresses in the new-city area are stronger than the retained coarse historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 140",
+      "lat": 11.0208579,
+      "lng": 106.6177602,
+      "accuracy_radius_m": 1200,
+      "source": "Nhatot listing evidence near Cho Ben The and Google Maps public place anchor",
+      "source_url": "https://www.nhatot.com/mua-ban-thanh-pho-thu-dau-mot-binh-duong/131990328.htm",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 120",
+      "lat": 11.0300017,
+      "lng": 106.6178385,
+      "accuracy_radius_m": 1300,
+      "source": "BDS68 listing evidence near Huynh Thi Hieu and Google Maps public road anchor",
+      "source_url": "https://bds68.com.vn/ban-dat/binh-duong/thu-dau-mot/phuong-tan-an/ban-dat-dx120-tan-an-thu-dau-mot-914m2650tr-so-hong-rieng-vay-50-pr25919901",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 135",
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 1500,
+      "source": "Official public procurement scope for DX135 in KP2 Tan An and Google Maps ward anchor",
+      "source_url": "https://dauthau.asia/en/plan/contractor-selection/khlcnt-consulting-packages-in-the-stage-of-investing-in-the-project-upgrading-btxm-sewer-from-alley-from-mr-1939664.html",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 141",
+      "lat": 11.0199517,
+      "lng": 106.6174373,
+      "accuracy_radius_m": 350,
+      "source": "Google Maps exact public address result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/search/?api=1&query=DX141%2C%20Tan%20An%2C%20Thu%20Dau%20Mot",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 108",
+      "lat": 11.0300017,
+      "lng": 106.6178385,
+      "accuracy_radius_m": 1200,
+      "source": "Public registered address on DX108 and Google Maps Huynh Thi Hieu anchor",
+      "source_url": "https://tracuunhanh.vn/3703300027-cong-ty-tnhh-shengyuan-wood",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 117",
+      "lat": 11.0227519,
+      "lng": 106.6242868,
+      "accuracy_radius_m": 1100,
+      "source": "Official procurement scope in KP7 Tan An and nearby OSM road anchors",
+      "source_url": "https://dauthau.asia/kehoach/luachon-nhathau/xay-dung-cong-thoat-nuoc-duong-dx117-khu-pho-7-phuong-tan-an-thanh-pho-thu-dau-mot-tinh-binh-duong-1102797.html",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "DX 109",
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 1500,
+      "source": "Public listing and registered-address evidence for DX109 in Tan An",
+      "source_url": "https://batdongsan.com.vn/ban-dat-phuong-tan-an_1/thanh-ly-lo-o-mt-dx109-an-thu-dau-mot-dien-tich-60m2-chi-1-2ty-so-hong-rieng-vi-tri-dep-pr43645597",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đại lộ Bình Dương",
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 1100,
+      "source": "Google Maps exact Khu tai dinh cu Tan An result located on QL13",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đường số 1",
+      "landmark_keys": ["TĐC Tân An"],
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact Khu tai dinh cu Tan An public place anchor",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đường số 2",
+      "landmark_keys": ["TĐC Tân An"],
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact Khu tai dinh cu Tan An public place anchor",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đường số 3",
+      "landmark_keys": ["TĐC Tân An"],
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact Khu tai dinh cu Tan An public place anchor",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đường số 5",
+      "landmark_keys": ["TĐC Tân An"],
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact Khu tai dinh cu Tan An public place anchor",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đường số 18",
+      "landmark_keys": ["TĐC Tân An"],
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact Khu tai dinh cu Tan An public place anchor",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Đường số 8",
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 1800,
+      "source": "Current public listing evidence for Duong so 8 in post-merger Phu An and Google Maps Tan An anchor",
+      "source_url": "https://radarbds.vn/listing/42794",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Bùi Ngọc Thu",
+      "lat": 11.0232043,
+      "lng": 106.6455718,
+      "accuracy_radius_m": 1400,
+      "source": "OpenStreetMap road geometry and multiple public Tan An listing pages",
+      "source_url": "https://www.openstreetmap.org/way/1238200028",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Bui Ngoc Thu follows the legacy Tan An-Hiep An edge; public road and listing evidence is stronger than the coarse historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Nguyễn Đức Thuận",
+      "landmark_keys": ["KDC Hiệp Phát 1"],
+      "lat": 11.0053207,
+      "lng": 106.6567778,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public road result and public KDC Hiep Phat listing evidence",
+      "source_url": "https://batdongsan.com.vn/ban-nha-rieng-duong-nguyen-duc-thuan-phuong-hiep-thanh-khu-dan-cu-hiep-phat/ban-kdc-1-gia-3-1-ty-ban-1-binh-bao-thue-phi-pr44645010",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the source listing labels KDC Hiep Phat 1 as Tan An while public project and road evidence places it on Nguyen Duc Thuan in adjacent Hiep Thanh"
     }
   ],
   "landmark_aliases": [
@@ -339,7 +525,48 @@
         "TDC Phu Chanh B",
         "tái định cư Phú Chánh B"
       ]
+    },
+    {
+      "canonical": "TĐC Tân An",
+      "aliases": [
+        "TDC Tan An",
+        "Khu tái định cư Tân An",
+        "tái định cư Tân An"
+      ]
+    },
+    {
+      "canonical": "KDC Hiệp Phát 1",
+      "aliases": [
+        "KDC Hiep Phat 1",
+        "Khu dân cư Hiệp Phát 1",
+        "KDC Hiệp Phát"
+      ]
     }
   ],
-  "landmarks": []
+  "landmarks": [
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "landmark_name": "TĐC Tân An",
+      "lat": 11.0186542,
+      "lng": 106.6271991,
+      "accuracy_radius_m": 750,
+      "source": "Google Maps exact public place result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+T%C3%A2n+An/@11.0186542,106.6271991,17z/",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "landmark_name": "KDC Hiệp Phát 1",
+      "lat": 11.0053207,
+      "lng": 106.6567778,
+      "accuracy_radius_m": 600,
+      "source": "Public project directory and listing evidence on Nguyen Duc Thuan",
+      "source_url": "https://nhaphonet.vn/du-an/khu-dan-cu-hiep-phat/",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the source listing uses Tan An while public project evidence places KDC Hiep Phat on Nguyen Duc Thuan in adjacent Hiep Thanh"
+    }
+  ]
 }

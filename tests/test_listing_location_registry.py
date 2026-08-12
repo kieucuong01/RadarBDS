@@ -1121,6 +1121,32 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         "boundary_mismatch_reason"
     ]
 
+    assert {
+        ("T\u00e2n An", "dx 140"),
+        ("T\u00e2n An", "dx 120"),
+        ("T\u00e2n An", "dx 135"),
+        ("T\u00e2n An", "dx 141"),
+        ("T\u00e2n An", "dx 108"),
+        ("T\u00e2n An", "dx 117"),
+        ("T\u00e2n An", "dx 109"),
+        ("T\u00e2n An", "dai lo binh duong"),
+        ("T\u00e2n An", "duong so 1"),
+        ("T\u00e2n An", "duong so 2"),
+        ("T\u00e2n An", "duong so 3"),
+        ("T\u00e2n An", "duong so 5"),
+        ("T\u00e2n An", "duong so 18"),
+        ("T\u00e2n An", "duong so 8"),
+        ("T\u00e2n An", "bui ngoc thu"),
+        ("T\u00e2n An", "nguyen duc thuan"),
+    }.issubset(indexed_roads)
+    indexed_landmarks = {
+        (row["ward"], row["normalized_landmark"]): row
+        for row in landmarks["landmarks"]
+    }
+    assert indexed_landmarks[("T\u00e2n An", "tdc tan an")]["source"].startswith(
+        "Google Maps"
+    )
+
     registry = load_location_registry()
     assert (
         registry.roads[
