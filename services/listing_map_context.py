@@ -278,6 +278,12 @@ def _normalize_road_candidate(value: str) -> str:
     ):
         return ""
     if re.match(
+        r"^(?:nhua|be\s*tong|dat)\s+\d{1,2}(?:\s+\d+)?\s*(?:m|met)\b",
+        candidate,
+        re.IGNORECASE,
+    ):
+        return ""
+    if re.match(
         r"^(?:duong\s+)?(?:dx|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
         r"[-./_]?\s*0*\d{1,2}\s+(?:m|met)\b",
         candidate,
@@ -644,15 +650,16 @@ def extract_map_location_context(
             evidence_text=evidence,
         )
 
+    nearby_road, _ = _relation_road(folded, _NEAR_PREFIX_RE)
     if explicit_direct_road:
         return MapLocationContext(
             direct_road=explicit_direct_road,
+            nearby_road=nearby_road,
             landmark=landmark,
-            relation="on",
+            relation="near" if nearby_road else "on",
             evidence_text=evidence,
         )
 
-    nearby_road, _ = _relation_road(folded, _NEAR_PREFIX_RE)
     if nearby_road:
         return MapLocationContext(
             nearby_road=nearby_road,

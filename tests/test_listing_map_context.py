@@ -676,8 +676,8 @@ def test_direct_frontage_road_beats_a_nearby_reference_road():
     )
 
     assert context.direct_road == "duong so 30 thang 4"
-    assert context.nearby_road == ""
-    assert context.relation == "on"
+    assert context.nearby_road == "vo minh duc"
+    assert context.relation == "near"
 
 
 def test_direct_numbered_road_is_not_replaced_by_marketing_copy_relations():
@@ -699,6 +699,21 @@ def test_generic_paved_road_width_does_not_become_numbered_road():
 
     assert context.direct_road == "thich quang duc"
     assert context.direct_road != "duong so 2"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Mat tien duong nhua 6,5m thong thoang, cach Le Chi Dan 200m",
+        "Duong nhua 4.5 met, cach Nguyen Duc Canh vai buoc chan",
+        "Duong be tong 3,5m, cach Phan Dang Luu 100m",
+    ],
+)
+def test_decimal_road_width_is_not_a_numbered_road(text):
+    context = extract_map_location_context("Dat dep", text)
+
+    assert context.direct_road == ""
+    assert not context.nearby_road.startswith("duong so")
 
 
 @pytest.mark.parametrize(
