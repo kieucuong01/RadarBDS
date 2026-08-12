@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v42",
+  "resolver_version": "osm-binh-duong-20260807-v43",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -586,6 +586,45 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "current Phu Tan listings explicitly place road 41 in TDC Phu Chanh B while Google uses the public Duong Phu Chanh 41 label"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Đường số 42",
+      "lat": 11.0698005,
+      "lng": 106.6953152,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps public address on Duong so 42 Phu Chanh verified by close-zoom map inspection with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Nh%C3%A0+H%C3%A0ng+LinhEnzo/@11.069752,106.6942516,18z/data=!4m6!3m5!1s0x3174cf001248a4c7:0x14af643630400f2b!8m2!3d11.0698005!4d106.6953152!16s%2Fg%2F11x27nxdrv",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Tan listings explicitly identify Duong so 42 in TDC Phu Chanh B under the former Hoa Phu scope"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Đường số 44",
+      "lat": 11.069173,
+      "lng": 106.695556,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps Street View direct road segment address at 56-28 Duong So 44 verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/@11.069173,106.695556,18z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Tan listings explicitly identify Duong so 44 in TDC Phu Chanh B under the former Hoa Phu scope"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Đường số 50",
+      "lat": 11.0666659,
+      "lng": 106.6941819,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public place address on Duong So 50 Phu Chanh verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Nh%C3%A0/@11.066666,106.6930876,18z/data=!4m6!3m5!1s0x3174cf7a782a9763:0xf0788cbdf8f13c17!8m2!3d11.0666659!4d106.6941819!16s%2Fg%2F11t7_hdmll",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Tan listings explicitly identify Duong so 50 in the TDC Phu Chanh area"
     },
     {
       "city": "THỦ DẦU MỘT",
