@@ -88,7 +88,7 @@ rollback_to_before() {
       performance_backup=""
     fi
     git reset --hard "`$before_commit" >/dev/null || true
-    if [ -f "`$raw_backup" ]; then
+    if [ -f "`$raw_backup" ] && [ ! -f data/raw_backup.json ]; then
       mkdir -p data
       cp -f "`$raw_backup" data/raw_backup.json || true
     fi
@@ -98,6 +98,7 @@ rollback_to_before() {
     fi
     sudo systemctl restart radar-bds.service || true
     if smoke_service; then
+      rm -f -- "`$raw_backup"
       echo "rollback smoke passed"
     else
       echo "rollback smoke failed"
@@ -163,12 +164,23 @@ if [ -n "`$dirty_files" ]; then
   exit 2
 fi
 
-cp -f data/raw_backup.json "`$raw_backup" 2>/dev/null || true
+if [ -f data/raw_backup.json ]; then
+  if ! cp -f data/raw_backup.json "`$raw_backup"; then
+    rm -f -- "`$raw_backup"
+    echo "runtime raw backup copy failed"
+    exit 1
+  fi
+  if ! cmp -s data/raw_backup.json "`$raw_backup"; then
+    rm -f -- "`$raw_backup"
+    echo "runtime raw backup copy failed validation"
+    exit 1
+  fi
+fi
 deploy_started="1"
 git fetch origin "$Branch"
 git pull --ff-only origin "$Branch"
 
-if [ -f "`$raw_backup" ]; then
+if [ -f "`$raw_backup" ] && [ ! -f data/raw_backup.json ]; then
   mkdir -p data
   cp -f "`$raw_backup" data/raw_backup.json
 fi
@@ -243,6 +255,7 @@ for url in \
 done
 
 after=`$(git rev-parse --short HEAD)
+rm -f -- "`$raw_backup"
 echo "deployed `$before -> `$after"
 if [ -n "`$known_temp_archive" ]; then
   echo "known temp archive: `$known_temp_archive"

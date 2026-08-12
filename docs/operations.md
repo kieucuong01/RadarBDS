@@ -433,6 +433,9 @@ The deploy script:
 - fast-forwards the VPS checkout,
 - removes legacy `data/facebook_profiles.json` after a DB migration/backup so Facebook broker configuration comes only from `facebook_crawl_profiles`,
 - allows runtime `data/raw_backup.json` to stay dirty on the VPS,
+- validates any temporary `raw_backup.json` copy byte-for-byte, never overwrites
+  an existing runtime copy during rollback/pull, and removes the temporary copy
+  after a successful deploy or rollback smoke,
 - auto-archives a small allowlist of known temporary audit/report files from the VPS checkout to `/tmp/radar-bds-deploy-known-temp-*.tgz`,
 - restarts `radar-bds.service`,
 - smokes `/api/dashboard` and `/api/signals`,
