@@ -1222,6 +1222,9 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert {
         ("Phú Hòa", "duong so 385"),
         ("Phú Hòa", "duong so 453"),
+        ("Phú Hòa", "duong so 93"),
+        ("Phú Hòa", "duong so 194"),
+        ("Phú Hòa", "duong so 269"),
         ("Phú Hòa", "tran van on"),
         ("Phú Hòa", "my phuoc tan van"),
     }.issubset(indexed_roads)

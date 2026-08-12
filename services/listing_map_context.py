@@ -84,6 +84,7 @@ _NON_ROAD_NAMES = {
     "oto",
     "o to",
     "xe hoi",
+    "chinh",
 }
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
@@ -478,6 +479,8 @@ def _direct_road(text: str) -> str:
             prefix_context,
         ):
             return _normalize_road_candidate(code_match.group(0))
+    if re.search(r"\bntmk\b", text, re.IGNORECASE):
+        return normalize_road_token("nguyen thi minh khai")
     for known_name in _KNOWN_ROAD_PREFIXES:
         known_match = re.search(
             rf"\b{re.escape(known_name)}\b",
@@ -550,8 +553,17 @@ def extract_map_location_context(
         normalize_location_token(description or "")
     )
 
+    direct_road = _direct_road(folded)
     alley_road, _ = _relation_road(folded, _ALLEY_PREFIX_RE)
     if alley_road:
+        if direct_road and direct_road != alley_road:
+            return MapLocationContext(
+                nearby_road=direct_road,
+                landmark=landmark,
+                relation="alley",
+                distance_m=_distance(folded),
+                evidence_text=evidence,
+            )
         nearby_road, _ = _relation_road(folded, _NEAR_PREFIX_RE)
         if nearby_road:
             return MapLocationContext(
@@ -579,7 +591,6 @@ def extract_map_location_context(
             evidence_text=evidence,
         )
 
-    direct_road = _direct_road(folded)
     if not direct_road and stored_road_name:
         stored_candidate = _normalize_road_candidate(
             normalize_location_token(stored_road_name)

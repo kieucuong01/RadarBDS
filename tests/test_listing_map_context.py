@@ -573,6 +573,20 @@ def test_phu_hoa_alley_identifiers_beat_marketing_copy(text, expected):
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
+        ("Nhà hẻm 109 NTMK khu 9 Phú Hòa", "nguyen thi minh khai"),
+        ("Đất đường Lê Hồng Phong hẻm 249", "le hong phong"),
+        ("Nhà 1 xẹt 30/4 cách đường chính 50m", "duong so 30 thang 4"),
+    ],
+)
+def test_phu_hoa_numbered_alley_prefers_explicit_parent_road(text, expected):
+    context = extract_map_location_context(text, "")
+    assert context.nearby_road == expected
+    assert context.relation == "alley"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
         ("Nhà KDC Phú Hòa 1 full nội thất", "kdc phu hoa 1"),
         ("Nhà KDC Phú Hòa 2 khu dân cư hiện hữu", "kdc phu hoa 2"),
         ("Nhà KDC Hoàng Nam 2 Phú Hòa", "kdc hoang nam 2"),

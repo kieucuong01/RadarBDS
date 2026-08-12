@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v33",
+  "resolver_version": "osm-binh-duong-20260807-v34",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -943,6 +943,39 @@
       "accuracy_radius_m": 650,
       "source": "Google Maps exact public intersection result for Nguyen Thi Minh Khai and Hem 453 verified with isolated browser-use",
       "source_url": "https://www.google.com/maps/place/Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai+%26+453,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9742924,106.6899288,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Đường số 93",
+      "lat": 10.9814244,
+      "lng": 106.6908157,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public Hẻm 93 Nguyễn Thị Minh Khai result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/H%E1%BA%BBm+93+Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9814244,106.6908157,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Đường số 194",
+      "lat": 10.9759184,
+      "lng": 106.6876741,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public Hẻm 194 Nguyễn Thị Minh Khai result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/H%E1%BA%BBm+194+Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9759184,106.6876741,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Đường số 269",
+      "lat": 10.975699,
+      "lng": 106.6924591,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public Hẻm 269 Nguyễn Thị Minh Khai result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/H%E1%BA%BBm+269+Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.975699,106.6924591,17z/",
       "verified_at": "2026-08-13"
     }
   ],
