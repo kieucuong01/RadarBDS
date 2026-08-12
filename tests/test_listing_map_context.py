@@ -389,6 +389,30 @@ def test_chanh_my_known_roads_drop_marketing_and_area_suffixes():
     assert huynh_van_cu.direct_road == "huynh van cu"
 
 
+def test_tan_an_common_road_phrases_map_to_known_roads():
+    nguyen_chi_thanh = extract_map_location_context(
+        "Dat Tan An cach duong lon Nguyen Chi Thanh",
+        "",
+    )
+    huynh_thi_hieu = extract_map_location_context(
+        "Dat Tan An cach Huynh Thi H nha tret lung",
+        "",
+    )
+    phan_dang_luu = extract_map_location_context(
+        "Dat Tan An cach Phan Dang Luu 60 met",
+        "",
+    )
+    le_chi_dan = extract_map_location_context(
+        "Nha Tan An 1 sec Le Chi",
+        "",
+    )
+
+    assert nguyen_chi_thanh.nearby_road == "nguyen chi thanh"
+    assert huynh_thi_hieu.nearby_road == "huynh thi hieu"
+    assert phan_dang_luu.nearby_road == "phan dang luu"
+    assert le_chi_dan.nearby_road == "le chi dan"
+
+
 def test_hiep_thanh_pham_ngoc_short_name_maps_to_pham_ngoc_thach():
     context = extract_map_location_context(
         "Đất Hiệp Thành cách Phạm Ngọc vòng xoay 500m",

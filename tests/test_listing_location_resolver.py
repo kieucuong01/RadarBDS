@@ -451,6 +451,9 @@ def test_phu_tan_context_named_road_is_used_when_stored_road_name_is_noise():
         ("\u0110\u1ecbnh H\u00f2a", "Vo Van Kiet", "vo-van-kiet"),
         ("Ch\u00e1nh M\u1ef9", "Nguyen Van Long", "nguyen-van-long"),
         ("Ch\u00e1nh M\u1ef9", "Huynh Van Cu", "huynh-van-cu"),
+        ("T\u00e2n An", "Huynh Thi Hieu", "huynh-thi-hieu"),
+        ("T\u00e2n An", "Phan Dang Luu", "phan-dang-luu"),
+        ("T\u00e2n An", "Le Chi Dan", "le-chi-dan"),
     ],
 )
 def test_common_thu_dau_mot_multi_segment_roads_use_aggregate_road(
