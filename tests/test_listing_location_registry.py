@@ -1009,6 +1009,57 @@ def test_builder_rejects_duplicate_alias_assigned_to_two_candidates(tmp_path):
         )
 
 
+def test_scoped_road_alias_does_not_leak_to_another_ward(tmp_path):
+    osm, sources, overrides, boundaries = _generated_payloads()
+    osm["elements"].extend(
+        [
+            {
+                "type": "way",
+                "id": 7001,
+                "tags": {"highway": "residential", "name": "Đường D3"},
+                "geometry": [
+                    {"lat": 11.010, "lon": 106.680},
+                    {"lat": 11.012, "lon": 106.684},
+                ],
+            },
+            {
+                "type": "way",
+                "id": 7002,
+                "tags": {"highway": "residential", "name": "Đường D3"},
+                "geometry": [
+                    {"lat": 11.060, "lon": 106.690},
+                    {"lat": 11.063, "lon": 106.694},
+                ],
+            },
+        ]
+    )
+    overrides["road_aliases"] = [
+        {
+            "city": "THỦ DẦU MỘT",
+            "ward": "Hiệp An",
+            "canonical": "Đường D3",
+            "aliases": ["Đường số 3", "Đường 3"],
+        }
+    ]
+
+    paths = build_location_registries(
+        osm,
+        sources,
+        tmp_path,
+        overrides=overrides,
+        boundary_paths=(boundaries,),
+    )
+    roads = json.loads(paths[1].read_text(encoding="utf-8"))["roads"]
+    d3_by_ward = {
+        row["ward"]: row
+        for row in roads
+        if row["normalized_road"] == "d 3"
+    }
+
+    assert "duong so 3" in d3_by_ward["Hiệp An"]["aliases"]
+    assert "duong so 3" not in d3_by_ward["Phú Tân"]["aliases"]
+
+
 def test_builder_rejects_unexplained_boundary_mismatch(tmp_path):
     osm, sources, overrides, boundaries = _generated_payloads()
     overrides["roads"] = [
@@ -1112,6 +1163,8 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("Hiệp An", "dx 106"),
         ("Hiệp An", "huynh thi chau"),
         ("Phú Lợi", "nguyen duc thuan"),
+        ("Phú Lợi", "bui ngoc thu"),
+        ("Phú Lợi", "ho van cong"),
         ("Phú Hòa", "thich quang duc"),
         ("Hiệp Thành", "bac si yersin"),
         ("Hiệp Thành", "nguyen van troi"),

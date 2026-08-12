@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v40",
+  "resolver_version": "osm-binh-duong-20260807-v41",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -1213,6 +1213,32 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "current Phu Loi listings include the former Hiep Thanh scope and explicitly name Nguyen Van Tiet"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Bùi Ngọc Thu",
+      "lat": 11.0144417,
+      "lng": 106.6380323,
+      "accuracy_radius_m": 1100,
+      "source": "OpenStreetMap aggregate named-road geometry reused under the current post-merger Phu Loi listing label",
+      "source_url": "https://www.openstreetmap.org/way/137265987",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings include former ward coverage and explicitly name Bui Ngoc Thu"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Hồ Văn Cống",
+      "lat": 11.012234,
+      "lng": 106.6325994,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact public named-road result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/H%E1%BB%93+V%C4%83n+C%E1%BB%91ng,+Ch%C3%A1nh+Hi%E1%BB%87p,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@11.012234,106.6325994,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Loi listings explicitly name Ho Van Cong while Google Maps uses the post-merger Chanh Hiep label"
     },
     {
       "city": "THỦ DẦU MỘT",

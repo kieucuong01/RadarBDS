@@ -149,6 +149,7 @@ _KNOWN_ROAD_PREFIXES = (
     "pham ngu lao",
     "nguyen binh khiem",
     "cach mang thang tam",
+    "dai lo binh duong",
     "bui quoc khanh",
     "phan dinh giot",
     "ngo gia tu",
@@ -272,6 +273,18 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
     if re.match(
+        r"^dai\s+lo\s+\d{1,4}(?:\s+\d+)?\s*m(?:\s*2\b|\b)",
+        candidate,
+        re.IGNORECASE,
+    ):
+        return ""
+    if re.match(
+        r"^\d{1,2}\s+\d{1,2}\s*m\b",
+        candidate,
+        re.IGNORECASE,
+    ):
+        return ""
+    if re.match(
         r"^(?:duong\s+)?nhua\s+\d{1,2}\s+(?:xe|o\s*to)\b",
         candidate,
         re.IGNORECASE,
@@ -294,6 +307,8 @@ def _normalize_road_candidate(value: str) -> str:
         return ""
     if candidate.startswith(("cmt8", "cmt 8", "cach mang thang 8")):
         return "cach mang thang tam"
+    if candidate.startswith("ntmk"):
+        return "nguyen thi minh khai"
     if candidate.startswith(("dai lo bd", "dai lo b d")):
         return "dai lo binh duong"
     if candidate.startswith(("dl binh duong", "dl bd")):
@@ -304,7 +319,7 @@ def _normalize_road_candidate(value: str) -> str:
         return "huynh van luy"
     if candidate.startswith("lhp"):
         return "le hong phong"
-    if candidate.startswith("quoc lo 13"):
+    if re.match(r"^quoc\s+lo\s*13\b", candidate, re.IGNORECASE):
         return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):
         return "dai lo binh duong"
@@ -419,12 +434,33 @@ def _normalize_road_candidate(value: str) -> str:
     )
     if alley_number_named_road:
         named_road = _normalize_road_candidate(alley_number_named_road.group("road"))
-        if _looks_like_road_name(named_road):
+        starts_with_admin_area = bool(
+            re.match(
+                r"^(?:tuong binh hiep|dinh hoa|tan an|hiep an|phu tan|"
+                r"phu hoa|phu loi|phu my|hiep thanh|chanh nghia|"
+                r"chanh my|phu tho|phu cuong|hoa phu|thu dau mot)\b",
+                named_road,
+                re.IGNORECASE,
+            )
+        )
+        if not starts_with_admin_area and _looks_like_road_name(named_road):
             return named_road
 
     number_match = _NUMBERED_ROAD_RE.match(candidate)
     if number_match:
         if number_match.group("suffix").lower() == "m":
+            return ""
+        suffix_context = candidate[number_match.end() :]
+        explicit_numbered = bool(
+            re.match(r"^(?:duong\s+)?so\s+", candidate, re.IGNORECASE)
+        )
+        if re.match(r"\s*(?:m|met)\b", suffix_context, re.IGNORECASE):
+            return ""
+        if not explicit_numbered and re.match(
+            r"\s+(?:xe|o\s*to)\b",
+            suffix_context,
+            re.IGNORECASE,
+        ):
             return ""
         if int(number_match.group("number")) > 500:
             return ""
@@ -487,6 +523,11 @@ def _relation_road(
             and re.search(r"\bthiet\s*$", prefix_context)
         ):
             continue
+        if (
+            match.group(0).strip().lower() == "nhanh"
+            and re.search(r"\bket\s+noi\s*$", prefix_context)
+        ):
+            continue
         road = _road_after(text, match.end())
         has_explicit_road_word = "duong" in match.group(0).lower()
         prefix = match.group(0).strip().lower()
@@ -546,6 +587,14 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
         road = _road_after(text, match.end())
         if road and _looks_like_road_name(road):
             return road
+
+    numbered_address = re.search(
+        r"\b\d{1,4}\s+(?P<road>dai\s+lo\s+b\s*d)\b",
+        text,
+        re.IGNORECASE,
+    )
+    if numbered_address:
+        return _normalize_road_candidate(numbered_address.group("road"))
 
     code_match = re.search(
         r"\b(?:dx|db|dh|dt|dl|tl|ql|nl|ni)\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
@@ -623,6 +672,14 @@ def extract_map_location_context(
     direct_road = explicit_direct_road or _known_named_road(folded)
     alley_road, _ = _relation_road(folded, _ALLEY_PREFIX_RE)
     if alley_road:
+        if not re.fullmatch(r"duong so \d{1,4}[a-z]?", alley_road):
+            return MapLocationContext(
+                nearby_road=alley_road,
+                landmark=landmark,
+                relation="alley",
+                distance_m=_distance(folded),
+                evidence_text=evidence,
+            )
         named_parent_road = _known_named_road(folded)
         parent_road = named_parent_road or direct_road
         if parent_road and parent_road != alley_road:

@@ -348,8 +348,8 @@ def _validate_aliases(
     rows: Sequence[Mapping],
     *,
     landmark: bool,
-) -> dict[str, list[str]]:
-    aliases_by_canonical: dict[str, list[str]] = {}
+) -> dict[tuple[str, str, str], list[str]]:
+    aliases_by_scope: dict[tuple[str, str, str], list[str]] = {}
     seen: dict[tuple[str, str, str], str] = {}
     normalizer = _normalize_landmark_token if landmark else normalize_road_token
     for row in rows:
@@ -367,11 +367,31 @@ def _validate_aliases(
             if previous is not None and previous != canonical:
                 raise ValueError(f"duplicate alias in one scope: {alias}")
             seen[scope_key] = canonical
-            aliases_by_canonical.setdefault(canonical, []).append(alias)
+            aliases_by_scope.setdefault((city, ward, canonical), []).append(alias)
     return {
-        key: sorted(set(values + [key]))
-        for key, values in aliases_by_canonical.items()
+        scope_key: sorted(set(values + [scope_key[2]]))
+        for scope_key, values in aliases_by_scope.items()
     }
+
+
+def _aliases_for_scope(
+    aliases_by_scope: Mapping[tuple[str, str, str], list[str]],
+    *,
+    city: str,
+    ward: str,
+    canonical: str,
+) -> list[str]:
+    normalized_city = normalize_location_token(city)
+    normalized_ward = normalize_location_token(ward)
+    aliases = {canonical}
+    for scope in (
+        ("", "", canonical),
+        ("", normalized_ward, canonical),
+        (normalized_city, "", canonical),
+        (normalized_city, normalized_ward, canonical),
+    ):
+        aliases.update(aliases_by_scope.get(scope, ()))
+    return sorted(aliases)
 
 
 def _validate_override_point(
@@ -706,7 +726,7 @@ def _legacy_road_rows(
 def _generated_landmark_rows(
     osm_payload: Mapping,
     boundaries: Mapping,
-    aliases_by_canonical: Mapping[str, list[str]],
+    aliases_by_scope: Mapping[tuple[str, str, str], list[str]],
 ) -> list[dict]:
     grouped = {}
     for element in osm_payload.get("elements") or []:
@@ -771,8 +791,11 @@ def _generated_landmark_rows(
                     "normalized_ward": normalized_ward,
                     "landmark_name": name,
                     "normalized_landmark": normalized,
-                    "aliases": aliases_by_canonical.get(
-                        normalized, [normalized]
+                    "aliases": _aliases_for_scope(
+                        aliases_by_scope,
+                        city=city,
+                        ward=ward,
+                        canonical=normalized,
                     ),
                     "lat": round(lat, 7),
                     "lng": round(lng, 7),
@@ -797,7 +820,7 @@ def _merge_curated_roads(
     rows: list[dict],
     override_rows: Sequence[Mapping],
     boundaries: Mapping,
-    aliases_by_canonical: Mapping[str, list[str]],
+    aliases_by_scope: Mapping[tuple[str, str, str], list[str]],
 ) -> list[dict]:
     curated = {}
     for source in override_rows:
@@ -819,7 +842,12 @@ def _merge_curated_roads(
             "normalized_ward": normalized_ward,
             "road_name": road_name,
             "normalized_road": normalized_road,
-            "aliases": aliases_by_canonical.get(normalized_road, [normalized_road]),
+            "aliases": _aliases_for_scope(
+                aliases_by_scope,
+                city=city,
+                ward=ward,
+                canonical=normalized_road,
+            ),
             "lat": round(lat, 7),
             "lng": round(lng, 7),
             "accuracy_radius_m": max(
@@ -878,7 +906,7 @@ def _merge_curated_landmarks(
     rows: list[dict],
     override_rows: Sequence[Mapping],
     boundaries: Mapping,
-    aliases_by_canonical: Mapping[str, list[str]],
+    aliases_by_scope: Mapping[tuple[str, str, str], list[str]],
 ) -> list[dict]:
     curated = {}
     for source in override_rows:
@@ -902,7 +930,12 @@ def _merge_curated_landmarks(
             "normalized_ward": normalized_ward,
             "landmark_name": name,
             "normalized_landmark": normalized,
-            "aliases": aliases_by_canonical.get(normalized, [normalized]),
+            "aliases": _aliases_for_scope(
+                aliases_by_scope,
+                city=city,
+                ward=ward,
+                canonical=normalized,
+            ),
             "lat": round(lat, 7),
             "lng": round(lng, 7),
             "accuracy_radius_m": max(
@@ -1202,7 +1235,12 @@ def build_location_registries(
     for row in road_rows:
         row.setdefault(
             "aliases",
-            road_aliases.get(row["normalized_road"], [row["normalized_road"]]),
+            _aliases_for_scope(
+                road_aliases,
+                city=row["city"],
+                ward=row["ward"],
+                canonical=row["normalized_road"],
+            ),
         )
 
     landmark_rows = _generated_landmark_rows(

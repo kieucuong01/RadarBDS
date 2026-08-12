@@ -717,6 +717,131 @@ def test_decimal_road_width_is_not_a_numbered_road(text):
 
 
 @pytest.mark.parametrize(
+    ("text", "expected_nearby"),
+    [
+        (
+            "Cach Bui Quoc Khanh co may chuc met. "
+            "Duong 2 xe hoi ra vo thoai mai",
+            "bui quoc khanh",
+        ),
+        (
+            "Cach Le Hong Phong 100m. Duong 5m 2 xe hoi ne nhau",
+            "le hong phong",
+        ),
+        (
+            "Mat tien duong 4 m + sat duong lon Le Hong Phong",
+            "le hong phong",
+        ),
+    ],
+)
+def test_vehicle_count_and_road_width_do_not_become_numbered_roads(
+    text, expected_nearby
+):
+    context = extract_map_location_context("Dat trung tam", text)
+
+    assert context.direct_road == ""
+    assert context.nearby_road == expected_nearby
+
+
+def test_area_after_generic_boulevard_does_not_hide_named_boulevard():
+    context = extract_map_location_context(
+        "Can ban dat mat tien dai lo 463.3m² tho cu 416m²",
+        "Vi tri: Dai Lo Binh Duong. Dien tich: 15 x 28m.",
+    )
+
+    assert context.direct_road == "dai lo binh duong"
+
+
+def test_decimal_frontage_does_not_override_cmt8_alley():
+    context = extract_map_location_context(
+        "Ban nha Chanh Nghia 1/ C",
+        "Ban nha 1/ Cach Mang Thang 8 cach 30m. "
+        "Dien tich 104m2. Mat tien 9.5m.",
+    )
+
+    assert context.direct_road == ""
+    assert context.nearby_road == "cach mang thang tam"
+    assert context.relation == "alley"
+
+
+def test_numbered_road_before_ward_name_keeps_the_numbered_road():
+    context = extract_map_location_context(
+        "Mat tien duong 51 Phu Tan Thu Dau Mot cu",
+        "Duong 51 phuong Phu Tan, sat Nguyen Van Linh.",
+    )
+
+    assert context.direct_road == "duong so 51"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "1 xet Le Chi Dan, gan cau Ba Co - pho di bo Bach Dang",
+            "le chi dan",
+        ),
+        (
+            "1/ Nguyen Duc Thuan, duong nhua gan 5m. Ho tro bank tet ga",
+            "nguyen duc thuan",
+        ),
+        (
+            "1 xet Nguyen Chi Thanh. Cach duong nhua lon tam 50m",
+            "nguyen chi thanh",
+        ),
+        (
+            "1/ duong Nguyen Binh cach 20m. "
+            "Thich hop lam nha vuon bao dep",
+            "nguyen binh",
+        ),
+    ],
+)
+def test_named_alley_road_beats_later_non_location_copy(text, expected):
+    context = extract_map_location_context("Nha trung tam", text)
+
+    assert context.nearby_road == expected
+    assert context.relation == "alley"
+
+
+def test_ql13_without_space_before_number_uses_canonical_road():
+    context = extract_map_location_context(
+        "Duong Quoc Lo13 lo goc khong tru chi gioi",
+        "",
+    )
+
+    assert context.direct_road == "dai lo binh duong"
+
+
+def test_direct_ntmk_beats_later_dt743_reference():
+    context = extract_map_location_context(
+        "Dat mat tien NTMK dang cho thue",
+        "Duong DT743 thong QL13",
+    )
+
+    assert context.direct_road == "nguyen thi minh khai"
+
+
+def test_address_number_before_dai_lo_bd_beats_nearby_ring_road():
+    context = extract_map_location_context(
+        "Ban can ho Happy One 26 Dai Lo BD",
+        "Doi dien Metro, ke duong Vanh Dai 3 dang thi cong",
+    )
+
+    assert context.direct_road == "dai lo binh duong"
+    assert context.nearby_road == "vanh dai 3"
+
+
+def test_fast_connection_copy_is_not_treated_as_an_alley():
+    context = extract_map_location_context(
+        "Nha mat tien Ho Van Cong",
+        "Ket noi nhanh Quoc Lo 13 - Dai Lo Binh Duong - TP HCM",
+    )
+
+    assert context.direct_road == "ho van cong"
+    assert context.nearby_road == ""
+    assert context.relation == "on"
+
+
+@pytest.mark.parametrize(
     ("text", "expected", "relation"),
     [
         ("Hem duong Lao Cai Nha Moi 90% xay dung tret lau", "lao cai", "alley"),
