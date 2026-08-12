@@ -696,6 +696,38 @@ def test_chanh_my_evidence_backed_locations_resolve(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_precision", "expected_slug"),
+    [
+        ("Mặt tiền D10 TĐC Phú Mỹ", "road", "d-10"),
+        ("Mặt tiền D8 TĐC Phú Mỹ", "road", "d-8"),
+        ("Mặt tiền D11 TĐC Phú Mỹ", "road", "d-11"),
+        ("Mặt tiền D12 TĐC Phú Mỹ", "road", "d-12"),
+        ("Đường N16 TĐC Phú Mỹ", "road", "n-16"),
+        ("Đất TĐC Phú Mỹ KP1", "landmark", "tdc-phu-my"),
+    ],
+)
+def test_phu_my_evidence_backed_locations_resolve(
+    title, expected_precision, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920106,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Mỹ",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

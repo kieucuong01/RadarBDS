@@ -171,6 +171,8 @@ _GENERIC_LANDMARK_PREFIXES = (
     "hien huu",
     "on dinh",
     "an ninh",
+    "an nin",
+    "nha lau",
     "yen tinh",
     "kin",
     "van minh",
@@ -496,6 +498,8 @@ def _landmark(text: str) -> str:
         kind = "tdc"
     elif kind == "khu dan cu":
         kind = "kdc"
+    if kind == "tdc" and normalized_name.startswith("phu my"):
+        normalized_name = "phu my"
     for prefix, canonical in _KNOWN_LANDMARK_PREFIXES:
         if normalized_name.startswith(prefix):
             normalized_name = canonical

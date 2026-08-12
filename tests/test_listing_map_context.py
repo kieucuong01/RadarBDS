@@ -490,6 +490,29 @@ def test_chanh_my_named_landmarks_are_bounded(text, expected):
     assert context.landmark == expected
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Đất TĐC Phú Mỹ KP1 Phú Tân kinh doanh tốt",
+        "Đất TĐC Phú Mỹ 5x20 full thổ cư",
+        "Nhà khu tái định cư Phú Mỹ khu phố 1",
+    ],
+)
+def test_phu_my_resettlement_landmark_stops_listing_suffixes(text):
+    assert extract_map_location_context(text, "").landmark == "tdc phu my"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Nhà Phú Mỹ khu dân cư nhà lầu đông kín giáp khu chợ",
+        "Nhà Phú Mỹ khu dân cư an ninh yên tĩnh",
+    ],
+)
+def test_phu_my_generic_neighborhood_copy_is_not_a_landmark(text):
+    assert extract_map_location_context(text, "").landmark == ""
+
+
 def test_tan_an_common_road_phrases_map_to_known_roads():
     nguyen_chi_thanh = extract_map_location_context(
         "Dat Tan An cach duong lon Nguyen Chi Thanh",

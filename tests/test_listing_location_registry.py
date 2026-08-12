@@ -1203,6 +1203,14 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("Chánh Mỹ", "cho chanh my"),
         ("Chánh Mỹ", "pho di bo bach dang"),
     }.issubset(indexed_landmarks)
+    assert {
+        ("Phú Mỹ", "d 8"),
+        ("Phú Mỹ", "d 10"),
+        ("Phú Mỹ", "d 11"),
+        ("Phú Mỹ", "d 12"),
+        ("Phú Mỹ", "n 16"),
+    }.issubset(indexed_roads)
+    assert ("Phú Mỹ", "tdc phu my") in indexed_landmarks
 
     registry = load_location_registry()
     assert (

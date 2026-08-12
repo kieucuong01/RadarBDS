@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v30",
+  "resolver_version": "osm-binh-duong-20260807-v31",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -807,6 +807,71 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "Cach Mang Thang Tam follows the legacy Chanh My edge; repeated current Chanh My listings and named OSM geometry are stronger than the coarse historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "D8",
+      "lat": 11.029555,
+      "lng": 106.6901722,
+      "accuracy_radius_m": 781.2,
+      "source": "OpenStreetMap named road geometry reused for the legacy Phu My listing scope",
+      "source_url": "https://www.openstreetmap.org/way/148726400",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and named OSM road geometry place the internal-road cluster in Phu Tan"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "D10",
+      "lat": 11.0305387,
+      "lng": 106.6911499,
+      "accuracy_radius_m": 305.0,
+      "source": "OpenStreetMap named road geometry reused for the legacy Phu My listing scope",
+      "source_url": "https://www.openstreetmap.org/way/148728149",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and named OSM road geometry place the internal-road cluster in Phu Tan"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "D11",
+      "lat": 11.0355126,
+      "lng": 106.6925563,
+      "accuracy_radius_m": 151.3,
+      "source": "OpenStreetMap named road geometry reused for the legacy Phu My listing scope",
+      "source_url": "https://www.openstreetmap.org/way/148726359",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and named OSM road geometry place the internal-road cluster in Phu Tan"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "D12",
+      "lat": 11.0295578,
+      "lng": 106.691636,
+      "accuracy_radius_m": 825.6,
+      "source": "OpenStreetMap named road geometry reused for the legacy Phu My listing scope",
+      "source_url": "https://www.openstreetmap.org/way/148726433",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and named OSM road geometry place the internal-road cluster in Phu Tan"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "N16",
+      "lat": 11.0345,
+      "lng": 106.692,
+      "accuracy_radius_m": 1000,
+      "source": "Repeated current N16 TDC Phu My listings anchored between adjacent named OSM N15, N19 and D12 roads",
+      "source_url": "https://www.openstreetmap.org/way/148728162",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and adjacent named OSM road geometry place the internal-road cluster in Phu Tan"
     }
   ],
   "landmark_aliases": [
@@ -903,6 +968,16 @@
     {
       "canonical": "Phố đi bộ Bạch Đằng",
       "aliases": ["Pho di bo Bach Dang"]
+    },
+    {
+      "canonical": "TĐC Phú Mỹ",
+      "aliases": [
+        "TDC Phu My",
+        "tái định cư Phú Mỹ",
+        "Khu tái định cư Phú Mỹ",
+        "TĐC Phú Mỹ KP1",
+        "TĐC Phú Mỹ Phú Tân"
+      ]
     }
   ],
   "landmarks": [
@@ -1021,6 +1096,19 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "the landmark is outside the coarse legacy Chanh My polygon but current Chanh My listings explicitly use it as their location reference"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "landmark_name": "TĐC Phú Mỹ",
+      "lat": 11.0305,
+      "lng": 106.691,
+      "accuracy_radius_m": 1800,
+      "source": "Repeated current TDC Phu My listing evidence anchored to the named OpenStreetMap D8, D10, D11 and D12 internal-road cluster",
+      "source_url": "https://www.openstreetmap.org/way/148728149",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and named OSM road geometry place the resettlement area in Phu Tan"
     }
   ]
 }
