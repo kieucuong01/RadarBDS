@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v23",
+  "resolver_version": "osm-binh-duong-20260807-v24",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -223,6 +223,100 @@
       "verified_at": "2026-08-12",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "road follows the Saigon river edge; public road evidence is stronger than the coarse historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "Hùng Vương",
+      "lat": 11.0179096,
+      "lng": 106.6761581,
+      "accuracy_radius_m": 1100,
+      "source": "Google Maps public address evidence from multiple places on Hùng Vương",
+      "source_url": "https://www.google.com/maps/place/Khu+Nh%C3%A0+%E1%BB%9E+Th%C6%B0%C6%A1ng+M%E1%BA%A1i+D%E1%BB%8Bch+V%E1%BB%A5+Ph%C3%BA+M%E1%BB%B9/data=!4m7!3m6!1s0x3174d17dcdb97f03:0xa2a6bc632e71ec34!8m2!3d11.0179096!4d106.6761581",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Mỹ",
+      "road_name": "Đồng Cây Viết",
+      "lat": 11.0063047,
+      "lng": 106.6771904,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps public address evidence from multiple places on Đồng Cây Viết",
+      "source_url": "https://www.google.com/maps/place/Viettel+post/data=!4m7!3m6!1s0x3174d144608f2b3d:0x12db36384d7f2358!8m2!3d11.0063047!4d106.6771904",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 106",
+      "lat": 11.0141561,
+      "lng": 106.6459672,
+      "accuracy_radius_m": 850,
+      "source": "Google Maps public place and address evidence on DX106",
+      "source_url": "https://www.google.com/maps/place/Nh%C3%A0+tr%E1%BB%8D+37+dx106/data=!4m7!3m6!1s0x3174d1007775aab3:0xe2bb92a1543d5abc!8m2!3d11.0141561!4d106.6459672",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public DX106 address evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "Huỳnh Thị Chấu",
+      "lat": 11.0236662,
+      "lng": 106.6399421,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps public address evidence from multiple places on Huỳnh Thị Chấu",
+      "source_url": "https://www.google.com/maps/place/Tr%C6%B0%E1%BB%9Dng+m%E1%BA%A7m+non+Ng%C3%B4i+Nh%C3%A0+Nh%E1%BB%8F/data=!4m7!3m6!1s0x3174d1c555aa4eb9:0x5c6e2800e1d59e0d!8m2!3d11.0236662!4d106.6399421",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Lợi",
+      "road_name": "Nguyễn Đức Thuận",
+      "lat": 11.0053207,
+      "lng": 106.6567778,
+      "accuracy_radius_m": 750,
+      "source": "Google Maps exact public road result under the post-merger Phú Lợi label",
+      "source_url": "https://www.google.com/maps/place/Nguy%E1%BB%85n+%C4%90%E1%BB%A9c+Thu%E1%BA%ADn,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@11.0053207,106.6567778,17z/data=!3m1!4b1!4m6!3m5!1s0x3174d10c35b998ef:0x3dd316d64533f4a5!8m2!3d11.0053207!4d106.6567778",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps uses the post-merger Phú Lợi label while Radar retains legacy valuation ward polygons"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Thích Quảng Đức",
+      "lat": 10.9810087,
+      "lng": 106.6710782,
+      "accuracy_radius_m": 950,
+      "source": "Google Maps public address evidence from multiple places on Thích Quảng Đức",
+      "source_url": "https://www.google.com/maps/place/S%E1%BB%91+4a+th%C3%ADch+qu%C3%A3ng+%C4%90%E1%BB%A9c+Ph%C3%BA+ho%C3%A0/data=!4m7!3m6!1s0x3174d196d432ea9d:0x185a299992901c42!8m2!3d10.9810087!4d106.6710782",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public road addresses are stronger than the overlapping coarse historical ward polygons"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Bác sĩ Yersin",
+      "lat": 10.983345,
+      "lng": 106.6577148,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps public address evidence from multiple places on Yersin",
+      "source_url": "https://www.google.com/maps/place/Yersin/data=!4m7!3m6!1s0x3174d1cf699a0789:0xaca095b0b606e6ad!8m2!3d10.983345!4d106.6577148",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Nguyễn Văn Trỗi",
+      "lat": 10.998443,
+      "lng": 106.6663303,
+      "accuracy_radius_m": 800,
+      "source": "Google Maps exact public road result",
+      "source_url": "https://www.google.com/maps/place/%C4%90.+Nguy%E1%BB%85n+V%C4%83n+Tr%E1%BB%97i,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.998443,106.6663303,17z/data=!3m1!4b1!4m6!3m5!1s0x3174d1140d70664b:0x22c1b3171f8ebc58!8m2!3d10.998443!4d106.6663303",
+      "verified_at": "2026-08-12"
     }
   ],
   "landmark_aliases": [

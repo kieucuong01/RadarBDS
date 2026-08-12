@@ -78,6 +78,43 @@ def test_landmark_aliases_normalize_to_one_identity():
     } == {"tdc phu chanh c"}
 
 
+def test_landmark_name_stops_before_listing_copy_and_road_reference():
+    tdc = extract_map_location_context(
+        "Nhà 1 trệt 1 lầu khu TĐC Phú Mỹ giá 2.9 tỷ",
+        "Vị trí đẹp ngay đầu đường D10",
+    )
+    kdc = extract_map_location_context(
+        "Đất KDC Hiệp Thành 1 gần đường Nguyễn Văn Trỗi",
+        "Diện tích 80m2",
+    )
+
+    assert tdc.landmark == "tdc phu my"
+    assert kdc.landmark == "kdc hiep thanh 1"
+
+
+def test_landmark_name_stops_before_newline_marketing_copy():
+    context = extract_map_location_context(
+        "Nhà TĐC Định Hòa",
+        "Hàng hiếm giá tốt, diện tích 5x20m",
+    )
+
+    assert context.landmark == "tdc dinh hoa"
+
+
+def test_landmark_name_stops_before_repeated_place_and_road_abbreviation():
+    repeated = extract_map_location_context(
+        "Nhà TĐC Phú Mỹ khu TĐC ngay nhánh Đồng Cây Viết",
+        "",
+    )
+    road_suffix = extract_map_location_context(
+        "Đất KDC Hiệp Phát 2 ĐG Nguyễn Đức Thuận",
+        "",
+    )
+
+    assert repeated.landmark == "tdc phu my"
+    assert road_suffix.landmark == "kdc hiep phat 2"
+
+
 def test_stored_road_does_not_turn_a_nearby_reference_into_frontage():
     context = extract_map_location_context(
         "Bán đất Tân An",

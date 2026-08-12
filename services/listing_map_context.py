@@ -68,7 +68,8 @@ _ROAD_STOP_RE = re.compile(
 _LANDMARK_STOP_RE = re.compile(
     r"\b(?:phuong|xa|thi tran|thanh pho|tp|gia|dien tich|dt|"
     r"ban|can ban|mat tien|hem|duong|so do|tho cu|ngang|dai|"
-    r"khu dan cu dong|dan cu dong)\b",
+    r"gan|sat|cach|vi tri|hang hiem|dg|khu tdc|tdc|tai dinh cu|"
+    r"kdc|khu dan cu|khu do thi|du an|khu dan cu dong|dan cu dong)\b",
     re.IGNORECASE,
 )
 _NON_ROAD_NAMES = {
@@ -376,11 +377,14 @@ def extract_map_location_context(
         combined,
         flags=re.IGNORECASE,
     )
-    folded = normalize_location_token(
-        combined
-    )
+    folded = normalize_location_token(combined)
     evidence = _bounded_evidence(title, description)
-    landmark = _landmark(folded)
+    # Keep title/description boundaries for landmarks so a short place name at
+    # the end of the title cannot absorb the opening marketing copy from the
+    # description after whitespace normalization.
+    landmark = _landmark(normalize_location_token(title or "")) or _landmark(
+        normalize_location_token(description or "")
+    )
 
     alley_road, _ = _relation_road(folded, _ALLEY_PREFIX_RE)
     if alley_road:

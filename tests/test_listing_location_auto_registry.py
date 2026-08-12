@@ -8,6 +8,7 @@ from services.listing_location_auto_registry import (
     evaluate_browser_evidence,
     parse_google_maps_coordinates,
     point_is_in_legacy_compatibility_zone,
+    point_is_in_scoped_ward,
 )
 
 
@@ -82,6 +83,15 @@ def test_phu_chanh_context_can_use_declared_legacy_compatibility_zone():
         "https://www.google.com/maps/"
         "@11.058782,106.7015151,17z?authuser=1"
     ) is None
+
+
+def test_all_supported_city_boundary_files_are_loadable():
+    assert point_is_in_scoped_ward(
+        "THUẬN AN", "An Phú", 10.948252, 106.736425
+    )
+    assert point_is_in_scoped_ward(
+        "DĨ AN", "An Bình", 10.878579, 106.755974
+    )
 
 
 def test_exact_landmark_inside_ward_auto_accepts_at_high_confidence():

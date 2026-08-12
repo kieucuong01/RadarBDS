@@ -1106,6 +1106,19 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert "boundary_mismatch_reason" in indexed_roads[
         ("Phú Tân", "duong so 35")
     ]
+    assert {
+        ("Phú Mỹ", "hung vuong"),
+        ("Phú Mỹ", "dong cay viet"),
+        ("Hiệp An", "dx 106"),
+        ("Hiệp An", "huynh thi chau"),
+        ("Phú Lợi", "nguyen duc thuan"),
+        ("Phú Hòa", "thich quang duc"),
+        ("Hiệp Thành", "bac si yersin"),
+        ("Hiệp Thành", "nguyen van troi"),
+    }.issubset(indexed_roads)
+    assert indexed_roads[("Hiệp An", "dx 106")][
+        "boundary_mismatch_reason"
+    ]
 
     registry = load_location_registry()
     assert (

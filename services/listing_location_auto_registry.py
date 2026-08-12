@@ -204,6 +204,10 @@ def _ward_boundaries() -> Mapping[tuple[str, str], object]:
                 city = "THỦ DẦU MỘT"
             elif "ben cat" in path_token:
                 city = "BẾN CÁT"
+            elif "thuan an" in path_token:
+                city = "THUẬN AN"
+            elif "di an" in path_token:
+                city = "DĨ AN"
         if not city:
             raise ValueError(f"ward boundary city is missing for {path}")
         for feature in payload.get("features") or ():
