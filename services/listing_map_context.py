@@ -98,6 +98,15 @@ _KNOWN_ROAD_PREFIXES = (
     "le chi dan",
     "mac dinh chi",
     "nguyen tri phuong",
+    "huynh van luy",
+    "hung vuong",
+    "pham ngoc thach",
+    "nguyen hue",
+    "dien bien phu",
+    "tran ngoc len",
+    "dong cay viet",
+    "my phuoc tan van",
+    "le loi",
 )
 
 

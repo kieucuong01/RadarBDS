@@ -285,3 +285,31 @@ def test_stored_non_road_marketing_phrase_is_ignored():
     )
 
     assert context.direct_road == ""
+
+
+def test_known_phu_my_road_name_stops_before_distance_words():
+    context = extract_map_location_context(
+        "Đất Phú Mỹ 1 xẹc Huỳnh Văn Lũy 30 mét",
+        "",
+    )
+
+    assert context.nearby_road == "huynh van luy"
+
+
+def test_known_phu_my_direct_road_stops_before_dimensions():
+    context = extract_map_location_context(
+        "Mặt tiền đường Hùng Vương 10x32 Đường Hùng Vương, Phường Phú Mỹ",
+        "",
+    )
+
+    assert context.direct_road == "hung vuong"
+
+
+def test_known_phu_my_stored_road_name_stops_before_marketing_words():
+    context = extract_map_location_context(
+        "Nhà Phú Mỹ",
+        "",
+        "Hung Vuong cua ngo chinh",
+    )
+
+    assert context.direct_road == "hung vuong"
