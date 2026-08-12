@@ -497,7 +497,12 @@ def resolve_listing_location(
     context_direct_road = normalize_road_token(
         getattr(context, "direct_road", "")
     )
-    direct_road = stored_road or context_direct_road
+    direct_roads = tuple(
+        dict.fromkeys(
+            road for road in (stored_road, context_direct_road) if road
+        )
+    )
+    direct_road = context_direct_road or stored_road
     nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
     landmark_key = normalize_location_token(getattr(context, "landmark", ""))
     relation = str(getattr(context, "relation", "") or "")
@@ -527,96 +532,100 @@ def resolve_listing_location(
     )
     landmark_ambiguous = landmark_match == "ambiguous"
 
-    if direct_road:
-        road_entry = _match_road(
-            city,
-            map_ward_label,
-            direct_road,
-            landmark_key if landmark_entry else "",
-            registry,
-        )
-        if isinstance(road_entry, Mapping):
-            canonical_road = _entry_road_key(road_entry, direct_road)
-            allowed_landmarks = tuple(
-                normalize_location_token(item)
-                for item in (road_entry.get("landmark_keys") or ())
+    ambiguous_direct_road = ""
+    if direct_roads:
+        for candidate_direct_road in direct_roads:
+            road_entry = _match_road(
+                city,
+                map_ward_label,
+                candidate_direct_road,
+                landmark_key if landmark_entry else "",
+                registry,
             )
-            if (
-                landmark_entry
-                and allowed_landmarks
-                and landmark_key not in allowed_landmarks
-            ):
+            if isinstance(road_entry, Mapping):
+                canonical_road = _entry_road_key(road_entry, candidate_direct_road)
+                allowed_landmarks = tuple(
+                    normalize_location_token(item)
+                    for item in (road_entry.get("landmark_keys") or ())
+                )
+                if (
+                    landmark_entry
+                    and allowed_landmarks
+                    and landmark_key not in allowed_landmarks
+                ):
+                    return _fallback_with_issue(
+                        listing_id=listing_id,
+                        city=city,
+                        ward=ward_label,
+                        road=candidate_direct_road,
+                        landmark=landmark_key,
+                        relation=relation,
+                        status="ambiguous",
+                        reason="road_landmark_conflict",
+                        registry=registry,
+                        signature=signature,
+                    )
+                resolved = _resolved_from_entry(
+                    listing_id=listing_id,
+                    precision="road",
+                    location_key=_road_location_key(
+                        city,
+                        ward,
+                        canonical_road,
+                        landmark_key if landmark_entry else "",
+                    ),
+                    entry=road_entry,
+                    resolver_version=registry.resolver_version,
+                    signature=signature,
+                    relation="on",
+                    reference_road=canonical_road,
+                    landmark_key=landmark_key if landmark_entry else "",
+                )
+                if resolved:
+                    issue = None
+                    if landmark_ambiguous:
+                        issue = _issue(
+                            listing_id=listing_id,
+                            city=city,
+                            ward=ward_label,
+                            road=candidate_direct_road,
+                            landmark=landmark_key,
+                            relation=relation,
+                            status="ambiguous",
+                            reason="ambiguous_landmark",
+                        )
+                    elif landmark_key and not landmark_entry:
+                        issue = _issue(
+                            listing_id=listing_id,
+                            city=city,
+                            ward=ward_label,
+                            road=candidate_direct_road,
+                            landmark=landmark_key,
+                            relation=relation,
+                            status="not_found",
+                            reason="landmark_not_found",
+                        )
+                    return LocationResolution(location=resolved, issue=issue)
                 return _fallback_with_issue(
                     listing_id=listing_id,
                     city=city,
                     ward=ward_label,
-                    road=direct_road,
+                    road=candidate_direct_road,
                     landmark=landmark_key,
                     relation=relation,
-                    status="ambiguous",
-                    reason="road_landmark_conflict",
+                    status="invalid",
+                    reason="invalid_road_point",
                     registry=registry,
                     signature=signature,
                 )
-            resolved = _resolved_from_entry(
-                listing_id=listing_id,
-                precision="road",
-                location_key=_road_location_key(
-                    city,
-                    ward,
-                    canonical_road,
-                    landmark_key if landmark_entry else "",
-                ),
-                entry=road_entry,
-                resolver_version=registry.resolver_version,
-                signature=signature,
-                relation="on",
-                reference_road=canonical_road,
-                landmark_key=landmark_key if landmark_entry else "",
-            )
-            if resolved:
-                issue = None
-                if landmark_ambiguous:
-                    issue = _issue(
-                        listing_id=listing_id,
-                        city=city,
-                        ward=ward_label,
-                        road=direct_road,
-                        landmark=landmark_key,
-                        relation=relation,
-                        status="ambiguous",
-                        reason="ambiguous_landmark",
-                    )
-                elif landmark_key and not landmark_entry:
-                    issue = _issue(
-                        listing_id=listing_id,
-                        city=city,
-                        ward=ward_label,
-                        road=direct_road,
-                        landmark=landmark_key,
-                        relation=relation,
-                        status="not_found",
-                        reason="landmark_not_found",
-                    )
-                return LocationResolution(location=resolved, issue=issue)
+            if road_entry == "ambiguous" and not ambiguous_direct_road:
+                ambiguous_direct_road = candidate_direct_road
+        if ambiguous_direct_road:
             return _fallback_with_issue(
                 listing_id=listing_id,
                 city=city,
                 ward=ward_label,
-                road=direct_road,
-                landmark=landmark_key,
-                relation=relation,
-                status="invalid",
-                reason="invalid_road_point",
-                registry=registry,
-                signature=signature,
-            )
-        if road_entry == "ambiguous":
-            return _fallback_with_issue(
-                listing_id=listing_id,
-                city=city,
-                ward=ward_label,
-                road=direct_road,
+                road=ambiguous_direct_road,
                 landmark=landmark_key,
                 relation=relation,
                 status="ambiguous",

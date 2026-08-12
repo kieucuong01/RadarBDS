@@ -356,6 +356,48 @@ def test_ambiguous_phu_tan_duong_so_84_uses_aggregate_road():
     assert "duong-so-84" in result.location.location_key
 
 
+def test_phu_tan_context_road_is_used_when_stored_road_name_is_noise():
+    registry = load_location_registry()
+    listing = {
+        "id": 910104,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "Ph\u00fa T\u00e2n",
+        "title": "Duong 104 TDC Phu Chanh D",
+        "description": "",
+        "road_name": "Gon Le",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert "duong-so-104" in result.location.location_key
+
+
+def test_phu_tan_context_named_road_is_used_when_stored_road_name_is_noise():
+    registry = load_location_registry()
+    listing = {
+        "id": 910105,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "Ph\u00fa T\u00e2n",
+        "title": "Mat tien Dien Bien Phu tao luc 1",
+        "description": "",
+        "road_name": "Kinh Doanh",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert "dien-bien-phu" in result.location.location_key
+
+
 @pytest.mark.parametrize(
     ("ward", "road", "expected_slug"),
     [
@@ -398,6 +440,8 @@ def test_ambiguous_phu_tan_duong_so_84_uses_aggregate_road():
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "DX 142", "dx-142"),
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "DX 143", "dx-143"),
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "DX 145", "dx-145"),
+        ("Ph\u00fa T\u00e2n", "Dien Bien Phu", "dien-bien-phu"),
+        ("Ph\u00fa T\u00e2n", "Nguyen Van Linh", "nguyen-van-linh"),
     ],
 )
 def test_common_thu_dau_mot_multi_segment_roads_use_aggregate_road(

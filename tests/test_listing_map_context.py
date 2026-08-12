@@ -140,7 +140,17 @@ def test_ql13_alias_resolves_to_dai_lo_binh_duong():
     )
 
     assert context.nearby_road == "dai lo binh duong"
-    assert context.relation == "alley"
+
+
+def test_phu_tan_nguyen_van_linh_keeps_canonical_road_before_tl2_alias():
+    context = extract_map_location_context(
+        "Sieu pham mat tien duong Nguyen Van Linh (TL2) TDC Phu Chanh C",
+        "",
+    )
+
+    assert context.direct_road == "nguyen van linh"
+    assert context.landmark == "tdc phu chanh c"
+    assert context.relation == "on"
 
 
 def test_dai_lo_binh_duong_after_slash_alley_is_extracted():

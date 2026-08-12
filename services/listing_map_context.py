@@ -113,6 +113,7 @@ _KNOWN_ROAD_PREFIXES = (
     "le thi trung",
     "huynh van nghe",
     "nguyen van troi",
+    "nguyen van linh",
     "nguyen duc thuan",
     "pham ngu lao",
     "nguyen binh khiem",
