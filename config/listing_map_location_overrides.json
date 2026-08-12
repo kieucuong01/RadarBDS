@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v37",
+  "resolver_version": "osm-binh-duong-20260807-v38",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -536,12 +536,12 @@
       "city": "THỦ DẦU MỘT",
       "ward": "Hiệp Thành",
       "road_name": "Nguyễn Văn Trỗi",
-      "lat": 10.998443,
-      "lng": 106.6663303,
-      "accuracy_radius_m": 800,
-      "source": "Google Maps exact public road result",
-      "source_url": "https://www.google.com/maps/place/%C4%90.+Nguy%E1%BB%85n+V%C4%83n+Tr%E1%BB%97i,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.998443,106.6663303,17z/data=!3m1!4b1!4m6!3m5!1s0x3174d1140d70664b:0x22c1b3171f8ebc58!8m2!3d10.998443!4d106.6663303",
-      "verified_at": "2026-08-12"
+      "lat": 10.9981709,
+      "lng": 106.6661548,
+      "accuracy_radius_m": 850,
+      "source": "OpenStreetMap aggregate named-road geometry",
+      "source_url": "https://www.openstreetmap.org/way/224851545",
+      "verified_at": "2026-08-13"
     },
     {
       "city": "THỦ DẦU MỘT",
@@ -1195,6 +1195,56 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "current Phu Loi listings include the former Hiep Thanh scope and explicitly name Nguyen Van Tiet"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Hồ Văn Cống",
+      "lat": 11.0045972,
+      "lng": 106.643563,
+      "accuracy_radius_m": 950,
+      "source": "Google Maps exact public address on Ho Van Cong verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/H%E1%BB%93+c%C3%A2u+c%C3%A1+gi%E1%BA%A3i+tr%C3%AD+Ph%C3%BAc+Ti%E1%BA%BFn/@11.0045972,106.643563,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hiep Thanh listings explicitly name Ho Van Cong while Google Maps uses the post-merger Chanh Hiep label"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "DX43",
+      "lat": 11.0118096,
+      "lng": 106.6650947,
+      "accuracy_radius_m": 850,
+      "source": "OpenStreetMap aggregate DX43 geometry reused for listings opposite KDC Hiep Thanh 3",
+      "source_url": "https://www.openstreetmap.org/way/146071026",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "explicit Hiep Thanh listings place DX43 opposite KDC Hiep Thanh 3 while the historical polygon assigns most geometry to Phu My"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Đường số 23",
+      "lat": 11.0035058,
+      "lng": 106.6688255,
+      "accuracy_radius_m": 550,
+      "source": "Google Maps exact public road result inside KDC Hiep Thanh III verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/%C4%90.+S%E1%BB%91+23,+Khu+d%C3%A2n+c%C6%B0+Hi%E1%BB%87p+Th%C3%A0nh+III,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@11.0035058,106.6688255,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "road_name": "Huỳnh Văn Lũy",
+      "lat": 10.9973499,
+      "lng": 106.6748084,
+      "accuracy_radius_m": 850,
+      "source": "OpenStreetMap aggregate named-road geometry reused along the Hiep Thanh and Phu Loi edge",
+      "source_url": "https://www.openstreetmap.org/way/1162050139",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "explicit Hiep Thanh listings use Huynh Van Luy along the historical ward edge"
     }
   ],
   "landmark_aliases": [
@@ -1227,8 +1277,7 @@
       "canonical": "KDC Hiệp Phát 1",
       "aliases": [
         "KDC Hiep Phat 1",
-        "Khu dân cư Hiệp Phát 1",
-        "KDC Hiệp Phát"
+        "Khu dân cư Hiệp Phát 1"
       ]
     },
     {
@@ -1312,11 +1361,23 @@
     },
     {
       "canonical": "KDC Hiệp Thành 1",
-      "aliases": ["KDC Hiep Thanh 1", "Khu dân cư Hiệp Thành 1", "KDC HT1"]
+      "aliases": ["KDC Hiep Thanh 1", "Khu dân cư Hiệp Thành 1", "KDC HT1", "KDC Hiệp Thành I"]
+    },
+    {
+      "canonical": "KDC Hiệp Thành 2",
+      "aliases": ["KDC Hiep Thanh 2", "Khu dân cư Hiệp Thành 2", "KDC HT2", "KDC Hiệp Thành II"]
     },
     {
       "canonical": "KDC Hiệp Thành 3",
-      "aliases": ["KDC Hiep Thanh 3", "Khu dân cư Hiệp Thành 3", "KDC HT3"]
+      "aliases": ["KDC Hiep Thanh 3", "Khu dân cư Hiệp Thành 3", "KDC HT3", "KDC Hiệp Thành III"]
+    },
+    {
+      "canonical": "KDC K8 Thành Lễ",
+      "aliases": ["KDC K8", "KDC K8 Hiep Thanh", "Khu dân cư K8 Thành Lễ"]
+    },
+    {
+      "canonical": "KDC Hiệp Phát",
+      "aliases": ["KDC Hiep Phat", "Khu dân cư Hiệp Phát"]
     },
     {
       "canonical": "KDC Phú Lợi",
@@ -1566,6 +1627,72 @@
       "accuracy_radius_m": 1100,
       "source": "Repeated current KDC Phu Loi listings anchored to the exact Google Maps De Tuoi Ninh Binh reference named in those listings",
       "source_url": "https://www.google.com/maps/place/Qu%C3%A1n+D%C3%AA+T%C6%B0%C6%A1i+Ninh+B%C3%ACnh/@10.9901449,106.6704555,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "landmark_name": "KDC Hiệp Thành 1",
+      "lat": 11.0007252,
+      "lng": 106.6546353,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public housing-development result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Hiep+Thanh+residential+area+1/@11.0007252,106.6546353,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "landmark_name": "KDC Hiệp Thành 2",
+      "lat": 10.9964379,
+      "lng": 106.6678169,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public housing-development result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+Hi%E1%BB%87p+Th%C3%A0nh+II,+Phu+Loi,+Ho+Chi+Minh,+Vietnam/@10.9964379,106.6678169,18z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "landmark_name": "KDC K8 Thành Lễ",
+      "lat": 10.9945973,
+      "lng": 106.6641322,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public housing-development result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+K8+Thanh+L%E1%BB%85/@10.9945973,106.6641322,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "landmark_name": "KDC Hiệp Phát",
+      "lat": 11.006641,
+      "lng": 106.6605128,
+      "accuracy_radius_m": 850,
+      "source": "Google Maps exact public KDC Nha O Xa Hoi Hiep Phat result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/KDC+NH%C3%80+%E1%BB%9E+X%C3%83+H%E1%BB%98I+HI%E1%BB%86P+PH%C3%81T/@11.006641,106.6605128,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "landmark_name": "KDC Hiệp Phát 1",
+      "lat": 11.006641,
+      "lng": 106.6605128,
+      "accuracy_radius_m": 950,
+      "source": "Google Maps exact public KDC Hiep Phat result used as the project anchor for zone 1",
+      "source_url": "https://www.google.com/maps/place/KDC+NH%C3%80+%E1%BB%9E+X%C3%83+H%E1%BB%98I+HI%E1%BB%86P+PH%C3%81T/@11.006641,106.6605128,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "landmark_name": "KDC Hiệp Phát 2",
+      "lat": 11.006641,
+      "lng": 106.6605128,
+      "accuracy_radius_m": 950,
+      "source": "Google Maps exact public KDC Hiep Phat result used as the project anchor for zone 2",
+      "source_url": "https://www.google.com/maps/place/KDC+NH%C3%80+%E1%BB%9E+X%C3%83+H%E1%BB%98I+HI%E1%BB%86P+PH%C3%81T/@11.006641,106.6605128,17z/",
       "verified_at": "2026-08-13"
     }
   ]

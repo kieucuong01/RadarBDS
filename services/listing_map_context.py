@@ -207,6 +207,19 @@ _GENERIC_LANDMARK_NAMES = {
 }
 
 _KNOWN_LANDMARK_PREFIXES = (
+    ("hiep thanh 1", "hiep thanh 1"),
+    ("hiep thanh i ", "hiep thanh 1"),
+    ("hiep thanh 2", "hiep thanh 2"),
+    ("hiep thanh ii", "hiep thanh 2"),
+    ("hiep thanh 3", "hiep thanh 3"),
+    ("hiep thanh iii", "hiep thanh 3"),
+    ("ht1", "hiep thanh 1"),
+    ("ht2", "hiep thanh 2"),
+    ("ht3", "hiep thanh 3"),
+    ("k8", "k8 thanh le"),
+    ("hiep phat 1", "hiep phat 1"),
+    ("hiep phat 2", "hiep phat 2"),
+    ("hiep phat", "hiep phat"),
     ("phu hoa 1", "phu hoa 1"),
     ("phu hoa 2", "phu hoa 2"),
     ("hoang nam 2", "hoang nam 2"),

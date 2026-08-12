@@ -655,6 +655,20 @@ def test_phu_hoa_landmarks_stop_before_listing_suffixes(text, expected):
     assert extract_map_location_context(text, "").landmark == expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà KDC Hiệp Thành 1 nội thất xịn, sổ vào ở ngay", "kdc hiep thanh 1"),
+        ("Nhà KDC Hiệp Thành II giảm 450 triệu", "kdc hiep thanh 2"),
+        ("Đất KDC HT3 xây dựng tự do", "kdc hiep thanh 3"),
+        ("Nhà KDC K8 Hiệp Thành mái thái kiên cố", "kdc k8 thanh le"),
+        ("Nhà KDC Hiệp Phát 1 thiết kế 2PN 2WC", "kdc hiep phat 1"),
+    ],
+)
+def test_hiep_thanh_landmarks_drop_listing_copy_and_zone_variants(text, expected):
+    assert extract_map_location_context(text, "").landmark == expected
+
+
 def test_tan_an_common_road_phrases_map_to_known_roads():
     nguyen_chi_thanh = extract_map_location_context(
         "Dat Tan An cach duong lon Nguyen Chi Thanh",
