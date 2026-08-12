@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v24",
+  "resolver_version": "osm-binh-duong-20260807-v25",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -317,6 +317,19 @@
       "source": "Google Maps exact public road result",
       "source_url": "https://www.google.com/maps/place/%C4%90.+Nguy%E1%BB%85n+V%C4%83n+Tr%E1%BB%97i,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.998443,106.6663303,17z/data=!3m1!4b1!4m6!3m5!1s0x3174d1140d70664b:0x22c1b3171f8ebc58!8m2!3d10.998443!4d106.6663303",
       "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "DB 6",
+      "lat": 11.044835,
+      "lng": 106.6870098,
+      "accuracy_radius_m": 850,
+      "source": "Google Maps public address evidence from multiple places on DB6",
+      "source_url": "https://www.google.com/maps/place/Thu%E1%BB%91c+T%C3%A2y+%C4%90%C4%83ng+Khoa/data=!4m7!3m6!1s0x3174d1ca93beb60b:0xaf084ee631cbfbbc!8m2!3d11.044835!4d106.6870098",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public DB6 addresses in the new-city area are stronger than the retained coarse historical ward polygon"
     }
   ],
   "landmark_aliases": [
