@@ -100,6 +100,7 @@ _KNOWN_ROAD_PREFIXES = (
     "thich quang duc",
     "tran van on",
     "nguyen chi thanh",
+    "nguyen duc canh",
     "le chi dan",
     "mac dinh chi",
     "nguyen tri phuong",
@@ -122,6 +123,7 @@ _KNOWN_ROAD_PREFIXES = (
     "nguyen van long",
     "huynh van cu",
     "huynh thi hieu",
+    "huynh thi chau",
     "phan dang luu",
     "nguyen huu canh",
     "phan boi chau",
@@ -139,6 +141,25 @@ _KNOWN_ROAD_PREFIXES = (
     "ngo gia tu",
     "hoang van thu",
     "thich quang duc",
+)
+
+_NON_LOCATION_RELATION_PREFIXES = (
+    "phan giap",
+    "phan nha",
+    "vo nha",
+    "vo thoai",
+    "ly tuong",
+    "ngo truoc",
+    "le c dat",
+    "nguyen ch hang",
+    "nguyen chi dat",
+)
+
+_GENERIC_LANDMARK_PREFIXES = (
+    "dong duc",
+    "dong dan",
+    "hien huu",
+    "on dinh",
 )
 
 
@@ -168,6 +189,15 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
+    if re.match(
+        r"^(?:duong\s+)?(?:dx|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
+        r"[-./_]?\s*0*\d{1,2}\s+(?:m|met)\b",
+        candidate,
+        re.IGNORECASE,
+    ):
+        return ""
+    if candidate.startswith(_NON_LOCATION_RELATION_PREFIXES):
+        return ""
     if candidate.startswith(("cmt8", "cmt 8", "cach mang thang 8")):
         return "cach mang thang tam"
     if candidate.startswith(("dai lo bd", "dai lo b d")):
@@ -184,6 +214,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "ho van cong"
     if candidate.startswith("nguyen chi than"):
         return "nguyen chi thanh"
+    if candidate.startswith("duc canh"):
+        return "nguyen duc canh"
     if candidate == "huynh thi" or candidate.startswith("huynh thi nha"):
         return "huynh thi hieu"
     if candidate.startswith(("phan dang l ", "phan dang nha ")):
@@ -368,7 +400,11 @@ def _direct_road(text: str) -> str:
     )
     if code_match:
         prefix_context = text[max(0, code_match.start() - 28) : code_match.start()]
-        if not re.search(
+        suffix_context = text[code_match.end() : code_match.end() + 8]
+        is_road_width = bool(
+            re.match(r"\s+(?:m|met)\b", suffix_context, re.IGNORECASE)
+        )
+        if not is_road_width and not re.search(
             r"\b(?:cach|gan|sat|ke|canh|ra|thong ra|noi ra|nhanh|hem|"
             r"1 xec|1 xet|1 sec|1 set)\s+(?:duong\s+)?$",
             prefix_context,
@@ -400,12 +436,15 @@ def _landmark(text: str) -> str:
     name = _cut_at_stop(match.group("name"), _LANDMARK_STOP_RE)
     if not name:
         return ""
+    normalized_name = normalize_location_token(name)
+    if normalized_name.startswith(_GENERIC_LANDMARK_PREFIXES):
+        return ""
     kind = match.group("kind").lower()
     if kind == "tai dinh cu":
         kind = "tdc"
     elif kind == "khu dan cu":
         kind = "kdc"
-    return normalize_location_token(f"{kind} {name}")
+    return normalize_location_token(f"{kind} {normalized_name}")
 
 
 def extract_map_location_context(

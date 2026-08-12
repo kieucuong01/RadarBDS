@@ -553,6 +553,40 @@ def test_tan_an_resettlement_landmark_resolves_out_of_ward_center():
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_slug"),
+    [
+        ("Mat tien DX98 Hiep An", "dx-98"),
+        ("Mat tien DX101 Hiep An", "dx-101"),
+        ("Mat tien DX102 Hiep An", "dx-102"),
+        ("Mat tien DX103 Hiep An", "dx-103"),
+        ("Mat tien DX105 Hiep An", "dx-105"),
+        ("Mat tien DX107 Hiep An", "dx-107"),
+        ("Mat tien Nguyen Duc Canh Hiep An", "nguyen-duc-canh"),
+        ("Cach Duc Canh 80m Hiep An", "nguyen-duc-canh"),
+    ],
+)
+def test_hiep_an_evidence_backed_roads_resolve_out_of_ward_center(
+    title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920102,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "Hi\u1ec7p An",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

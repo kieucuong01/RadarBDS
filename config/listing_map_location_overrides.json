@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v26",
+  "resolver_version": "osm-binh-duong-20260807-v27",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -21,6 +21,17 @@
         "DX096",
         "ĐX96",
         "ĐX-096"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "canonical": "Đường Nguyễn Đức Cảnh",
+      "aliases": [
+        "Nguyễn Đức Cảnh",
+        "Đức Cảnh",
+        "Nguyen Duc Canh",
+        "Duc Canh"
       ]
     },
     {
@@ -258,6 +269,84 @@
       "verified_at": "2026-08-12",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "public DX106 address evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 98",
+      "lat": 11.0238607,
+      "lng": 106.640499,
+      "accuracy_radius_m": 1400,
+      "source": "Current public Hiệp An listing evidence and nearby OpenStreetMap Phan Đăng Lưu anchor",
+      "source_url": "https://www.oneday.com.vn/vi_VN/bds/ban-nha-tro-binh-duong-thu-dau-mot-xa-hiep-an-ban-dat-chinh-chu-duong-dx098-phuong-hiep-an-thu-dau-mot-binh-duong/",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public DX98 listing evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 101",
+      "lat": 11.0160189,
+      "lng": 106.6438388,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public road result",
+      "source_url": "https://www.google.com/maps/place/%C4%90%C6%B0%E1%BB%9Dng+%C4%90X-101/data=!4m7!3m6!1s0x3174d184b1a7fab3:0x9492492413d96cb9!8m2!3d11.0160189!4d106.6438388!16s%2Fg%2F11h5dv_yxb",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps exact road evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 102",
+      "lat": 11.0137211,
+      "lng": 106.6421303,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public address evidence from multiple places on DX102",
+      "source_url": "https://www.google.com/maps/place/C%C3%B4ng+Ty+Tnhh+Sx+%26+Tm+Icc+Paint/data=!4m7!3m6!1s0x3174d19cdc5c318d:0x292cf96bb0beabac!8m2!3d11.0137211!4d106.6421303!16s%2Fg%2F11vhqmwkzw",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps public DX102 address evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 103",
+      "lat": 11.0255304,
+      "lng": 106.647117,
+      "accuracy_radius_m": 1800,
+      "source": "Official business address on DX103 and nearby Google Maps Bưng Cầu anchor",
+      "source_url": "https://vitinhmiennam.com/lien-he",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public DX103 address evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 105",
+      "lat": 11.0244035,
+      "lng": 106.6421349,
+      "accuracy_radius_m": 1500,
+      "source": "Public DX105 address and Đại lộ Bình Dương proximity evidence with nearby OpenStreetMap anchor",
+      "source_url": "https://www.maymayphuocdatbinhduong.com/sua-may-may-tai-thu-dau-mot/",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public DX105 address evidence is stronger than the coarse retained historical ward polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 107",
+      "lat": 11.0232043,
+      "lng": 106.6455718,
+      "accuracy_radius_m": 1200,
+      "source": "Public DX107-to-Bùi Ngọc Thu listing evidence and OpenStreetMap Bùi Ngọc Thu anchor",
+      "source_url": "https://guland.vn/post/ban-lo-dat-mat-tien-dx107-phuong-hiep-an-nam-sat-duong-bui-ngoc-thu-duong-nhua-6m-thong-dan-cu-dong-1494310",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "public DX107 listing evidence is stronger than the coarse retained historical ward polygon"
     },
     {
       "city": "THỦ DẦU MỘT",

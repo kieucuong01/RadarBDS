@@ -1,3 +1,5 @@
+import pytest
+
 from services.listing_map_context import extract_map_location_context
 
 
@@ -570,6 +572,87 @@ def test_hiep_an_common_short_road_phrases_map_to_known_roads():
     assert nguyen_chi_thanh.nearby_road == "nguyen chi thanh"
     assert le_chi_dan.nearby_road == "le chi dan"
     assert dai_lo_binh_duong.nearby_road == "dai lo binh duong"
+
+
+def test_hiep_an_known_roads_stop_before_marketing_copy():
+    nguyen_duc_canh = extract_map_location_context(
+        "Dat Hiep An cach Nguyen Duc Canh 100m ke nha 3 tang",
+        "",
+    )
+    huynh_thi_chau = extract_map_location_context(
+        "Mat tien Huynh Thi Chau sam uat con thich hop kinh doanh",
+        "",
+    )
+
+    assert nguyen_duc_canh.nearby_road == "nguyen duc canh"
+    assert nguyen_duc_canh.distance_m == 100.0
+    assert huynh_thi_chau.direct_road == "huynh thi chau"
+
+
+def test_hiep_an_false_person_phrases_do_not_hide_later_known_roads():
+    phan_dang_luu = extract_map_location_context(
+        "Dat Hiep An gan phan giap chu nha dep",
+        "Cach Phan Dang Luu 50m",
+    )
+    bui_ngoc_thu = extract_map_location_context(
+        "Dat Hiep An cach vo nha 7 met",
+        "Sat Bui Ngoc Thu 80m",
+    )
+    le_chi_dan = extract_map_location_context(
+        "Dat Hiep An gan ly tuong phan dau dat chua cho de",
+        "Cach Le Chi Dan 70m",
+    )
+
+    assert phan_dang_luu.nearby_road == "phan dang luu"
+    assert bui_ngoc_thu.nearby_road == "bui ngoc thu"
+    assert le_chi_dan.nearby_road == "le chi dan"
+
+
+@pytest.mark.parametrize(
+    ("misleading_phrase", "real_road", "expected"),
+    [
+        ("gan phan nha moi", "Phan Dang Luu", "phan dang luu"),
+        ("cach vo thoai mai", "Bui Ngoc Thu", "bui ngoc thu"),
+        ("gan le c dat", "Le Chi Dan", "le chi dan"),
+        ("gan nguyen ch hang ngop", "Nguyen Chi Thanh", "nguyen chi thanh"),
+        ("cach nguyen chi dat", "Nguyen Chi Thanh", "nguyen chi thanh"),
+        ("gan ngo truoc nha", "Nguyen Duc Canh", "nguyen duc canh"),
+    ],
+)
+def test_hiep_an_more_false_relation_phrases_defer_to_real_road(
+    misleading_phrase, real_road, expected
+):
+    context = extract_map_location_context(
+        f"Dat Hiep An {misleading_phrase}",
+        f"Cach {real_road} 70m",
+    )
+
+    assert context.nearby_road == expected
+
+
+def test_hiep_an_road_width_and_dense_neighborhood_are_not_locations():
+    road_width = extract_map_location_context(
+        "Mat tien DX 6 met thong tum lum nha 1 tret 1 lau",
+        "",
+    )
+    dense_neighborhood = extract_map_location_context(
+        "Nha Hiep An khu dan cu dong duc an ninh",
+        "",
+    )
+    existing_neighborhood = extract_map_location_context(
+        "Dat Hiep An KDC hien huu dan o kin",
+        "",
+    )
+    stable_neighborhood = extract_map_location_context(
+        "Nha Hiep An khu dan cu on dinh",
+        "",
+    )
+
+    assert road_width.direct_road == ""
+    assert road_width.nearby_road == ""
+    assert dense_neighborhood.landmark == ""
+    assert existing_neighborhood.landmark == ""
+    assert stable_neighborhood.landmark == ""
 
 
 def test_phu_cuong_common_road_phrases_map_to_known_roads():

@@ -1120,6 +1120,20 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert indexed_roads[("Hiệp An", "dx 106")][
         "boundary_mismatch_reason"
     ]
+    assert {
+        ("Hi\u1ec7p An", "dx 98"),
+        ("Hi\u1ec7p An", "dx 101"),
+        ("Hi\u1ec7p An", "dx 102"),
+        ("Hi\u1ec7p An", "dx 103"),
+        ("Hi\u1ec7p An", "dx 105"),
+        ("Hi\u1ec7p An", "dx 107"),
+    }.issubset(indexed_roads)
+    assert "nguyen duc canh" in indexed_roads[
+        ("Hi\u1ec7p An", "duong nguyen duc canh")
+    ]["aliases"]
+    assert "duc canh" in indexed_roads[
+        ("Hi\u1ec7p An", "duong nguyen duc canh")
+    ]["aliases"]
 
     assert {
         ("T\u00e2n An", "dx 140"),
