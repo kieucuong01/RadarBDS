@@ -513,6 +513,33 @@ def test_phu_my_generic_neighborhood_copy_is_not_a_landmark(text):
     assert extract_map_location_context(text, "").landmark == ""
 
 
+@pytest.mark.parametrize(
+    ("text", "expected_road", "expected_relation"),
+    [
+        ("Nhà sẹc Huỳnh Văn Cù gần cầu Phú Cường", "huynh van cu", "alley"),
+        ("Nhà xẹc phố Bạch Đằng ngay chợ", "bach dang", "alley"),
+        ("Mặt tiền Nguyễn Văn Bé, nhà 1 trệt", "nguyen van be", "on"),
+        ("Gần Lý Thường Kiệt mua hết giá tốt", "ly thuong kiet", "near"),
+        ("1/ đường Ngô Quyền, hẻm xe hơi", "ngo quyen", "alley"),
+        ("1/ Thích Quảng Đức, hỗ trợ vay", "thich quang duc", "alley"),
+    ],
+)
+def test_phu_cuong_named_roads_stop_before_listing_copy(
+    text, expected_road, expected_relation
+):
+    context = extract_map_location_context(text, "")
+    assert (context.direct_road or context.nearby_road) == expected_road
+    assert context.relation == expected_relation
+
+
+def test_phu_cuong_interior_finish_copy_is_not_a_landmark():
+    context = extract_map_location_context(
+        "KDC hoàn thiện nội thất gỗ cao cấp chủ để lại toàn bộ",
+        "",
+    )
+    assert context.landmark == ""
+
+
 def test_tan_an_common_road_phrases_map_to_known_roads():
     nguyen_chi_thanh = extract_map_location_context(
         "Dat Tan An cach duong lon Nguyen Chi Thanh",

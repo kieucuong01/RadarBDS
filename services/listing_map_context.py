@@ -29,7 +29,8 @@ _NEAR_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ALLEY_PREFIX_RE = re.compile(
-    r"\b(?:\d+\s*/|1\s*(?:x|s)(?:ec|et)|mot\s*(?:x|s)(?:ec|et)|nhanh|hem)\s+"
+    r"\b(?:\d+\s*/|1\s*(?:x|s)(?:ec|et)|mot\s*(?:x|s)(?:ec|et)|"
+    r"(?:x|s)(?:ec|et)|nhanh|hem)\s+"
     r"(?:duong\s+)?",
     re.IGNORECASE,
 )
@@ -87,7 +88,7 @@ _NON_ROAD_NAMES = {
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
     r"dx|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
-    r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|"
+    r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"dai lo|bac si|yersin|yesin|"
     r"my phuoc|mptv|phu loi|phu tan"
@@ -95,6 +96,12 @@ _ROAD_NAME_HINT_RE = re.compile(
     re.IGNORECASE,
 )
 _KNOWN_ROAD_PREFIXES = (
+    "nguyen van be",
+    "bach dang",
+    "hai ba trung",
+    "ly thuong kiet",
+    "ngo quyen",
+    "tran tu binh",
     "nguyen thi minh khai",
     "le hong phong",
     "thich quang duc",
@@ -184,6 +191,7 @@ _GENERIC_LANDMARK_PREFIXES = (
     "van phong",
     "xay dung",
     "abc",
+    "hoan thien",
 )
 
 _GENERIC_LANDMARK_NAMES = {
@@ -271,6 +279,7 @@ def _normalize_road_candidate(value: str) -> str:
     if candidate.startswith("quoc lo 1 phut"):
         return ""
     for leading_noise in (
+        "pho ",
         "hem duong ",
         "hem ",
         "duong lon ",

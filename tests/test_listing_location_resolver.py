@@ -728,6 +728,58 @@ def test_phu_my_evidence_backed_locations_resolve(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_slug"),
+    [
+        ("Nhà xẹc phố Bạch Đằng", "bach-dang"),
+        ("Mặt tiền Nguyễn Văn Bé, nhà 1 trệt", "nguyen-van-be"),
+        ("Mặt tiền Phan Đình Giót", "phan-dinh-giot"),
+        ("Đường DX42 Phú Cường", "dx-42"),
+        ("1/ đường Ngô Quyền, hẻm xe hơi", "ngo-quyen"),
+        ("1/ Thích Quảng Đức, hỗ trợ vay", "thich-quang-duc"),
+    ],
+)
+def test_phu_cuong_evidence_backed_roads_resolve(title, expected_slug):
+    registry = load_location_registry()
+    listing = {
+        "id": 920107,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Cường",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+def test_explicit_listing_text_coordinate_resolves_as_exact():
+    registry = load_location_registry()
+    listing = {
+        "id": 920108,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Cường",
+        "title": "Nhà đất Phú Cường",
+        "description": "Vị trí: 10.982451,106.666357",
+        "road_name": "",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], ""
+    )
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "exact"
+    assert result.location.lat == pytest.approx(10.982451)
+    assert result.location.lng == pytest.approx(106.666357)
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

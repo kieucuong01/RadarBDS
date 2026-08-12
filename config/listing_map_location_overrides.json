@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v31",
+  "resolver_version": "osm-binh-duong-20260807-v32",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -872,6 +872,56 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and adjacent named OSM road geometry place the internal-road cluster in Phu Tan"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Nguyễn Văn Bé",
+      "lat": 10.9880145,
+      "lng": 106.6487033,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public road result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Nguy%E1%BB%85n+V%C4%83n+B%C3%A9,+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9880145,106.6487033,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Phan Đình Giót",
+      "lat": 10.9757321,
+      "lng": 106.6595918,
+      "accuracy_radius_m": 500,
+      "source": "OpenStreetMap named road geometry reused for listings on the Phu Cuong edge",
+      "source_url": "https://www.openstreetmap.org/way/224851463",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Phan Dinh Giot follows the coarse legacy Phu Cuong and Chanh Nghia edge; repeated current Phu Cuong listing evidence is stronger than the historical polygon"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "Đại lộ Bình Dương",
+      "lat": 10.981395,
+      "lng": 106.6668677,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap named QL13 geometry nearest the legacy Phu Cuong listing scope",
+      "source_url": "https://www.openstreetmap.org/way/974379373",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current listings retain Phu Cuong while their explicit QL13 reference lies on the adjacent historical ward edge"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "road_name": "DX42",
+      "lat": 11.0132809,
+      "lng": 106.6675258,
+      "accuracy_radius_m": 500,
+      "source": "OpenStreetMap named DX42 geometry reused for an explicit legacy Phu Cuong listing reference",
+      "source_url": "https://www.openstreetmap.org/way/146075748",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the current listing retains Phu Cuong but explicitly names DX42, whose named OSM geometry is in the adjacent legacy Phu My scope"
     }
   ],
   "landmark_aliases": [
@@ -1109,6 +1159,17 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "TDC Phu My listings retain the legacy Phu My valuation ward while current public addresses and named OSM road geometry place the resettlement area in Phu Tan"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Cường",
+      "landmark_name": "Phố đi bộ Bạch Đằng",
+      "lat": 10.9822198,
+      "lng": 106.6466652,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public place result verified with isolated browser-use and repeated current Phu Cuong listing evidence",
+      "source_url": "https://www.google.com/maps/place/Ph%E1%BB%91+%C4%90i+B%E1%BB%99+B%E1%BA%A1ch+%C4%90%E1%BA%B1ng/@10.9822198,106.6466652,17z/",
+      "verified_at": "2026-08-13"
     }
   ]
 }

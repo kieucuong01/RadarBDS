@@ -21,6 +21,12 @@ if TYPE_CHECKING:
 
 
 _NON_ALNUM = re.compile(r"[^a-z0-9]+")
+_TEXT_COORDINATE_RE = re.compile(
+    r"\b(?:vị\s*trí|vi\s*tri|tọa\s*độ|toa\s*do)\s*[:=-]?\s*"
+    r"(?P<lat>1[01]\.[0-9]{4,8})\s*[,;]\s*"
+    r"(?P<lng>106\.[0-9]{4,8})\b",
+    re.IGNORECASE,
+)
 
 
 def normalize_location_token(value: str) -> str:
@@ -152,9 +158,17 @@ def _inside_service_bounds(lat: float, lng: float) -> bool:
 def _source_point(listing: Mapping) -> tuple[float, float] | None:
     lat = _float(_value(listing, "source_lat"))
     lng = _float(_value(listing, "source_lng"))
-    if lat is None or lng is None or not _inside_service_bounds(lat, lng):
-        return None
-    return lat, lng
+    if lat is not None and lng is not None and _inside_service_bounds(lat, lng):
+        return lat, lng
+    for key in ("title", "description"):
+        match = _TEXT_COORDINATE_RE.search(str(_value(listing, key, "") or ""))
+        if not match:
+            continue
+        lat = _float(match.group("lat"))
+        lng = _float(match.group("lng"))
+        if lat is not None and lng is not None and _inside_service_bounds(lat, lng):
+            return lat, lng
+    return None
 
 
 def listing_location_signature(
