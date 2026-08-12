@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v32",
+  "resolver_version": "osm-binh-duong-20260807-v33",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -922,6 +922,28 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "the current listing retains Phu Cuong but explicitly names DX42, whose named OSM geometry is in the adjacent legacy Phu My scope"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Đường số 385",
+      "lat": 10.9777417,
+      "lng": 106.6883294,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public intersection result for Nguyen Thi Minh Khai and Hem 385 verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai+%26+H%E1%BA%BBm+385,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9777417,106.6883294,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "road_name": "Đường số 453",
+      "lat": 10.9742924,
+      "lng": 106.6899288,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public intersection result for Nguyen Thi Minh Khai and Hem 453 verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Nguy%E1%BB%85n+Th%E1%BB%8B+Minh+Khai+%26+453,+Ph%C3%BA+L%E1%BB%A3i,+H%E1%BB%93+Ch%C3%AD+Minh,+Vietnam/@10.9742924,106.6899288,17z/",
+      "verified_at": "2026-08-13"
     }
   ],
   "landmark_aliases": [
@@ -1169,6 +1191,39 @@
       "accuracy_radius_m": 650,
       "source": "Google Maps exact public place result verified with isolated browser-use and repeated current Phu Cuong listing evidence",
       "source_url": "https://www.google.com/maps/place/Ph%E1%BB%91+%C4%90i+B%E1%BB%99+B%E1%BA%A1ch+%C4%90%E1%BA%B1ng/@10.9822198,106.6466652,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "landmark_name": "KDC Phú Hòa 1",
+      "lat": 10.9734232,
+      "lng": 106.6787709,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact public address on N9 inside KDC Phu Hoa 1 plus repeated current listing evidence",
+      "source_url": "https://www.google.com/maps/place/S%E1%BB%91+10,+%C4%91%C6%B0%E1%BB%9Dng+N9,+KDC+Ph%C3%BA+h%C3%B2a+1,+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t,+B%C3%ACnh+D%C6%B0%C6%A1ng/@10.9734232,106.6787709,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "landmark_name": "KDC Phú Hòa 2",
+      "lat": 10.9818427,
+      "lng": 106.6910945,
+      "accuracy_radius_m": 1100,
+      "source": "Google Maps exact public housing-development result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+D%C3%A2n+C%C6%B0+Ph%C3%BA+H%C3%B2a+2,+Phu+Loi,+Ho+Chi+Minh,+Vietnam/@10.9818427,106.6910945,15z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Hòa",
+      "landmark_name": "KDC Hoàng Nam 2",
+      "lat": 10.9859657,
+      "lng": 106.6939251,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public housing-development result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+D%C3%A2n+C%C6%B0+Ho%C3%A0ng+Nam+2/@10.9859657,106.6939251,17z/",
       "verified_at": "2026-08-13"
     }
   ]

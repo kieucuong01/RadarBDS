@@ -154,6 +154,10 @@ _KNOWN_ROAD_PREFIXES = (
 )
 
 _NON_LOCATION_RELATION_PREFIXES = (
+    "bac si dien",
+    "le kip",
+    "le con kip",
+    "le nua kip",
     "phan giap",
     "phan nha",
     "vo nha",
@@ -199,6 +203,9 @@ _GENERIC_LANDMARK_NAMES = {
 }
 
 _KNOWN_LANDMARK_PREFIXES = (
+    ("phu hoa 1", "phu hoa 1"),
+    ("phu hoa 2", "phu hoa 2"),
+    ("hoang nam 2", "hoang nam 2"),
     ("tuong binh hiep", "tuong binh hiep"),
     ("p dinh hoa", "dinh hoa"),
     ("dinh hoa", "dinh hoa"),
@@ -422,12 +429,16 @@ def _relation_road(
     for match in prefix_re.finditer(text):
         road = _road_after(text, match.end())
         has_explicit_road_word = "duong" in match.group(0).lower()
-        is_bare_alley_number = (
-            prefix_re is _ALLEY_PREFIX_RE
-            and not has_explicit_road_word
-            and re.fullmatch(r"duong so \d{1,4}[a-z]?", road or "")
+        prefix = match.group(0).strip().lower()
+        is_numbered_road = bool(
+            re.fullmatch(r"duong so \d{1,4}[a-z]?", road or "")
         )
-        if is_bare_alley_number:
+        is_unqualified_number = (
+            not has_explicit_road_word
+            and is_numbered_road
+            and not (prefix_re is _ALLEY_PREFIX_RE and prefix.startswith("hem"))
+        )
+        if is_unqualified_number:
             continue
         if road and (has_explicit_road_word or _looks_like_road_name(road)):
             return road, match
@@ -541,6 +552,15 @@ def extract_map_location_context(
 
     alley_road, _ = _relation_road(folded, _ALLEY_PREFIX_RE)
     if alley_road:
+        nearby_road, _ = _relation_road(folded, _NEAR_PREFIX_RE)
+        if nearby_road:
+            return MapLocationContext(
+                nearby_road=nearby_road,
+                landmark=landmark,
+                relation="near",
+                distance_m=_distance(folded),
+                evidence_text=evidence,
+            )
         return MapLocationContext(
             nearby_road=alley_road,
             landmark=landmark,

@@ -780,6 +780,39 @@ def test_explicit_listing_text_coordinate_resolves_as_exact():
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_precision", "expected_slug"),
+    [
+        ("Nhà KDC Phú Hòa 1", "landmark", "kdc-phu-hoa-1"),
+        ("Nhà KDC Phú Hòa 2", "landmark", "kdc-phu-hoa-2"),
+        ("Nhà KDC Hoàng Nam 2", "landmark", "kdc-hoang-nam-2"),
+        ("Nhà hẻm 385 Phú Hòa", "road", "duong-so-385"),
+        ("Nhà hẻm 453 Phú Hòa", "road", "duong-so-453"),
+        ("Mặt tiền Trần Văn Ơn", "road", "tran-van-on"),
+        ("Gần Mỹ Phước Tân Vạn", "road", "my-phuoc-tan-van"),
+    ],
+)
+def test_phu_hoa_evidence_backed_locations_resolve(
+    title, expected_precision, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920109,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Phú Hòa",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

@@ -344,14 +344,14 @@ def test_alley_number_with_named_road_uses_named_road_not_numbered_road():
     assert context.nearby_road == "nguyen thi minh khai"
 
 
-def test_bare_alley_number_is_not_treated_as_numbered_road():
+def test_verified_phu_hoa_alley_number_is_treated_as_numbered_road():
     context = extract_map_location_context(
         "Bán nhà hẻm 385 khu 8 Phú Hòa TDM",
         "",
     )
 
-    assert context.nearby_road == ""
-    assert context.direct_road == ""
+    assert context.nearby_road == "duong so 385"
+    assert context.relation == "alley"
 
 
 def test_explicit_near_road_wins_after_bare_alley_number():
@@ -538,6 +538,48 @@ def test_phu_cuong_interior_finish_copy_is_not_a_landmark():
         "",
     )
     assert context.landmark == ""
+
+
+def test_phu_hoa_near_school_copy_does_not_invent_road_one():
+    context = extract_map_location_context(
+        "Nhà gần trường THCS Phú Hòa, thiết kế 1 trệt 1 lầu",
+        "",
+    )
+    assert context.nearby_road == ""
+
+
+def test_phu_hoa_explicit_nearby_numbered_road_is_kept():
+    context = extract_map_location_context("Đất gần đường số 1 Phú Hòa", "")
+    assert context.nearby_road == "duong so 1"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà hẻm 385 Phú Hòa", "duong so 385"),
+        ("Nhà hẻm 453 Phú Hòa gần bác sĩ Điền", "duong so 453"),
+        (
+            "Nhanh lẹ kịp khách iu, nhà xẹt đường 30/4 Phú Hòa",
+            "duong so 30 thang 4",
+        ),
+    ],
+)
+def test_phu_hoa_alley_identifiers_beat_marketing_copy(text, expected):
+    context = extract_map_location_context(text, "")
+    assert context.nearby_road == expected
+    assert context.relation == "alley"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà KDC Phú Hòa 1 full nội thất", "kdc phu hoa 1"),
+        ("Nhà KDC Phú Hòa 2 khu dân cư hiện hữu", "kdc phu hoa 2"),
+        ("Nhà KDC Hoàng Nam 2 Phú Hòa", "kdc hoang nam 2"),
+    ],
+)
+def test_phu_hoa_landmarks_stop_before_listing_suffixes(text, expected):
+    assert extract_map_location_context(text, "").landmark == expected
 
 
 def test_tan_an_common_road_phrases_map_to_known_roads():

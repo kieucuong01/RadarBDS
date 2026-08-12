@@ -1219,6 +1219,17 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("Phú Cường", "dx 42"),
     }.issubset(indexed_roads)
     assert ("Phú Cường", "pho di bo bach dang") in indexed_landmarks
+    assert {
+        ("Phú Hòa", "duong so 385"),
+        ("Phú Hòa", "duong so 453"),
+        ("Phú Hòa", "tran van on"),
+        ("Phú Hòa", "my phuoc tan van"),
+    }.issubset(indexed_roads)
+    assert {
+        ("Phú Hòa", "kdc phu hoa 1"),
+        ("Phú Hòa", "kdc phu hoa 2"),
+        ("Phú Hòa", "kdc hoang nam 2"),
+    }.issubset(indexed_landmarks)
 
     registry = load_location_registry()
     assert (
