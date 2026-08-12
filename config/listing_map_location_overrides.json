@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v38",
+  "resolver_version": "osm-binh-duong-20260807-v39",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -187,6 +187,24 @@
       "ward": "Phú Lợi",
       "canonical": "Nguyễn Thị Minh Khai",
       "aliases": ["NTMK", "Nguyen Thi Minh Khai"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "canonical": "Đường D2",
+      "aliases": ["Đường số 2", "Đường 2"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "canonical": "Đường D3",
+      "aliases": ["Đường số 3", "Đường 3"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "canonical": "Đường D10",
+      "aliases": ["Đường số 10", "Đường 10"]
     }
   ],
   "roads": [
@@ -1245,6 +1263,54 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "explicit Hiep Thanh listings use Huynh Van Luy along the historical ward edge"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Đường D4",
+      "lat": 10.975578,
+      "lng": 106.6662649,
+      "accuracy_radius_m": 500,
+      "source": "OpenStreetMap named-road geometry corroborated by Google Maps public D4 addresses in KDC Chanh Nghia",
+      "source_url": "https://www.openstreetmap.org/way/224839356",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Đường D5",
+      "lat": 10.9761935,
+      "lng": 106.6667368,
+      "accuracy_radius_m": 500,
+      "source": "OpenStreetMap named-road geometry corroborated by Google Maps public D5 addresses in KDC Chanh Nghia",
+      "source_url": "https://www.openstreetmap.org/way/224839363",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Bạch Đằng",
+      "lat": 10.9806355,
+      "lng": 106.6496774,
+      "accuracy_radius_m": 1000,
+      "source": "OpenStreetMap aggregate riverfront geometry reused for listings near Ben and Pho di bo Bach Dang",
+      "source_url": "https://www.openstreetmap.org/way/263643111",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Chanh Nghia listings repeatedly use Ben or Pho di bo Bach Dang as their nearest named public reference across the retained legacy ward boundary"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Bác sĩ Yersin",
+      "lat": 10.9824088,
+      "lng": 106.6584753,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap named-road geometry reused for TDC Chanh Nghia listings explicitly near Yersin",
+      "source_url": "https://www.openstreetmap.org/way/126154664",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "TDC Chanh Nghia listings explicitly use Yersin as a nearby reference across the retained legacy ward boundary"
     }
   ],
   "landmark_aliases": [
@@ -1378,6 +1444,14 @@
     {
       "canonical": "KDC Hiệp Phát",
       "aliases": ["KDC Hiep Phat", "Khu dân cư Hiệp Phát"]
+    },
+    {
+      "canonical": "KDC Chánh Nghĩa",
+      "aliases": ["KDC Chanh Nghia", "KDC Chánh Nghi", "Khu dân cư Chánh Nghĩa"]
+    },
+    {
+      "canonical": "TĐC Chánh Nghĩa",
+      "aliases": ["TDC Chanh Nghia", "Khu tái định cư Chánh Nghĩa", "tái định cư Chánh Nghĩa"]
     },
     {
       "canonical": "KDC Phú Lợi",
@@ -1693,6 +1767,28 @@
       "accuracy_radius_m": 950,
       "source": "Google Maps exact public KDC Hiep Phat result used as the project anchor for zone 2",
       "source_url": "https://www.google.com/maps/place/KDC+NH%C3%80+%E1%BB%9E+X%C3%83+H%E1%BB%98I+HI%E1%BB%86P+PH%C3%81T/@11.006641,106.6605128,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "landmark_name": "KDC Chánh Nghĩa",
+      "lat": 10.9705408,
+      "lng": 106.6651542,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps public Sky View and Compass One results inside KDC Chanh Nghia verified with browser-use",
+      "source_url": "https://www.google.com/maps/search/Khu+dan+cu+Chanh+Nghia+Sky+View",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "landmark_name": "TĐC Chánh Nghĩa",
+      "lat": 10.96282,
+      "lng": 106.6628928,
+      "accuracy_radius_m": 850,
+      "source": "Google Maps exact public address at 48 Duong D2 inside Khu tai dinh cu Chanh Nghia verified with browser-use",
+      "source_url": "https://www.google.com/maps/search/48+%C4%90%C6%B0%E1%BB%9Dng+D2,+Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+Ch%C3%A1nh+Ngh%C4%A9a,+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t",
       "verified_at": "2026-08-13"
     }
   ]

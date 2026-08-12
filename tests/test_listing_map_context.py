@@ -669,6 +669,77 @@ def test_hiep_thanh_landmarks_drop_listing_copy_and_zone_variants(text, expected
     assert extract_map_location_context(text, "").landmark == expected
 
 
+def test_direct_frontage_road_beats_a_nearby_reference_road():
+    context = extract_map_location_context(
+        "Nha MT 30/4 noi dai",
+        "Gan Vo Minh Duc - Co.opmart, duong thong ven song Bach Dang",
+    )
+
+    assert context.direct_road == "duong so 30 thang 4"
+    assert context.nearby_road == ""
+    assert context.relation == "on"
+
+
+def test_direct_numbered_road_is_not_replaced_by_marketing_copy_relations():
+    context = extract_map_location_context(
+        "Ban nha duong so 3 Chanh Nghia",
+        "Thiet ke dang nha o, ket cau chuan khach san",
+        stored_road_name="Duong So 3",
+    )
+
+    assert context.direct_road == "duong so 3"
+    assert context.nearby_road == ""
+
+
+def test_generic_paved_road_width_does_not_become_numbered_road():
+    context = extract_map_location_context(
+        "Hem thong Thich Quang Duc - Ngo Gia Tu",
+        "Duong nhua 2 xe hoi ne nhau, ke KDC Chanh Nghia",
+    )
+
+    assert context.direct_road == "thich quang duc"
+    assert context.direct_road != "duong so 2"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected", "relation"),
+    [
+        ("Hem duong Lao Cai Nha Moi 90% xay dung tret lau", "lao cai", "alley"),
+        ("Cach duong Lao Cai may chuc met thoi", "lao cai", "near"),
+        ("1/ bui quoc khach. Duong be tong 6m", "bui quoc khanh", "alley"),
+        ("Thong ra Phan Di Dat Chanh Nghia, sau do la Phan Dinh Giot", "phan dinh giot", "near"),
+    ],
+)
+def test_chanh_nghia_noisy_parent_roads_normalize_to_registry_names(
+    text, expected, relation
+):
+    context = extract_map_location_context("Dat Chanh Nghia", text)
+
+    assert context.nearby_road == expected
+    assert context.relation == relation
+
+
+def test_cmt8_is_recognized_before_false_sat_tran_relation():
+    context = extract_map_location_context(
+        "Nha moi 2 mat thoang CMT8",
+        "Ba tang op gach sat tran, moi xay 2023, hoan cong du",
+    )
+
+    assert context.direct_road == "cach mang thang tam"
+    assert context.nearby_road == ""
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nha KDC Chanh Nghia noi that full go do", "kdc chanh nghia"),
+        ("Dat sat KDC Chanh Nghi trung tam", "kdc chanh nghia"),
+    ],
+)
+def test_chanh_nghia_landmark_suffixes_use_one_canonical_key(text, expected):
+    assert extract_map_location_context(text, "").landmark == expected
+
+
 def test_tan_an_common_road_phrases_map_to_known_roads():
     nguyen_chi_thanh = extract_map_location_context(
         "Dat Tan An cach duong lon Nguyen Chi Thanh",
