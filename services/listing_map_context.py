@@ -119,6 +119,7 @@ _KNOWN_ROAD_PREFIXES = (
     "le thi trung",
     "huynh van nghe",
     "nguyen van troi",
+    "nguyen van cu",
     "le van tach",
     "nguyen van long",
     "huynh van cu",
@@ -193,6 +194,14 @@ _KNOWN_LANDMARK_PREFIXES = (
     ("dinh hoa", "dinh hoa"),
     ("thanh le", "thanh le"),
     ("becamex dinh hoa", "becamex dinh hoa"),
+    ("hud chanh my", "chanh my"),
+    ("sinh thai chanh my", "chanh my"),
+    ("chanh my", "chanh my"),
+)
+
+_KNOWN_EXPLICIT_LANDMARKS = (
+    ("pho di bo bach dang", "pho di bo bach dang"),
+    ("cho chanh my", "cho chanh my"),
 )
 
 
@@ -467,6 +476,9 @@ def _direct_road(text: str) -> str:
 
 
 def _landmark(text: str) -> str:
+    for phrase, canonical in _KNOWN_EXPLICIT_LANDMARKS:
+        if re.search(rf"\b{re.escape(phrase)}\b", text, re.IGNORECASE):
+            return canonical
     match = _LANDMARK_RE.search(text)
     if not match:
         return ""

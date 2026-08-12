@@ -660,6 +660,41 @@ def test_dinh_hoa_evidence_backed_locations_resolve(
 
 
 @pytest.mark.parametrize(
+    ("title", "expected_precision", "expected_slug"),
+    [
+        ("Mặt tiền Đường số 1 Chánh Mỹ", "road", "duong-so-1"),
+        ("Mặt tiền Đường số 4 Chánh Mỹ", "road", "duong-so-4"),
+        ("Mặt tiền Đường số 5 KĐT Chánh Mỹ", "road", "duong-so-5"),
+        ("Đường N3 KĐT sinh thái Chánh Mỹ", "road", "n-3"),
+        ("Cách Cách Mạng Tháng Tám 100m", "road", "cach-mang-thang-tam"),
+        ("Đất TĐC Chánh Mỹ", "landmark", "tdc-chanh-my"),
+        ("Khu đô thị HUD Chánh Mỹ", "landmark", "khu-do-thi-chanh-my"),
+        ("Nhà gần Chợ Chánh Mỹ", "landmark", "cho-chanh-my"),
+        ("Đất cách Phố đi bộ Bạch Đằng", "landmark", "pho-di-bo-bach-dang"),
+    ],
+)
+def test_chanh_my_evidence_backed_locations_resolve(
+    title, expected_precision, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920105,
+        "city": "THỦ DẦU MỘT",
+        "ward": "Chánh Mỹ",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
     ("text", "expected"),
     [
         ("Mặt tiền Dx120 Tân An", "dx 120"),

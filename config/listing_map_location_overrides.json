@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v29",
+  "resolver_version": "osm-binh-duong-20260807-v30",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -750,6 +750,67 @@
       "verified_at": "2026-08-12",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "TDC Dinh Hoa is stored in the legacy Dinh Hoa listing scope while public road 36 addresses use Hoa Phu"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "Đường số 1",
+      "landmark_keys": ["Khu đô thị Chánh Mỹ"],
+      "lat": 10.9866146,
+      "lng": 106.6267752,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact Chanh My ecological urban-area result plus repeated current listing evidence; OSM does not name the internal road",
+      "source_url": "https://www.google.com/maps/place/KHU+%C4%90%C3%94+TH%E1%BB%8A+SINH+TH%C3%81I+CH%C3%81NH+M%E1%BB%B8/@10.9866146,106.6267752,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "Đường số 4",
+      "landmark_keys": ["Khu đô thị Chánh Mỹ"],
+      "lat": 10.9866146,
+      "lng": 106.6267752,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact Chanh My ecological urban-area result plus repeated current listing evidence; OSM does not name the internal road",
+      "source_url": "https://www.google.com/maps/place/KHU+%C4%90%C3%94+TH%E1%BB%8A+SINH+TH%C3%81I+CH%C3%81NH+M%E1%BB%B8/@10.9866146,106.6267752,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "Đường số 5",
+      "landmark_keys": ["Khu đô thị Chánh Mỹ"],
+      "lat": 10.9866146,
+      "lng": 106.6267752,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact Chanh My ecological urban-area result plus 28 current listing candidates; OSM does not name the internal road",
+      "source_url": "https://www.google.com/maps/place/KHU+%C4%90%C3%94+TH%E1%BB%8A+SINH+TH%C3%81I+CH%C3%81NH+M%E1%BB%B8/@10.9866146,106.6267752,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "N3",
+      "landmark_keys": ["Khu đô thị Chánh Mỹ"],
+      "lat": 10.9866146,
+      "lng": 106.6267752,
+      "accuracy_radius_m": 2400,
+      "source": "Google Maps Chanh My project search area plus six independent current listing candidates; no named OSM geometry is available",
+      "source_url": "https://www.google.com/maps/search/%C4%90%C6%B0%E1%BB%9Dng+N3+Ch%C3%A1nh+M%E1%BB%B9+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t/@10.9857853,106.6431474,15z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "road_name": "Cách Mạng Tháng Tám",
+      "lat": 10.9873865,
+      "lng": 106.6521006,
+      "accuracy_radius_m": 1700,
+      "source": "OpenStreetMap road geometry verified against Google Maps Chanh My search scope",
+      "source_url": "https://www.openstreetmap.org/way/126156303",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Cach Mang Thang Tam follows the legacy Chanh My edge; repeated current Chanh My listings and named OSM geometry are stronger than the coarse historical ward polygon"
     }
   ],
   "landmark_aliases": [
@@ -819,6 +880,33 @@
         "Dự án Becamex Định Hòa",
         "Du an Becamex Dinh Hoa"
       ]
+    },
+    {
+      "canonical": "TĐC Chánh Mỹ",
+      "aliases": [
+        "TDC Chanh My",
+        "tái định cư Chánh Mỹ",
+        "Khu tái định cư Chánh Mỹ"
+      ]
+    },
+    {
+      "canonical": "Khu đô thị Chánh Mỹ",
+      "aliases": [
+        "KĐT Chánh Mỹ",
+        "KDT Chanh My",
+        "Khu đô thị sinh thái Chánh Mỹ",
+        "KDT sinh thai Chanh My",
+        "Khu đô thị HUD Chánh Mỹ",
+        "KDT HUD Chanh My"
+      ]
+    },
+    {
+      "canonical": "Chợ Chánh Mỹ",
+      "aliases": ["Cho Chanh My"]
+    },
+    {
+      "canonical": "Phố đi bộ Bạch Đằng",
+      "aliases": ["Pho di bo Bach Dang"]
     }
   ],
   "landmarks": [
@@ -891,6 +979,52 @@
       "source": "Google Maps exact public housing result verified with isolated browser-use and official project evidence",
       "source_url": "https://www.google.com/maps/place/Khu+cao+t%E1%BA%A7ng+Nh%C3%A0+%E1%BB%9F+x%C3%A3+h%E1%BB%99i+Becamex+%C4%90%E1%BB%8Bnh+H%C3%B2a+-+Th%C3%A0nh+Ph%E1%BB%91+M%E1%BB%9Bi+B%C3%ACnh+D%C6%B0%C6%A1ng+(%C4%90%E1%BA%A1i+h%E1%BB%8Dc+qu%E1%BB%91c+t%E1%BA%BF+Mi%E1%BB%81n+%C4%90%C3%B4ng+EIU)/@11.052196,106.6615538,17z/",
       "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "landmark_name": "Khu đô thị Chánh Mỹ",
+      "lat": 10.9866146,
+      "lng": 106.6267752,
+      "accuracy_radius_m": 1400,
+      "source": "Google Maps exact public place result verified with isolated browser-use and HUD project evidence",
+      "source_url": "https://www.google.com/maps/place/KHU+%C4%90%C3%94+TH%E1%BB%8A+SINH+TH%C3%81I+CH%C3%81NH+M%E1%BB%B8/@10.9866146,106.6267752,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "landmark_name": "TĐC Chánh Mỹ",
+      "lat": 10.9866146,
+      "lng": 106.6267752,
+      "accuracy_radius_m": 1800,
+      "source": "Repeated current TDC Chanh My listing evidence anchored to the verified Chanh My urban-area footprint",
+      "source_url": "https://khudothichanhmy.vn/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "landmark_name": "Chợ Chánh Mỹ",
+      "lat": 10.9944183,
+      "lng": 106.6435616,
+      "accuracy_radius_m": 450,
+      "source": "Google Maps exact public place result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Ch%E1%BB%A3+Ch%C3%A1nh+M%E1%BB%B9/@10.9944183,106.6435616,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Mỹ",
+      "landmark_name": "Phố đi bộ Bạch Đằng",
+      "lat": 10.9822198,
+      "lng": 106.6466652,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps exact public place result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Ph%E1%BB%91+%C4%90i+B%E1%BB%99+B%E1%BA%A1ch+%C4%90%E1%BA%B1ng/@10.9822198,106.6466652,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the landmark is outside the coarse legacy Chanh My polygon but current Chanh My listings explicitly use it as their location reference"
     }
   ]
 }

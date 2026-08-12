@@ -1169,6 +1169,13 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("T\u00e2n An", "bui ngoc thu"),
         ("T\u00e2n An", "nguyen duc thuan"),
     }.issubset(indexed_roads)
+    assert {
+        ("Chánh Mỹ", "duong so 1"),
+        ("Chánh Mỹ", "duong so 4"),
+        ("Chánh Mỹ", "duong so 5"),
+        ("Chánh Mỹ", "n 3"),
+        ("Chánh Mỹ", "cach mang thang tam"),
+    }.issubset(indexed_roads)
     indexed_landmarks = {
         (row["ward"], row["normalized_landmark"]): row
         for row in landmarks["landmarks"]
@@ -1189,6 +1196,13 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert indexed_landmarks[("T\u00e2n An", "tdc tan an")]["source"].startswith(
         "Google Maps"
     )
+
+    assert {
+        ("Chánh Mỹ", "tdc chanh my"),
+        ("Chánh Mỹ", "khu do thi chanh my"),
+        ("Chánh Mỹ", "cho chanh my"),
+        ("Chánh Mỹ", "pho di bo bach dang"),
+    }.issubset(indexed_landmarks)
 
     registry = load_location_registry()
     assert (

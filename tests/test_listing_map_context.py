@@ -461,6 +461,35 @@ def test_chanh_my_known_roads_drop_marketing_and_area_suffixes():
     assert huynh_van_cu.direct_road == "huynh van cu"
 
 
+def test_chanh_my_nguyen_van_cu_stops_marketing_suffix():
+    direct = extract_map_location_context(
+        "Mặt tiền Nguyễn Văn Cừ đại lộ huyết mạch kết nối trung tâm",
+        "",
+    )
+    alley = extract_map_location_context(
+        "Nhà Chánh Mỹ 1 sẹc Nguyễn Văn Cừ kề bên khu đô thị",
+        "",
+    )
+
+    assert direct.direct_road == "nguyen van cu"
+    assert alley.nearby_road == "nguyen van cu"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Đất TĐC Chánh Mỹ đối diện khu chung cư", "tdc chanh my"),
+        ("Khu đô thị Chánh Mỹ cầu Phú Cường phố đi bộ", "khu do thi chanh my"),
+        ("Nhà gần Chợ Chánh Mỹ đường nhựa 5m", "cho chanh my"),
+        ("Đất cách Phố đi bộ Bạch Đằng 300m", "pho di bo bach dang"),
+    ],
+)
+def test_chanh_my_named_landmarks_are_bounded(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected
+
+
 def test_tan_an_common_road_phrases_map_to_known_roads():
     nguyen_chi_thanh = extract_map_location_context(
         "Dat Tan An cach duong lon Nguyen Chi Thanh",
