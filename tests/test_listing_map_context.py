@@ -131,3 +131,72 @@ def test_nearby_named_road_stops_before_distance_suffix():
     assert context.nearby_road == "huynh thi hieu"
     assert context.relation == "near"
     assert context.distance_m == 150.0
+
+
+def test_ql13_alias_resolves_to_dai_lo_binh_duong():
+    context = extract_map_location_context(
+        "Bán nhà Hiệp An",
+        "1 sẹt quốc lộ 13 gần trạm thu phí suối giữa",
+    )
+
+    assert context.nearby_road == "dai lo binh duong"
+    assert context.relation == "alley"
+
+
+def test_dai_lo_binh_duong_after_slash_alley_is_extracted():
+    context = extract_map_location_context(
+        "Nhà Định Hoà",
+        "1/ Đại Lộ Bình Dương 150m Chủ Hạ 100tr Bán Nhanh",
+    )
+
+    assert context.nearby_road == "dai lo binh duong"
+    assert context.relation == "alley"
+    assert context.distance_m == 150.0
+
+
+def test_road_candidate_stops_before_vao_distance_suffix():
+    context = extract_map_location_context(
+        "Bán đất Tân An",
+        "Vị trí Nhánh Huỳnh thị Hiếu vào 200m.",
+    )
+
+    assert context.nearby_road == "huynh thi hieu"
+    assert context.distance_m == 200.0
+
+
+def test_road_candidate_stops_before_chi_distance_without_breaking_name():
+    context = extract_map_location_context(
+        "Bán đất Tân An",
+        "cách Phan Đăng Lưu chỉ 100m, gần Ngã Tư Võ Cái",
+    )
+
+    assert context.nearby_road == "phan dang luu"
+    assert context.distance_m == 100.0
+
+
+def test_road_candidate_stops_before_kdc_and_ward_suffixes():
+    context = extract_map_location_context(
+        "Bán nhà mặt tiền Hoàng Hoa Thám KDC Phúc Đạt, Phú Lợi",
+        "",
+    )
+
+    assert context.direct_road == "hoang hoa tham"
+
+
+def test_road_candidate_drops_following_ward_city_suffix():
+    context = extract_map_location_context(
+        "Bán mặt tiền Hồ Văn Cống Tương Bình Hiệp TDM",
+        "Nay là phường Chánh Hiệp TPHCM",
+    )
+
+    assert context.direct_road == "ho van cong"
+
+
+def test_le_chi_dan_name_is_not_cut_at_chi():
+    context = extract_map_location_context(
+        "Bán nhà",
+        "1 sẹc Lê Chí Dân chỉ 80m",
+    )
+
+    assert context.nearby_road == "le chi dan"
+    assert context.distance_m == 80.0

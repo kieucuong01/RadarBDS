@@ -57,7 +57,11 @@ _ROAD_STOP_RE = re.compile(
     r"tphcm|hcm|tdc|tai dinh cu|dan cu|o to|xe hoi|"
     r"duong nhua|duong be tong|duong dat|"
     r"gia|dien tich|dt|ban|can ban|chinh chu|chu gui|gui|"
-    r"vi tri|kinh doanh|thong|gan|sat|cach|ngay|doi dien)\b|"
+    r"vi tri|kinh doanh|thong|gan|sat|cach|ngay|doi dien|"
+    r"kdc|vao|nay|"
+    r"tuong binh hiep|dinh hoa|tan an|hiep an|phu hoa|phu loi|"
+    r"phu my|hiep thanh|chanh nghia|chanh my|phu tho|phu cuong|hoa phu|"
+    r"(?<!nguyen )(?<!le )(?<!ho )(?<!mac )chi)\b|"
     r"\b\d{1,4}(?:[.,]\d+)?\s*m\b",
     re.IGNORECASE,
 )
@@ -80,6 +84,7 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"dx|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
+    r"dai lo|"
     r"my phuoc|phu loi|phu tan"
     r")\b",
     re.IGNORECASE,
@@ -114,6 +119,9 @@ def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
     if candidate.startswith("nguyen tri phuong"):
         return normalize_road_token("nguyen tri phuong")
+    for known_name in ("nguyen chi thanh", "le chi dan", "mac dinh chi"):
+        if candidate.startswith(known_name):
+            return normalize_road_token(known_name)
 
     code_match = _ROAD_CODE_RE.match(candidate)
     if code_match:
@@ -146,7 +154,10 @@ def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(words[:8])
     if candidate in _NON_ROAD_NAMES or len(candidate) < 3:
         return ""
-    return normalize_road_token(candidate)
+    normalized = normalize_road_token(candidate)
+    if normalized in {"ql 13", "quoc lo 13"}:
+        return "dai lo binh duong"
+    return normalized
 
 
 def _looks_like_road_name(road: str) -> bool:

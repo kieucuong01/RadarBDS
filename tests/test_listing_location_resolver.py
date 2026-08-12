@@ -365,6 +365,12 @@ def test_ambiguous_phu_tan_duong_so_84_uses_aggregate_road():
         ("Ph\u00fa H\u00f2a", "Le Hong Phong", "le-hong-phong"),
         ("Ch\u00e1nh Ngh\u0129a", "Bui Quoc Khanh", "bui-quoc-khanh"),
         ("\u0110\u1ecbnh H\u00f2a", "DX 71", "dx-71"),
+        ("\u0110\u1ecbnh H\u00f2a", "Dai Lo Binh Duong", "dai-lo-binh-duong"),
+        ("Hi\u1ec7p An", "Dai Lo Binh Duong", "dai-lo-binh-duong"),
+        ("Ph\u00fa H\u00f2a", "Dai Lo Binh Duong", "dai-lo-binh-duong"),
+        ("\u0110\u1ecbnh H\u00f2a", "Nguyen Van Thanh", "nguyen-van-thanh"),
+        ("Ph\u00fa L\u1ee3i", "My Phuoc Tan Van", "my-phuoc-tan-van"),
+        ("Ph\u00fa L\u1ee3i", "Hoang Hoa Tham", "hoang-hoa-tham"),
     ],
 )
 def test_common_thu_dau_mot_multi_segment_roads_use_aggregate_road(
