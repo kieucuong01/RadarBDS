@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v43",
+  "resolver_version": "osm-binh-duong-20260807-v44",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -616,6 +616,19 @@
     {
       "city": "THỦ DẦU MỘT",
       "ward": "Phú Tân",
+      "road_name": "Đường số 45",
+      "lat": 11.06147,
+      "lng": 106.69725,
+      "accuracy_radius_m": 650,
+      "source": "Google Maps direct road label centered at zoom 20 beside Huynh Van Luy verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/@11.06147,106.69725,20z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Tan listings explicitly identify Duong so 45 in TDC Phu Chanh B under the former Hoa Phu scope"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
       "road_name": "Đường số 50",
       "lat": 11.0666659,
       "lng": 106.6941819,
@@ -625,6 +638,19 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "current Phu Tan listings explicitly identify Duong so 50 in the TDC Phu Chanh area"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Tân",
+      "road_name": "Đường số 53",
+      "lat": 11.0585,
+      "lng": 106.7,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps direct road label centered at zoom 20 in the Phu Chanh numbered-road grid verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/@11.0585,106.7000,20z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Phu Tan listings explicitly identify Duong so 53 in the TDC Phu Chanh area"
     },
     {
       "city": "THỦ DẦU MỘT",
