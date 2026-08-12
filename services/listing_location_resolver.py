@@ -76,6 +76,11 @@ def _road_location_key(
     return key
 
 
+def _entry_road_key(entry: Mapping[str, object], fallback: str) -> str:
+    canonical = normalize_road_token(str(entry.get("normalized_road") or ""))
+    return canonical or fallback
+
+
 def _value(listing: Mapping, key: str, default=None):
     try:
         return listing.get(key, default)
@@ -522,6 +527,7 @@ def resolve_listing_location(
             registry,
         )
         if isinstance(road_entry, Mapping):
+            canonical_road = _entry_road_key(road_entry, direct_road)
             allowed_landmarks = tuple(
                 normalize_location_token(item)
                 for item in (road_entry.get("landmark_keys") or ())
@@ -549,14 +555,14 @@ def resolve_listing_location(
                 location_key=_road_location_key(
                     city,
                     ward,
-                    direct_road,
+                    canonical_road,
                     landmark_key if landmark_entry else "",
                 ),
                 entry=road_entry,
                 resolver_version=registry.resolver_version,
                 signature=signature,
                 relation="on",
-                reference_road=direct_road,
+                reference_road=canonical_road,
                 landmark_key=landmark_key if landmark_entry else "",
             )
             if resolved:
@@ -619,20 +625,21 @@ def resolve_listing_location(
             registry,
         )
         if isinstance(road_entry, Mapping):
+            canonical_road = _entry_road_key(road_entry, nearby_road)
             resolved = _resolved_from_entry(
                 listing_id=listing_id,
                 precision="road",
                 location_key=_road_location_key(
                     city,
                     ward,
-                    nearby_road,
+                    canonical_road,
                     landmark_key if landmark_entry else "",
                 ),
                 entry=road_entry,
                 resolver_version=registry.resolver_version,
                 signature=signature,
                 relation=relation or "near",
-                reference_road=nearby_road,
+                reference_road=canonical_road,
                 landmark_key=landmark_key if landmark_entry else "",
             )
             if resolved:

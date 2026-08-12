@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v7",
+  "resolver_version": "osm-binh-duong-20260807-v8",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -40,6 +40,30 @@
         "Đường 37",
         "Duong so 37"
       ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp Thành",
+      "canonical": "Đại lộ Bình Dương",
+      "aliases": [
+        "QL13",
+        "QL 13",
+        "Quốc lộ 13",
+        "Quoc Lo 13",
+        "Dai Lo Binh"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Phú Thọ",
+      "canonical": "Đại lộ Bình Dương",
+      "aliases": [
+        "QL13",
+        "QL 13",
+        "Quốc lộ 13",
+        "Quoc Lo 13",
+        "Dai Lo Binh"
+      ]
     }
   ],
   "roads": [
@@ -74,6 +98,85 @@
       "verified_at": "2026-07-29",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "broker landmark is stronger than available historical ward boundary"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tân An",
+      "road_name": "Mạc Đĩnh Chi",
+      "lat": 11.0289045,
+      "lng": 106.6195355,
+      "accuracy_radius_m": 1400,
+      "source": "TinBDS road page and OpenStreetMap endpoint-derived midpoint",
+      "source_url": "https://tinbds.com/binh-duong/thu-dau-mot/duong-mac-dinh-chi",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Định Hòa",
+      "road_name": "DX 80",
+      "lat": 11.0218,
+      "lng": 106.6548,
+      "accuracy_radius_m": 1000,
+      "source": "Batdongsan listing evidence and OpenStreetMap nearby-road anchor",
+      "source_url": "https://batdongsan.com.vn/ban-dat-duong-dx-080-phuong-dinh-hoa-163/ban-mat-tien-80-gan-benh-vien-chi-pr44920810",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hiệp An",
+      "road_name": "DX 90",
+      "lat": 11.0238607,
+      "lng": 106.640499,
+      "accuracy_radius_m": 900,
+      "source": "Batdongsan listing evidence and OpenStreetMap nearby-road anchor",
+      "source_url": "https://batdongsan.com.vn/ban-nha-mat-pho-duong-dx-090-phuong-hiep-an-163/ban-moi-xay-1-tret-1-lau-tien-dx90-nhua-6m-thong-nam-sat-phan-dang-luu-pr45102086",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 142",
+      "lat": 11.0112,
+      "lng": 106.6369,
+      "accuracy_radius_m": 1000,
+      "source": "Batdongsan listing evidence and OpenStreetMap nearby-road anchors",
+      "source_url": "https://batdongsan.com.vn/ban-dat-duong-dx-142-phuong-tuong-binh-hiep/ban-2-lo-goc-dep-mat-tien-dx142-nhua-7m-thong-nam-sat-nguyen-chi-thanh-pr44174613",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 143",
+      "lat": 11.0112,
+      "lng": 106.6369,
+      "accuracy_radius_m": 1000,
+      "source": "BDS68 listing evidence and OpenStreetMap nearby-road anchors",
+      "source_url": "https://bds68.com.vn/ban-dat/binh-duong/thu-dau-mot/duong-dx-143/6-lo-f0-mat-tuen-dx143-phuong-tuong-binh-hiep-cach-nguyen-chi-thanh-100m-thong-ho-van-cong-pr26948085",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Tương Bình Hiệp",
+      "road_name": "DX 145",
+      "lat": 11.0116,
+      "lng": 106.6388,
+      "accuracy_radius_m": 1000,
+      "source": "Batdongsan listing evidence and OpenStreetMap nearby-road anchor",
+      "source_url": "https://batdongsan.com.vn/ban-dat-duong-dx-145-phuong-tuong-binh-hiep/vi-tri-dep-gia-re-mat-tien-145-tp-tdm-bd-dt-99-5m2-tc-70m-gia-2-ty-1-pr43417377",
+      "verified_at": "2026-08-12"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "road_name": "Nguyễn Tri Phương",
+      "lat": 10.9725,
+      "lng": 106.6467,
+      "accuracy_radius_m": 1800,
+      "source": "TinBDS road page and TDM education directory evidence",
+      "source_url": "https://tinbds.com/binh-duong/thu-dau-mot/duong-nguyen-tri-phuong",
+      "verified_at": "2026-08-12",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "road follows the Saigon river edge; public road evidence is stronger than the coarse historical ward polygon"
     }
   ],
   "landmark_aliases": [

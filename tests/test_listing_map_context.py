@@ -200,3 +200,41 @@ def test_le_chi_dan_name_is_not_cut_at_chi():
 
     assert context.nearby_road == "le chi dan"
     assert context.distance_m == 80.0
+
+
+def test_alley_number_before_named_road_uses_named_road_not_alley_number():
+    context = extract_map_location_context(
+        "Nhà nhánh 385 Lê Hồng Phong khu 8 Phú Hoà",
+        "2/hẻm 385, cách đường Lê Hồng Phong 100m",
+    )
+
+    assert context.nearby_road == "le hong phong"
+
+
+def test_road_30_4_is_not_treated_as_duong_so_30():
+    context = extract_map_location_context(
+        "Bán đất 1/ đường 30/4 Phú Hoà cách 20m",
+        "",
+    )
+
+    assert context.nearby_road == "duong so 30 thang 4"
+
+
+def test_stored_road_name_is_cleaned_like_extracted_road_text():
+    context = extract_map_location_context(
+        "Bán mặt tiền Hồ Văn Cống Tương Bình Hiệp TDM",
+        "",
+        "Ho Van Cong Tuong Binh Hiep Tdm",
+    )
+
+    assert context.direct_road == "ho van cong"
+
+
+def test_stored_ql13_alias_becomes_dai_lo_binh_duong():
+    context = extract_map_location_context(
+        "Bán nhà Hiệp Thành",
+        "",
+        "QL13",
+    )
+
+    assert context.direct_road == "dai lo binh duong"

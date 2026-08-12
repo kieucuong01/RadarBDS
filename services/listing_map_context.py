@@ -117,6 +117,8 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
+    if candidate.startswith("dai lo binh"):
+        return "dai lo binh duong"
     if candidate.startswith("nguyen tri phuong"):
         return normalize_road_token("nguyen tri phuong")
     for known_name in ("nguyen chi thanh", "le chi dan", "mac dinh chi"):
@@ -136,7 +138,26 @@ def _normalize_road_candidate(value: str) -> str:
             f"{code_match.group('prefix')} "
             f"{int(code_match.group('number'))}{code_match.group('suffix')}"
         )
-        return normalize_road_token(raw)
+        normalized = normalize_road_token(raw)
+        if normalized in {"ql 13", "quoc lo 13"}:
+            return "dai lo binh duong"
+        return normalized
+
+    slash_date_match = re.match(
+        r"^(?:duong\s+)?30\s*(?:/|thang\s*)?\s*4\b", candidate, re.IGNORECASE
+    )
+    if slash_date_match:
+        return normalize_road_token("duong 30 thang 4")
+
+    alley_number_named_road = re.match(
+        r"^\d{1,4}\s+(?P<road>[a-z][a-z0-9\s]{2,80})",
+        candidate,
+        re.IGNORECASE,
+    )
+    if alley_number_named_road:
+        named_road = _normalize_road_candidate(alley_number_named_road.group("road"))
+        if _looks_like_road_name(named_road):
+            return named_road
 
     number_match = _NUMBERED_ROAD_RE.match(candidate)
     if number_match:
@@ -240,6 +261,7 @@ def extract_map_location_context(
 ) -> MapLocationContext:
     """Extract map-only location clues without mutating canonical listing data."""
     combined = " ".join(part for part in (title or "", description or "") if part)
+    combined = re.sub(r"\b30\s*/\s*4\b", "30 thang 4", combined, flags=re.IGNORECASE)
     combined = re.sub(
         r"\b\d+\s*/\s*(?=[^\W\d_])",
         " hem ",
@@ -274,7 +296,9 @@ def extract_map_location_context(
 
     direct_road = _direct_road(folded)
     if not direct_road and stored_road_name:
-        direct_road = normalize_road_token(stored_road_name)
+        direct_road = _normalize_road_candidate(
+            normalize_location_token(stored_road_name)
+        )
 
     return MapLocationContext(
         direct_road=direct_road,
