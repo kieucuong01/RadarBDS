@@ -117,6 +117,12 @@ _KNOWN_ROAD_PREFIXES = (
     "nguyen duc thuan",
     "pham ngu lao",
     "nguyen binh khiem",
+    "cach mang thang tam",
+    "bui quoc khanh",
+    "phan dinh giot",
+    "ngo gia tu",
+    "hoang van thu",
+    "thich quang duc",
 )
 
 
@@ -146,6 +152,8 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
+    if candidate.startswith(("cmt8", "cmt 8", "cach mang thang 8")):
+        return "cach mang thang tam"
     if candidate.startswith(("dai lo bd", "dai lo b d")):
         return "dai lo binh duong"
     if candidate.startswith("dai lo binh"):

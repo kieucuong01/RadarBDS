@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v13",
+  "resolver_version": "osm-binh-duong-20260807-v14",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -63,6 +63,29 @@
         "Quốc lộ 13",
         "Quoc Lo 13",
         "Dai Lo Binh"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "canonical": "Ba Mươi Tháng Tư",
+      "aliases": [
+        "30/4",
+        "Đường 30/4",
+        "Duong 30/4",
+        "30 Thang 4",
+        "Duong so 30 thang 4"
+      ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Chánh Nghĩa",
+      "canonical": "Cách Mạng Tháng Tám",
+      "aliases": [
+        "CMT8",
+        "CMT 8",
+        "Cach Mang Thang 8",
+        "Duong Cach Mang Thang 8"
       ]
     }
   ],

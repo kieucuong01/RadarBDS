@@ -153,6 +153,19 @@ def test_phu_tan_nguyen_van_linh_keeps_canonical_road_before_tl2_alias():
     assert context.relation == "on"
 
 
+def test_chanh_nghia_common_road_aliases_are_canonicalized():
+    cases = {
+        "Dat 1 xec CMT8 chi 30m": "cach mang thang tam",
+        "Nha 1/ Bui Quoc Khanh hem da bao": "bui quoc khanh",
+        "Dat 1/ Phan Dinh Giot ke ben KDC Chanh Nghia": "phan dinh giot",
+        "Ban nha nhanh Ngo Gia Tu Chanh Nghia": "ngo gia tu",
+    }
+
+    for text, expected in cases.items():
+        context = extract_map_location_context(text, "")
+        assert (context.direct_road or context.nearby_road) == expected
+
+
 def test_dai_lo_binh_duong_after_slash_alley_is_extracted():
     context = extract_map_location_context(
         "Nhà Định Hoà",
