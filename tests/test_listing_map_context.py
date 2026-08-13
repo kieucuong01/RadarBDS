@@ -1736,3 +1736,16 @@ def test_extract_context_clips_more_verified_thuan_an_landmarks(text, expected):
     context = extract_map_location_context(text, "")
 
     assert context.landmark == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Nhà mặt tiền Đường 22 Tháng 12 gần chợ Thuận Giao",
+        "Bán đất cách đường 22 tháng 12 khoảng 50m",
+    ],
+)
+def test_extract_context_preserves_thuan_an_22_thang_12_road(text):
+    context = extract_map_location_context(text, "")
+
+    assert (context.direct_road or context.nearby_road) == "duong so 22 thang 12"

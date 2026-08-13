@@ -451,6 +451,12 @@ def _normalize_road_candidate(value: str) -> str:
         return "bui quoc khanh"
     if candidate.startswith("phan di dat"):
         return "phan dinh giot"
+    if re.match(
+        r"^(?:duong\s+)?22\s*(?:/|\s+thang\s+)\s*12\b",
+        candidate,
+        re.IGNORECASE,
+    ):
+        return "duong so 22 thang 12"
     if candidate.startswith("tran ngoc lien"):
         return "tran ngoc len"
     if candidate.startswith("duc canh"):
