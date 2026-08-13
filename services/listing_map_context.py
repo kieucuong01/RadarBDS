@@ -39,7 +39,8 @@ _DIRECT_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ROAD_CODE_RE = re.compile(
-    r"^(?:duong\s+)?(?P<prefix>dx|da|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
+    r"^(?:duong\s+)?(?P<prefix>dx|da|db|dh|dt|dl|tl|ql|na|nb|ne|nf|"
+    r"nh|nj|nk|nl|ni|dj|dk|n|d)\s*"
     r"[-./_]?\s*0*(?P<number>\d{1,4})(?P<suffix>[a-z]?)\b",
     re.IGNORECASE,
 )
@@ -60,7 +61,7 @@ _ROAD_STOP_RE = re.compile(
     r"moi xay|xay dung|hoan cong|dang thi cong|"
     r"duong nhua|duong be tong|duong dat|"
     r"gia|dien tich|dt|ban|can ban|chinh chu|chu gui|gui|"
-    r"vi tri|kinh doanh|thong|gan|sat|cach|ngay|doi dien|"
+    r"vi tri|kinh doanh|thong|noi dai|rong|gan|sat|cach|ngay|doi dien|"
     r"kdc|vao|nay|"
     r"tuong binh hiep|dinh hoa|tan an|hiep an|phu hoa|phu loi|"
     r"phu my|hiep thanh|chanh nghia|chanh my|phu tho|phu cuong|hoa phu|"
@@ -89,11 +90,11 @@ _NON_ROAD_NAMES = {
 }
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
-    r"dx|da|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
+    r"dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"dai lo|bac si|yersin|yesin|"
-    r"my phuoc|mptv|phu loi|phu tan"
+    r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|vanh dai|vanh 4"
     r")\b",
     re.IGNORECASE,
 )
@@ -213,6 +214,10 @@ _GENERIC_LANDMARK_NAMES = {
 }
 
 _KNOWN_LANDMARK_PREFIXES = (
+    ("my phuoc 3 ben cat", "my phuoc 3"),
+    ("my phuoc iii", "my phuoc 3"),
+    ("my phuoc 3", "my phuoc 3"),
+    ("rach bap", "rach bap"),
     ("chanh nghia", "chanh nghia"),
     ("chanh nghi", "chanh nghia"),
     ("hiep thanh 1", "hiep thanh 1"),
@@ -312,6 +317,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "nguyen thi minh khai"
     if candidate.startswith(("dai lo bd", "dai lo b d")):
         return "dai lo binh duong"
+    if re.match(r"^vanh(?:\s+dai)?\s+4\b", candidate, re.IGNORECASE):
+        return "vanh dai 4"
     if candidate.startswith(("dl binh duong", "dl bd")):
         return "dai lo binh duong"
     if candidate.startswith("mptv"):
@@ -400,16 +407,35 @@ def _normalize_road_candidate(value: str) -> str:
             return named_road
         return ""
 
+    local_ward_road = re.match(
+        r"^(?P<ward>phu\s+an|an\s+dien)\s+"
+        r"(?P<number>0*\d{1,3})\b",
+        candidate,
+        re.IGNORECASE,
+    )
+    if local_ward_road:
+        return normalize_road_token(
+            f"{local_ward_road.group('ward')} {local_ward_road.group('number')}"
+        )
+
     code_match = _ROAD_CODE_RE.match(candidate)
     if code_match:
         if code_match.group("suffix").lower() == "m":
             return ""
         code_prefix = code_match.group("prefix").lower()
         code_number = int(code_match.group("number"))
-        if code_prefix == "dt" and not 700 <= code_number <= 799:
+        is_dt7a = (
+            code_prefix == "dt"
+            and code_number == 7
+            and code_match.group("suffix").lower() == "a"
+        )
+        if code_prefix == "dt" and not (700 <= code_number <= 799 or is_dt7a):
             return ""
         if (
-            code_prefix in {"dx", "da", "db", "dh", "dl", "nl", "ni", "n", "d"}
+            code_prefix in {
+                "dx", "da", "db", "dh", "dl", "na", "nb", "ne", "nf",
+                "nh", "nj", "nk", "nl", "ni", "dj", "dk", "n", "d",
+            }
             and code_number > 999
         ):
             return ""
@@ -427,6 +453,18 @@ def _normalize_road_candidate(value: str) -> str:
     )
     if slash_date_match:
         return normalize_road_token("duong 30 thang 4")
+
+    local_road_match = re.match(
+        r"^(?P<prefix>phu an|an dien|tan dinh|hoa loi)\s+"
+        r"(?P<number>\d{1,3})\b",
+        candidate,
+        re.IGNORECASE,
+    )
+    if local_road_match:
+        return normalize_road_token(
+            f"{local_road_match.group('prefix')} "
+            f"{local_road_match.group('number')}"
+        )
 
     alley_number_named_road = re.match(
         r"^\d{1,4}\s+(?P<road>[a-z][a-z0-9\s]{2,80})",
@@ -475,6 +513,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "huynh thi hieu"
     if candidate in {"phan dang l", "phan dang"}:
         return "phan dang luu"
+    if candidate.startswith("quoc lo 14 "):
+        return "ql 14"
     words = candidate.split()
     if not words:
         return ""
@@ -490,10 +530,14 @@ def _normalize_road_candidate(value: str) -> str:
 def _looks_like_road_name(road: str) -> bool:
     if not road:
         return False
-    if re.match(r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|nl|ni|n)\b", road):
+    if re.match(
+        r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n)\b",
+        road,
+    ):
         return bool(
             re.match(
-                r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|nl|ni|n)\s+\d{1,4}[a-z]?\b",
+                r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n)"
+                r"\s+\d{1,4}[a-z]?\b",
                 road,
             )
         )
@@ -598,7 +642,8 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
         return _normalize_road_candidate(numbered_address.group("road"))
 
     code_match = re.search(
-        r"\b(?:dx|da|db|dh|dt|dl|tl|ql|nl|ni)\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
+        r"\b(?:dx|da|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk)"
+        r"\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
         text,
     )
     if code_match:

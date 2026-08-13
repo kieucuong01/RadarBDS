@@ -3,7 +3,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260807-v46"
+LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260807-v55"
 LISTING_MAP_BOUNDS = (
     (10.75, 106.25),
     (11.65, 107.10),
@@ -19,6 +19,46 @@ LISTING_MAP_WARD_ALIASES = {
 }
 
 LISTING_MAP_FORCE_AGGREGATE_ROADS = frozenset({
+    ("ben cat", "an dien", "duong hung vuong"),
+    ("ben cat", "an dien", "duong tinh 748"),
+    ("ben cat", "an dien", "duong vanh dai 4 thanh pho ho chi minh"),
+    ("ben cat", "an tay", "duong hung vuong"),
+    ("ben cat", "an tay", "duong tinh 744"),
+    ("ben cat", "an tay", "duong vanh dai 4 thanh pho ho chi minh"),
+    ("ben cat", "phu an", "duong tinh 744"),
+    ("ben cat", "thoi hoa", "dj 5"),
+    ("ben cat", "thoi hoa", "duong my phuoc tan van"),
+    ("ben cat", "thoi hoa", "my phuoc tan van"),
+    ("ben cat", "thoi hoa", "na 7"),
+    ("ben cat", "thoi hoa", "ne 2"),
+    ("ben cat", "thoi hoa", "ne 8"),
+    ("ben cat", "thoi hoa", "n 3"),
+    ("ben cat", "thoi hoa", "n 5"),
+    ("ben cat", "thoi hoa", "n 6"),
+    ("ben cat", "thoi hoa", "n 7"),
+    ("ben cat", "thoi hoa", "n 10"),
+    ("ben cat", "thoi hoa", "na 2"),
+    ("ben cat", "thoi hoa", "d 9"),
+    ("ben cat", "thoi hoa", "d 11"),
+    ("ben cat", "thoi hoa", "d 12"),
+    ("ben cat", "thoi hoa", "d 13"),
+    ("ben cat", "thoi hoa", "duong de 1"),
+    ("ben cat", "thoi hoa", "duong de 4"),
+    ("ben cat", "thoi hoa", "duong di 1"),
+    ("ben cat", "thoi hoa", "duong di 3"),
+    ("ben cat", "thoi hoa", "duong kh 1"),
+    ("ben cat", "thoi hoa", "duong vanh dai 4"),
+    ("ben cat", "thoi hoa", "quoc lo 13"),
+    ("ben cat", "tan dinh", "dai lo binh duong"),
+    ("ben cat", "tan dinh", "my phuoc tan van"),
+    ("ben cat", "tan dinh", "quoc lo 13"),
+    ("ben cat", "hoa loi", "duong pham hung"),
+    ("ben cat", "hoa loi", "my phuoc tan van"),
+    ("ben cat", "chanh phu hoa", "duong my phuoc tan van"),
+    ("ben cat", "chanh phu hoa", "ne 3"),
+    ("ben cat", "my phuoc", "quoc lo 13"),
+    ("ben cat", "my phuoc", "na 3"),
+    ("ben cat", "my phuoc", "n 5"),
     ("thu dau mot", "phu hoa", "tran van on"),
     ("thu dau mot", "phu hoa", "my phuoc tan van"),
     ("thu dau mot", "phu cuong", "bach dang"),

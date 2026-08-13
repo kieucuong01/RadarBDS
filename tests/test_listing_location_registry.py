@@ -672,6 +672,7 @@ def test_registry_builder_labels_parent_zone_fallback_honestly(tmp_path):
         "ward": "Mỹ Phước 1",
         "point": {"lat": 11.147617, "lng": 106.611713},
         "fallback_parent": "Mỹ Phước",
+        "road_scope_parent": "Thới Hòa",
         "source": "Verified parent-zone point",
         "source_url": "https://example.test/source",
     }
@@ -686,6 +687,7 @@ def test_registry_builder_labels_parent_zone_fallback_honestly(tmp_path):
 
     ward = json.loads(ward_path.read_text(encoding="utf-8"))["wards"][0]
     assert ward["fallback_parent"] == "Mỹ Phước"
+    assert ward["road_scope_parent"] == "Thới Hòa"
     assert (
         ward["label"]
         == "Theo trung tâm Mỹ Phước (xấp xỉ cho Mỹ Phước 1)"

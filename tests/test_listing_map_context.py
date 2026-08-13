@@ -1267,3 +1267,105 @@ def test_hiep_thanh_dai_lo_bd_alias_maps_to_dai_lo_binh_duong():
     )
 
     assert context.nearby_road == "dai lo binh duong"
+
+
+@pytest.mark.parametrize(
+    ("title", "stored_road_name"),
+    [
+        ("Mặt tiền đường Phú An 024, vị trí đẹp", ""),
+        ("Đường vô thoải mái, xung quanh nhiều công ty", "Phú An 024"),
+    ],
+)
+def test_extract_context_recognizes_phu_an_numbered_local_road(
+    title, stored_road_name
+):
+    context = extract_map_location_context(title, "", stored_road_name)
+
+    assert context.direct_road == "phu an 024"
+    assert context.relation == "on"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_direct", "expected_nearby", "expected_landmark"),
+    [
+        ("Mặt tiền DT7A gần vòng xoay An Điền", "dt 7 a", "", ""),
+        ("Đất gần đường vành 4, 10x27m", "", "vanh dai 4", ""),
+        ("Bán nhà KDC Rạch Bắp An Điền, Bến Cát", "", "", "kdc rach bap"),
+        ("Mặt tiền đường An Điền 99 nhà vườn", "an dien 99", "", ""),
+    ],
+)
+def test_extract_context_normalizes_an_dien_road_and_landmark_variants(
+    text, expected_direct, expected_nearby, expected_landmark
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == expected_direct
+    assert context.nearby_road == expected_nearby
+    assert context.landmark == expected_landmark
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Mặt tiền NJ17 Mỹ Phước 3", "nj 17"),
+        ("Mặt tiền DJ5 Mỹ Phước 3", "dj 5"),
+        ("Mặt tiền NK4 Mỹ Phước 3", "nk 4"),
+        ("Mặt tiền NH15 Mỹ Phước 3", "nh 15"),
+        ("Mặt tiền NA7 Mỹ Phước 3", "na 7"),
+        ("Mặt tiền DK12 Mỹ Phước 3", "dk 12"),
+    ],
+)
+def test_extract_context_recognizes_my_phuoc_3_industrial_grid_codes(
+    text, expected
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == expected
+    assert context.relation == "on"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Bán đất Khu đô thị Mỹ Phước 3 Bến Cát", "khu do thi my phuoc 3"),
+        ("Nhà KDC Mỹ Phước 3 sầm uất tiện ích đầy đủ", "kdc my phuoc 3"),
+        ("Đất TĐC Mỹ Phước III khu phố 3B", "tdc my phuoc 3"),
+    ],
+)
+def test_extract_context_clips_my_phuoc_3_landmark_trailing_ad_copy(
+    text, expected
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected
+
+
+def test_extract_context_recognizes_tan_dinh_numbered_local_road():
+    context = extract_map_location_context(
+        "Cần bán đất khu 1 Tân Định",
+        "Có 35m mặt tiền Tân Định 028 nối dài",
+        "Tân Định 028",
+    )
+
+    assert context.direct_road == "tan dinh 028"
+    assert context.relation == "on"
+
+
+def test_extract_context_clips_hoa_loi_road_width_copy():
+    context = extract_map_location_context(
+        "Bán đất mặt tiền Phạm Hùng rộng 20m Hòa Lợi",
+        "",
+        "",
+    )
+
+    assert context.direct_road == "pham hung"
+
+
+def test_extract_context_clips_quoc_lo_14_trailing_landmark_copy():
+    context = extract_map_location_context(
+        "Bán đất mặt tiền Quốc lộ 14 và chợ Chánh Lưu LH ngay",
+        "",
+        "",
+    )
+
+    assert context.direct_road == "ql 14"

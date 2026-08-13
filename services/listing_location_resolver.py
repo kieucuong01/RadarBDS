@@ -63,11 +63,14 @@ def normalize_road_token(value: str) -> str:
     bare_number_letter = re.match(r"^(\d{1,4})\s+([a-z])$", normalized)
     if bare_number_letter and bare_number_letter.group(2) != "m":
         normalized = f"duong so {normalized}"
-    if re.match(r"^duong (?:dx|da|d|db|dh|dt|ql|n|ng|ni|na|nb) \d", normalized):
+    road_code_prefixes = (
+        "dx|da|d|db|dh|dt|ql|n|ng|ni|na|nb|ne|nf|nh|nj|nk|nl|dj|dk"
+    )
+    if re.match(rf"^duong (?:{road_code_prefixes}) \d", normalized):
         normalized = normalized.removeprefix("duong ")
     normalized = re.sub(r"^duong (?=\d)", "duong so ", normalized)
     normalized = re.sub(
-        r"^(?P<prefix>(?:dx|da|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+)0+(?=\d)",
+        rf"^(?P<prefix>(?:{road_code_prefixes})\s+)0+(?=\d)",
         r"\g<prefix>",
         normalized,
     )
@@ -302,7 +305,11 @@ def _road_scopes(
     normalized_ward = normalize_location_token(_canonical_map_ward(city, ward))
     scopes = [normalized_ward]
     ward_entry = registry.wards.get((city, normalized_ward)) or {}
-    parent = normalize_location_token(ward_entry.get("fallback_parent") or "")
+    parent = normalize_location_token(
+        ward_entry.get("road_scope_parent")
+        or ward_entry.get("fallback_parent")
+        or ""
+    )
     if parent and parent not in scopes:
         scopes.append(parent)
     return tuple(scopes)

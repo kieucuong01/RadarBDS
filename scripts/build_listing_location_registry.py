@@ -475,6 +475,9 @@ def _build_ward_rows(
             )
         ward_keys.add(key)
         fallback_parent = str(source.get("fallback_parent") or "").strip()
+        road_scope_parent = str(
+            source.get("road_scope_parent") or ""
+        ).strip()
         default_label = (
             f"Theo trung tâm {fallback_parent} (xấp xỉ cho {ward})"
             if fallback_parent
@@ -492,6 +495,8 @@ def _build_ward_rows(
         }
         if fallback_parent:
             row["fallback_parent"] = fallback_parent
+        if road_scope_parent:
+            row["road_scope_parent"] = road_scope_parent
         if element_key is not None:
             row["osm_type"] = element_key[0]
             row["osm_id"] = element_key[1]

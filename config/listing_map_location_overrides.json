@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v46",
+  "resolver_version": "osm-binh-duong-20260807-v55",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -227,9 +227,281 @@
       "ward": "Chánh Nghĩa",
       "canonical": "Đường D10",
       "aliases": ["Đường số 10", "Đường 10"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Phú An",
+      "canonical": "Đường tỉnh 744",
+      "aliases": ["ĐT744", "ĐT 744", "DT744", "DT 744"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền",
+      "canonical": "Đường tỉnh 748",
+      "aliases": ["ĐT748", "ĐT 748", "DT748", "DT 748"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền",
+      "canonical": "Đường Vành đai 4 Thành phố Hồ Chí Minh",
+      "aliases": ["Vành đai 4", "Vành 4", "Đường vành 4"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền",
+      "canonical": "Đường Hùng Vương",
+      "aliases": [
+        "Hùng Vương",
+        "Hung Vuong",
+        "ĐT7A",
+        "DT7A",
+        "Đường 7A",
+        "Đường số 7A",
+        "7A"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây",
+      "canonical": "Đường tỉnh 744",
+      "aliases": ["ĐT744", "ĐT 744", "DT744", "DT 744"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây",
+      "canonical": "Đường Vành đai 4 Thành phố Hồ Chí Minh",
+      "aliases": ["Vành đai 4", "Vành 4", "Đường vành 4"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây",
+      "canonical": "Đường Hùng Vương",
+      "aliases": ["Hùng Vương", "ĐT7A", "DT7A", "Đường 7A", "Đường số 7A", "7A"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "canonical": "Đường Vành đai 4 Thành phố Hồ Chí Minh",
+      "aliases": ["Vành đai 4", "Vành 4", "Đường vành 4"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "canonical": "Quốc lộ 13",
+      "aliases": ["QL13", "QL 13", "Đại lộ Bình Dương", "Dai lo Binh Duong"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Quốc lộ 13",
+      "aliases": [
+        "QL13",
+        "QL 13",
+        "QL14",
+        "QL 14",
+        "Quốc lộ 14"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Tân Định 006",
+      "aliases": ["DX6", "DX006", "ĐX6", "ĐX006", "ĐX 006"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Đường Chợ Hoàng Gia",
+      "aliases": ["Chợ Hoàng Gia", "Chợ Hoàng", "Cho Hoang Gia", "Cho Hoang"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "canonical": "Đại lộ Bình Dương",
+      "aliases": ["QL13", "QL 13", "QL14", "QL 14", "Quốc lộ 14"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "canonical": "Đường tỉnh 741",
+      "aliases": ["ĐT741", "ĐT 741", "DT741", "DT 741"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "canonical": "Đường Phạm Hùng",
+      "aliases": ["Phạm Hùng", "Pham Hung"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "canonical": "Đường tỉnh 741",
+      "aliases": [
+        "ĐT741",
+        "ĐT 741",
+        "DT741",
+        "DT 741",
+        "QL14",
+        "QL 14",
+        "Quốc lộ 14"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "canonical": "Đường Mỹ Phước - Tân Vạn",
+      "aliases": ["Mỹ Phước Tân Vạn", "MPTV"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "canonical": "Quốc lộ 13",
+      "aliases": [
+        "QL13",
+        "QL 13",
+        "Đại lộ Bình Dương",
+        "Dai lo Binh Duong"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "canonical": "Đường Mỹ Phước - Tân Vạn",
+      "aliases": ["Mỹ Phước Tân Vạn", "MPTV"]
     }
   ],
   "roads": [
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "road_name": "Đường Mỹ Phước - Tân Vạn",
+      "lat": 11.108521,
+      "lng": 106.6417707,
+      "accuracy_radius_m": 4700,
+      "source": "OpenStreetMap aggregate of the My Phuoc - Tan Van corridor in the adjacent Thoi Hoa market scope reused for legacy My Phuoc listings",
+      "source_url": "https://www.openstreetmap.org/way/1137122849",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "legacy My Phuoc listing scope spans the current Thoi Hoa road corridor while the available historical polygon is coarse"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "road_name": "Đường DK5A",
+      "lat": 11.0916376,
+      "lng": 106.637209,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap DK5A geometry in the adjacent Thoi Hoa market scope reused for legacy My Phuoc listings",
+      "source_url": "https://www.openstreetmap.org/way/1081045551",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "legacy My Phuoc listing scope spans the current Thoi Hoa road grid while the available historical polygon is coarse"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "road_name": "Đường tỉnh 741",
+      "lat": 11.1605556,
+      "lng": 106.6677778,
+      "accuracy_radius_m": 2600,
+      "source": "Official Bình Dương environmental-monitoring coordinate at the ĐT.741 and ĐH.604 junction",
+      "source_url": "https://moitruongbinhduong.gov.vn/upload/files/3_BC%20KHBVMT%20BC%20_14_12_2016.pdf",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "road_name": "Đường ĐH.604",
+      "lat": 11.1605556,
+      "lng": 106.6677778,
+      "accuracy_radius_m": 2600,
+      "source": "Official Bình Dương environmental-monitoring coordinate at the ĐH.604 and ĐT.741 junction, corroborated by the current official land-price route description",
+      "source_url": "https://moitruongbinhduong.gov.vn/upload/files/3_BC%20KHBVMT%20BC%20_14_12_2016.pdf",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "Đại lộ Bình Dương",
+      "lat": 11.0404576,
+      "lng": 106.6366603,
+      "accuracy_radius_m": 1800,
+      "source": "OpenStreetMap aggregate of Đại lộ Bình Dương in the former Tân Định area retained by current Hòa Lợi listings",
+      "source_url": "https://www.openstreetmap.org/way/1163527720",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hòa Lợi listings retain former Tân Định road references after the administrative merger"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "Đường ĐH.601",
+      "lat": 11.0602778,
+      "lng": 106.6416667,
+      "accuracy_radius_m": 2200,
+      "source": "Official Ministry of Natural Resources and Environment Bình Dương geographic-name endpoints for ĐH.601 reused for current Hòa Lợi listings",
+      "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hòa Lợi listings explicitly identify ĐH.601 in the former Tân Định area"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "Đường ĐH.602",
+      "lat": 11.0830556,
+      "lng": 106.6452778,
+      "accuracy_radius_m": 1800,
+      "source": "Official Ministry of Natural Resources and Environment Bình Dương geographic-name endpoints for ĐH.602",
+      "source_url": "https://thuvienphapluat.vn/van-ban/Tai-nguyen-Moi-truong/Thong-tu-14-2016-TT-BTNMT-dia-danh-dan-cu-son-thuy-van-kinh-te-xa-hoi-thanh-lap-ban-do-tinh-Binh-Duong-318907.aspx",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the official ĐH.602 endpoint falls across the coarse historical Hòa Lợi polygon while current listings explicitly retain Hòa Lợi"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "Đường tỉnh 741",
+      "lat": 11.0672222,
+      "lng": 106.655,
+      "accuracy_radius_m": 2600,
+      "source": "Official ĐH.601 endpoint at its junction with ĐT.741 plus the official provincial-road geographic-name record",
+      "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "road_name": "Đại lộ Bình Dương",
+      "lat": 11.0404576,
+      "lng": 106.6366603,
+      "accuracy_radius_m": 1090,
+      "source": "OpenStreetMap aggregate of the named Đại lộ Bình Dương segments in the historical Tân Định scope",
+      "source_url": "https://www.openstreetmap.org/way/1163527720",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "road_name": "Đường ĐH.601",
+      "lat": 11.0602778,
+      "lng": 106.6416667,
+      "accuracy_radius_m": 1900,
+      "source": "Official Ministry of Natural Resources and Environment Bình Dương geographic-name endpoints for ĐH.601",
+      "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "road_name": "Đường Chợ Hoàng Gia",
+      "lat": 11.0541667,
+      "lng": 106.6341667,
+      "accuracy_radius_m": 1400,
+      "source": "Official Tân Định khu phố 2 geographic-name anchor corroborated by public Chợ Hoàng Gia road addresses and provincial environmental reporting",
+      "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
+      "verified_at": "2026-08-13"
+    },
     {
       "city": "THỦ DẦU MỘT",
       "ward": "Phú Tân",
@@ -1905,9 +2177,160 @@
         "Khu tái định cư Hòa Lợi",
         "Khu dân cư TDC Hòa Lợi"
       ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền",
+      "canonical": "KDC Rạch Bắp",
+      "aliases": [
+        "KDC Rach Bap",
+        "Khu dân cư Rạch Bắp",
+        "Khu dan cu Rach Bap"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây",
+      "canonical": "KDC An Tây A",
+      "aliases": ["KDC An Tay A", "Khu dân cư An Tây A"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "canonical": "Khu đô thị Mỹ Phước 3",
+      "aliases": [
+        "Khu do thi My Phuoc 3",
+        "Khu đô thị Mỹ Phước 3 Bến Cát",
+        "Khu do thi My Phuoc 3 Ben Cat",
+        "KĐT Mỹ Phước 3",
+        "KDT My Phuoc 3",
+        "KDC Mỹ Phước 3",
+        "KDC My Phuoc 3"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "canonical": "TĐC Mỹ Phước 3",
+      "aliases": [
+        "TDC My Phuoc 3",
+        "TĐC Mỹ Phước III",
+        "TDC My Phuoc III",
+        "Khu tái định cư Mỹ Phước 3",
+        "Khu tai dinh cu My Phuoc 3"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "canonical": "Khu đô thị Mỹ Phước 4",
+      "aliases": [
+        "Khu do thi My Phuoc 4",
+        "Khu đô thị Mỹ Phước 4 Bến Cát",
+        "Khu do thi My Phuoc 4 Ben Cat",
+        "KĐT Mỹ Phước 4",
+        "KDT My Phuoc 4",
+        "KDC Mỹ Phước 4",
+        "KDC My Phuoc 4"
+      ]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "canonical": "TĐC Mỹ Phước",
+      "aliases": [
+        "TDC My Phuoc",
+        "Khu TĐC Mỹ Phước",
+        "Khu TDC My Phuoc",
+        "Khu TM-DV-TĐC Mỹ Phước",
+        "Khu TMDV TDC My Phuoc"
+      ]
     }
   ],
   "landmarks": [
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "landmark_name": "TĐC Hòa Lợi",
+      "lat": 11.0884678,
+      "lng": 106.6717489,
+      "accuracy_radius_m": 1800,
+      "source": "Google Maps public Khu dân cư TĐC Hòa Lợi anchor corroborated by public project and IJC reporting",
+      "source_url": "https://www.google.com/maps/search/?api=1&query=Khu%20dan%20cu%20TDC%20Hoa%20Loi",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "landmark_name": "Khu đô thị Mỹ Phước 3",
+      "lat": 11.118,
+      "lng": 106.623,
+      "accuracy_radius_m": 5200,
+      "source": "OpenStreetMap Mỹ Phước 3 named-road grid centroid corroborated by public project and official planning evidence",
+      "source_url": "https://www.openstreetmap.org/#map=14/11.1180/106.6230",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "landmark_name": "TĐC Mỹ Phước 3",
+      "lat": 11.09717,
+      "lng": 106.58847,
+      "accuracy_radius_m": 900,
+      "source": "Google public MP Hotel place result at plus code 3JWQ+R9G on NE8 inside Khu Tái Định Cư Mỹ Phước 3, corroborated by official courier addresses",
+      "source_url": "https://www.google.com/travel/hotels/entity/CgoInpiO48jPhrAjEAE",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current public NE8 addresses explicitly place the resettlement area in Thoi Hoa while the available polygon is a coarse historical boundary"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "landmark_name": "Khu đô thị Mỹ Phước 4",
+      "lat": 11.1440263,
+      "lng": 106.6018378,
+      "accuracy_radius_m": 2400,
+      "source": "Google Maps public coordinate for a current business address inside KDC My Phuoc 4, corroborated by public project and official ward evidence",
+      "source_url": "https://www.google.com/maps/place/11%C2%B008%E2%80%9938.5%22N+106%C2%B036%E2%80%9906.5%22E/@11.1440263,106.6018378,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current public addresses place My Phuoc 4 in Thoi Hoa while the available legacy ward polygon is a coarse historical boundary"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "landmark_name": "TĐC Mỹ Phước",
+      "lat": 11.1299355,
+      "lng": 106.5992897,
+      "accuracy_radius_m": 1500,
+      "source": "OpenStreetMap N6 road-grid centroid anchored by current official retail addresses inside Khu TM-DV-TDC My Phuoc",
+      "source_url": "https://www.openstreetmap.org/way/1209836183",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Tây",
+      "landmark_name": "KDC An Tây A",
+      "lat": 11.0852778,
+      "lng": 106.5491667,
+      "accuracy_radius_m": 1800,
+      "source": "Official environmental monitoring coordinate at An Tay A primary school used as the nearby KDC An Tay A area anchor",
+      "source_url": "https://moitruongbinhduong.gov.vn/upload/files/Hien%20trang%20moi%20truong%202011-2015.pdf",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "An Điền",
+      "landmark_name": "KDC Rạch Bắp",
+      "lat": 11.1293157,
+      "lng": 106.5235062,
+      "accuracy_radius_m": 2500,
+      "source": "OpenStreetMap Rach Bap place anchor corroborated by public KDC Rach Bap project evidence",
+      "source_url": "https://www.openstreetmap.org/node/12695580128",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the 51.1 ha KDC Rach Bap project spans the historical An Dien and An Tay area while current listings consistently retain An Dien"
+    },
     {
       "city": "THỦ DẦU MỘT",
       "ward": "Tương Bình Hiệp",
