@@ -1680,3 +1680,29 @@ def test_extract_context_clips_tran_dai_nghia_ben_don_suffix():
     )
 
     assert context.direct_road == "tran dai nghia"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Đất KDC ViệtSing An Phú Thuận An", "kdc viet sing"),
+        ("Bán nền KDC An Thạnh Thuận An cũ", "kdc an thanh"),
+        ("Nhà KDC Minh Tuấn Bình Hòa Thuận An", "kdc minh tuan"),
+        ("Đất KDC Thuận Giao Thuận An Bình Dương", "kdc thuan giao"),
+        ("Nhà KDC Vĩnh Phú 1 Thuận An", "kdc vinh phu 1"),
+        ("Đất KDC Vĩnh Phú 2 Thuận An", "kdc vinh phu 2"),
+    ],
+)
+def test_extract_context_clips_known_thuan_an_landmark_suffixes(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected
+
+
+def test_extract_context_does_not_collapse_unverified_numbered_thuan_giao_area():
+    context = extract_map_location_context(
+        "Bán đất KDC Thuận Giao 2, phường Thuận Giao",
+        "",
+    )
+
+    assert context.landmark == "kdc thuan giao 2"

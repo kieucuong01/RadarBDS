@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v65",
+  "resolver_version": "osm-binh-duong-20260814-v66",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -614,6 +614,12 @@
       "ward": "Uyên Hưng",
       "canonical": "Đường Uyên Hưng 10",
       "aliases": ["Uyên Hưng 10", "N10", "N 10"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "canonical": "Thuận Giao 22",
+      "aliases": ["Đường 22", "Đường số 22"]
     }
   ],
   "roads": [

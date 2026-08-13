@@ -1157,6 +1157,9 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert indexed_roads[("Phú Tân", "duong so 35")]["source_url"].endswith(
         "/225107254"
     )
+    assert "duong so 22" in indexed_roads[
+        ("Thuận Giao", "thuan giao 22")
+    ]["aliases"]
     assert indexed_roads[("Phú Tân", "duong so 37")]["source_url"].endswith(
         "/1369653803"
     )

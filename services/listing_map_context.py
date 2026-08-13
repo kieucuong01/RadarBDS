@@ -256,6 +256,16 @@ _GENERIC_LANDMARK_NAMES = {
 }
 
 _KNOWN_LANDMARK_PREFIXES = (
+    ("vietsing an phu", "viet sing"),
+    ("viet sing an phu", "viet sing"),
+    ("an thanh thuan an", "an thanh"),
+    ("minh tuan binh hoa", "minh tuan"),
+    ("thuan giao thuan an", "thuan giao"),
+    ("vinh phu 2 thuan an", "vinh phu 2"),
+    ("vinh phu2 thuan an", "vinh phu 2"),
+    ("vinh phu 1 thuan an", "vinh phu 1"),
+    ("vinh phu1 thuan an", "vinh phu 1"),
+    ("vinh phu thuan an", "vinh phu"),
     ("phuc dat", "phuc dat"),
     ("dong an", "dong an"),
     ("ho lang", "ho lang"),
