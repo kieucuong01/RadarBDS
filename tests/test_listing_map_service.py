@@ -75,6 +75,7 @@ class _MapConnection:
                     "label_price_ty": 1.8,
                     "label_area_m2": 100,
                     "label_price_per_m2": 18.0,
+                    "manual_override_kind": "listing",
                 },
                 {
                     **common,
@@ -90,6 +91,7 @@ class _MapConnection:
                     "label_price_ty": 2.4,
                     "label_area_m2": 120,
                     "label_price_per_m2": 20.0,
+                    "manual_override_kind": "group",
                 },
                 {
                     **common,
@@ -102,6 +104,7 @@ class _MapConnection:
                     "relation": "at",
                     "listing_count": 1,
                     "best_mos": 20.0,
+                    "manual_override_kind": None,
                 },
                 {
                     **common,
@@ -114,9 +117,10 @@ class _MapConnection:
                     "relation": "",
                     "listing_count": 1,
                     "best_mos": 18.0,
+                    "manual_override_kind": None,
                 },
             ])
-        if "ml.location_key = ?" in sql:
+        if "f.location_key = ?" in sql:
             self.item_calls += 1
             return _Cursor(rows=[{
                 "total_count": 1,
@@ -134,6 +138,7 @@ class _MapConnection:
                 "is_signal": 1,
                 "primary_local_path": None,
                 "primary_img_url": None,
+                "manual_override_kind": "group",
             }])
         raise AssertionError(sql)
 
@@ -274,6 +279,61 @@ def test_summary_singleton_exact_and_road_include_compact_label_metrics(
         if "GROUP BY ml.location_key" in sql
     )
     assert "label_price_per_m2" in summary_sql
+
+
+def test_effective_map_locations_apply_listing_then_group_overrides(monkeypatch):
+    import services.listing_map as listing_map
+
+    connection = _MapConnection()
+
+    @contextmanager
+    def fake_get_conn():
+        yield connection
+
+    listing_map.clear_listing_map_cache()
+    monkeypatch.setattr(listing_map, "get_conn", fake_get_conn)
+
+    admin_payload = listing_map.load_listing_map_summary(
+        mode="signals",
+        tier="admin",
+        filters=_filters(),
+    )
+    guest_payload = listing_map.load_listing_map_summary(
+        mode="signals",
+        tier="guest",
+        filters=_filters(),
+    )
+
+    summary_sql = next(
+        sql for sql, _params in connection.queries
+        if "GROUP BY ml.location_key" in sql
+    ).lower()
+    version_sql = next(
+        sql for sql, _params in connection.queries
+        if "as data_version" in sql.lower()
+    ).lower()
+    assert "effective_map_locations as materialized" in summary_sql
+    assert "left join listing_map_listing_overrides" in summary_sql
+    assert "left join listing_map_group_overrides" in summary_sql
+    assert "when listing_override.listing_id is not null" in summary_sql
+    assert "exact:' || f.id" in summary_sql
+    assert "listing_map_group_overrides" in version_sql
+    assert "listing_map_listing_overrides" in version_sql
+
+    admin_exact = next(
+        group for group in admin_payload["locations"]
+        if group["precision"] == "exact"
+    )
+    admin_road = next(
+        group for group in admin_payload["locations"]
+        if group["precision"] == "road"
+    )
+    assert admin_exact["manual_override"] == "listing"
+    assert admin_road["manual_override"] == "group"
+    assert all(
+        "manual_override" not in group
+        for group in guest_payload["locations"]
+    )
     normalized_summary_sql = " ".join(summary_sql.lower().split())
     assert "ml.location_precision in ('exact', 'road')" in (
         normalized_summary_sql
@@ -346,7 +406,7 @@ def test_all_map_uses_listing_read_model_and_durable_version(monkeypatch):
     )
     item_sql = next(
         sql for sql, _params in connection.queries
-        if "ml.location_key = ?" in sql
+        if "f.location_key = ?" in sql
     )
     assert "FROM public_dataset_versions" in sql_text
     assert "FROM signal_card_read_model rm" in summary_sql
@@ -410,7 +470,7 @@ def test_all_map_rolls_back_when_durable_listing_version_is_zero(monkeypatch):
 
     item_sql = next(
         sql for sql, _params in connection.queries
-        if "ml.location_key = ?" in sql
+        if "f.location_key = ?" in sql
     )
     assert "latest_valuation AS MATERIALIZED" in item_sql
     assert "FROM signal_card_read_model rm" not in item_sql
@@ -508,7 +568,7 @@ def test_all_map_items_single_flight_same_cache_key(monkeypatch):
 
     class _SlowMapConnection(_MapConnection):
         def execute(self, sql, params=None):
-            if "ml.location_key = ?" in sql:
+            if "f.location_key = ?" in sql:
                 time.sleep(0.05)
             return super().execute(sql, params)
 
@@ -605,7 +665,7 @@ def test_group_items_are_bounded_and_allowlisted(monkeypatch):
     )
     item_sql = next(
         sql for sql, _params in connection.queries
-        if "ml.location_key = ?" in sql
+        if "f.location_key = ?" in sql
     )
     assert "latest_valuation AS MATERIALIZED" in item_sql
     assert "LIMIT ? OFFSET ?" in item_sql
@@ -645,7 +705,7 @@ def test_signal_group_items_reuse_read_model_primary_image(monkeypatch):
 
     item_sql = next(
         sql for sql, _params in connection.queries
-        if "ml.location_key = ?" in sql
+        if "f.location_key = ?" in sql
     )
     assert "latest_valuation" not in item_sql
     assert "LEFT JOIN LATERAL" not in item_sql

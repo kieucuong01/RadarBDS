@@ -2337,17 +2337,55 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
                lv.legal_road_code,
                lv.road_match_status,
                lv.conflict_flags AS legal_conflict_flags,
-               ml.lat AS map_lat,
-               ml.lng AS map_lng,
-               ml.location_precision AS map_precision,
-               ml.location_label AS map_label,
-               ml.resolver_version AS map_resolver_version,
+               CASE
+                   WHEN map_listing_override.listing_id IS NOT NULL
+                   THEN map_listing_override.lat
+                   WHEN map_group_override.location_key IS NOT NULL
+                   THEN map_group_override.lat
+                   ELSE ml.lat
+               END AS map_lat,
+               CASE
+                   WHEN map_listing_override.listing_id IS NOT NULL
+                   THEN map_listing_override.lng
+                   WHEN map_group_override.location_key IS NOT NULL
+                   THEN map_group_override.lng
+                   ELSE ml.lng
+               END AS map_lng,
+               CASE
+                   WHEN map_listing_override.listing_id IS NOT NULL
+                   THEN 'exact'
+                   ELSE ml.location_precision
+               END AS map_precision,
+               CASE
+                   WHEN map_listing_override.listing_id IS NOT NULL
+                   THEN 'Vị trí chính xác do admin xác minh'
+                   ELSE ml.location_label
+               END AS map_label,
+               CASE
+                   WHEN map_listing_override.listing_id IS NOT NULL
+                   THEN 'admin-override'
+                   ELSE ml.resolver_version
+               END AS map_resolver_version,
+               CASE
+                   WHEN map_listing_override.listing_id IS NOT NULL
+                   THEN 'listing'
+                   WHEN map_group_override.location_key IS NOT NULL
+                   THEN 'group'
+                   ELSE NULL
+               END AS map_manual_override,
                {fresh_flag}
         FROM listings l
         LEFT JOIN latest_valuation v ON l.id = v.listing_id
         LEFT JOIN latest_shadow_valuation sv ON l.id = sv.listing_id
         LEFT JOIN legal_verifications lv ON lv.listing_id = l.id
         LEFT JOIN listing_map_locations ml ON ml.listing_id = l.id
+        LEFT JOIN listing_map_listing_overrides map_listing_override
+          ON map_listing_override.listing_id = l.id
+         AND map_listing_override.active = TRUE
+        LEFT JOIN listing_map_group_overrides map_group_override
+          ON map_group_override.location_key = ml.location_key
+         AND map_group_override.active = TRUE
+         AND ml.location_precision IN ('road', 'landmark', 'ward')
         WHERE l.id = ?
           AND COALESCE(l.is_blacklisted,0)=0
           AND COALESCE(l.review_hidden,0)=0
@@ -2376,9 +2414,10 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
     map_precision = listing_dict.pop("map_precision", None)
     map_label = listing_dict.pop("map_label", None)
     map_resolver_version = listing_dict.pop("map_resolver_version", None)
+    map_manual_override = listing_dict.pop("map_manual_override", None)
     map_location = None
     if (
-        map_precision in {"exact", "road", "ward"}
+        map_precision in {"exact", "road", "landmark", "ward"}
         and map_lat is not None
         and map_lng is not None
     ):
@@ -2389,6 +2428,8 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
             "label": str(map_label or ""),
             "resolver_version": str(map_resolver_version or ""),
         }
+        if tier == "admin" and map_manual_override in {"listing", "group"}:
+            map_location["manual_override"] = map_manual_override
     listing_dict["is_fresh_locked"] = bool(listing_dict.get("is_fresh_locked"))
     listing_dict["has_so"] = _format_has_so(listing_dict)
     listing_dict.update(signal_badge_metadata(listing_dict))

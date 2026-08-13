@@ -484,6 +484,178 @@
   gap: 4px;
 }
 
+.listing-map-item-shell {
+  display: grid;
+  gap: 6px;
+}
+
+.listing-map-item-admin-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.listing-map-admin-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #6d28d9;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.listing-map-admin-id-lookup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  margin: 10px 0 4px;
+  padding: 9px;
+  border: 1px dashed rgba(124, 58, 237, 0.38);
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.listing-map-admin-lookup-button,
+.listing-map-admin-edit-group,
+.listing-map-admin-edit-listing,
+.listing-map-admin-save,
+.listing-map-admin-reset {
+  min-height: 44px;
+  border: 1px solid #7c3aed;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.listing-map-admin-lookup-button,
+.listing-map-admin-edit-group,
+.listing-map-admin-save {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.listing-map-admin-edit-group {
+  width: 100%;
+  margin: 0 0 8px;
+}
+
+.listing-map-admin-edit-listing,
+.listing-map-admin-reset {
+  padding: 7px 10px;
+  background: var(--card, #fff);
+  color: #6d28d9;
+}
+
+.listing-map-admin-editor {
+  padding: 16px;
+}
+
+.listing-map-admin-editor h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.listing-map-admin-target,
+.listing-map-admin-help {
+  color: var(--text-muted, #64748b);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.listing-map-admin-target {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.listing-map-admin-help {
+  margin: -2px 0 2px;
+}
+
+.listing-map-admin-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.listing-map-admin-field {
+  display: grid;
+  gap: 5px;
+  color: var(--text, #0f172a);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.listing-map-admin-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 10px;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 10px;
+  background: var(--card, #fff);
+  color: var(--text, #0f172a);
+  font: inherit;
+  font-size: 16px;
+}
+
+textarea.listing-map-admin-input {
+  min-height: 82px;
+  resize: vertical;
+}
+
+.listing-map-admin-coordinate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.listing-map-admin-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.listing-map-admin-actions > :only-child {
+  grid-column: 1 / -1;
+}
+
+.listing-map-admin-error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(220, 38, 38, 0.09);
+  color: #b91c1c;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.listing-map-admin-draft-icon {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.listing-map-admin-draft-icon span {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: #7c3aed;
+  box-shadow: 0 2px 10px rgba(76, 29, 149, 0.55);
+}
+
+.listing-map-admin-save:disabled,
+.listing-map-admin-reset:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .listing-map-item-content strong {
   display: -webkit-box;
   overflow: hidden;
@@ -648,6 +820,7 @@
 
   .listing-map-directory,
   .listing-map-items,
+  .listing-map-admin-editor,
   .listing-map-error,
   .listing-map-panel-loading {
     padding: 12px;

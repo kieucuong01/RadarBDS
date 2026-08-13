@@ -28,6 +28,9 @@
   var INITIAL_MAP_MAX_ZOOM = 16;
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+  var ADMIN_VERIFICATION_SOURCES = [
+    "seller_confirmed", "site_visit", "google_maps", "document", "other"
+  ];
   var SHARE_EXCLUDED_PARAMS = [
     "page", "limit", "include_total", "sort_by", "sort_dir",
     "location_key", "lat", "lng", "accuracy", "zoom", "center",
@@ -75,7 +78,13 @@
     userAccuracyCircle: null,
     locationRequestId: 0,
     mapFeedbackTimer: null,
-    mapFeedbackElement: null
+    mapFeedbackElement: null,
+    adminEdit: null,
+    adminReturnView: null,
+    adminOldMarker: null,
+    adminDraftMarker: null,
+    adminMapClickHandler: null,
+    adminEditToken: 0
   };
 
   function normalizeMode(value) {
@@ -162,6 +171,110 @@
     return {
       mode: mode,
       query: String((snapshot && snapshot.query) || "")
+    };
+  }
+
+  function adminEditActionModel(tier, group, item) {
+    var canEdit = String(tier || "").toLowerCase() === "admin";
+    var precision = String((group && group.precision) || "");
+    var listingId = validListingId(item);
+    var canEditGroup = canEdit
+      && ["road", "landmark", "ward"].indexOf(precision) >= 0;
+    var canEditListing = canEdit && Boolean(listingId);
+    return {
+      canEdit: canEdit,
+      canEditGroup: canEditGroup,
+      canEditListing: canEditListing,
+      listingLabel: canEditListing
+        ? (precision === "exact" ? "Sửa vị trí" : "Đặt vị trí chính xác")
+        : ""
+    };
+  }
+
+  function parseAdminCoordinateInput(value) {
+    var text = String(value || "").trim();
+    var pair = text.match(
+      /^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/
+    );
+    if (pair) return { lat: Number(pair[1]), lng: Number(pair[2]) };
+    try {
+      var url = new URL(text);
+      var host = String(url.hostname || "").toLowerCase();
+      var isGoogle = host === "google.com"
+        || host.endsWith(".google.com")
+        || host === "goo.gl"
+        || host.endsWith(".goo.gl");
+      if (!isGoogle) return null;
+      var decoded = decodeURIComponent(text);
+      var at = decoded.match(
+        /@(-?\d{1,2}(?:\.\d+)?),(-?\d{1,3}(?:\.\d+)?)(?:,|$)/
+      );
+      if (at) return { lat: Number(at[1]), lng: Number(at[2]) };
+      var raw = url.searchParams.get("query")
+        || url.searchParams.get("q")
+        || url.searchParams.get("ll")
+        || "";
+      pair = decodeURIComponent(raw).match(
+        /^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/
+      );
+      return pair ? { lat: Number(pair[1]), lng: Number(pair[2]) } : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function buildAdminOverridePayload(values) {
+    values = values || {};
+    var lat = finiteNumber(values.lat);
+    var lng = finiteNumber(values.lng);
+    var source = String(values.verificationSource || "").trim().toLowerCase();
+    var note = String(values.note || "").trim();
+    var coordinateInput = String(values.coordinateInput || "").trim();
+    var evidenceUrl = String(values.evidenceUrl || "").trim();
+    if (
+      lat === null
+      || lng === null
+      || ADMIN_VERIFICATION_SOURCES.indexOf(source) < 0
+      || !note
+    ) return null;
+    return {
+      lat: lat,
+      lng: lng,
+      coordinate_input: coordinateInput,
+      verification_source: source,
+      note: note,
+      evidence_url: evidenceUrl
+    };
+  }
+
+  function adminOverrideEndpoint(target) {
+    target = target || {};
+    if (target.kind === "group") {
+      return LOCATION_KEY_PATTERN.test(String(target.locationKey || ""))
+        ? "/admin/api/map-location-overrides/group"
+        : null;
+    }
+    if (target.kind === "listing") {
+      var listingId = validListingId({ id: target.listingId });
+      return listingId
+        ? "/admin/api/map-location-overrides/listing/" + listingId
+        : null;
+    }
+    return null;
+  }
+
+  function adminEditorModel(target, override) {
+    target = target || {};
+    var isGroup = target.kind === "group";
+    var listingId = validListingId({ id: target.listingId });
+    var rawLabel = String(target.label || "").trim();
+    return {
+      heading: isGroup ? "Sửa điểm chung" : "Đặt vị trí chính xác",
+      targetLabel: isGroup
+        ? (rawLabel || String(target.locationKey || ""))
+        : "Tin #" + (listingId || "") + (rawLabel ? " · " + rawLabel : ""),
+      canReset: Boolean(override && override.active),
+      saveLabel: isGroup ? "Lưu điểm chung" : "Lưu vị trí chính xác"
     };
   }
 
@@ -279,8 +392,32 @@
   }
 
   function finiteNumber(value) {
+    if (value === null || value === undefined || String(value).trim() === "") {
+      return null;
+    }
     var number = Number(value);
     return Number.isFinite(number) ? number : null;
+  }
+
+  function adminDraftPoint(target, center) {
+    target = target || {};
+    center = center || {};
+    var withinBinhDuong = function (lat, lng) {
+      return lat !== null && lng !== null
+        && lat >= 10.65 && lat <= 11.55
+        && lng >= 105.8 && lng <= 107.1;
+    };
+    var originalLat = finiteNumber(target.lat);
+    var originalLng = finiteNumber(target.lng);
+    if (withinBinhDuong(originalLat, originalLng)) {
+      return { lat: originalLat, lng: originalLng, hasOriginal: true };
+    }
+    var centerLat = finiteNumber(center.lat);
+    var centerLng = finiteNumber(center.lng);
+    if (withinBinhDuong(centerLat, centerLng)) {
+      return { lat: centerLat, lng: centerLng, hasOriginal: false };
+    }
+    return { lat: 11.02, lng: 106.63, hasOriginal: false };
   }
 
   function trimNumber(value, decimals) {
@@ -437,7 +574,7 @@
   }
 
   function sheetExpandedForView(kind, currentExpanded) {
-    if (["items-loading", "items", "items-error"].indexOf(kind) >= 0) {
+    if (["items-loading", "items", "items-error", "admin-edit"].indexOf(kind) >= 0) {
       return true;
     }
     return Boolean(currentExpanded);
@@ -646,6 +783,10 @@
     return node;
   }
 
+  function isAdminUser() {
+    return Boolean(root && String(root.USER_TIER || "") === "admin");
+  }
+
   function isMobileViewport() {
     return Boolean(state.mediaQuery && state.mediaQuery.matches);
   }
@@ -731,6 +872,44 @@
       }
       return response.json();
     });
+  }
+
+  function fetchAdminJson(url, method, payload) {
+    return root.fetch(url, {
+      method: method,
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: payload === undefined ? undefined : JSON.stringify(payload)
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (data) {
+        if (!response.ok) {
+          var error = new Error(data.error || response.statusText || "request_failed");
+          error.code = data.error || "request_failed";
+          error.status = response.status;
+          throw error;
+        }
+        return data;
+      });
+    });
+  }
+
+  function adminErrorMessage(error) {
+    var code = String((error && error.code) || "");
+    var messages = {
+      coordinate_not_found: "Không đọc được tọa độ. Hãy dán lat,lng hoặc link Google Maps đầy đủ.",
+      invalid_coordinates: "Tọa độ chưa hợp lệ.",
+      coordinate_mismatch: "Tọa độ nhập tay không khớp link đã dán.",
+      coordinate_out_of_bounds: "Vị trí nằm ngoài vùng phục vụ Bình Dương.",
+      invalid_verification_source: "Hãy chọn nguồn xác minh.",
+      note_required: "Hãy nhập ghi chú xác minh.",
+      invalid_evidence_url: "Link bằng chứng chưa hợp lệ.",
+      listing_not_found: "Không tìm thấy mã tin này.",
+      location_not_found: "Marker không còn tồn tại. Hãy tải lại Maps.",
+      override_not_found: "Vị trí này chưa có chỉnh sửa thủ công.",
+      admin_required: "Phiên admin đã hết hạn. Hãy đăng nhập lại."
+    };
+    return messages[code] || "Không lưu được vị trí. Hãy thử lại.";
   }
 
   function markerStyle(precision) {
@@ -1066,6 +1245,373 @@
     }, 0);
   }
 
+  function clearAdminEditLayers() {
+    if (state.map && state.adminMapClickHandler) {
+      state.map.off("click", state.adminMapClickHandler);
+    }
+    if (state.map && state.adminOldMarker) {
+      state.map.removeLayer(state.adminOldMarker);
+    }
+    if (state.map && state.adminDraftMarker) {
+      state.map.removeLayer(state.adminDraftMarker);
+    }
+    state.adminMapClickHandler = null;
+    state.adminOldMarker = null;
+    state.adminDraftMarker = null;
+  }
+
+  function syncAdminCoordinateFields() {
+    var target = activePanel();
+    if (!target || !state.adminEdit) return;
+    var latInput = target.querySelector("[data-map-admin-lat]");
+    var lngInput = target.querySelector("[data-map-admin-lng]");
+    if (latInput) latInput.value = Number(state.adminEdit.lat).toFixed(7);
+    if (lngInput) lngInput.value = Number(state.adminEdit.lng).toFixed(7);
+  }
+
+  function updateAdminDraftPoint(lat, lng) {
+    lat = finiteNumber(lat);
+    lng = finiteNumber(lng);
+    if (!state.adminEdit || lat === null || lng === null) return false;
+    state.adminEdit.lat = lat;
+    state.adminEdit.lng = lng;
+    if (state.adminDraftMarker) {
+      state.adminDraftMarker.setLatLng([lat, lng]);
+    }
+    syncAdminCoordinateFields();
+    return true;
+  }
+
+  function mountAdminEditLayers() {
+    if (!state.map || !state.adminEdit || !root.L) return;
+    clearAdminEditLayers();
+    var edit = state.adminEdit;
+    if (edit.hasOriginal) {
+      state.adminOldMarker = root.L.circleMarker(
+        [edit.originalLat, edit.originalLng],
+        {
+          radius: 8,
+          color: "#64748b",
+          fillColor: "#94a3b8",
+          fillOpacity: 0.35,
+          opacity: 0.75,
+          weight: 2,
+          interactive: false
+        }
+      ).addTo(state.map);
+    }
+    state.adminDraftMarker = root.L.marker([edit.lat, edit.lng], {
+      draggable: true,
+      keyboard: true,
+      zIndexOffset: 1800,
+      icon: root.L.divIcon({
+        className: "listing-map-admin-draft-icon",
+        html: '<span aria-hidden="true"></span>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      })
+    }).addTo(state.map);
+    state.adminDraftMarker.on("dragend", function (event) {
+      var point = event.target.getLatLng();
+      updateAdminDraftPoint(point.lat, point.lng);
+    });
+    state.adminMapClickHandler = function (event) {
+      if (!state.adminEdit || !event || !event.latlng) return;
+      updateAdminDraftPoint(event.latlng.lat, event.latlng.lng);
+    };
+    state.map.on("click", state.adminMapClickHandler);
+  }
+
+  function adminStateUrl(target) {
+    var params = new URLSearchParams();
+    if (target.kind === "group") {
+      params.set("location_key", target.locationKey);
+    } else {
+      params.set("listing_id", String(target.listingId));
+    }
+    return "/admin/api/map-location-overrides?" + params.toString();
+  }
+
+  function beginAdminEdit(target) {
+    if (!isAdminUser() || !state.map || !target) return;
+    var center = state.map.getCenter();
+    var draftPoint = adminDraftPoint(target, center);
+    state.adminReturnView = state.panelView;
+    state.adminEditToken += 1;
+    var token = state.adminEditToken;
+    state.adminEdit = {
+      target: target,
+      lat: draftPoint.lat,
+      lng: draftPoint.lng,
+      originalLat: draftPoint.hasOriginal ? draftPoint.lat : null,
+      originalLng: draftPoint.hasOriginal ? draftPoint.lng : null,
+      hasOriginal: draftPoint.hasOriginal,
+      override: null,
+      loading: true,
+      saving: false,
+      error: "",
+      form: null
+    };
+    setPanelView("admin-edit", null, null);
+    mountAdminEditLayers();
+    fetchAdminJson(adminStateUrl(target), "GET").then(function (payload) {
+      if (!state.adminEdit || token !== state.adminEditToken) return;
+      state.adminEdit.override = target.kind === "group"
+        ? payload.group
+        : payload.listing;
+      if (state.adminEdit.override && state.adminEdit.override.active) {
+        state.adminEdit.lat = Number(state.adminEdit.override.lat);
+        state.adminEdit.lng = Number(state.adminEdit.override.lng);
+      }
+      state.adminEdit.loading = false;
+      renderActiveView();
+      mountAdminEditLayers();
+    }).catch(function (error) {
+      if (!state.adminEdit || token !== state.adminEditToken) return;
+      state.adminEdit.loading = false;
+      state.adminEdit.error = adminErrorMessage(error);
+      renderActiveView();
+      mountAdminEditLayers();
+    });
+  }
+
+  function cancelAdminEdit() {
+    state.adminEditToken += 1;
+    clearAdminEditLayers();
+    var returnView = state.adminReturnView || { kind: "directory" };
+    state.adminEdit = null;
+    state.adminReturnView = null;
+    state.panelView = returnView;
+    renderActiveView();
+  }
+
+  function appendAdminField(form, labelText, input) {
+    var field = create("label", "listing-map-admin-field");
+    field.appendChild(create("span", "", labelText));
+    field.appendChild(input);
+    form.appendChild(field);
+    return input;
+  }
+
+  function adminInput(type, name, value) {
+    var input = create("input", "listing-map-admin-input");
+    input.type = type;
+    input.name = name;
+    input.value = value === undefined || value === null ? "" : String(value);
+    return input;
+  }
+
+  function rememberAdminForm(form) {
+    if (!state.adminEdit || !form) return null;
+    var values = {
+      lat: form.elements.lat && form.elements.lat.value,
+      lng: form.elements.lng && form.elements.lng.value,
+      coordinateInput: form.elements.coordinate_input
+        && form.elements.coordinate_input.value,
+      verificationSource: form.elements.verification_source
+        && form.elements.verification_source.value,
+      note: form.elements.note && form.elements.note.value,
+      evidenceUrl: form.elements.evidence_url
+        && form.elements.evidence_url.value
+    };
+    state.adminEdit.form = values;
+    return values;
+  }
+
+  function refreshAfterAdminEdit(target, wasReset) {
+    clearAdminEditLayers();
+    state.adminEdit = null;
+    state.adminReturnView = null;
+    return requestSummary({ preserveViewport: true }).then(function (payload) {
+      var expectedKey = target.kind === "group"
+        ? target.locationKey
+        : (!wasReset ? "exact:" + target.listingId : "");
+      var group = expectedKey && payload && (payload.locations || []).find(
+        function (item) { return item.location_key === expectedKey; }
+      );
+      if (group) selectGroup(group);
+    });
+  }
+
+  function submitAdminEdit(form, reset) {
+    if (!state.adminEdit || state.adminEdit.saving) return;
+    var edit = state.adminEdit;
+    var endpoint = adminOverrideEndpoint(edit.target);
+    if (!endpoint) return;
+    var method = reset ? "DELETE" : "PUT";
+    var payload;
+    if (reset) {
+      payload = edit.target.kind === "group"
+        ? { location_key: edit.target.locationKey }
+        : {};
+    } else {
+      var values = rememberAdminForm(form);
+      if (values.coordinateInput) {
+        var parsed = parseAdminCoordinateInput(values.coordinateInput);
+        if (!parsed) {
+          edit.error = "Không đọc được tọa độ từ nội dung đã dán.";
+          renderActiveView();
+          mountAdminEditLayers();
+          return;
+        }
+        values.lat = parsed.lat;
+        values.lng = parsed.lng;
+        edit.lat = parsed.lat;
+        edit.lng = parsed.lng;
+      }
+      payload = buildAdminOverridePayload(values);
+      if (!payload) {
+        edit.error = "Hãy nhập đủ tọa độ, nguồn xác minh và ghi chú.";
+        renderActiveView();
+        mountAdminEditLayers();
+        return;
+      }
+      if (edit.target.kind === "group") {
+        payload.location_key = edit.target.locationKey;
+      }
+    }
+    edit.saving = true;
+    edit.error = "";
+    renderActiveView();
+    mountAdminEditLayers();
+    fetchAdminJson(endpoint, method, payload).then(function () {
+      if (!state.adminEdit) return;
+      showMapFeedback(
+        reset ? "Đã khôi phục vị trí tự động." : "Đã cập nhật vị trí.",
+        "success"
+      );
+      return refreshAfterAdminEdit(edit.target, reset);
+    }).catch(function (error) {
+      if (!state.adminEdit) return;
+      state.adminEdit.saving = false;
+      state.adminEdit.error = adminErrorMessage(error);
+      renderActiveView();
+      mountAdminEditLayers();
+    });
+  }
+
+  function renderAdminEditorInto(target) {
+    if (!target || !state.adminEdit) return;
+    cancelDirectoryRender();
+    clearElement(target);
+    var edit = state.adminEdit;
+    var model = adminEditorModel(edit.target, edit.override);
+    var shell = create("div", "listing-map-admin-editor");
+    if (isMobileSheet(target)) appendSheetHandle(shell);
+    var back = create("button", "listing-map-back", "← Quay lại");
+    back.type = "button";
+    back.addEventListener("click", cancelAdminEdit);
+    shell.appendChild(back);
+    shell.appendChild(create("h3", "", model.heading));
+    shell.appendChild(create("p", "listing-map-admin-target", model.targetLabel));
+    if (edit.loading) {
+      shell.appendChild(create("p", "listing-map-admin-help", "Đang tải trạng thái vị trí..."));
+      target.appendChild(shell);
+      return;
+    }
+    if (edit.override && edit.override.active) {
+      shell.appendChild(create("span", "listing-map-admin-badge", "Đã sửa thủ công"));
+    }
+    var form = create("form", "listing-map-admin-form");
+    form.noValidate = true;
+    var coordinateInput = adminInput(
+      "text",
+      "coordinate_input",
+      edit.form ? edit.form.coordinateInput : ""
+    );
+    coordinateInput.placeholder = "11.052345,106.666789 hoặc link Google Maps";
+    appendAdminField(form, "Tọa độ hoặc link Google Maps", coordinateInput);
+    var coordinateGrid = create("div", "listing-map-admin-coordinate-grid");
+    var latInput = adminInput("number", "lat", edit.lat.toFixed(7));
+    latInput.step = "0.0000001";
+    latInput.dataset.mapAdminLat = "true";
+    var lngInput = adminInput("number", "lng", edit.lng.toFixed(7));
+    lngInput.step = "0.0000001";
+    lngInput.dataset.mapAdminLng = "true";
+    appendAdminField(coordinateGrid, "Vĩ độ", latInput);
+    appendAdminField(coordinateGrid, "Kinh độ", lngInput);
+    form.appendChild(coordinateGrid);
+    form.appendChild(create(
+      "p",
+      "listing-map-admin-help",
+      "Kéo marker tím hoặc chấm trực tiếp lên bản đồ để đổi vị trí."
+    ));
+    var source = create("select", "listing-map-admin-input");
+    source.name = "verification_source";
+    [
+      ["", "Chọn nguồn xác minh"],
+      ["seller_confirmed", "Môi giới/chủ đất xác nhận"],
+      ["site_visit", "Khảo sát thực tế"],
+      ["google_maps", "Google Maps"],
+      ["document", "Giấy tờ"],
+      ["other", "Khác"]
+    ].forEach(function (entry) {
+      var option = create("option", "", entry[1]);
+      option.value = entry[0];
+      source.appendChild(option);
+    });
+    source.value = edit.form
+      ? edit.form.verificationSource
+      : String((edit.override && edit.override.verification_source) || "");
+    appendAdminField(form, "Nguồn xác minh", source);
+    var note = create("textarea", "listing-map-admin-input");
+    note.name = "note";
+    note.maxLength = 500;
+    note.rows = 3;
+    note.value = edit.form
+      ? edit.form.note
+      : String((edit.override && edit.override.note) || "");
+    appendAdminField(form, "Ghi chú xác minh", note);
+    var evidence = adminInput(
+      "url",
+      "evidence_url",
+      edit.form
+        ? edit.form.evidenceUrl
+        : String((edit.override && edit.override.evidence_url) || "")
+    );
+    evidence.placeholder = "https://... (không bắt buộc)";
+    appendAdminField(form, "Link bằng chứng", evidence);
+    if (edit.error) {
+      var error = create("p", "listing-map-admin-error", edit.error);
+      error.setAttribute("role", "alert");
+      form.appendChild(error);
+    }
+    var actions = create("div", "listing-map-admin-actions");
+    var save = create("button", "listing-map-admin-save", edit.saving ? "Đang lưu..." : model.saveLabel);
+    save.type = "submit";
+    save.disabled = edit.saving;
+    actions.appendChild(save);
+    if (model.canReset) {
+      var reset = create("button", "listing-map-admin-reset", "Khôi phục tự động");
+      reset.type = "button";
+      reset.disabled = edit.saving;
+      reset.addEventListener("click", function () {
+        if (root.confirm("Khôi phục vị trí tự động cho mục này?")) {
+          submitAdminEdit(form, true);
+        }
+      });
+      actions.appendChild(reset);
+    }
+    form.appendChild(actions);
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      submitAdminEdit(form, false);
+    });
+    coordinateInput.addEventListener("change", function () {
+      if (!coordinateInput.value.trim()) return;
+      var parsed = parseAdminCoordinateInput(coordinateInput.value);
+      if (parsed) updateAdminDraftPoint(parsed.lat, parsed.lng);
+    });
+    [latInput, lngInput].forEach(function (input) {
+      input.addEventListener("change", function () {
+        updateAdminDraftPoint(latInput.value, lngInput.value);
+      });
+    });
+    shell.appendChild(form);
+    target.appendChild(shell);
+    if (isMobileSheet(target)) target.scrollTop = 0;
+  }
+
   function groupButton(group) {
     var copy = precisionCopy(group.precision);
     var button = create("button", "listing-map-group-button");
@@ -1077,6 +1623,13 @@
     );
     var header = create("span", "listing-map-group-button-head");
     header.appendChild(create("strong", "", group.label || copy.badge));
+    if (isAdminUser() && group.manual_override) {
+      header.appendChild(create(
+        "span",
+        "listing-map-admin-badge",
+        "Đã sửa thủ công"
+      ));
+    }
     header.appendChild(create(
       "span",
       "listing-map-count-badge",
@@ -1184,6 +1737,39 @@
       stats.appendChild(card);
     });
     shell.appendChild(stats);
+    if (isAdminUser()) {
+      var adminLookup = create("form", "listing-map-admin-id-lookup");
+      var listingIdInput = adminInput("number", "listing_id", "");
+      listingIdInput.min = "1";
+      listingIdInput.placeholder = "Mã tin, ví dụ 63565";
+      listingIdInput.setAttribute("aria-label", "Mã tin cần cập nhật vị trí");
+      var lookupButton = create(
+        "button",
+        "listing-map-admin-lookup-button",
+        "Cập nhật theo mã tin"
+      );
+      lookupButton.type = "submit";
+      adminLookup.appendChild(listingIdInput);
+      adminLookup.appendChild(lookupButton);
+      adminLookup.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var listingId = validListingId({ id: listingIdInput.value });
+        if (!listingId) {
+          listingIdInput.setCustomValidity("Hãy nhập mã tin hợp lệ.");
+          listingIdInput.reportValidity();
+          return;
+        }
+        listingIdInput.setCustomValidity("");
+        beginAdminEdit({
+          kind: "listing",
+          listingId: listingId,
+          label: "",
+          lat: null,
+          lng: null
+        });
+      });
+      shell.appendChild(adminLookup);
+    }
     var heading = create(
       "h3",
       "listing-map-directory-title",
@@ -1431,7 +2017,8 @@
     scheduleMarkerLabelRefresh();
   }
 
-  function renderMarkers(payload) {
+  function renderMarkers(payload, options) {
+    options = options || {};
     if (!state.map || !state.markerLayer) return;
     cancelMarkerRender();
     state.markerLayer.clearLayers();
@@ -1445,7 +2032,7 @@
       return true;
     });
     state.markerLabelGroups = groups.slice();
-    if (bounds.length) {
+    if (bounds.length && !options.preserveViewport) {
       state.map.fitBounds(bounds, {
         padding: [38, 38],
         maxZoom: 16,
@@ -1454,7 +2041,7 @@
       state.map.setZoom(closerInitialZoom(state.map.getZoom()), {
         animate: false
       });
-    } else {
+    } else if (!bounds.length && !options.preserveViewport) {
       state.map.setView([11.02, 106.63], 11);
     }
     var context = {
@@ -1525,8 +2112,35 @@
       precisionCopy(group.precision).badge + ". "
         + precisionCopy(group.precision).detail
     ));
+    var groupActions = adminEditActionModel(root && root.USER_TIER, group, null);
+    if (groupActions.canEditGroup) {
+      var editGroup = create(
+        "button",
+        "listing-map-admin-edit-group",
+        group.manual_override ? "Sửa điểm chung" : "Sửa điểm chung"
+      );
+      editGroup.type = "button";
+      editGroup.addEventListener("click", function () {
+        beginAdminEdit({
+          kind: "group",
+          locationKey: group.location_key,
+          label: group.label,
+          lat: group.lat,
+          lng: group.lng
+        });
+      });
+      shell.appendChild(editGroup);
+      if (group.manual_override === "group") {
+        shell.appendChild(create(
+          "span",
+          "listing-map-admin-badge",
+          "Đã sửa thủ công"
+        ));
+      }
+    }
     var list = create("div", "listing-map-item-list");
     (payload.items || []).forEach(function (item) {
+      var cardShell = create("div", "listing-map-item-shell");
       var card = create("button", "listing-map-item-card");
       card.type = "button";
       if (item.thumbnail) {
@@ -1567,7 +2181,36 @@
       card.addEventListener("click", function () {
         openItem(item);
       });
-      list.appendChild(card);
+      cardShell.appendChild(card);
+      var itemAction = adminEditActionModel(root && root.USER_TIER, group, item);
+      if (itemAction.canEditListing) {
+        var itemAdminRow = create("div", "listing-map-item-admin-row");
+        if (item.manual_override === "listing") {
+          itemAdminRow.appendChild(create(
+            "span",
+            "listing-map-admin-badge",
+            "Đã sửa thủ công"
+          ));
+        }
+        var editListing = create(
+          "button",
+          "listing-map-admin-edit-listing",
+          itemAction.listingLabel
+        );
+        editListing.type = "button";
+        editListing.addEventListener("click", function () {
+          beginAdminEdit({
+            kind: "listing",
+            listingId: item.id,
+            label: item.title || "",
+            lat: group.lat,
+            lng: group.lng
+          });
+        });
+        itemAdminRow.appendChild(editListing);
+        cardShell.appendChild(itemAdminRow);
+      }
+      list.appendChild(cardShell);
     });
     if (!list.childNodes.length) {
       list.appendChild(create(
@@ -1671,6 +2314,10 @@
       renderItemsInto(target, view.group, view.payload || { items: [] });
       return;
     }
+    if (view.kind === "admin-edit") {
+      renderAdminEditorInto(target);
+      return;
+    }
     if (view.kind === "items-loading") {
       renderItemsLoadingInto(target, view.group);
       return;
@@ -1735,13 +2382,14 @@
     });
   }
 
-  function renderSummary(payload) {
+  function renderSummary(payload, options) {
     state.summary = payload;
     setPanelView("directory");
-    renderMarkers(payload);
+    renderMarkers(payload, options);
   }
 
-  function requestSummary() {
+  function requestSummary(options) {
+    options = options || {};
     if (!state.open || !state.snapshot) return Promise.resolve();
     summarySequence += 1;
     var sequence = summarySequence;
@@ -1752,7 +2400,8 @@
     return fetchJson(buildSummaryUrl(state.snapshot), controller)
       .then(function (payload) {
         if (!state.open || sequence !== summarySequence) return;
-        renderSummary(payload);
+        renderSummary(payload, options);
+        return payload;
       })
       .catch(function (error) {
         if (error && error.name === "AbortError") return;
@@ -1807,6 +2456,8 @@
     state.workspace = workspace;
     state.summary = null;
     state.selectedGroup = null;
+    state.adminEdit = null;
+    state.adminReturnView = null;
     state.panelView = { kind: "directory", group: null, payload: null };
     state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
     setMobileSheetExpanded(false);
@@ -1856,6 +2507,10 @@
     state.itemController = null;
     cancelDirectoryRender();
     cancelMarkerRender();
+    state.adminEditToken += 1;
+    clearAdminEditLayers();
+    state.adminEdit = null;
+    state.adminReturnView = null;
     clearMarkerLabels();
     if (state.markerLayer) state.markerLayer.clearLayers();
     clearUserLocation();
@@ -1963,6 +2618,10 @@
     if (!state.open || isSignalModalOpen()) return;
     if (event.key === "Escape") {
       event.preventDefault();
+      if (state.adminEdit) {
+        cancelAdminEdit();
+        return;
+      }
       close({ reason: "escape" });
       return;
     }
@@ -2030,6 +2689,12 @@
     activePanelId: activePanelId,
     directoryWindow: directoryWindow,
     panelRenderModel: panelRenderModel,
+    adminEditActionModel: adminEditActionModel,
+    parseAdminCoordinateInput: parseAdminCoordinateInput,
+    buildAdminOverridePayload: buildAdminOverridePayload,
+    adminOverrideEndpoint: adminOverrideEndpoint,
+    adminDraftPoint: adminDraftPoint,
+    adminEditorModel: adminEditorModel,
     markerLabelModel: markerLabelModel,
     markerLabelRect: markerLabelRect,
     markerLabelClassName: markerLabelClassName,

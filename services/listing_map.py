@@ -146,8 +146,20 @@ def _listing_map_query_context(conn, mode: str) -> tuple[str, bool]:
         dataset, version = read_model
         row = conn.execute(
             """
-            SELECT COALESCE(MAX(updated_at), 'epoch')::text AS data_version
-            FROM listing_map_locations
+            SELECT GREATEST(
+                COALESCE((
+                    SELECT MAX(updated_at)
+                    FROM listing_map_locations
+                ), 'epoch'),
+                COALESCE((
+                    SELECT MAX(updated_at)
+                    FROM listing_map_group_overrides
+                ), 'epoch'),
+                COALESCE((
+                    SELECT MAX(updated_at)
+                    FROM listing_map_listing_overrides
+                ), 'epoch')
+            )::text AS data_version
             """
         ).fetchone()
         map_version = str(_row_value(row, "data_version", "epoch"))
@@ -174,6 +186,14 @@ def _listing_map_query_context(conn, mode: str) -> tuple[str, bool]:
             COALESCE((
                 SELECT MAX(updated_at)
                 FROM listing_map_locations
+            ), 'epoch'),
+            COALESCE((
+                SELECT MAX(updated_at)
+                FROM listing_map_group_overrides
+            ), 'epoch'),
+            COALESCE((
+                SELECT MAX(updated_at)
+                FROM listing_map_listing_overrides
             ), 'epoch'),
             COALESCE((
                 SELECT MAX(GREATEST(
@@ -358,18 +378,87 @@ def _filtered_sql(
 
 
 def _base_cte(filtered_sql: str, *, use_read_model: bool) -> str:
+    effective_map_sql = """
+        effective_map_locations AS MATERIALIZED (
+            SELECT f.*,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                         OR derived_map.listing_id IS NOT NULL
+                       THEN f.id
+                       ELSE NULL
+                   END AS listing_id,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN 'exact:' || f.id::TEXT
+                       ELSE derived_map.location_key
+                   END AS location_key,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN listing_override.lat
+                       WHEN group_override.location_key IS NOT NULL
+                       THEN group_override.lat
+                       ELSE derived_map.lat
+                   END AS lat,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN listing_override.lng
+                       WHEN group_override.location_key IS NOT NULL
+                       THEN group_override.lng
+                       ELSE derived_map.lng
+                   END AS lng,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN 'exact'
+                       ELSE derived_map.location_precision
+                   END AS location_precision,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN 'Vị trí chính xác do admin xác minh'
+                       ELSE derived_map.location_label
+                   END AS location_label,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN 0.0
+                       ELSE derived_map.accuracy_radius_m
+                   END AS accuracy_radius_m,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN 'on'
+                       ELSE COALESCE(derived_map.relation, '')
+                   END AS relation,
+                   CASE
+                       WHEN listing_override.listing_id IS NOT NULL
+                       THEN 'listing'
+                       WHEN group_override.location_key IS NOT NULL
+                       THEN 'group'
+                       ELSE NULL
+                   END AS manual_override_kind
+            FROM filtered f
+            LEFT JOIN listing_map_locations derived_map
+              ON derived_map.listing_id = f.id
+            LEFT JOIN listing_map_listing_overrides listing_override
+              ON listing_override.listing_id = f.id
+             AND listing_override.active = TRUE
+            LEFT JOIN listing_map_group_overrides group_override
+              ON group_override.location_key = derived_map.location_key
+             AND group_override.active = TRUE
+             AND derived_map.location_precision IN ('road', 'landmark', 'ward')
+        )
+    """
     if use_read_model:
         return f"""
             WITH filtered AS MATERIALIZED (
                 {filtered_sql}
-            )
+            ),
+            {effective_map_sql}
         """
     return f"""
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE},
              filtered AS MATERIALIZED (
                  {filtered_sql}
-             )
+             ),
+             {effective_map_sql}
     """
 
 
@@ -434,27 +523,28 @@ def load_listing_map_summary(
                        ml.location_label,
                        ml.accuracy_radius_m,
                        ''::TEXT AS relation,
+                       MAX(ml.manual_override_kind) AS manual_override_kind,
                        COUNT(*)::INTEGER AS listing_count,
-                       MAX(f.mos_pct) AS best_mos,
+                       MAX(ml.mos_pct) AS best_mos,
                        CASE
                            WHEN ml.location_precision IN ('exact', 'road')
                             AND COUNT(*) = 1
-                           THEN MAX(f.price_ty)
+                           THEN MAX(ml.price_ty)
                            ELSE NULL
                        END AS label_price_ty,
                        CASE
                            WHEN ml.location_precision IN ('exact', 'road')
                             AND COUNT(*) = 1
-                           THEN MAX(f.area_m2)
+                           THEN MAX(ml.area_m2)
                            ELSE NULL
                        END AS label_area_m2,
                        CASE
                            WHEN ml.location_precision IN ('exact', 'road')
                             AND COUNT(*) = 1
                            THEN COALESCE(
-                               MAX(f.price_per_m2),
-                               MAX(f.price_ty) * 1000.0
-                                   / NULLIF(MAX(f.area_m2), 0)
+                               MAX(ml.price_per_m2),
+                               MAX(ml.price_ty) * 1000.0
+                                   / NULLIF(MAX(ml.area_m2), 0)
                            )
                            ELSE NULL
                        END AS label_price_per_m2,
@@ -488,15 +578,7 @@ def load_listing_map_summary(
                            ) OVER(),
                            0
                        )::INTEGER AS ward_count
-                FROM filtered f
-                LEFT JOIN listing_map_locations ml
-                  ON ml.listing_id = f.id
-                 AND ml.location_precision IN (
-                       'exact',
-                       'road',
-                       'landmark',
-                       'ward'
-                 )
+                FROM effective_map_locations ml
                 GROUP BY ml.location_key,
                          ml.lat,
                          ml.lng,
@@ -577,6 +659,11 @@ def load_listing_map_summary(
                     location["area_m2"] = round(area_m2, 2)
                 if price_per_m2 is not None:
                     location["price_per_m2"] = round(price_per_m2, 2)
+            manual_override = str(
+                _row_value(row, "manual_override_kind", "") or ""
+            )
+            if tier == "admin" and manual_override in {"listing", "group"}:
+                location["manual_override"] = manual_override
             locations.append(location)
         payload = {
             "mode": mode,
@@ -667,12 +754,12 @@ def load_listing_map_items(
                        f.publisher_rank,
                        f.mos_pct,
                        f.is_signal,
+                       f.manual_override_kind,
                        primary_img.local_path AS primary_local_path,
                        primary_img.img_url AS primary_img_url
-                FROM filtered f
-                JOIN listing_map_locations ml ON ml.listing_id = f.id
+                FROM effective_map_locations f
                 {_primary_image_join(use_read_model=use_read_model)}
-                WHERE ml.location_key = ?
+                WHERE f.location_key = ?
                 ORDER BY f.publisher_rank ASC, f.activity_at DESC, f.id DESC
                 LIMIT ? OFFSET ?
                 """,
@@ -691,7 +778,7 @@ def load_listing_map_items(
                 _row_value(row, "property_type", "") or ""
             )
             activity_at, card_date_reason = listing_card_activity(row)
-            items.append(redact_for_tier({
+            item = {
                 "id": int(_row_value(row, "id", 0)),
                 "title": str(_row_value(row, "title", "") or ""),
                 "price_ty": _row_value(row, "price_ty"),
@@ -717,7 +804,13 @@ def load_listing_map_items(
                     _row_value(row, "primary_img_url"),
                     prefer_thumb=True,
                 ) or "",
-            }, tier))
+            }
+            manual_override = str(
+                _row_value(row, "manual_override_kind", "") or ""
+            )
+            if tier == "admin" and manual_override in {"listing", "group"}:
+                item["manual_override"] = manual_override
+            items.append(redact_for_tier(item, tier))
         payload = {
             "mode": mode,
             "location_key": location_key,

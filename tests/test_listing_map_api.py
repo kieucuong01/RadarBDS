@@ -286,3 +286,123 @@ def test_listing_map_tracking_actions_are_allowlisted_and_privacy_bounded(
     assert len(recorded) == len(LISTING_MAP_TRACK_ACTIONS)
     assert all(item["context"] == expected_context for item in recorded)
     assert all(item["listing_id"] is None for item in recorded)
+
+
+@pytest.mark.parametrize("tier", ("guest", "free", "vip"))
+def test_map_override_admin_endpoints_reject_non_admin(tier):
+    app_module, client = _client()
+
+    with mock.patch.object(app_module, "current_tier", return_value=tier):
+        assert client.get(
+            "/admin/api/map-location-overrides?listing_id=42"
+        ).status_code == 403
+        assert client.put(
+            "/admin/api/map-location-overrides/group",
+            json={"location_key": "road:thu-dau-mot:phu-loi:dx-43"},
+        ).status_code == 403
+        assert client.delete(
+            "/admin/api/map-location-overrides/listing/42"
+        ).status_code == 403
+
+
+def test_map_override_admin_mutations_reject_cross_origin_even_without_session_cookie():
+    app_module, client = _client()
+
+    with mock.patch.object(app_module, "current_tier", return_value="admin"):
+        response = client.put(
+            "/admin/api/map-location-overrides/group",
+            headers={"Origin": "https://evil.example"},
+            json={"location_key": "road:thu-dau-mot:phu-loi:dx-43"},
+        )
+
+    assert response.status_code == 403
+    assert response.get_json() == {"ok": False, "error": "cross_site_request"}
+
+
+def test_map_override_admin_endpoints_save_and_reset_without_public_cache():
+    app_module, client = _client()
+    group_key = "road:thu-dau-mot:phu-loi:dx-43"
+    payload = {
+        "location_key": group_key,
+        "lat": 11.052345,
+        "lng": 106.666789,
+        "verification_source": "seller_confirmed",
+        "note": "Chủ đất xác nhận.",
+        "evidence_url": "",
+    }
+    saved = {**payload, "active": True, "updated_by": "admin"}
+    reset = {**saved, "active": False}
+
+    with (
+        mock.patch.object(app_module, "current_tier", return_value="admin"),
+        mock.patch.object(app_module, "_admin_actor", return_value="admin"),
+        mock.patch.object(
+            app_module,
+            "save_group_map_location_override",
+            return_value=saved,
+        ) as save_group,
+        mock.patch.object(
+            app_module,
+            "reset_group_map_location_override",
+            return_value=reset,
+        ) as reset_group,
+        mock.patch.object(app_module, "clear_listing_map_cache") as clear_cache,
+    ):
+        saved_response = client.put(
+            "/admin/api/map-location-overrides/group",
+            json=payload,
+        )
+        reset_response = client.delete(
+            "/admin/api/map-location-overrides/group",
+            json={"location_key": group_key},
+        )
+
+    assert saved_response.status_code == 200
+    assert saved_response.get_json()["override"]["active"] is True
+    assert reset_response.status_code == 200
+    assert reset_response.get_json()["override"]["active"] is False
+    assert saved_response.headers["Cache-Control"] == "private, no-store"
+    assert "X-Radar-Public-Cache" not in saved_response.headers
+    save_group.assert_called_once()
+    reset_group.assert_called_once()
+    assert clear_cache.call_count == 2
+
+
+def test_map_override_admin_endpoint_maps_domain_errors_and_loads_state():
+    app_module, client = _client()
+    from services.listing_map_overrides import MapLocationOverrideError
+
+    with (
+        mock.patch.object(app_module, "current_tier", return_value="admin"),
+        mock.patch.object(
+            app_module,
+            "load_map_location_override_state",
+            return_value={"group": None, "listing": {"listing_id": 42}},
+        ) as load_state,
+    ):
+        state_response = client.get(
+            "/admin/api/map-location-overrides?listing_id=42"
+        )
+
+    assert state_response.status_code == 200
+    assert state_response.get_json()["listing"]["listing_id"] == 42
+    load_state.assert_called_once_with(location_key="", listing_id=42)
+
+    with (
+        mock.patch.object(app_module, "current_tier", return_value="admin"),
+        mock.patch.object(
+            app_module,
+            "save_listing_map_location_override",
+            side_effect=MapLocationOverrideError("coordinate_out_of_bounds"),
+        ),
+    ):
+        error_response = client.put(
+            "/admin/api/map-location-overrides/listing/42",
+            json={"lat": 9, "lng": 106},
+        )
+
+    assert error_response.status_code == 400
+    assert error_response.get_json() == {
+        "ok": False,
+        "error": "coordinate_out_of_bounds",
+    }

@@ -269,6 +269,31 @@ def admin_api_audit(**kwargs):
     return _impl("admin_api_audit", **kwargs)
 
 
+@bp.route("/admin/api/map-location-overrides")
+def admin_api_map_location_overrides(**kwargs):
+    return _impl("admin_api_map_location_overrides", **kwargs)
+
+
+@bp.route(
+    "/admin/api/map-location-overrides/group",
+    methods=["PUT", "DELETE"],
+)
+def admin_api_map_location_group_override(**kwargs):
+    return _impl("admin_api_map_location_group_override", **kwargs)
+
+
+@bp.route(
+    "/admin/api/map-location-overrides/listing/<int:listing_id>",
+    methods=["PUT", "DELETE"],
+)
+def admin_api_map_location_listing_override(listing_id, **kwargs):
+    return _impl(
+        "admin_api_map_location_listing_override",
+        listing_id=listing_id,
+        **kwargs,
+    )
+
+
 @bp.route("/admin/api/listing-reports")
 def admin_api_listing_reports(**kwargs):
     return _impl("admin_api_listing_reports", **kwargs)

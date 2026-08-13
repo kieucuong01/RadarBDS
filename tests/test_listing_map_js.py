@@ -443,7 +443,7 @@ def test_mobile_sheet_model_exposes_explicit_accessible_states():
 def test_selected_group_views_require_an_expanded_mobile_sheet():
     assert _run_node("mapApi.sheetExpandedForView('directory',false)") is False
     assert _run_node("mapApi.sheetExpandedForView('directory',true)") is True
-    for view in ("items-loading", "items", "items-error"):
+    for view in ("items-loading", "items", "items-error", "admin-edit"):
         assert _run_node(
             f"mapApi.sheetExpandedForView({json.dumps(view)},false)"
         ) is True
@@ -590,3 +590,119 @@ def test_client_tracking_allowlist_includes_every_listing_map_event():
 
     for action in actions:
         assert source.count(f'"{action}"') >= 2
+
+
+def test_admin_edit_actions_are_scoped_by_tier_precision_and_listing():
+    assert _run_node(
+        "mapApi.adminEditActionModel('guest',{precision:'road'},null)"
+    ) == {
+        "canEdit": False,
+        "canEditGroup": False,
+        "canEditListing": False,
+        "listingLabel": "",
+    }
+    assert _run_node(
+        "mapApi.adminEditActionModel('admin',{precision:'road'},null)"
+    ) == {
+        "canEdit": True,
+        "canEditGroup": True,
+        "canEditListing": False,
+        "listingLabel": "",
+    }
+    assert _run_node(
+        "mapApi.adminEditActionModel('admin',{precision:'road'},"
+        "{id:42,manual_override:''})"
+    ) == {
+        "canEdit": True,
+        "canEditGroup": True,
+        "canEditListing": True,
+        "listingLabel": "Đặt vị trí chính xác",
+    }
+    assert _run_node(
+        "mapApi.adminEditActionModel('admin',{precision:'exact'},"
+        "{id:42,manual_override:'listing'})"
+    ) == {
+        "canEdit": True,
+        "canEditGroup": False,
+        "canEditListing": True,
+        "listingLabel": "Sửa vị trí",
+    }
+
+
+def test_admin_coordinate_parser_matches_backend_contract():
+    assert _run_node(
+        "mapApi.parseAdminCoordinateInput('11.052345,106.666789')"
+    ) == {"lat": 11.052345, "lng": 106.666789}
+    assert _run_node(
+        "mapApi.parseAdminCoordinateInput("
+        "'https://www.google.com/maps/place/X/@11.061234,106.671234,17z')"
+    ) == {"lat": 11.061234, "lng": 106.671234}
+    assert _run_node(
+        "mapApi.parseAdminCoordinateInput("
+        "'https://maps.app.goo.gl/short-code')"
+    ) is None
+
+
+def test_admin_override_payload_and_endpoint_are_deterministic():
+    payload = _run_node(
+        "mapApi.buildAdminOverridePayload({"
+        "lat:'11.052345',lng:'106.666789',coordinateInput:'',"
+        "verificationSource:'seller_confirmed',"
+        "note:' Chủ đất xác nhận. ',evidenceUrl:''})"
+    )
+    assert payload == {
+        "lat": 11.052345,
+        "lng": 106.666789,
+        "coordinate_input": "",
+        "verification_source": "seller_confirmed",
+        "note": "Chủ đất xác nhận.",
+        "evidence_url": "",
+    }
+    assert _run_node(
+        "mapApi.buildAdminOverridePayload({lat:null,lng:null,"
+        "verificationSource:'seller_confirmed',note:'Đã xác minh'})"
+    ) is None
+    assert _run_node(
+        "mapApi.adminOverrideEndpoint({kind:'group',"
+        "locationKey:'road:thu-dau-mot:phu-loi:dx-43'})"
+    ) == "/admin/api/map-location-overrides/group"
+    assert _run_node(
+        "mapApi.adminOverrideEndpoint({kind:'listing',listingId:42})"
+    ) == "/admin/api/map-location-overrides/listing/42"
+    assert _run_node(
+        "mapApi.adminOverrideEndpoint({kind:'listing',listingId:0})"
+    ) is None
+
+
+def test_admin_draft_point_rejects_zero_or_out_of_region_coordinates():
+    assert _run_node(
+        "mapApi.adminDraftPoint({lat:null,lng:null},{lat:0,lng:0})"
+    ) == {"lat": 11.02, "lng": 106.63, "hasOriginal": False}
+    assert _run_node(
+        "mapApi.adminDraftPoint({lat:11.061,lng:106.671},{lat:0,lng:0})"
+    ) == {"lat": 11.061, "lng": 106.671, "hasOriginal": True}
+    assert _run_node(
+        "mapApi.adminDraftPoint({},{lat:11.09,lng:106.72})"
+    ) == {"lat": 11.09, "lng": 106.72, "hasOriginal": False}
+
+
+def test_admin_editor_model_exposes_safe_group_and_listing_copy():
+    assert _run_node(
+        "mapApi.adminEditorModel({kind:'group',"
+        "locationKey:'road:thu-dau-mot:phu-loi:dx-43',"
+        "label:'Theo tên đường ĐX 43'}, {active:true})"
+    ) == {
+        "heading": "Sửa điểm chung",
+        "targetLabel": "Theo tên đường ĐX 43",
+        "canReset": True,
+        "saveLabel": "Lưu điểm chung",
+    }
+    assert _run_node(
+        "mapApi.adminEditorModel({kind:'listing',listingId:42,"
+        "label:'Lô đất Phú Lợi'}, null)"
+    ) == {
+        "heading": "Đặt vị trí chính xác",
+        "targetLabel": "Tin #42 · Lô đất Phú Lợi",
+        "canReset": False,
+        "saveLabel": "Lưu vị trí chính xác",
+    }

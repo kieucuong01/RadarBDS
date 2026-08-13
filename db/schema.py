@@ -1183,6 +1183,66 @@ def _migrate_listing_map_locations(conn: Any) -> None:
         ON listing_map_locations(location_key)
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS listing_map_group_overrides (
+            location_key TEXT PRIMARY KEY,
+            lat DOUBLE PRECISION NOT NULL CHECK (lat BETWEEN -90 AND 90),
+            lng DOUBLE PRECISION NOT NULL CHECK (lng BETWEEN -180 AND 180),
+            verification_source TEXT NOT NULL CHECK (
+                verification_source IN (
+                    'seller_confirmed',
+                    'site_visit',
+                    'google_maps',
+                    'document',
+                    'other'
+                )
+            ),
+            note TEXT NOT NULL,
+            evidence_url TEXT NOT NULL DEFAULT '',
+            updated_by TEXT NOT NULL DEFAULT 'admin',
+            active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_map_group_overrides_active
+        ON listing_map_group_overrides(active, updated_at DESC)
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS listing_map_listing_overrides (
+            listing_id BIGINT PRIMARY KEY REFERENCES listings(id) ON DELETE CASCADE,
+            lat DOUBLE PRECISION NOT NULL CHECK (lat BETWEEN -90 AND 90),
+            lng DOUBLE PRECISION NOT NULL CHECK (lng BETWEEN -180 AND 180),
+            verification_source TEXT NOT NULL CHECK (
+                verification_source IN (
+                    'seller_confirmed',
+                    'site_visit',
+                    'google_maps',
+                    'document',
+                    'other'
+                )
+            ),
+            note TEXT NOT NULL,
+            evidence_url TEXT NOT NULL DEFAULT '',
+            updated_by TEXT NOT NULL DEFAULT 'admin',
+            active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_listing_map_listing_overrides_active
+        ON listing_map_listing_overrides(active, updated_at DESC)
+        """
+    )
 
 
 def _migrate_listing_reports(conn: Any) -> None:

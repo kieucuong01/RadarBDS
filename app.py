@@ -117,6 +117,14 @@ from services.listing_map import (
     load_listing_map_items,
     load_listing_map_summary,
 )
+from services.listing_map_overrides import (
+    MapLocationOverrideError,
+    load_override_state as load_map_location_override_state,
+    reset_group_override as reset_group_map_location_override,
+    reset_listing_override as reset_listing_map_location_override,
+    save_group_override as save_group_map_location_override,
+    save_listing_override as save_listing_map_location_override,
+)
 from services.listing_comparables import load_listing_comparables
 from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed
 from services.listing_reports import (
@@ -7381,6 +7389,128 @@ def admin_api_audit():
         return {"items": [dict(r) for r in rows]}
 
     return jsonify(_cached_admin_read_payload("audit", (entity_type, entity_id or ""), _load_payload, ttl_seconds=10))
+
+
+def _admin_map_override_json(payload: dict, status: int = 200):
+    response = jsonify(payload)
+    response.status_code = status
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers.pop("X-Radar-Public-Cache", None)
+    return response
+
+
+def _map_override_error_response(exc: MapLocationOverrideError):
+    return _admin_map_override_json(
+        {"ok": False, "error": exc.code},
+        status=exc.status,
+    )
+
+
+def _reject_cross_site_map_override_request():
+    supplied = request.headers.get("Origin") or request.headers.get("Referer")
+    host = request.host.split(":", 1)[0].strip("[]").lower()
+    if not supplied and host in {"localhost", "127.0.0.1", "::1"}:
+        return None
+
+    def _origin(value: str) -> str:
+        parsed = urllib.parse.urlsplit(value or "")
+        if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+            return ""
+        return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+
+    allowed = {_origin(request.host_url), _origin(PUBLIC_BASE_URL)}
+    if not supplied or _origin(supplied) not in allowed:
+        return _admin_map_override_json(
+            {"ok": False, "error": "cross_site_request"},
+            status=403,
+        )
+    return None
+
+
+@require_admin_auth
+def admin_api_map_location_overrides():
+    location_key = (request.args.get("location_key") or "").strip()
+    raw_listing_id = request.args.get("listing_id")
+    listing_id = None
+    if raw_listing_id not in (None, ""):
+        try:
+            listing_id = int(raw_listing_id)
+        except (TypeError, ValueError):
+            return _admin_map_override_json(
+                {"ok": False, "error": "invalid_listing_id"},
+                status=400,
+            )
+        if listing_id <= 0:
+            return _admin_map_override_json(
+                {"ok": False, "error": "invalid_listing_id"},
+                status=400,
+            )
+    if location_key and (
+        len(location_key) > 240
+        or not _LISTING_MAP_LOCATION_KEY_RE.fullmatch(location_key)
+    ):
+        return _admin_map_override_json(
+            {"ok": False, "error": "invalid_location_key"},
+            status=400,
+        )
+    state = load_map_location_override_state(
+        location_key=location_key,
+        listing_id=listing_id,
+    )
+    return _admin_map_override_json({"ok": True, **state})
+
+
+@require_admin_auth
+def admin_api_map_location_group_override():
+    cross_site = _reject_cross_site_map_override_request()
+    if cross_site is not None:
+        return cross_site
+    payload = request.get_json(silent=True) or {}
+    location_key = str(payload.get("location_key") or "").strip()
+    try:
+        if request.method == "DELETE":
+            override = reset_group_map_location_override(
+                location_key,
+                actor=_admin_actor(),
+                audit_writer=_write_admin_audit,
+            )
+        else:
+            override = save_group_map_location_override(
+                location_key,
+                payload,
+                actor=_admin_actor(),
+                audit_writer=_write_admin_audit,
+            )
+    except MapLocationOverrideError as exc:
+        return _map_override_error_response(exc)
+    clear_listing_map_cache()
+    return _admin_map_override_json({"ok": True, "override": override})
+
+
+@require_admin_auth
+def admin_api_map_location_listing_override(listing_id: int):
+    cross_site = _reject_cross_site_map_override_request()
+    if cross_site is not None:
+        return cross_site
+    payload = request.get_json(silent=True) or {}
+    try:
+        if request.method == "DELETE":
+            override = reset_listing_map_location_override(
+                listing_id,
+                actor=_admin_actor(),
+                audit_writer=_write_admin_audit,
+            )
+        else:
+            override = save_listing_map_location_override(
+                listing_id,
+                payload,
+                actor=_admin_actor(),
+                audit_writer=_write_admin_audit,
+            )
+    except MapLocationOverrideError as exc:
+        return _map_override_error_response(exc)
+    clear_listing_map_cache()
+    return _admin_map_override_json({"ok": True, "override": override})
 
 
 # ═══════════════════════════════════════════════════════════════════════════

@@ -69,7 +69,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-location-share-20260813b") == 2
+    assert html.count("listing-map-admin-overrides-20260814c") == 2
     assert "listing-map-price-zoom-20260813" not in html
     assert "listing-map-compact-labels-20260813" not in html
     assert "window.RADAR_MAP_VENDOR" in html
@@ -294,7 +294,7 @@ def test_listing_map_assets_use_current_location_share_cache_version():
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-location-share-20260813b") == 2
+    assert template.count("listing-map-admin-overrides-20260814c") == 2
     assert template.count("listing-map-launch-share-20260814") == 2
     assert "listing-map-price-zoom-20260813" not in template
     assert "listing-map-compact-labels-20260813" not in template

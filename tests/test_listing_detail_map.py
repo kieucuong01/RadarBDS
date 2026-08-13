@@ -85,6 +85,7 @@ def _listing_row(**overrides):
         "map_precision": "road",
         "map_label": "Theo tên đường ĐX 43, Phú Lợi",
         "map_resolver_version": "osm-2026-07-29-v1",
+        "map_manual_override": None,
     }
     row.update(overrides)
     return row
@@ -121,6 +122,32 @@ def test_listing_detail_without_derived_location_returns_none():
         detail = market_data.load_listing_detail(None, 42, tier="guest")
 
     assert detail["map_location"] is None
+
+
+def test_listing_detail_uses_effective_admin_override_without_leaking_metadata():
+    from services import market_data
+
+    conn = _DetailConnection(_listing_row(
+        map_lat=11.052345,
+        map_lng=106.666789,
+        map_precision="exact",
+        map_label="Vị trí chính xác do admin xác minh",
+        map_resolver_version="admin-override",
+        map_manual_override="listing",
+    ))
+    with mock.patch.object(market_data, "_open_read_conn", return_value=conn):
+        detail = market_data.load_listing_detail(None, 42, tier="guest")
+
+    sql = conn.detail_sql.lower()
+    assert "left join listing_map_listing_overrides" in sql
+    assert "left join listing_map_group_overrides" in sql
+    assert detail["map_location"] == {
+        "lat": 11.052345,
+        "lng": 106.666789,
+        "precision": "exact",
+        "label": "Vị trí chính xác do admin xác minh",
+        "resolver_version": "admin-override",
+    }
 
 
 def test_listing_detail_api_serializes_map_location():
