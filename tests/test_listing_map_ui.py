@@ -64,7 +64,8 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-compact-labels-20260813") == 2
+    assert html.count("listing-map-price-zoom-20260813") == 1
+    assert html.count("listing-map-compact-labels-20260813") == 1
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -230,13 +231,14 @@ def test_listing_map_marker_labels_have_compact_price_and_count_styles():
     assert 'font-family: "Segoe UI", Arial, sans-serif' in styles
 
 
-def test_listing_map_assets_use_compact_label_cache_version():
+def test_listing_map_assets_use_current_zoom_and_label_cache_versions():
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-compact-labels-20260813") == 2
+    assert template.count("listing-map-price-zoom-20260813") == 1
+    assert template.count("listing-map-compact-labels-20260813") == 1
     assert "listing-map-label-font-20260807" not in template
 
 
