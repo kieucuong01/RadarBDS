@@ -24,7 +24,7 @@ _DISTANCE_RE = re.compile(
     re.IGNORECASE,
 )
 _NEAR_PREFIX_RE = re.compile(
-    r"\b(?:cach|gan|sat|ke|canh|doi dien|ra|thong ra|noi ra)\s+"
+    r"\b(?:cach|gan|sat|ke ben|ke|canh|doi dien|ra|thong ra|noi ra)\s+"
     r"(?:duong\s+)?",
     re.IGNORECASE,
 )
@@ -94,7 +94,7 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
-    r"dai lo|bac si|yersin|yesin|cho ben lon|cho hoang gia|"
+    r"dai lo|bac si|yersin|yesin|cho ben lon|cho hoang gia|lo\s+7\s*b|"
     r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|vanh dai|vanh 4"
     r")\b",
     re.IGNORECASE,
@@ -315,6 +315,8 @@ def _normalize_road_candidate(value: str) -> str:
         return ""
     if candidate.startswith(_NON_LOCATION_RELATION_PREFIXES):
         return ""
+    if re.match(r"^(?:duong\s+)?(?:lo|tinh\s+lo)\s*7\s*b\b", candidate):
+        return "lo 7 b"
     if candidate.startswith(("cmt8", "cmt 8", "cach mang thang 8")):
         return "cach mang thang tam"
     if candidate.startswith("ntmk"):
@@ -600,12 +602,18 @@ def _relation_road(
 
 
 def _known_named_road(text: str) -> str:
+    if re.search(r"\b(?:duong\s+)?2\s*/\s*9\b", text, re.IGNORECASE):
+        return normalize_road_token("dh 604")
+    if re.search(r"\bben\s+cha\s+vi\b", text, re.IGNORECASE):
+        return normalize_road_token("dh 607")
+    if re.search(r"\bba\s+lang\s+xi\b|\bbalangxi\b", text, re.IGNORECASE):
+        return normalize_road_token("dh 602")
+    if re.search(r"\b(?:lo|tinh\s+lo)\s*7\s*b\b", text, re.IGNORECASE):
+        return "lo 7 b"
     if re.search(r"\bntmk\b", text, re.IGNORECASE):
         return normalize_road_token("nguyen thi minh khai")
     if re.search(r"\bcmt\s*8\b", text, re.IGNORECASE):
         return normalize_road_token("cach mang thang tam")
-    if re.search(r"\bba\s+lang\s+xi\b|\bbalangxi\b", text, re.IGNORECASE):
-        return normalize_road_token("dh 602")
     for known_name in _KNOWN_ROAD_PREFIXES:
         known_match = re.search(
             rf"\b{re.escape(known_name)}\b",
@@ -635,7 +643,7 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
         ):
             continue
         if re.search(
-            r"\b(?:cach|gan|sat|ke|canh|ra|thong ra|noi ra)\s*$",
+            r"\b(?:cach|gan|sat|ke ben|ke|canh|ra|thong ra|noi ra)\s*$",
             prefix_context,
         ):
             continue
@@ -660,11 +668,17 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
     if code_match:
         prefix_context = text[max(0, code_match.start() - 28) : code_match.start()]
         suffix_context = text[code_match.end() : code_match.end() + 8]
+        code_text = normalize_location_token(code_match.group(0))
         is_road_width = bool(
             re.match(r"\s+(?:m|met)\b", suffix_context, re.IGNORECASE)
         )
-        if not is_road_width and not re.search(
-            r"\b(?:cach|gan|sat|ke|canh|ra|thong ra|noi ra|nhanh|hem|"
+        tc_without_road_word = code_text.startswith("tc") and not re.search(
+            r"\b(?:duong|mat tien|mt)\s*$",
+            prefix_context,
+            re.IGNORECASE,
+        )
+        if not is_road_width and not tc_without_road_word and not re.search(
+            r"\b(?:cach|gan|sat|ke ben|ke|canh|ra|thong ra|noi ra|nhanh|hem|"
             r"1 xec|1 xet|1 sec|1 set)\s+(?:duong\s+)?$",
             prefix_context,
         ):
@@ -704,9 +718,28 @@ def _landmark(text: str) -> str:
 
 def _subzone_landmark(text: str) -> str:
     """Return only a single, explicit Bến Cát market subzone clue."""
-    letter_zones = sorted(set(re.findall(r"\bkhu\s+([f-l])\b", text)))
+    letter_zones = sorted(
+        set(
+            re.findall(r"\bkhu\s+([f-l])\b", text)
+            + re.findall(r"\bkhu\s+my\s+phuoc\s+([f-l])\b", text)
+        )
+    )
     if len(letter_zones) == 1:
         return f"khu {letter_zones[0]}"
+    if len(letter_zones) > 1:
+        return ""
+
+    numbered_my_phuoc = sorted(
+        set(
+            int(number)
+            for number in re.findall(
+                r"\b(?:my\s+phuoc|mp)\s*([1-4])\b",
+                text,
+            )
+        )
+    )
+    if len(numbered_my_phuoc) == 1:
+        return f"khu vuc my phuoc {numbered_my_phuoc[0]}"
 
     if re.search(r"\btan\s+dinh\b", text):
         numbered_zones = sorted(
@@ -735,6 +768,24 @@ def extract_map_location_context(
         combined,
         flags=re.IGNORECASE,
     )
+    combined = re.sub(
+        r"\b(?:đường|duong)\s+2\s*/\s*9\b",
+        "duong DH604",
+        combined,
+        flags=re.IGNORECASE,
+    )
+    combined = re.sub(
+        r"\bben\s+cha\s+vi\b",
+        "DH607",
+        combined,
+        flags=re.IGNORECASE,
+    )
+    combined = re.sub(
+        r"\bba\s+lang\s+xi\b|\bbalangxi\b",
+        "DH602",
+        combined,
+        flags=re.IGNORECASE,
+    )
     # Listings sometimes duplicate the road introducer ("duong duong 30/04").
     # Collapse only that introducer so the numbered-road parser sees the full
     # date name instead of stopping at the second generic "duong" token.
@@ -751,6 +802,17 @@ def extract_map_location_context(
         flags=re.IGNORECASE,
     )
     folded = normalize_location_token(combined)
+    folded = re.sub(
+        r"\b(duong\s+)2\s*/\s*9\b",
+        r"\1dh 604",
+        folded,
+    )
+    folded = re.sub(r"\bben\s+cha\s+vi\b", "dh 607", folded)
+    folded = re.sub(
+        r"\bba\s+lang\s+xi\b|\bbalangxi\b",
+        "dh 602",
+        folded,
+    )
     evidence = _bounded_evidence(title, description)
     # Keep title/description boundaries for landmarks so a short place name at
     # the end of the title cannot absorb the opening marketing copy from the
@@ -758,7 +820,15 @@ def extract_map_location_context(
     explicit_landmark = _landmark(
         normalize_location_token(title or "")
     ) or _landmark(normalize_location_token(description or ""))
-    landmark = _subzone_landmark(folded) or explicit_landmark
+    subzone_landmark = _subzone_landmark(folded)
+    is_letter_subzone = bool(
+        re.fullmatch(r"khu\s+[f-l]", subzone_landmark or "")
+    )
+    landmark = (
+        subzone_landmark
+        if is_letter_subzone
+        else (explicit_landmark or subzone_landmark)
+    )
 
     explicit_direct_road = _direct_road(folded, include_known_fallback=False)
     direct_road = explicit_direct_road or _known_named_road(folded)

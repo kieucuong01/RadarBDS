@@ -1640,3 +1640,74 @@ def test_my_phuoc_resettlement_landmark_resolves():
     assert result.location
     assert result.location.precision == "landmark"
     assert "tdc-my-phuoc" in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_slug"),
+    [
+        ("Chánh Phú Hòa", "Mặt tiền đường 2/9", "dh-604"),
+        ("Chánh Phú Hòa", "Mặt tiền ĐH605", "dh-605"),
+        ("Thới Hòa", "Đất gần đường Ba Làng Xi", "dh-602"),
+        ("Mỹ Phước", "Nhà đường Bến Chà Vi", "dh-607"),
+        ("Mỹ Phước", "Mặt tiền Lộ 7B", "lo-7-b"),
+    ],
+)
+def test_requested_ben_cat_center_fallback_roads_resolve(
+    ward, title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921314,
+        "city": "BẾN CÁT",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_slug"),
+    [
+        ("Mỹ Phước", "Nhà Khu H Mỹ Phước 3", "khu-h-my-phuoc-3"),
+        ("Chánh Phú Hòa", "Nhà Khu G Mỹ Phước 3", "khu-g-my-phuoc-3"),
+        ("Thới Hòa", "Nhà Khu K Mỹ Phước 3", "khu-k-my-phuoc-3"),
+        ("Mỹ Phước", "Nhà KCN Mỹ Phước 2", "khu-vuc-my-phuoc-2"),
+        ("Chánh Phú Hòa", "Đất KCN Mỹ Phước 3", "khu-vuc-my-phuoc-3"),
+        ("Thới Hòa", "Đất Khu đô thị Mỹ Phước 4", "khu-do-thi-my-phuoc-4"),
+    ],
+)
+def test_requested_ben_cat_center_fallback_zones_resolve(
+    ward, title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921315,
+        "city": "BẾN CÁT",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert expected_slug in result.location.location_key

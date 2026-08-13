@@ -322,6 +322,30 @@ def _road_scopes(
     return tuple(scopes)
 
 
+def _landmark_scopes(
+    city: str,
+    ward: str,
+    registry: LocationRegistry,
+) -> tuple[str, ...]:
+    """Return explicitly configured subzone scopes without widening roads."""
+    normalized_ward = normalize_location_token(_canonical_map_ward(city, ward))
+    scopes = [normalized_ward]
+    ward_entry = registry.wards.get((city, normalized_ward)) or {}
+    raw_parents = ward_entry.get("landmark_scope_parents")
+    if isinstance(raw_parents, (list, tuple)):
+        parents = raw_parents
+    else:
+        parents = (ward_entry.get("landmark_scope_parent") or "",)
+    for raw_parent in parents:
+        parent = normalize_location_token(raw_parent)
+        if parent and parent not in scopes:
+            scopes.append(parent)
+    for road_scope in _road_scopes(city, ward, registry):
+        if road_scope not in scopes:
+            scopes.append(road_scope)
+    return tuple(scopes)
+
+
 def _match_landmark(
     city: str,
     ward: str,
@@ -330,7 +354,7 @@ def _match_landmark(
 ) -> Mapping[str, object] | str | None:
     if not normalized_landmark:
         return None
-    for scope in _road_scopes(city, ward, registry):
+    for scope in _landmark_scopes(city, ward, registry):
         matched = registry.landmarks.get((city, scope, normalized_landmark))
         if isinstance(matched, Mapping):
             return matched

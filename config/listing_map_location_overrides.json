@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260813-v57",
+  "resolver_version": "osm-binh-duong-20260813-v58",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -292,6 +292,12 @@
     },
     {
       "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "canonical": "Đường ĐH.602",
+      "aliases": ["DH602", "ĐH602", "ĐH 602", "Ba Làng Xi", "BaLangXi", "Đường Ba Làng Xi"]
+    },
+    {
+      "city": "BẾN CÁT",
       "ward": "Tân Định",
       "canonical": "Quốc lộ 13",
       "aliases": [
@@ -360,6 +366,24 @@
     },
     {
       "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "canonical": "Đường ĐH.604",
+      "aliases": ["DH604", "ĐH604", "ĐH 604", "Đường 2/9", "2/9", "Duong 2/9"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "canonical": "Đường ĐH.605",
+      "aliases": ["DH605", "ĐH605", "ĐH 605"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "canonical": "Lộ 7B",
+      "aliases": ["Lộ7B", "Tỉnh lộ 7B", "Đường 7B", "Lo 7B"]
+    },
+    {
+      "city": "BẾN CÁT",
       "ward": "Mỹ Phước",
       "canonical": "Quốc lộ 13",
       "aliases": [
@@ -374,6 +398,18 @@
       "ward": "Mỹ Phước",
       "canonical": "Đường Mỹ Phước - Tân Vạn",
       "aliases": ["Mỹ Phước Tân Vạn", "MPTV"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "canonical": "Đường ĐH.607",
+      "aliases": ["DH607", "ĐH607", "ĐH 607", "Bến Chà Vi", "Đường Bến Chà Vi"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "canonical": "Lộ 7B",
+      "aliases": ["Lộ7B", "Tỉnh lộ 7B", "Đường 7B", "Lo 7B"]
     }
   ],
   "roads": [
@@ -405,6 +441,30 @@
     },
     {
       "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "road_name": "Đường ĐH.607",
+      "lat": 11.1639132,
+      "lng": 106.6061853,
+      "accuracy_radius_m": 4000,
+      "source": "Google Maps public exact Đường DH 607 result corroborated by the official Bình Dương route identity ĐH.607 (Đường Bến Chà Vi)",
+      "source_url": "https://www.google.com/maps/place/%C4%90%C6%B0%E1%BB%9Dng+DH+607,+B%E1%BA%BFn+C%C3%A1t,+H%E1%BB%93+Ch%C3%AD+Minh,+Vi%E1%BB%87t+Nam/@11.1639132,106.6061853,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước",
+      "road_name": "Lộ 7B",
+      "lat": 11.1231381,
+      "lng": 106.6210316,
+      "accuracy_radius_m": 6500,
+      "source": "Official Bình Dương land-use route identity for Lộ 7B with a bounded Google Maps public viewport anchor",
+      "source_url": "https://www.google.com/maps/search/Lo+7B+My+Phuoc+Ben+Cat/@11.1231381,106.6210316,14z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Lộ 7B spans the legacy Mỹ Phước and Chánh Phú Hòa listing scopes"
+    },
+    {
+      "city": "BẾN CÁT",
       "ward": "Chánh Phú Hòa",
       "road_name": "Đường tỉnh 741",
       "lat": 11.1605556,
@@ -424,6 +484,43 @@
       "source": "Official Bình Dương environmental-monitoring coordinate at the ĐH.604 and ĐT.741 junction, corroborated by the current official land-price route description",
       "source_url": "https://moitruongbinhduong.gov.vn/upload/files/3_BC%20KHBVMT%20BC%20_14_12_2016.pdf",
       "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "road_name": "Đường ĐH.605",
+      "lat": 11.1548611,
+      "lng": 106.6506944,
+      "accuracy_radius_m": 2600,
+      "source": "Midpoint of the official Ministry of Natural Resources and Environment Bình Dương geographic-name endpoints for ĐH.605",
+      "source_url": "https://vanbanphapluat.co/thong-tu-14-2016-tt-btnmt-dia-danh-dan-cu-son-thuy-van-kinh-te-xa-hoi-thanh-lap-ban-do-tinh-binh-duong",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Chánh Phú Hòa",
+      "road_name": "Lộ 7B",
+      "lat": 11.1231381,
+      "lng": 106.6210316,
+      "accuracy_radius_m": 6500,
+      "source": "Official Bình Dương land-use route identity for Lộ 7B with a bounded Google Maps public viewport anchor",
+      "source_url": "https://congbao.binhduong.gov.vn/noi-dung-van-ban/978/download",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Lộ 7B spans the legacy Mỹ Phước and Chánh Phú Hòa listing scopes"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Thới Hòa",
+      "road_name": "Đường ĐH.602",
+      "lat": 11.0830556,
+      "lng": 106.6452778,
+      "accuracy_radius_m": 1900,
+      "source": "Official Ministry of Natural Resources and Environment Bình Dương geographic-name endpoint for ĐH.602 (Ba Làng Xi)",
+      "source_url": "https://thuvienphapluat.vn/van-ban/Tai-nguyen-Moi-truong/Thong-tu-14-2016-TT-BTNMT-dia-danh-dan-cu-son-thuy-van-kinh-te-xa-hoi-thanh-lap-ban-do-tinh-Binh-Duong-318907.aspx",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "the official ĐH.602 endpoint falls across the coarse historical Thới Hòa polygon while current listings explicitly identify Ba Làng Xi in Thới Hòa"
     },
     {
       "city": "BẾN CÁT",

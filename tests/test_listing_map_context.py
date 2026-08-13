@@ -1434,3 +1434,65 @@ def test_extract_context_clips_quoc_lo_14_trailing_landmark_copy():
     )
 
     assert context.direct_road == "ql 14"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_direct", "expected_nearby"),
+    [
+        ("Mặt tiền đường 2/9 Chánh Phú Hòa", "dh 604", ""),
+        ("Nhà kế bên đường 2/9 Chánh Phú Hòa", "", "dh 604"),
+        ("Nhà đường Bến Chà Vi Mỹ Phước", "dh 607", ""),
+        ("Nhà tại Bến Chà Vi Mỹ Phước", "dh 607", ""),
+        ("Mặt tiền Lộ 7B Mỹ Phước", "lo 7 b", ""),
+        ("Đất gần đường Ba Làng Xi Thới Hòa", "", "dh 602"),
+    ],
+)
+def test_extract_context_normalizes_official_ben_cat_road_names(
+    text, expected_direct, expected_nearby
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == expected_direct
+    assert context.nearby_road == expected_nearby
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Đất 17x35 TC 50 quy hoạch đất ở",
+        "Nhà DT5x32 thổ cư 65m",
+        "Lô đất DT 80m2, TC 60m2",
+    ],
+)
+def test_extract_context_does_not_treat_dimensions_as_ben_cat_road_codes(text):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà KCN Mỹ Phước 1", "khu vuc my phuoc 1"),
+        ("Đất sát khu công nghiệp MP2", "khu vuc my phuoc 2"),
+        ("Nhà giáp KCN Mỹ Phước 3", "khu vuc my phuoc 3"),
+        ("Đất khu đô thị Mỹ Phước 4", "khu do thi my phuoc 4"),
+        ("Nhà khu Mỹ Phước K", "khu k"),
+    ],
+)
+def test_extract_context_recognizes_single_my_phuoc_area_or_letter_zone(
+    text, expected
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected
+
+
+def test_extract_context_does_not_choose_between_two_my_phuoc_areas():
+    context = extract_map_location_context(
+        "Đất giữa KCN Mỹ Phước 2 và KCN Mỹ Phước 3",
+        "",
+    )
+
+    assert context.landmark == ""
