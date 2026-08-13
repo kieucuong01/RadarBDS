@@ -2,7 +2,9 @@ import json
 from argparse import Namespace
 
 from services.listing_location_resolver import LocationRegistry
+from services.listing_location_resolver import resolve_listing_location
 from services.listing_map_fallback_audit import audit_ward_fallbacks
+from services.listing_map_context import extract_map_location_context
 
 
 def _registry(*roads):
@@ -28,6 +30,9 @@ def _registry(*roads):
             ("THUẬN AN", "an phu"): {
                 "city": "THUẬN AN",
                 "normalized_ward": "an phu",
+                "lat": 10.96,
+                "lng": 106.72,
+                "label": "Trung tâm An Phú",
             }
         },
     )
@@ -99,6 +104,28 @@ def test_audit_marks_same_name_osm_segments_ambiguous_without_aggregate():
             "sample_listing_ids": [106],
         }
     ]
+
+
+def test_resolver_uses_unique_registry_road_text_when_extractor_is_empty():
+    registry = _registry({"canonical": "duong an phu 17", "aliases": ["an phu 17"]})
+    listing = {
+        "id": 107,
+        "city": "THUẬN AN",
+        "ward": "An Phú",
+        "title": "Bán nhà An Phú 17",
+        "description": "Khu phố đông dân, pháp lý đầy đủ.",
+        "road_name": "",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    assert not context.direct_road
+    result = resolve_listing_location(listing, registry, context)
+
+    assert result.location is not None
+    assert result.location.precision == "road"
+    assert result.location.reference_road == "duong an phu 17"
 
 
 def test_audit_requires_road_context_for_short_numbered_alias():

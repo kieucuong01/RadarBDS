@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import json
 from pathlib import Path
@@ -26,6 +26,12 @@ _TEXT_COORDINATE_RE = re.compile(
     r"(?P<lat>1[01]\.[0-9]{4,8})\s*[,;]\s*"
     r"(?P<lng>106\.[0-9]{4,8})\b",
     re.IGNORECASE,
+)
+_REGISTRY_SHORT_NUMBERED_ROAD_RE = re.compile(
+    r"^(?:d|da|db|dc|n|na|r|x|c)\s+\d{1,3}[a-z]?$"
+)
+_REGISTRY_ROAD_CONTEXT_RE = re.compile(
+    r"(?:\bduong|\bmat tien|\bmt|\bhem|\bkdc|\btdc)\s*(?:so\s*)?$"
 )
 
 
@@ -217,6 +223,10 @@ class LocationRegistry:
         Mapping[str, object] | tuple[Mapping[str, object], ...],
     ]
     wards: Mapping[tuple[str, str], Mapping[str, object]]
+    road_text_aliases: Mapping[
+        tuple[str, str],
+        Mapping[str, tuple[Mapping[str, object], ...]],
+    ] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -321,6 +331,72 @@ def _road_scopes(
         if parent and parent not in scopes:
             scopes.append(parent)
     return tuple(scopes)
+
+
+def _unique_registry_road_from_text(
+    city: str,
+    wards: tuple[str, ...],
+    raw_text: str,
+    registry: LocationRegistry,
+) -> str:
+    """Return one resolvable scoped road named in otherwise unparsed text."""
+    text = normalize_road_token(raw_text)
+    if not text:
+        return ""
+    matched_canonicals: set[str] = set()
+    allowed_scopes = {
+        scope
+        for ward in wards
+        for scope in _road_scopes(city, ward, registry)
+    }
+    scoped_aliases: dict[str, tuple[Mapping[str, object], ...]] = {}
+    for scope in allowed_scopes:
+        cached = registry.road_text_aliases.get((city, scope))
+        if cached is not None:
+            scoped_aliases.update(cached)
+            continue
+        scoped_aliases.update(
+            {
+                raw_alias: entries
+            for (entry_city, entry_ward, raw_alias), entries in registry.roads.items()
+            if entry_city == city and entry_ward == scope
+            }
+        )
+    if not scoped_aliases:
+        return ""
+    tokens = text.split()
+    alias_lengths = {
+        len(alias.split()) for alias in scoped_aliases if alias
+    }
+    text_phrases = {
+        " ".join(tokens[index : index + length])
+        for length in alias_lengths
+        for index in range(0, len(tokens) - length + 1)
+    }
+    for alias in text_phrases.intersection(scoped_aliases):
+        entries = scoped_aliases[alias]
+        aggregate_count = sum(
+            1 for entry in entries if bool(entry.get("aggregate"))
+        )
+        if len(entries) != 1 and aggregate_count != 1:
+            continue
+        if _REGISTRY_SHORT_NUMBERED_ROAD_RE.fullmatch(alias):
+            match = re.search(
+                rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])",
+                text,
+            )
+            if not match or not _REGISTRY_ROAD_CONTEXT_RE.search(
+                text[max(0, match.start() - 24) : match.start()]
+            ):
+                continue
+        canonicals = {
+            _entry_road_key(entry, alias) for entry in entries
+        }
+        if len(canonicals) == 1:
+            matched_canonicals.update(canonicals)
+    if len(matched_canonicals) == 1:
+        return next(iter(matched_canonicals))
+    return ""
 
 
 def _landmark_scopes(
@@ -661,6 +737,20 @@ def resolve_listing_location(
             registry=registry,
             signature=signature,
         )
+
+    registry_text_road = ""
+    if not direct_roads and not nearby_road and not landmark_key:
+        registry_text_road = _unique_registry_road_from_text(
+            city,
+            lookup_ward_labels,
+            " ".join(
+                str(_value(listing, key, "") or "")
+                for key in ("title", "description")
+            ),
+            registry,
+        )
+    if registry_text_road and registry_text_road not in direct_roads:
+        direct_roads = (*direct_roads, registry_text_road)
 
     landmark_match = _match_landmark_in_wards(
         city,
@@ -1018,6 +1108,9 @@ def load_location_registry(
             )
             road_lists.setdefault(key, []).append(item)
     roads = {key: tuple(items) for key, items in road_lists.items()}
+    road_text_aliases = {}
+    for (city, ward, alias), entries in roads.items():
+        road_text_aliases.setdefault((city, ward), {})[alias] = entries
 
     landmark_lists = {}
     for item in landmark_payload.get("landmarks") or []:
@@ -1042,4 +1135,5 @@ def load_location_registry(
         roads=roads,
         landmarks=landmarks,
         wards=wards,
+        road_text_aliases=road_text_aliases,
     )

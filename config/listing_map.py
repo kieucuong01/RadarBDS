@@ -3,7 +3,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v60"
+LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v61"
 LISTING_MAP_BOUNDS = (
     (10.75, 106.25),
     (11.65, 107.10),
@@ -21,6 +21,8 @@ LISTING_MAP_WARD_ALIASES = {
 LISTING_MAP_FORCE_AGGREGATE_ROADS = frozenset({
     ("thuan an", "an phu", "duong tinh 743 a"),
     ("thuan an", "an phu", "duong so 22 thang 12"),
+    ("thuan an", "an phu", "my phuoc tan van"),
+    ("thuan an", "an thanh", "ho van men"),
     ("thuan an", "binh chuan", "duong tinh 743 a"),
     ("thuan an", "binh hoa", "dai lo binh duong"),
     ("thuan an", "binh nham", "cach mang thang tam"),
@@ -31,7 +33,9 @@ LISTING_MAP_FORCE_AGGREGATE_ROADS = frozenset({
     ("thuan an", "lai thieu", "dai lo binh duong"),
     ("thuan an", "lai thieu", "nguyen huu canh"),
     ("thuan an", "thuan giao", "dai lo binh duong"),
+    ("thuan an", "thuan giao", "duong thu khoa huan"),
     ("thuan an", "thuan giao", "duong so 22 thang 12"),
+    ("thuan an", "thuan giao", "my phuoc tan van"),
     ("thuan an", "vinh phu", "dai lo binh duong"),
     ("thuan an", "an thanh", "cach mang thang tam"),
     ("thuan an", "an thanh", "dai lo binh duong"),
