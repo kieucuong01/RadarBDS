@@ -915,35 +915,35 @@
   function markerStyle(precision) {
     if (precision === "exact") {
       return {
-        radius: 8,
+        radius: 6,
         color: "#047857",
-        weight: 3,
+        weight: 2,
         fillColor: "#10b981",
         fillOpacity: 0.86
       };
     }
     if (precision === "road") {
       return {
-        radius: 9,
+        radius: 7,
         color: "#3730a3",
-        weight: 3,
+        weight: 2,
         fillColor: "#6366f1",
         fillOpacity: 0.84
       };
     }
     if (precision === "landmark") {
       return {
-        radius: 9,
+        radius: 7,
         color: "#0f766e",
-        weight: 3,
+        weight: 2,
         fillColor: "#14b8a6",
         fillOpacity: 0.84
       };
     }
     return {
-      radius: 10,
+      radius: 8,
       color: "#b45309",
-      weight: 3,
+      weight: 2,
       fillColor: "#f59e0b",
       fillOpacity: 0.82
     };
@@ -2698,6 +2698,7 @@
     markerLabelModel: markerLabelModel,
     markerLabelRect: markerLabelRect,
     markerLabelClassName: markerLabelClassName,
+    markerStyle: markerStyle,
     closerInitialZoom: closerInitialZoom,
     labelRectCollides: labelRectCollides,
     batchRanges: batchRanges,

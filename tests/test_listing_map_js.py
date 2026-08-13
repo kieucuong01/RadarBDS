@@ -362,6 +362,20 @@ def test_marker_label_class_identifies_singleton_road_price():
     )
 
 
+def test_map_markers_use_compact_visual_radius_and_border():
+    assert _run_node("mapApi.markerStyle('exact')") == {
+        "radius": 6,
+        "color": "#047857",
+        "weight": 2,
+        "fillColor": "#10b981",
+        "fillOpacity": 0.86,
+    }
+    assert _run_node("mapApi.markerStyle('road').radius") == 7
+    assert _run_node("mapApi.markerStyle('landmark').radius") == 7
+    assert _run_node("mapApi.markerStyle('ward').radius") == 8
+    assert _run_node("mapApi.markerStyle('ward').weight") == 2
+
+
 def test_exact_marker_label_collision_uses_screen_rect_gap():
     assert _run_node(
         "mapApi.labelRectCollides("
