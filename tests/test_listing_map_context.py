@@ -1654,3 +1654,29 @@ def test_extract_context_rejects_marketing_stored_road_name():
     )
 
     assert context.stored_road == ""
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Gần đường nhựa lớn",
+        "Đường Bách Hóa Xanh",
+        "Đường đang lên nhựa",
+        "Đường hỗ trợ ngân hàng cho anh em tại",
+        "Đường lớn ngã tư miếu ông Cù",
+    ],
+)
+def test_extract_context_rejects_tan_uyen_round_two_noise(text):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+
+
+def test_extract_context_clips_tran_dai_nghia_ben_don_suffix():
+    context = extract_map_location_context(
+        "Bán đất mặt tiền Trần Đại Nghĩa Bến Đồn Vĩnh Tân",
+        "",
+    )
+
+    assert context.direct_road == "tran dai nghia"

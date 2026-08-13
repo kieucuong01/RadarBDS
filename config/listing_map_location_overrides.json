@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v64",
+  "resolver_version": "osm-binh-duong-20260814-v65",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -602,6 +602,18 @@
       "ward": "Phú Chánh",
       "canonical": "Đường Phú Chánh 17",
       "aliases": ["Phú Chánh 17"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Phú Chánh",
+      "canonical": "Đường số 3",
+      "aliases": ["Đường 3"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Uyên Hưng",
+      "canonical": "Đường Uyên Hưng 10",
+      "aliases": ["Uyên Hưng 10", "N10", "N 10"]
     }
   ],
   "roads": [
@@ -2558,6 +2570,17 @@
       "source": "Google Maps exact public address on Đường Phú Chánh 17 verified with isolated browser-use",
       "source_url": "https://www.google.com/maps/place/Trang+tr%E1%BA%A1i+H%E1%BB%93ng+Anh+T%C3%A2n+Uy%C3%AAn+B%C3%ACnh+D%C6%B0%C6%A1ng+%C4%90%C6%B0%E1%BB%9Dng+ph%C3%BA+ch%C3%A1nh+17/@11.0638166,106.7138452,17z/",
       "verified_at": "2026-08-14"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Uyên Hưng",
+      "road_name": "Đường Uyên Hưng 10",
+      "lat": 11.0634417,
+      "lng": 106.7851282,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public Đường Uyên Hưng 10 result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/%C4%90%C6%B0%E1%BB%9Dng+Uy%C3%AAn+H%C6%B0ng+10/@11.0634417,106.7851282,17z/",
+      "verified_at": "2026-08-14"
     }
   ],
   "landmark_aliases": [
@@ -2980,6 +3003,12 @@
       "ward": "Tân Phước Khánh",
       "canonical": "KDC Thái Bình Dương",
       "aliases": ["Khu dân cư Thái Bình Dương"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Bạch Đằng",
+      "canonical": "TĐC Bạch Đằng",
+      "aliases": ["TDC Bach Dang", "Khu tái định cư Bạch Đằng"]
     }
   ],
   "landmarks": [
@@ -3813,6 +3842,19 @@
       "source": "Google Maps exact public KDC Thái Bình Dương - Tân Phước Khánh result verified with isolated browser-use",
       "source_url": "https://www.google.com/maps/place/KDC+Th%C3%A1i+B%C3%ACnh+D%C6%B0%C6%A1ng+-+T%C3%A2n+Ph%C6%B0%E1%BB%9Bc+Kh%C3%A1nh/@11.0015849,106.7332603,17z/",
       "verified_at": "2026-08-14"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Bạch Đằng",
+      "landmark_name": "TĐC Bạch Đằng",
+      "lat": 11.099536,
+      "lng": 106.8060388,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact public Tái định cư Bạch Đằng Tân Uyên result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/T%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+B%E1%BA%A1ch+%C4%90%E1%BA%B1ng+T%C3%A2n+Uy%C3%AAn/@11.099536,106.8060388,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The exact public resettlement site serving Bạch Đằng lies outside the retained legacy island ward polygon"
     }
   ]
 }

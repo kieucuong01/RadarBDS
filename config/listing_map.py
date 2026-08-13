@@ -3,7 +3,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v64"
+LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v65"
 LISTING_MAP_BOUNDS = (
     (10.75, 106.25),
     (11.65, 107.10),
@@ -48,6 +48,7 @@ LISTING_MAP_FORCE_AGGREGATE_ROADS = frozenset({
     ("tan uyen", "phu chanh", "duong tinh 742"),
     ("tan uyen", "phu chanh", "ngo thoi nhiem"),
     ("tan uyen", "phu chanh", "huynh van luy"),
+    ("tan uyen", "phu chanh", "duong so 3"),
     ("tan uyen", "tan hiep", "duong nguyen tri phuong"),
     ("tan uyen", "tan phuoc khanh", "duong tinh 746"),
     ("tan uyen", "tan phuoc khanh", "duong to vinh dien"),
@@ -223,6 +224,10 @@ LISTING_MAP_WARD_BOUNDARY_PATHS = (
     / "config"
     / "map_products"
     / "di_an_legacy_boundaries.geojson",
+    PROJECT_ROOT
+    / "config"
+    / "map_products"
+    / "tan_uyen_legacy_boundaries.geojson",
 )
 
 LISTING_MAP_ALLOWED_PRECISIONS = frozenset(

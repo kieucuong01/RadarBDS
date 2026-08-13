@@ -92,6 +92,9 @@ def test_all_supported_city_boundary_files_are_loadable():
     assert point_is_in_scoped_ward(
         "DĨ AN", "An Bình", 10.878579, 106.755974
     )
+    assert point_is_in_scoped_ward(
+        "TÂN UYÊN", "Bạch Đằng", 11.033162, 106.795857
+    )
 
 
 def test_exact_landmark_inside_ward_auto_accepts_at_high_confidence():

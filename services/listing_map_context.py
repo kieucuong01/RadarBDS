@@ -103,6 +103,13 @@ _NON_ROAD_NAMES = {
     "tphcm lo dat",
     "xe tai",
 }
+_NON_ROAD_PREFIXES = (
+    "nhua lon",
+    "bach hoa xanh",
+    "dang len nhua",
+    "ho tro ngan hang cho anh em tai",
+    "lon nga tu",
+)
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
     r"dx|da|d|db|dh|dt|dl|tl|ql|gs|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n|duong so|"
@@ -292,6 +299,7 @@ _KNOWN_LANDMARK_PREFIXES = (
 )
 
 _KNOWN_EXPLICIT_LANDMARKS = (
+    ("tdc bach dang", "tdc bach dang"),
     ("kdc thai binh duong", "kdc thai binh duong"),
     ("pho di bo bach dang", "pho di bo bach dang"),
     ("cho chanh my", "cho chanh my"),
@@ -348,6 +356,8 @@ def _cut_at_stop(value: str, stop_re: re.Pattern[str]) -> str:
 
 def _normalize_road_candidate(value: str) -> str:
     candidate = " ".join(value.strip().split())
+    if candidate.startswith(_NON_ROAD_PREFIXES):
+        return ""
     if re.match(
         r"^dai\s+lo\s+\d{1,4}(?:\s+\d+)?\s*m(?:\s*2\b|\b)",
         candidate,
@@ -418,6 +428,8 @@ def _normalize_road_candidate(value: str) -> str:
         return "nguyen chi thanh"
     if candidate.startswith("nguyen tri phuon"):
         return "nguyen tri phuong"
+    if candidate.startswith("tran dai nghia"):
+        return "tran dai nghia"
     if candidate.startswith("bui quoc khach"):
         return "bui quoc khanh"
     if candidate.startswith("phan di dat"):
@@ -708,6 +720,8 @@ def _known_named_road(text: str) -> str:
             r"\b(?:truong|thcs|thpt|tieu hoc|mam non)(?:\s+\w+){0,2}\s*$",
             prefix_context,
         ):
+            continue
+        if re.search(r"\b(?:phuong|xa|thi tran)\s*$", prefix_context):
             continue
         return normalize_road_token(known_name)
     return ""

@@ -741,14 +741,21 @@ def resolve_listing_location(
     )
     nearby_road = normalize_road_token(getattr(context, "nearby_road", ""))
     generic_stored_road = stored_road == ward
+    if generic_stored_road and context_direct_road == ward:
+        context_direct_road = ""
+    stored_roads_for_resolution = (
+        () if generic_stored_road else tuple(validated_stored_roads)
+    )
     direct_roads = tuple(
         dict.fromkeys(
             road
-            for road in (*validated_stored_roads, context_direct_road)
+            for road in (*stored_roads_for_resolution, context_direct_road)
             if road and not (nearby_road and generic_stored_road and road == stored_road)
         )
     )
-    direct_road = context_direct_road or stored_road
+    direct_road = context_direct_road or (
+        "" if generic_stored_road else stored_road
+    )
     landmark_key = normalize_location_token(getattr(context, "landmark", ""))
     relation = str(getattr(context, "relation", "") or "")
     candidate_road = direct_road or nearby_road

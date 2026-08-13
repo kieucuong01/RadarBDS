@@ -2036,12 +2036,14 @@ def test_explicit_tan_uyen_city_prevents_phu_chanh_tdm_alias_collision():
     [
         ("Phú Chánh", "Bán đất DT742", "dt 742"),
         ("Phú Chánh", "Đất đường Phú Chánh 17", "duong phu chanh 17"),
+        ("Phú Chánh", "Bán đất đường số 3", "duong so 3"),
         ("Tân Hiệp", "Gần Nguyễn Tri Phương", "duong nguyen tri phuong"),
         ("Tân Phước Khánh", "Đất Tô Vĩnh Diện", "duong to vinh dien"),
         ("Tân Phước Khánh", "Nhà Võ Thị Sáu", "duong vo thi sau"),
         ("Tân Vĩnh Hiệp", "Gần DT746", "duong tinh 746"),
         ("Thạnh Phước", "Đất đường Gò Trắc", "duong go trac"),
         ("Thái Hòa", "Cách DT747 200m", "duong tinh 747"),
+        ("Uyên Hưng", "Bán đất đường N10", "duong uyen hung 10"),
         ("Vĩnh Tân", "Mặt tiền Trần Đại Nghĩa", "duong tran dai nghia"),
     ],
 )
@@ -2111,3 +2113,49 @@ def test_tan_uyen_tan_phuoc_khanh_thai_binh_duong_landmark_resolves():
     assert result.location
     assert result.location.precision == "landmark"
     assert "kdc-thai-binh-duong" in result.location.location_key
+
+
+def test_tan_uyen_bach_dang_resettlement_landmark_resolves():
+    registry = load_location_registry()
+    listing = {
+        "id": 921405,
+        "city": "TÂN UYÊN",
+        "ward": "Bạch Đằng",
+        "title": "Bán đất TĐC Bạch Đằng Tân Uyên",
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(listing["title"], "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert "tdc-bach-dang" in result.location.location_key
+
+
+def test_tan_uyen_stored_ward_name_is_not_treated_as_a_road():
+    registry = load_location_registry()
+    listing = {
+        "id": 921406,
+        "city": "TÂN UYÊN",
+        "ward": "Bạch Đằng",
+        "title": "Bán đất vườn đẹp",
+        "description": "Phường Bạch Đằng",
+        "road_name": "Bạch Đằng",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(
+            listing["title"], listing["description"], listing["road_name"]
+        ),
+    )
+
+    assert result.location
+    assert result.location.precision == "ward"
+    assert result.issue is None
