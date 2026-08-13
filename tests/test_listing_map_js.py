@@ -246,14 +246,27 @@ def test_marker_label_rect_uses_each_model_dimensions():
     assert result["count"]["bottom"] - result["count"]["top"] == 18
 
 
-def test_closer_initial_zoom_reaches_price_label_threshold_with_cap():
-    assert _run_node("mapApi.closerInitialZoom(8)") == 13
-    assert _run_node("mapApi.closerInitialZoom(11)") == 13
-    assert _run_node("mapApi.closerInitialZoom(12)") == 13
+def test_closer_initial_zoom_opens_at_fourteen_with_cap():
+    assert _run_node("mapApi.closerInitialZoom(8)") == 14
+    assert _run_node("mapApi.closerInitialZoom(12)") == 14
     assert _run_node("mapApi.closerInitialZoom(13)") == 14
+    assert _run_node("mapApi.closerInitialZoom(14)") == 15
     assert _run_node("mapApi.closerInitialZoom(15)") == 16
     assert _run_node("mapApi.closerInitialZoom(16)") == 16
-    assert _run_node("mapApi.closerInitialZoom('broken')") == 13
+    assert _run_node("mapApi.closerInitialZoom('broken')") == 14
+
+
+def test_marker_label_class_identifies_singleton_road_price():
+    result = _run_node(
+        "(function(){const group={precision:'road',listing_count:1,"
+        "price_ty:1.8,area_m2:100,price_per_m2:18};"
+        "const model=mapApi.markerLabelModel(group,14);"
+        "return mapApi.markerLabelClassName(group,model);})()"
+    )
+    assert result == (
+        "listing-map-marker-label listing-map-marker-label-price "
+        "listing-map-marker-label-precision-road"
+    )
 
 
 def test_exact_marker_label_collision_uses_screen_rect_gap():

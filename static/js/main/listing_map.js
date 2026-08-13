@@ -24,7 +24,7 @@
   var COUNT_LABEL_HEIGHT = 18;
   var COUNT_LABEL_ANCHOR_Y = 29;
   var MARKER_LABEL_COLLISION_GAP = 4;
-  var INITIAL_MAP_MIN_ZOOM = PRICE_LABEL_MIN_ZOOM;
+  var INITIAL_MAP_MIN_ZOOM = 14;
   var INITIAL_MAP_MAX_ZOOM = 16;
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -314,6 +314,14 @@
       top: point.y - anchorY,
       bottom: point.y - anchorY + height
     };
+  }
+
+  function markerLabelClassName(group, model) {
+    var precision = group && group.precision === "nearby"
+      ? "road"
+      : String((group && group.precision) || "");
+    return "listing-map-marker-label listing-map-marker-label-"
+      + model.kind + " listing-map-marker-label-precision-" + precision;
   }
 
   function closerInitialZoom(fittedZoom) {
@@ -1010,8 +1018,7 @@
         keyboard: false,
         zIndexOffset: 1000,
         icon: root.L.divIcon({
-          className: "listing-map-marker-label listing-map-marker-label-"
-            + model.kind,
+          className: markerLabelClassName(group, model),
           html: markerLabelHtml(model),
           iconSize: [model.width, model.height],
           iconAnchor: [model.width / 2, model.anchorY]
@@ -1680,6 +1687,7 @@
     panelRenderModel: panelRenderModel,
     markerLabelModel: markerLabelModel,
     markerLabelRect: markerLabelRect,
+    markerLabelClassName: markerLabelClassName,
     closerInitialZoom: closerInitialZoom,
     labelRectCollides: labelRectCollides,
     batchRanges: batchRanges,
