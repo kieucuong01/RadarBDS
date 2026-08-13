@@ -207,7 +207,12 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "min-height: 44px" in styles
     assert "@media (prefers-reduced-motion: reduce)" in styles
     assert ".listing-map-precision-landmark" in styles
-    assert "root.L.circle(" not in script
+    assert "state.userAccuracyCircle = root.L.circle(" in script
+    add_marker_source = script.split("function addMarker(group)", 1)[1].split(
+        "function setSummaryStatus", 1
+    )[0]
+    assert "root.L.circleMarker(" in add_marker_source
+    assert "root.L.circle(" not in add_marker_source
     assert "safeCount(summary.nearby_count)" not in script
     assert "listing_map_official_gis_opened" not in script
     assert "listingMapOfficialGisLink" not in script

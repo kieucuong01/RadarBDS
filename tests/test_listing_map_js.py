@@ -256,6 +256,43 @@ def test_closer_initial_zoom_opens_at_fourteen_with_cap():
     assert _run_node("mapApi.closerInitialZoom('broken')") == 14
 
 
+def test_current_location_zoom_never_zooms_out():
+    assert _run_node("mapApi.locationTargetZoom(14)") == 16
+    assert _run_node("mapApi.locationTargetZoom(16)") == 16
+    assert _run_node("mapApi.locationTargetZoom(18)") == 18
+    assert _run_node("mapApi.locationTargetZoom('broken')") == 16
+
+
+def test_geolocation_errors_use_concise_vietnamese_copy():
+    assert _run_node(
+        "mapApi.geolocationErrorMessage({code:1})"
+    ) == "Bạn chưa cấp quyền vị trí."
+    assert _run_node(
+        "mapApi.geolocationErrorMessage({code:2})"
+    ) == "Không xác định được vị trí."
+    assert _run_node(
+        "mapApi.geolocationErrorMessage({code:3})"
+    ) == "Định vị quá thời gian, hãy thử lại."
+    assert _run_node(
+        "mapApi.geolocationErrorMessage({code:99})"
+    ) == "Không thể định vị lúc này."
+
+
+def test_stale_or_closed_location_callbacks_are_rejected():
+    assert _run_node(
+        "mapApi.isCurrentLocationCallback(4,4,true,true)"
+    ) is True
+    assert _run_node(
+        "mapApi.isCurrentLocationCallback(3,4,true,true)"
+    ) is False
+    assert _run_node(
+        "mapApi.isCurrentLocationCallback(4,4,false,true)"
+    ) is False
+    assert _run_node(
+        "mapApi.isCurrentLocationCallback(4,4,true,false)"
+    ) is False
+
+
 def test_marker_label_class_identifies_singleton_road_price():
     result = _run_node(
         "(function(){const group={precision:'road',listing_count:1,"

@@ -152,6 +152,83 @@
   background: #dbeafe;
 }
 
+.listing-map-map-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-map-map-actions .listing-map-control-button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  border-radius: 0;
+  background: #fff;
+  color: #0f172a;
+  font: 800 1.05rem/1 "Segoe UI", Arial, sans-serif;
+  cursor: pointer;
+  place-items: center;
+}
+
+.listing-map-map-actions .listing-map-control-button:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.listing-map-map-actions .listing-map-control-button:nth-child(2) {
+  border-bottom: 0;
+  border-radius: 0 0 4px 4px;
+}
+
+.listing-map-map-actions .listing-map-control-button:hover,
+.listing-map-map-actions .listing-map-control-button:focus-visible {
+  background: #f1f5f9;
+  color: #1d4ed8;
+}
+
+.listing-map-map-actions .listing-map-control-button:disabled {
+  cursor: wait;
+  opacity: 0.56;
+}
+
+.listing-map-map-actions .listing-map-locate-button.is-loading span {
+  animation: listing-map-spin 0.8s linear infinite;
+}
+
+.listing-map-feedback {
+  position: absolute;
+  top: 0;
+  left: 42px;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 100px));
+  padding: 7px 9px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.18);
+  color: #334155;
+  font: 700 0.7rem/1.3 "Segoe UI", Arial, sans-serif;
+  pointer-events: none;
+}
+
+.listing-map-feedback[data-kind="error"] {
+  color: #b91c1c;
+}
+
+.listing-map-feedback[data-kind="success"] {
+  color: #047857;
+}
+
+.listing-map-user-location {
+  filter: drop-shadow(0 1px 3px rgba(37, 99, 235, 0.42));
+}
+
+.listing-map-user-accuracy {
+  pointer-events: none;
+}
+
 .listing-map-marker-label {
   box-sizing: border-box;
   border: 1px solid rgba(15, 118, 110, 0.24);

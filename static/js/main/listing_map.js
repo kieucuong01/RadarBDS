@@ -61,7 +61,15 @@
     markerGeneration: 0,
     markerFrameId: null,
     markerRenderCount: 0,
-    sheetExpanded: false
+    sheetExpanded: false,
+    mapActionControl: null,
+    locationButton: null,
+    shareButton: null,
+    userLocationMarker: null,
+    userAccuracyCircle: null,
+    locationRequestId: 0,
+    mapFeedbackTimer: null,
+    mapFeedbackElement: null
   };
 
   function normalizeMode(value) {
@@ -401,6 +409,32 @@
     return Math.min(Math.round(number), 20000);
   }
 
+  function locationTargetZoom(currentZoom) {
+    var zoom = finiteNumber(currentZoom);
+    return Math.max(zoom === null ? 0 : zoom, 16);
+  }
+
+  function geolocationErrorMessage(error) {
+    var code = Number(error && error.code);
+    if (code === 1) return "Bạn chưa cấp quyền vị trí.";
+    if (code === 2) return "Không xác định được vị trí.";
+    if (code === 3) return "Định vị quá thời gian, hãy thử lại.";
+    return "Không thể định vị lúc này.";
+  }
+
+  function isCurrentLocationCallback(
+    requestId,
+    activeRequestId,
+    isOpen,
+    hasMap
+  ) {
+    return Boolean(
+      requestId === activeRequestId
+      && isOpen
+      && hasMap
+    );
+  }
+
   function safeTrackingContext(input) {
     input = input || {};
     var output = {};
@@ -703,10 +737,181 @@
     state.activeBaseLayer = safeId;
   }
 
+  function setLocationButtonLoading(loading) {
+    if (!state.locationButton) return;
+    state.locationButton.disabled = Boolean(loading);
+    state.locationButton.setAttribute(
+      "aria-busy",
+      loading ? "true" : "false"
+    );
+    state.locationButton.classList.toggle("is-loading", Boolean(loading));
+  }
+
+  function showMapFeedback(message, kind) {
+    if (!state.mapFeedbackElement) return;
+    if (state.mapFeedbackTimer !== null) {
+      root.clearTimeout(state.mapFeedbackTimer);
+    }
+    state.mapFeedbackElement.textContent = String(message || "");
+    state.mapFeedbackElement.dataset.kind = kind || "info";
+    state.mapFeedbackElement.hidden = false;
+    state.mapFeedbackTimer = root.setTimeout(function () {
+      state.mapFeedbackTimer = null;
+      if (state.mapFeedbackElement) state.mapFeedbackElement.hidden = true;
+    }, 2500);
+  }
+
+  function clearUserLocation() {
+    state.locationRequestId += 1;
+    if (state.map && state.userLocationMarker) {
+      state.map.removeLayer(state.userLocationMarker);
+    }
+    if (state.map && state.userAccuracyCircle) {
+      state.map.removeLayer(state.userAccuracyCircle);
+    }
+    state.userLocationMarker = null;
+    state.userAccuracyCircle = null;
+    setLocationButtonLoading(false);
+    if (state.mapFeedbackTimer !== null) {
+      root.clearTimeout(state.mapFeedbackTimer);
+      state.mapFeedbackTimer = null;
+    }
+    state.mapFeedbackElement = null;
+    state.locationButton = null;
+    state.shareButton = null;
+    state.mapActionControl = null;
+  }
+
+  function requestUserLocation() {
+    var geolocation = root.navigator && root.navigator.geolocation;
+    if (!geolocation || typeof geolocation.getCurrentPosition !== "function") {
+      showMapFeedback("Trình duyệt không hỗ trợ định vị.", "error");
+      return;
+    }
+    state.locationRequestId += 1;
+    var requestId = state.locationRequestId;
+    setLocationButtonLoading(true);
+    geolocation.getCurrentPosition(function (position) {
+      if (!isCurrentLocationCallback(
+        requestId,
+        state.locationRequestId,
+        state.open,
+        Boolean(state.map)
+      )) return;
+      var latitude = finiteNumber(position && position.coords && position.coords.latitude);
+      var longitude = finiteNumber(position && position.coords && position.coords.longitude);
+      if (latitude === null || longitude === null) {
+        setLocationButtonLoading(false);
+        showMapFeedback("Không xác định được vị trí.", "error");
+        return;
+      }
+      if (state.userLocationMarker) {
+        state.map.removeLayer(state.userLocationMarker);
+      }
+      if (state.userAccuracyCircle) {
+        state.map.removeLayer(state.userAccuracyCircle);
+      }
+      state.userAccuracyCircle = root.L.circle([latitude, longitude], {
+        radius: normalizeAccuracyRadius(position.coords.accuracy),
+        className: "listing-map-user-accuracy",
+        color: "#2563eb",
+        fillColor: "#60a5fa",
+        fillOpacity: 0.12,
+        opacity: 0.38,
+        weight: 1,
+        interactive: false
+      }).addTo(state.map);
+      state.userLocationMarker = root.L.circleMarker(
+        [latitude, longitude],
+        {
+          radius: 7,
+          className: "listing-map-user-location",
+          color: "#ffffff",
+          fillColor: "#2563eb",
+          fillOpacity: 1,
+          opacity: 1,
+          weight: 3,
+          interactive: false
+        }
+      ).addTo(state.map);
+      state.map.setView(
+        [latitude, longitude],
+        locationTargetZoom(state.map.getZoom())
+      );
+      setLocationButtonLoading(false);
+      showMapFeedback("Đã xác định vị trí của bạn.", "success");
+    }, function (error) {
+      if (!isCurrentLocationCallback(
+        requestId,
+        state.locationRequestId,
+        state.open,
+        Boolean(state.map)
+      )) return;
+      setLocationButtonLoading(false);
+      showMapFeedback(geolocationErrorMessage(error), "error");
+    }, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
+  }
+
+  function mountMapActionControls(L) {
+    var MapActions = L.Control.extend({
+      options: { position: "topleft" },
+      onAdd: function () {
+        var container = L.DomUtil.create(
+          "div",
+          "leaflet-bar listing-map-map-actions"
+        );
+        var locate = L.DomUtil.create(
+          "button",
+          "listing-map-control-button listing-map-locate-button",
+          container
+        );
+        locate.type = "button";
+        locate.title = "Vị trí của tôi";
+        locate.setAttribute("aria-label", "Vị trí của tôi");
+        locate.setAttribute("aria-busy", "false");
+        locate.innerHTML = '<span aria-hidden="true">⌖</span>';
+        var share = L.DomUtil.create(
+          "button",
+          "listing-map-control-button listing-map-share-button",
+          container
+        );
+        share.type = "button";
+        share.title = "Chia sẻ";
+        share.setAttribute("aria-label", "Chia sẻ");
+        share.innerHTML = '<span aria-hidden="true">↗</span>';
+        share.disabled = true;
+        var feedback = L.DomUtil.create(
+          "div",
+          "listing-map-feedback",
+          container
+        );
+        feedback.hidden = true;
+        feedback.setAttribute("role", "status");
+        feedback.setAttribute("aria-live", "polite");
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+        L.DomEvent.on(locate, "click", requestUserLocation);
+        state.locationButton = locate;
+        state.shareButton = share;
+        state.mapFeedbackElement = feedback;
+        return container;
+      }
+    });
+    state.mapActionControl = new MapActions();
+    state.mapActionControl.addTo(state.map);
+  }
+
   function initMap(L) {
     var canvas = element("listingMapCanvas");
     if (!canvas) throw new Error("Missing listing map canvas");
-    if (state.map) state.map.remove();
+    if (state.map) {
+      clearUserLocation();
+      state.map.remove();
+    }
     state.map = L.map(canvas, mapOptions());
     var definitions = mapBaseLayers();
     state.baseLayers = {
@@ -744,6 +949,7 @@
     });
     state.markerLayer = L.layerGroup().addTo(state.map);
     state.markerLabelLayer = L.layerGroup().addTo(state.map);
+    mountMapActionControls(L);
     state.map.on("zoomend moveend", scheduleMarkerLabelRefresh);
     state.map.setView([11.02, 106.63], 11);
     root.setTimeout(function () {
@@ -1534,6 +1740,7 @@
     cancelMarkerRender();
     clearMarkerLabels();
     if (state.markerLayer) state.markerLayer.clearLayers();
+    clearUserLocation();
     if (state.map) state.map.remove();
     state.map = null;
     state.markerLayer = null;
@@ -1682,6 +1889,9 @@
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
     normalizeAccuracyRadius: normalizeAccuracyRadius,
+    locationTargetZoom: locationTargetZoom,
+    geolocationErrorMessage: geolocationErrorMessage,
+    isCurrentLocationCallback: isCurrentLocationCallback,
     activePanelId: activePanelId,
     directoryWindow: directoryWindow,
     panelRenderModel: panelRenderModel,
