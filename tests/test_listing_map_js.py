@@ -176,28 +176,81 @@ def test_panel_render_model_omits_exact_locations_from_directory():
     }
 
 
-def test_exact_marker_label_model_uses_two_compact_rows_at_overview_zoom():
-    result = _run_node(
-        "mapApi.exactMarkerLabelModel({"
-        "precision:'exact',price_ty:1.8,area_m2:100,price_per_m2:18"
-        "},14)"
-    )
+def test_marker_label_model_uses_compact_price_rows_for_exact_and_single_road():
+    for precision, priority in (("exact", 0), ("road", 1)):
+        result = _run_node(
+            "mapApi.markerLabelModel({"
+            f"precision:'{precision}',listing_count:1,"
+            "price_ty:1.8,area_m2:100,price_per_m2:18"
+            "},13)"
+        )
 
-    assert result == {
-        "visible": True,
-        "line1": "1,8 tỷ · 100 m²",
-        "line2": "18 tr/m²",
-    }
+        assert result["visible"] is True
+        assert result["kind"] == "price"
+        assert result["priority"] == priority
+        assert result["line1"] == "1,8 tỷ · 100m²"
+        assert result["line2"] == "18tr/m²"
+
     assert _run_node(
-        "mapApi.exactMarkerLabelModel({"
-        "precision:'exact',price_ty:1.8,area_m2:100,price_per_m2:18"
-        "},13).visible"
+        "mapApi.markerLabelModel({"
+        "precision:'exact',listing_count:1,price_ty:1.8,"
+        "area_m2:100,price_per_m2:18"
+        "},12).visible"
     ) is False
-    assert _run_node(
-        "mapApi.exactMarkerLabelModel({"
-        "precision:'road',price_ty:1.8,area_m2:100,price_per_m2:18"
-        "},17).visible"
-    ) is False
+
+
+def test_marker_label_model_uses_count_badges_for_grouped_locations():
+    cases = (
+        ("road", 3, 2),
+        ("landmark", 1, 3),
+        ("ward", 8, 4),
+    )
+    for precision, count, priority in cases:
+        result = _run_node(
+            "mapApi.markerLabelModel({"
+            f"precision:'{precision}',listing_count:{count}"
+            "},9)"
+        )
+        assert result["visible"] is True
+        assert result["kind"] == "count"
+        assert result["priority"] == priority
+        assert result["line1"] == f"{count} tin"
+        assert result["line2"] == ""
+
+
+def test_marker_label_model_does_not_replace_invalid_single_price_with_count():
+    for precision in ("exact", "road"):
+        assert _run_node(
+            "mapApi.markerLabelModel({"
+            f"precision:'{precision}',listing_count:1,"
+            "price_ty:null,area_m2:100,price_per_m2:null"
+            "},16).visible"
+        ) is False
+
+
+def test_marker_label_rect_uses_each_model_dimensions():
+    result = _run_node(
+        "(function(){"
+        "const price=mapApi.markerLabelModel({"
+        "precision:'exact',listing_count:1,price_ty:1.8,"
+        "area_m2:100,price_per_m2:18},13);"
+        "const count=mapApi.markerLabelModel({"
+        "precision:'ward',listing_count:8},9);"
+        "return {price:mapApi.markerLabelRect({x:100,y:100},price),"
+        "count:mapApi.markerLabelRect({x:100,y:100},count)};"
+        "})()"
+    )
+    assert result["price"]["right"] - result["price"]["left"] == 92
+    assert result["price"]["bottom"] - result["price"]["top"] == 30
+    assert result["count"]["right"] - result["count"]["left"] == 44
+    assert result["count"]["bottom"] - result["count"]["top"] == 18
+
+
+def test_closer_initial_zoom_adds_one_level_with_cap():
+    assert _run_node("mapApi.closerInitialZoom(11)") == 12
+    assert _run_node("mapApi.closerInitialZoom(15)") == 16
+    assert _run_node("mapApi.closerInitialZoom(16)") == 16
+    assert _run_node("mapApi.closerInitialZoom(18)") == 16
 
 
 def test_exact_marker_label_collision_uses_screen_rect_gap():
