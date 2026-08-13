@@ -43,15 +43,20 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'role="dialog"' in html
     assert 'aria-modal="true"' in html
     assert 'aria-labelledby="listingMapTitle"' in html
-    assert 'aria-describedby="listingMapDescription"' in html
+    assert 'aria-describedby="listingMapDescription"' not in html
+    assert 'id="listingMapDescription"' not in html
+    assert 'class="listing-map-head-main"' in html
+    assert 'class="listing-map-title-detail"' in html
+    assert "Radar BĐS Maps" in html
     assert 'id="listingMapClose"' in html
     assert 'aria-label="Đóng bản đồ"' in html
     assert 'id="listingMapStatus"' in html
     assert 'role="status"' in html
     assert 'aria-live="polite"' in html
     assert 'aria-busy="false"' in html
-    assert "tọa độ, tuyến đường, khu dân cư hoặc trung tâm phường" in html
     assert 'class="listing-map-precision-legend"' in html
+    for label in ("Chính xác", "Theo đường", "Theo khu vực", "Theo phường"):
+        assert label in html
     for precision in ("exact", "road", "landmark", "ward"):
         assert f"listing-map-precision-{precision}" in html
     for hook in (
@@ -229,6 +234,22 @@ def test_listing_map_marker_labels_have_compact_price_and_count_styles():
     assert "font-size: 0.54rem" in styles
     assert "line-height: 1.08" in styles
     assert 'font-family: "Segoe UI", Arial, sans-serif' in styles
+
+
+def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
+    root = Path(__file__).resolve().parent.parent
+    styles = (root / "static/css/main/listing_map.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert ".listing-map-head-main" in styles
+    assert ".listing-map-title-detail" in styles
+    assert "flex-wrap: nowrap" in styles
+    assert "overflow-x: auto" in styles
+    assert not re.search(
+        r"\.listing-map-precision-legend\s*\{\s*display:\s*none",
+        styles,
+    )
 
 
 def test_listing_map_assets_use_current_zoom_and_label_cache_versions():
