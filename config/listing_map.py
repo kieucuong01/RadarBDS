@@ -3,7 +3,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260813-v59"
+LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v60"
 LISTING_MAP_BOUNDS = (
     (10.75, 106.25),
     (11.65, 107.10),
@@ -19,6 +19,26 @@ LISTING_MAP_WARD_ALIASES = {
 }
 
 LISTING_MAP_FORCE_AGGREGATE_ROADS = frozenset({
+    ("thuan an", "an phu", "duong tinh 743 a"),
+    ("thuan an", "an phu", "duong so 22 thang 12"),
+    ("thuan an", "binh chuan", "duong tinh 743 a"),
+    ("thuan an", "binh hoa", "dai lo binh duong"),
+    ("thuan an", "binh nham", "cach mang thang tam"),
+    ("thuan an", "binh nham", "nguyen chi thanh"),
+    ("thuan an", "binh nham", "nguyen huu canh"),
+    ("thuan an", "binh nham", "nguyen van long"),
+    ("thuan an", "lai thieu", "cach mang thang tam"),
+    ("thuan an", "lai thieu", "dai lo binh duong"),
+    ("thuan an", "lai thieu", "nguyen huu canh"),
+    ("thuan an", "thuan giao", "dai lo binh duong"),
+    ("thuan an", "thuan giao", "duong so 22 thang 12"),
+    ("thuan an", "vinh phu", "dai lo binh duong"),
+    ("thuan an", "an thanh", "cach mang thang tam"),
+    ("thuan an", "an thanh", "dai lo binh duong"),
+    ("thuan an", "hung dinh", "cach mang thang tam"),
+    ("thuan an", "hung dinh", "duong so 22 thang 12"),
+    ("thuan an", "hung dinh", "nguyen huu canh"),
+    ("thuan an", "an son", "ho van men"),
     ("ben cat", "an dien", "duong hung vuong"),
     ("ben cat", "an dien", "duong tinh 748"),
     ("ben cat", "an dien", "duong vanh dai 4 thanh pho ho chi minh"),

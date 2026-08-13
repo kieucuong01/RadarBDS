@@ -104,6 +104,7 @@ from cli.map_locations import (
     cmd_map_location_coverage,
     cmd_map_location_ingest_evidence,
     cmd_map_location_research_queue,
+    cmd_map_location_ward_audit,
     cmd_map_locations,
 )
 from cli.system import (
@@ -297,6 +298,18 @@ def build_parser():
     p_map_coverage.add_argument("--city", default="")
     p_map_coverage.add_argument("--ward", default="")
     p_map_coverage.add_argument(
+        "--include-ward-alias",
+        action="append",
+        default=[],
+    )
+
+    p_map_ward_audit = sub.add_parser(
+        "map-location-ward-audit",
+        help="Audit ward-center fallbacks as aggregate-only safe JSON",
+    )
+    p_map_ward_audit.add_argument("--city", required=True)
+    p_map_ward_audit.add_argument("--ward", required=True)
+    p_map_ward_audit.add_argument(
         "--include-ward-alias",
         action="append",
         default=[],
@@ -526,6 +539,8 @@ def main():
         cmd_guland_publisher_backfill(args)
     elif args.cmd == "map-location-coverage":
         cmd_map_location_coverage(args)
+    elif args.cmd == "map-location-ward-audit":
+        cmd_map_location_ward_audit(args)
     elif args.cmd == "map-location-research-queue":
         cmd_map_location_research_queue(args)
     elif args.cmd == "map-location-ingest-evidence":

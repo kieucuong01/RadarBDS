@@ -77,6 +77,37 @@ def iter_location_candidates(
     return candidates
 
 
+def load_ward_fallback_listings(wards: Sequence[str]) -> list[dict]:
+    """Load private text only for an in-process aggregate ward audit."""
+    selected = sorted(
+        {
+            str(ward or "").strip()
+            for ward in wards
+            if str(ward or "").strip()
+        }
+    )
+    if not selected:
+        return []
+    placeholders = ",".join("?" for _ in selected)
+    with get_conn() as conn:
+        rows = conn.execute(
+            f"""
+            SELECT l.id, l.title, l.description, l.road_name
+            FROM listings l
+            INNER JOIN listing_map_locations ml
+              ON ml.listing_id = l.id
+            WHERE l.ward IN ({placeholders})
+              AND ml.location_precision = 'ward'
+              AND COALESCE(l.probably_sold, 0) = 0
+              AND COALESCE(l.is_blacklisted, 0) = 0
+              AND COALESCE(l.review_hidden, 0) = 0
+            ORDER BY l.id
+            """,
+            selected,
+        ).fetchall()
+    return [_row_dict(row) for row in rows]
+
+
 def upsert_listing_map_locations(
     rows: Sequence[ResolvedLocation],
 ) -> int:

@@ -14,6 +14,7 @@ from config.listing_map import (
     LISTING_MAP_OVERRIDE_PATH,
 )
 from db.listing_location_coverage import load_listing_location_coverage
+from db.listing_map_locations import load_ward_fallback_listings
 from services.listing_location_auto_registry import (
     BrowserLocationEvidence,
     browser_evidence_recheck_due,
@@ -22,9 +23,11 @@ from services.listing_location_auto_registry import (
 )
 from services.listing_location_backfill import backfill_listing_locations
 from services.listing_location_resolver import (
+    load_location_registry,
     normalize_location_token,
     normalize_road_token,
 )
+from services.listing_map_fallback_audit import audit_ward_fallbacks
 
 
 def cmd_map_locations(args):
@@ -34,6 +37,34 @@ def cmd_map_locations(args):
     )
     print(json.dumps(stats, ensure_ascii=False, sort_keys=True))
     return stats
+
+
+def cmd_map_location_ward_audit(args):
+    """Print aggregate-only evidence for listings still at ward precision."""
+    city = str(getattr(args, "city", "") or "").strip().upper()
+    ward = str(getattr(args, "ward", "") or "").strip()
+    ward_aliases = [
+        str(value or "").strip()
+        for value in (getattr(args, "include_ward_alias", None) or [])
+        if str(value or "").strip()
+    ]
+    listings = load_ward_fallback_listings([ward, *ward_aliases])
+    audit = audit_ward_fallbacks(
+        listings,
+        load_location_registry(),
+        city=city,
+        ward=ward,
+        include_sample_ids=False,
+    )
+    payload = {
+        "city": city,
+        "ward": ward,
+        "ward_aliases": ward_aliases,
+        "ward_fallback_listing_count": len(listings),
+        **audit,
+    }
+    print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+    return payload
 
 
 _COVERAGE_STATUSES = ("ambiguous", "not_found", "invalid")

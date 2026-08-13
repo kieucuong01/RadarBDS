@@ -1881,3 +1881,129 @@ def test_di_an_browser_verified_roads_and_landmarks_resolve(
     assert result.issue is None
     assert result.location
     assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_precision", "expected_slug"),
+    [
+        ("An Phú", "Đất gần ĐT743", "road", "duong-tinh-743-a"),
+        ("Bình Chuẩn", "Nhà sát ĐT743", "road", "duong-tinh-743-a"),
+        (
+            "Bình Nhâm",
+            "Mặt tiền Cách Mạng Tháng Tám",
+            "road",
+            "cach-mang-thang-tam",
+        ),
+        (
+            "Bình Nhâm",
+            "Nhà đường Nguyễn Hữu Cảnh",
+            "road",
+            "nguyen-huu-canh",
+        ),
+        (
+            "Bình Nhâm",
+            "Đất đường Nguyễn Chí Thanh",
+            "road",
+            "nguyen-chi-thanh",
+        ),
+        (
+            "Bình Nhâm",
+            "Nhà đường Nguyễn Văn Lộng",
+            "road",
+            "nguyen-van-long",
+        ),
+        (
+            "Lái Thiêu",
+            "Đất gần Cách Mạng Tháng Tám",
+            "road",
+            "cach-mang-thang-tam",
+        ),
+        (
+            "Lái Thiêu",
+            "Nhà gần Quốc lộ 13",
+            "road",
+            "dai-lo-binh-duong",
+        ),
+        (
+            "Thuận Giao",
+            "Đất sát Đại lộ Bình Dương",
+            "road",
+            "dai-lo-binh-duong",
+        ),
+        (
+            "Vĩnh Phú",
+            "Nhà gần QL13",
+            "road",
+            "dai-lo-binh-duong",
+        ),
+        ("An Sơn", "Đất đường Hồ Văn Mên", "road", "ho-van-men"),
+        (
+            "An Phú",
+            "Đất KDC Việt Sing",
+            "landmark",
+            "kdc-viet-sing",
+        ),
+        (
+            "An Thạnh",
+            "Đất TĐC An Thạnh",
+            "landmark",
+            "tdc-an-thanh",
+        ),
+        (
+            "Bình Hòa",
+            "Nhà KDC Minh Tuấn",
+            "landmark",
+            "kdc-minh-tuan",
+        ),
+        (
+            "Thuận Giao",
+            "Đất KDC Thuận Giao",
+            "landmark",
+            "kdc-thuan-giao",
+        ),
+        (
+            "Vĩnh Phú",
+            "Nhà KDC Vĩnh Phú 1",
+            "landmark",
+            "kdc-vinh-phu-1",
+        ),
+        (
+            "Vĩnh Phú",
+            "Đất KDC Vĩnh Phú 2",
+            "landmark",
+            "kdc-vinh-phu-2",
+        ),
+        (
+            "Vĩnh Phú",
+            "Đất KDC Vĩnh Phú",
+            "landmark",
+            "kdc-vinh-phu",
+        ),
+    ],
+)
+def test_requested_thuan_an_center_fallback_locations_resolve(
+    ward,
+    title,
+    expected_precision,
+    expected_slug,
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 930300,
+        "city": "THUẬN AN",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key

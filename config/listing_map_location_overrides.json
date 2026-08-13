@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260813-v59",
+  "resolver_version": "osm-binh-duong-20260814-v60",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -530,6 +530,18 @@
       "ward": "Đông Hòa",
       "canonical": "Đường D3",
       "aliases": ["D3", "Đường số 3"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Đường tỉnh 743A",
+      "aliases": ["ĐT743", "ĐT 743", "DT743", "DT 743"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường tỉnh 743A",
+      "aliases": ["ĐT743", "ĐT 743", "DT743", "DT 743"]
     }
   ],
   "roads": [
@@ -2849,6 +2861,42 @@
       "ward": "Bình An",
       "canonical": "Khu đô thị mới Bình Nguyên",
       "aliases": ["Khu đô thị Bình Nguyên", "KDC Bình Nguyên"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "KDC Việt Sing",
+      "aliases": ["KDC Viet Sing", "KDC Vietsing", "Khu dân cư Việt Sing"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Thạnh",
+      "canonical": "TĐC An Thạnh",
+      "aliases": ["TDC An Thanh", "Khu tái định cư An Thạnh", "KDC An Thạnh", "KDC An Thanh", "Khu dân cư An Thạnh"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Hòa",
+      "canonical": "KDC Minh Tuấn",
+      "aliases": ["KDC Minh Tuan", "Khu dân cư Minh Tuấn"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "canonical": "KDC Thuận Giao",
+      "aliases": ["KDC Thuan Giao", "Khu dân cư Thuận Giao"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Vĩnh Phú",
+      "canonical": "KDC Vĩnh Phú 1",
+      "aliases": ["KDC Vinh Phu 1", "Khu dân cư Vĩnh Phú 1"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Vĩnh Phú",
+      "canonical": "KDC Vĩnh Phú",
+      "aliases": ["KDC Vinh Phu", "Khu dân cư Vĩnh Phú"]
     }
   ],
   "landmarks": [
@@ -3588,6 +3636,78 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "The production listing abbreviates the nearby Lê Phong 2 development as KDC Lê Phong in the retained Tân Bình scope"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "landmark_name": "KDC Việt Sing",
+      "lat": 10.9433264,
+      "lng": 106.7333084,
+      "accuracy_radius_m": 1600,
+      "source": "OpenStreetMap public KDC Việt Sing shopping-center anchor and named internal-road grid",
+      "source_url": "https://www.openstreetmap.org/node/4489477989",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Thạnh",
+      "landmark_name": "TĐC An Thạnh",
+      "lat": 10.9537958,
+      "lng": 106.7001361,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact public Khu Tái Định Cư An Thạnh result",
+      "source_url": "https://www.google.com/maps/place/Khu+T%C3%A1i+%C4%90%E1%BB%8Bnh+C%C6%B0+An+Th%E1%BA%A1nh/@10.9537958,106.7001361,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The exact public place retains the old An Thạnh development name while the current Google Maps administrative label is Thuận Giao"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Hòa",
+      "landmark_name": "KDC Minh Tuấn",
+      "lat": 10.9199841,
+      "lng": 106.729249,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public KDC Minh Tuấn result",
+      "source_url": "https://www.google.com/maps/place/KDC+Minh+Tu%E1%BA%A5n/@10.9199841,106.729249,17z/",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "landmark_name": "KDC Thuận Giao",
+      "lat": 10.9642212,
+      "lng": 106.7131442,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact public Khu dân cư Thuận Giao result",
+      "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+Thu%E1%BA%ADn+Giao/@10.9642212,106.7131442,17z/",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Vĩnh Phú",
+      "landmark_name": "KDC Vĩnh Phú 1",
+      "lat": 10.8805012,
+      "lng": 106.7109442,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps exact public KDC Vĩnh Phú 1 result",
+      "source_url": "https://www.google.com/maps/place/KDC+V%C4%A9nh+Ph%C3%BA+1/@10.8805012,106.7109442,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The exact public place retains the old Vĩnh Phú development name while current map labels use the merged Bình Hòa administration"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Vĩnh Phú",
+      "landmark_name": "KDC Vĩnh Phú",
+      "lat": 10.883589,
+      "lng": 106.7103192,
+      "accuracy_radius_m": 1400,
+      "source": "Midpoint derived from the two exact Google Maps public KDC Vĩnh Phú 1 and KDC Vĩnh Phú 2 anchors",
+      "source_url": "https://www.google.com/maps/place/KDC+V%C4%A9nh+Ph%C3%BA+1/@10.8805012,106.7109442,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The two exact public development anchors retain the old Vĩnh Phú name while current map labels use the merged Bình Hòa administration"
     }
   ]
 }

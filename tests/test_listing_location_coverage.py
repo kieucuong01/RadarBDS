@@ -58,6 +58,30 @@ def test_location_candidates_include_map_text_but_exclude_sensitive_fields():
         assert forbidden not in sql
 
 
+def test_ward_fallback_loader_is_active_ward_precision_and_private():
+    from db import listing_map_locations
+
+    connection = _Connection()
+    with mock.patch.object(
+        listing_map_locations,
+        "get_conn",
+        return_value=_connection_context(connection),
+    ):
+        listing_map_locations.load_ward_fallback_listings(
+            ["An Phú", "An Phu"]
+        )
+
+    sql, params = connection.executed[0]
+    lowered = sql.lower()
+    assert "ml.location_precision = 'ward'" in lowered
+    assert "coalesce(l.probably_sold, 0) = 0" in lowered
+    assert "coalesce(l.is_blacklisted, 0) = 0" in lowered
+    assert "coalesce(l.review_hidden, 0) = 0" in lowered
+    assert params == ["An Phu", "An Phú"]
+    for forbidden in ("phone", "url", "seller", "image"):
+        assert forbidden not in lowered
+
+
 def test_coverage_upsert_bounds_samples_and_preserves_first_seen():
     from db import listing_location_coverage
 
