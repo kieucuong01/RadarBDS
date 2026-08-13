@@ -64,7 +64,8 @@ def normalize_road_token(value: str) -> str:
     if bare_number_letter and bare_number_letter.group(2) != "m":
         normalized = f"duong so {normalized}"
     road_code_prefixes = (
-        "dx|da|d|db|dh|dt|ql|n|ng|ni|na|nb|ne|nf|nh|nj|nk|nl|dj|dk"
+        "dx|da|d|db|de|df|dg|dh|di|dt|ql|kh|ki|kj|kk|n|ng|ni|na|"
+        "nb|ne|nf|nh|nj|nk|nl|dj|dk|tc|xe|xh|xj"
     )
     if re.match(rf"^duong (?:{road_code_prefixes}) \d", normalized):
         normalized = normalized.removeprefix("duong ")
@@ -305,13 +306,19 @@ def _road_scopes(
     normalized_ward = normalize_location_token(_canonical_map_ward(city, ward))
     scopes = [normalized_ward]
     ward_entry = registry.wards.get((city, normalized_ward)) or {}
-    parent = normalize_location_token(
-        ward_entry.get("road_scope_parent")
-        or ward_entry.get("fallback_parent")
-        or ""
-    )
-    if parent and parent not in scopes:
-        scopes.append(parent)
+    raw_parents = ward_entry.get("road_scope_parents")
+    if isinstance(raw_parents, (list, tuple)):
+        parents = raw_parents
+    else:
+        parents = (
+            ward_entry.get("road_scope_parent")
+            or ward_entry.get("fallback_parent")
+            or "",
+        )
+    for raw_parent in parents:
+        parent = normalize_location_token(raw_parent)
+        if parent and parent not in scopes:
+            scopes.append(parent)
     return tuple(scopes)
 
 
@@ -323,23 +330,15 @@ def _match_landmark(
 ) -> Mapping[str, object] | str | None:
     if not normalized_landmark:
         return None
-    entries = []
-    seen = set()
     for scope in _road_scopes(city, ward, registry):
         matched = registry.landmarks.get((city, scope, normalized_landmark))
         if isinstance(matched, Mapping):
-            candidates = (matched,)
-        else:
-            candidates = tuple(matched or ())
-        for entry in candidates:
-            identity = id(entry)
-            if identity not in seen:
-                seen.add(identity)
-                entries.append(entry)
-    if len(entries) == 1:
-        return entries[0]
-    if len(entries) > 1:
-        return "ambiguous"
+            return matched
+        candidates = tuple(matched or ())
+        if len(candidates) == 1:
+            return candidates[0]
+        if len(candidates) > 1:
+            return "ambiguous"
     return None
 
 
@@ -350,36 +349,35 @@ def _match_road(
     landmark_key: str,
     registry: LocationRegistry,
 ) -> Mapping[str, object] | str | None:
-    entries = []
-    seen = set()
     for scope in _road_scopes(city, ward, registry):
-        for item in registry.roads.get((city, scope, normalized_road), ()):
-            identity = id(item)
-            if identity not in seen:
-                seen.add(identity)
-                entries.append(item)
-    if landmark_key:
-        scoped = [
-            item
-            for item in entries
-            if landmark_key
-            in tuple(
-                normalize_location_token(value)
-                for value in (item.get("landmark_keys") or ())
-            )
+        entries = list(
+            registry.roads.get((city, scope, normalized_road), ())
+        )
+        if not entries:
+            continue
+        if landmark_key:
+            scoped = [
+                item
+                for item in entries
+                if landmark_key
+                in tuple(
+                    normalize_location_token(value)
+                    for value in (item.get("landmark_keys") or ())
+                )
+            ]
+            if len(scoped) == 1:
+                return scoped[0]
+            if len(scoped) > 1:
+                return "ambiguous"
+        if len(entries) == 1:
+            return entries[0]
+        aggregate_entries = [
+            entry for entry in entries if bool(entry.get("aggregate"))
         ]
-        if len(scoped) == 1:
-            return scoped[0]
-        if len(scoped) > 1:
-            return "ambiguous"
-    if len(entries) == 1:
-        return entries[0]
-    aggregate_entries = [
-        entry for entry in entries if bool(entry.get("aggregate"))
-    ]
-    if len(aggregate_entries) == 1:
-        return aggregate_entries[0]
-    return "ambiguous" if entries else None
+        if len(aggregate_entries) == 1:
+            return aggregate_entries[0]
+        return "ambiguous"
+    return None
 
 
 def _ward_fallback(

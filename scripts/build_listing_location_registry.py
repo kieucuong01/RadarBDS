@@ -478,6 +478,14 @@ def _build_ward_rows(
         road_scope_parent = str(
             source.get("road_scope_parent") or ""
         ).strip()
+        raw_road_scope_parents = source.get("road_scope_parents") or []
+        if not isinstance(raw_road_scope_parents, list):
+            raise ValueError(f"road_scope_parents must be a list for {ward}")
+        road_scope_parents = [
+            str(parent).strip()
+            for parent in raw_road_scope_parents
+            if str(parent).strip()
+        ]
         default_label = (
             f"Theo trung tâm {fallback_parent} (xấp xỉ cho {ward})"
             if fallback_parent
@@ -497,6 +505,8 @@ def _build_ward_rows(
             row["fallback_parent"] = fallback_parent
         if road_scope_parent:
             row["road_scope_parent"] = road_scope_parent
+        if road_scope_parents:
+            row["road_scope_parents"] = road_scope_parents
         if element_key is not None:
             row["osm_type"] = element_key[0]
             row["osm_id"] = element_key[1]

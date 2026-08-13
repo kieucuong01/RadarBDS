@@ -1327,6 +1327,26 @@ def test_extract_context_recognizes_my_phuoc_3_industrial_grid_codes(
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
+        ("Lo I1 duong DI1 My Phuoc 3", "di 1"),
+        ("Day tro F18 duong DF5 My Phuoc 3", "df 5"),
+        ("Lo G34 duong NG3A My Phuoc 3", "ng 3 a"),
+        ("Mat tien DG2 khu G My Phuoc 3", "dg 2"),
+        ("Nha H27 duong XH4 My Phuoc 3", "xh 4"),
+        ("Day tro K45 duong KK4A My Phuoc 3", "kk 4 a"),
+    ],
+)
+def test_extract_context_recognizes_second_pass_my_phuoc_3_grid_codes(
+    text, expected
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == expected
+    assert context.relation == "on"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
         ("Bán đất Khu đô thị Mỹ Phước 3 Bến Cát", "khu do thi my phuoc 3"),
         ("Nhà KDC Mỹ Phước 3 sầm uất tiện ích đầy đủ", "kdc my phuoc 3"),
         ("Đất TĐC Mỹ Phước III khu phố 3B", "tdc my phuoc 3"),

@@ -1154,6 +1154,7 @@ def test_an_tay_evidence_backed_locations_resolve_out_of_ward_center(
         ("Mặt tiền NA7 Mỹ Phước 3", "na-7"),
         ("Mặt tiền DH8 Mỹ Phước 3", "dh-8"),
         ("Mặt tiền NI14 Mỹ Phước 3", "ni-14"),
+        ("Mặt tiền DI1 Mỹ Phước 3", "di-1"),
         ("Mặt tiền NE2 Mỹ Phước 3", "ne-2"),
         ("Mặt tiền NE8 Mỹ Phước 3", "ne-8"),
         ("Gần Mỹ Phước Tân Vạn", "my-phuoc-tan-van"),
@@ -1179,6 +1180,109 @@ def test_my_phuoc_3_uses_thoi_hoa_road_scope(title, expected_slug):
     assert result.location
     assert result.location.precision == "road"
     assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("title", "expected_slug"),
+    [
+        ("Mat tien DF5 khu F My Phuoc 3", "df-5"),
+        ("Mat tien NF4 khu F My Phuoc 3", "nf-4"),
+        ("Mat tien NG3A khu G My Phuoc 3", "ng-3-a"),
+        ("Mat tien DH3 My Phuoc 3", "dh-3"),
+    ],
+)
+def test_my_phuoc_3_uses_chanh_phu_hoa_road_scope(
+    title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921308,
+        "city": "B\u1ebeN C\u00c1T",
+        "ward": "M\u1ef9 Ph\u01b0\u1edbc 3",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("title", "expected_slug"),
+    [
+        ("Mat tien DL12 My Phuoc 3", "dl-12"),
+        ("Mat tien DL14 My Phuoc 3", "dl-14"),
+        ("Mat tien DL11 My Phuoc 3", "dl-11"),
+        ("Mat tien NL7 My Phuoc 3", "nl-7"),
+    ],
+)
+def test_my_phuoc_3_browser_backed_roads_resolve(
+    title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921309,
+        "city": "B\u1ebeN C\u00c1T",
+        "ward": "M\u1ef9 Ph\u01b0\u1edbc 3",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+def test_phu_an_dh609_browser_backed_road_resolves():
+    registry = load_location_registry()
+    listing = {
+        "id": 921310,
+        "city": "B\u1ebeN C\u00c1T",
+        "ward": "Ph\u00fa An",
+        "title": "Mat tien DH609 Phu An",
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(listing["title"], "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert "dh-609" in result.location.location_key
+
+
+@pytest.mark.parametrize("title", ["Mat tien DH602 Tan Dinh", "Gan Ba Lang Xi Tan Dinh"])
+def test_tan_dinh_dh602_and_ba_lang_xi_share_road_marker(title):
+    registry = load_location_registry()
+    listing = {
+        "id": 921311,
+        "city": "B\u1ebeN C\u00c1T",
+        "ward": "T\u00e2n \u0110\u1ecbnh",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert "dh-602" in result.location.location_key
 
 
 @pytest.mark.parametrize(

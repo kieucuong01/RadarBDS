@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v55",
+  "resolver_version": "osm-binh-duong-20260807-v56",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -2004,6 +2004,91 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "DA7 listings explicitly identify the Hoa Phu new-city grid near Ngo Thoi Nhiem school"
+    },
+    {
+      "city": "B\u1ebeN C\u00c1T",
+      "ward": "M\u1ef9 Ph\u01b0\u1edbc 3",
+      "road_name": "DL12",
+      "lat": 11.0977294,
+      "lng": 106.6293781,
+      "accuracy_radius_m": 1500,
+      "source": "Google Maps exact public business address on Duong DL12 in KDT My Phuoc 3 verified with isolated Playwright browser",
+      "source_url": "https://www.google.com/maps/place/CONG+TY+CO+PHAN+DIA+OC+TIEN+THANG/@11.0977294,106.6293781,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "My Phuoc 3 is a market sub-zone spanning the legacy Thoi Hoa and Chanh Phu Hoa map scopes"
+    },
+    {
+      "city": "B\u1ebeN C\u00c1T",
+      "ward": "M\u1ef9 Ph\u01b0\u1edbc 3",
+      "road_name": "DL14",
+      "lat": 11.1080614,
+      "lng": 106.6302303,
+      "accuracy_radius_m": 1300,
+      "source": "Google Maps exact public restaurant address on DL14 in My Phuoc 3 verified with isolated Playwright browser",
+      "source_url": "https://www.google.com/maps/place/Mi+Cay+Sasin+My+Phuoc+3/@11.1080614,106.6302303,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "My Phuoc 3 is a market sub-zone spanning the legacy Thoi Hoa and Chanh Phu Hoa map scopes"
+    },
+    {
+      "city": "B\u1ebeN C\u00c1T",
+      "ward": "M\u1ef9 Ph\u01b0\u1edbc 3",
+      "road_name": "NL7",
+      "lat": 11.1070584,
+      "lng": 106.6278922,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public business address on Duong NL7 in My Phuoc 3 verified with isolated Playwright browser",
+      "source_url": "https://www.google.com/maps/place/Xe+dap+xe+dap+dien+gia+re+My+Phuoc+3/@11.1070584,106.6278922,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "My Phuoc 3 is a market sub-zone spanning the legacy Thoi Hoa and Chanh Phu Hoa map scopes"
+    },
+    {
+      "city": "B\u1ebeN C\u00c1T",
+      "ward": "M\u1ef9 Ph\u01b0\u1edbc 3",
+      "road_name": "DL11",
+      "lat": 11.105828,
+      "lng": 106.628751,
+      "accuracy_radius_m": 800,
+      "source": "Google Maps pin OCR embedded in Radar BDS source listing 42748, whose title and extracted road both identify DL11 in My Phuoc 3",
+      "source_url": "https://www.google.com/maps/@11.105828,106.628751,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "My Phuoc 3 is a market sub-zone spanning the legacy Thoi Hoa and Chanh Phu Hoa map scopes"
+    },
+    {
+      "city": "B\u1ebeN C\u00c1T",
+      "ward": "Ph\u00fa An",
+      "road_name": "\u0110\u01b0\u1eddng \u0110H.609",
+      "aliases": [
+        "DH609",
+        "\u0110H609"
+      ],
+      "lat": 11.0515223,
+      "lng": 106.5847726,
+      "accuracy_radius_m": 1800,
+      "source": "Google Maps exact public Cong An xa Phu An address on DH609 verified with isolated Playwright browser",
+      "source_url": "https://www.google.com/maps/place/Cong+An+xa+Phu+An/@11.0515223,106.5847726,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "B\u1ebeN C\u00c1T",
+      "ward": "T\u00e2n \u0110\u1ecbnh",
+      "road_name": "\u0110\u01b0\u1eddng \u0110H.602",
+      "aliases": [
+        "DH602",
+        "\u0110H602",
+        "Ba L\u00e0ng Xi",
+        "BaLangXi",
+        "\u0110\u01b0\u1eddng Ba L\u00e0ng Xi"
+      ],
+      "lat": 11.0830556,
+      "lng": 106.6452778,
+      "accuracy_radius_m": 1900,
+      "source": "Official Ministry of Natural Resources and Environment Binh Duong geographic-name endpoint for DH602; current Tan Dinh listings identify the same segment as Ba Lang Xi",
+      "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
+      "verified_at": "2026-08-13"
     }
   ],
   "landmark_aliases": [

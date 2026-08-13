@@ -173,7 +173,8 @@ _GENERIC_ROAD_COPY = frozenset({
     "mat tien",
 })
 _NUMBERED_ROAD_RE = re.compile(
-    r"^(?:duong so|dx|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+\d+[a-z]?$"
+    r"^(?:duong so|dx|d|db|de|df|dg|dh|di|dt|ql|kh|ki|kj|kk|n|"
+    r"ng|ni|na|nb|tc|xe|xh|xj)\s+\d+[a-z]?$"
 )
 
 

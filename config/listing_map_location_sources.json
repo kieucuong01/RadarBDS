@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v55",
+  "resolver_version": "osm-binh-duong-20260807-v56",
   "coverage_cities": [
     "THỦ DẦU MỘT",
     "BẾN CÁT",
@@ -272,6 +272,10 @@
       },
       "fallback_parent": "Mỹ Phước",
       "road_scope_parent": "Thới Hòa",
+      "road_scope_parents": [
+        "Thới Hòa",
+        "Chánh Phú Hòa"
+      ],
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },

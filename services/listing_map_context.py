@@ -39,8 +39,8 @@ _DIRECT_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ROAD_CODE_RE = re.compile(
-    r"^(?:duong\s+)?(?P<prefix>dx|da|db|dh|dt|dl|tl|ql|na|nb|ne|nf|"
-    r"nh|nj|nk|nl|ni|dj|dk|n|d)\s*"
+    r"^(?:duong\s+)?(?P<prefix>dx|da|db|de|df|dg|dh|di|dt|dl|tl|ql|"
+    r"kh|ki|kj|kk|na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj|n|d)\s*"
     r"[-./_]?\s*0*(?P<number>\d{1,4})(?P<suffix>[a-z]?)\b",
     re.IGNORECASE,
 )
@@ -303,7 +303,8 @@ def _normalize_road_candidate(value: str) -> str:
     ):
         return ""
     if re.match(
-        r"^(?:duong\s+)?(?:dx|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
+        r"^(?:duong\s+)?(?:dx|db|de|df|dg|dh|di|dt|dl|tl|ql|"
+        r"kh|ki|kj|kk|ng|nl|ni|tc|xe|xh|xj|n|d)\s*"
         r"[-./_]?\s*0*\d{1,2}\s+(?:m|met)\b",
         candidate,
         re.IGNORECASE,
@@ -433,8 +434,10 @@ def _normalize_road_candidate(value: str) -> str:
             return ""
         if (
             code_prefix in {
-                "dx", "da", "db", "dh", "dl", "na", "nb", "ne", "nf",
-                "nh", "nj", "nk", "nl", "ni", "dj", "dk", "n", "d",
+                "dx", "da", "db", "de", "df", "dg", "dh", "di", "dl",
+                "kh", "ki", "kj", "kk", "na", "nb", "ne", "nf", "ng",
+                "nh", "nj", "nk", "nl", "ni", "dj", "dk", "tc", "xe",
+                "xh", "xj", "n", "d",
             }
             and code_number > 999
         ):
@@ -531,12 +534,14 @@ def _looks_like_road_name(road: str) -> bool:
     if not road:
         return False
     if re.match(
-        r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n)\b",
+        r"^(?:dx|da|d|db|de|df|dg|dh|di|dt|dl|tl|ql|kh|ki|kj|kk|"
+        r"na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj|n)\b",
         road,
     ):
         return bool(
             re.match(
-                r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n)"
+                r"^(?:dx|da|d|db|de|df|dg|dh|di|dt|dl|tl|ql|kh|ki|kj|kk|"
+                r"na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj|n)"
                 r"\s+\d{1,4}[a-z]?\b",
                 road,
             )
@@ -596,6 +601,8 @@ def _known_named_road(text: str) -> str:
         return normalize_road_token("nguyen thi minh khai")
     if re.search(r"\bcmt\s*8\b", text, re.IGNORECASE):
         return normalize_road_token("cach mang thang tam")
+    if re.search(r"\bba\s+lang\s+xi\b|\bbalangxi\b", text, re.IGNORECASE):
+        return normalize_road_token("dh 602")
     for known_name in _KNOWN_ROAD_PREFIXES:
         known_match = re.search(
             rf"\b{re.escape(known_name)}\b",
@@ -642,7 +649,8 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
         return _normalize_road_candidate(numbered_address.group("road"))
 
     code_match = re.search(
-        r"\b(?:dx|da|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk)"
+        r"\b(?:dx|da|db|de|df|dg|dh|di|dt|dl|tl|ql|kh|ki|kj|kk|"
+        r"na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj)"
         r"\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
         text,
     )
