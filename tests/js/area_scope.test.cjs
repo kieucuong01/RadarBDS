@@ -36,16 +36,17 @@ const wardsByCity = {
   'TÂN UYÊN': ['Uyên Hưng', 'Tân Phước Khánh'],
 };
 
-assert.equal(api.STORAGE_KEY, 'radar_area_scope_v1');
+assert.equal(api.STORAGE_KEY, 'radar_area_scope_v2');
+assert.equal(api.LEGACY_STORAGE_KEY, 'radar_area_scope_v1');
 
 const urlScope = api.scopeFromSearchParams(
   new URLSearchParams('tab=signals&ward=T%C3%A2n+An&ward=Ph%C3%BA+T%C3%A2n'),
   wardsByCity
 );
 assert.deepEqual(plain(urlScope), {
-  version: 1,
-  city: 'THỦ DẦU MỘT',
-  wards: ['Tân An', 'Phú Tân'],
+  version: 2,
+  activeCity: 'THỦ DẦU MỘT',
+  selections: { 'THỦ DẦU MỘT': ['Tân An', 'Phú Tân'] },
   mode: 'custom',
   label: 'Tân An + Phú Tân',
 });
@@ -55,9 +56,9 @@ const cityScope = api.scopeFromSearchParams(
   wardsByCity
 );
 assert.deepEqual(plain(cityScope), {
-  version: 1,
-  city: 'BẾN CÁT',
-  wards: [],
+  version: 2,
+  activeCity: 'BẾN CÁT',
+  selections: {},
   mode: 'city_all',
   label: 'Toàn Bến Cát',
 });
@@ -67,9 +68,9 @@ const tanUyenCityScope = api.scopeFromSearchParams(
   wardsByCity
 );
 assert.deepEqual(plain(tanUyenCityScope), {
-  version: 1,
-  city: 'TÂN UYÊN',
-  wards: [],
+  version: 2,
+  activeCity: 'TÂN UYÊN',
+  selections: {},
   mode: 'city_all',
   label: 'Toàn Tân Uyên',
 });
@@ -98,9 +99,9 @@ const restored = api.validateScope({
   updatedAt: '2026-08-06T10:00:00.000Z',
 }, wardsByCity);
 assert.deepEqual(plain(restored), {
-  version: 1,
-  city: 'THỦ DẦU MỘT',
-  wards: ['Hiệp Thành'],
+  version: 2,
+  activeCity: 'THỦ DẦU MỘT',
+  selections: { 'THỦ DẦU MỘT': ['Hiệp Thành'] },
   mode: 'preset',
   label: 'Hiệp Thành',
   updatedAt: '2026-08-06T10:00:00.000Z',
@@ -112,10 +113,53 @@ const tanAnWard = wardsByCity[tdmCity][0];
 const phuTanWard = wardsByCity[tdmCity][1];
 const myPhuocWard = wardsByCity[benCatCity][0];
 
-assert.deepEqual(plain(api.nextDraftWardScope(null, tdmCity, tanAnWard, wardsByCity)), {
+const multiCityScope = api.validateScope({
+  version: 2,
+  activeCity: benCatCity,
+  mode: 'custom',
+  selections: {
+    [tdmCity]: [tanAnWard],
+    [benCatCity]: [myPhuocWard],
+  },
+}, wardsByCity);
+assert.deepEqual(plain(api.flattenScopeWards(multiCityScope, wardsByCity)), [
+  tanAnWard,
+  myPhuocWard,
+]);
+assert.deepEqual(plain(api.selectionCounts(multiCityScope)), {
+  wards: 2,
+  cities: 2,
+});
+
+const multiCityParams = new URLSearchParams(`city=${encodeURIComponent(benCatCity)}`);
+api.applyScopeToParams(multiCityParams, multiCityScope, wardsByCity);
+assert.equal(multiCityParams.has('city'), false);
+assert.deepEqual(multiCityParams.getAll('ward'), [tanAnWard, myPhuocWard]);
+
+const multiCityFromUrl = api.scopeFromSearchParams(
+  new URLSearchParams(`ward=${encodeURIComponent(tanAnWard)}&ward=${encodeURIComponent(myPhuocWard)}`),
+  wardsByCity
+);
+assert.deepEqual(plain(multiCityFromUrl.selections), {
+  [tdmCity]: [tanAnWard],
+  [benCatCity]: [myPhuocWard],
+});
+
+const migratedV1Scope = api.validateScope({
   version: 1,
   city: tdmCity,
   wards: [tanAnWard],
+  mode: 'custom',
+}, wardsByCity);
+assert.equal(migratedV1Scope.version, 2);
+assert.deepEqual(plain(migratedV1Scope.selections), {
+  [tdmCity]: [tanAnWard],
+});
+
+assert.deepEqual(plain(api.nextDraftWardScope(null, tdmCity, tanAnWard, wardsByCity)), {
+  version: 2,
+  activeCity: tdmCity,
+  selections: { [tdmCity]: [tanAnWard] },
   mode: 'custom',
   label: tanAnWard,
 });
@@ -126,9 +170,9 @@ assert.deepEqual(plain(api.nextDraftWardScope({
   wards: [tanAnWard],
   mode: 'custom',
 }, tdmCity, phuTanWard, wardsByCity)), {
-  version: 1,
-  city: tdmCity,
-  wards: [tanAnWard, phuTanWard],
+  version: 2,
+  activeCity: tdmCity,
+  selections: { [tdmCity]: [tanAnWard, phuTanWard] },
   mode: 'custom',
   label: `${tanAnWard} + ${phuTanWard}`,
 });
@@ -139,9 +183,9 @@ assert.deepEqual(plain(api.nextDraftWardScope({
   wards: [tanAnWard, phuTanWard],
   mode: 'custom',
 }, tdmCity, tanAnWard, wardsByCity)), {
-  version: 1,
-  city: tdmCity,
-  wards: [phuTanWard],
+  version: 2,
+  activeCity: tdmCity,
+  selections: { [tdmCity]: [phuTanWard] },
   mode: 'custom',
   label: phuTanWard,
 });
@@ -152,11 +196,14 @@ assert.deepEqual(plain(api.nextDraftWardScope({
   wards: [tanAnWard],
   mode: 'custom',
 }, benCatCity, myPhuocWard, wardsByCity)), {
-  version: 1,
-  city: benCatCity,
-  wards: [myPhuocWard],
+  version: 2,
+  activeCity: benCatCity,
+  selections: {
+    [tdmCity]: [tanAnWard],
+    [benCatCity]: [myPhuocWard],
+  },
   mode: 'custom',
-  label: myPhuocWard,
+  label: '2 phường · 2 thành phố',
 });
 
 assert.equal(api.nextDraftWardScope({
@@ -233,11 +280,12 @@ const storage = {
     this.value = value;
   },
   getItem(key) {
-    assert.equal(key, api.STORAGE_KEY);
-    return this.value;
+    if (key === api.STORAGE_KEY) return this.value;
+    if (key === api.LEGACY_STORAGE_KEY) return '';
+    assert.fail(`unexpected storage key: ${key}`);
   },
   removeItem(key) {
-    assert.equal(key, api.STORAGE_KEY);
+    assert.ok([api.STORAGE_KEY, api.LEGACY_STORAGE_KEY].includes(key));
     this.value = '';
   },
 };
@@ -252,9 +300,9 @@ api.saveScope({
 });
 assert.match(storage.value, /"updatedAt"/);
 assert.deepEqual(plain(api.readStoredScope(storage, wardsByCity)), {
-  version: 1,
-  city: 'THỦ DẦU MỘT',
-  wards: ['Tân An'],
+  version: 2,
+  activeCity: 'THỦ DẦU MỘT',
+  selections: { 'THỦ DẦU MỘT': ['Tân An'] },
   mode: 'custom',
   label: 'Tân An',
   filters: {

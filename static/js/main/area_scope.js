@@ -5,7 +5,8 @@
 })(typeof window !== 'undefined' ? window : globalThis, function buildAreaScope(root) {
   'use strict';
 
-  const STORAGE_KEY = 'radar_area_scope_v1';
+  const STORAGE_KEY = 'radar_area_scope_v2';
+  const LEGACY_STORAGE_KEY = 'radar_area_scope_v1';
   const VALID_MODES = new Set(['custom', 'preset', 'city_all']);
   const PROP_TYPE_LABELS = Object.freeze({
     dat_nen: '\u0110\u1ea5t',
@@ -24,6 +25,7 @@
   ]);
   let areaScopeDraft = null;
   let areaScopeDraftCity = '';
+  let currentScope = null;
 
   const PRESET_SCOPES = Object.freeze([
     Object.freeze({
@@ -144,31 +146,91 @@
     return Object.keys(normalized).length ? normalized : null;
   }
 
+  function normalizedSelections(candidate, wardsByCity) {
+    const rawSelections = candidate && candidate.selections && typeof candidate.selections === 'object'
+      ? candidate.selections
+      : {};
+    const selections = {};
+    Object.keys(wardsByCity || {}).forEach((city) => {
+      const available = wardsByCity[city] || [];
+      const selected = uniqueValues(rawSelections[city]).filter((ward) => available.includes(ward));
+      if (selected.length) selections[city] = selected;
+    });
+    return selections;
+  }
+
+  function flattenScopeWards(scope, wardsByCity) {
+    if (!scope) return [];
+    if (scope.mode === 'city_all') {
+      return Array.from((wardsByCity || {})[scope.activeCity] || []);
+    }
+    const selections = scope.selections || {};
+    const cityOrder = Object.keys(wardsByCity || {});
+    const orderedCities = cityOrder.concat(
+      Object.keys(selections).filter((city) => !cityOrder.includes(city))
+    );
+    return uniqueValues(orderedCities.flatMap((city) => selections[city] || []));
+  }
+
+  function selectionCounts(scope) {
+    const selections = (scope && scope.selections) || {};
+    const cityLists = Object.values(selections).filter(
+      (wards) => Array.isArray(wards) && wards.length
+    );
+    return {
+      wards: cityLists.reduce((sum, wards) => sum + wards.length, 0),
+      cities: cityLists.length,
+    };
+  }
+
   function scopeLabel(scope) {
     if (!scope) return '';
-    if (scope.mode === 'city_all') return `Toàn ${cityLabel(scope.city)}`;
-    const wards = uniqueValues(scope.wards);
-    return wards.length ? wards.join(' + ') : `Toàn ${cityLabel(scope.city)}`;
+    if (scope.mode === 'city_all') {
+      return `Toàn ${cityLabel(scope.activeCity || scope.city)}`;
+    }
+    if (!scope.selections && uniqueValues(scope.wards).length) {
+      return uniqueValues(scope.wards).join(' + ');
+    }
+    const counts = selectionCounts(scope);
+    if (counts.cities > 1) {
+      return `${counts.wards} phường · ${counts.cities} thành phố`;
+    }
+    const selections = scope.selections || {};
+    const wards = uniqueValues(Object.values(selections).flat());
+    return wards.length ? wards.join(' + ') : 'Chưa chọn phường';
   }
 
   function validateScope(candidate, wardsByCity) {
-    if (!candidate || Number(candidate.version) !== 1) return null;
-    const city = resolveCity(candidate.city, wardsByCity);
-    if (!city) return null;
+    if (!candidate || ![1, 2].includes(Number(candidate.version))) return null;
+    const isLegacy = Number(candidate.version) === 1;
+    const activeCity = resolveCity(
+      isLegacy ? candidate.city : (candidate.activeCity || candidate.city),
+      wardsByCity
+    );
+    if (!activeCity) return null;
     const mode = VALID_MODES.has(candidate.mode) ? candidate.mode : 'custom';
-    const availableWards = wardsByCity[city] || [];
-    const wards = mode === 'city_all' ? [] : uniqueValues(candidate.wards);
-    if (mode !== 'city_all') {
-      if (!wards.length) return null;
-      if (wards.some((ward) => !availableWards.includes(ward))) return null;
+    let selections;
+    if (isLegacy) {
+      const availableWards = wardsByCity[activeCity] || [];
+      const legacyWards = mode === 'city_all' ? [] : uniqueValues(candidate.wards);
+      if (legacyWards.some((ward) => !availableWards.includes(ward))) return null;
+      selections = legacyWards.length ? { [activeCity]: legacyWards } : {};
+    } else {
+      selections = normalizedSelections(candidate, wardsByCity);
+      const submittedCount = Object.values(candidate.selections || {}).reduce(
+        (sum, wards) => sum + uniqueValues(wards).length,
+        0
+      );
+      if (submittedCount !== selectionCounts({ selections }).wards) return null;
     }
+    if (mode !== 'city_all' && !selectionCounts({ selections }).wards) return null;
     const normalized = {
-      version: 1,
-      city,
-      wards,
+      version: 2,
+      activeCity,
+      selections: mode === 'city_all' ? {} : selections,
       mode,
-      label: scopeLabel({ city, wards, mode }),
     };
+    normalized.label = scopeLabel(normalized);
     if (typeof candidate.updatedAt === 'string' && candidate.updatedAt) {
       normalized.updatedAt = candidate.updatedAt;
     }
@@ -199,25 +261,55 @@
     const wards = uniqueValues(source.getAll('ward[]').concat(source.getAll('ward')));
     const cityFromQuery = resolveCity(source.get('city'), wardsByCity);
     if (wards.length) {
-      const city = cityFromQuery || inferCityForWard(wards[0], wardsByCity);
-      return validateScope({ version: 1, city, wards, mode: 'custom' }, wardsByCity);
+      const selections = {};
+      for (const ward of wards) {
+        const city = inferCityForWard(ward, wardsByCity);
+        if (!city) return null;
+        if (!selections[city]) selections[city] = [];
+        selections[city].push(ward);
+      }
+      return validateScope({
+        version: 2,
+        activeCity: cityFromQuery || inferCityForWard(wards[0], wardsByCity),
+        selections,
+        mode: 'custom',
+      }, wardsByCity);
     }
     if (cityFromQuery && source.has('city')) {
-      return validateScope({ version: 1, city: cityFromQuery, wards: [], mode: 'city_all' }, wardsByCity);
+      return validateScope({
+        version: 2,
+        activeCity: cityFromQuery,
+        selections: {},
+        mode: 'city_all',
+      }, wardsByCity);
     }
     return null;
   }
 
-  function applyScopeToParams(params, scope) {
+  function applyScopeToParams(params, scope, wardsByCity) {
     if (!(params instanceof URLSearchParams) || !scope) return params;
     params.delete('city');
     params.delete('ward');
     params.delete('ward[]');
     params.delete('ward_mode');
-    params.set('city', scope.city);
-    if (scope.mode !== 'city_all') {
-      uniqueValues(scope.wards).forEach((ward) => params.append('ward', ward));
+    const activeCity = scope.activeCity || scope.city || '';
+    if (scope.mode === 'city_all') {
+      params.set('city', activeCity);
+      return params;
     }
+    const selections = scope.selections || (
+      activeCity && uniqueValues(scope.wards).length
+        ? { [activeCity]: uniqueValues(scope.wards) }
+        : {}
+    );
+    const selectedCities = Object.keys(selections).filter((city) => selections[city].length);
+    if (!selectedCities.length) {
+      params.set('ward_mode', 'none');
+      return params;
+    }
+    if (selectedCities.length === 1) params.set('city', selectedCities[0]);
+    flattenScopeWards({ ...scope, selections }, wardsByCity || root.INITIAL_WARDS_BY_CITY || {})
+      .forEach((ward) => params.append('ward', ward));
     return params;
   }
 
@@ -458,8 +550,13 @@
   function readStoredScope(storage, wardsByCity) {
     try {
       const raw = storage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      return validateScope(JSON.parse(raw), wardsByCity);
+      if (raw) {
+        const current = validateScope(JSON.parse(raw), wardsByCity);
+        if (current) return current;
+      }
+      const legacyRaw = storage.getItem(LEGACY_STORAGE_KEY);
+      if (!legacyRaw) return null;
+      return validateScope(JSON.parse(legacyRaw), wardsByCity);
     } catch (err) {
       return null;
     }
@@ -469,12 +566,18 @@
     const target = storage || root.localStorage;
     if (!target || !scope) return null;
     const normalizedFilters = normalizeStoredFilters(filters);
-    const payload = {
-      version: 1,
-      city: scope.city,
-      wards: scope.mode === 'city_all' ? [] : uniqueValues(scope.wards),
+    const normalizedScope = Number(scope.version) === 2 ? scope : {
+      version: 2,
+      activeCity: scope.city,
+      selections: scope.mode === 'city_all' ? {} : { [scope.city]: uniqueValues(scope.wards) },
       mode: scope.mode,
-      label: scopeLabel(scope),
+    };
+    const payload = {
+      version: 2,
+      activeCity: normalizedScope.activeCity,
+      selections: normalizedScope.mode === 'city_all' ? {} : normalizedScope.selections,
+      mode: normalizedScope.mode,
+      label: scopeLabel(normalizedScope),
       updatedAt: new Date().toISOString(),
     };
     if (normalizedFilters) payload.filters = normalizedFilters;
@@ -489,7 +592,10 @@
   function clearStoredScope(storage) {
     const target = storage || root.localStorage;
     try {
-      if (target) target.removeItem(STORAGE_KEY);
+      if (target) {
+        target.removeItem(STORAGE_KEY);
+        target.removeItem(LEGACY_STORAGE_KEY);
+      }
     } catch (err) {}
   }
 
@@ -511,17 +617,20 @@
     const selectedWard = String(ward || '').trim();
     if (!resolvedCity || !selectedWard || !(wardsByCity[resolvedCity] || []).includes(selectedWard)) return null;
     const base = validateScope(current, wardsByCity);
-    const currentWards = base && base.city === resolvedCity && base.mode !== 'city_all'
-      ? uniqueValues(base.wards)
-      : [];
+    const selections = base && base.mode !== 'city_all'
+      ? Object.fromEntries(Object.entries(base.selections).map(([key, wards]) => [key, Array.from(wards)]))
+      : {};
+    const currentWards = uniqueValues(selections[resolvedCity]);
     const nextWards = currentWards.includes(selectedWard)
       ? currentWards.filter((item) => item !== selectedWard)
       : currentWards.concat(selectedWard);
-    if (!nextWards.length) return null;
+    if (nextWards.length) selections[resolvedCity] = nextWards;
+    else delete selections[resolvedCity];
+    if (!Object.keys(selections).length) return null;
     return validateScope({
-      version: 1,
-      city: resolvedCity,
-      wards: nextWards,
+      version: 2,
+      activeCity: resolvedCity,
+      selections,
       mode: 'custom',
     }, wardsByCity);
   }
@@ -814,6 +923,7 @@
 
   return Object.freeze({
     STORAGE_KEY,
+    LEGACY_STORAGE_KEY,
     PRESET_SCOPES,
     applyDashboardScope,
     applyOptionalFiltersToParams,
@@ -821,12 +931,14 @@
     applyScopeToParams,
     clearStoredScope,
     filtersFromSearchParams,
+    flattenScopeWards,
     hideChooser,
     renderAreaScopeDraft,
     nextDraftWardScope,
     readStoredScope,
     replaceUrlWithScope,
     saveScope,
+    selectionCounts,
     scopeFromSearchParams,
     scopeStatusLabel,
     scopeStatusParts,
