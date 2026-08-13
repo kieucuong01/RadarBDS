@@ -1,10 +1,11 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v61",
+  "resolver_version": "osm-binh-duong-20260814-v62",
   "coverage_cities": [
     "THỦ DẦU MỘT",
     "BẾN CÁT",
     "THUẬN AN",
-    "DĨ AN"
+    "DĨ AN",
+    "TÂN UYÊN"
   ],
   "canonical_wards": [
     {
@@ -178,6 +179,54 @@
     {
       "city": "DĨ AN",
       "ward": "Tân Đông Hiệp"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Hội Nghĩa"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Khánh Bình"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Phú Chánh"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Hiệp"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Vĩnh Hiệp"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thạnh Hội"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thạnh Phước"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thái Hòa"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Uyên Hưng"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Vĩnh Tân"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Bạch Đằng"
     }
   ],
   "osm_snapshot": {
@@ -670,6 +719,90 @@
       },
       "source": "Wikidata Q10841802 revision 1493037585 (pre-merger ward coordinate)",
       "source_url": "https://www.wikidata.org/w/index.php?title=Q10841802&oldid=1493037585"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Hội Nghĩa",
+      "point": {"lat": 11.11378, "lng": 106.763238},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Khánh Bình",
+      "point": {"lat": 11.040699, "lng": 106.756789},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Phú Chánh",
+      "point": {"lat": 11.071245, "lng": 106.696312},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Hiệp",
+      "point": {"lat": 11.07091, "lng": 106.742382},
+      "source": "Radar BDS derived boundary representative point",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "point": {"lat": 10.997133, "lng": 106.721993},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Vĩnh Hiệp",
+      "point": {"lat": 11.025877, "lng": 106.713464},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thạnh Hội",
+      "point": {"lat": 10.989796, "lng": 106.7764},
+      "source": "Radar BDS derived boundary representative point",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thạnh Phước",
+      "point": {"lat": 11.002003, "lng": 106.765053},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thái Hòa",
+      "point": {"lat": 10.98759, "lng": 106.754566},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Uyên Hưng",
+      "point": {"lat": 11.079007, "lng": 106.791629},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Vĩnh Tân",
+      "point": {"lat": 11.109588, "lng": 106.714863},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Bạch Đằng",
+      "point": {"lat": 11.033162, "lng": 106.795857},
+      "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
+      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     }
   ],
   "roads": [

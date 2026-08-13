@@ -3,7 +3,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v61"
+LISTING_MAP_RESOLVER_VERSION = "osm-binh-duong-20260814-v62"
 LISTING_MAP_BOUNDS = (
     (10.75, 106.25),
     (11.65, 107.10),
@@ -13,6 +13,7 @@ LISTING_MAP_SUPPORTED_CITIES = (
     "BẾN CÁT",
     "THUẬN AN",
     "DĨ AN",
+    "TÂN UYÊN",
 )
 LISTING_MAP_WARD_ALIASES = {
     ("THỦ DẦU MỘT", "phu chanh"): "Phú Tân",

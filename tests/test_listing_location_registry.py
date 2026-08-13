@@ -1123,8 +1123,10 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert wards["resolver_version"] == LISTING_MAP_RESOLVER_VERSION
     assert roads["resolver_version"] == LISTING_MAP_RESOLVER_VERSION
     assert landmarks["resolver_version"] == LISTING_MAP_RESOLVER_VERSION
-    assert {"DĨ AN", "THUẬN AN"}.issubset(LISTING_MAP_SUPPORTED_CITIES)
-    assert manifest["ward_count"] == len(wards["wards"]) == 43
+    assert {"DĨ AN", "THUẬN AN", "TÂN UYÊN"}.issubset(
+        LISTING_MAP_SUPPORTED_CITIES
+    )
+    assert manifest["ward_count"] == len(wards["wards"]) == 55
     assert manifest["road_count"] == len(roads["roads"])
     assert manifest["road_count"] > 110
     assert manifest["landmark_count"] == len(landmarks["landmarks"])
