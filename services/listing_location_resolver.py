@@ -127,9 +127,6 @@ def _canonical_city(listing: Mapping) -> str:
     raw_city = str(_value(listing, "city", "") or "").strip()
     ward = str(_value(listing, "ward", "") or "").strip()
     ward_token = normalize_location_token(ward)
-    for (alias_city, alias_ward), _canonical_ward in LISTING_MAP_WARD_ALIASES.items():
-        if ward_token == alias_ward:
-            return alias_city
     try:
         from services.market_data import CITY_MAP, get_city_for_ward
 
@@ -137,11 +134,17 @@ def _canonical_city(listing: Mapping) -> str:
         for city in CITY_MAP:
             if normalize_location_token(city) == normalized_city:
                 return city
+        for (alias_city, alias_ward), _canonical_ward in LISTING_MAP_WARD_ALIASES.items():
+            if ward_token == alias_ward:
+                return alias_city
         inferred = get_city_for_ward(ward)
         if inferred:
             return inferred
     except ImportError:
         pass
+    for (alias_city, alias_ward), _canonical_ward in LISTING_MAP_WARD_ALIASES.items():
+        if ward_token == alias_ward:
+            return alias_city
     return raw_city.upper()
 
 

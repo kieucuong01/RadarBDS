@@ -2007,3 +2007,62 @@ def test_requested_thuan_an_center_fallback_locations_resolve(
     assert result.location
     assert result.location.precision == expected_precision
     assert expected_slug in result.location.location_key
+
+
+def test_explicit_tan_uyen_city_prevents_phu_chanh_tdm_alias_collision():
+    registry = load_location_registry()
+    listing = {
+        "id": 921401,
+        "city": "TÂN UYÊN",
+        "ward": "Phú Chánh",
+        "title": "Bán đất DT742 Phú Chánh Tân Uyên",
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(listing["title"], "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert result.location.location_key.startswith("road:tan-uyen:phu-chanh:")
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_road"),
+    [
+        ("Phú Chánh", "Bán đất DT742", "dt 742"),
+        ("Tân Hiệp", "Gần Nguyễn Tri Phương", "duong nguyen tri phuong"),
+        ("Tân Phước Khánh", "Đất Tô Vĩnh Diện", "duong to vinh dien"),
+        ("Tân Phước Khánh", "Nhà Võ Thị Sáu", "duong vo thi sau"),
+        ("Tân Vĩnh Hiệp", "Gần DT746", "duong tinh 746"),
+        ("Thạnh Phước", "Đất đường Gò Trắc", "duong go trac"),
+        ("Thái Hòa", "Cách DT747 200m", "duong tinh 747"),
+        ("Vĩnh Tân", "Mặt tiền Trần Đại Nghĩa", "duong tran dai nghia"),
+    ],
+)
+def test_tan_uyen_priority_roads_resolve_in_old_ward_scope(
+    ward, title, expected_road
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921402,
+        "city": "TÂN UYÊN",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert result.location.reference_road == expected_road

@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v62",
+  "resolver_version": "osm-binh-duong-20260814-v63",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -542,6 +542,60 @@
       "ward": "Bình Chuẩn",
       "canonical": "Đường tỉnh 743A",
       "aliases": ["ĐT743", "ĐT 743", "DT743", "DT 743"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Hiệp",
+      "canonical": "Đường Nguyễn Tri Phương",
+      "aliases": ["Nguyễn Tri Phương"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "canonical": "Đường Tô Vĩnh Diện",
+      "aliases": ["Tô Vĩnh Diện", "Tô Vĩnh Diên"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "canonical": "Đường Võ Thị Sáu",
+      "aliases": ["Võ Thị Sáu"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "canonical": "Đường Huỳnh Văn Cù",
+      "aliases": ["Huỳnh Văn Cù"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "canonical": "Đường tỉnh 746",
+      "aliases": ["ĐT746", "ĐT 746", "DT746", "DT 746"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Vĩnh Hiệp",
+      "canonical": "Đường tỉnh 746",
+      "aliases": ["ĐT746", "ĐT 746", "DT746", "DT 746"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thạnh Phước",
+      "canonical": "Đường Gò Trắc",
+      "aliases": ["Gò Trắc"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Thái Hòa",
+      "canonical": "Đường tỉnh 747",
+      "aliases": ["ĐT747", "ĐT 747", "DT747", "DT 747"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Vĩnh Tân",
+      "canonical": "Đường Trần Đại Nghĩa",
+      "aliases": ["Trần Đại Nghĩa"]
     }
   ],
   "roads": [
