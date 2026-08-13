@@ -128,6 +128,52 @@ def test_resolver_uses_unique_registry_road_text_when_extractor_is_empty():
     assert result.location.reference_road == "duong an phu 17"
 
 
+def test_resolver_ignores_invalid_stored_road_before_registry_text_fallback():
+    registry = _registry(
+        {"canonical": "duong an phu 17", "aliases": ["an phu 17"]}
+    )
+    listing = {
+        "id": 111,
+        "city": "THUẬN AN",
+        "ward": "An Phú",
+        "title": "Bán nhà An Phú 17",
+        "description": "Phường An Phú",
+        "road_name": "Chốt gọn",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    result = resolve_listing_location(listing, registry, context)
+
+    assert result.location is not None
+    assert result.location.precision == "road"
+    assert result.location.reference_road == "duong an phu 17"
+
+
+def test_resolver_accepts_registry_backed_stored_road_unknown_to_heuristic():
+    registry = _registry(
+        {"canonical": "duong phu chanh 17", "aliases": ["phu chanh 17"]}
+    )
+    listing = {
+        "id": 112,
+        "city": "THUẬN AN",
+        "ward": "An Phú",
+        "title": "Bán lô đất đẹp",
+        "description": "Phường An Phú",
+        "road_name": "Phú Chánh 17",
+    }
+    context = extract_map_location_context(
+        listing["title"], listing["description"], listing["road_name"]
+    )
+
+    result = resolve_listing_location(listing, registry, context)
+
+    assert result.location is not None
+    assert result.location.precision == "road"
+    assert result.location.reference_road == "duong phu chanh 17"
+
+
 def test_audit_requires_road_context_for_short_numbered_alias():
     registry = _registry({"canonical": "d 1", "aliases": ["d1"]})
     listings = [
@@ -229,6 +275,77 @@ def test_audit_can_omit_listing_ids_from_privacy_safe_output():
     assert result["known_registry_missed"] == [
         {
             "candidate": "phan dinh giot",
+            "affected_listing_count": 1,
+        }
+    ]
+
+
+def test_audit_reports_extracted_candidates_as_aggregates_only():
+    registry = _registry({"canonical": "ngo thoi nhiem"})
+    listings = [
+        {
+            "id": 108,
+            "title": "Bán đất gần Ngô Thời Nhiệm",
+            "description": "Phường Phú Chánh",
+            "road_name": "",
+        },
+        {
+            "id": 109,
+            "title": "Bán đất gần Ngô Thời Nhiệm",
+            "description": "Giá tốt",
+            "road_name": "",
+        },
+    ]
+
+    result = audit_ward_fallbacks(
+        listings,
+        registry,
+        city="THUẬN AN",
+        ward="An Phú",
+        include_sample_ids=False,
+    )
+
+    assert result["extracted_candidates"] == [
+        {
+            "candidate": "ngo thoi nhiem",
+            "kind": "nearby_road",
+            "affected_listing_count": 2,
+        }
+    ]
+    assert result["proposed_resolutions"] == [
+        {
+            "precision": "road",
+            "status": "resolved",
+            "reason": "",
+            "affected_listing_count": 2,
+        }
+    ]
+    assert "108" not in json.dumps(result)
+    assert "109" not in json.dumps(result)
+
+
+def test_audit_reports_proposed_issue_candidates_as_aggregates():
+    result = audit_ward_fallbacks(
+        [
+            {
+                "id": 110,
+                "title": "Bán đất đường DX999",
+                "description": "Phường An Phú",
+                "road_name": "",
+            }
+        ],
+        _registry(),
+        city="THUẬN AN",
+        ward="An Phú",
+        include_sample_ids=False,
+    )
+
+    assert result["proposed_issues"] == [
+        {
+            "candidate": "dx 999",
+            "kind": "road",
+            "status": "not_found",
+            "reason": "road_not_found",
             "affected_listing_count": 1,
         }
     ]

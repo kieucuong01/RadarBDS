@@ -710,7 +710,32 @@ def resolve_listing_location(
         context,
         registry,
     )
-    stored_road = normalize_road_token(_value(listing, "road_name", ""))
+    raw_stored_road = normalize_road_token(_value(listing, "road_name", ""))
+    context_stored_road = getattr(context, "stored_road", None)
+    validated_stored_roads: list[str] = []
+    if context_stored_road is None:
+        if raw_stored_road:
+            validated_stored_roads.append(raw_stored_road)
+    else:
+        normalized_context_stored = normalize_road_token(context_stored_road)
+        if normalized_context_stored:
+            validated_stored_roads.append(normalized_context_stored)
+        if (
+            raw_stored_road
+            and raw_stored_road not in validated_stored_roads
+            and isinstance(
+                _match_road_in_wards(
+                    city,
+                    lookup_ward_labels,
+                    raw_stored_road,
+                    "",
+                    registry,
+                ),
+                Mapping,
+            )
+        ):
+            validated_stored_roads.append(raw_stored_road)
+    stored_road = validated_stored_roads[0] if validated_stored_roads else ""
     context_direct_road = normalize_road_token(
         getattr(context, "direct_road", "")
     )
@@ -719,7 +744,7 @@ def resolve_listing_location(
     direct_roads = tuple(
         dict.fromkeys(
             road
-            for road in (stored_road, context_direct_road)
+            for road in (*validated_stored_roads, context_direct_road)
             if road and not (nearby_road and generic_stored_road and road == stored_road)
         )
     )

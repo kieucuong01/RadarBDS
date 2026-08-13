@@ -13,6 +13,7 @@ from services.listing_location_resolver import (
 class MapLocationContext:
     direct_road: str = ""
     nearby_road: str = ""
+    stored_road: str = ""
     landmark: str = ""
     ward_hint: str = ""
     relation: str = ""
@@ -68,6 +69,8 @@ _ROAD_STOP_RE = re.compile(
     r"phu my|hiep thanh|chanh nghia|chanh my|phu tho|phu cuong|hoa phu|"
     r"tan dinh|hoa loi|thoi hoa|my phuoc|"
     r"di an|dong hoa|tan dong hiep|binh an|tan binh|an binh|binh thang|"
+    r"hoi nghia|khanh binh|phu chanh|tan hiep|tan phuoc khanh|"
+    r"tan vinh hiep|thanh hoi|thanh phuoc|thai hoa|uyen hung|vinh tan|bach dang|"
     r"(?<!nguyen )(?<!le )(?<!ho )(?<!mac )chi)\b|"
     r"\b\d{1,4}(?:[.,]\d+)?\s*m\b",
     re.IGNORECASE,
@@ -75,6 +78,8 @@ _ROAD_STOP_RE = re.compile(
 _LANDMARK_STOP_RE = re.compile(
     r"\b(?:phuong|xa|thi tran|thanh pho|tp|thu dau mot|tdm|"
     r"binh duong|ho chi minh|hcm|nay la|truoc sap nhap|"
+    r"hoi nghia|khanh binh|tan hiep|tan phuoc khanh|"
+    r"tan vinh hiep|thanh hoi|thanh phuoc|thai hoa|uyen hung|vinh tan|bach dang|"
     r"gia|dien tich|dt|"
     r"ban|can ban|mat tien|hem|duong|so do|tho cu|ngang|dai|"
     r"gan|sat|cach|vi tri|hang hiem|dg|khu tdc|tdc|tai dinh cu|"
@@ -90,6 +95,13 @@ _NON_ROAD_NAMES = {
     "o to",
     "xe hoi",
     "chinh",
+    "chot gon",
+    "dan vao",
+    "kinh doanh buon ban",
+    "ban lo dat co the xay xuong",
+    "hang hiem",
+    "tphcm lo dat",
+    "xe tai",
 }
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
@@ -228,6 +240,8 @@ _GENERIC_LANDMARK_PREFIXES = (
     "xay dung",
     "abc",
     "hoan thien",
+    "cao cap",
+    "ngay cho",
 )
 
 _GENERIC_LANDMARK_NAMES = {
@@ -278,6 +292,7 @@ _KNOWN_LANDMARK_PREFIXES = (
 )
 
 _KNOWN_EXPLICIT_LANDMARKS = (
+    ("kdc thai binh duong", "kdc thai binh duong"),
     ("pho di bo bach dang", "pho di bo bach dang"),
     ("cho chanh my", "cho chanh my"),
 )
@@ -896,8 +911,38 @@ def extract_map_location_context(
     evidence = _bounded_evidence(title, description)
     ward_hint = _explicit_di_an_ward_hint(title, description)
 
+    validated_stored_road = ""
+    if stored_road_name:
+        normalized_stored_text = normalize_location_token(stored_road_name)
+        stored_candidate = _normalize_road_candidate(
+            normalized_stored_text
+        )
+        is_unqualified_listing_code = re.fullmatch(
+            r"d\s+\d{3,4}[a-z]?",
+            stored_candidate or "",
+        ) and not re.search(
+            rf"\b(?:duong|mat tien|mt)\s+{re.escape(stored_candidate)}\b",
+            folded,
+        )
+        explicit_stored_name = re.sub(
+            r"^duong\s+",
+            "",
+            stored_candidate or "",
+        ).strip()
+        is_explicit_stored_road = (
+            normalized_stored_text.startswith("duong ")
+            and bool(explicit_stored_name)
+            and explicit_stored_name not in _NON_ROAD_NAMES
+        )
+        if not is_unqualified_listing_code and (
+            _looks_like_road_name(stored_candidate)
+            or is_explicit_stored_road
+        ):
+            validated_stored_road = stored_candidate
+
     def make_context(**values) -> MapLocationContext:
         values.setdefault("ward_hint", ward_hint)
+        values.setdefault("stored_road", validated_stored_road)
         values.setdefault("evidence_text", evidence)
         return MapLocationContext(**values)
     # Keep title/description boundaries for landmarks so a short place name at
@@ -968,21 +1013,8 @@ def extract_map_location_context(
             distance_m=_distance(folded),
         )
 
-    if not direct_road and stored_road_name:
-        stored_candidate = _normalize_road_candidate(
-            normalize_location_token(stored_road_name)
-        )
-        is_unqualified_listing_code = re.fullmatch(
-            r"d\s+\d{3,4}[a-z]?",
-            stored_candidate or "",
-        ) and not re.search(
-            rf"\b(?:duong|mat tien|mt)\s+{re.escape(stored_candidate)}\b",
-            folded,
-        )
-        if is_unqualified_listing_code:
-            stored_candidate = ""
-        if _looks_like_road_name(stored_candidate):
-            direct_road = stored_candidate
+    if not direct_road and validated_stored_road:
+        direct_road = validated_stored_road
 
     return make_context(
         direct_road=direct_road,

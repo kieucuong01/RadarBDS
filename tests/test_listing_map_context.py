@@ -1604,3 +1604,53 @@ def test_extract_context_clips_known_di_an_landmarks(text, expected):
     context = extract_map_location_context(text, "")
 
     assert context.landmark == expected
+
+
+def test_extract_context_rejects_access_road_marketing_phrase():
+    context = extract_map_location_context(
+        "Bán đất đường dẫn vào rộng rãi gần Ngô Thời Nhiệm",
+        "Phường Phú Chánh, Tân Uyên",
+    )
+
+    assert context.direct_road == ""
+    assert context.nearby_road == "ngo thoi nhiem"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Đất KDC cao cấp đầy đủ tiện ích gần DT742",
+        "Bán đất TĐC ngay chợ Phú Chánh",
+    ],
+)
+def test_extract_context_rejects_tan_uyen_generic_landmark_copy(text):
+    assert extract_map_location_context(text, "").landmark == ""
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Đường chốt gọn",
+        "Đường dân vào",
+        "Đường kinh doanh buôn bán",
+        "Đường bán lô đất có thể xây xưởng",
+        "Đường hàng hiếm",
+        "Đường TPHCM lô đất",
+        "Đường xe tải",
+    ],
+)
+def test_extract_context_rejects_tan_uyen_marketing_as_road(text):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+
+
+def test_extract_context_rejects_marketing_stored_road_name():
+    context = extract_map_location_context(
+        "Bán lô đất An Phú 17",
+        "",
+        "Đường chốt gọn",
+    )
+
+    assert context.stored_road == ""

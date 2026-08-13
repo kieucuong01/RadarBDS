@@ -2035,6 +2035,7 @@ def test_explicit_tan_uyen_city_prevents_phu_chanh_tdm_alias_collision():
     ("ward", "title", "expected_road"),
     [
         ("Phú Chánh", "Bán đất DT742", "dt 742"),
+        ("Phú Chánh", "Đất đường Phú Chánh 17", "duong phu chanh 17"),
         ("Tân Hiệp", "Gần Nguyễn Tri Phương", "duong nguyen tri phuong"),
         ("Tân Phước Khánh", "Đất Tô Vĩnh Diện", "duong to vinh dien"),
         ("Tân Phước Khánh", "Nhà Võ Thị Sáu", "duong vo thi sau"),
@@ -2066,3 +2067,47 @@ def test_tan_uyen_priority_roads_resolve_in_old_ward_scope(
     assert result.location
     assert result.location.precision == "road"
     assert result.location.reference_road == expected_road
+
+
+def test_tan_uyen_khanh_binh_thanh_duy_landmark_resolves():
+    registry = load_location_registry()
+    listing = {
+        "id": 921403,
+        "city": "TÂN UYÊN",
+        "ward": "Khánh Bình",
+        "title": "Bán đất KDC Thanh Duy Khánh Bình",
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(listing["title"], "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert "kdc-thanh-duy" in result.location.location_key
+
+
+def test_tan_uyen_tan_phuoc_khanh_thai_binh_duong_landmark_resolves():
+    registry = load_location_registry()
+    listing = {
+        "id": 921404,
+        "city": "TÂN UYÊN",
+        "ward": "Tân Phước Khánh",
+        "title": "Bán đất KDC Thái Bình Dương Tân Phước Khánh",
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(listing["title"], "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert "kdc-thai-binh-duong" in result.location.location_key

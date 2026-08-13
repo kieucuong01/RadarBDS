@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v63",
+  "resolver_version": "osm-binh-duong-20260814-v64",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -596,6 +596,12 @@
       "ward": "Vĩnh Tân",
       "canonical": "Đường Trần Đại Nghĩa",
       "aliases": ["Trần Đại Nghĩa"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Phú Chánh",
+      "canonical": "Đường Phú Chánh 17",
+      "aliases": ["Phú Chánh 17"]
     }
   ],
   "roads": [
@@ -2541,6 +2547,17 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "The listing explicitly identifies the road and the old Bình Thắng to current Đông Hòa transition while the OSM segments fall in the adjacent retained polygon"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Phú Chánh",
+      "road_name": "Đường Phú Chánh 17",
+      "lat": 11.0638166,
+      "lng": 106.7138452,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public address on Đường Phú Chánh 17 verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Trang+tr%E1%BA%A1i+H%E1%BB%93ng+Anh+T%C3%A2n+Uy%C3%AAn+B%C3%ACnh+D%C6%B0%C6%A1ng+%C4%90%C6%B0%E1%BB%9Dng+ph%C3%BA+ch%C3%A1nh+17/@11.0638166,106.7138452,17z/",
+      "verified_at": "2026-08-14"
     }
   ],
   "landmark_aliases": [
@@ -2951,6 +2968,18 @@
       "ward": "Vĩnh Phú",
       "canonical": "KDC Vĩnh Phú",
       "aliases": ["KDC Vinh Phu", "Khu dân cư Vĩnh Phú"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Khánh Bình",
+      "canonical": "KDC Thanh Duy",
+      "aliases": ["Khu dân cư Thanh Duy", "KDC Thành Duy"]
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "canonical": "KDC Thái Bình Dương",
+      "aliases": ["Khu dân cư Thái Bình Dương"]
     }
   ],
   "landmarks": [
@@ -3762,6 +3791,28 @@
       "verified_at": "2026-08-14",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "The two exact public development anchors retain the old Vĩnh Phú name while current map labels use the merged Bình Hòa administration"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Khánh Bình",
+      "landmark_name": "KDC Thanh Duy",
+      "lat": 11.0311218,
+      "lng": 106.7516666,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps exact public Khu dan cu Thanh Duy result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+dan+cu+thanh+duy/@11.0311218,106.7516666,17z/",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "TÂN UYÊN",
+      "ward": "Tân Phước Khánh",
+      "landmark_name": "KDC Thái Bình Dương",
+      "lat": 11.0015849,
+      "lng": 106.7332603,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps exact public KDC Thái Bình Dương - Tân Phước Khánh result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/KDC+Th%C3%A1i+B%C3%ACnh+D%C6%B0%C6%A1ng+-+T%C3%A2n+Ph%C6%B0%E1%BB%9Bc+Kh%C3%A1nh/@11.0015849,106.7332603,17z/",
+      "verified_at": "2026-08-14"
     }
   ]
 }

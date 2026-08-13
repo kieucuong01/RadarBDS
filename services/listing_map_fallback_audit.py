@@ -9,7 +9,9 @@ from services.listing_location_resolver import (
     LocationRegistry,
     normalize_location_token,
     normalize_road_token,
+    resolve_listing_location,
 )
+from services.listing_map_context import extract_map_location_context
 
 
 _SHORT_NUMBERED_ROAD_RE = re.compile(
@@ -88,6 +90,9 @@ def audit_ward_fallbacks(
     ordered_aliases = sorted(aliases, key=lambda item: (-len(item), item))
     known_matches: dict[str, set[int]] = defaultdict(set)
     ambiguous_matches: dict[str, set[int]] = defaultdict(set)
+    extracted_matches: dict[tuple[str, str], set[int]] = defaultdict(set)
+    proposed_matches: dict[tuple[str, str, str], set[int]] = defaultdict(set)
+    proposed_issue_matches: dict[tuple[str, str, str, str], set[int]] = defaultdict(set)
     for listing in listings:
         text = normalize_location_token(
             " ".join(
@@ -98,6 +103,41 @@ def audit_ward_fallbacks(
         listing_id = int(listing.get("id") or 0)
         if listing_id <= 0 or not text:
             continue
+        context = extract_map_location_context(
+            str(listing.get("title") or ""),
+            str(listing.get("description") or ""),
+            str(listing.get("road_name") or ""),
+        )
+        for kind in ("direct_road", "nearby_road", "landmark"):
+            candidate = normalize_location_token(getattr(context, kind, ""))
+            if candidate:
+                extracted_matches[(kind, candidate)].add(listing_id)
+        proposed = resolve_listing_location(
+            {
+                **dict(listing),
+                "city": city,
+                "ward": ward,
+            },
+            registry=registry,
+            context=context,
+        )
+        precision = proposed.location.precision if proposed.location else "unmapped"
+        status = proposed.issue.status if proposed.issue else "resolved"
+        reason = proposed.issue.resolution_note if proposed.issue else ""
+        proposed_matches[(precision, status, reason)].add(listing_id)
+        if proposed.issue:
+            road_candidate = normalize_road_token(proposed.issue.road_candidate)
+            landmark_candidate = normalize_location_token(
+                proposed.issue.landmark_candidate
+            )
+            if road_candidate:
+                proposed_issue_matches[
+                    ("road", road_candidate, status, reason)
+                ].add(listing_id)
+            elif landmark_candidate:
+                proposed_issue_matches[
+                    ("landmark", landmark_candidate, status, reason)
+                ].add(listing_id)
         for alias in ordered_aliases:
             match = re.search(
                 rf"(?<![a-z0-9]){_alias_pattern(alias)}(?![a-z0-9])",
@@ -117,6 +157,62 @@ def audit_ward_fallbacks(
                 ambiguous_matches[alias].add(listing_id)
             break
 
+    extracted_candidates = [
+        {
+            "candidate": candidate,
+            "kind": kind,
+            "affected_listing_count": len(listing_ids),
+        }
+        for (kind, candidate), listing_ids in extracted_matches.items()
+    ]
+    extracted_candidates.sort(
+        key=lambda row: (
+            -row["affected_listing_count"],
+            row["kind"],
+            row["candidate"],
+        )
+    )
+    proposed_resolutions = [
+        {
+            "precision": precision,
+            "status": status,
+            "reason": reason,
+            "affected_listing_count": len(listing_ids),
+        }
+        for (precision, status, reason), listing_ids in proposed_matches.items()
+    ]
+    proposed_resolutions.sort(
+        key=lambda row: (
+            -row["affected_listing_count"],
+            row["precision"],
+            row["status"],
+            row["reason"],
+        )
+    )
+    proposed_issues = [
+        {
+            "candidate": candidate,
+            "kind": kind,
+            "status": status,
+            "reason": reason,
+            "affected_listing_count": len(listing_ids),
+        }
+        for (
+            kind,
+            candidate,
+            status,
+            reason,
+        ), listing_ids in proposed_issue_matches.items()
+    ]
+    proposed_issues.sort(
+        key=lambda row: (
+            -row["affected_listing_count"],
+            row["kind"],
+            row["candidate"],
+            row["status"],
+            row["reason"],
+        )
+    )
     return {
         "known_registry_missed": _aggregate(
             known_matches,
@@ -126,4 +222,7 @@ def audit_ward_fallbacks(
             ambiguous_matches,
             include_sample_ids=include_sample_ids,
         ),
+        "extracted_candidates": extracted_candidates,
+        "proposed_resolutions": proposed_resolutions,
+        "proposed_issues": proposed_issues,
     }
