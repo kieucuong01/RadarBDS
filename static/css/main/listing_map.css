@@ -150,39 +150,61 @@
   background: #dbeafe;
 }
 
-.listing-map-exact-label {
-  display: grid;
-  align-content: center;
-  gap: 1px;
+.listing-map-marker-label {
   box-sizing: border-box;
-  width: 104px !important;
-  height: 34px !important;
-  padding: 3px 5px;
-  border: 1px solid rgba(4, 120, 87, 0.22);
-  border-radius: 8px;
+  border: 1px solid rgba(15, 118, 110, 0.24);
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
   color: #0f172a;
   font-family: "Segoe UI", Arial, sans-serif;
-  font-size: 0.58rem;
-  font-weight: 850;
-  line-height: 1.12;
+  font-weight: 800;
+  line-height: 1.08;
   pointer-events: none;
   text-align: center;
   white-space: nowrap;
 }
 
-.listing-map-exact-label-main,
-.listing-map-exact-label-sub {
+.listing-map-marker-label-price {
+  display: grid;
+  align-content: center;
+  gap: 1px;
+  width: 92px !important;
+  height: 30px !important;
+  padding: 2px 4px;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(15, 23, 42, 0.16);
+  font-size: 0.54rem;
+}
+
+.listing-map-marker-label-main,
+.listing-map-marker-label-sub {
   display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.listing-map-exact-label-sub {
+.listing-map-marker-label-sub {
   color: #047857;
   font-weight: 900;
+}
+
+.listing-map-marker-label-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px !important;
+  height: 18px !important;
+  padding: 1px 4px;
+  border-color: rgba(67, 56, 202, 0.24);
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.14);
+  color: #4338ca;
+  font-size: 0.54rem;
+}
+
+.listing-map-marker-label-count-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .listing-map-panel,

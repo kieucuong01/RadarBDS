@@ -953,7 +953,7 @@
 
   function markerLabelHtml(model) {
     if (model.kind === "count") {
-      return '<span class="listing-map-marker-label-count">'
+      return '<span class="listing-map-marker-label-count-text">'
         + model.line1 + "</span>";
     }
     return (

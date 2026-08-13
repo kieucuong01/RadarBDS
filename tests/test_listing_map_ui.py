@@ -64,7 +64,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-label-font-20260807") == 2
+    assert html.count("listing-map-compact-labels-20260813") == 2
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -209,7 +209,7 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert ".listing-map-official-gis" not in styles
 
 
-def test_listing_map_exact_marker_labels_are_compact_two_rows():
+def test_listing_map_marker_labels_have_compact_price_and_count_styles():
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
@@ -217,12 +217,27 @@ def test_listing_map_exact_marker_labels_are_compact_two_rows():
         encoding="utf-8"
     )
 
-    assert ".listing-map-exact-label" in styles
-    assert ".listing-map-exact-label-main" in styles
-    assert ".listing-map-exact-label-sub" in styles
-    assert "font-size: 0.58rem" in styles
-    assert "line-height: 1.12" in styles
+    assert ".listing-map-marker-label-price" in styles
+    assert ".listing-map-marker-label-count" in styles
+    assert ".listing-map-marker-label-main" in styles
+    assert ".listing-map-marker-label-sub" in styles
+    assert "width: 92px !important" in styles
+    assert "height: 30px !important" in styles
+    assert "width: 44px !important" in styles
+    assert "height: 18px !important" in styles
+    assert "font-size: 0.54rem" in styles
+    assert "line-height: 1.08" in styles
     assert 'font-family: "Segoe UI", Arial, sans-serif' in styles
+
+
+def test_listing_map_assets_use_compact_label_cache_version():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    template = (root / "templates/index.html").read_text(encoding="utf-8")
+
+    assert template.count("listing-map-compact-labels-20260813") == 2
+    assert "listing-map-label-font-20260807" not in template
 
 
 def test_listing_map_workspace_body_gets_stable_remaining_height():
