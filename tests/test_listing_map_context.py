@@ -1496,3 +1496,111 @@ def test_extract_context_does_not_choose_between_two_my_phuoc_areas():
     )
 
     assert context.landmark == ""
+
+
+def test_extract_context_keeps_di_an_legacy_ward_hint_and_nguyen_thai_hoc():
+    context = extract_map_location_context(
+        "Bán đất đường Nguyễn Thái Học, phường Dĩ An",
+        "Vị trí gần chợ Dĩ An",
+    )
+
+    assert context.direct_road == "nguyen thai hoc"
+    assert context.ward_hint == "Dĩ An"
+
+
+def test_extract_context_reads_explicit_legacy_ward_from_description():
+    context = extract_map_location_context(
+        "Nhà gần đường Võ Thị Sáu",
+        "Địa chỉ thuộc phường Đông Hòa, thành phố Dĩ An",
+    )
+
+    assert context.nearby_road == "vo thi sau"
+    assert context.ward_hint == "Đông Hòa"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Giá 6,9 tỷ TL - 108,6m2, phường Dĩ An",
+        "Bán lô 4,2 tỷ TL 175m2 tại Dĩ An",
+    ],
+)
+def test_extract_context_does_not_treat_thuong_luong_area_as_tl_road(text):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+
+
+@pytest.mark.parametrize(
+    ("text", "expected_direct", "expected_nearby"),
+    [
+        (
+            "Mặt tiền đường Nguyễn Đức Thiệu, Lý Thường Kiệt vô 70m",
+            "nguyen duc thieu",
+            "",
+        ),
+        ("Đường Lê Thị Út vô 1 sẹc", "le thi ut", ""),
+        ("Cách đường Nguyễn Trung Trực 50m", "", "nguyen trung truc"),
+    ],
+)
+def test_extract_context_clips_di_an_road_copy(
+    text, expected_direct, expected_nearby
+):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == expected_direct
+    assert context.nearby_road == expected_nearby
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Bán đất mặt tiền GS1 phường Đông Hòa", "gs 1"),
+        ("Nhà gần đường GS12 Đông Hòa", "gs 12"),
+        ("Cách Quốc lộ 1K Làng Đại học 200m", "quoc lo 1 k"),
+        ("Mặt tiền đường Huỳnh Thị Tươi 7x12,5m", "huynh thi tuoi"),
+        ("Gần đường Bùi Thị Xuân và chợ Tân Bình", "bui thi xuan"),
+        ("Cách đường Nguyễn Đình Chiểu khoảng 100m", "nguyen dinh chieu"),
+        ("Gần đường Võ Thị Sáu hàng hiếm", "vo thi sau"),
+        ("Một sẹc Nguyễn Trung Trực 50m", "nguyen trung truc"),
+        ("Gần đường liên huyện Tân Đông Hiệp", "lien huyen"),
+        ("Cách QL 1 K khoảng 200m", "quoc lo 1 k"),
+        ("Nhà đường lên huyện Tân Bình", "lien huyen"),
+    ],
+)
+def test_extract_context_normalizes_di_an_named_and_grid_roads(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert (context.direct_road or context.nearby_road) == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Đường đang trải nhựa, xe hơi vào tận nơi",
+        "Nhà đẳng cấp sang trọng tại Dĩ An",
+    ],
+)
+def test_extract_context_rejects_di_an_marketing_copy_as_road(text):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà KDC Phúc Đạt Dĩ An 5x17, full thổ cư", "kdc phuc dat"),
+        ("Đất KDC Đông An, phường Tân Đông Hiệp", "kdc dong an"),
+        ("Nhà KDC Hồ Lang Tân Đông Hiệp", "kdc ho lang"),
+        ("Bán đất KDC Icon Central, Dĩ An", "kdc icon central"),
+        ("Nhà KDC Biconsi rẻ", "kdc biconsi"),
+        ("Đất Khu đô thị Bình Nguyên gần làng đại học", "khu do thi binh nguyen"),
+    ],
+)
+def test_extract_context_clips_known_di_an_landmarks(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected

@@ -1711,3 +1711,173 @@ def test_requested_ben_cat_center_fallback_zones_resolve(
     assert result.location
     assert result.location.precision == "landmark"
     assert expected_slug in result.location.location_key
+
+
+def test_di_an_explicit_legacy_ward_hint_selects_matching_road_scope():
+    registry = LocationRegistry(
+        resolver_version="di-an-hint-test-v1",
+        roads={
+            ("DĨ AN", "di an", "vo thi sau"): (
+                _road(lat=10.9001, lng=106.7001),
+            ),
+            ("DĨ AN", "dong hoa", "vo thi sau"): (
+                _road(lat=10.8802, lng=106.7602),
+            ),
+        },
+        landmarks={},
+        wards={
+            ("DĨ AN", "di an"): _road(lat=10.9000, lng=106.7000),
+            ("DĨ AN", "dong hoa"): _road(lat=10.8800, lng=106.7600),
+        },
+    )
+    title = "Nhà gần đường Võ Thị Sáu, phường Đông Hòa, thành phố Dĩ An"
+    listing = {
+        "id": 930001,
+        "city": "DĨ AN",
+        "ward": "Dĩ An",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert result.location.lat == pytest.approx(10.8802)
+    assert result.location.location_key.startswith("road:di-an:di-an:")
+
+
+def test_di_an_missing_ward_hint_keeps_stored_ward_scope():
+    registry = LocationRegistry(
+        resolver_version="di-an-hint-test-v1",
+        roads={
+            ("DĨ AN", "di an", "vo thi sau"): (
+                _road(lat=10.9001, lng=106.7001),
+            ),
+            ("DĨ AN", "dong hoa", "vo thi sau"): (
+                _road(lat=10.8802, lng=106.7602),
+            ),
+        },
+        landmarks={},
+        wards={
+            ("DĨ AN", "di an"): _road(lat=10.9000, lng=106.7000),
+            ("DĨ AN", "dong hoa"): _road(lat=10.8800, lng=106.7600),
+        },
+    )
+    title = "Nhà gần đường Võ Thị Sáu"
+    listing = {
+        "id": 930002,
+        "city": "DĨ AN",
+        "ward": "Dĩ An",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert result.location.lat == pytest.approx(10.9001)
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_slug"),
+    [
+        ("Dĩ An", "Mặt tiền Phan Bội Châu, phường Dĩ An", "duong-phan-boi-chau"),
+        ("Dĩ An", "Mặt tiền Ngô Văn Sở, phường Dĩ An", "duong-ngo-van-so"),
+        ("Dĩ An", "Gần Nguyễn Tri Phương, phường Dĩ An", "duong-nguyen-tri-phuong"),
+        ("Dĩ An", "Gần ĐT743B, phường Tân Đông Hiệp", "duong-tinh-743-b"),
+        ("Đông Hòa", "Gần Quốc lộ 1K, phường Đông Hòa", "quoc-lo-1-k"),
+        ("Đông Hòa", "Mặt tiền Nguyễn Đình Chiểu", "duong-nguyen-dinh-chieu"),
+        ("Đông Hòa", "Mặt tiền GS12", "gs-12"),
+        ("Tân Đông Hiệp", "Mặt tiền Mỹ Phước Tân Vạn", "my-phuoc-tan-van"),
+        ("Tân Đông Hiệp", "Gần ĐT743B", "duong-tinh-743-b"),
+        ("Bình An", "Gần Quốc lộ 1K", "quoc-lo-1-k"),
+        ("Bình An", "Mặt tiền ĐT743A", "duong-tinh-743-a"),
+        ("Bình An", "Gần đường Bình Thung", "duong-binh-thung"),
+        ("Bình An", "Gần Vành đai 3", "duong-vanh-dai-3"),
+        ("Tân Bình", "Gần đường Bùi Thị Xuân", "bui-thi-xuan"),
+        ("Tân Bình", "Gần đường Huỳnh Thị Tươi", "huynh-thi-tuoi"),
+        ("Tân Bình", "Gần đường Nguyễn Thị Tươi", "nguyen-thi-tuoi"),
+        ("Bình Thắng", "Mặt tiền đường 30/4, phường Bình Thắng", "30-thang-4"),
+    ],
+)
+def test_requested_di_an_center_fallback_roads_resolve(
+    ward, title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 930100,
+        "city": "DĨ AN",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_slug"),
+    [
+        ("Dĩ An", "Nhà đường Lê Thị Út", "le-thi-ut"),
+        ("Tân Đông Hiệp", "Đất đường Liên Huyện", "lien-huyen"),
+        ("Tân Bình", "Đất đường Liên Huyện", "lien-huyen"),
+        ("Đông Hòa", "Đất đường D3", "d-3"),
+        ("Tân Đông Hiệp", "Nhà KDC Đông An", "kdc-dong-an"),
+        ("Tân Đông Hiệp", "Đất KDC Hố Lang", "kdc-ho-lang"),
+        ("Tân Đông Hiệp", "Nhà KDC Icon Central", "kdc-icon-central"),
+        ("Tân Bình", "Đất dự án Hoàng Nam 5", "kdc-hoang-nam-5"),
+        ("Tân Bình", "Nhà KDC Biconsi", "kdc-biconsi"),
+        ("Dĩ An", "Nhà KDC Phúc Đạt", "kdc-phuc-dat"),
+        ("Tân Đông Hiệp", "Nhà KDC Phúc Đạt", "kdc-phuc-dat"),
+        ("Bình An", "Nhà KDC Phúc Đạt", "kdc-phuc-dat"),
+        ("Dĩ An", "Nhà KDC Lê Phong", "kdc-le-phong"),
+        ("Đông Hòa", "Nhà KDC Lê Phong", "kdc-le-phong"),
+        ("Tân Bình", "Nhà KDC Lê Phong", "kdc-le-phong"),
+    ],
+)
+def test_di_an_browser_verified_roads_and_landmarks_resolve(
+    ward, title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 930200,
+        "city": "DĨ AN",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert expected_slug in result.location.location_key

@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260813-v58",
+  "resolver_version": "osm-binh-duong-20260813-v59",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -410,6 +410,126 @@
       "ward": "Mỹ Phước",
       "canonical": "Lộ 7B",
       "aliases": ["Lộ7B", "Tỉnh lộ 7B", "Đường 7B", "Lo 7B"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Đường Phan Bội Châu",
+      "aliases": ["Phan Bội Châu"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Đường Ngô Văn Sở",
+      "aliases": ["Ngô Văn Sở"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Đường Nguyễn Tri Phương",
+      "aliases": ["Nguyễn Tri Phương"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Đường tỉnh 743A",
+      "aliases": ["ĐT743", "ĐT 743", "DT743", "DT 743", "ĐT743A", "DT743A"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Đường tỉnh 743B",
+      "aliases": ["ĐT743B", "ĐT 743B", "DT743B", "DT 743B"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Đường tỉnh 743C",
+      "aliases": ["ĐT743C", "ĐT 743C", "DT743C", "DT 743C"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "canonical": "Đường Nguyễn Đình Chiểu",
+      "aliases": ["Nguyễn Đình Chiểu"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "canonical": "Đường GS 01",
+      "aliases": ["GS1", "GS01", "GS 1", "GS 01"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "canonical": "Đường GS 12",
+      "aliases": ["GS12", "GS 12"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "canonical": "Đường tỉnh 743A",
+      "aliases": ["ĐT743", "ĐT 743", "DT743", "DT 743", "ĐT743A", "DT743A"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "canonical": "Đường tỉnh 743B",
+      "aliases": ["ĐT743B", "ĐT 743B", "DT743B", "DT 743B"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "canonical": "Đường tỉnh 743C",
+      "aliases": ["ĐT743C", "ĐT 743C", "DT743C", "DT 743C"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "canonical": "Đường tỉnh 743A",
+      "aliases": ["ĐT743", "ĐT 743", "DT743", "DT 743", "ĐT743A", "DT743A"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "canonical": "Đường Bình Thung",
+      "aliases": ["Bình Thung"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "canonical": "Đường vành đai 3 Thành phố Hồ Chí Minh",
+      "aliases": ["Vành đai 3", "Đường vành đai 3"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình Thắng",
+      "canonical": "Đường Trần Đại Nghĩa",
+      "aliases": ["Trần Đại Nghĩa"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "canonical": "Lê Thị Út",
+      "aliases": ["Đường Lê Thị Út"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "canonical": "Đường Liên Huyện",
+      "aliases": ["Liên Huyện", "Đường liên huyện", "Đường lên huyện"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình",
+      "canonical": "Đường Liên Huyện",
+      "aliases": ["Liên Huyện", "Đường liên huyện", "Đường lên huyện"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "canonical": "Đường D3",
+      "aliases": ["D3", "Đường số 3"]
     }
   ],
   "roads": [
@@ -2203,6 +2323,158 @@
       "source": "Official Ministry of Natural Resources and Environment Binh Duong geographic-name endpoint for DH602; current Tan Dinh listings identify the same segment as Ba Lang Xi",
       "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
       "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "road_name": "Nguyễn Đức Thiệu",
+      "lat": 10.8996927,
+      "lng": 106.7466603,
+      "accuracy_radius_m": 900,
+      "source": "OpenStreetMap aggregate of three named alleys anchored on Nguyễn Đức Thiệu",
+      "source_url": "https://www.openstreetmap.org/way/1392051516",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "road_name": "Quốc lộ 1K",
+      "lat": 10.8900163,
+      "lng": 106.7812647,
+      "accuracy_radius_m": 3500,
+      "source": "OpenStreetMap aggregate of the adjacent Quốc lộ 1K corridor used for listings that explicitly reference the road",
+      "source_url": "https://www.openstreetmap.org/way/568398685",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The road reference is more useful than the coarse stored Dĩ An ward center and the corridor lies in the adjacent legacy Đông Hòa scope"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "road_name": "Võ Thị Sáu",
+      "lat": 10.8915141,
+      "lng": 106.7742495,
+      "accuracy_radius_m": 2500,
+      "source": "OpenStreetMap named-road geometry in the adjacent legacy Đông Hòa scope",
+      "source_url": "https://www.openstreetmap.org/way/291139325",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Current Dĩ An listings may omit the legacy Đông Hòa ward while explicitly naming Võ Thị Sáu"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "road_name": "Đông Minh",
+      "lat": 10.8999112,
+      "lng": 106.7713217,
+      "accuracy_radius_m": 1800,
+      "source": "OpenStreetMap named-road geometry in the adjacent legacy Đông Hòa scope",
+      "source_url": "https://www.openstreetmap.org/way/291552694",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Current Dĩ An listings may omit the legacy Đông Hòa ward while explicitly naming Đông Minh"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "road_name": "Lê Thị Út",
+      "lat": 10.926641,
+      "lng": 106.7562949,
+      "accuracy_radius_m": 1900,
+      "source": "Google Maps exact public named-road result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/L%C3%AA+Th%E1%BB%8B+%C3%9At,+D%C4%A9+An,+H%E1%BB%93+Ch%C3%AD+Minh,+Vi%E1%BB%87t+Nam/@10.926641,106.7562949,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The current Dĩ An aggregate includes listings from the former Tân Đông Hiệp area where this road is located"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "road_name": "Quốc lộ 1K",
+      "lat": 10.8900163,
+      "lng": 106.7812647,
+      "accuracy_radius_m": 4500,
+      "source": "OpenStreetMap aggregate of the Quốc lộ 1K corridor used only when listings explicitly reference the road",
+      "source_url": "https://www.openstreetmap.org/way/568398685",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Stored post-merger ward labels are coarser than the explicitly named Quốc lộ 1K corridor"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "road_name": "Đường Liên Huyện",
+      "lat": 10.9616626,
+      "lng": 106.7548063,
+      "accuracy_radius_m": 3200,
+      "source": "Google Maps exact public named-road result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/%C4%90%C6%B0%E1%BB%9Dng+li%C3%AAn+huy%E1%BB%87n+d%C4%A9+An+B%C3%ACnh+D%C6%B0%C6%A1ng/@10.9616626,106.7548063,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The retained Tân Đông Hiệp listing scope includes the former Tân Bình segment served by this road"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình",
+      "road_name": "Đường Liên Huyện",
+      "lat": 10.9616626,
+      "lng": 106.7548063,
+      "accuracy_radius_m": 3200,
+      "source": "Google Maps exact public named-road result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/%C4%90%C6%B0%E1%BB%9Dng+li%C3%AAn+huy%E1%BB%87n+d%C4%A9+An+B%C3%ACnh+D%C6%B0%C6%A1ng/@10.9616626,106.7548063,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "road_name": "Đường D3",
+      "lat": 10.8993058,
+      "lng": 106.7974771,
+      "accuracy_radius_m": 1700,
+      "source": "Centroid of two Google Maps exact public D3 named-road results verified with Browser Use",
+      "source_url": "https://www.google.com/maps/search/Duong+D3+Dong+Hoa+Di+An",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps exposes D3 as two nearby named segments across the former Đông Hòa and Bình An edge"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "road_name": "Quốc lộ 1K",
+      "lat": 10.8900163,
+      "lng": 106.7812647,
+      "accuracy_radius_m": 3500,
+      "source": "OpenStreetMap aggregate of the adjacent Quốc lộ 1K corridor used for explicit road references",
+      "source_url": "https://www.openstreetmap.org/way/568398685",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The corridor follows the Bình An and Đông Hòa market edge while the retained legacy boundary is coarse"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "road_name": "Trần Đại Nghĩa",
+      "lat": 10.9011918,
+      "lng": 106.7955563,
+      "accuracy_radius_m": 1800,
+      "source": "OpenStreetMap aggregate of Trần Đại Nghĩa on the Bình An and Bình Thắng market edge",
+      "source_url": "https://www.openstreetmap.org/way/692331458",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The named road serves listings near the retained Bình An and Bình Thắng boundary"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình Thắng",
+      "road_name": "Đường 30 Tháng 4",
+      "lat": 10.8885512,
+      "lng": 106.8154514,
+      "accuracy_radius_m": 2200,
+      "source": "OpenStreetMap aggregate of Đường 30 Tháng 4 corroborated by the production listing naming legacy Bình Thắng and current Đông Hòa",
+      "source_url": "https://www.openstreetmap.org/way/211849414",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The listing explicitly identifies the road and the old Bình Thắng to current Đông Hòa transition while the OSM segments fall in the adjacent retained polygon"
     }
   ],
   "landmark_aliases": [
@@ -2316,6 +2588,31 @@
         "Khu dân cư Phúc Đạt",
         "KDC Phúc Đạt 4PN"
       ]
+    },
+    {
+      "city": "DĨ AN",
+      "canonical": "KDC Đông An",
+      "aliases": ["KDC Dong An", "Khu dân cư Đông An"]
+    },
+    {
+      "city": "DĨ AN",
+      "canonical": "KDC Hố Lang",
+      "aliases": ["KDC Ho Lang", "KDC Hồ Lang", "Khu dân cư Hố Lang"]
+    },
+    {
+      "city": "DĨ AN",
+      "canonical": "KDC Icon Central",
+      "aliases": ["Icon Central", "KDC ICON CENTRAL"]
+    },
+    {
+      "city": "DĨ AN",
+      "canonical": "KDC Hoàng Nam 5",
+      "aliases": ["KDC Hoang Nam 5", "Dự án Hoàng Nam 5", "Hoàng Nam 5"]
+    },
+    {
+      "city": "DĨ AN",
+      "canonical": "KDC Biconsi",
+      "aliases": ["KDC BICONSI", "Khu dân cư Biconsi"]
     },
     {
       "canonical": "KDC Hiệp Thành 1",
@@ -2534,6 +2831,24 @@
         "Khu TM-DV-TĐC Mỹ Phước",
         "Khu TMDV TDC My Phuoc"
       ]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "canonical": "KDC Bình Nguyên",
+      "aliases": ["Khu đô thị Bình Nguyên", "KĐT Bình Nguyên"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "canonical": "TĐC Đông Hòa",
+      "aliases": ["TĐC Đông Hòa C", "KDC Đông Hòa", "KDC Đông Hòa C"]
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "canonical": "Khu đô thị mới Bình Nguyên",
+      "aliases": ["Khu đô thị Bình Nguyên", "KDC Bình Nguyên"]
     }
   ],
   "landmarks": [
@@ -3136,6 +3451,143 @@
       "source": "Google Maps exact public Khu dan cu TDC Hoa Loi result corroborated by the exact resettlement-park result",
       "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+TDC+HO%C3%80+L%E1%BB%A2I/data=!4m7!3m6!1s0x3174cf0000163d3d:0x30446356db18d076!8m2!3d11.0884678!4d106.6717489",
       "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "landmark_name": "KDC Đông An",
+      "lat": 10.9096749,
+      "lng": 106.7832708,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public residential-area result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+%C4%90%C3%B4ng+An+,+P+T%C3%A2n+%C4%91%C3%B4ng+Hi%E1%BB%87p/@10.9096749,106.7832708,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "landmark_name": "KDC Hố Lang",
+      "lat": 10.9556513,
+      "lng": 106.7492624,
+      "accuracy_radius_m": 1700,
+      "source": "Centroid of Google Maps exact public Hố Lang historical-site and eco-park anchors verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/Khu+di+t%C3%ADch+l%E1%BB%8Bch+s%E1%BB%AD+H%E1%BB%91+Lang/@10.9542501,106.7494126,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The KDC is an area around the named Hố Lang anchors rather than a single cadastral point"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "landmark_name": "KDC Icon Central",
+      "lat": 10.9333257,
+      "lng": 106.7481878,
+      "accuracy_radius_m": 850,
+      "source": "Google Maps exact public ICON CENTRAL result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/ICON+CENTRAL/@10.9333257,106.7481878,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The retained Tân Đông Hiệp listing scope includes the former Tân Bình project area"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình",
+      "landmark_name": "KDC Hoàng Nam 5",
+      "lat": 10.9588867,
+      "lng": 106.7484192,
+      "accuracy_radius_m": 850,
+      "source": "Google Maps exact public Hoàng Nam 5 project result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/D%E1%BB%B1+%C3%A1n+Ho%C3%A0ng+Nam+5+D%C4%A9+An/@10.9588867,106.7484192,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình",
+      "landmark_name": "KDC Biconsi",
+      "lat": 10.9283505,
+      "lng": 106.7755665,
+      "accuracy_radius_m": 950,
+      "source": "Google Maps exact public KDC Biconsi result verified with Browser Use",
+      "source_url": "https://www.google.com/maps/place/KDC+Biconsi/@10.9283505,106.7755665,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Listings retain the former Tân Bình valuation ward while Google Maps now labels the site under Tân Đông Hiệp"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "landmark_name": "KDC Phúc Đạt",
+      "lat": 10.893937,
+      "lng": 106.793937,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public Khu dân cư Phúc Đạt result and full Plus Code 7P28VQVV+HH verified with Browser Use",
+      "source_url": "https://plus.codes/7P28VQVV%2BHH",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Current Dĩ An aggregate listings use the project name while Google Maps labels its exact Thống Nhất address under Đông Hòa"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Đông Hiệp",
+      "landmark_name": "KDC Phúc Đạt",
+      "lat": 10.893937,
+      "lng": 106.793937,
+      "accuracy_radius_m": 1100,
+      "source": "Google Maps exact public Khu dân cư Phúc Đạt result and full Plus Code 7P28VQVV+HH verified with Browser Use",
+      "source_url": "https://plus.codes/7P28VQVV%2BHH",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The production listing explicitly names this project while retaining the broader post-merger Tân Đông Hiệp scope"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Bình An",
+      "landmark_name": "KDC Phúc Đạt",
+      "lat": 10.893937,
+      "lng": 106.793937,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public Khu dân cư Phúc Đạt result at 56C/12 Thống Nhất and full Plus Code 7P28VQVV+HH verified with Browser Use",
+      "source_url": "https://plus.codes/7P28VQVV%2BHH",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Production Bình An listings explicitly say Thống Nhất and KDC Phúc Đạt while Google Maps labels the address under adjacent Đông Hòa"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Dĩ An",
+      "landmark_name": "KDC Lê Phong",
+      "lat": 10.8976461,
+      "lng": 106.7784495,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps exact public Khu Dân Cư Lê Phong result corroborated by production listings near GO Dĩ An",
+      "source_url": "https://www.google.com/maps/place/Khu+D%C3%A2n+C%C6%B0+L%C3%AA+Phong/@10.8976461,106.7784495,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Current Dĩ An aggregate listings omit the former Đông Hòa ward but repeatedly identify this project near GO Dĩ An"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Đông Hòa",
+      "landmark_name": "KDC Lê Phong",
+      "lat": 10.8976461,
+      "lng": 106.7784495,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps exact public Khu Dân Cư Lê Phong result corroborated by production listing evidence at Trần Hưng Đạo near GO Dĩ An",
+      "source_url": "https://www.google.com/maps/place/Khu+D%C3%A2n+C%C6%B0+L%C3%AA+Phong/@10.8976461,106.7784495,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "DĨ AN",
+      "ward": "Tân Bình",
+      "landmark_name": "KDC Lê Phong",
+      "lat": 10.9113016,
+      "lng": 106.7489506,
+      "accuracy_radius_m": 1200,
+      "source": "Google Maps exact public Khu dân cư Lê Phong 2 result corroborated by production listing evidence near Chiêu Liêu",
+      "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+L%C3%AA+Phong+2/@10.9113016,106.7489506,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The production listing abbreviates the nearby Lê Phong 2 development as KDC Lê Phong in the retained Tân Bình scope"
     }
   ]
 }

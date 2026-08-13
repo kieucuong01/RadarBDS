@@ -14,6 +14,7 @@ class MapLocationContext:
     direct_road: str = ""
     nearby_road: str = ""
     landmark: str = ""
+    ward_hint: str = ""
     relation: str = ""
     distance_m: float | None = None
     evidence_text: str = ""
@@ -39,7 +40,7 @@ _DIRECT_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ROAD_CODE_RE = re.compile(
-    r"^(?:duong\s+)?(?P<prefix>dx|da|db|de|df|dg|dh|di|dt|dl|tl|ql|"
+    r"^(?:duong\s+)?(?P<prefix>dx|da|db|de|df|dg|dh|di|dt|dl|tl|ql|gs|"
     r"kh|ki|kj|kk|na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj|n|d)\s*"
     r"[-./_]?\s*0*(?P<number>\d{1,4})(?P<suffix>[a-z]?)\b",
     re.IGNORECASE,
@@ -62,10 +63,11 @@ _ROAD_STOP_RE = re.compile(
     r"duong nhua|duong be tong|duong dat|"
     r"gia|dien tich|dt|ban|can ban|chinh chu|chu gui|gui|"
     r"vi tri|kinh doanh|thong|noi dai|rong|gan|sat|cach|ngay|doi dien|"
-    r"kdc|vao|nay|"
+    r"kdc|vao|re|thuoc|dia chi|roadcopybreak|nay|"
     r"tuong binh hiep|dinh hoa|tan an|hiep an|phu hoa|phu loi|"
     r"phu my|hiep thanh|chanh nghia|chanh my|phu tho|phu cuong|hoa phu|"
     r"tan dinh|hoa loi|thoi hoa|my phuoc|"
+    r"di an|dong hoa|tan dong hiep|binh an|tan binh|an binh|binh thang|"
     r"(?<!nguyen )(?<!le )(?<!ho )(?<!mac )chi)\b|"
     r"\b\d{1,4}(?:[.,]\d+)?\s*m\b",
     re.IGNORECASE,
@@ -91,11 +93,11 @@ _NON_ROAD_NAMES = {
 }
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
-    r"dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n|duong so|"
+    r"dx|da|d|db|dh|dt|dl|tl|ql|gs|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"dai lo|bac si|yersin|yesin|cho ben lon|cho hoang gia|lo\s+7\s*b|"
-    r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|vanh dai|vanh 4"
+    r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|vanh dai|vanh 4|len huyen|lien huyen"
     r")\b",
     re.IGNORECASE,
 )
@@ -131,6 +133,12 @@ _KNOWN_ROAD_PREFIXES = (
     "le thi trung",
     "huynh van nghe",
     "nguyen van troi",
+    "nguyen dinh chieu",
+    "nguyen cong hoan",
+    "nguyen trung truc",
+    "nguyen duc thieu",
+    "nguyen thi tuoi",
+    "nguyen thai hoc",
     "nguyen thai binh",
     "nguyen van tiet",
     "nguyen van cu",
@@ -142,6 +150,14 @@ _KNOWN_ROAD_PREFIXES = (
     "phan dang luu",
     "nguyen huu canh",
     "phan boi chau",
+    "bui thi xuan",
+    "huynh thi tuoi",
+    "vo thi sau",
+    "le thi ut",
+    "pham van dieu",
+    "to vinh dien",
+    "lien huyen",
+    "len huyen",
     "tran binh trong",
     "bui ngoc thu",
     "nguyen an ninh",
@@ -176,6 +192,8 @@ _NON_LOCATION_RELATION_PREFIXES = (
     "phan nha",
     "vo nha",
     "vo thoai",
+    "dang trai",
+    "dang cap",
     "ly tuong",
     "ngo truoc",
     "le c dat",
@@ -217,6 +235,16 @@ _GENERIC_LANDMARK_NAMES = {
 }
 
 _KNOWN_LANDMARK_PREFIXES = (
+    ("phuc dat", "phuc dat"),
+    ("dong an", "dong an"),
+    ("ho lang", "ho lang"),
+    ("icon central", "icon central"),
+    ("biconsi", "biconsi"),
+    ("binh nguyen", "binh nguyen"),
+    ("dong tac", "dong tac"),
+    ("le phong", "le phong"),
+    ("hoang nam 5", "hoang nam 5"),
+    ("tu hai", "tu hai"),
     ("my phuoc 3 ben cat", "my phuoc 3"),
     ("my phuoc iii", "my phuoc 3"),
     ("my phuoc 3", "my phuoc 3"),
@@ -260,6 +288,30 @@ def _bounded_evidence(title: str, description: str) -> str:
         part.strip() for part in (title or "", description or "") if part.strip()
     )
     return evidence[:180]
+
+
+_DI_AN_WARD_HINTS = (
+    ("tan dong hiep", "Tân Đông Hiệp"),
+    ("binh thang", "Bình Thắng"),
+    ("dong hoa", "Đông Hòa"),
+    ("binh an", "Bình An"),
+    ("tan binh", "Tân Bình"),
+    ("an binh", "An Bình"),
+    ("di an", "Dĩ An"),
+)
+
+
+def _explicit_di_an_ward_hint(title: str, description: str) -> str:
+    """Return only an explicitly labelled legacy Dĩ An ward."""
+    for raw_text in (title or "", description or ""):
+        text = normalize_location_token(raw_text)
+        for normalized_ward, display_ward in _DI_AN_WARD_HINTS:
+            if re.search(
+                rf"\b(?:phuong|p)\s+{re.escape(normalized_ward)}\b",
+                text,
+            ):
+                return display_ward
+    return ""
 
 
 def _distance(text: str) -> float | None:
@@ -306,7 +358,7 @@ def _normalize_road_candidate(value: str) -> str:
     ):
         return ""
     if re.match(
-        r"^(?:duong\s+)?(?:dx|db|de|df|dg|dh|di|dt|dl|tl|ql|"
+        r"^(?:duong\s+)?(?:dx|db|de|df|dg|dh|di|dt|dl|tl|ql|gs|"
         r"kh|ki|kj|kk|ng|nl|ni|tc|xe|xh|xj|n|d)\s*"
         r"[-./_]?\s*0*\d{1,2}\s+(?:m|met)\b",
         candidate,
@@ -335,6 +387,12 @@ def _normalize_road_candidate(value: str) -> str:
         return "le hong phong"
     if re.match(r"^quoc\s+lo\s*13\b", candidate, re.IGNORECASE):
         return "dai lo binh duong"
+    if re.match(r"^quoc\s+lo\s*1\s*k\b", candidate, re.IGNORECASE):
+        return "quoc lo 1 k"
+    if re.match(r"^ql\s*1\s*k\b", candidate, re.IGNORECASE):
+        return "quoc lo 1 k"
+    if candidate.startswith(("len huyen", "lien huyen")):
+        return "lien huyen"
     if candidate.startswith("dai lo binh"):
         return "dai lo binh duong"
     if candidate.startswith(("yersin", "yesin", "bac si yersin")):
@@ -384,7 +442,11 @@ def _normalize_road_candidate(value: str) -> str:
         return "nguyen chi thanh"
     if candidate.startswith("nguyen thi minh "):
         return "nguyen thi minh khai"
-    if candidate.startswith("nguyen thai "):
+    if candidate == "nguyen thai":
+        return ""
+    if candidate.startswith("nguyen thai hoc"):
+        return "nguyen thai hoc"
+    if candidate.startswith("nguyen thai binh"):
         return "nguyen thai binh"
     if candidate.startswith("le hong "):
         return "le hong phong"
@@ -442,7 +504,7 @@ def _normalize_road_candidate(value: str) -> str:
                 "dx", "da", "db", "de", "df", "dg", "dh", "di", "dl",
                 "kh", "ki", "kj", "kk", "na", "nb", "ne", "nf", "ng",
                 "nh", "nj", "nk", "nl", "ni", "dj", "dk", "tc", "xe",
-                "xh", "xj", "n", "d",
+                "xh", "xj", "n", "d", "gs",
             }
             and code_number > 999
         ):
@@ -517,6 +579,8 @@ def _normalize_road_candidate(value: str) -> str:
         )
 
     candidate = _cut_at_stop(candidate, _ROAD_STOP_RE)
+    if candidate == "nguyen thai":
+        return ""
     if candidate == "huynh thi":
         return "huynh thi hieu"
     if candidate in {"phan dang l", "phan dang"}:
@@ -539,13 +603,13 @@ def _looks_like_road_name(road: str) -> bool:
     if not road:
         return False
     if re.match(
-        r"^(?:dx|da|d|db|de|df|dg|dh|di|dt|dl|tl|ql|kh|ki|kj|kk|"
+        r"^(?:dx|da|d|db|de|df|dg|dh|di|dt|dl|tl|ql|gs|kh|ki|kj|kk|"
         r"na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj|n)\b",
         road,
     ):
         return bool(
             re.match(
-                r"^(?:dx|da|d|db|de|df|dg|dh|di|dt|dl|tl|ql|kh|ki|kj|kk|"
+                r"^(?:dx|da|d|db|de|df|dg|dh|di|dt|dl|tl|ql|gs|kh|ki|kj|kk|"
                 r"na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj|n)"
                 r"\s+\d{1,4}[a-z]?\b",
                 road,
@@ -660,7 +724,7 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
         return _normalize_road_candidate(numbered_address.group("road"))
 
     code_match = re.search(
-        r"\b(?:dx|da|db|de|df|dg|dh|di|dt|dl|tl|ql|kh|ki|kj|kk|"
+        r"\b(?:dx|da|db|de|df|dg|dh|di|dt|dl|tl|ql|gs|kh|ki|kj|kk|"
         r"na|nb|ne|nf|ng|nh|nj|nk|nl|ni|dj|dk|tc|xe|xh|xj)"
         r"\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
         text,
@@ -677,10 +741,18 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
             prefix_context,
             re.IGNORECASE,
         )
-        if not is_road_width and not tc_without_road_word and not re.search(
-            r"\b(?:cach|gan|sat|ke ben|ke|canh|ra|thong ra|noi ra|nhanh|hem|"
-            r"1 xec|1 xet|1 sec|1 set)\s+(?:duong\s+)?$",
-            prefix_context,
+        tl_after_price = code_text.startswith("tl") and bool(
+            re.search(r"\bty\s*$", prefix_context, re.IGNORECASE)
+        )
+        if (
+            not is_road_width
+            and not tc_without_road_word
+            and not tl_after_price
+            and not re.search(
+                r"\b(?:cach|gan|sat|ke ben|ke|canh|ra|thong ra|noi ra|nhanh|hem|"
+                r"1 xec|1 xet|1 sec|1 set)\s+(?:duong\s+)?$",
+                prefix_context,
+            )
         ):
             return _normalize_road_candidate(code_match.group(0))
     return _known_named_road(text) if include_known_fallback else ""
@@ -761,7 +833,10 @@ def extract_map_location_context(
     stored_road_name: str = "",
 ) -> MapLocationContext:
     """Extract map-only location clues without mutating canonical listing data."""
-    combined = " ".join(part for part in (title or "", description or "") if part)
+    combined = " roadcopybreak ".join(
+        part for part in (title or "", description or "") if part
+    )
+    combined = re.sub(r"[,;]\s+", " roadcopybreak ", combined)
     combined = re.sub(
         r"\b30\s*/\s*0?4\b",
         "30 thang 4",
@@ -803,6 +878,11 @@ def extract_map_location_context(
     )
     folded = normalize_location_token(combined)
     folded = re.sub(
+        r"\bvo\s+(?=(?:mot|1|\d)\b)",
+        "roadcopybreak ",
+        folded,
+    )
+    folded = re.sub(
         r"\b(duong\s+)2\s*/\s*9\b",
         r"\1dh 604",
         folded,
@@ -814,6 +894,12 @@ def extract_map_location_context(
         folded,
     )
     evidence = _bounded_evidence(title, description)
+    ward_hint = _explicit_di_an_ward_hint(title, description)
+
+    def make_context(**values) -> MapLocationContext:
+        values.setdefault("ward_hint", ward_hint)
+        values.setdefault("evidence_text", evidence)
+        return MapLocationContext(**values)
     # Keep title/description boundaries for landmarks so a short place name at
     # the end of the title cannot absorb the opening marketing copy from the
     # description after whitespace normalization.
@@ -835,57 +921,51 @@ def extract_map_location_context(
     alley_road, _ = _relation_road(folded, _ALLEY_PREFIX_RE)
     if alley_road:
         if not re.fullmatch(r"duong so \d{1,4}[a-z]?", alley_road):
-            return MapLocationContext(
+            return make_context(
                 nearby_road=alley_road,
                 landmark=landmark,
                 relation="alley",
                 distance_m=_distance(folded),
-                evidence_text=evidence,
             )
         named_parent_road = _known_named_road(folded)
         parent_road = named_parent_road or direct_road
         if parent_road and parent_road != alley_road:
-            return MapLocationContext(
+            return make_context(
                 nearby_road=parent_road,
                 landmark=landmark,
                 relation="alley",
                 distance_m=_distance(folded),
-                evidence_text=evidence,
             )
         nearby_road, _ = _relation_road(folded, _NEAR_PREFIX_RE)
         if nearby_road:
-            return MapLocationContext(
+            return make_context(
                 nearby_road=nearby_road,
                 landmark=landmark,
                 relation="near",
                 distance_m=_distance(folded),
-                evidence_text=evidence,
             )
-        return MapLocationContext(
+        return make_context(
             nearby_road=alley_road,
             landmark=landmark,
             relation="alley",
             distance_m=_distance(folded),
-            evidence_text=evidence,
         )
 
     nearby_road, _ = _relation_road(folded, _NEAR_PREFIX_RE)
     if explicit_direct_road:
-        return MapLocationContext(
+        return make_context(
             direct_road=explicit_direct_road,
             nearby_road=nearby_road,
             landmark=landmark,
             relation="near" if nearby_road else "on",
-            evidence_text=evidence,
         )
 
     if nearby_road:
-        return MapLocationContext(
+        return make_context(
             nearby_road=nearby_road,
             landmark=landmark,
             relation="near",
             distance_m=_distance(folded),
-            evidence_text=evidence,
         )
 
     if not direct_road and stored_road_name:
@@ -904,9 +984,8 @@ def extract_map_location_context(
         if _looks_like_road_name(stored_candidate):
             direct_road = stored_candidate
 
-    return MapLocationContext(
+    return make_context(
         direct_road=direct_road,
         landmark=landmark,
         relation="on" if direct_road else ("at" if landmark else ""),
-        evidence_text=evidence,
     )

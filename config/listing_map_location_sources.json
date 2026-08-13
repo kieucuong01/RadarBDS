@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260813-v58",
+  "resolver_version": "osm-binh-duong-20260813-v59",
   "coverage_cities": [
     "THỦ DẦU MỘT",
     "BẾN CÁT",
@@ -380,6 +380,14 @@
         "lat": 10.896978,
         "lng": 106.754054
       },
+      "road_scope_parents": [
+        "An Bình",
+        "Tân Đông Hiệp"
+      ],
+      "landmark_scope_parents": [
+        "An Bình",
+        "Tân Đông Hiệp"
+      ],
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },
@@ -390,6 +398,14 @@
         "lat": 10.886923,
         "lng": 106.791004
       },
+      "road_scope_parents": [
+        "Bình An",
+        "Bình Thắng"
+      ],
+      "landmark_scope_parents": [
+        "Bình An",
+        "Bình Thắng"
+      ],
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },
@@ -410,6 +426,8 @@
         "lat": 10.921211,
         "lng": 106.770382
       },
+      "road_scope_parent": "Tân Bình",
+      "landmark_scope_parent": "Tân Bình",
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },

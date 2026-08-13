@@ -65,7 +65,7 @@ def normalize_road_token(value: str) -> str:
         normalized = f"duong so {normalized}"
     road_code_prefixes = (
         "dx|da|d|db|de|df|dg|dh|di|dt|ql|kh|ki|kj|kk|n|ng|ni|na|"
-        "nb|ne|nf|nh|nj|nk|nl|dj|dk|tc|xe|xh|xj"
+        "nb|ne|nf|nh|nj|nk|nl|dj|dk|tc|xe|xh|xj|gs"
     )
     if re.match(rf"^duong (?:{road_code_prefixes}) \d", normalized):
         normalized = normalized.removeprefix("duong ")
@@ -197,6 +197,7 @@ def listing_location_signature(
                 normalize_road_token(getattr(context, "direct_road", "")),
                 normalize_road_token(getattr(context, "nearby_road", "")),
                 normalize_location_token(getattr(context, "landmark", "")),
+                normalize_location_token(getattr(context, "ward_hint", "")),
                 normalize_location_token(getattr(context, "relation", "")),
                 "" if distance is None else f"{distance:.1f}",
             )
@@ -404,6 +405,58 @@ def _match_road(
     return None
 
 
+def _lookup_ward_labels(
+    city: str,
+    stored_ward: str,
+    context: "MapLocationContext | None",
+    registry: LocationRegistry,
+) -> tuple[str, ...]:
+    """Prefer an explicit legacy ward clue while retaining stored fallback."""
+    labels: list[str] = []
+    ward_hint = str(getattr(context, "ward_hint", "") or "").strip()
+    if ward_hint:
+        canonical_hint = _canonical_map_ward(city, ward_hint)
+        hint_key = normalize_location_token(canonical_hint)
+        if (city, hint_key) in registry.wards:
+            labels.append(canonical_hint)
+    if stored_ward not in labels:
+        labels.append(stored_ward)
+    return tuple(labels)
+
+
+def _match_landmark_in_wards(
+    city: str,
+    wards: tuple[str, ...],
+    normalized_landmark: str,
+    registry: LocationRegistry,
+) -> Mapping[str, object] | str | None:
+    for ward in wards:
+        match = _match_landmark(city, ward, normalized_landmark, registry)
+        if match is not None:
+            return match
+    return None
+
+
+def _match_road_in_wards(
+    city: str,
+    wards: tuple[str, ...],
+    normalized_road: str,
+    landmark_key: str,
+    registry: LocationRegistry,
+) -> Mapping[str, object] | str | None:
+    for ward in wards:
+        match = _match_road(
+            city,
+            ward,
+            normalized_road,
+            landmark_key,
+            registry,
+        )
+        if match is not None:
+            return match
+    return None
+
+
 def _ward_fallback(
     *,
     listing_id: int,
@@ -572,6 +625,12 @@ def resolve_listing_location(
     ward_label = str(_value(listing, "ward", "") or "").strip()
     map_ward_label = _canonical_map_ward(city, ward_label)
     ward = normalize_location_token(map_ward_label)
+    lookup_ward_labels = _lookup_ward_labels(
+        city,
+        map_ward_label,
+        context,
+        registry,
+    )
     stored_road = normalize_road_token(_value(listing, "road_name", ""))
     context_direct_road = normalize_road_token(
         getattr(context, "direct_road", "")
@@ -603,9 +662,9 @@ def resolve_listing_location(
             signature=signature,
         )
 
-    landmark_match = _match_landmark(
+    landmark_match = _match_landmark_in_wards(
         city,
-        map_ward_label,
+        lookup_ward_labels,
         landmark_key,
         registry,
     )
@@ -617,9 +676,9 @@ def resolve_listing_location(
     ambiguous_direct_road = ""
     if direct_roads:
         for candidate_direct_road in direct_roads:
-            road_entry = _match_road(
+            road_entry = _match_road_in_wards(
                 city,
-                map_ward_label,
+                lookup_ward_labels,
                 candidate_direct_road,
                 landmark_key if landmark_entry else "",
                 registry,
@@ -717,9 +776,9 @@ def resolve_listing_location(
             )
 
     if nearby_road:
-        road_entry = _match_road(
+        road_entry = _match_road_in_wards(
             city,
-            map_ward_label,
+            lookup_ward_labels,
             nearby_road,
             landmark_key if landmark_entry else "",
             registry,
