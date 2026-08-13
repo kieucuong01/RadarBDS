@@ -1189,6 +1189,21 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("Phú Tân", "dx 5"),
         ("Phú Tân", "dx 76"),
         ("Phú Thọ", "duong vo minh duc"),
+        ("Hòa Phú", "d 19"),
+        ("Hòa Phú", "duong ly thai to"),
+        ("Hòa Phú", "db 12"),
+        ("Hòa Phú", "duong so 11 b"),
+        ("Hòa Phú", "duong so 3"),
+        ("Hòa Phú", "duong so 5 b"),
+        ("Hòa Phú", "duong hung vuong"),
+        ("Hòa Phú", "n 25"),
+        ("Hòa Phú", "duong so 9 a"),
+        ("Hòa Phú", "huynh van luy"),
+        ("Hòa Phú", "duong so 60"),
+        ("Hòa Phú", "n 17"),
+        ("Hòa Phú", "duong so 1"),
+        ("Hòa Phú", "da 7"),
+        ("Hòa Phú", "dong khoi"),
     }.issubset(indexed_roads)
     assert "vo minh duc" in indexed_roads[
         ("Phú Thọ", "duong vo minh duc")
@@ -1196,6 +1211,15 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert indexed_roads[("Hiệp An", "dx 106")][
         "boundary_mismatch_reason"
     ]
+    assert indexed_roads[("Hòa Phú", "duong ly thai to")]["road_name"] == (
+        "Đường Lý Thái Tổ"
+    )
+    assert indexed_roads[("Hòa Phú", "duong hung vuong")]["road_name"] == (
+        "Đường Hùng Vương"
+    )
+    assert indexed_roads[("Hòa Phú", "duong so 60")]["road_name"] == "Đường số 60"
+    assert indexed_roads[("Hòa Phú", "duong so 9 a")]["road_name"] == "Đường số 9A"
+    assert indexed_roads[("Hòa Phú", "dong khoi")]["road_name"] == "Đồng Khởi"
     assert {
         ("Hi\u1ec7p An", "dx 98"),
         ("Hi\u1ec7p An", "dx 101"),
@@ -1272,6 +1296,10 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert indexed_landmarks[("T\u00e2n An", "tdc tan an")]["source"].startswith(
         "Google Maps"
     )
+    assert {
+        ("Hòa Phú", "tdc hoa phu"),
+        ("Hòa Phú", "tdc hoa loi"),
+    }.issubset(indexed_landmarks)
 
     assert {
         ("Chánh Mỹ", "tdc chanh my"),

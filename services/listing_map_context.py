@@ -39,7 +39,7 @@ _DIRECT_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 _ROAD_CODE_RE = re.compile(
-    r"^(?:duong\s+)?(?P<prefix>dx|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
+    r"^(?:duong\s+)?(?P<prefix>dx|da|db|dh|dt|dl|tl|ql|nl|ni|n|d)\s*"
     r"[-./_]?\s*0*(?P<number>\d{1,4})(?P<suffix>[a-z]?)\b",
     re.IGNORECASE,
 )
@@ -89,7 +89,7 @@ _NON_ROAD_NAMES = {
 }
 _ROAD_NAME_HINT_RE = re.compile(
     r"^(?:"
-    r"dx|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
+    r"dx|da|d|db|dh|dt|dl|tl|ql|nl|ni|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"dai lo|bac si|yersin|yesin|"
@@ -115,6 +115,7 @@ _KNOWN_ROAD_PREFIXES = (
     "nguyen tri phuong",
     "huynh van luy",
     "hung vuong",
+    "dong khoi",
     "pham ngoc thach",
     "nguyen hue",
     "dien bien phu",
@@ -408,7 +409,7 @@ def _normalize_road_candidate(value: str) -> str:
         if code_prefix == "dt" and not 700 <= code_number <= 799:
             return ""
         if (
-            code_prefix in {"dx", "db", "dh", "dl", "nl", "ni", "n", "d"}
+            code_prefix in {"dx", "da", "db", "dh", "dl", "nl", "ni", "n", "d"}
             and code_number > 999
         ):
             return ""
@@ -489,10 +490,10 @@ def _normalize_road_candidate(value: str) -> str:
 def _looks_like_road_name(road: str) -> bool:
     if not road:
         return False
-    if re.match(r"^(?:dx|d|db|dh|dt|dl|tl|ql|nl|ni|n)\b", road):
+    if re.match(r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|nl|ni|n)\b", road):
         return bool(
             re.match(
-                r"^(?:dx|d|db|dh|dt|dl|tl|ql|nl|ni|n)\s+\d{1,4}[a-z]?\b",
+                r"^(?:dx|da|d|db|dh|dt|dl|tl|ql|nl|ni|n)\s+\d{1,4}[a-z]?\b",
                 road,
             )
         )
@@ -597,7 +598,7 @@ def _direct_road(text: str, *, include_known_fallback: bool = True) -> str:
         return _normalize_road_candidate(numbered_address.group("road"))
 
     code_match = re.search(
-        r"\b(?:dx|db|dh|dt|dl|tl|ql|nl|ni)\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
+        r"\b(?:dx|da|db|dh|dt|dl|tl|ql|nl|ni)\s*[-./_]?\s*0*\d{1,4}[a-z]?\b",
         text,
     )
     if code_match:

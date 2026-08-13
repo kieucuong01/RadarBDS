@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v45",
+  "resolver_version": "osm-binh-duong-20260807-v46",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -85,6 +85,18 @@
         "Vo Minh Duc",
         "Duong Vo Minh Duc"
       ]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "canonical": "Đường Lý Thái Tổ",
+      "aliases": ["Lý Thái Tổ", "Ly Thai To"]
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "canonical": "Đường Hùng Vương",
+      "aliases": ["Hùng Vương", "Hung Vuong"]
     },
     {
       "city": "THỦ DẦU MỘT",
@@ -1594,6 +1606,132 @@
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "TDC Chanh Nghia listings explicitly use Yersin as a nearby reference across the retained legacy ward boundary"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Đường D19",
+      "lat": 11.0727,
+      "lng": 106.66825,
+      "accuracy_radius_m": 500,
+      "source": "Google Maps rendered named D19 inside the TDC Hoa Loi grid, cross-checked against adjacent OpenStreetMap D17, D18, D22, N2 and N3 geometry",
+      "source_url": "https://www.google.com/maps/@11.0738939,106.6679662,18z",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "N17",
+      "lat": 11.07555,
+      "lng": 106.66925,
+      "accuracy_radius_m": 550,
+      "source": "Google Maps rendered named N17 inside the TDC Hoa Loi grid, cross-checked against adjacent OpenStreetMap D8, D10 and D18 geometry",
+      "source_url": "https://www.google.com/maps/@11.0738939,106.6679662,17z",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "N25",
+      "lat": 11.0413879,
+      "lng": 106.6895953,
+      "accuracy_radius_m": 1000,
+      "source": "Google Maps exact public address at 02 Duong N25 in the new-city area, reused for current Hoa Phu listings explicitly naming N25",
+      "source_url": "https://www.google.com/maps/place/S%E1%BB%91+02,+%C4%91%C6%B0%E1%BB%9Dng+n25,+kp1,+ph%C6%B0%E1%BB%9Dng+Ph%C3%BA+T%C3%A2n,+Tp+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t,+t%E1%BB%89nh+b%C3%ACnh+d%C6%B0%C6%A1ng/data=!4m7!3m6!1s0x3174d10030008dc5:0x1db3682e9614be81!8m2!3d11.0413879!4d106.6895953",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hoa Phu listings use the merged new-city scope and explicitly identify N25"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "DB12",
+      "lat": 11.0461304,
+      "lng": 106.6857253,
+      "accuracy_radius_m": 1200,
+      "source": "Repeated current DB12 KDT Moi Hoa Phu listings anchored to a Google Maps public result in the same new-city road grid",
+      "source_url": "https://www.google.com/maps/place/C%C6%A0M+NI%C3%8AU+HO%C3%80NG+GIA/data=!4m7!3m6!1s0x3174d1177112b65b:0xed96523e2910e4e3!8m2!3d11.0461304!4d106.6857253",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "DB12 listings explicitly name the Hoa Phu new-city road grid across the retained historical boundary"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Đường số 11B",
+      "lat": 11.0444259,
+      "lng": 106.6596302,
+      "accuracy_radius_m": 900,
+      "source": "Repeated TDC Dinh Hoa listings and adjacent OpenStreetMap road 11A anchor, reused under current Hoa Phu listing scope",
+      "source_url": "https://www.openstreetmap.org/way/1173904109",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hoa Phu listings explicitly identify road 11B in TDC Dinh Hoa"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Đường số 5B",
+      "lat": 11.0421,
+      "lng": 106.65835,
+      "accuracy_radius_m": 1100,
+      "source": "Public road 5B TDC Dinh Hoa listings and adjacent OpenStreetMap road 5A and 5C anchors, reused under current Hoa Phu scope",
+      "source_url": "https://batdongsan.com.vn/ban-dat-duong-so-5b-phuong-hoa-phu-2-163/can-ban-lo-goc-tdc-dinh-gan-tp-moi-binh-duong-pr44270354",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hoa Phu listings explicitly identify road 5B in TDC Dinh Hoa"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Đường số 1",
+      "lat": 11.06365,
+      "lng": 106.69175,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps rendered named road 1 beside Nguyen Khuyen school in the Phu Chanh and new-city grid",
+      "source_url": "https://www.google.com/maps/@11.0636463,106.6907017,18z",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hoa Phu listings include the former Phu Chanh scope and explicitly name road 1"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Đường số 3",
+      "lat": 11.06365,
+      "lng": 106.6928,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps rendered named road 3 beside Nguyen Khuyen school, matching current Phu Chanh B listing evidence",
+      "source_url": "https://www.google.com/maps/@11.0636463,106.6907017,18z",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Hoa Phu listings include the former Phu Chanh B scope and explicitly name road 3"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "Huỳnh Văn Lũy",
+      "lat": 10.999977,
+      "lng": 106.6779716,
+      "accuracy_radius_m": 650,
+      "source": "OpenStreetMap Hem 322 Huynh Van Luy geometry reused for current listings whose text explicitly names Hem 322 near Nha van hoa Phu Loi",
+      "source_url": "https://www.openstreetmap.org/way/613336270",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "these listings carry a stale Hoa Phu ward but explicitly identify Hem 322 Huynh Van Luy in Phu Loi"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "road_name": "DA7",
+      "lat": 11.0543471,
+      "lng": 106.6907184,
+      "accuracy_radius_m": 1200,
+      "source": "Repeated DA7 KDT Moi Hoa Phu listings anchored to the exact Google Maps Ngo Thoi Nhiem school result named by those listings",
+      "source_url": "https://www.google.com/maps/place/Tr%C6%B0%E1%BB%9Dng+TH+Ng%C3%B4+Th%E1%BB%9Di+Nhi%E1%BB%87m/data=!4m7!3m6!1s0x3174cf007e53ba0b:0x7017214d33616db8!8m2!3d11.0543471!4d106.6907184",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "DA7 listings explicitly identify the Hoa Phu new-city grid near Ngo Thoi Nhiem school"
     }
   ],
   "landmark_aliases": [
@@ -1749,6 +1887,24 @@
     {
       "canonical": "KDC Hoàng Nam 2",
       "aliases": ["KDC Hoang Nam 2", "KDC Hoàng Nam Phú Lợi"]
+    },
+    {
+      "canonical": "TĐC Hòa Phú",
+      "aliases": [
+        "TDC Hoa Phu",
+        "Khu tái định cư Hòa Phú",
+        "tái định cư Hòa Phú"
+      ]
+    },
+    {
+      "canonical": "TĐC Hòa Lợi",
+      "aliases": [
+        "TDC Hoa Loi",
+        "TDC Hòa Lợi Hòa Phú",
+        "TDC Hoa Loi Hoa Phu",
+        "Khu tái định cư Hòa Lợi",
+        "Khu dân cư TDC Hòa Lợi"
+      ]
     }
   ],
   "landmarks": [
@@ -2072,6 +2228,28 @@
       "accuracy_radius_m": 850,
       "source": "Google Maps exact public address at 48 Duong D2 inside Khu tai dinh cu Chanh Nghia verified with browser-use",
       "source_url": "https://www.google.com/maps/search/48+%C4%90%C6%B0%E1%BB%9Dng+D2,+Khu+t%C3%A1i+%C4%91%E1%BB%8Bnh+c%C6%B0+Ch%C3%A1nh+Ngh%C4%A9a,+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "landmark_name": "TĐC Hòa Phú",
+      "lat": 11.0952833,
+      "lng": 106.6935741,
+      "accuracy_radius_m": 1500,
+      "source": "Repeated current TDC Hoa Phu listing evidence anchored to the exact Google Maps Khu nha o Sun Casa result named by those listings",
+      "source_url": "https://www.google.com/maps/place/Khu+nh%C3%A0+%E1%BB%9F+Sun+Casa/data=!4m7!3m6!1s0x3174cffb81b8f3a9:0x809948cca51f80d7!8m2!3d11.0952833!4d106.6935741",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "THỦ DẦU MỘT",
+      "ward": "Hòa Phú",
+      "landmark_name": "TĐC Hòa Lợi",
+      "lat": 11.0884678,
+      "lng": 106.6717489,
+      "accuracy_radius_m": 1800,
+      "source": "Google Maps exact public Khu dan cu TDC Hoa Loi result corroborated by the exact resettlement-park result",
+      "source_url": "https://www.google.com/maps/place/Khu+d%C3%A2n+c%C6%B0+TDC+HO%C3%80+L%E1%BB%A2I/data=!4m7!3m6!1s0x3174cf0000163d3d:0x30446356db18d076!8m2!3d11.0884678!4d106.6717489",
       "verified_at": "2026-08-13"
     }
   ]

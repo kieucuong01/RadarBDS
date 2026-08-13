@@ -324,6 +324,25 @@ def test_phu_tho_repeated_duong_prefix_keeps_full_30_4_road_name():
     assert context.direct_road == "duong so 30 thang 4"
 
 
+def test_hoa_phu_da7_road_code_is_extracted_from_listing_copy():
+    context = extract_map_location_context(
+        "Mat tien duong DA7 khu do thi moi Hoa Phu",
+        "",
+    )
+
+    assert context.direct_road == "da 7"
+
+
+def test_hoa_phu_dong_khoi_stored_road_is_recognized():
+    context = extract_map_location_context(
+        "Mat tien Dong Khoi can nha 3 mat tien",
+        "",
+        "Dong Khoi",
+    )
+
+    assert context.direct_road == "dong khoi"
+
+
 def test_stored_road_name_is_cleaned_like_extracted_road_text():
     context = extract_map_location_context(
         "Bán mặt tiền Hồ Văn Cống Tương Bình Hiệp TDM",

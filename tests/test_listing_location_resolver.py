@@ -493,6 +493,21 @@ def test_phu_tan_context_named_road_is_used_when_stored_road_name_is_noise():
         ("Ph\u00fa Th\u1ecd", "CMT8", "cach-mang-thang-tam"),
         ("Ph\u00fa Th\u1ecd", "30/4", "duong-so-30-thang-4"),
         ("Ph\u00fa Th\u1ecd", "Vo Minh Duc", "duong-vo-minh-duc"),
+        ("H\u00f2a Ph\u00fa", "D19", "d-19"),
+        ("H\u00f2a Ph\u00fa", "Ly Thai To", "duong-ly-thai-to"),
+        ("H\u00f2a Ph\u00fa", "DB12", "db-12"),
+        ("H\u00f2a Ph\u00fa", "Duong 11B", "duong-so-11-b"),
+        ("H\u00f2a Ph\u00fa", "Duong so 3", "duong-so-3"),
+        ("H\u00f2a Ph\u00fa", "Duong 5B", "duong-so-5-b"),
+        ("H\u00f2a Ph\u00fa", "Hung Vuong", "duong-hung-vuong"),
+        ("H\u00f2a Ph\u00fa", "N25", "n-25"),
+        ("H\u00f2a Ph\u00fa", "Duong 9A", "duong-so-9-a"),
+        ("H\u00f2a Ph\u00fa", "Huynh Van Luy", "huynh-van-luy"),
+        ("H\u00f2a Ph\u00fa", "Duong 60", "duong-so-60"),
+        ("H\u00f2a Ph\u00fa", "N17", "n-17"),
+        ("H\u00f2a Ph\u00fa", "Duong so 1", "duong-so-1"),
+        ("H\u00f2a Ph\u00fa", "DA7", "da-7"),
+        ("H\u00f2a Ph\u00fa", "Dong Khoi", "dong-khoi"),
         ("Hi\u1ec7p An", "Bui Ngoc Thu", "bui-ngoc-thu"),
         ("Hi\u1ec7p An", "Le Chi Dan", "le-chi-dan"),
         ("Ph\u00fa C\u01b0\u1eddng", "CMT8", "cach-mang-thang-tam"),
@@ -584,6 +599,34 @@ def test_tan_an_resettlement_landmark_resolves_out_of_ward_center():
     assert result.location
     assert result.location.precision == "landmark"
     assert "tdc-tan-an" in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("title", "expected_slug"),
+    [
+        ("TDC Hoa Phu sat ben Suncasa", "tdc-hoa-phu"),
+        ("TDC Hoa Loi Hoa Phu Binh Duong", "tdc-hoa-loi"),
+    ],
+)
+def test_hoa_phu_evidence_backed_landmarks_resolve_out_of_ward_center(
+    title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 920111,
+        "city": "TH\u1ee6 D\u1ea6U M\u1ed8T",
+        "ward": "H\u00f2a Ph\u00fa",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(title, "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert expected_slug in result.location.location_key
 
 
 @pytest.mark.parametrize(

@@ -63,11 +63,11 @@ def normalize_road_token(value: str) -> str:
     bare_number_letter = re.match(r"^(\d{1,4})\s+([a-z])$", normalized)
     if bare_number_letter and bare_number_letter.group(2) != "m":
         normalized = f"duong so {normalized}"
-    if re.match(r"^duong (?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb) \d", normalized):
+    if re.match(r"^duong (?:dx|da|d|db|dh|dt|ql|n|ng|ni|na|nb) \d", normalized):
         normalized = normalized.removeprefix("duong ")
     normalized = re.sub(r"^duong (?=\d)", "duong so ", normalized)
     normalized = re.sub(
-        r"^(?P<prefix>(?:dx|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+)0+(?=\d)",
+        r"^(?P<prefix>(?:dx|da|d|db|dh|dt|ql|n|ng|ni|na|nb)\s+)0+(?=\d)",
         r"\g<prefix>",
         normalized,
     )
