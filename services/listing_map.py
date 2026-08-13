@@ -437,19 +437,19 @@ def load_listing_map_summary(
                        COUNT(*)::INTEGER AS listing_count,
                        MAX(f.mos_pct) AS best_mos,
                        CASE
-                           WHEN ml.location_precision = 'exact'
+                           WHEN ml.location_precision IN ('exact', 'road')
                             AND COUNT(*) = 1
                            THEN MAX(f.price_ty)
                            ELSE NULL
                        END AS label_price_ty,
                        CASE
-                           WHEN ml.location_precision = 'exact'
+                           WHEN ml.location_precision IN ('exact', 'road')
                             AND COUNT(*) = 1
                            THEN MAX(f.area_m2)
                            ELSE NULL
                        END AS label_area_m2,
                        CASE
-                           WHEN ml.location_precision = 'exact'
+                           WHEN ml.location_precision IN ('exact', 'road')
                             AND COUNT(*) = 1
                            THEN COALESCE(
                                MAX(f.price_per_m2),
@@ -559,7 +559,7 @@ def load_listing_map_summary(
                 ),
             }
             if (
-                location["precision"] == "exact"
+                location["precision"] in {"exact", "road"}
                 and listing_count == 1
             ):
                 price_ty = _optional_float(row, "label_price_ty")

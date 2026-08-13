@@ -87,6 +87,9 @@ class _MapConnection:
                     "location_label": "Theo tên đường ĐX 43, Phú Lợi",
                     "listing_count": 1,
                     "best_mos": 24.0,
+                    "label_price_ty": 2.4,
+                    "label_area_m2": 120,
+                    "label_price_per_m2": 20.0,
                 },
                 {
                     **common,
@@ -232,7 +235,9 @@ def test_summary_invariants_and_compact_query(monkeypatch):
     assert "sum(count(ml.listing_id)) over()" in summary_sql
 
 
-def test_summary_exact_locations_include_compact_label_metrics(monkeypatch):
+def test_summary_singleton_exact_and_road_include_compact_label_metrics(
+    monkeypatch,
+):
     import services.listing_map as listing_map
 
     connection = _MapConnection()
@@ -261,12 +266,18 @@ def test_summary_exact_locations_include_compact_label_metrics(monkeypatch):
     assert exact["price_ty"] == 1.8
     assert exact["area_m2"] == 100
     assert exact["price_per_m2"] == 18.0
-    assert "price_ty" not in road
+    assert road["price_ty"] == 2.4
+    assert road["area_m2"] == 120
+    assert road["price_per_m2"] == 20.0
     summary_sql = next(
         sql for sql, _params in connection.queries
         if "GROUP BY ml.location_key" in sql
     )
     assert "label_price_per_m2" in summary_sql
+    normalized_summary_sql = " ".join(summary_sql.lower().split())
+    assert "ml.location_precision in ('exact', 'road')" in (
+        normalized_summary_sql
+    )
 
 
 def test_signal_summary_uses_read_model_and_dataset_version(monkeypatch):
