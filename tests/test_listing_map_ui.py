@@ -295,8 +295,11 @@ def test_listing_map_assets_use_current_location_share_cache_version():
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
     assert template.count("listing-map-location-share-20260813b") == 2
+    assert template.count("listing-map-launch-share-20260814") == 2
     assert "listing-map-price-zoom-20260813" not in template
     assert "listing-map-compact-labels-20260813" not in template
+    assert "js/main/core.js') }}?v=listing-workspace-20260811" not in template
+    assert "js/main/boot.js') }}?v=scope-filter-storage-20260807" not in template
     assert "listing-map-label-font-20260807" not in template
 
 
