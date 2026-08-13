@@ -69,12 +69,19 @@ def audit_ward_fallbacks(
 ) -> dict:
     normalized_ward = normalize_location_token(ward)
     aliases: dict[str, set[str]] = defaultdict(set)
+    alias_is_resolvable: dict[str, bool] = {}
     for (entry_city, entry_ward, raw_alias), entries in registry.roads.items():
         if entry_city != city or entry_ward != normalized_ward:
             continue
         alias = normalize_road_token(raw_alias)
         if not alias:
             continue
+        aggregate_count = sum(
+            1 for entry in entries if bool(entry.get("aggregate"))
+        )
+        alias_is_resolvable[alias] = (
+            len(entries) == 1 or aggregate_count == 1
+        )
         for entry in entries:
             aliases[alias].add(_entry_canonical(entry, alias))
 
@@ -104,7 +111,7 @@ def audit_ward_fallbacks(
             ):
                 continue
             canonicals = aliases[alias]
-            if len(canonicals) == 1:
+            if len(canonicals) == 1 and alias_is_resolvable.get(alias, False):
                 known_matches[next(iter(canonicals))].add(listing_id)
             else:
                 ambiguous_matches[alias].add(listing_id)

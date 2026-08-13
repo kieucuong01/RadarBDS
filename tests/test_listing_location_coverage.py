@@ -365,6 +365,7 @@ def test_radar_parser_accepts_coverage_audit_options():
             "Phú Tân",
             "--include-ward-alias",
             "Phú Chánh",
+            "--omit-sample-ids",
         ]
     )
 
@@ -374,6 +375,44 @@ def test_radar_parser_accepts_coverage_audit_options():
     assert args.city == "THỦ DẦU MỘT"
     assert args.ward == "Phú Tân"
     assert args.include_ward_alias == ["Phú Chánh"]
+    assert args.omit_sample_ids is True
+
+
+def test_coverage_cli_can_omit_sample_listing_ids(monkeypatch, capsys):
+    import cli.map_locations as map_cli
+
+    monkeypatch.setattr(
+        map_cli,
+        "load_listing_location_coverage",
+        lambda status, limit: [
+            {
+                "candidate_key": "road:thuan-an:an-phu:phan-dinh-giot",
+                "city": "THUẬN AN",
+                "ward": "An Phú",
+                "road_candidate": "phan dinh giot",
+                "landmark_candidate": "",
+                "relation": "on",
+                "status": status,
+                "affected_listing_count": 3,
+                "sample_listing_ids": [101, 102],
+                "resolution_note": "ambiguous_road",
+            }
+        ],
+    )
+
+    payload = map_cli.cmd_map_location_coverage(
+        Namespace(
+            status="ambiguous",
+            limit=100,
+            city="THUẬN AN",
+            ward="",
+            include_ward_alias=[],
+            omit_sample_ids=True,
+        )
+    )
+
+    assert payload == json.loads(capsys.readouterr().out)
+    assert "sample_listing_ids" not in payload["items"][0]
 
 
 def test_radar_parser_accepts_research_queue_location_filters():

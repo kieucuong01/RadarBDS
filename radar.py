@@ -302,6 +302,11 @@ def build_parser():
         action="append",
         default=[],
     )
+    p_map_coverage.add_argument(
+        "--omit-sample-ids",
+        action="store_true",
+        help="Omit listing identifiers from aggregate audit output",
+    )
 
     p_map_ward_audit = sub.add_parser(
         "map-location-ward-audit",

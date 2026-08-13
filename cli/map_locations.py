@@ -100,8 +100,13 @@ def cmd_map_location_coverage(args):
             str(row.get("candidate_key") or ""),
         )
     )
+    public_fields = _PUBLIC_FIELDS
+    if bool(getattr(args, "omit_sample_ids", False)):
+        public_fields = tuple(
+            field for field in public_fields if field != "sample_listing_ids"
+        )
     items = [
-        {field: row.get(field) for field in _PUBLIC_FIELDS}
+        {field: row.get(field) for field in public_fields}
         for row in loaded[:limit]
     ]
     payload = {

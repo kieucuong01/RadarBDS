@@ -13,6 +13,9 @@ def _registry(*roads):
             "normalized_ward": "an phu",
             "normalized_road": road["canonical"],
             "aliases": road.get("aliases", []),
+            "lat": 10.95,
+            "lng": 106.73,
+            "label": road["canonical"],
         }
         for alias in {road["canonical"], *road.get("aliases", [])}:
             key = ("THUẬN AN", "an phu", alias)
@@ -55,6 +58,45 @@ def test_audit_finds_named_registry_road_missed_by_primary_extractor():
             "candidate": "phan dinh giot",
             "affected_listing_count": 1,
             "sample_listing_ids": [101],
+        }
+    ]
+
+
+def test_audit_marks_same_name_osm_segments_ambiguous_without_aggregate():
+    registry = _registry({"canonical": "phan dinh giot"})
+    roads = {}
+    for key, entries in registry.roads.items():
+        first = entries[0]
+        roads[key] = (
+            first,
+            {**first, "lat": 10.951, "lng": 106.731},
+        )
+    registry = LocationRegistry(
+        resolver_version=registry.resolver_version,
+        roads=roads,
+        landmarks=registry.landmarks,
+        wards=registry.wards,
+    )
+
+    result = audit_ward_fallbacks(
+        [
+            {
+                "id": 106,
+                "title": "Nhà Phan Đình Giót",
+                "description": "Phường An Phú",
+            }
+        ],
+        registry,
+        city="THUẬN AN",
+        ward="An Phú",
+    )
+
+    assert result["known_registry_missed"] == []
+    assert result["ambiguous_registry_matches"] == [
+        {
+            "candidate": "phan dinh giot",
+            "affected_listing_count": 1,
+            "sample_listing_ids": [106],
         }
     ]
 
