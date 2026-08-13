@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v56",
+  "resolver_version": "osm-binh-duong-20260813-v57",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -316,6 +316,12 @@
     },
     {
       "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Đường Chợ Bến Lớn",
+      "aliases": ["Chợ Bến Lớn", "Cho Ben Lon", "Đường Bến Lớn", "Ben Lon"]
+    },
+    {
+      "city": "BẾN CÁT",
       "ward": "Hòa Lợi",
       "canonical": "Đại lộ Bình Dương",
       "aliases": ["QL13", "QL 13", "QL14", "QL 14", "Quốc lộ 14"]
@@ -500,6 +506,17 @@
       "accuracy_radius_m": 1400,
       "source": "Official Tân Định khu phố 2 geographic-name anchor corroborated by public Chợ Hoàng Gia road addresses and provincial environmental reporting",
       "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "road_name": "Đường Chợ Bến Lớn",
+      "lat": 11.0560315,
+      "lng": 106.6277181,
+      "accuracy_radius_m": 1400,
+      "source": "Google Maps public Chợ Bến Lớn Tân Định place on Đường Bến Lớn",
+      "source_url": "https://www.google.com/maps/place/Ch%E1%BB%A3+B%E1%BA%BFn+L%E1%BB%9Bn+T%C3%A2n+%C4%90%E1%BB%8Bnh/@11.0560315,106.6277181,17z/",
       "verified_at": "2026-08-13"
     },
     {
@@ -2281,6 +2298,96 @@
     },
     {
       "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 1",
+      "canonical": "Khu vực Mỹ Phước 1",
+      "aliases": ["My Phuoc 1", "Khu My Phuoc 1"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 2",
+      "canonical": "Khu vực Mỹ Phước 2",
+      "aliases": ["My Phuoc 2", "Khu My Phuoc 2"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu vực Mỹ Phước 3",
+      "aliases": ["My Phuoc 3", "MP3", "Khu My Phuoc 3"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 4",
+      "canonical": "Khu vực Mỹ Phước 4",
+      "aliases": ["My Phuoc 4", "MP4", "Khu My Phuoc 4"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu F Mỹ Phước 3",
+      "aliases": ["Khu F"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu G Mỹ Phước 3",
+      "aliases": ["Khu G"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu H Mỹ Phước 3",
+      "aliases": ["Khu H"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu I Mỹ Phước 3",
+      "aliases": ["Khu I"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu J Mỹ Phước 3",
+      "aliases": ["Khu J"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu K Mỹ Phước 3",
+      "aliases": ["Khu K"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "canonical": "Khu L Mỹ Phước 3",
+      "aliases": ["Khu L"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Khu phố 1 Tân Định",
+      "aliases": ["KP1 Tân Định", "Khu 1 Tân Định"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Khu phố 2 Tân Định",
+      "aliases": ["KP2 Tân Định", "Khu 2 Tân Định"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Khu phố 3 Tân Định",
+      "aliases": ["KP3 Tân Định", "Khu 3 Tân Định"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "canonical": "Khu phố 4 Tân Định",
+      "aliases": ["KP4 Tân Định", "Khu 4 Tân Định"]
+    },
+    {
+      "city": "BẾN CÁT",
       "ward": "Thới Hòa",
       "canonical": "Khu đô thị Mỹ Phước 3",
       "aliases": [
@@ -2335,6 +2442,179 @@
   "landmarks": [
     {
       "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 1",
+      "landmark_name": "Khu vực Mỹ Phước 1",
+      "lat": 11.1298145,
+      "lng": 106.6002091,
+      "accuracy_radius_m": 2500,
+      "source": "Google Maps public KCN Mỹ Phước 1 place anchor",
+      "source_url": "https://www.google.com/maps/place/KCN+M%E1%BB%B9+Ph%C6%B0%E1%BB%9Bc/@11.1298145,106.6002091,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 2",
+      "landmark_name": "Khu vực Mỹ Phước 2",
+      "lat": 11.130493,
+      "lng": 106.6133916,
+      "accuracy_radius_m": 2500,
+      "source": "Google Maps public Chợ Mỹ Phước 2 place anchor",
+      "source_url": "https://www.google.com/maps/place/Ch%E1%BB%A3+M%E1%BB%B9+Ph%C6%B0%E1%BB%9Bc+2/@11.130493,106.6133916,17z/",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu vực Mỹ Phước 3",
+      "lat": 11.116,
+      "lng": 106.642,
+      "accuracy_radius_m": 6000,
+      "source": "OpenStreetMap Mỹ Phước 3 named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=14/11.1160/106.6420",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 4",
+      "landmark_name": "Khu vực Mỹ Phước 4",
+      "lat": 11.099,
+      "lng": 106.614,
+      "accuracy_radius_m": 4000,
+      "source": "OpenStreetMap N10/N12/NE8 grid centroid corroborated by Google Maps Mỹ Phước 4 and Vành đai 4 places",
+      "source_url": "https://www.google.com/maps/search/Khu+do+thi+My+Phuoc+4+Ben+Cat",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu F Mỹ Phước 3",
+      "lat": 11.1413501,
+      "lng": 106.6394792,
+      "accuracy_radius_m": 2300,
+      "source": "OpenStreetMap DF/NF named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.1413501/106.6394792",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu G Mỹ Phước 3",
+      "lat": 11.1393543,
+      "lng": 106.6576837,
+      "accuracy_radius_m": 3000,
+      "source": "OpenStreetMap DG/NG named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.1393543/106.6576837",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu H Mỹ Phước 3",
+      "lat": 11.1200342,
+      "lng": 106.6377257,
+      "accuracy_radius_m": 2800,
+      "source": "OpenStreetMap DH/NH named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.1200342/106.6377257",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu I Mỹ Phước 3",
+      "lat": 11.1162269,
+      "lng": 106.6460745,
+      "accuracy_radius_m": 3000,
+      "source": "OpenStreetMap DI/NI named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.1162269/106.6460745",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu J Mỹ Phước 3",
+      "lat": 11.1058258,
+      "lng": 106.637467,
+      "accuracy_radius_m": 2500,
+      "source": "OpenStreetMap DJ/NJ named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.1058258/106.6374670",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu K Mỹ Phước 3",
+      "lat": 11.0908775,
+      "lng": 106.6366959,
+      "accuracy_radius_m": 2500,
+      "source": "OpenStreetMap DK/NK named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.0908775/106.6366959",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Mỹ Phước 3",
+      "landmark_name": "Khu L Mỹ Phước 3",
+      "lat": 11.1046693,
+      "lng": 106.6290629,
+      "accuracy_radius_m": 1800,
+      "source": "OpenStreetMap DL/NL named-road grid centroid",
+      "source_url": "https://www.openstreetmap.org/#map=16/11.1046693/106.6290629",
+      "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "landmark_name": "Khu phố 1 Tân Định",
+      "lat": 11.0479787,
+      "lng": 106.6486976,
+      "accuracy_radius_m": 2200,
+      "source": "Google Maps public Văn phòng khu phố 1 place in the former Tân Định area",
+      "source_url": "https://www.google.com/maps/place/V%C4%83n+ph%C3%B2ng+khu+ph%E1%BB%91+1/@11.0479787,106.6486976,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Google Maps places retain the former Tan Dinh khu-pho identity while the available legacy polygon is coarse"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "landmark_name": "Khu phố 2 Tân Định",
+      "lat": 11.0541319,
+      "lng": 106.6353338,
+      "accuracy_radius_m": 1800,
+      "source": "Google Maps public Khu phố 2 Phường Tân Định place",
+      "source_url": "https://www.google.com/maps/place/Khu+ph%E1%BB%91+2,+Ph%C6%B0%E1%BB%9Dng+T%C3%A2n+%C4%90%E1%BB%8Bnh,+B%E1%BA%BFn+C%C3%A1t,+B%C3%ACnh+D%C6%B0%C6%A1ng/@11.0541319,106.6353338,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Google Maps places retain the former Tan Dinh khu-pho identity while the available legacy polygon is coarse"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "landmark_name": "Khu phố 3 Tân Định",
+      "lat": 11.0560315,
+      "lng": 106.6277181,
+      "accuracy_radius_m": 1800,
+      "source": "Google Maps public Chợ Bến Lớn Tân Định anchor corroborated by listings naming Khu 3",
+      "source_url": "https://www.google.com/maps/place/Ch%E1%BB%A3+B%E1%BA%BFn+L%E1%BB%9Bn+T%C3%A2n+%C4%90%E1%BB%8Bnh/@11.0560315,106.6277181,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Google Maps places retain the former Tan Dinh khu-pho identity while the available legacy polygon is coarse"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Tân Định",
+      "landmark_name": "Khu phố 4 Tân Định",
+      "lat": 11.0755456,
+      "lng": 106.6352348,
+      "accuracy_radius_m": 2200,
+      "source": "Google Maps public KP4 Tân Định Bến Cát place",
+      "source_url": "https://www.google.com/maps/place/Kp4,+t%C3%A2n+%C4%91%E1%BB%8Bnh+b%E1%BA%BFn+c%C3%A1t+b%C3%ACnh+d%C6%B0%C6%A1ng/@11.0755456,106.6352348,17z/",
+      "verified_at": "2026-08-13",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "current Google Maps places retain the former Tan Dinh khu-pho identity while the available legacy polygon is coarse"
+    },
+    {
+      "city": "BẾN CÁT",
       "ward": "Hòa Lợi",
       "landmark_name": "TĐC Hòa Lợi",
       "lat": 11.0884678,
@@ -2372,11 +2652,11 @@
       "city": "BẾN CÁT",
       "ward": "Thới Hòa",
       "landmark_name": "Khu đô thị Mỹ Phước 4",
-      "lat": 11.1440263,
-      "lng": 106.6018378,
-      "accuracy_radius_m": 2400,
-      "source": "Google Maps public coordinate for a current business address inside KDC My Phuoc 4, corroborated by public project and official ward evidence",
-      "source_url": "https://www.google.com/maps/place/11%C2%B008%E2%80%9938.5%22N+106%C2%B036%E2%80%9906.5%22E/@11.1440263,106.6018378,17z/",
+      "lat": 11.099,
+      "lng": 106.614,
+      "accuracy_radius_m": 4000,
+      "source": "OpenStreetMap N10/N12/NE8 grid centroid corroborated by Google Maps Mỹ Phước 4, Oasis and Vành đai 4 places",
+      "source_url": "https://www.google.com/maps/search/Khu+do+thi+My+Phuoc+4+Ben+Cat",
       "verified_at": "2026-08-13",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "current public addresses place My Phuoc 4 in Thoi Hoa while the available legacy ward polygon is a coarse historical boundary"

@@ -1371,6 +1371,51 @@ def test_extract_context_recognizes_tan_dinh_numbered_local_road():
     assert context.relation == "on"
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà trọ Khu F Mỹ Phước 3", "khu f"),
+        ("Bán đất khu G MP3", "khu g"),
+        ("Nhà gác lửng tại Khu I", "khu i"),
+        ("Dãy trọ khu L Mỹ Phước III", "khu l"),
+        ("Bán đất KP1 Tân Định", "khu pho 1 tan dinh"),
+        ("Nhà khu phố 2 Tân Định", "khu pho 2 tan dinh"),
+        ("Lô đất khu 4 Tân Định", "khu pho 4 tan dinh"),
+    ],
+)
+def test_extract_context_recognizes_ben_cat_subzone_landmark(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert context.direct_road == ""
+    assert context.nearby_road == ""
+    assert context.landmark == expected
+    assert context.relation == "at"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Cần 2 lô khu H khu L khu J Mỹ Phước 3",
+        "Nhà nằm giữa khu 1 và khu 2 Tân Định",
+    ],
+)
+def test_extract_context_does_not_choose_ambiguous_ben_cat_subzone(text):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == ""
+
+
+def test_extract_context_keeps_road_priority_when_zone_is_also_present():
+    context = extract_map_location_context(
+        "Mặt tiền đường DI1 Khu I Mỹ Phước 3",
+        "",
+    )
+
+    assert context.direct_road == "di 1"
+    assert context.landmark == "khu i"
+    assert context.relation == "on"
+
+
 def test_extract_context_clips_hoa_loi_road_width_copy():
     context = extract_map_location_context(
         "Bán đất mặt tiền Phạm Hùng rộng 20m Hòa Lợi",

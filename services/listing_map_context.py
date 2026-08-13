@@ -65,6 +65,7 @@ _ROAD_STOP_RE = re.compile(
     r"kdc|vao|nay|"
     r"tuong binh hiep|dinh hoa|tan an|hiep an|phu hoa|phu loi|"
     r"phu my|hiep thanh|chanh nghia|chanh my|phu tho|phu cuong|hoa phu|"
+    r"tan dinh|hoa loi|thoi hoa|my phuoc|"
     r"(?<!nguyen )(?<!le )(?<!ho )(?<!mac )chi)\b|"
     r"\b\d{1,4}(?:[.,]\d+)?\s*m\b",
     re.IGNORECASE,
@@ -93,7 +94,7 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"dx|da|d|db|dh|dt|dl|tl|ql|na|nb|ne|nf|nh|nj|nk|nl|ni|dj|dk|n|duong so|"
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
-    r"dai lo|bac si|yersin|yesin|"
+    r"dai lo|bac si|yersin|yesin|cho ben lon|cho hoang gia|"
     r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|vanh dai|vanh 4"
     r")\b",
     re.IGNORECASE,
@@ -161,6 +162,8 @@ _KNOWN_ROAD_PREFIXES = (
     "lao cai",
     "lo chen",
     "vo van kiet",
+    "cho ben lon",
+    "cho hoang gia",
 )
 
 _NON_LOCATION_RELATION_PREFIXES = (
@@ -699,6 +702,26 @@ def _landmark(text: str) -> str:
     return normalize_location_token(f"{kind} {normalized_name}")
 
 
+def _subzone_landmark(text: str) -> str:
+    """Return only a single, explicit Bến Cát market subzone clue."""
+    letter_zones = sorted(set(re.findall(r"\bkhu\s+([f-l])\b", text)))
+    if len(letter_zones) == 1:
+        return f"khu {letter_zones[0]}"
+
+    if re.search(r"\btan\s+dinh\b", text):
+        numbered_zones = sorted(
+            set(
+                re.findall(
+                    r"\b(?:khu\s+pho|kp|khu)\s*([1-4])\b",
+                    text,
+                )
+            )
+        )
+        if len(numbered_zones) == 1:
+            return f"khu pho {numbered_zones[0]} tan dinh"
+    return ""
+
+
 def extract_map_location_context(
     title: str,
     description: str,
@@ -732,9 +755,10 @@ def extract_map_location_context(
     # Keep title/description boundaries for landmarks so a short place name at
     # the end of the title cannot absorb the opening marketing copy from the
     # description after whitespace normalization.
-    landmark = _landmark(normalize_location_token(title or "")) or _landmark(
-        normalize_location_token(description or "")
-    )
+    explicit_landmark = _landmark(
+        normalize_location_token(title or "")
+    ) or _landmark(normalize_location_token(description or ""))
+    landmark = _subzone_landmark(folded) or explicit_landmark
 
     explicit_direct_road = _direct_road(folded, include_known_fallback=False)
     direct_road = explicit_direct_road or _known_named_road(folded)

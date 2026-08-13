@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260807-v56",
+  "resolver_version": "osm-binh-duong-20260813-v57",
   "coverage_cities": [
     "THỦ DẦU MỘT",
     "BẾN CÁT",
@@ -244,52 +244,56 @@
       "city": "BẾN CÁT",
       "ward": "Mỹ Phước 1",
       "point": {
-        "lat": 11.147617,
-        "lng": 106.611713
+        "lat": 11.1298145,
+        "lng": 106.6002091
       },
       "fallback_parent": "Mỹ Phước",
+      "fallback_landmark": "Khu vực Mỹ Phước 1",
       "road_scope_parent": "Thới Hòa",
-      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
-      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      "source": "Google Maps public KCN Mỹ Phước 1 place anchor; parent-zone road scope",
+      "source_url": "https://www.google.com/maps/place/KCN+M%E1%BB%B9+Ph%C6%B0%E1%BB%9Bc/@11.1298145,106.6002091,17z/"
     },
     {
       "city": "BẾN CÁT",
       "ward": "Mỹ Phước 2",
       "point": {
-        "lat": 11.147617,
-        "lng": 106.611713
+        "lat": 11.130493,
+        "lng": 106.6133916
       },
       "fallback_parent": "Mỹ Phước",
-      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
-      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      "fallback_landmark": "Khu vực Mỹ Phước 2",
+      "source": "Google Maps public Chợ Mỹ Phước 2 place anchor",
+      "source_url": "https://www.google.com/maps/place/Ch%E1%BB%A3+M%E1%BB%B9+Ph%C6%B0%E1%BB%9Bc+2/@11.130493,106.6133916,17z/"
     },
     {
       "city": "BẾN CÁT",
       "ward": "Mỹ Phước 3",
       "point": {
-        "lat": 11.147617,
-        "lng": 106.611713
+        "lat": 11.116,
+        "lng": 106.642
       },
       "fallback_parent": "Mỹ Phước",
+      "fallback_landmark": "Khu vực Mỹ Phước 3",
       "road_scope_parent": "Thới Hòa",
       "road_scope_parents": [
         "Thới Hòa",
         "Chánh Phú Hòa"
       ],
-      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
-      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      "source": "OpenStreetMap Mỹ Phước 3 named-road grid centroid; parent-zone road scopes",
+      "source_url": "https://www.openstreetmap.org/#map=14/11.1160/106.6420"
     },
     {
       "city": "BẾN CÁT",
       "ward": "Mỹ Phước 4",
       "point": {
-        "lat": 11.147617,
-        "lng": 106.611713
+        "lat": 11.099,
+        "lng": 106.614
       },
       "fallback_parent": "Mỹ Phước",
+      "fallback_landmark": "Khu vực Mỹ Phước 4",
       "road_scope_parent": "Thới Hòa",
-      "source": "Stanford Geospatial Center / GADM v2.8 snapshot; parent-zone fallback for market sub-zone",
-      "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
+      "source": "OpenStreetMap N10/N12/NE8 grid centroid corroborated by Google Maps Mỹ Phước 4 and Vành đai 4 places",
+      "source_url": "https://www.google.com/maps/search/Khu+do+thi+My+Phuoc+4+Ben+Cat"
     },
     {
       "city": "BẾN CÁT",

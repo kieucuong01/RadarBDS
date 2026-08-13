@@ -1469,6 +1469,159 @@ def test_my_phuoc_4_landmark_resolves_in_thoi_hoa_scope():
     assert "khu-do-thi-my-phuoc-4" in result.location.location_key
 
 
+@pytest.mark.parametrize(
+    ("ward", "expected_slug"),
+    [
+        ("Mỹ Phước 1", "khu-vuc-my-phuoc-1"),
+        ("Mỹ Phước 2", "khu-vuc-my-phuoc-2"),
+        ("Mỹ Phước 3", "khu-vuc-my-phuoc-3"),
+        ("Mỹ Phước 4", "khu-vuc-my-phuoc-4"),
+    ],
+)
+def test_numbered_my_phuoc_ward_fallback_uses_distinct_area_landmark(
+    ward, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921308,
+        "city": "BẾN CÁT",
+        "ward": ward,
+        "title": "Nhà đất đẹp, đường nội bộ chưa có tên",
+        "description": "",
+        "road_name": "",
+    }
+    context = extract_map_location_context(listing["title"], "", "")
+
+    result = resolve_listing_location(listing, registry=registry, context=context)
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert expected_slug in result.location.location_key
+
+
+def test_my_phuoc_4_area_fallback_uses_corrected_thoi_hoa_grid():
+    registry = load_location_registry()
+    listing = {
+        "id": 921309,
+        "city": "BẾN CÁT",
+        "ward": "Mỹ Phước 4",
+        "title": "Đất Mỹ Phước 4 đường nội bộ",
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(listing["title"], "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert result.location.lat == pytest.approx(11.099, abs=0.02)
+    assert result.location.lng == pytest.approx(106.614, abs=0.02)
+    assert abs(result.location.lat - 11.147617) > 0.02
+
+
+@pytest.mark.parametrize("letter", list("FGHIJKL"))
+def test_my_phuoc_3_letter_zone_resolves_before_area_fallback(letter):
+    registry = load_location_registry()
+    title = f"Nhà trọ Khu {letter} Mỹ Phước 3"
+    listing = {
+        "id": 921310,
+        "city": "BẾN CÁT",
+        "ward": "Mỹ Phước 3",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert f"khu-{letter.lower()}-my-phuoc-3" in result.location.location_key
+
+
+def test_my_phuoc_3_multiple_letter_zones_use_general_area_fallback():
+    registry = load_location_registry()
+    title = "Cần 2 lô khu H khu L khu J Mỹ Phước 3"
+    listing = {
+        "id": 921311,
+        "city": "BẾN CÁT",
+        "ward": "Mỹ Phước 3",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert "khu-vuc-my-phuoc-3" in result.location.location_key
+
+
+@pytest.mark.parametrize("number", [1, 2, 3, 4])
+def test_tan_dinh_numbered_subzone_resolves_to_area_landmark(number):
+    registry = load_location_registry()
+    title = f"Bán đất KP{number} Tân Định"
+    listing = {
+        "id": 921312,
+        "city": "BẾN CÁT",
+        "ward": "Tân Định",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert f"khu-pho-{number}-tan-dinh" in result.location.location_key
+
+
+def test_tan_dinh_cho_ben_lon_resolves_as_road_for_direct_and_near_copy():
+    registry = load_location_registry()
+    for title in (
+        "Mặt tiền đường Chợ Bến Lớn khu 3 Tân Định",
+        "Nhà 1 sẹc đường Chợ Bến Lớn Tân Định",
+    ):
+        listing = {
+            "id": 921313,
+            "city": "BẾN CÁT",
+            "ward": "Tân Định",
+            "title": title,
+            "description": "",
+            "road_name": "",
+        }
+        result = resolve_listing_location(
+            listing,
+            registry=registry,
+            context=extract_map_location_context(title, "", ""),
+        )
+
+        assert result.location
+        assert result.location.precision == "road"
+        assert "duong-cho-ben-lon" in result.location.location_key
+
+
 def test_my_phuoc_resettlement_landmark_resolves():
     registry = load_location_registry()
     listing = {

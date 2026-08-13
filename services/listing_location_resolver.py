@@ -394,6 +394,35 @@ def _ward_fallback(
     entry = registry.wards.get((city, normalized_ward))
     if not entry:
         return None
+    fallback_landmark = normalize_location_token(
+        str(entry.get("fallback_landmark") or "")
+    )
+    landmark_match = _match_landmark(
+        city,
+        ward,
+        fallback_landmark,
+        registry,
+    )
+    if isinstance(landmark_match, Mapping):
+        canonical_landmark = _entry_landmark_key(
+            landmark_match,
+            fallback_landmark,
+        )
+        return _resolved_from_entry(
+            listing_id=listing_id,
+            precision="landmark",
+            location_key=(
+                f"landmark:{_slug(city)}:{_slug(normalized_ward)}:"
+                f"{_slug(canonical_landmark)}"
+            ),
+            entry=landmark_match,
+            resolver_version=registry.resolver_version,
+            signature=signature,
+            relation="at",
+            landmark_key=canonical_landmark,
+            resolution_status=status,
+            resolution_reason=reason,
+        )
     return _resolved_from_entry(
         listing_id=listing_id,
         precision="ward",

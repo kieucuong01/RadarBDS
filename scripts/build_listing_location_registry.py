@@ -475,6 +475,9 @@ def _build_ward_rows(
             )
         ward_keys.add(key)
         fallback_parent = str(source.get("fallback_parent") or "").strip()
+        fallback_landmark = str(
+            source.get("fallback_landmark") or ""
+        ).strip()
         road_scope_parent = str(
             source.get("road_scope_parent") or ""
         ).strip()
@@ -503,6 +506,8 @@ def _build_ward_rows(
         }
         if fallback_parent:
             row["fallback_parent"] = fallback_parent
+        if fallback_landmark:
+            row["fallback_landmark"] = fallback_landmark
         if road_scope_parent:
             row["road_scope_parent"] = road_scope_parent
         if road_scope_parents:
