@@ -117,6 +117,25 @@ def test_removing_map_flag_preserves_dashboard_state():
     )
 
 
+def test_shared_map_history_marker_survives_modal_back_then_cleans_up():
+    result = _run_node(
+        "(function(){"
+        "const active=mapApi.sharedMapHistoryState({source:'dashboard'},true);"
+        "const closed=mapApi.sharedMapHistoryState(active,false);"
+        "return {active:active,closed:closed};"
+        "})()"
+    )
+
+    assert result == {
+        "active": {
+            "source": "dashboard",
+            "radarListingMap": True,
+            "radarListingMapShared": True,
+        },
+        "closed": {"source": "dashboard"},
+    }
+
+
 def test_map_base_layers_have_complete_attribution():
     layers = _run_node("mapApi.mapBaseLayers()")
 

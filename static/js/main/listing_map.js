@@ -225,6 +225,18 @@
     }
   }
 
+  function sharedMapHistoryState(currentState, active) {
+    var nextState = Object.assign({}, currentState || {});
+    if (active) {
+      nextState.radarListingMap = true;
+      nextState.radarListingMapShared = true;
+    } else {
+      delete nextState.radarListingMap;
+      delete nextState.radarListingMapShared;
+    }
+    return nextState;
+  }
+
   function safeCount(value) {
     var number = Number(value);
     return Number.isFinite(number) && number >= 0 ? Math.round(number) : 0;
@@ -1436,7 +1448,8 @@
     if (bounds.length) {
       state.map.fitBounds(bounds, {
         padding: [38, 38],
-        maxZoom: 16
+        maxZoom: 16,
+        animate: false
       });
       state.map.setZoom(closerInitialZoom(state.map.getZoom()), {
         animate: false
@@ -1811,6 +1824,12 @@
         root.location.href
       );
       state.historyPushed = true;
+    } else if (state.initialSharedOpen) {
+      root.history.replaceState(
+        sharedMapHistoryState(root.history.state, true),
+        "",
+        root.location.href
+      );
     }
     emitTrack("listing_map_opened", {
       mode: safe.mode,
@@ -1903,7 +1922,7 @@
     state.panelView = { kind: "directory", group: null, payload: null };
     if (shouldReplaceSharedUrl) {
       root.history.replaceState(
-        root.history.state,
+        sharedMapHistoryState(root.history.state, false),
         "",
         urlWithoutMapFlag(root.location.href)
       );
@@ -1997,6 +2016,7 @@
     buildItemsUrl: buildItemsUrl,
     buildMapShareUrl: buildMapShareUrl,
     urlWithoutMapFlag: urlWithoutMapFlag,
+    sharedMapHistoryState: sharedMapHistoryState,
     normalizeBaseLayer: normalizeBaseLayer,
     cardDateText: cardDateText,
     mapBaseLayers: mapBaseLayers,

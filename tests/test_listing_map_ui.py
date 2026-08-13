@@ -69,8 +69,9 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-price-zoom-20260813") == 1
-    assert html.count("listing-map-compact-labels-20260813") == 1
+    assert html.count("listing-map-location-share-20260813b") == 2
+    assert "listing-map-price-zoom-20260813" not in html
+    assert "listing-map-compact-labels-20260813" not in html
     assert "window.RADAR_MAP_VENDOR" in html
     assert not re.search(
         r"<(?:script|link)[^>]+(?:leaflet\.js|leaflet\.css)",
@@ -241,6 +242,15 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert ".listing-map-official-gis" not in styles
 
 
+def test_initial_fit_bounds_cannot_outlive_a_fast_map_close():
+    script = Path("static/js/main/listing_map.js").read_text(encoding="utf-8")
+    fit_bounds_options = script.split(
+        "state.map.fitBounds(bounds, {", 1
+    )[1].split("});", 1)[0]
+
+    assert "animate: false" in fit_bounds_options
+
+
 def test_listing_map_marker_labels_have_compact_price_and_count_styles():
     from pathlib import Path
 
@@ -278,14 +288,15 @@ def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
     )
 
 
-def test_listing_map_assets_use_current_zoom_and_label_cache_versions():
+def test_listing_map_assets_use_current_location_share_cache_version():
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-price-zoom-20260813") == 1
-    assert template.count("listing-map-compact-labels-20260813") == 1
+    assert template.count("listing-map-location-share-20260813b") == 2
+    assert "listing-map-price-zoom-20260813" not in template
+    assert "listing-map-compact-labels-20260813" not in template
     assert "listing-map-label-font-20260807" not in template
 
 
