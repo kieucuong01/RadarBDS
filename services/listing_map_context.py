@@ -155,6 +155,7 @@ _KNOWN_ROAD_PREFIXES = (
     "nguyen dinh chieu",
     "nguyen cong hoan",
     "nguyen trung truc",
+    "nguyen trai",
     "nguyen duc thieu",
     "nguyen thi tuoi",
     "nguyen thai hoc",
@@ -189,6 +190,8 @@ _KNOWN_ROAD_PREFIXES = (
     "cach mang thang tam",
     "dai lo binh duong",
     "bui quoc khanh",
+    "thu khoa huan",
+    "thuan an hoa",
     "phan dinh giot",
     "ngo gia tu",
     "hoang van thu",
@@ -259,12 +262,15 @@ _KNOWN_LANDMARK_PREFIXES = (
     ("vietsing an phu", "viet sing"),
     ("viet sing an phu", "viet sing"),
     ("an thanh thuan an", "an thanh"),
+    ("minh tuan", "minh tuan"),
     ("minh tuan binh hoa", "minh tuan"),
     ("thuan giao thuan an", "thuan giao"),
     ("vinh phu 2 thuan an", "vinh phu 2"),
     ("vinh phu2 thuan an", "vinh phu 2"),
     ("vinh phu 1 thuan an", "vinh phu 1"),
     ("vinh phu1 thuan an", "vinh phu 1"),
+    ("vinh phu 1 gd2", "vinh phu 1"),
+    ("vinh phu1 gd2", "vinh phu 1"),
     ("vinh phu thuan an", "vinh phu"),
     ("phuc dat", "phuc dat"),
     ("dong an", "dong an"),
@@ -309,6 +315,7 @@ _KNOWN_LANDMARK_PREFIXES = (
 )
 
 _KNOWN_EXPLICIT_LANDMARKS = (
+    ("ho guom xanh", "ho guom xanh"),
     ("tdc bach dang", "tdc bach dang"),
     ("kdc thai binh duong", "kdc thai binh duong"),
     ("pho di bo bach dang", "pho di bo bach dang"),
@@ -513,7 +520,9 @@ def _normalize_road_candidate(value: str) -> str:
         return ""
 
     local_ward_road = re.match(
-        r"^(?P<ward>phu\s+an|an\s+dien)\s+"
+        r"^(?P<ward>phu\s+an|an\s+dien|an\s+phu|an\s+son|"
+        r"an\s+thanh|binh\s+chuan|binh\s+hoa|binh\s+nham|"
+        r"hung\s+dinh|lai\s+thieu|thuan\s+giao|vinh\s+phu)\s+"
         r"(?P<number>0*\d{1,3})\b",
         candidate,
         re.IGNORECASE,
@@ -824,6 +833,8 @@ def _landmark(text: str) -> str:
         if normalized_name.startswith(prefix):
             normalized_name = canonical
             break
+    if re.match(r"^thuan giao(?:$|\s+(?!\d))", normalized_name):
+        normalized_name = "thuan giao"
     return normalize_location_token(f"{kind} {normalized_name}")
 
 

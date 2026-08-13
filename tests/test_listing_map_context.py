@@ -1706,3 +1706,33 @@ def test_extract_context_does_not_collapse_unverified_numbered_thuan_giao_area()
     )
 
     assert context.landmark == "kdc thuan giao 2"
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Cách đường Bình Chuẩn 67 đang làm 50m", "binh chuan 67"),
+        ("Gần đường Hưng Định 20 đang mở", "hung dinh 20"),
+        ("Cách đường Thủ Khoa Huân tăng máy lạnh bếp ga", "thu khoa huan"),
+        ("Gần đường Nguyễn Trãi Lái Thiêu", "nguyen trai"),
+    ],
+)
+def test_extract_context_clips_known_thuan_an_road_suffixes(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert context.nearby_road == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Nhà KDC Minh Tuấn đặc biệt đối diện quỹ đất lớn", "kdc minh tuan"),
+        ("Đất KDC Thuận Giao rẻ nhất khu", "kdc thuan giao"),
+        ("Nhà KDC Vĩnh Phú 1 GĐ2 giáp ranh Bình Chiểu", "kdc vinh phu 1"),
+        ("Đất gần Hồ Gươm Xanh Lái Thiêu", "ho guom xanh"),
+    ],
+)
+def test_extract_context_clips_more_verified_thuan_an_landmarks(text, expected):
+    context = extract_map_location_context(text, "")
+
+    assert context.landmark == expected

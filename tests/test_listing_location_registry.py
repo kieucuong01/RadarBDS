@@ -1160,6 +1160,10 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
     assert "duong so 22" in indexed_roads[
         ("Thuận Giao", "thuan giao 22")
     ]["aliases"]
+    assert "thu khoa huan" in indexed_roads[
+        ("Thuận Giao", "duong thu khoa huan")
+    ]["aliases"]
+    assert "tl 43" in indexed_roads[("Bình Hòa", "tinh lo 43")]["aliases"]
     assert indexed_roads[("Phú Tân", "duong so 37")]["source_url"].endswith(
         "/1369653803"
     )
@@ -1289,6 +1293,11 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         (row["ward"], row["normalized_landmark"]): row
         for row in landmarks["landmarks"]
     }
+    assert {
+        ("An Sơn", "tdc an son"),
+        ("Lái Thiêu", "tdc dong tu"),
+        ("Lái Thiêu", "ho guom xanh"),
+    }.issubset(indexed_landmarks)
     assert "kdc tuong binh hiep" in indexed_landmarks[
         ("T\u01b0\u01a1ng B\u00ecnh Hi\u1ec7p", "tdc tuong binh hiep")
     ]["aliases"]

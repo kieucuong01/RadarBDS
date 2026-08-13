@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v66",
+  "resolver_version": "osm-binh-duong-20260814-v67",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -620,6 +620,90 @@
       "ward": "Thuận Giao",
       "canonical": "Thuận Giao 22",
       "aliases": ["Đường 22", "Đường số 22"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Đường An Phú 17",
+      "aliases": ["An Phú 17"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Đường An Phú 18",
+      "aliases": ["An Phú 18"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Đường An Phú 35",
+      "aliases": ["An Phú 35"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Phan Đình Giót",
+      "aliases": ["Phan Đình Gió"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường Bình Chuẩn 17",
+      "aliases": ["Bình Chuẩn 17"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường Bình Chuẩn 34",
+      "aliases": ["Bình Chuẩn 34"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường Bình Chuẩn 52",
+      "aliases": ["Bình Chuẩn 52"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường Bình Chuẩn 65",
+      "aliases": ["Bình Chuẩn 65"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường Bình Chuẩn 67",
+      "aliases": ["Bình Chuẩn 67"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Đường Lê Thị Trung",
+      "aliases": ["Lê Thị Trung"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Hòa",
+      "canonical": "Tỉnh lộ 43",
+      "aliases": ["TL43", "TL 43", "ĐT43", "Đường tỉnh 43"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "canonical": "Đường Thủ Khoa Huân",
+      "aliases": ["Thủ Khoa Huân"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "canonical": "Đường 22 Tháng 12",
+      "aliases": ["22 Tháng 12"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Thuận Giao",
+      "canonical": "Đường Thuận An Hòa",
+      "aliases": ["Thuận An Hòa"]
     }
   ],
   "roads": [
@@ -2999,6 +3083,24 @@
       "aliases": ["KDC Vinh Phu", "Khu dân cư Vĩnh Phú"]
     },
     {
+      "city": "THUẬN AN",
+      "ward": "An Sơn",
+      "canonical": "TĐC An Sơn",
+      "aliases": ["TDC An Son", "Khu tái định cư An Sơn"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Lái Thiêu",
+      "canonical": "TĐC Đông Tư",
+      "aliases": ["TDC Dong Tu", "Khu tái định cư Đông Tư"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Lái Thiêu",
+      "canonical": "Hồ Gươm Xanh",
+      "aliases": ["Hồ Hoàn Kiếm Nhỏ", "Ho Guom Xanh"]
+    },
+    {
       "city": "TÂN UYÊN",
       "ward": "Khánh Bình",
       "canonical": "KDC Thanh Duy",
@@ -3826,6 +3928,39 @@
       "verified_at": "2026-08-14",
       "allow_boundary_mismatch": true,
       "boundary_mismatch_reason": "The two exact public development anchors retain the old Vĩnh Phú name while current map labels use the merged Bình Hòa administration"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Sơn",
+      "landmark_name": "TĐC An Sơn",
+      "lat": 10.927944,
+      "lng": 106.66105,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public 565 Khu TDC An Sơn result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/565+Khu+TDC+An+S%C6%A1n/@10.927944,106.66105,17z/",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Lái Thiêu",
+      "landmark_name": "TĐC Đông Tư",
+      "lat": 10.9110269,
+      "lng": 106.7026776,
+      "accuracy_radius_m": 1100,
+      "source": "Google Maps exact public Ban Điều Hành KP Đông Tư result used as the repeated TĐC Đông Tư area anchor",
+      "source_url": "https://www.google.com/maps/place/Ban+%C4%90i%E1%BB%81u+H%C3%A0nh+KP+%C4%90%C3%B4ng+T%C6%B0/@10.9110269,106.7026776,17z/",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Lái Thiêu",
+      "landmark_name": "Hồ Gươm Xanh",
+      "lat": 10.8967559,
+      "lng": 106.7049151,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public Hồ Hoàn Kiếm Nhỏ result returned for the repeated local Hồ Gươm Xanh name",
+      "source_url": "https://www.google.com/maps/place/H%E1%BB%93+Ho%C3%A0n+Ki%E1%BA%BFm+Nh%E1%BB%8F/@10.8967559,106.7049151,17z/",
+      "verified_at": "2026-08-14"
     },
     {
       "city": "TÂN UYÊN",
