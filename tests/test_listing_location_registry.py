@@ -1188,7 +1188,11 @@ def test_production_registry_covers_supported_wards_and_matches_manifest():
         ("Phú Tân", "huynh van luy"),
         ("Phú Tân", "dx 5"),
         ("Phú Tân", "dx 76"),
+        ("Phú Thọ", "duong vo minh duc"),
     }.issubset(indexed_roads)
+    assert "vo minh duc" in indexed_roads[
+        ("Phú Thọ", "duong vo minh duc")
+    ]["aliases"]
     assert indexed_roads[("Hiệp An", "dx 106")][
         "boundary_mismatch_reason"
     ]

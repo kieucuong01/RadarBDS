@@ -652,7 +652,21 @@ def extract_map_location_context(
 ) -> MapLocationContext:
     """Extract map-only location clues without mutating canonical listing data."""
     combined = " ".join(part for part in (title or "", description or "") if part)
-    combined = re.sub(r"\b30\s*/\s*4\b", "30 thang 4", combined, flags=re.IGNORECASE)
+    combined = re.sub(
+        r"\b30\s*/\s*0?4\b",
+        "30 thang 4",
+        combined,
+        flags=re.IGNORECASE,
+    )
+    # Listings sometimes duplicate the road introducer ("duong duong 30/04").
+    # Collapse only that introducer so the numbered-road parser sees the full
+    # date name instead of stopping at the second generic "duong" token.
+    combined = re.sub(
+        r"\bduong\s+duong\s+(?=30\s+thang\s+0?4\b)",
+        "duong ",
+        combined,
+        flags=re.IGNORECASE,
+    )
     combined = re.sub(
         r"\b\d+\s*/\s*(?=[^\W\d_])",
         " hem ",

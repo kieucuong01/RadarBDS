@@ -492,6 +492,7 @@ def test_phu_tan_context_named_road_is_used_when_stored_road_name_is_noise():
         ("Ph\u00fa Th\u1ecd", "Tran Binh Trong", "tran-binh-trong"),
         ("Ph\u00fa Th\u1ecd", "CMT8", "cach-mang-thang-tam"),
         ("Ph\u00fa Th\u1ecd", "30/4", "duong-so-30-thang-4"),
+        ("Ph\u00fa Th\u1ecd", "Vo Minh Duc", "duong-vo-minh-duc"),
         ("Hi\u1ec7p An", "Bui Ngoc Thu", "bui-ngoc-thu"),
         ("Hi\u1ec7p An", "Le Chi Dan", "le-chi-dan"),
         ("Ph\u00fa C\u01b0\u1eddng", "CMT8", "cach-mang-thang-tam"),

@@ -315,6 +315,15 @@ def test_road_30_4_is_not_treated_as_duong_so_30():
     assert context.nearby_road == "duong so 30 thang 4"
 
 
+def test_phu_tho_repeated_duong_prefix_keeps_full_30_4_road_name():
+    context = extract_map_location_context(
+        "Nha sau mat tien duong duong 30/04 thong Le Hong Phong",
+        "",
+    )
+
+    assert context.direct_road == "duong so 30 thang 4"
+
+
 def test_stored_road_name_is_cleaned_like_extracted_road_text():
     context = extract_map_location_context(
         "Bán mặt tiền Hồ Văn Cống Tương Bình Hiệp TDM",
