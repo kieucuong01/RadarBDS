@@ -66,7 +66,7 @@ def _is_valid_facebook_photo_permalink(url: str) -> bool:
     )
 
 
-def _validate_publish_success(record: dict, *, require_visual: bool = False) -> dict:
+def _validate_publish_success(record: dict, *, require_visual: bool = False, require_comment: bool = False) -> dict:
     """Hard gate for cron KPI: success requires a real post permalink."""
     browser_result = _extract_browser_result(str(record.get("stdout") or ""))
     if not browser_result:
@@ -80,6 +80,8 @@ def _validate_publish_success(record: dict, *, require_visual: bool = False) -> 
         photo_permalink = browser_result.get("photo_permalink") or ""
         if not browser_result.get("verified_visual") or not _is_valid_facebook_photo_permalink(photo_permalink):
             raise SystemExit(f"Publish verification missing native visual/photo permalink: {browser_result}")
+    if require_comment and not browser_result.get("verified_comment"):
+        raise SystemExit(f"Publish verification missing required Radar BDS self-comment: {browser_result}")
     return browser_result
 
 
@@ -87,6 +89,7 @@ def _program(queue: dict, mode: str, screenshot_path: str) -> str:
     page_url = queue.get("target", {}).get("page_url") or "https://www.facebook.com/radarbdsvn/"
     content = queue.get("content", {})
     message = content["message"]
+    self_comment = str(content.get("self_comment") or "").strip()
     image = str(content.get("visual_path") or content.get("image") or "").strip()
     if image and not Path(image).exists():
         raise SystemExit(f"Queue visual/image file missing: {image}")
@@ -97,6 +100,7 @@ import json, time
 page_url = {page_url!r}
 message = {message!r}
 image = {image!r}
+self_comment = {self_comment!r}
 needle = {needle!r}
 mode = {mode!r}
 screenshot_path = {screenshot_path!r}
@@ -307,6 +311,77 @@ def verified_on_page():
             return True, needle, post.get('permalink') or '', photo_permalink
     return False, needle, '', ''
 
+def add_self_comment(permalink):
+    if not self_comment:
+        return True, ''
+    comment_needle = self_comment.split('\\n', 1)[0][:80]
+    new_tab(permalink)
+    wait_for_load()
+    time.sleep(4)
+    focused = False
+    for y in (0, 650, 1300, 2200):
+        js('window.scrollTo(0, ' + str(y) + ')')
+        time.sleep(1.2)
+        target = js('''(() => {{
+            const labels = /write a comment|comment as|viết bình luận|bình luận dưới tên/i;
+            const selectors = '[role="textbox"], [contenteditable="true"], [aria-label]';
+            for (const el of [...document.querySelectorAll(selectors)]) {{
+                const label = (el.getAttribute('aria-label') || el.innerText || el.textContent || '').trim();
+                const r = el.getBoundingClientRect();
+                if (labels.test(label) && r.width > 40 && r.height > 18) {{
+                    return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2, label}};
+                }}
+            }}
+            return {{found: false}};
+        }})()''') or {{'found': False}}
+        if target.get('found'):
+            click_at_xy(target['x'], target['y'])
+            time.sleep(1)
+            focused = True
+            break
+    if not focused:
+        return False, comment_needle
+    type_text(self_comment)
+    time.sleep(2)
+    clicked = False
+    for _ in range(8):
+        target = js('''(() => {{
+            const labels = /^(comment|bình luận|post|đăng)$/i;
+            for (const el of [...document.querySelectorAll('[role="button"], button')]) {{
+                const text = (el.innerText || el.ariaLabel || el.getAttribute('aria-label') || el.textContent || '').trim();
+                const disabled = el.getAttribute('aria-disabled') === 'true' || el.disabled;
+                const r = el.getBoundingClientRect();
+                if (labels.test(text) && !disabled && r.width > 18 && r.height > 18) {{
+                    return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2, text}};
+                }}
+            }}
+            return {{found: false}};
+        }})()''') or {{'found': False}}
+        if target.get('found'):
+            click_at_xy(target['x'], target['y'])
+            clicked = True
+            break
+        time.sleep(1)
+    if not clicked:
+        return False, comment_needle
+    for _ in range(18):
+        time.sleep(2)
+        ok = js('''(() => {{
+            const needle = %s;
+            const linkNeedle = 'radarbds.vn';
+            for (const article of [...document.querySelectorAll('[role="article"]')]) {{
+                const text = article.innerText || '';
+                if (!text.includes(needle) || !text.includes(linkNeedle)) continue;
+                const draftHit = [...article.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]')]
+                    .some(el => ((el.innerText || el.value || el.textContent || '').includes(needle)));
+                if (!draftHit) return true;
+            }}
+            return false;
+        }})()''' % json.dumps(comment_needle))
+        if ok:
+            return True, comment_needle
+    return False, comment_needle
+
 # Current Page UI is normally: composer -> Next -> Post settings -> Post.
 # Click exact buttons inside the expected dialog so we do not confuse
 # `Post audience` with the final `Post` button.
@@ -386,9 +461,16 @@ for _ in range(25):
     if found:
         break
     time.sleep(2)
+comment_ok, comment_needle = (False, '')
+if found:
+    comment_ok, comment_needle = add_self_comment(permalink)
+if self_comment and not comment_ok:
+    found = False
 capture_screenshot(path=screenshot_path, full=False, max_dim=1800)
-print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'verified_visual': bool(photo_permalink), 'needle': needle, 'permalink': permalink, 'photo_permalink': photo_permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': flow}}, ensure_ascii=False))
+print(json.dumps({{'ok': found, 'mode': mode, 'verified_text': found, 'verified_visual': bool(photo_permalink), 'verified_comment': comment_ok, 'comment_needle': comment_needle, 'needle': needle, 'permalink': permalink, 'photo_permalink': photo_permalink, 'screenshot': screenshot_path, 'page_info': page_info(), 'flow': flow}}, ensure_ascii=False))
 if not found:
+    if self_comment and not comment_ok:
+        raise RuntimeError('Post was attempted but required Radar BDS self-comment was not verified.')
     raise RuntimeError('Post action attempted but verification text was not found.')
 """
 
@@ -449,7 +531,7 @@ def run(args: argparse.Namespace) -> dict:
     }
     if proc.returncode == 0 and args.mode == "publish":
         try:
-            record["browser_result"] = _validate_publish_success(record, require_visual=True)
+            record["browser_result"] = _validate_publish_success(record, require_visual=True, require_comment=bool(content.get("self_comment")))
         except SystemExit as exc:
             record["validation_error"] = str(exc)
             log_path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

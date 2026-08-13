@@ -164,3 +164,34 @@ def test_generated_publish_program_never_uses_escape_after_typing_hashtags(tmp_p
     compile(program, "<browser-use-program>", "exec")
     assert "if '#' in message:" not in program
     assert "press_key('Escape')" not in program.split("caption_already_present", 1)[1]
+
+
+def test_validate_publish_success_requires_self_comment_when_requested():
+    record = {
+        "stdout": (
+            '{"ok": true, "verified_text": true, "verified_visual": true, '
+            '"verified_comment": false, '
+            '"permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123", '
+            '"photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789"}\n'
+        )
+    }
+    with pytest.raises(SystemExit, match="self-comment"):
+        mod._validate_publish_success(record, require_visual=True, require_comment=True)
+
+
+def test_generated_publish_program_posts_and_verifies_self_comment(tmp_path):
+    image = tmp_path / "visual.png"
+    image.write_bytes(b"fake")
+    queue = {
+        "target": {"page_url": "https://www.facebook.com/radarbdsvn/"},
+        "content": {
+            "message": "Hook line\nBody",
+            "visual_path": str(image),
+            "self_comment": "Xem chi tiết trên Radar BDS: https://radarbds.vn/?utm_medium=pinned_comment",
+        },
+    }
+    program = mod._program(queue, "publish", str(tmp_path / "shot.png"))
+    compile(program, "<browser-use-program>", "exec")
+    assert "add_self_comment" in program
+    assert "verified_comment" in program
+    assert "radarbds.vn" in program

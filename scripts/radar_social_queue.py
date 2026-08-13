@@ -535,19 +535,25 @@ def _hashtags_for_page(page: dict[str, Any]) -> list[str]:
     return ["RadarBDS", "BinhDuong", "ThuDauMot"]
 
 
-def _utm_url(url: str, slug: str, *, campaign: str = "page_article") -> str:
+def _utm_url(url: str, slug: str, *, campaign: str = "page_article", medium: str = "organic_social") -> str:
     parsed = urllib.parse.urlsplit(url)
     query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
     query.update({
         "utm_source": "facebook",
-        "utm_medium": "organic_social",
+        "utm_medium": medium,
         "utm_campaign": campaign,
         "utm_content": slug,
     })
     return urllib.parse.urlunsplit(parsed._replace(query=urllib.parse.urlencode(query)))
 
 
-def _ward_filter_url(page: dict[str, Any], ward: str, slug: str) -> str:
+def _ward_filter_url(
+    page: dict[str, Any],
+    ward: str,
+    slug: str,
+    *,
+    medium: str = "organic_social",
+) -> str:
     """Return a radarbds.vn URL that lands readers on a ward-filtered view.
 
     Prefer the article's configured dashboard CTA because daily articles often
@@ -557,15 +563,29 @@ def _ward_filter_url(page: dict[str, Any], ward: str, slug: str) -> str:
     href = _plain(page.get("primary_href") or "")
     if not href:
         href = "/?tab=signals&ward=" + urllib.parse.quote(ward)
-    return _utm_url(_absolute_url(href), f"{slug}-ward-filter", campaign="ward_filter")
+    return _utm_url(_absolute_url(href), f"{slug}-ward-filter", campaign="ward_filter", medium=medium)
 
 
-def _ward_filter_cta(ward: str, filter_url: str, article_url: str) -> str:
+def _ward_filter_cta(ward: str) -> str:
     return (
-        f"Vào radarbds.vn → lọc phường {ward} để xem từng tin đang rao:\n"
-        f"{filter_url}\n\n"
-        f"Bài phân tích dữ liệu:\n{article_url}"
+        f"Link Radar BDS nằm ở bình luận đầu tiên để anh chị mở lọc phường {ward} và đọc bài phân tích chi tiết."
     )
+
+
+def _self_comment_text(ward: str, filter_url: str, article_url: str) -> str:
+    return (
+        f"Xem chi tiết trên Radar BDS: {filter_url} | Bài phân tích dữ liệu: {article_url}. "
+        "Radar BDS dùng dữ liệu giá rao để lọc ban đầu; trước khi quyết định mua vẫn nên kiểm tra thực tế, vị trí và giấy tờ."
+    )
+
+
+def _build_self_comment(page: dict[str, Any], url: str, slug: str = "") -> str:
+    cards = _article_cards(page)
+    ward = _extract_ward(page, cards)
+    slug_key = slug or _plain(page.get("path") or "daily_article")
+    article_url = _utm_url(url, slug_key, campaign="page_native", medium="pinned_comment")
+    filter_url = _ward_filter_url(page, ward, slug_key, medium="pinned_comment")
+    return _self_comment_text(ward, filter_url, article_url)
 
 
 def _budget_bullets(cards: list[dict[str, Any]], limit: int = 3) -> list[str]:
@@ -620,7 +640,7 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
     slug_key = slug or _plain(page.get("path") or "daily_article")
     final_url = _utm_url(url, slug_key)
     filter_url = _ward_filter_url(page, ward, slug_key)
-    ward_cta = _ward_filter_cta(ward, filter_url, final_url)
+    ward_cta = _ward_filter_cta(ward)
     # Keep f-string body indentation consistent so textwrap.dedent can remove it.
     ward_cta_block = ward_cta.replace("\n", "\n        ")
     ward_hashtag = _slug_hashtag(ward)
@@ -634,8 +654,7 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
             f"{title}?",
             "Theo dữ liệu 14 ngày Radar đang theo dõi, nhóm đáng mở trước là:\n" + bullets,
             "Đây là giá rao/nhóm tin để lọc ban đầu, không phải giá giao dịch. Vẫn cần kiểm tra sổ, đường/hẻm, quy hoạch và thực địa.",
-            "Mở Radar để lọc theo ngân sách/loại hình:\n" + filter_url,
-            "Bài phân tích dữ liệu:\n" + final_url,
+            "Link Radar BDS nằm ở bình luận đầu tiên để anh chị mở lọc theo ngân sách/loại hình và đọc bài phân tích chi tiết.",
             "#RadarBDS #BinhDuong #ThuDauMot",
         ])
 
@@ -746,6 +765,7 @@ def create(args: argparse.Namespace) -> dict[str, Any]:
             "message": _build_message(page, url, args.style, slug),
             "link": _utm_url(url, slug),
             "ward_filter_link": _ward_filter_url(page, _extract_ward(page, _article_cards(page)), slug),
+            "self_comment": _build_self_comment(page, url, slug),
             "hashtags": _hashtags_for_page(page),
             "visual_style": _visual_kind(slug, page),
             "visual_prompt": _visual_design_prompt(_visual_kind(slug, page), page),

@@ -62,6 +62,7 @@ def test_posted_today_accepts_production_nested_browser_result():
         "browser_result": {
             "verified_text": True,
             "verified_visual": True,
+            "verified_comment": True,
             "permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123",
             "photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789",
         },
@@ -98,6 +99,7 @@ def test_parse_post_wrapper_stdout_requires_browser_permalink():
             "ok": True,
             "verified_text": True,
             "verified_visual": True,
+            "verified_comment": True,
             "permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123",
             "photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789",
         },
@@ -128,3 +130,19 @@ def test_parse_post_wrapper_stdout_rejects_browser_result_not_ok():
             '"permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123", '
             '"photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789"}}'
         )
+
+
+def test_parse_post_wrapper_stdout_rejects_missing_self_comment():
+    with pytest.raises(SystemExit, match="self-comment"):
+        mod.parse_post_wrapper_stdout(
+            '{"returncode": 0, "browser_result": {'
+            '"ok": true, "verified_text": true, "verified_visual": true, '
+            '"permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123", '
+            '"photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789"}}'
+        )
+
+
+def test_page_care_style_rotates_on_tuesday_and_thursday():
+    assert mod.page_care_style_for_date(dt.date(2026, 8, 10)) == "data_post"
+    assert mod.page_care_style_for_date(dt.date(2026, 8, 11)) == "market_pulse"
+    assert mod.page_care_style_for_date(dt.date(2026, 8, 13)) == "market_pulse"

@@ -29,14 +29,16 @@ def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path):
     message = item["content"]["message"]
     ward_filter_link = item["content"]["ward_filter_link"]
 
-    assert "Vào radarbds.vn → lọc phường Tân An" in message
-    assert "https://radarbds.vn/?tab=signals&ward=T%C3%A2n+An" in message
-    assert "utm_campaign=ward_filter" in message
-    assert "utm_medium=organic_social" in message
+    self_comment = item["content"]["self_comment"]
+
+    assert "Link Radar BDS nằm ở bình luận đầu tiên" in message
+    assert "https://radarbds.vn/?tab=signals&ward=T%C3%A2n+An" in self_comment
+    assert "utm_campaign=ward_filter" in self_comment
+    assert "utm_medium=pinned_comment" in self_comment
     assert "utm_campaign=page_article" in item["content"]["link"]
-    assert "Bài phân tích dữ liệu:" in message
-    assert item["content"]["link"] in message
-    assert ward_filter_link in message
+    assert "utm_campaign=page_native" in self_comment
+    assert item["content"]["link"] not in message
+    assert ward_filter_link not in message
     assert "\n        •" not in message
 
 
@@ -101,7 +103,8 @@ def test_budget_article_caption_is_specific_and_not_generic_ward_copy(tmp_path):
     assert item["content"]["visual_style"] == "budget_filter"
     assert "Theo dữ liệu 14 ngày" in message
     assert "Hiệp An: 197 tin" in message
-    assert "Mở Radar để lọc theo ngân sách/loại hình" in message
+    assert "Link Radar BDS nằm ở bình luận đầu tiên" in message
+    assert "utm_medium=pinned_comment" in item["content"]["self_comment"]
     assert "lọc phường Thủ Dầu Một · dữ liệu 14 ngày" not in message
     assert "chưa đủ dữ liệu" not in message
 
