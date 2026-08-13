@@ -24,6 +24,7 @@
   var COUNT_LABEL_HEIGHT = 18;
   var COUNT_LABEL_ANCHOR_Y = 29;
   var MARKER_LABEL_COLLISION_GAP = 4;
+  var INITIAL_MAP_MIN_ZOOM = PRICE_LABEL_MIN_ZOOM;
   var INITIAL_MAP_MAX_ZOOM = 16;
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
@@ -317,8 +318,11 @@
 
   function closerInitialZoom(fittedZoom) {
     var zoom = finiteNumber(fittedZoom);
-    if (zoom === null) return 11;
-    return Math.min(zoom + 1, INITIAL_MAP_MAX_ZOOM);
+    if (zoom === null) return INITIAL_MAP_MIN_ZOOM;
+    return Math.min(
+      Math.max(zoom + 1, INITIAL_MAP_MIN_ZOOM),
+      INITIAL_MAP_MAX_ZOOM
+    );
   }
 
   function batchRanges(total, batchSize) {

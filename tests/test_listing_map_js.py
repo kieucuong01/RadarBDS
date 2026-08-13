@@ -246,11 +246,14 @@ def test_marker_label_rect_uses_each_model_dimensions():
     assert result["count"]["bottom"] - result["count"]["top"] == 18
 
 
-def test_closer_initial_zoom_adds_one_level_with_cap():
-    assert _run_node("mapApi.closerInitialZoom(11)") == 12
+def test_closer_initial_zoom_reaches_price_label_threshold_with_cap():
+    assert _run_node("mapApi.closerInitialZoom(8)") == 13
+    assert _run_node("mapApi.closerInitialZoom(11)") == 13
+    assert _run_node("mapApi.closerInitialZoom(12)") == 13
+    assert _run_node("mapApi.closerInitialZoom(13)") == 14
     assert _run_node("mapApi.closerInitialZoom(15)") == 16
     assert _run_node("mapApi.closerInitialZoom(16)") == 16
-    assert _run_node("mapApi.closerInitialZoom(18)") == 16
+    assert _run_node("mapApi.closerInitialZoom('broken')") == 13
 
 
 def test_exact_marker_label_collision_uses_screen_rect_gap():
