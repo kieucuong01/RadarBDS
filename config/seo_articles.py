@@ -13596,6 +13596,268 @@ SEO_ARTICLES = {
             }
         ]
     }
+,
+    "hiep-thanh-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/hiep-thanh-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc",
+        "title": "Hiệp Thành hay Tương Bình Hiệp: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 13/08/2026: nếu anh đang so Hiệp Thành với Tương Bình Hiệp, nên tách đất nền với nhà đất trước. Tương Bình Hiệp đang mềm hơn ở cả hai nhóm và dày hàng dưới 3 tỷ hơn rõ.",
+        "keywords": "Hiệp Thành hay Tương Bình Hiệp, giá đất Hiệp Thành, giá đất Tương Bình Hiệp, nhà đất Hiệp Thành, nhà đất Tương Bình Hiệp, Radar BDS",
+        "breadcrumb_label": "Hiệp Thành hay Tương Bình Hiệp",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Hiệp Thành hay Tương Bình Hiệp: nên xem khu nào trước?",
+        "hero_text": "Nếu anh cần mặt bằng giá mềm và nhiều lựa chọn dưới 3 tỷ hơn, nên mở Tương Bình Hiệp trước. Nếu anh muốn soi thêm nhóm tín hiệu ở Hiệp Thành thì mở sau. Điểm quan trọng là phải tách riêng đất nền với nhà đất, vì hai phường này chênh nhau khá mạnh ở cả giá rao lẫn độ dày nguồn hàng.",
+        "scope_label": "Thủ Dầu Một · Hiệp Thành / Tương Bình Hiệp",
+        "hero_checks": [
+            "Snapshot live ngày 13/08/2026, max crawled_at 13/08/2026 11:06",
+            "Đất nền: Hiệp Thành 23,4 tr/m²; Tương Bình Hiệp 17,5 tr/m²",
+            "Nhà đất: Hiệp Thành 38,9 tr/m²; Tương Bình Hiệp 30,0 tr/m²",
+            "Tương Bình Hiệp có 822 tin dưới 3 tỷ ở hai nhóm chính; Hiệp Thành có 265 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc Tương Bình Hiệp",
+        "primary_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_tuong_binh_hiep",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_tuong_binh_hiep",
+        "map_label": "Tin tức / Hiệp Thành · Tương Bình Hiệp",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "1.759 tin",
+            "delta": "Hiệp Thành 817 · Tương Bình Hiệp 942",
+            "note": "Nguồn Facebook live, lọc ngày 13/08/2026 với is_active=1; đây là giá rao, không phải giá chốt"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Tương Bình Hiệp dễ mở trước nếu anh giữ ngân sách gọn",
+            "price": "Đất nền 17,5 tr/m² · Nhà đất 30,0 tr/m² · đều thấp hơn Hiệp Thành",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "822 vs 265 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "64 vs 96 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Xem dữ liệu khu vực và lối vào dashboard của Hiệp Thành."
+            },
+            {
+                "label": "Trang phường Tương Bình Hiệp",
+                "href": "/binh-duong/phuong-tuong-binh-hiep",
+                "description": "Xem dữ liệu khu vực và lối vào dashboard của Tương Bình Hiệp."
+            },
+            {
+                "label": "Tân An vs Tương Bình Hiệp",
+                "href": "/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc",
+                "description": "Đọc thêm một bài so sánh có cùng phường nhưng intent khác: nên lọc đất nền hay nhà đất trước."
+            },
+            {
+                "label": "Phú Lợi hay Hiệp Thành",
+                "href": "/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc",
+                "description": "Đặt Hiệp Thành vào một bài so sánh khác theo loại hình và ngân sách."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Ước lượng nhanh trước khi gọi môi giới hoặc đi xem."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ưu tiên mặt bằng giá mềm hơn thì nên mở phường nào trước?",
+                "a": "Nên mở Tương Bình Hiệp trước. Trong snapshot live ngày 13/08/2026, đất nền ở đây có giá rao trung vị 17,5 tr/m² so với 23,4 tr/m² ở Hiệp Thành. Nhà đất cũng thấp hơn, khoảng 30,0 tr/m² so với 38,9 tr/m². Đây là giá rao, không phải giá chốt giao dịch."
+            },
+            {
+                "q": "Dưới 3 tỷ thì Tương Bình Hiệp hơn Hiệp Thành ở điểm nào?",
+                "a": "Tương Bình Hiệp đang dày hàng hơn rõ ở cả hai nhóm chính. Phường này có 341 tin đất nền dưới 3 tỷ và 481 tin nhà đất dưới 3 tỷ. Hiệp Thành tương ứng là 76 và 189 tin. Nếu anh muốn rút ngắn thời gian lọc ban đầu, đây là khác biệt rất đáng kể."
+            },
+            {
+                "q": "Vì sao Hiệp Thành có nhiều dấu hiệu hơn nhưng chưa chắc nên mở trước?",
+                "a": "Vì dấu hiệu chỉ là lớp ưu tiên kiểm tra, còn khả năng mua được còn phụ thuộc mặt bằng giá và độ dày nguồn hàng theo ngân sách. Hiệp Thành có 96 dấu hiệu, cao hơn 64 ở Tương Bình Hiệp, nhưng giá rao lại cao hơn ở cả đất nền lẫn nhà đất và số tin dưới 3 tỷ ít hơn nhiều."
+            },
+            {
+                "q": "Khi so Hiệp Thành và Tương Bình Hiệp có nên gộp đất nền với nhà đất không?",
+                "a": "Không nên. Đất nền và nhà đất có nhịp giá khác nhau. Nếu gộp chung, anh rất dễ kết luận sai về mức giá và số lựa chọn thực tế. Cách an toàn là khóa loại hình trước, rồi mới so giá trung vị, tổng giá và số tin còn trong vùng ngân sách."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-13",
+            "modified_at": "2026-08-13",
+            "intro": [
+                "Nếu anh đang phân vân giữa Hiệp Thành và Tương Bình Hiệp, câu trả lời ngắn là: cần giá mềm và nhiều lựa chọn dưới 3 tỷ hơn thì mở Tương Bình Hiệp trước. Hiệp Thành phù hợp hơn khi anh muốn soi thêm nhóm tin có dấu hiệu dữ liệu dày hơn.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS, lọc các tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu cập nhật đến 13/08/2026 11:06 nên đây là giá rao công khai để sàng lọc ban đầu, không phải giá giao dịch đã chốt."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "1.759 tin",
+                    "note": "Hiệp Thành 817 · Tương Bình Hiệp 942"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "23,4 vs 17,5 tr/m²",
+                    "note": "Hiệp Thành vs Tương Bình Hiệp"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "38,9 vs 30,0 tr/m²",
+                    "note": "Hiệp Thành vs Tương Bình Hiệp"
+                },
+                {
+                    "label": "Nguồn hàng dưới 3 tỷ",
+                    "value": "265 vs 822 tin",
+                    "note": "Hiệp Thành vs Tương Bình Hiệp ở hai nhóm chính"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Hiệp Thành và Tương Bình Hiệp đang khác nhau thế nào theo loại hình?",
+                    "note": "Nguồn Facebook live ngày 13/08/2026, chỉ lấy tin đang theo dõi với is_active=1, is_blacklisted=0, review_hidden=0. Đây là giá rao, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Hiệp Thành · đất nền", "tracked": "247", "signals": "96", "under3": "76", "under4": "138", "median_m2": "23,4 tr/m²", "median_total": "3,44 tỷ", "mid_range": "15,6-28,9 tr/m²"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "tracked": "548", "signals": "96", "under3": "189", "under4": "288", "median_m2": "38,9 tr/m²", "median_total": "3,30 tỷ", "mid_range": "29,6-50,0 tr/m²"},
+                        {"ward_type": "Tương Bình Hiệp · đất nền", "tracked": "402", "signals": "64", "under3": "341", "under4": "348", "median_m2": "17,5 tr/m²", "median_total": "1,95 tỷ", "mid_range": "14,0-20,5 tr/m²"},
+                        {"ward_type": "Tương Bình Hiệp · nhà đất", "tracked": "536", "signals": "64", "under3": "481", "under4": "517", "median_m2": "30,0 tr/m²", "median_total": "2,59 tỷ", "mid_range": "21,3-31,4 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Khóa đúng loại hình trước, rồi mới quyết định thứ tự mở phường và so giá trung vị cùng loại hình.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều lựa chọn dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "341 tin đất nền và 481 tin nhà đất dưới 3 tỷ, đều cao hơn rõ so với Hiệp Thành."},
+                        {"need": "Ưu tiên mặt bằng giá mềm hơn", "open_first": "Tương Bình Hiệp", "why": "Giá trung vị thấp hơn ở cả đất nền 17,5 tr/m² và nhà đất 30,0 tr/m²."},
+                        {"need": "Muốn soi thêm nhóm tin có dấu hiệu", "open_first": "Hiệp Thành", "why": "Hiệp Thành hiện có 96 dấu hiệu, cao hơn 64 ở Tương Bình Hiệp."},
+                        {"need": "Tìm nhà đất tổng giá gọn hơn", "open_first": "Tương Bình Hiệp", "why": "Tổng giá trung vị nhà đất khoảng 2,59 tỷ, thấp hơn 3,30 tỷ ở Hiệp Thành."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền Tương Bình Hiệp mềm hơn và dày hàng dưới 3 tỷ hơn rõ",
+                    "note": "So đúng đất nền với đất nền để tránh đọc sai mặt bằng giá.",
+                    "alt": "Biểu đồ so đất nền Hiệp Thành và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Hiệp Thành", "value_label": "23,4 tr/m² · 76 tin dưới 3 tỷ", "width": 100, "color": "#dc2626"},
+                        {"label": "Tương Bình Hiệp", "value_label": "17,5 tr/m² · 341 tin dưới 3 tỷ", "width": 75, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Tương Bình Hiệp cũng mềm hơn, nhưng Hiệp Thành có nhiều dấu hiệu hơn",
+                    "note": "Đừng gộp giá rao với số dấu hiệu thành một kết luận duy nhất.",
+                    "alt": "Biểu đồ so nhà đất Hiệp Thành và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Hiệp Thành", "value_label": "38,9 tr/m² · 96 dấu hiệu", "width": 100, "color": "#2563eb"},
+                        {"label": "Tương Bình Hiệp", "value_label": "30,0 tr/m² · 64 dấu hiệu", "width": 77, "color": "#f59e0b"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-mem-va-nguon-hang",
+                    "heading": "1. Nếu cần mặt bằng mềm và nhiều lựa chọn dưới 3 tỷ, nên mở Tương Bình Hiệp trước",
+                    "paragraphs": [
+                        "Tương Bình Hiệp đang mềm hơn ở cả hai nhóm chính. Đất nền có giá rao trung vị 17,5 tr/m² và tổng giá trung vị khoảng 1,95 tỷ, thấp hơn Hiệp Thành ở mức 23,4 tr/m² và 3,44 tỷ. Nhà đất cũng thấp hơn, khoảng 30,0 tr/m² và 2,59 tỷ, trong khi Hiệp Thành là 38,9 tr/m² và 3,30 tỷ.",
+                        "Khác biệt lớn nhất nằm ở độ dày nguồn hàng dưới 3 tỷ. Tương Bình Hiệp hiện có 341 tin đất nền dưới 3 tỷ và 481 tin nhà đất dưới 3 tỷ. Hiệp Thành chỉ có 76 và 189 tin. Nếu anh đang muốn rút ngắn vòng gọi hỏi ban đầu, đây là lợi thế rất rõ để mở Tương Bình Hiệp trước."
+                    ],
+                    "bullets": [
+                        "Đất nền Tương Bình Hiệp: 402 tin · 341 tin dưới 3 tỷ · giá trung vị 17,5 tr/m²",
+                        "Nhà đất Tương Bình Hiệp: 536 tin · 481 tin dưới 3 tỷ · giá trung vị 30,0 tr/m²",
+                        "Tổng giá trung vị: đất nền 1,95 tỷ · nhà đất 2,59 tỷ",
+                        "Đây là giá rao công khai, không phải giá chốt giao dịch"
+                    ]
+                },
+                {
+                    "id": "vi-sao-hiep-thanh-van-dang-xem",
+                    "heading": "2. Hiệp Thành vẫn đáng mở tiếp nếu anh thích bắt đầu từ nhóm tin có dấu hiệu",
+                    "paragraphs": [
+                        "Hiệp Thành hiện có 96 dấu hiệu đáng chú ý, cao hơn 64 ở Tương Bình Hiệp. Điều đó cho thấy phường này có thêm một lớp tin cần soi kỹ hơn sau khi anh đã chọn loại hình và ngân sách.",
+                        "Nhưng dấu hiệu không đồng nghĩa với mặt bằng giá mềm hơn. Ở Hiệp Thành, đất nền đang ở mức 23,4 tr/m² và nhà đất ở mức 38,9 tr/m². Vì vậy cách đọc an toàn là dùng dấu hiệu để xếp thứ tự kiểm tra, chứ không thay cho bước so giá rao theo cùng loại hình."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành tổng tin: 817",
+                        "Dấu hiệu ở Hiệp Thành: 96",
+                        "Giá đất nền trung vị: 23,4 tr/m²",
+                        "Giá nhà đất trung vị: 38,9 tr/m²"
+                    ]
+                },
+                {
+                    "id": "tach-dat-nen-nha-dat",
+                    "heading": "3. Điểm dễ sai nhất là gộp đất nền với nhà đất thành một mặt bằng chung",
+                    "paragraphs": [
+                        "Nếu chỉ nhìn một con số giá chung cho cả phường, anh sẽ bỏ lỡ khác biệt rất lớn giữa hai loại hình. Ở Hiệp Thành, chênh lệch giữa đất nền và nhà đất là 23,4 so với 38,9 tr/m². Ở Tương Bình Hiệp là 17,5 so với 30,0 tr/m². Đây là hai bài toán mua khác nhau.",
+                        "Cách làm gọn nhất là khóa loại hình trước, rồi mới so tiếp giá trung vị, tổng giá và số tin dưới 3 tỷ hoặc 4 tỷ. Làm đúng thứ tự này sẽ giảm rất nhiều cuộc gọi nhầm nhóm tin và giúp anh giữ được cảm giác mặt bằng giá thực hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền và nhà đất không dùng chung một mốc giá",
+                        "So cùng loại hình trước khi quyết định mở phường nào",
+                        "Nhìn thêm tổng giá vì diện tích và cấu trúc tài sản khác nhau",
+                        "Dùng giá rao như bộ lọc ban đầu, không phải kết luận cuối"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này ít tốn thời gian hơn",
+                    "paragraphs": [
+                        "Bước đầu, anh có thể mở Tương Bình Hiệp, khóa loại hình rồi giới hạn ngân sách 3 tỷ hoặc 4 tỷ để có danh sách ngắn. Sau đó mới mở thêm Hiệp Thành để xem nhóm tin có dấu hiệu và so lại từng tin cùng loại hình.",
+                        "Nếu đã có vài tin phù hợp, anh nên chuyển sang công cụ định giá để kiểm tra nhanh mặt bằng quanh mức giá đang xem. Sau vòng lọc dữ liệu, vẫn phải kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và mức độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Tương Bình Hiệp để lấy mặt bằng mềm và dày hàng hơn",
+                        "Bước 2: mở thêm Hiệp Thành để soi lớp tín hiệu",
+                        "Bước 3: so cùng loại hình, cùng ngân sách, rồi mới gọi sâu",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã khóa rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong vùng ngân sách 3-4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Hiệp Thành và Tương Bình Hiệp theo đúng loại hình",
+            "body": "Bắt đầu bằng phường phù hợp với mục tiêu của anh: Tương Bình Hiệp nếu cần mặt bằng mềm và nhiều lựa chọn dưới 3 tỷ, Hiệp Thành nếu muốn soi tiếp nhóm tin có dấu hiệu dữ liệu dày hơn.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_tuong_binh_hiep"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Hiệp Thành hay Tương Bình Hiệp", "href": "/tin-tuc/hiep-thanh-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/hiep-thanh-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
