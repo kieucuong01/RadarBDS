@@ -28,6 +28,11 @@
   var INITIAL_MAP_MAX_ZOOM = 16;
   var LOCATION_KEY_PATTERN = /^(exact|road|landmark|ward):[a-z0-9:-]+$/;
   var SAFE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+  var SHARE_EXCLUDED_PARAMS = [
+    "page", "limit", "include_total", "sort_by", "sort_dir",
+    "location_key", "lat", "lng", "accuracy", "zoom", "center",
+    "marker", "selected"
+  ];
   var leafletPromise = null;
   var bound = false;
   var summarySequence = 0;
@@ -50,6 +55,7 @@
     scrollElement: null,
     scrollTop: 0,
     historyPushed: false,
+    initialSharedOpen: false,
     summary: null,
     selectedGroup: null,
     panelView: { kind: "directory", group: null, payload: null },
@@ -188,6 +194,35 @@
     params.set("page", String(safePage));
     params.set("limit", String(safeLimit));
     return "/api/map-listing-items?" + params.toString();
+  }
+
+  function buildMapShareUrl(snapshot, currentHref) {
+    var safe = normalizedSnapshot(snapshot);
+    if (!safe) return null;
+    try {
+      var url = new URL(currentHref);
+      var params = new URLSearchParams(safe.query);
+      SHARE_EXCLUDED_PARAMS.forEach(function (key) {
+        params.delete(key);
+      });
+      params.set("tab", safe.mode);
+      params.set("map", "1");
+      url.search = params.toString();
+      url.hash = "";
+      return url.toString();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function urlWithoutMapFlag(currentHref) {
+    try {
+      var url = new URL(currentHref);
+      url.searchParams.delete("map");
+      return url.toString();
+    } catch (error) {
+      return String(currentHref || "");
+    }
   }
 
   function safeCount(value) {
@@ -856,6 +891,68 @@
     });
   }
 
+  function copyShareUrl(url) {
+    var navigatorObject = root.navigator || {};
+    if (
+      navigatorObject.clipboard
+      && typeof navigatorObject.clipboard.writeText === "function"
+    ) {
+      return navigatorObject.clipboard.writeText(url);
+    }
+    return new Promise(function (resolve, reject) {
+      var textarea = root.document.createElement("textarea");
+      textarea.value = url;
+      textarea.readOnly = true;
+      textarea.setAttribute("aria-hidden", "true");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      root.document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        if (!root.document.execCommand("copy")) {
+          throw new Error("copy_failed");
+        }
+        resolve();
+      } catch (error) {
+        reject(error);
+      } finally {
+        textarea.remove();
+      }
+    });
+  }
+
+  function shareCurrentMap() {
+    var shareUrl = buildMapShareUrl(
+      state.snapshot,
+      root.location && root.location.href
+    );
+    if (!shareUrl) {
+      showMapFeedback("Không thể tạo liên kết, hãy thử lại.", "error");
+      return;
+    }
+    var navigatorObject = root.navigator || {};
+    if (typeof navigatorObject.share === "function") {
+      try {
+        Promise.resolve(navigatorObject.share({
+          title: "Radar BĐS Maps",
+          url: shareUrl
+        })).catch(function (error) {
+          if (!error || error.name !== "AbortError") {
+            showMapFeedback("Không thể chia sẻ, hãy thử lại.", "error");
+          }
+        });
+      } catch (error) {
+        showMapFeedback("Không thể chia sẻ, hãy thử lại.", "error");
+      }
+      return;
+    }
+    copyShareUrl(shareUrl).then(function () {
+      showMapFeedback("Đã sao chép", "success");
+    }).catch(function () {
+      showMapFeedback("Không thể sao chép, hãy thử lại.", "error");
+    });
+  }
+
   function mountMapActionControls(L) {
     var MapActions = L.Control.extend({
       options: { position: "topleft" },
@@ -883,7 +980,6 @@
         share.title = "Chia sẻ";
         share.setAttribute("aria-label", "Chia sẻ");
         share.innerHTML = '<span aria-hidden="true">↗</span>';
-        share.disabled = true;
         var feedback = L.DomUtil.create(
           "div",
           "listing-map-feedback",
@@ -895,6 +991,7 @@
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
         L.DomEvent.on(locate, "click", requestUserLocation);
+        L.DomEvent.on(share, "click", shareCurrentMap);
         state.locationButton = locate;
         state.shareButton = share;
         state.mapFeedbackElement = feedback;
@@ -1692,6 +1789,7 @@
     }
     captureDashboardState();
     state.open = true;
+    state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.snapshot = safe;
     state.workspace = workspace;
     state.summary = null;
@@ -1706,7 +1804,7 @@
     var closeButton = element("listingMapClose");
     if (closeButton) closeButton.focus();
 
-    if (!options.fromPopstate) {
+    if (!options.fromPopstate && !state.initialSharedOpen) {
       root.history.pushState(
         { radarListingMap: true },
         "",
@@ -1727,6 +1825,7 @@
     options = options || {};
     if (!state.open) return;
     var snapshot = state.snapshot;
+    var wasInitialSharedOpen = state.initialSharedOpen;
     var reason = options.reason || "button";
     var closingBaseLayer = state.activeBaseLayer;
     state.open = false;
@@ -1791,12 +1890,26 @@
       && root.history.state
       && root.history.state.radarListingMap
     );
+    var shouldReplaceSharedUrl = (
+      wasInitialSharedOpen
+      && !options.fromPopstate
+      && !options.skipHistory
+    );
     state.historyPushed = false;
+    state.initialSharedOpen = false;
     state.snapshot = null;
     state.summary = null;
     state.selectedGroup = null;
     state.panelView = { kind: "directory", group: null, payload: null };
-    if (shouldConsumeHistory) root.history.back();
+    if (shouldReplaceSharedUrl) {
+      root.history.replaceState(
+        root.history.state,
+        "",
+        urlWithoutMapFlag(root.location.href)
+      );
+    } else if (shouldConsumeHistory) {
+      root.history.back();
+    }
   }
 
   function focusableElements() {
@@ -1882,6 +1995,8 @@
     normalizeMode: normalizeMode,
     buildSummaryUrl: buildSummaryUrl,
     buildItemsUrl: buildItemsUrl,
+    buildMapShareUrl: buildMapShareUrl,
+    urlWithoutMapFlag: urlWithoutMapFlag,
     normalizeBaseLayer: normalizeBaseLayer,
     cardDateText: cardDateText,
     mapBaseLayers: mapBaseLayers,

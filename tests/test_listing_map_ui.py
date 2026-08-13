@@ -139,6 +139,27 @@ def test_listing_map_assets_warm_without_blocking_initial_dashboard_render():
     assert "await warmListingMapAssets()" in core
 
 
+def test_shared_listing_map_startup_excludes_flag_and_preserves_history():
+    root = Path(__file__).resolve().parent.parent
+    boot = (root / "static/js/main/boot.js").read_text(encoding="utf-8")
+    core = (root / "static/js/main/core.js").read_text(encoding="utf-8")
+    map_script = (root / "static/js/main/listing_map.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert (
+        "const shouldOpenListingMap = searchParams.get('map') === '1';"
+        in boot
+    )
+    assert "searchParams.delete('map');" in boot
+    assert "initialSharedOpen: true" in boot
+    assert "async function lazyOpenListingMap(options = {})" in core
+    assert "window.RadarListingMap.open(snapshot, options)" in core
+    assert "root.history.replaceState" in map_script
+    assert "root.history.pushState" in map_script
+    assert "root.history.back()" in map_script
+
+
 def test_all_listings_script_warms_after_load_and_before_tab_click():
     from pathlib import Path
 

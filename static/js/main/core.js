@@ -208,11 +208,11 @@ function getListingMapFilterSnapshot() {
   return { mode, query: params.toString() };
 }
 
-async function lazyOpenListingMap() {
+async function lazyOpenListingMap(options = {}) {
   const snapshot = getListingMapFilterSnapshot();
   if (!snapshot) return;
   await warmListingMapAssets();
-  return window.RadarListingMap.open(snapshot);
+  return window.RadarListingMap.open(snapshot, options);
 }
 
 window.openSignal = lazyOpenSignal;

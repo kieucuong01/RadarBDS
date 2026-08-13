@@ -80,6 +80,43 @@ def test_summary_and_item_urls_preserve_frozen_filter_snapshot():
     ) is None
 
 
+def test_share_url_preserves_tab_and_repeated_filters_without_private_state():
+    url = _run_node(
+        "mapApi.buildMapShareUrl({mode:'all',query:"
+        "'city=D%C4%A8+AN&ward=T%C3%A2n+%C4%90%C3%B4ng+Hi%E1%BB%87p&"
+        "ward=B%C3%ACnh+An&prop_type=dat_nen&page=2&limit=50&lat=11.1'},"
+        "'https://radarbds.vn/?utm_source=test#section')"
+    )
+
+    assert url.startswith("https://radarbds.vn/?")
+    assert "tab=all" in url
+    assert "map=1" in url
+    assert url.count("ward=") == 2
+    assert "prop_type=dat_nen" in url
+    for forbidden in (
+        "page=",
+        "limit=",
+        "lat=",
+        "lng=",
+        "accuracy=",
+        "zoom=",
+        "location_key=",
+    ):
+        assert forbidden not in url
+    assert "#" not in url
+
+
+def test_removing_map_flag_preserves_dashboard_state():
+    result = _run_node(
+        "mapApi.urlWithoutMapFlag("
+        "'https://radarbds.vn/?tab=signals&ward=Ph%C3%BA+T%C3%A2n&map=1'"
+        ")"
+    )
+    assert result == (
+        "https://radarbds.vn/?tab=signals&ward=Ph%C3%BA+T%C3%A2n"
+    )
+
+
 def test_map_base_layers_have_complete_attribution():
     layers = _run_node("mapApi.mapBaseLayers()")
 

@@ -58,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   const searchParams = new URLSearchParams(window.location.search);
+  const shouldOpenListingMap = searchParams.get('map') === '1';
+  searchParams.delete('map');
   const initialTab = searchParams.get('tab') || window.location.hash.replace(/^#/, '');
   const shouldOpenInitialTab = ['signals', 'all', 'market', 'insights'].includes(initialTab);
   if (shouldOpenInitialTab) searchParams.delete('tab');
@@ -140,8 +142,14 @@ document.addEventListener('DOMContentLoaded', () => {
       applyFilters();
     }
   }
-  if (shouldOpenInitialTab && initialTab !== 'signals') {
+  if (shouldOpenInitialTab && initialTab !== 'signals' && !shouldOpenListingMap) {
     requestAnimationFrame(() => switchTab(initialTab, null));
+  }
+  if (shouldOpenListingMap && ['signals', 'all'].includes(initialTab)) {
+    window.setTimeout(async () => {
+      if (initialTab !== 'signals') await switchTab(initialTab, null);
+      await window.openListingMap({ initialSharedOpen: true });
+    }, 0);
   }
   if (landingIntent === 'watchlist' && window.RadarAuth && typeof window.RadarAuth.openWatchlistModal === 'function') {
     setTimeout(() => {
