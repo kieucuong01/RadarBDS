@@ -1939,9 +1939,10 @@
         return;
       }
       occupied.push(rect);
-      root.L.marker([lat, lng], {
-        interactive: false,
+      var labelMarker = root.L.marker([lat, lng], {
+        interactive: true,
         keyboard: false,
+        bubblingMouseEvents: false,
         zIndexOffset: 1000,
         icon: root.L.divIcon({
           className: markerLabelClassName(group, model),
@@ -1949,7 +1950,11 @@
           iconSize: [model.width, model.height],
           iconAnchor: [model.width / 2, model.anchorY]
         })
-      }).addTo(state.markerLabelLayer);
+      });
+      labelMarker.on("click", function () {
+        selectGroup(group);
+      });
+      labelMarker.addTo(state.markerLabelLayer);
     });
   }
 

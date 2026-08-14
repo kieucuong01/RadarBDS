@@ -69,7 +69,8 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'data-state="collapsed"' in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-marker-hierarchy-20260814") == 2
+    assert html.count("listing-map-touch-target-20260814") == 2
+    assert "listing-map-marker-hierarchy-20260814" not in html
     assert "listing-map-price-zoom-20260813" not in html
     assert "listing-map-compact-labels-20260813" not in html
     assert "window.RADAR_MAP_VENDOR" in html
@@ -300,6 +301,37 @@ def test_listing_map_marker_labels_have_compact_price_and_count_styles():
     assert 'font-family: "Segoe UI", Arial, sans-serif' in styles
 
 
+def test_rendered_map_labels_are_clickable_group_targets():
+    root = Path(__file__).resolve().parent.parent
+    script = (root / "static/js/main/listing_map.js").read_text(
+        encoding="utf-8"
+    )
+    styles = (root / "static/css/main/listing_map.css").read_text(
+        encoding="utf-8"
+    )
+
+    labels_source = script.split("function refreshMarkerLabels()", 1)[1].split(
+        "function scheduleMarkerLabelRefresh", 1
+    )[0]
+    assert "var labelMarker = root.L.marker" in labels_source
+    assert "interactive: true" in labels_source
+    assert "keyboard: false" in labels_source
+    assert "bubblingMouseEvents: false" in labels_source
+    assert 'labelMarker.on("click", function ()' in labels_source
+    assert "selectGroup(group);" in labels_source
+    assert "labelMarker.addTo(state.markerLabelLayer);" in labels_source
+    assert re.search(
+        r"\.listing-map-marker-label\s*\{[^}]*pointer-events:\s*auto;",
+        styles,
+        re.S,
+    )
+    assert re.search(
+        r"\.listing-map-marker-label\s*\{[^}]*cursor:\s*pointer;",
+        styles,
+        re.S,
+    )
+
+
 def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
     root = Path(__file__).resolve().parent.parent
     styles = (root / "static/css/main/listing_map.css").read_text(
@@ -316,13 +348,14 @@ def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
     )
 
 
-def test_listing_map_assets_use_current_location_share_cache_version():
+def test_listing_map_assets_use_touch_target_cache_version():
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-marker-hierarchy-20260814") == 2
+    assert template.count("listing-map-touch-target-20260814") == 2
+    assert "listing-map-marker-hierarchy-20260814" not in template
     assert template.count("listing-map-launch-share-20260814") == 1
     assert template.count("multi-city-ward-filter-20260814") >= 3
     assert "listing-map-price-zoom-20260813" not in template
