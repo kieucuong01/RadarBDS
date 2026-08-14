@@ -13858,6 +13858,268 @@ SEO_ARTICLES = {
         ]
     }
 
+    ,
+    "tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc",
+        "title": "Tương Bình Hiệp hay Phú Hòa: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 14/08/2026: nếu anh cần mặt bằng giá rao mềm hơn và nhiều lựa chọn dưới 3 tỷ, nên mở Tương Bình Hiệp trước. Phú Hòa đáng xem sau khi anh muốn so nhóm nhà đất và nguồn hàng rộng hơn.",
+        "keywords": "Tương Bình Hiệp hay Phú Hòa, giá đất Tương Bình Hiệp, giá đất Phú Hòa, nhà đất Tương Bình Hiệp, nhà đất Phú Hòa, Radar BDS",
+        "breadcrumb_label": "Tương Bình Hiệp hay Phú Hòa",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Tương Bình Hiệp hay Phú Hòa: nên xem khu nào trước?",
+        "hero_text": "Nếu anh muốn lọc nhanh nhóm giá rao mềm và còn nhiều lựa chọn dưới 3 tỷ, nên mở Tương Bình Hiệp trước. Nếu anh muốn xem thêm phường có nguồn hàng rộng hơn nhưng mặt bằng giá cao hơn, hãy mở Phú Hòa sau. Điểm quan trọng là luôn tách đất nền với nhà đất trước khi kết luận.",
+        "scope_label": "Thủ Dầu Một · Tương Bình Hiệp / Phú Hòa",
+        "hero_checks": [
+            "Snapshot live ngày 14/08/2026, max crawled_at 14/08/2026 11:02",
+            "Đất nền: Tương Bình Hiệp 17,5 tr/m²; Phú Hòa 28,5 tr/m²",
+            "Nhà đất: Tương Bình Hiệp 29,9 tr/m²; Phú Hòa 38,5 tr/m²",
+            "Tương Bình Hiệp có 784 tin dưới 3 tỷ ở hai nhóm chính; Phú Hòa có 299 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc Tương Bình Hiệp",
+        "primary_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=tuong_binh_hiep_vs_phu_hoa",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=tuong_binh_hiep_vs_phu_hoa",
+        "map_label": "Tin tức / Tương Bình Hiệp · Phú Hòa",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "2.019 tin",
+            "delta": "Tương Bình Hiệp 947 · Phú Hòa 1.072",
+            "note": "Nguồn Facebook live, lọc ngày 14/08/2026 với is_active=1; đây là giá rao, không phải giá chốt"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Tương Bình Hiệp dễ mở trước nếu anh muốn giữ ngân sách gọn hơn",
+            "price": "Đất nền 17,5 tr/m² · Nhà đất 29,9 tr/m² · đều thấp hơn Phú Hòa",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "784 vs 299 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "65 vs 66 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Tương Bình Hiệp",
+                "href": "/binh-duong/phuong-tuong-binh-hiep",
+                "description": "Xem dữ liệu khu vực và lối vào dashboard của Tương Bình Hiệp."
+            },
+            {
+                "label": "Trang phường Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Xem dữ liệu khu vực và lối vào dashboard của Phú Hòa."
+            },
+            {
+                "label": "Hiệp Thành hay Tương Bình Hiệp",
+                "href": "/tin-tuc/hiep-thanh-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm bài so sánh có chung Tương Bình Hiệp nhưng intent khác: mặt bằng mềm hay nhóm tín hiệu."
+            },
+            {
+                "label": "Tân An vs Tương Bình Hiệp",
+                "href": "/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc",
+                "description": "Xem thêm góc đọc theo loại hình trước khi so phường."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh rộng hơn của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Ước lượng nhanh trước khi gọi môi giới hoặc đi xem thực địa."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu muốn mặt bằng giá rao mềm hơn thì nên mở phường nào trước?",
+                "a": "Nên mở Tương Bình Hiệp trước. Trong snapshot live ngày 14/08/2026, đất nền ở đây có giá rao trung vị 17,5 tr/m² so với 28,5 tr/m² ở Phú Hòa. Nhà đất cũng thấp hơn, khoảng 29,9 tr/m² so với 38,5 tr/m². Đây là giá rao, không phải giá chốt giao dịch."
+            },
+            {
+                "q": "Dưới 3 tỷ thì Tương Bình Hiệp hơn Phú Hòa ở điểm nào?",
+                "a": "Tương Bình Hiệp đang dày hàng hơn rõ ở cả hai nhóm chính. Phường này có 333 tin đất nền dưới 3 tỷ và 451 tin nhà đất dưới 3 tỷ. Phú Hòa tương ứng là 140 và 159 tin. Nếu anh muốn rút ngắn thời gian lọc ban đầu, khác biệt này rất đáng kể."
+            },
+            {
+                "q": "Vì sao Phú Hòa có tổng tin nhiều hơn nhưng chưa chắc nên mở trước?",
+                "a": "Vì tổng tin nhiều chưa nói lên mức giá phù hợp với ngân sách của anh. Phú Hòa có 1.072 tin đang theo dõi, nhỉnh hơn 947 ở Tương Bình Hiệp, nhưng mặt bằng giá rao ở cả đất nền lẫn nhà đất đều cao hơn. Khi ưu tiên lọc nhanh theo ngân sách, nên đọc giá trung vị và số tin còn dưới 3-4 tỷ trước."
+            },
+            {
+                "q": "Khi so Tương Bình Hiệp và Phú Hòa có nên gộp đất nền với nhà đất không?",
+                "a": "Không nên. Đất nền và nhà đất có nhịp giá khác nhau. Cách an toàn là khóa loại hình trước, rồi mới so giá trung vị, tổng giá và số tin còn trong vùng ngân sách. Làm vậy sẽ giảm rất nhiều cuộc gọi nhầm nhóm tin."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-14",
+            "modified_at": "2026-08-14",
+            "intro": [
+                "Nếu anh đang phân vân giữa Tương Bình Hiệp và Phú Hòa, câu trả lời ngắn là: cần giá rao mềm và nhiều lựa chọn dưới 3 tỷ hơn thì mở Tương Bình Hiệp trước. Phú Hòa phù hợp hơn khi anh muốn so tiếp một phường có nguồn hàng rộng nhưng mặt bằng giá cao hơn.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS, chỉ lấy tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu cập nhật đến 14/08/2026 11:02 nên đây là giá rao công khai để sàng lọc ban đầu, không phải giá giao dịch đã chốt."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "2.019 tin",
+                    "note": "Tương Bình Hiệp 947 · Phú Hòa 1.072"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "17,5 vs 28,5 tr/m²",
+                    "note": "Tương Bình Hiệp vs Phú Hòa"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "29,9 vs 38,5 tr/m²",
+                    "note": "Tương Bình Hiệp vs Phú Hòa"
+                },
+                {
+                    "label": "Nguồn hàng dưới 3 tỷ",
+                    "value": "784 vs 299 tin",
+                    "note": "Tương Bình Hiệp vs Phú Hòa ở hai nhóm chính"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Tương Bình Hiệp và Phú Hòa đang khác nhau thế nào theo loại hình?",
+                    "note": "Nguồn Facebook live ngày 14/08/2026, chỉ lấy tin đang theo dõi với is_active=1, is_blacklisted=0, review_hidden=0. Đây là giá rao, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Tương Bình Hiệp · đất nền", "tracked": "373", "signals": "65", "under3": "333", "under4": "340", "median_m2": "17,5 tr/m²", "median_total": "1,95 tỷ", "mid_range": "14,0-20,5 tr/m²"},
+                        {"ward_type": "Tương Bình Hiệp · nhà đất", "tracked": "491", "signals": "65", "under3": "451", "under4": "485", "median_m2": "29,9 tr/m²", "median_total": "2,60 tỷ", "mid_range": "21,3-31,4 tr/m²"},
+                        {"ward_type": "Phú Hòa · đất nền", "tracked": "276", "signals": "66", "under3": "140", "under4": "216", "median_m2": "28,5 tr/m²", "median_total": "2,95 tỷ", "mid_range": "23,6-31,8 tr/m²"},
+                        {"ward_type": "Phú Hòa · nhà đất", "tracked": "504", "signals": "66", "under3": "159", "under4": "382", "median_m2": "38,5 tr/m²", "median_total": "3,75 tỷ", "mid_range": "31,2-43,4 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Khóa đúng loại hình trước, rồi mới quyết định thứ tự mở phường và so giá trung vị cùng loại hình.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều lựa chọn dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "333 tin đất nền và 451 tin nhà đất dưới 3 tỷ, đều cao hơn rõ so với Phú Hòa."},
+                        {"need": "Ưu tiên mặt bằng giá mềm hơn", "open_first": "Tương Bình Hiệp", "why": "Giá trung vị thấp hơn ở cả đất nền 17,5 tr/m² và nhà đất 29,9 tr/m²."},
+                        {"need": "Muốn xem phường có nguồn hàng rộng hơn", "open_first": "Phú Hòa", "why": "Phú Hòa đang có 1.072 tin theo dõi, nhỉnh hơn 947 tin ở Tương Bình Hiệp."},
+                        {"need": "Tìm nhà đất tổng giá gọn hơn", "open_first": "Tương Bình Hiệp", "why": "Tổng giá trung vị nhà đất khoảng 2,60 tỷ, thấp hơn 3,75 tỷ ở Phú Hòa."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền Tương Bình Hiệp mềm hơn và dày hàng dưới 3 tỷ hơn rõ",
+                    "note": "So đúng đất nền với đất nền để tránh đọc sai mặt bằng giá.",
+                    "alt": "Biểu đồ so đất nền Tương Bình Hiệp và Phú Hòa",
+                    "rows": [
+                        {"label": "Tương Bình Hiệp", "value_label": "17,5 tr/m² · 333 tin dưới 3 tỷ", "width": 61, "color": "#16a34a"},
+                        {"label": "Phú Hòa", "value_label": "28,5 tr/m² · 140 tin dưới 3 tỷ", "width": 100, "color": "#dc2626"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Tương Bình Hiệp cũng mềm hơn, còn Phú Hòa dày hàng hơn về tổng lượng",
+                    "note": "Đọc đồng thời giá trung vị và độ rộng nguồn hàng để tránh kết luận một chiều.",
+                    "alt": "Biểu đồ so nhà đất Tương Bình Hiệp và Phú Hòa",
+                    "rows": [
+                        {"label": "Tương Bình Hiệp", "value_label": "29,9 tr/m² · 491 tin nhà đất", "width": 78, "color": "#2563eb"},
+                        {"label": "Phú Hòa", "value_label": "38,5 tr/m² · 504 tin nhà đất", "width": 100, "color": "#f59e0b"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-mem-va-ngan-sach",
+                    "heading": "1. Nếu cần mặt bằng mềm và nhiều lựa chọn dưới 3 tỷ, nên mở Tương Bình Hiệp trước",
+                    "paragraphs": [
+                        "Tương Bình Hiệp đang mềm hơn ở cả hai nhóm chính. Đất nền có giá rao trung vị 17,5 tr/m² và tổng giá trung vị khoảng 1,95 tỷ, thấp hơn Phú Hòa ở mức 28,5 tr/m² và 2,95 tỷ. Nhà đất cũng thấp hơn, khoảng 29,9 tr/m² và 2,60 tỷ, trong khi Phú Hòa là 38,5 tr/m² và 3,75 tỷ.",
+                        "Khác biệt lớn nhất nằm ở độ dày nguồn hàng dưới 3 tỷ. Tương Bình Hiệp hiện có 333 tin đất nền dưới 3 tỷ và 451 tin nhà đất dưới 3 tỷ. Phú Hòa chỉ có 140 và 159 tin. Nếu anh muốn rút ngắn vòng gọi hỏi ban đầu, đây là lợi thế rất rõ để mở Tương Bình Hiệp trước."
+                    ],
+                    "bullets": [
+                        "Đất nền Tương Bình Hiệp: 373 tin · 333 tin dưới 3 tỷ · giá trung vị 17,5 tr/m²",
+                        "Nhà đất Tương Bình Hiệp: 491 tin · 451 tin dưới 3 tỷ · giá trung vị 29,9 tr/m²",
+                        "Tổng giá trung vị: đất nền 1,95 tỷ · nhà đất 2,60 tỷ",
+                        "Đây là giá rao công khai, không phải giá chốt giao dịch"
+                    ]
+                },
+                {
+                    "id": "vi-sao-phu-hoa-van-dang-xem",
+                    "heading": "2. Phú Hòa vẫn đáng mở tiếp nếu anh muốn nhìn phường có nguồn hàng rộng hơn",
+                    "paragraphs": [
+                        "Phú Hòa hiện có 1.072 tin đang theo dõi, cao hơn 947 tin ở Tương Bình Hiệp. Riêng nhóm nhà đất, Phú Hòa có 504 tin so với 491 tin ở Tương Bình Hiệp, tức là khi anh muốn mở rộng vùng khảo sát sau bước lọc ngân sách, đây vẫn là một phường nên giữ trong danh sách.",
+                        "Nhưng tổng tin nhiều hơn không đồng nghĩa với giá dễ chịu hơn. Ở Phú Hòa, đất nền đang ở mức 28,5 tr/m² và nhà đất ở mức 38,5 tr/m². Vì vậy cách đọc an toàn là dùng độ rộng nguồn hàng để quyết định mở tiếp, còn quyết định mở trước nên dựa vào giá rao và số tin còn trong vùng ngân sách."
+                    ],
+                    "bullets": [
+                        "Phú Hòa tổng tin: 1.072",
+                        "Dấu hiệu ở Phú Hòa: 66",
+                        "Giá đất nền trung vị: 28,5 tr/m²",
+                        "Giá nhà đất trung vị: 38,5 tr/m²"
+                    ]
+                },
+                {
+                    "id": "tach-dat-nen-nha-dat",
+                    "heading": "3. Điểm dễ sai nhất là gộp đất nền với nhà đất thành một mặt bằng chung",
+                    "paragraphs": [
+                        "Nếu chỉ nhìn một con số giá chung cho cả phường, anh sẽ bỏ lỡ khác biệt rất lớn giữa hai loại hình. Ở Tương Bình Hiệp, chênh lệch giữa đất nền và nhà đất là 17,5 so với 29,9 tr/m². Ở Phú Hòa là 28,5 so với 38,5 tr/m². Đây là hai bài toán mua khác nhau.",
+                        "Cách làm gọn nhất là khóa loại hình trước, rồi mới so tiếp giá trung vị, tổng giá và số tin dưới 3 tỷ hoặc 4 tỷ. Làm đúng thứ tự này sẽ giảm rất nhiều cuộc gọi nhầm nhóm tin và giúp anh giữ được cảm giác mặt bằng giá thực hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền và nhà đất không dùng chung một mốc giá",
+                        "So cùng loại hình trước khi quyết định mở phường nào",
+                        "Nhìn thêm tổng giá vì diện tích và cấu trúc tài sản khác nhau",
+                        "Dùng giá rao như bộ lọc ban đầu, không phải kết luận cuối"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này ít tốn thời gian hơn",
+                    "paragraphs": [
+                        "Bước đầu, anh có thể mở Tương Bình Hiệp, khóa loại hình rồi giới hạn ngân sách 3 tỷ hoặc 4 tỷ để có danh sách ngắn. Sau đó mới mở thêm Phú Hòa để xem nhóm tin rộng hơn và đối chiếu từng tin cùng loại hình.",
+                        "Nếu đã có vài tin phù hợp, anh nên chuyển sang công cụ định giá để kiểm tra nhanh mặt bằng quanh mức giá đang xem. Sau vòng lọc dữ liệu, vẫn phải kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và mức độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Tương Bình Hiệp để lấy mặt bằng mềm và dày hàng dưới 3 tỷ hơn",
+                        "Bước 2: mở thêm Phú Hòa để mở rộng vùng khảo sát",
+                        "Bước 3: so cùng loại hình, cùng ngân sách, rồi mới gọi sâu",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã khóa rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong vùng ngân sách 3-4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Tương Bình Hiệp và Phú Hòa theo đúng loại hình",
+            "body": "Bắt đầu bằng phường phù hợp với mục tiêu của anh: Tương Bình Hiệp nếu cần mặt bằng mềm và nhiều lựa chọn dưới 3 tỷ, Phú Hòa nếu muốn mở rộng thêm vùng khảo sát sau khi đã chốt khung ngân sách.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=tuong_binh_hiep_vs_phu_hoa"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Tương Bình Hiệp hay Phú Hòa", "href": "/tin-tuc/tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
