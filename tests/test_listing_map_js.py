@@ -788,3 +788,29 @@ def test_singleton_modal_item_requires_one_valid_item_from_an_eligible_group():
         "mapApi.singletonModalItem({precision:'ward',listing_count:1},"
         "{items:[{id:42}]})"
     ) is None
+
+
+def test_group_selection_outcome_opens_only_confirmed_exact_or_road_singletons():
+    direct = _run_node(
+        "mapApi.groupSelectionOutcome({precision:'road',listing_count:1},"
+        "{items:[{id:42,title:'NE8'}]})"
+    )
+    assert direct["kind"] == "modal"
+    assert direct["item"]["id"] == 42
+
+    assert _run_node(
+        "mapApi.groupSelectionOutcome({precision:'exact',listing_count:1},"
+        "{items:[]}).kind"
+    ) == "items-error"
+    assert _run_node(
+        "mapApi.groupSelectionOutcome({precision:'road',listing_count:1},"
+        "{items:[{id:42},{id:43}]}).kind"
+    ) == "items"
+    assert _run_node(
+        "mapApi.groupSelectionOutcome({precision:'landmark',listing_count:1},"
+        "{items:[{id:42}]}).kind"
+    ) == "items"
+    assert _run_node(
+        "mapApi.groupSelectionOutcome({precision:'ward',listing_count:1},"
+        "{items:[{id:42}]}).kind"
+    ) == "items"

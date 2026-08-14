@@ -2122,6 +2122,16 @@
     return items[0];
   }
 
+  function groupSelectionOutcome(group, payload) {
+    var directItem = singletonModalItem(group, payload);
+    if (directItem) return { kind: "modal", item: directItem };
+    if (isDirectModalGroup(group) && (!payload
+      || !Array.isArray(payload.items) || payload.items.length === 0)) {
+      return { kind: "items-error", item: null };
+    }
+    return { kind: "items", item: null };
+  }
+
   function openListingFromMap(targetRoot, item) {
     var win = targetRoot || root;
     if (!validListingId(item) || !win || typeof win.openListingModal !== "function") {
@@ -2394,7 +2404,11 @@
   function selectGroup(group) {
     if (!state.open || !state.snapshot) return;
     state.selectedGroup = group;
-    setMobileSheetExpanded(true);
+    var directModalGroup = isDirectModalGroup(group);
+    if (!directModalGroup) {
+      setMobileSheetExpanded(true);
+      setPanelView("items-loading", group);
+    }
     itemSequence += 1;
     var sequence = itemSequence;
     if (state.itemController) state.itemController.abort();
@@ -2407,7 +2421,6 @@
       20
     );
     if (!url) return;
-    setPanelView("items-loading", group);
     emitTrack("listing_map_group_selected", {
       mode: state.snapshot.mode,
       precision: group.precision,
@@ -2417,6 +2430,14 @@
     });
     fetchJson(url, controller).then(function (payload) {
       if (!state.open || sequence !== itemSequence) return;
+      var outcome = groupSelectionOutcome(group, payload);
+      if (outcome.kind === "modal" && openListingFromMap(root, outcome.item)) {
+        return;
+      }
+      if (outcome.kind === "items-error") {
+        setPanelView("items-error", group);
+        return;
+      }
       setPanelView("items", group, payload);
     }).catch(function (error) {
       if (error && error.name === "AbortError") return;
@@ -2753,6 +2774,7 @@
     selectedSheetActionModel: selectedSheetActionModel,
     isDirectModalGroup: isDirectModalGroup,
     singletonModalItem: singletonModalItem,
+    groupSelectionOutcome: groupSelectionOutcome,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,
