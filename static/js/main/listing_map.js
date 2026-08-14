@@ -2110,6 +2110,18 @@
     return proxy;
   }
 
+  function isDirectModalGroup(group) {
+    if (!group || safeCount(group.listing_count) !== 1) return false;
+    return group.precision === "exact" || group.precision === "road";
+  }
+
+  function singletonModalItem(group, payload) {
+    if (!isDirectModalGroup(group)) return null;
+    var items = payload && Array.isArray(payload.items) ? payload.items : [];
+    if (items.length !== 1 || !validListingId(items[0])) return null;
+    return items[0];
+  }
+
   function openListingFromMap(targetRoot, item) {
     var win = targetRoot || root;
     if (!validListingId(item) || !win || typeof win.openListingModal !== "function") {
@@ -2739,6 +2751,8 @@
     mobileSheetModel: mobileSheetModel,
     sheetExpandedForView: sheetExpandedForView,
     selectedSheetActionModel: selectedSheetActionModel,
+    isDirectModalGroup: isDirectModalGroup,
+    singletonModalItem: singletonModalItem,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,

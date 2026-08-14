@@ -744,3 +744,47 @@ def test_admin_editor_model_exposes_safe_group_and_listing_copy():
         "canReset": False,
         "saveLabel": "Lưu vị trí chính xác",
     }
+
+
+def test_direct_modal_group_is_limited_to_single_exact_and_road_markers():
+    assert _run_node(
+        "mapApi.isDirectModalGroup({precision:'exact',listing_count:1})"
+    ) is True
+    assert _run_node(
+        "mapApi.isDirectModalGroup({precision:'road',listing_count:1})"
+    ) is True
+    assert _run_node(
+        "mapApi.isDirectModalGroup({precision:'landmark',listing_count:1})"
+    ) is False
+    assert _run_node(
+        "mapApi.isDirectModalGroup({precision:'ward',listing_count:1})"
+    ) is False
+    assert _run_node(
+        "mapApi.isDirectModalGroup({precision:'road',listing_count:2})"
+    ) is False
+    assert _run_node(
+        "mapApi.isDirectModalGroup({precision:'exact',listing_count:'1'})"
+    ) is True
+
+
+def test_singleton_modal_item_requires_one_valid_item_from_an_eligible_group():
+    assert _run_node(
+        "mapApi.singletonModalItem({precision:'road',listing_count:1},"
+        "{items:[{id:42,title:'NE8'}]}).id"
+    ) == 42
+    assert _run_node(
+        "mapApi.singletonModalItem({precision:'exact',listing_count:1},"
+        "{items:[{id:0,title:'Thiếu mã'}]})"
+    ) is None
+    assert _run_node(
+        "mapApi.singletonModalItem({precision:'road',listing_count:1},"
+        "{items:[]})"
+    ) is None
+    assert _run_node(
+        "mapApi.singletonModalItem({precision:'road',listing_count:1},"
+        "{items:[{id:42},{id:43}]})"
+    ) is None
+    assert _run_node(
+        "mapApi.singletonModalItem({precision:'ward',listing_count:1},"
+        "{items:[{id:42}]})"
+    ) is None
