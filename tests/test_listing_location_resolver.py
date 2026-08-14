@@ -1976,6 +1976,12 @@ def test_requested_di_an_center_fallback_roads_resolve(
         ("Dĩ An", "Nhà KDC Lê Phong", "kdc-le-phong"),
         ("Đông Hòa", "Nhà KDC Lê Phong", "kdc-le-phong"),
         ("Tân Bình", "Nhà KDC Lê Phong", "kdc-le-phong"),
+        ("Dĩ An", "Nhà gần ngã tư Chiêu Liêu", "nga-tu-chieu-lieu"),
+        ("Tân Bình", "Đất gần Chợ Đông Thành", "nga-tu-chieu-lieu"),
+        ("Dĩ An", "Đất KDC Sóng Thần 2", "kcn-song-than-2"),
+        ("Tân Đông Hiệp", "Đất KDC Đại Quang", "kdc-dai-quang"),
+        ("Tân Đông Hiệp", "Nhà đường Trần Thị Xanh", "tran-thi-xanh"),
+        ("Tân Bình", "Nhà gần Phạm Văn Diêu", "pham-van-dieu"),
     ],
 )
 def test_di_an_browser_verified_roads_and_landmarks_resolve(
@@ -2000,6 +2006,54 @@ def test_di_an_browser_verified_roads_and_landmarks_resolve(
     assert result.issue is None
     assert result.location
     assert expected_slug in result.location.location_key
+
+
+def test_di_an_dong_hoa_alley_recovers_dao_duy_tu_from_noisy_number():
+    registry = load_location_registry()
+    title = "Nhà Đông Hòa"
+    description = "Hẻm 1 sẹc sát Đào Duy Từ"
+    listing = {
+        "id": 930202,
+        "city": "DĨ AN",
+        "ward": "Đông Hòa",
+        "title": title,
+        "description": description,
+        "road_name": "Đường số 1",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, description, description),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert "dao-duy-tu" in result.location.location_key
+
+
+def test_di_an_registry_text_recovers_landmark_when_extractor_is_empty():
+    registry = load_location_registry()
+    listing = {
+        "id": 930201,
+        "city": "DĨ AN",
+        "ward": "Tân Đông Hiệp",
+        "title": "Nhà trong KDC Icon Central",
+        "description": "Khu dân cư Icon Central, vị trí thuận tiện",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=MapLocationContext(),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert "kdc-icon-central" in result.location.location_key
 
 
 @pytest.mark.parametrize(

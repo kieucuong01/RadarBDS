@@ -30,6 +30,9 @@ _TEXT_COORDINATE_RE = re.compile(
 _REGISTRY_SHORT_NUMBERED_ROAD_RE = re.compile(
     r"^(?:d|da|db|dc|n|na|r|x|c)\s+\d{1,3}[a-z]?$"
 )
+_REGISTRY_GENERIC_NUMBERED_ROAD_RE = re.compile(
+    r"^duong\s+so\s+\d{1,3}[a-z]?$"
+)
 _REGISTRY_ROAD_CONTEXT_RE = re.compile(
     r"(?:\bduong|\bmat tien|\bmt|\bhem|\bkdc|\btdc)\s*(?:so\s*)?$"
 )
@@ -239,6 +242,13 @@ class LocationRegistry:
     road_text_aliases: Mapping[
         tuple[str, str],
         Mapping[str, tuple[Mapping[str, object], ...]],
+    ] = field(default_factory=dict)
+    landmark_text_aliases: Mapping[
+        tuple[str, str],
+        Mapping[
+            str,
+            Mapping[str, object] | tuple[Mapping[str, object], ...],
+        ],
     ] = field(default_factory=dict)
 
 
@@ -488,6 +498,102 @@ def _landmark_scopes(
         if road_scope not in scopes:
             scopes.append(road_scope)
     return tuple(scopes)
+
+
+def _unique_registry_landmark_from_text(
+    city: str,
+    wards: tuple[str, ...],
+    raw_text: str,
+    registry: LocationRegistry,
+) -> str:
+    """Return one scoped registry landmark explicitly named in listing text."""
+    text = normalize_location_token(raw_text)
+    if not text:
+        return ""
+    normalized_ward_names = {
+        normalize_location_token(_canonical_map_ward(city, ward))
+        for ward in wards
+    }
+    allowed_scopes = tuple(
+        dict.fromkeys(
+            scope
+            for ward in wards
+            for scope in _landmark_scopes(city, ward, registry)
+        )
+    )
+    scoped_aliases: dict[
+        str,
+        Mapping[str, object] | tuple[Mapping[str, object], ...],
+    ] = {}
+    for scope in allowed_scopes:
+        cached = registry.landmark_text_aliases.get((city, scope))
+        if cached is not None:
+            for alias, entries in cached.items():
+                scoped_aliases.setdefault(alias, entries)
+            continue
+        for (entry_city, entry_scope, alias), entries in registry.landmarks.items():
+            if entry_city == city and entry_scope == scope:
+                scoped_aliases.setdefault(alias, entries)
+    if not scoped_aliases:
+        return ""
+
+    token_matches = list(re.finditer(r"[a-z0-9]+", text))
+    tokens = [match.group(0) for match in token_matches]
+    title_boundary = (
+        tokens.index("landmarkcopybreak")
+        if "landmarkcopybreak" in tokens
+        else len(tokens)
+    )
+    matches: list[tuple[int, int, str, int]] = []
+    for alias in scoped_aliases:
+        alias_tokens = alias.split()
+        length = len(alias_tokens)
+        if not alias or not length or alias in normalized_ward_names:
+            continue
+        for index in range(0, len(tokens) - length + 1):
+            if tokens[index : index + length] != alias_tokens:
+                continue
+            raw_entries = scoped_aliases[alias]
+            entries = (
+                raw_entries
+                if isinstance(raw_entries, tuple)
+                else (raw_entries,)
+            )
+            canonicals = {
+                _entry_landmark_key(entry, alias) for entry in entries
+            }
+            if len(canonicals) != 1:
+                continue
+            score = length + (100 if index < title_boundary else 0)
+            matches.append(
+                (index, index + length, next(iter(canonicals)), score)
+            )
+
+    specific_matches = [
+        match
+        for match in matches
+        if not any(
+            other[0] <= match[0]
+            and other[1] >= match[1]
+            and (other[0], other[1]) != (match[0], match[1])
+            for other in matches
+        )
+    ]
+    canonical_scores: dict[str, int] = {}
+    for match in specific_matches:
+        canonical_scores[match[2]] = max(
+            match[3],
+            canonical_scores.get(match[2], -1),
+        )
+    if not canonical_scores or len(canonical_scores) != 1:
+        return ""
+    highest_score = max(canonical_scores.values())
+    strongest = [
+        canonical
+        for canonical, score in canonical_scores.items()
+        if score == highest_score
+    ]
+    return strongest[0] if len(strongest) == 1 else ""
 
 
 def _match_landmark(
@@ -864,9 +970,18 @@ def resolve_listing_location(
         ),
         registry,
     )
+    nearby_numbers = set(re.findall(r"\d+", nearby_road))
+    recovered_numbers = set(re.findall(r"\d+", registry_text_road))
+    numbered_nearby_is_noisy = bool(
+        _REGISTRY_SHORT_NUMBERED_ROAD_RE.fullmatch(nearby_road)
+        or _REGISTRY_GENERIC_NUMBERED_ROAD_RE.fullmatch(nearby_road)
+    ) and not bool(nearby_numbers & recovered_numbers)
     if (
         registry_text_road
-        and not nearby_road
+        and (
+            not nearby_road
+            or numbered_nearby_is_noisy
+        )
         and registry_text_road not in direct_roads
     ):
         direct_roads = (*direct_roads, registry_text_road)
@@ -877,6 +992,26 @@ def resolve_listing_location(
         landmark_key,
         registry,
     )
+    if not landmark_key and not isinstance(landmark_match, Mapping):
+        registry_text_landmark = _unique_registry_landmark_from_text(
+            city,
+            lookup_ward_labels,
+            " landmarkcopybreak ".join(
+                str(_value(listing, key, "") or "")
+                for key in ("title", "description")
+            ),
+            registry,
+        )
+        if registry_text_landmark:
+            recovered_match = _match_landmark_in_wards(
+                city,
+                lookup_ward_labels,
+                registry_text_landmark,
+                registry,
+            )
+            if isinstance(recovered_match, Mapping):
+                landmark_key = registry_text_landmark
+                landmark_match = recovered_match
     landmark_entry = (
         landmark_match if isinstance(landmark_match, Mapping) else None
     )
@@ -1292,10 +1427,14 @@ def load_location_registry(
         key: items[0] if len(items) == 1 else tuple(items)
         for key, items in landmark_lists.items()
     }
+    landmark_text_aliases = {}
+    for (city, ward, alias), entries in landmarks.items():
+        landmark_text_aliases.setdefault((city, ward), {})[alias] = entries
     return LocationRegistry(
         resolver_version=resolver_version,
         roads=roads,
         landmarks=landmarks,
         wards=wards,
         road_text_aliases=road_text_aliases,
+        landmark_text_aliases=landmark_text_aliases,
     )
