@@ -721,6 +721,7 @@ Build the four versioned artifacts atomically:
   --boundary config\map_products\ben_cat_legacy_boundaries.geojson `
   --boundary config\map_products\thuan_an_legacy_boundaries.geojson `
   --boundary config\map_products\di_an_legacy_boundaries.geojson `
+  --boundary config\map_products\tan_uyen_legacy_boundaries.geojson `
   --output-dir static\maps\listing-locations
 ```
 

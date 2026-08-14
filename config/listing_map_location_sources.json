@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v68",
+  "resolver_version": "osm-binh-duong-20260814-v69",
   "coverage_cities": [
     "THỦ DẦU MỘT",
     "BẾN CÁT",
@@ -282,6 +282,12 @@
         "lat": 11.094779,
         "lng": 106.678579
       },
+      "landmark_scope_parents": [
+        "Mỹ Phước 1",
+        "Mỹ Phước 2",
+        "Mỹ Phước 3",
+        "Mỹ Phước 4"
+      ],
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },
@@ -389,6 +395,12 @@
         "lat": 11.061952,
         "lng": 106.63282
       },
+      "landmark_scope_parents": [
+        "Mỹ Phước 1",
+        "Mỹ Phước 2",
+        "Mỹ Phước 3",
+        "Mỹ Phước 4"
+      ],
       "source": "Stanford Geospatial Center / GADM v2.8 snapshot",
       "source_url": "https://geodiscovery.uwm.edu/catalog/stanford-dk039bc2779/metadata"
     },

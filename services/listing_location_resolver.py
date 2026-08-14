@@ -346,6 +346,10 @@ def _unique_registry_road_from_text(
     text = normalize_road_token(raw_text)
     if not text:
         return ""
+    normalized_ward_names = {
+        normalize_road_token(_canonical_map_ward(city, ward))
+        for ward in wards
+    }
     matched_canonicals: set[str] = set()
     allowed_scopes = {
         scope
@@ -377,6 +381,11 @@ def _unique_registry_road_from_text(
         for index in range(0, len(tokens) - length + 1)
     }
     for alias in text_phrases.intersection(scoped_aliases):
+        # Some legacy wards share their name with a registry road alias (for
+        # example "Tân Định"). A bare ward mention is location context, not
+        # enough evidence to promote a listing to road precision.
+        if alias in normalized_ward_names:
+            continue
         entries = scoped_aliases[alias]
         aggregate_count = sum(
             1 for entry in entries if bool(entry.get("aggregate"))
@@ -453,34 +462,47 @@ def _match_road(
     landmark_key: str,
     registry: LocationRegistry,
 ) -> Mapping[str, object] | str | None:
+    road_candidates = [normalized_road]
+    if normalized_road.startswith("duong "):
+        without_prefix = normalized_road.removeprefix("duong ")
+        if without_prefix and all(
+            token.isalpha() for token in without_prefix.split()
+        ):
+            road_candidates.append(without_prefix)
+    elif normalized_road and all(
+        token.isalpha() for token in normalized_road.split()
+    ):
+        road_candidates.append(f"duong {normalized_road}")
+
     for scope in _road_scopes(city, ward, registry):
-        entries = list(
-            registry.roads.get((city, scope, normalized_road), ())
-        )
-        if not entries:
-            continue
-        if landmark_key:
-            scoped = [
-                item
-                for item in entries
-                if landmark_key
-                in tuple(
-                    normalize_location_token(value)
-                    for value in (item.get("landmark_keys") or ())
-                )
+        for road_candidate in road_candidates:
+            entries = list(
+                registry.roads.get((city, scope, road_candidate), ())
+            )
+            if not entries:
+                continue
+            if landmark_key:
+                scoped = [
+                    item
+                    for item in entries
+                    if landmark_key
+                    in tuple(
+                        normalize_location_token(value)
+                        for value in (item.get("landmark_keys") or ())
+                    )
+                ]
+                if len(scoped) == 1:
+                    return scoped[0]
+                if len(scoped) > 1:
+                    return "ambiguous"
+            if len(entries) == 1:
+                return entries[0]
+            aggregate_entries = [
+                entry for entry in entries if bool(entry.get("aggregate"))
             ]
-            if len(scoped) == 1:
-                return scoped[0]
-            if len(scoped) > 1:
-                return "ambiguous"
-        if len(entries) == 1:
-            return entries[0]
-        aggregate_entries = [
-            entry for entry in entries if bool(entry.get("aggregate"))
-        ]
-        if len(aggregate_entries) == 1:
-            return aggregate_entries[0]
-        return "ambiguous"
+            if len(aggregate_entries) == 1:
+                return aggregate_entries[0]
+            return "ambiguous"
     return None
 
 

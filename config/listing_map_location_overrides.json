@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v68",
+  "resolver_version": "osm-binh-duong-20260814-v69",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -325,6 +325,12 @@
       "ward": "Tân Định",
       "canonical": "Đường Chợ Bến Lớn",
       "aliases": ["Chợ Bến Lớn", "Cho Ben Lon", "Đường Bến Lớn", "Ben Lon"]
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "canonical": "Đường Chợ Hoàng Gia",
+      "aliases": ["Chợ Hoàng Gia", "Chợ Hoàng", "Cho Hoang Gia", "Cho Hoang"]
     },
     {
       "city": "BẾN CÁT",
@@ -865,6 +871,19 @@
       "source": "Official ĐH.601 endpoint at its junction with ĐT.741 plus the official provincial-road geographic-name record",
       "source_url": "https://luatvietnam.vn/tai-nguyen/thong-tu-14-2016-tt-btnmt-bo-tai-nguyen-va-moi-truong-107282-d1.html",
       "verified_at": "2026-08-13"
+    },
+    {
+      "city": "BẾN CÁT",
+      "ward": "Hòa Lợi",
+      "road_name": "Đường Chợ Hoàng Gia",
+      "lat": 11.0461795,
+      "lng": 106.6338608,
+      "accuracy_radius_m": 250,
+      "source": "Google Maps public Chợ Hoàng Gia place with Đường Chợ Hoàng Gia, Hòa Lợi address",
+      "source_url": "https://www.google.com/maps/place/Ch%E1%BB%A3+Ho%C3%A0ng+Gia/@11.0461795,106.6338608,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps identifies the exact Chợ Hoàng Gia address as Hòa Lợi while the retained historical ward polygon is coarse"
     },
     {
       "city": "BẾN CÁT",

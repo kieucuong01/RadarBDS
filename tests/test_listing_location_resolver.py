@@ -1344,6 +1344,78 @@ def test_tan_dinh_evidence_backed_roads_resolve(title, expected_slug):
     assert expected_slug in result.location.location_key
 
 
+def test_tan_dinh_numbered_road_text_prefers_specific_alias_over_ward_name():
+    registry = load_location_registry()
+    title = (
+        "Chủ cần bán gấp 3 lô liền kề, mặt tiền Tân Định 006, "
+        "đường nhựa thông 7m"
+    )
+    listing = {
+        "id": 921316,
+        "city": "BẾN CÁT",
+        "ward": "Tân Định",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert "tan-dinh-006" in result.location.location_key
+
+
+def test_bare_tan_dinh_ward_text_is_not_treated_as_a_road():
+    registry = load_location_registry()
+    title = "Nhà cấp 4 Tân Định giá tốt, đường bê tông nội bộ"
+    listing = {
+        "id": 921317,
+        "city": "BẾN CÁT",
+        "ward": "Tân Định",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "ward"
+
+
+def test_stored_named_road_matches_registry_with_optional_duong_prefix():
+    registry = load_location_registry()
+    title = "Đất Hòa Lợi giáp đường Vành đai 4 và đường Trần Đại Nghĩa"
+    listing = {
+        "id": 921318,
+        "city": "BẾN CÁT",
+        "ward": "Hòa Lợi",
+        "title": title,
+        "description": "",
+        "road_name": "Tran Dai Nghia",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", listing["road_name"]),
+    )
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert "duong-tran-dai-nghia" in result.location.location_key
+
+
 @pytest.mark.parametrize(
     ("title", "expected_precision", "expected_slug"),
     [
@@ -2007,6 +2079,62 @@ def test_requested_thuan_an_center_fallback_locations_resolve(
     assert result.location
     assert result.location.precision == expected_precision
     assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_slug"),
+    [
+        ("Hòa Lợi", "Đất khu vực Mỹ Phước 3", "khu-vuc-my-phuoc-3"),
+        ("Tân Định", "Đất khu vực Mỹ Phước 4", "khu-vuc-my-phuoc-4"),
+    ],
+)
+def test_explicit_my_phuoc_landmark_resolves_for_legacy_ben_cat_wards(
+    ward, title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 921319,
+        "city": "BẾN CÁT",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "landmark"
+    assert expected_slug in result.location.location_key
+
+
+def test_hoa_loi_cho_hoang_gia_uses_verified_road_scope():
+    registry = load_location_registry()
+    title = "Bán đất sát Chợ Hoàng Gia, phường Hòa Lợi"
+    listing = {
+        "id": 921320,
+        "city": "BẾN CÁT",
+        "ward": "Hòa Lợi",
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.issue is None
+    assert result.location
+    assert result.location.precision == "road"
+    assert "cho-hoang-gia" in result.location.location_key
 
 
 def test_explicit_tan_uyen_city_prevents_phu_chanh_tdm_alias_collision():
