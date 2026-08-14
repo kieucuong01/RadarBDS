@@ -175,7 +175,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=scope-filter-storage-20260807" in html
+    assert "js/main/boot.js') }}?v=multi-city-ward-filter-20260814" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
@@ -490,7 +490,7 @@ def test_mobile_sidebar_filters_are_compact_for_ward_selection():
     filters_css = _read("static/css/main/filters.css")
 
     for expected in [
-        "scope-filter-storage-20260807",
+        "multi-city-ward-filter-20260814",
         "ward-option-name",
         ".sidebar #wardFilters",
         "grid-template-columns: repeat(2, minmax(0, 1fr))",
@@ -651,7 +651,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "scope-filter-storage-20260807",
+        "multi-city-ward-filter-20260814",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -667,7 +667,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "scope-filter-storage-20260807",
+        "multi-city-ward-filter-20260814",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -835,8 +835,8 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
-        "js/main/filters.js') }}?v=scope-dismiss-fallback-20260808",
-        "js/main/area_scope.js') }}?v=scope-dismiss-fallback-20260808",
+        "js/main/filters.js') }}?v=multi-city-ward-filter-20260814",
+        "js/main/area_scope.js') }}?v=multi-city-ward-filter-20260814",
         "toggleRangePreset",
         "selectedRangeTokens",
         "applyRangeParamsFromUrl",
