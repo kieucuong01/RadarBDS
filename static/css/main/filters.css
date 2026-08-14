@@ -566,6 +566,23 @@ body.area-scope-modal-open {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+.city-pill-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.city-pill-count[hidden] {
+  display: none;
+}
+
 .city-pill.active {
   background: var(--primary);
   border-color: var(--primary);
@@ -1725,6 +1742,7 @@ body.area-scope-modal-open {
 
   .sidebar .city-pill {
     padding: 5px 10px;
+    min-height: 44px;
   }
 
   .sidebar .ward-bulk-actions {

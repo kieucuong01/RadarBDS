@@ -58,7 +58,7 @@ const cityScope = api.scopeFromSearchParams(
 assert.deepEqual(plain(cityScope), {
   version: 2,
   activeCity: 'BẾN CÁT',
-  selections: {},
+  selections: { 'BẾN CÁT': ['Mỹ Phước', 'Mỹ Phước 3'] },
   mode: 'city_all',
   label: 'Toàn Bến Cát',
 });
@@ -70,7 +70,7 @@ const tanUyenCityScope = api.scopeFromSearchParams(
 assert.deepEqual(plain(tanUyenCityScope), {
   version: 2,
   activeCity: 'TÂN UYÊN',
-  selections: {},
+  selections: { 'TÂN UYÊN': ['Uyên Hưng', 'Tân Phước Khánh'] },
   mode: 'city_all',
   label: 'Toàn Tân Uyên',
 });
@@ -154,6 +154,20 @@ const migratedV1Scope = api.validateScope({
 assert.equal(migratedV1Scope.version, 2);
 assert.deepEqual(plain(migratedV1Scope.selections), {
   [tdmCity]: [tanAnWard],
+});
+
+api.setCurrentScope(multiCityScope, wardsByCity);
+api.setActiveScopeCity(tdmCity, wardsByCity);
+api.updateCitySelection(tdmCity, [tanAnWard, phuTanWard], wardsByCity);
+api.setActiveScopeCity(benCatCity, wardsByCity);
+assert.deepEqual(plain(api.getCurrentScope().selections), {
+  [tdmCity]: [tanAnWard, phuTanWard],
+  [benCatCity]: [myPhuocWard],
+});
+assert.equal(api.getCurrentScope().activeCity, benCatCity);
+assert.deepEqual(plain(api.selectionCounts(api.getCurrentScope())), {
+  wards: 3,
+  cities: 2,
 });
 
 assert.deepEqual(plain(api.nextDraftWardScope(null, tdmCity, tanAnWard, wardsByCity)), {
@@ -397,6 +411,12 @@ window.applyFilters = function applyFilters() {
   appliedByClose += 1;
 };
 window.document = doc;
+api.setCurrentScope({
+  version: 2,
+  activeCity: 'THỦ DẦU MỘT',
+  selections: { 'THỦ DẦU MỘT': ['Tân An', 'Phú Tân'] },
+  mode: 'city_all',
+}, window.INITIAL_WARDS_BY_CITY);
 window.closeAreaScopeChooser();
 assert.equal(chooser.hidden, true);
 assert.equal(bar.hidden, false);

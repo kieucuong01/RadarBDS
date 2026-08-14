@@ -1,19 +1,15 @@
 // Sidebar filters, city/ward controls, sorting, and dashboard metadata refresh.
 function selectCity(btn) {
-  document.querySelectorAll('.city-pill').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('.city-pill').forEach(p => {
+    const active = p === btn;
+    p.classList.toggle('active', active);
+    p.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
   document.getElementById('cityInput').value = btn.dataset.city;
-  updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
-  if (window.RadarAreaScope && typeof window.RadarAreaScope.applyDashboardScope === 'function') {
-    window.RadarAreaScope.applyDashboardScope({
-      version: 1,
-      city: btn.dataset.city,
-      wards: [],
-      mode: 'city_all',
-    }, { persist: true, updateUrl: true, apply: true });
-    return;
+  if (window.RadarAreaScope && typeof window.RadarAreaScope.setActiveScopeCity === 'function') {
+    window.RadarAreaScope.setActiveScopeCity(btn.dataset.city, globalWardsByCity);
   }
-  applyFilters();
+  updateWardFilters(globalWardsByCity, [], { preserveScroll: false, preserveSearch: false });
 }
 
 function filterWards(query) {
@@ -25,6 +21,10 @@ function filterWards(query) {
 }
 
 function updateWardSelectionSummary() {
+  if (window.RadarAreaScope && typeof window.RadarAreaScope.renderCitySelectionBadges === 'function') {
+    window.RadarAreaScope.renderCitySelectionBadges(document);
+    return;
+  }
   const boxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
   const countEl = document.getElementById('wardSelectedCount');
   const selectedCount = boxes.filter(b => b.checked).length;
@@ -80,10 +80,14 @@ function setAllWards(checked) {
   document.querySelectorAll('#wardFilters input[name="ward"]').forEach(box => {
     box.checked = checked;
   });
-  updateWardSelectionSummary();
-  if (checked && window.RadarAreaScope && typeof window.selectCurrentCityAllAreaScope === 'function') {
-    window.selectCurrentCityAllAreaScope();
-    return;
+  if (window.RadarAreaScope && typeof window.RadarAreaScope.commitVisibleCitySelection === 'function') {
+    window.RadarAreaScope.commitVisibleCitySelection(document, globalWardsByCity);
+    window.RadarAreaScope.renderCitySelectionBadges(document);
+    if (typeof window.persistCurrentAreaScope === 'function') {
+      window.persistCurrentAreaScope({ updateUrl: true });
+    }
+  } else {
+    updateWardSelectionSummary();
   }
   scheduleApplyFilters();
 }
@@ -95,6 +99,17 @@ function getFilterQuery() {
   for (let [k, v] of fd.entries()) {
     params.append(k, v);
   }
+  params.delete('city');
+  params.delete('ward');
+  params.delete('ward[]');
+  params.delete('ward_mode');
+  if (window.RadarAreaScope && typeof window.RadarAreaScope.applyScopeToParams === 'function') {
+    window.RadarAreaScope.applyScopeToParams(
+      params,
+      window.RadarAreaScope.getCurrentScope(),
+      globalWardsByCity
+    );
+  }
   const hideGulandReposts = document.getElementById('hideGulandReposts');
   if (hideGulandReposts) {
     params.set(
@@ -104,10 +119,6 @@ function getFilterQuery() {
   }
   selectedRangeTokens('price').forEach(token => params.append('price_range', token));
   selectedRangeTokens('area').forEach(token => params.append('area_range', token));
-  const wardBoxes = Array.from(document.querySelectorAll('#wardFilters input[name="ward"]'));
-  if (wardBoxes.length > 0 && wardBoxes.every(box => !box.checked)) {
-    params.set('ward_mode', 'none');
-  }
   // Command-bar controls live outside #filterForm, so append them explicitly.
   const mosSlider = document.getElementById('mosSlider');
   if (mosSlider) {

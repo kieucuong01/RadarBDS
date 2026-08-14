@@ -161,7 +161,7 @@
 
   function flattenScopeWards(scope, wardsByCity) {
     if (!scope) return [];
-    if (scope.mode === 'city_all') {
+    if (scope.mode === 'city_all' && !Object.keys(scope.selections || {}).length) {
       return Array.from((wardsByCity || {})[scope.activeCity] || []);
     }
     const selections = scope.selections || {};
@@ -186,7 +186,10 @@
   function scopeLabel(scope) {
     if (!scope) return '';
     if (scope.mode === 'city_all') {
-      return `Toàn ${cityLabel(scope.activeCity || scope.city)}`;
+      const selectedCity = Object.keys(scope.selections || {})[0]
+        || scope.activeCity
+        || scope.city;
+      return `Toàn ${cityLabel(selectedCity)}`;
     }
     if (!scope.selections && uniqueValues(scope.wards).length) {
       return uniqueValues(scope.wards).join(' + ');
@@ -212,7 +215,9 @@
     let selections;
     if (isLegacy) {
       const availableWards = wardsByCity[activeCity] || [];
-      const legacyWards = mode === 'city_all' ? [] : uniqueValues(candidate.wards);
+      const legacyWards = mode === 'city_all'
+        ? Array.from(availableWards)
+        : uniqueValues(candidate.wards);
       if (legacyWards.some((ward) => !availableWards.includes(ward))) return null;
       selections = legacyWards.length ? { [activeCity]: legacyWards } : {};
     } else {
@@ -223,11 +228,11 @@
       );
       if (submittedCount !== selectionCounts({ selections }).wards) return null;
     }
-    if (mode !== 'city_all' && !selectionCounts({ selections }).wards) return null;
+    if (isLegacy && mode !== 'city_all' && !selectionCounts({ selections }).wards) return null;
     const normalized = {
       version: 2,
       activeCity,
-      selections: mode === 'city_all' ? {} : selections,
+      selections,
       mode,
     };
     normalized.label = scopeLabel(normalized);
@@ -237,6 +242,102 @@
     const filters = normalizeStoredFilters(candidate.filters);
     if (filters) normalized.filters = filters;
     return normalized;
+  }
+
+  function setCurrentScope(scope, wardsByCity) {
+    const normalized = validateScope(
+      scope,
+      wardsByCity || root.INITIAL_WARDS_BY_CITY || {}
+    );
+    if (!normalized) return null;
+    currentScope = normalized;
+    return currentScope;
+  }
+
+  function getCurrentScope() {
+    return currentScope;
+  }
+
+  function setActiveScopeCity(city, wardsByCity) {
+    const cityMap = wardsByCity || root.INITIAL_WARDS_BY_CITY || {};
+    const resolvedCity = resolveCity(city, cityMap);
+    if (!resolvedCity) return null;
+    if (!currentScope) {
+      currentScope = {
+        version: 2,
+        activeCity: resolvedCity,
+        selections: {},
+        mode: 'custom',
+        label: 'Chưa chọn phường',
+      };
+      return currentScope;
+    }
+    currentScope = {
+      ...currentScope,
+      activeCity: resolvedCity,
+    };
+    return currentScope;
+  }
+
+  function updateCitySelection(city, wards, wardsByCity) {
+    const cityMap = wardsByCity || root.INITIAL_WARDS_BY_CITY || {};
+    const resolvedCity = resolveCity(city, cityMap);
+    if (!resolvedCity) return null;
+    const availableWards = cityMap[resolvedCity] || [];
+    const selected = uniqueValues(wards).filter((ward) => availableWards.includes(ward));
+    if (selected.length !== uniqueValues(wards).length) return null;
+    const selections = Object.fromEntries(
+      Object.entries((currentScope && currentScope.selections) || {}).map(
+        ([key, values]) => [key, Array.from(values)]
+      )
+    );
+    if (selected.length) selections[resolvedCity] = selected;
+    else delete selections[resolvedCity];
+    const selectedCities = Object.keys(selections).filter((key) => selections[key].length);
+    const mode = selectedCities.length === 1
+      && selections[selectedCities[0]].length === (cityMap[selectedCities[0]] || []).length
+      ? 'city_all'
+      : 'custom';
+    currentScope = validateScope({
+      version: 2,
+      activeCity: resolvedCity,
+      selections,
+      mode,
+      filters: currentScope && currentScope.filters,
+    }, cityMap);
+    return currentScope;
+  }
+
+  function commitVisibleCitySelection(doc, wardsByCity) {
+    const documentRef = doc || root.document;
+    const cityMap = wardsByCity || root.INITIAL_WARDS_BY_CITY || {};
+    if (!documentRef) return null;
+    const cityInput = documentRef.getElementById('cityInput');
+    const city = resolveCity(cityInput ? cityInput.value : '', cityMap);
+    if (!city) return null;
+    const boxes = Array.from(
+      documentRef.querySelectorAll('#wardFilters input[name="ward"]')
+    );
+    const checked = boxes.filter((box) => box.checked).map((box) => box.value);
+    return updateCitySelection(city, checked, cityMap);
+  }
+
+  function renderCitySelectionBadges(doc) {
+    const documentRef = doc || root.document;
+    if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return;
+    const scope = currentScope;
+    const selections = (scope && scope.selections) || {};
+    documentRef.querySelectorAll('[data-city-count]').forEach((badge) => {
+      const city = badge.dataset ? badge.dataset.cityCount : '';
+      const count = uniqueValues(selections[city]).length;
+      badge.textContent = String(count);
+      badge.hidden = count === 0;
+    });
+    const summary = documentRef.getElementById('wardSelectedCount');
+    if (summary) {
+      const counts = selectionCounts(scope);
+      summary.textContent = `${counts.wards} phường · ${counts.cities} thành phố`;
+    }
   }
 
   function filtersFromSearchParams(filterParams) {
@@ -279,7 +380,7 @@
       return validateScope({
         version: 2,
         activeCity: cityFromQuery,
-        selections: {},
+        selections: { [cityFromQuery]: Array.from(wardsByCity[cityFromQuery] || []) },
         mode: 'city_all',
       }, wardsByCity);
     }
@@ -294,7 +395,8 @@
     params.delete('ward_mode');
     const activeCity = scope.activeCity || scope.city || '';
     if (scope.mode === 'city_all') {
-      params.set('city', activeCity);
+      const selectedCity = Object.keys(scope.selections || {})[0] || activeCity;
+      params.set('city', selectedCity);
       return params;
     }
     const selections = scope.selections || (
@@ -569,13 +671,15 @@
     const normalizedScope = Number(scope.version) === 2 ? scope : {
       version: 2,
       activeCity: scope.city,
-      selections: scope.mode === 'city_all' ? {} : { [scope.city]: uniqueValues(scope.wards) },
+      selections: scope.mode === 'city_all'
+        ? { [scope.city]: Array.from((root.INITIAL_WARDS_BY_CITY || {})[scope.city] || []) }
+        : { [scope.city]: uniqueValues(scope.wards) },
       mode: scope.mode,
     };
     const payload = {
       version: 2,
       activeCity: normalizedScope.activeCity,
-      selections: normalizedScope.mode === 'city_all' ? {} : normalizedScope.selections,
+      selections: normalizedScope.selections,
       mode: normalizedScope.mode,
       label: scopeLabel(normalizedScope),
       updatedAt: new Date().toISOString(),
@@ -605,11 +709,17 @@
     const cityInput = documentRef.getElementById('cityInput');
     const city = resolveCity(cityInput ? cityInput.value : '', wardsByCity);
     if (!city) return null;
+    if (currentScope) return currentScope;
     const boxes = Array.from(documentRef.querySelectorAll('#wardFilters input[name="ward"]'));
     const checked = boxes.filter((box) => box.checked).map((box) => box.value);
     if (!checked.length) return null;
     const mode = checked.length === boxes.length ? 'city_all' : 'custom';
-    return validateScope({ version: 1, city, wards: checked, mode }, wardsByCity);
+    return validateScope({
+      version: 2,
+      activeCity: city,
+      selections: { [city]: checked },
+      mode,
+    }, wardsByCity);
   }
 
   function nextDraftWardScope(current, city, ward, wardsByCity) {
@@ -637,8 +747,8 @@
 
   function setAreaScopeDraft(scope, doc) {
     const normalized = validateScope(scope, root.INITIAL_WARDS_BY_CITY || {});
-    areaScopeDraft = normalized && normalized.mode !== 'city_all' ? normalized : null;
-    areaScopeDraftCity = normalized ? normalized.city : '';
+    areaScopeDraft = normalized;
+    areaScopeDraftCity = normalized ? normalized.activeCity : '';
     renderAreaScopeDraft(doc || root.document);
     return areaScopeDraft;
   }
@@ -646,8 +756,8 @@
   function renderAreaScopeDraft(doc) {
     const documentRef = doc || root.document;
     if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return;
-    const selectedCity = areaScopeDraftCity || (areaScopeDraft && areaScopeDraft.city) || '';
-    const selectedWards = new Set(areaScopeDraft && areaScopeDraft.mode !== 'city_all' ? areaScopeDraft.wards : []);
+    const selectedCity = areaScopeDraftCity || (areaScopeDraft && areaScopeDraft.activeCity) || '';
+    const selections = (areaScopeDraft && areaScopeDraft.selections) || {};
     documentRef.querySelectorAll('.area-scope-city-tab').forEach((tab) => {
       const tabCity = tab.dataset ? tab.dataset.city : '';
       tab.classList.toggle('is-active', Boolean(selectedCity && tabCity === selectedCity));
@@ -662,13 +772,13 @@
     documentRef.querySelectorAll('.area-scope-ward-chip').forEach((chip) => {
       const chipCity = chip.dataset ? chip.dataset.city : '';
       const chipWard = chip.dataset ? chip.dataset.ward : '';
-      const selected = Boolean(selectedCity && chipCity === selectedCity && selectedWards.has(chipWard));
+      const selected = Boolean((selections[chipCity] || []).includes(chipWard));
       chip.classList.toggle('is-selected', selected);
       chip.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
     const applyBtn = documentRef.getElementById('areaScopeApplySelection');
     if (applyBtn) {
-      const enabled = Boolean(areaScopeDraft && areaScopeDraft.mode !== 'city_all' && areaScopeDraft.wards.length);
+      const enabled = Boolean(areaScopeDraft && selectionCounts(areaScopeDraft).wards);
       applyBtn.disabled = !enabled;
       applyBtn.textContent = enabled ? `Áp dụng: ${scopeLabel(areaScopeDraft)}` : 'Áp dụng khu vực';
     }
@@ -678,21 +788,27 @@
     const documentRef = doc || root.document;
     if (!documentRef || !scope) return;
     const cityInput = documentRef.getElementById('cityInput');
-    if (cityInput) cityInput.value = scope.city;
+    const activeCity = scope.activeCity || scope.city;
+    if (cityInput) cityInput.value = activeCity;
     documentRef.querySelectorAll('.city-pill').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.city === scope.city);
+      const active = btn.dataset.city === activeCity;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
   }
 
   function syncScopeControls(scope, wardsByCity, doc, updateWardFilters) {
     const documentRef = doc || root.document;
     if (!documentRef || !scope) return;
-    setCityControls(scope, documentRef);
-    const selectedWards = scope.mode === 'city_all' ? [] : scope.wards;
+    const normalized = setCurrentScope(scope, wardsByCity);
+    if (!normalized) return;
+    setCityControls(normalized, documentRef);
+    const selectedWards = normalized.selections[normalized.activeCity] || [];
     if (typeof updateWardFilters === 'function') {
       updateWardFilters(wardsByCity, selectedWards, { preserveScroll: false, preserveSearch: false });
     }
-    setAreaScopeDraft(scope, documentRef);
+    renderCitySelectionBadges(documentRef);
+    setAreaScopeDraft(normalized, documentRef);
   }
 
   function updateScopeUi(scope, doc) {
@@ -732,11 +848,13 @@
     if (!documentRef) return;
     const chooser = documentRef.getElementById('areaScopeChooser');
     const bar = documentRef.getElementById('areaScopeBar');
-    const draft = selectedScopeFromControls(documentRef, root.INITIAL_WARDS_BY_CITY || {});
+    const draft = currentScope || selectedScopeFromControls(documentRef, root.INITIAL_WARDS_BY_CITY || {});
     const label = documentRef.getElementById('areaScopeLabel');
     const hasSavedScopeLabel = Boolean(label && String(label.textContent || '').trim());
-    areaScopeDraft = draft && draft.mode !== 'city_all' ? draft : null;
-    areaScopeDraftCity = draft && (draft.mode !== 'city_all' || hasSavedScopeLabel) ? draft.city : '';
+    areaScopeDraft = draft || null;
+    areaScopeDraftCity = draft && (draft.mode !== 'city_all' || hasSavedScopeLabel)
+      ? draft.activeCity
+      : '';
     if (chooser) {
       chooser.hidden = false;
       if (documentRef.body) documentRef.body.classList.add('area-scope-modal-open');
@@ -750,14 +868,14 @@
   function defaultDismissedScope(doc) {
     const documentRef = doc || root.document;
     const wardsByCity = root.INITIAL_WARDS_BY_CITY || {};
-    const selected = selectedScopeFromControls(documentRef, wardsByCity);
+    const selected = currentScope || selectedScopeFromControls(documentRef, wardsByCity);
     if (selected) return selected;
     const defaultCity = resolveCity('THỦ DẦU MỘT', wardsByCity) || Object.keys(wardsByCity)[0] || '';
     if (!defaultCity) return null;
     return validateScope({
-      version: 1,
-      city: defaultCity,
-      wards: [],
+      version: 2,
+      activeCity: defaultCity,
+      selections: { [defaultCity]: Array.from(wardsByCity[defaultCity] || []) },
       mode: 'city_all',
     }, wardsByCity);
   }
@@ -766,7 +884,7 @@
     if (!root.location || !root.history || !scope) return;
     const params = new URLSearchParams(root.location.search || '');
     params.set('tab', 'signals');
-    applyScopeToParams(params, scope);
+    applyScopeToParams(params, scope, root.INITIAL_WARDS_BY_CITY || {});
     if (optionalFilters) applyOptionalFiltersToParams(params, optionalFilters);
     else if (scope.filters) applyStoredFiltersToParams(params, scope);
     const nextUrl = `${root.location.pathname || '/'}?${params.toString()}${root.location.hash || ''}`;
@@ -778,6 +896,7 @@
     const wardsByCity = root.INITIAL_WARDS_BY_CITY || {};
     const normalized = validateScope(scope, wardsByCity);
     if (!normalized) return null;
+    currentScope = normalized;
     syncScopeControls(normalized, wardsByCity, root.document, root.updateWardFilters);
     updateScopeUi(normalized, root.document);
     const filtersToPersist = opts.optionalFilters || opts.filters || currentFilterParamsFromControls(root.document);
@@ -796,9 +915,9 @@
     const preset = PRESET_SCOPES.find((item) => item.id === id);
     if (!preset) return null;
     return {
-      version: 1,
-      city: preset.city,
-      wards: Array.from(preset.wards),
+      version: 2,
+      activeCity: preset.city,
+      selections: { [preset.city]: Array.from(preset.wards) },
       mode: preset.mode,
       label: preset.label,
     };
@@ -813,9 +932,13 @@
     const cityInput = doc && doc.getElementById('cityInput');
     const city = resolveCity(cityInput ? cityInput.value : 'THỦ DẦU MỘT', root.INITIAL_WARDS_BY_CITY || {});
     return applyDashboardScope({
-      version: 1,
-      city: city || 'THỦ DẦU MỘT',
-      wards: [],
+      version: 2,
+      activeCity: city || 'THỦ DẦU MỘT',
+      selections: {
+        [city || 'THỦ DẦU MỘT']: Array.from(
+          (root.INITIAL_WARDS_BY_CITY || {})[city || 'THỦ DẦU MỘT'] || []
+        ),
+      },
       mode: 'city_all',
     }, { persist: true, updateUrl: true, apply: true });
   };
@@ -825,9 +948,11 @@
     if (!resolvedCity) return null;
     const optionalFilters = syncAreaScopeOptionalFilters(root.document);
     return applyDashboardScope({
-      version: 1,
-      city: resolvedCity,
-      wards: [],
+      version: 2,
+      activeCity: resolvedCity,
+      selections: {
+        [resolvedCity]: Array.from((root.INITIAL_WARDS_BY_CITY || {})[resolvedCity] || []),
+      },
       mode: 'city_all',
     }, { persist: true, updateUrl: true, apply: true, optionalFilters });
   };
@@ -836,7 +961,7 @@
     const resolvedCity = resolveCity(city, root.INITIAL_WARDS_BY_CITY || {});
     if (!resolvedCity) return null;
     areaScopeDraftCity = resolvedCity;
-    if (!areaScopeDraft || areaScopeDraft.city !== resolvedCity) areaScopeDraft = null;
+    if (areaScopeDraft) areaScopeDraft = { ...areaScopeDraft, activeCity: resolvedCity };
     renderAreaScopeDraft(root.document);
     return areaScopeDraft;
   };
@@ -930,15 +1055,20 @@
     applyStoredFiltersToParams,
     applyScopeToParams,
     clearStoredScope,
+    commitVisibleCitySelection,
     filtersFromSearchParams,
     flattenScopeWards,
+    getCurrentScope,
     hideChooser,
     renderAreaScopeDraft,
     nextDraftWardScope,
     readStoredScope,
+    renderCitySelectionBadges,
     replaceUrlWithScope,
     saveScope,
     selectionCounts,
+    setActiveScopeCity,
+    setCurrentScope,
     scopeFromSearchParams,
     scopeStatusLabel,
     scopeStatusParts,
@@ -951,6 +1081,7 @@
     syncAreaScopeOptionalFilters,
     syncScopeControls,
     updateScopeUi,
+    updateCitySelection,
     validateScope,
   });
 });

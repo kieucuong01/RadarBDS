@@ -1,6 +1,9 @@
 // DOM event wiring and initial dashboard boot sequence.
 function updateWardFilters(wardsByCity, activeWards, opts = {}) {
-  const selectedCity = document.getElementById('cityInput').value;
+  const scope = window.RadarAreaScope && window.RadarAreaScope.getCurrentScope
+    ? window.RadarAreaScope.getCurrentScope()
+    : null;
+  const selectedCity = (scope && scope.activeCity) || document.getElementById('cityInput').value;
   const wards = wardsByCity[selectedCity] || [];
   const container = document.getElementById('wardFilters');
   const searchInput = document.getElementById('wardSearch');
@@ -10,11 +13,14 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
   const wardScrollTop = wardScroll ? wardScroll.scrollTop : 0;
   const preserveSearch = opts.preserveSearch !== false;
   if (searchInput && !preserveSearch) searchInput.value = '';
-  const selected = new Set(activeWards || []);
-  const shouldCheckAll = selected.size === 0;
+  const selected = new Set(
+    scope && scope.selections
+      ? (scope.selections[selectedCity] || [])
+      : (activeWards || [])
+  );
 
   container.innerHTML = wards.map(w => {
-    const checked = shouldCheckAll || selected.has(w) ? 'checked' : '';
+    const checked = selected.has(w) ? 'checked' : '';
     const wardName = escHtml(w);
     return `
       <label class="filter-option">
@@ -23,7 +29,11 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
       </label>
     `;
   }).join('');
-  updateWardSelectionSummary();
+  if (window.RadarAreaScope && window.RadarAreaScope.renderCitySelectionBadges) {
+    window.RadarAreaScope.renderCitySelectionBadges(document);
+  } else {
+    updateWardSelectionSummary();
+  }
 
   requestAnimationFrame(() => {
     if (sidebar) sidebar.scrollTop = sidebarScrollTop;
@@ -34,7 +44,12 @@ function updateWardFilters(wardsByCity, activeWards, opts = {}) {
 // Global listener for Filter changes (Auto-apply)
 document.addEventListener('change', (e) => {
   if (e.target.matches('#wardFilters input[name="ward"]')) {
-    updateWardSelectionSummary();
+    if (window.RadarAreaScope && window.RadarAreaScope.commitVisibleCitySelection) {
+      window.RadarAreaScope.commitVisibleCitySelection(document, globalWardsByCity);
+      window.RadarAreaScope.renderCitySelectionBadges(document);
+    } else {
+      updateWardSelectionSummary();
+    }
     if (window.RadarAreaScope && typeof window.persistCurrentAreaScope === 'function') {
       window.persistCurrentAreaScope({ updateUrl: true });
     }
@@ -73,7 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cityInput = document.getElementById('cityInput');
     if (cityInput) cityInput.value = initialCity;
     document.querySelectorAll('.city-pill').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.city === initialCity);
+      const active = btn.dataset.city === initialCity;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
   }
   const initialDateRange = searchParams.get('date_range');
@@ -111,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlScope = window.RadarAreaScope.scopeFromSearchParams(searchParams, globalWardsByCity);
     const hasAnyUrlFilter = searchParams.toString().length > 0;
     if (urlScope) {
+      window.RadarAreaScope.setCurrentScope(urlScope, globalWardsByCity);
       window.RadarAreaScope.syncScopeControls(urlScope, globalWardsByCity, document, updateWardFilters);
       window.RadarAreaScope.updateScopeUi(urlScope, document);
       window.RadarAreaScope.saveScope(urlScope, window.localStorage, window.RadarAreaScope.filtersFromSearchParams(searchParams));
@@ -120,10 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (!hasAnyUrlFilter) {
       const storedScope = window.RadarAreaScope.readStoredScope(window.localStorage, globalWardsByCity);
       if (storedScope) {
+        window.RadarAreaScope.setCurrentScope(storedScope, globalWardsByCity);
         window.RadarAreaScope.syncScopeControls(storedScope, globalWardsByCity, document, updateWardFilters);
         window.RadarAreaScope.syncStoredFiltersControls(storedScope, document);
         window.RadarAreaScope.applyStoredFiltersToParams(searchParams, storedScope);
         window.RadarAreaScope.updateScopeUi(storedScope, document);
+        window.RadarAreaScope.saveScope(storedScope, window.localStorage, storedScope.filters);
         window.RadarAreaScope.replaceUrlWithScope(storedScope);
         applyFilters();
       } else {
@@ -131,6 +151,20 @@ document.addEventListener('DOMContentLoaded', () => {
         hideLoader();
       }
       handledInitialAreaScope = true;
+    } else if (hasAnyUrlFilter) {
+      const fallbackCity = initialCity && globalWardsByCity[initialCity]
+        ? initialCity
+        : 'THỦ DẦU MỘT';
+      const fallbackScope = window.RadarAreaScope.validateScope({
+        version: 2,
+        activeCity: fallbackCity,
+        selections: { [fallbackCity]: Array.from(globalWardsByCity[fallbackCity] || []) },
+        mode: 'city_all',
+      }, globalWardsByCity);
+      if (fallbackScope) {
+        window.RadarAreaScope.setCurrentScope(fallbackScope, globalWardsByCity);
+        window.RadarAreaScope.syncScopeControls(fallbackScope, globalWardsByCity, document, updateWardFilters);
+      }
     }
   }
 

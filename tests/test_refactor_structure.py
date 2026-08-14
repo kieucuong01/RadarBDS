@@ -236,6 +236,21 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "defaultDismissedScope" in area_scope_js
     assert "RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE" in area_scope_js
     assert "RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE" in filters_js
+
+
+def test_sidebar_keeps_multi_city_ward_selections_while_switching_city_tabs():
+    html = _read("templates/index.html")
+    filters_js = _read("static/js/main/filters.js")
+    area_scope_js = _read("static/js/main/area_scope.js")
+
+    assert "data-city-count" in html
+    assert 'id="wardSelectedCount" aria-live="polite"' in html
+    assert "RadarAreaScope.setActiveScopeCity" in filters_js
+    select_city = filters_js.split("function selectCity(btn)", 1)[1].split(
+        "\nfunction ", 1
+    )[0]
+    assert "applyFilters()" not in select_city
+    assert "applyDashboardScope" not in select_city
     assert "scopeStatusLabel" in area_scope_js
     assert "scopeStatusParts" in area_scope_js
     assert "renderScopeStatusChips" in area_scope_js

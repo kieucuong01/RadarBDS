@@ -229,7 +229,12 @@
           <div class="city-pills">
             {% for city_value, city_label in dashboard_filter_cities %}
               {% if wards_by_city.get(city_value) %}
-                <button type="button" class="city-pill {% if loop.first %}active{% endif %}" data-city="{{ city_value }}" onclick="selectCity(this)">{{ city_label }}</button>
+                <button type="button" class="city-pill {% if loop.first %}active{% endif %}"
+                  data-city="{{ city_value }}" onclick="selectCity(this)"
+                  aria-pressed="{% if loop.first %}true{% else %}false{% endif %}">
+                  <span>{{ city_label }}</span>
+                  <span class="city-pill-count" data-city-count="{{ city_value }}" hidden>0</span>
+                </button>
               {% endif %}
             {% endfor %}
           </div>
@@ -240,7 +245,7 @@
           <div class="ward-bulk-actions">
             <button type="button" class="ward-action-btn" onclick="setAllWards(true)">Chọn tất cả</button>
             <button type="button" class="ward-action-btn ward-action-clear" onclick="setAllWards(false)">Bỏ chọn</button>
-            <span class="ward-count" id="wardSelectedCount">0/0 phường</span>
+            <span class="ward-count" id="wardSelectedCount" aria-live="polite">0 phường · 0 thành phố</span>
           </div>
           <div class="ward-scroll-area">
             <div id="wardFilters"></div>
