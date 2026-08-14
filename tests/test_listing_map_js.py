@@ -370,8 +370,14 @@ def test_map_markers_use_compact_visual_radius_and_border():
         "fillColor": "#10b981",
         "fillOpacity": 0.86,
     }
-    assert _run_node("mapApi.markerStyle('road').radius") == 7
-    assert _run_node("mapApi.markerStyle('landmark').radius") == 7
+    assert _run_node("mapApi.markerStyle('road').radius") == 6
+    assert _run_node("mapApi.markerStyle('landmark')") == {
+        "radius": 7,
+        "color": "#be123c",
+        "weight": 2,
+        "fillColor": "#fb7185",
+        "fillOpacity": 0.84,
+    }
     assert _run_node("mapApi.markerStyle('ward').radius") == 8
     assert _run_node("mapApi.markerStyle('ward').weight") == 2
 

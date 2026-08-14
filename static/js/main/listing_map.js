@@ -924,7 +924,7 @@
     }
     if (precision === "road") {
       return {
-        radius: 7,
+        radius: 6,
         color: "#3730a3",
         weight: 2,
         fillColor: "#6366f1",
@@ -934,9 +934,9 @@
     if (precision === "landmark") {
       return {
         radius: 7,
-        color: "#0f766e",
+        color: "#be123c",
         weight: 2,
-        fillColor: "#14b8a6",
+        fillColor: "#fb7185",
         fillOpacity: 0.84
       };
     }

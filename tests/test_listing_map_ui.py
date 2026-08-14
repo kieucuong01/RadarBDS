@@ -229,6 +229,11 @@ def test_workspace_js_has_history_focus_abort_and_honest_group_contracts():
     assert "min-height: 44px" in styles
     assert "@media (prefers-reduced-motion: reduce)" in styles
     assert ".listing-map-precision-landmark" in styles
+    assert re.search(
+        r"\.listing-map-precision-landmark\s*\{[^}]*#be123c",
+        styles,
+        re.S,
+    )
     assert "state.userAccuracyCircle = root.L.circle(" in script
     add_marker_source = script.split("function addMarker(group)", 1)[1].split(
         "function setSummaryStatus", 1
