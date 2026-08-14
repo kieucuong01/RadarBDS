@@ -116,7 +116,10 @@ _ROAD_NAME_HINT_RE = re.compile(
     r"nguyen|tran|le|ly|pham|phan|huynh|vo|dang|do|ngo|bui|thich|bach|"
     r"hoang|ho|mac|ton duc|cach mang|hung vuong|dien bien|quoc lo|"
     r"dai lo|bac si|yersin|yesin|cho ben lon|cho hoang gia|lo\s+7\s*b|"
-    r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|vanh dai|vanh 4|len huyen|lien huyen"
+    r"my phuoc|mptv|phu loi|phu tan|phu an|an dien|tan dinh|hoa loi|"
+    r"an phu|an son|an thanh|binh chuan|binh hoa|binh nham|hung dinh|"
+    r"lai thieu|thuan giao|vinh phu|cau tau|"
+    r"vanh dai|vanh 4|len huyen|lien huyen"
     r")\b",
     re.IGNORECASE,
 )
@@ -202,6 +205,7 @@ _KNOWN_ROAD_PREFIXES = (
     "vo van kiet",
     "cho ben lon",
     "cho hoang gia",
+    "cau tau",
 )
 
 _NON_LOCATION_RELATION_PREFIXES = (

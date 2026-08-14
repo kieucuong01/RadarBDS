@@ -33,6 +33,16 @@ _REGISTRY_SHORT_NUMBERED_ROAD_RE = re.compile(
 _REGISTRY_ROAD_CONTEXT_RE = re.compile(
     r"(?:\bduong|\bmat tien|\bmt|\bhem|\bkdc|\btdc)\s*(?:so\s*)?$"
 )
+_REGISTRY_NON_ROAD_CONTEXT_RE = re.compile(
+    r"\b(?:truong(?:\s+(?:tieu hoc|thcs|thpt|mam non))?|"
+    r"thcs|thpt|tieu hoc|mam non|cho)\s*$"
+)
+_REGISTRY_DIRECT_CONTEXT_RE = re.compile(
+    r"\b(?:mat tien|mt|duong|hem)\s*(?:so\s*)?$"
+)
+_REGISTRY_NEAR_CONTEXT_RE = re.compile(
+    r"\b(?:cach|gan|sat|ke|canh|doi dien)\s*$"
+)
 
 
 def normalize_location_token(value: str) -> str:
@@ -350,7 +360,7 @@ def _unique_registry_road_from_text(
         normalize_road_token(_canonical_map_ward(city, ward))
         for ward in wards
     }
-    matched_roads: list[tuple[int, int, str]] = []
+    matched_roads: list[tuple[int, int, str, int]] = []
     allowed_scopes = {
         scope
         for ward in wards
@@ -373,6 +383,11 @@ def _unique_registry_road_from_text(
         return ""
     token_matches = list(re.finditer(r"[a-z0-9]+", text))
     tokens = [match.group(0) for match in token_matches]
+    title_boundary = (
+        tokens.index("roadcopybreak")
+        if "roadcopybreak" in tokens
+        else len(tokens)
+    )
     alias_lengths = {len(alias.split()) for alias in scoped_aliases if alias}
     for length in alias_lengths:
         for index in range(0, len(tokens) - length + 1):
@@ -397,6 +412,9 @@ def _unique_registry_road_from_text(
             if len(canonicals) != 1:
                 continue
             start = token_matches[index].start()
+            prefix_context = text[max(0, start - 45) : start]
+            if _REGISTRY_NON_ROAD_CONTEXT_RE.search(prefix_context):
+                continue
             if (
                 _REGISTRY_SHORT_NUMBERED_ROAD_RE.fullmatch(alias)
                 and not _REGISTRY_ROAD_CONTEXT_RE.search(
@@ -404,8 +422,17 @@ def _unique_registry_road_from_text(
                 )
             ):
                 continue
+            score = length
+            if index < title_boundary:
+                score += 100
+            if _REGISTRY_DIRECT_CONTEXT_RE.search(prefix_context):
+                score += 40
+            elif _REGISTRY_NEAR_CONTEXT_RE.search(prefix_context):
+                score += 5
+            if any(token.isdigit() for token in alias.split()):
+                score += 10
             matched_roads.append(
-                (index, index + length, next(iter(canonicals)))
+                (index, index + length, next(iter(canonicals)), score)
             )
 
     # A numbered local road often also contains a shorter base-road alias,
@@ -422,9 +449,21 @@ def _unique_registry_road_from_text(
             for other in matched_roads
         )
     ]
-    matched_canonicals = {match[2] for match in specific_matches}
-    if len(matched_canonicals) == 1:
-        return next(iter(matched_canonicals))
+    canonical_scores: dict[str, int] = {}
+    for match in specific_matches:
+        canonical_scores[match[2]] = max(
+            match[3],
+            canonical_scores.get(match[2], -1),
+        )
+    if canonical_scores:
+        highest_score = max(canonical_scores.values())
+        strongest = [
+            canonical
+            for canonical, score in canonical_scores.items()
+            if score == highest_score
+        ]
+        if len(strongest) == 1:
+            return strongest[0]
     return ""
 
 
@@ -820,7 +859,7 @@ def resolve_listing_location(
     registry_text_road = _unique_registry_road_from_text(
         city,
         lookup_ward_labels,
-        " ".join(
+        " roadcopybreak ".join(
             str(_value(listing, key, "") or "")
             for key in ("title", "description")
         ),

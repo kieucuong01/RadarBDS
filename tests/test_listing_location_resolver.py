@@ -2154,6 +2154,88 @@ def test_thuan_an_registry_text_recovers_from_noisy_extracted_context(
 
 
 @pytest.mark.parametrize(
+    ("ward", "title", "description", "expected_slug"),
+    [
+        (
+            "Bình Chuẩn",
+            "Nhà đường Bình Chuẩn 65, sổ hồng riêng",
+            "Cách ĐT743 chỉ 100m",
+            "duong-binh-chuan-65",
+        ),
+        (
+            "Bình Chuẩn",
+            "Nhà gần đường Bình Chuẩn 63 đang làm",
+            "Gần Trường Tiểu học Lê Thị Trung",
+            "binh-chuan-63",
+        ),
+        (
+            "Bình Hòa",
+            "Bán nhà đường Bình Hòa 11 Thuận An",
+            "Đường xe hơi thông thoáng",
+            "binh-hoa-11",
+        ),
+        (
+            "Bình Hòa",
+            "Bán lô đất Bình Hòa 15 cách Nguyễn Du chưa đến 100m",
+            "",
+            "binh-hoa-15",
+        ),
+        (
+            "Hưng Định",
+            "Bán nhà đường Cầu Tàu 1 sẹt Hưng Định",
+            "Gần chợ Búng, Nhà thờ Búng",
+            "duong-cau-tau",
+        ),
+    ],
+)
+def test_thuan_an_registry_text_prefers_primary_property_road(
+    ward, title, description, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 930302,
+        "city": "THUẬN AN",
+        "ward": ward,
+        "title": title,
+        "description": description,
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, description, ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert expected_slug in result.location.location_key
+
+
+def test_thuan_an_market_name_is_not_promoted_to_numbered_road():
+    registry = load_location_registry()
+    title = "Nhà KDC Dân sinh, gần chợ Bình Chuẩn 34"
+    description = "Cách Trường Tiểu học Lê Thị Trung 500m"
+    listing = {
+        "id": 930303,
+        "city": "THUẬN AN",
+        "ward": "Bình Chuẩn",
+        "title": title,
+        "description": description,
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, description, ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "ward"
+
+
+@pytest.mark.parametrize(
     ("ward", "title", "expected_slug"),
     [
         ("Hòa Lợi", "Đất khu vực Mỹ Phước 3", "khu-vuc-my-phuoc-3"),
