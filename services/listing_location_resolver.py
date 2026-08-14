@@ -350,7 +350,7 @@ def _unique_registry_road_from_text(
         normalize_road_token(_canonical_map_ward(city, ward))
         for ward in wards
     }
-    matched_canonicals: set[str] = set()
+    matched_roads: list[tuple[int, int, str]] = []
     allowed_scopes = {
         scope
         for ward in wards
@@ -371,41 +371,58 @@ def _unique_registry_road_from_text(
         )
     if not scoped_aliases:
         return ""
-    tokens = text.split()
-    alias_lengths = {
-        len(alias.split()) for alias in scoped_aliases if alias
-    }
-    text_phrases = {
-        " ".join(tokens[index : index + length])
-        for length in alias_lengths
-        for index in range(0, len(tokens) - length + 1)
-    }
-    for alias in text_phrases.intersection(scoped_aliases):
-        # Some legacy wards share their name with a registry road alias (for
-        # example "Tân Định"). A bare ward mention is location context, not
-        # enough evidence to promote a listing to road precision.
-        if alias in normalized_ward_names:
-            continue
-        entries = scoped_aliases[alias]
-        aggregate_count = sum(
-            1 for entry in entries if bool(entry.get("aggregate"))
-        )
-        if len(entries) != 1 and aggregate_count != 1:
-            continue
-        if _REGISTRY_SHORT_NUMBERED_ROAD_RE.fullmatch(alias):
-            match = re.search(
-                rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])",
-                text,
+    token_matches = list(re.finditer(r"[a-z0-9]+", text))
+    tokens = [match.group(0) for match in token_matches]
+    alias_lengths = {len(alias.split()) for alias in scoped_aliases if alias}
+    for length in alias_lengths:
+        for index in range(0, len(tokens) - length + 1):
+            alias = " ".join(tokens[index : index + length])
+            entries = scoped_aliases.get(alias)
+            if not entries:
+                continue
+            # Some legacy wards share their name with a registry road alias
+            # (for example "Tân Định"). A bare ward mention is location
+            # context, not enough evidence to promote a listing to road
+            # precision.
+            if alias in normalized_ward_names:
+                continue
+            aggregate_count = sum(
+                1 for entry in entries if bool(entry.get("aggregate"))
             )
-            if not match or not _REGISTRY_ROAD_CONTEXT_RE.search(
-                text[max(0, match.start() - 24) : match.start()]
+            if len(entries) != 1 and aggregate_count != 1:
+                continue
+            canonicals = {
+                _entry_road_key(entry, alias) for entry in entries
+            }
+            if len(canonicals) != 1:
+                continue
+            start = token_matches[index].start()
+            if (
+                _REGISTRY_SHORT_NUMBERED_ROAD_RE.fullmatch(alias)
+                and not _REGISTRY_ROAD_CONTEXT_RE.search(
+                    text[max(0, start - 24) : start]
+                )
             ):
                 continue
-        canonicals = {
-            _entry_road_key(entry, alias) for entry in entries
-        }
-        if len(canonicals) == 1:
-            matched_canonicals.update(canonicals)
+            matched_roads.append(
+                (index, index + length, next(iter(canonicals)))
+            )
+
+    # A numbered local road often also contains a shorter base-road alias,
+    # e.g. "Đường Bình Hòa 24" contains "Đường Bình Hòa". Keep the most
+    # specific overlapping alias, while separate mentions of distinct roads
+    # remain ambiguous and therefore do not get auto-promoted.
+    specific_matches = [
+        match
+        for match in matched_roads
+        if not any(
+            other[0] <= match[0]
+            and other[1] >= match[1]
+            and (other[0], other[1]) != (match[0], match[1])
+            for other in matched_roads
+        )
+    ]
+    matched_canonicals = {match[2] for match in specific_matches}
     if len(matched_canonicals) == 1:
         return next(iter(matched_canonicals))
     return ""
@@ -795,18 +812,25 @@ def resolve_listing_location(
             signature=signature,
         )
 
-    registry_text_road = ""
-    if not direct_roads and not nearby_road and not landmark_key:
-        registry_text_road = _unique_registry_road_from_text(
-            city,
-            lookup_ward_labels,
-            " ".join(
-                str(_value(listing, key, "") or "")
-                for key in ("title", "description")
-            ),
-            registry,
-        )
-    if registry_text_road and registry_text_road not in direct_roads:
+    # Keep a registry-backed recovery candidate even when the heuristic
+    # extractor produced a noisy road or landmark. The extracted direct road
+    # still wins when it resolves; this candidate only prevents an unrelated
+    # phrase such as "bờ sông" or an overlong project name from hiding one
+    # unique, scoped road that is explicitly present in the listing text.
+    registry_text_road = _unique_registry_road_from_text(
+        city,
+        lookup_ward_labels,
+        " ".join(
+            str(_value(listing, key, "") or "")
+            for key in ("title", "description")
+        ),
+        registry,
+    )
+    if (
+        registry_text_road
+        and not nearby_road
+        and registry_text_road not in direct_roads
+    ):
         direct_roads = (*direct_roads, registry_text_road)
 
     landmark_match = _match_landmark_in_wards(
@@ -973,6 +997,49 @@ def resolve_listing_location(
                         reason="landmark_not_found",
                     )
                 return LocationResolution(location=resolved, issue=issue)
+        if registry_text_road and registry_text_road != nearby_road:
+            recovery_entry = _match_road_in_wards(
+                city,
+                lookup_ward_labels,
+                registry_text_road,
+                landmark_key if landmark_entry else "",
+                registry,
+            )
+            if isinstance(recovery_entry, Mapping):
+                canonical_road = _entry_road_key(
+                    recovery_entry,
+                    registry_text_road,
+                )
+                recovered = _resolved_from_entry(
+                    listing_id=listing_id,
+                    precision="road",
+                    location_key=_road_location_key(
+                        city,
+                        ward,
+                        canonical_road,
+                        landmark_key if landmark_entry else "",
+                    ),
+                    entry=recovery_entry,
+                    resolver_version=registry.resolver_version,
+                    signature=signature,
+                    relation=relation or "near",
+                    reference_road=canonical_road,
+                    landmark_key=landmark_key if landmark_entry else "",
+                )
+                if recovered:
+                    return LocationResolution(
+                        location=recovered,
+                        issue=_issue(
+                            listing_id=listing_id,
+                            city=city,
+                            ward=ward_label,
+                            road=nearby_road,
+                            landmark=landmark_key,
+                            relation=relation,
+                            status="not_found",
+                            reason="nearby_road_not_found",
+                        ),
+                    )
         status, reason = (
             ("ambiguous", "ambiguous_nearby_road")
             if road_entry == "ambiguous"

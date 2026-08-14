@@ -1,5 +1,5 @@
 {
-  "resolver_version": "osm-binh-duong-20260814-v69",
+  "resolver_version": "osm-binh-duong-20260814-v70",
   "road_aliases": [
     {
       "city": "THỦ DẦU MỘT",
@@ -644,6 +644,12 @@
       "ward": "An Phú",
       "canonical": "Đường An Phú 35",
       "aliases": ["An Phú 35"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Đường Liên Huyện",
+      "aliases": ["Liên Huyện", "Đường lên huyện"]
     },
     {
       "city": "THUẬN AN",
@@ -2690,6 +2696,19 @@
       "source": "Google Maps exact public Đường Uyên Hưng 10 result verified with isolated browser-use",
       "source_url": "https://www.google.com/maps/place/%C4%90%C6%B0%E1%BB%9Dng+Uy%C3%AAn+H%C6%B0ng+10/@11.0634417,106.7851282,17z/",
       "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "road_name": "Đường Liên Huyện",
+      "lat": 10.9605998,
+      "lng": 106.7496933,
+      "accuracy_radius_m": 1800,
+      "source": "Google Maps public road search corroborated by exact public Liên Huyện addresses verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/search/%C4%90%C6%B0%E1%BB%9Dng+Li%C3%AAn+Huy%E1%BB%87n,+An+Ph%C3%BA,+Thu%E1%BA%ADn+An,+B%C3%ACnh+D%C6%B0%C6%A1ng/@10.9605998,106.7496933,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "Google Maps public results explicitly label Liên Huyện in An Phú while the retained legacy ward polygon is coarse at this road edge"
     }
   ],
   "landmark_aliases": [
@@ -3070,6 +3089,18 @@
       "ward": "An Phú",
       "canonical": "KDC Việt Sing",
       "aliases": ["KDC Viet Sing", "KDC Vietsing", "Khu dân cư Việt Sing"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "canonical": "Khu nhà ở Phú Hồng Thịnh 3",
+      "aliases": ["KDC Phú Hồng Thịnh 3", "Khu dân cư Phú Hồng Thịnh 3"]
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "canonical": "Khu nhà ở thương mại Lâm Hải",
+      "aliases": ["Dự án Lâm Hải", "KDC Lâm Hải", "Khu nhà ở Lâm Hải"]
     },
     {
       "city": "THUẬN AN",
@@ -3886,6 +3917,30 @@
       "source": "OpenStreetMap public KDC Việt Sing shopping-center anchor and named internal-road grid",
       "source_url": "https://www.openstreetmap.org/node/4489477989",
       "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "An Phú",
+      "landmark_name": "Khu nhà ở Phú Hồng Thịnh 3",
+      "lat": 10.9601178,
+      "lng": 106.7423428,
+      "accuracy_radius_m": 700,
+      "source": "Google Maps exact public KHU NHÀ Ở PHÚ HỒNG THỊNH 3 result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/KHU+NH%C3%80+%E1%BB%9E+PH%C3%9A+H%E1%BB%92NG+TH%E1%BB%8ANH+3/@10.9601178,106.7423428,17z/",
+      "verified_at": "2026-08-14"
+    },
+    {
+      "city": "THUẬN AN",
+      "ward": "Bình Chuẩn",
+      "landmark_name": "Khu nhà ở thương mại Lâm Hải",
+      "lat": 10.9907107,
+      "lng": 106.7200545,
+      "accuracy_radius_m": 900,
+      "source": "Google Maps exact public Khu Nhà ở thương mại Lâm Hải result verified with isolated browser-use",
+      "source_url": "https://www.google.com/maps/place/Khu+Nh%C3%A0+%E1%BB%9F+th%C6%B0%C6%A1ng+m%E1%BA%A1i+L%C3%A2m+H%E1%BA%A3i/@10.9907107,106.7200545,17z/",
+      "verified_at": "2026-08-14",
+      "allow_boundary_mismatch": true,
+      "boundary_mismatch_reason": "The exact public project address now uses Thuận Giao while production listings retain the legacy Bình Chuẩn market scope"
     },
     {
       "city": "THUẬN AN",

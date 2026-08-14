@@ -2051,6 +2051,24 @@ def test_di_an_browser_verified_roads_and_landmarks_resolve(
             "landmark",
             "kdc-vinh-phu",
         ),
+        (
+            "An Phú",
+            "Đất đường Liên Huyện",
+            "road",
+            "duong-lien-huyen",
+        ),
+        (
+            "An Phú",
+            "Đất KDC Phú Hồng Thịnh 3",
+            "landmark",
+            "khu-nha-o-phu-hong-thinh-3",
+        ),
+        (
+            "Bình Chuẩn",
+            "Đất dự án Lâm Hải",
+            "landmark",
+            "khu-nha-o-thuong-mai-lam-hai",
+        ),
     ],
 )
 def test_requested_thuan_an_center_fallback_locations_resolve(
@@ -2078,6 +2096,60 @@ def test_requested_thuan_an_center_fallback_locations_resolve(
     assert result.issue is None
     assert result.location
     assert result.location.precision == expected_precision
+    assert expected_slug in result.location.location_key
+
+
+@pytest.mark.parametrize(
+    ("ward", "title", "expected_slug"),
+    [
+        (
+            "An Phú",
+            "Mặt tiền đường An Phú 35, dự án nhà ở Kim Thuận An",
+            "duong-an-phu-35",
+        ),
+        (
+            "Bình Chuẩn",
+            "Bán nhà đường Bình Chuẩn 65, dự án Lâm Hải",
+            "duong-binh-chuan-65",
+        ),
+        (
+            "Bình Hòa",
+            "Nhà 1 xẹt nhẹ đường Bình Hòa 04, sát đường lớn",
+            "duong-binh-hoa-04",
+        ),
+        (
+            "Bình Hòa",
+            "Nhà đường Bình Hòa 24, khu dân cư đông",
+            "duong-binh-hoa-24",
+        ),
+        (
+            "Vĩnh Phú",
+            "Nhà mặt tiền Vĩnh Phú 38, sát đường bờ sông",
+            "vinh-phu-38",
+        ),
+    ],
+)
+def test_thuan_an_registry_text_recovers_from_noisy_extracted_context(
+    ward, title, expected_slug
+):
+    registry = load_location_registry()
+    listing = {
+        "id": 930301,
+        "city": "THUẬN AN",
+        "ward": ward,
+        "title": title,
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=extract_map_location_context(title, "", ""),
+    )
+
+    assert result.location
+    assert result.location.precision == "road"
     assert expected_slug in result.location.location_key
 
 
