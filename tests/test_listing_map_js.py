@@ -382,6 +382,24 @@ def test_map_markers_use_compact_visual_radius_and_border():
     assert _run_node("mapApi.markerStyle('ward').weight") == 2
 
 
+def test_map_marker_radius_grows_progressively_at_close_zoom():
+    expected = {
+        "exact": [6, 6, 7, 7, 8, 8],
+        "road": [6, 6, 7, 7, 8, 8],
+        "landmark": [7, 7, 8, 8, 9, 9],
+        "ward": [8, 8, 9, 9, 10, 10],
+    }
+
+    for precision, radii in expected.items():
+        assert _run_node(
+            "[14,15,16,17,18,19].map(zoom=>"
+            f"mapApi.markerRadius('{precision}',zoom))"
+        ) == radii
+
+    assert _run_node("mapApi.markerStyle('exact',18).radius") == 8
+    assert _run_node("mapApi.markerStyle('landmark',16).radius") == 8
+
+
 def test_exact_marker_label_collision_uses_screen_rect_gap():
     assert _run_node(
         "mapApi.labelRectCollides("

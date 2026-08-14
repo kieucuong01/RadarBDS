@@ -17,6 +17,8 @@
   var MARKER_BATCH_SIZE = 200;
   var MOBILE_MEDIA_QUERY = "(max-width: 760px)";
   var PRICE_LABEL_MIN_ZOOM = 13;
+  var CLOSE_MARKER_MEDIUM_ZOOM = 16;
+  var CLOSE_MARKER_HIGH_ZOOM = 18;
   var PRICE_LABEL_WIDTH = 92;
   var PRICE_LABEL_HEIGHT = 30;
   var PRICE_LABEL_ANCHOR_Y = 40;
@@ -912,10 +914,20 @@
     return messages[code] || "Không lưu được vị trí. Hãy thử lại.";
   }
 
-  function markerStyle(precision) {
+  function markerRadius(precision, zoom) {
+    var baseRadius = precision === "ward"
+      ? 8
+      : (precision === "landmark" ? 7 : 6);
+    var numericZoom = Number(zoom);
+    if (numericZoom >= CLOSE_MARKER_HIGH_ZOOM) return baseRadius + 2;
+    if (numericZoom >= CLOSE_MARKER_MEDIUM_ZOOM) return baseRadius + 1;
+    return baseRadius;
+  }
+
+  function markerStyle(precision, zoom) {
     if (precision === "exact") {
       return {
-        radius: 6,
+        radius: markerRadius(precision, zoom),
         color: "#047857",
         weight: 2,
         fillColor: "#10b981",
@@ -924,7 +936,7 @@
     }
     if (precision === "road") {
       return {
-        radius: 6,
+        radius: markerRadius(precision, zoom),
         color: "#3730a3",
         weight: 2,
         fillColor: "#6366f1",
@@ -933,7 +945,7 @@
     }
     if (precision === "landmark") {
       return {
-        radius: 7,
+        radius: markerRadius(precision, zoom),
         color: "#be123c",
         weight: 2,
         fillColor: "#fb7185",
@@ -941,7 +953,7 @@
       };
     }
     return {
-      radius: 8,
+      radius: markerRadius(precision, zoom),
       color: "#b45309",
       weight: 2,
       fillColor: "#f59e0b",
@@ -1238,11 +1250,24 @@
     state.markerLayer = L.layerGroup().addTo(state.map);
     state.markerLabelLayer = L.layerGroup().addTo(state.map);
     mountMapActionControls(L);
-    state.map.on("zoomend moveend", scheduleMarkerLabelRefresh);
+    state.map.on("zoomend", function () {
+      refreshMarkerRadii();
+      scheduleMarkerLabelRefresh();
+    });
+    state.map.on("moveend", scheduleMarkerLabelRefresh);
     state.map.setView([11.02, 106.63], 11);
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize();
     }, 0);
+  }
+
+  function refreshMarkerRadii() {
+    if (!state.map || !state.markerLayer) return;
+    var zoom = state.map.getZoom();
+    state.markerLayer.eachLayer(function (layer) {
+      if (!layer || typeof layer.setRadius !== "function") return;
+      layer.setRadius(markerRadius(layer._radarPrecision, zoom));
+    });
   }
 
   function clearAdminEditLayers() {
@@ -1947,8 +1972,9 @@
     var lng = Number(group.lng);
     var marker = root.L.circleMarker(
       [lat, lng],
-      markerStyle(group.precision)
+      markerStyle(group.precision, state.map.getZoom())
     );
+    marker._radarPrecision = group.precision;
     marker.bindTooltip(makeTooltip(group));
     marker.on("click", function () {
       selectGroup(group);
@@ -2698,6 +2724,7 @@
     markerLabelModel: markerLabelModel,
     markerLabelRect: markerLabelRect,
     markerLabelClassName: markerLabelClassName,
+    markerRadius: markerRadius,
     markerStyle: markerStyle,
     closerInitialZoom: closerInitialZoom,
     labelRectCollides: labelRectCollides,

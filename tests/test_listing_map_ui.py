@@ -256,6 +256,29 @@ def test_initial_fit_bounds_cannot_outlive_a_fast_map_close():
     assert "animate: false" in fit_bounds_options
 
 
+def test_listing_map_refreshes_existing_marker_radii_after_zoom():
+    script = Path("static/js/main/listing_map.js").read_text(encoding="utf-8")
+
+    refresh_source = script.split(
+        "function refreshMarkerRadii()", 1
+    )[1].split("function clearAdminEditLayers", 1)[0]
+    assert "state.markerLayer.eachLayer" in refresh_source
+    assert "state.map.getZoom()" in refresh_source
+    assert "layer.setRadius(markerRadius(layer._radarPrecision, zoom))" in refresh_source
+
+    init_source = script.split("function initMap(L)", 1)[1].split(
+        "function clearAdminEditLayers", 1
+    )[0]
+    assert 'state.map.on("zoomend", function ()' in init_source
+    assert "refreshMarkerRadii();" in init_source
+
+    add_marker_source = script.split("function addMarker(group)", 1)[1].split(
+        "function setSummaryStatus", 1
+    )[0]
+    assert "markerStyle(group.precision, state.map.getZoom())" in add_marker_source
+    assert "marker._radarPrecision = group.precision" in add_marker_source
+
+
 def test_listing_map_marker_labels_have_compact_price_and_count_styles():
     from pathlib import Path
 
