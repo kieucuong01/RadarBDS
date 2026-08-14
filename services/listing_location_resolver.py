@@ -361,24 +361,23 @@ def _unique_registry_road_from_text(
         for ward in wards
     }
     matched_roads: list[tuple[int, int, str, int]] = []
-    allowed_scopes = {
-        scope
-        for ward in wards
-        for scope in _road_scopes(city, ward, registry)
-    }
+    allowed_scopes = tuple(
+        dict.fromkeys(
+            scope
+            for ward in wards
+            for scope in _road_scopes(city, ward, registry)
+        )
+    )
     scoped_aliases: dict[str, tuple[Mapping[str, object], ...]] = {}
     for scope in allowed_scopes:
         cached = registry.road_text_aliases.get((city, scope))
         if cached is not None:
-            scoped_aliases.update(cached)
+            for raw_alias, entries in cached.items():
+                scoped_aliases.setdefault(raw_alias, entries)
             continue
-        scoped_aliases.update(
-            {
-                raw_alias: entries
-            for (entry_city, entry_ward, raw_alias), entries in registry.roads.items()
-            if entry_city == city and entry_ward == scope
-            }
-        )
+        for (entry_city, entry_ward, raw_alias), entries in registry.roads.items():
+            if entry_city == city and entry_ward == scope:
+                scoped_aliases.setdefault(raw_alias, entries)
     if not scoped_aliases:
         return ""
     token_matches = list(re.finditer(r"[a-z0-9]+", text))

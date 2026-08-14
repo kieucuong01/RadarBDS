@@ -12,7 +12,7 @@ from services.listing_location_resolver import (
     normalize_road_token,
     resolve_listing_location,
 )
-from services.listing_map_context import extract_map_location_context
+from services.listing_map_context import MapLocationContext, extract_map_location_context
 
 
 PHU_TAN_FIXTURE_PATH = (
@@ -1391,6 +1391,53 @@ def test_bare_tan_dinh_ward_text_is_not_treated_as_a_road():
 
     assert result.location
     assert result.location.precision == "ward"
+
+
+def test_registry_text_prefers_child_ward_over_parent_scope_deterministically():
+    child = {
+        **_road(lat=11.11, lng=106.61),
+        "normalized_road": "duong my phuoc 1",
+    }
+    parent = {
+        **_road(lat=11.22, lng=106.62),
+        "normalized_road": "duong my phuoc parent",
+    }
+    registry = LocationRegistry(
+        resolver_version="scope-order-test-v1",
+        roads={
+            ("BẾN CÁT", "my phuoc 1", "duong so 1"): (child,),
+            ("BẾN CÁT", "my phuoc 1", "duong my phuoc 1"): (child,),
+            ("BẾN CÁT", "my phuoc", "duong so 1"): (parent,),
+            ("BẾN CÁT", "my phuoc", "duong my phuoc parent"): (parent,),
+        },
+        landmarks={},
+        wards={
+            ("BẾN CÁT", "my phuoc 1"): {
+                **_road(lat=11.10, lng=106.60),
+                "road_scope_parent": "Mỹ Phước",
+            },
+            ("BẾN CÁT", "my phuoc"): _road(lat=11.20, lng=106.60),
+        },
+    )
+    listing = {
+        "id": 921321,
+        "city": "BẾN CÁT",
+        "ward": "Mỹ Phước 1",
+        "title": "Nhà đường số 1",
+        "description": "",
+        "road_name": "",
+    }
+
+    result = resolve_listing_location(
+        listing,
+        registry=registry,
+        context=MapLocationContext(),
+    )
+
+    assert result.location
+    assert result.location.precision == "road"
+    assert result.location.reference_road == "duong my phuoc 1"
+    assert result.location.lat == pytest.approx(11.11)
 
 
 def test_stored_named_road_matches_registry_with_optional_duong_prefix():
