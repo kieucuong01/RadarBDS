@@ -1,6 +1,6 @@
 # Listing Maps Singleton Modal Design
 
-**Date:** 2026-08-14  
+**Date:** 2026-08-14
 **Status:** Approved design, pending written-spec review
 
 ## Goal
