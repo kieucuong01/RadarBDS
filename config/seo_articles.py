@@ -14120,6 +14120,268 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc",
+        "title": "Dưới 3 tỷ nên xem Phú Tân hay Tương Bình Hiệp trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 15/08/2026: nếu anh lọc dưới 3 tỷ, Tương Bình Hiệp đang dày hàng hơn rõ; Phú Tân giữ lợi thế ở nhóm đất nền có nhiều dấu hiệu đáng kiểm tra. Nên tách đất nền và nhà đất trước khi so.",
+        "keywords": "dưới 3 tỷ Phú Tân hay Tương Bình Hiệp, giá đất Phú Tân, giá đất Tương Bình Hiệp, đất nền dưới 3 tỷ Thủ Dầu Một, nhà đất dưới 3 tỷ Thủ Dầu Một, Radar BDS",
+        "breadcrumb_label": "Dưới 3 tỷ: Phú Tân hay Tương Bình Hiệp",
+        "hero_badge": "So sánh theo ngân sách",
+        "hero_title": "Dưới 3 tỷ nên xem Phú Tân hay Tương Bình Hiệp trước?",
+        "hero_text": "Nếu mục tiêu của anh là có nhiều lựa chọn còn nằm trong khung dưới 3 tỷ, nên mở Tương Bình Hiệp trước. Nếu anh muốn soi thêm lớp đất nền có nhiều dấu hiệu đáng kiểm tra hơn, Phú Tân vẫn đáng mở sau. Điểm quan trọng là phải khóa đúng loại hình trước, vì hai phường này cho ra hai bài toán rất khác.",
+        "scope_label": "Thủ Dầu Một · Phú Tân / Tương Bình Hiệp",
+        "hero_checks": [
+            "Snapshot live ngày 15/08/2026, max crawled_at khoảng 11:05 ở cả hai phường",
+            "Dưới 3 tỷ: Tương Bình Hiệp có 786 tin ở hai nhóm chính; Phú Tân có 419 tin",
+            "Đất nền: Phú Tân 23,8 tr/m²; Tương Bình Hiệp 17,5 tr/m²",
+            "Nhà đất: Phú Tân 34,4 tr/m²; Tương Bình Hiệp 29,9 tr/m²"
+        ],
+        "primary_cta": "Mở dashboard lọc Tương Bình Hiệp dưới 3 tỷ",
+        "primary_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=under3_phu_tan_vs_tuong_binh_hiep",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=under3_phu_tan_vs_tuong_binh_hiep",
+        "map_label": "Tin tức / Phú Tân · Tương Bình Hiệp",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "1.971 tin",
+            "delta": "Phú Tân 1.020 · Tương Bình Hiệp 951",
+            "note": "Nguồn Facebook live ngày 15/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Tương Bình Hiệp dễ mở trước nếu anh giữ khung dưới 3 tỷ",
+            "price": "Đất nền 17,5 tr/m² · Nhà đất 29,9 tr/m² · đều thấp hơn Phú Tân",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "786 vs 419 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "67 vs 516 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Tân",
+                "href": "/binh-duong/phuong-phu-tan",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Tân và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Tương Bình Hiệp",
+                "href": "/binh-duong/phuong-tuong-binh-hiep",
+                "description": "Mở trang khu vực để xem dữ liệu Tương Bình Hiệp và lọc tiếp các tin dưới 3 tỷ."
+            },
+            {
+                "label": "Giá đất Phú Tân hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất tại Phú Tân."
+            },
+            {
+                "label": "Giá đất Tương Bình Hiệp hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất tại Tương Bình Hiệp."
+            },
+            {
+                "label": "MOS là gì khi lọc tin dưới giá cơ sở?",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Hiểu thêm lớp ưu tiên kiểm tra sau khi đã khóa phường và ngân sách."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu chỉ có khoảng dưới 3 tỷ thì nên mở phường nào trước?",
+                "a": "Nên mở Tương Bình Hiệp trước. Trong snapshot live ngày 15/08/2026, phường này có 334 tin đất nền dưới 3 tỷ và 452 tin nhà đất dưới 3 tỷ, tổng cộng 786 tin ở hai nhóm chính. Phú Tân tương ứng là 376 và 43 tin, tổng 419 tin."
+            },
+            {
+                "q": "Phú Tân có gì đáng xem nếu số tin dưới 3 tỷ ít hơn?",
+                "a": "Phú Tân vẫn đáng mở sau khi anh đã lấy mặt bằng ở Tương Bình Hiệp, đặc biệt nếu anh đang soi đất nền có nhiều dấu hiệu đáng kiểm tra hơn. Snapshot live hiện tại cho thấy Phú Tân có 516 tin có dấu hiệu, cao hơn nhiều so với 67 ở Tương Bình Hiệp."
+            },
+            {
+                "q": "Vì sao phải tách đất nền và nhà đất khi so Phú Tân với Tương Bình Hiệp?",
+                "a": "Vì hai loại hình có nhịp giá khác nhau. Ở Phú Tân, đất nền có giá rao trung vị 23,8 tr/m² nhưng nhà đất là 34,4 tr/m². Ở Tương Bình Hiệp là 17,5 và 29,9 tr/m². Nếu gộp chung, anh dễ kết luận sai về phường nào hợp ngân sách hơn."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-15",
+            "modified_at": "2026-08-15",
+            "intro": [
+                "Nếu anh đang giữ khung dưới 3 tỷ, câu trả lời ngắn là: nên mở Tương Bình Hiệp trước để có nhiều lựa chọn hơn. Phú Tân vẫn đáng xem sau, nhất là khi anh muốn soi thêm lớp đất nền có nhiều dấu hiệu đáng kiểm tra.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS ngày 15/08/2026, chỉ lấy tin active, không bị blacklist và không bị ẩn kiểm duyệt. Đây là giá rao công khai để lọc ban đầu, không phải giá giao dịch đã chốt."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "1.971 tin",
+                    "note": "Phú Tân 1.020 · Tương Bình Hiệp 951"
+                },
+                {
+                    "label": "Nguồn hàng dưới 3 tỷ",
+                    "value": "419 vs 786 tin",
+                    "note": "Phú Tân vs Tương Bình Hiệp ở đất nền + nhà đất"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "23,8 vs 17,5 tr/m²",
+                    "note": "Phú Tân vs Tương Bình Hiệp"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "34,4 vs 29,9 tr/m²",
+                    "note": "Phú Tân vs Tương Bình Hiệp"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Tân và Tương Bình Hiệp đang khác nhau thế nào trong khung dưới 3 tỷ?",
+                    "note": "Nguồn Facebook live ngày 15/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Tân · đất nền", "tracked": "625", "signals": "516", "under3": "376", "under4": "507", "median_m2": "23,8 tr/m²", "median_total": "2,8 tỷ", "mid_range": "18,7-26,9 tr/m²"},
+                        {"ward_type": "Phú Tân · nhà đất", "tracked": "141", "signals": "516", "under3": "43", "under4": "95", "median_m2": "34,4 tr/m²", "median_total": "3,5 tỷ", "mid_range": "27,0-39,3 tr/m²"},
+                        {"ward_type": "Tương Bình Hiệp · đất nền", "tracked": "375", "signals": "67", "under3": "334", "under4": "347", "median_m2": "17,5 tr/m²", "median_total": "1,95 tỷ", "mid_range": "14,0-20,5 tr/m²"},
+                        {"ward_type": "Tương Bình Hiệp · nhà đất", "tracked": "493", "signals": "67", "under3": "452", "under4": "487", "median_m2": "29,9 tr/m²", "median_total": "2,6 tỷ", "mid_range": "21,3-31,4 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Khóa loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều lựa chọn dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "334 tin đất nền và 452 tin nhà đất dưới 3 tỷ, dày hàng hơn rõ so với Phú Tân."},
+                        {"need": "Muốn mặt bằng giá mềm hơn để làm mốc", "open_first": "Tương Bình Hiệp", "why": "Giá trung vị thấp hơn ở cả đất nền 17,5 tr/m² và nhà đất 29,9 tr/m²."},
+                        {"need": "Muốn soi đất nền có nhiều dấu hiệu đáng kiểm tra", "open_first": "Phú Tân", "why": "Phú Tân hiện có 516 dấu hiệu trong snapshot live, dày hơn nhiều để anh mở tiếp vòng hai."},
+                        {"need": "Tìm nhà đất dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "452 tin nhà đất dưới 3 tỷ, trong khi Phú Tân chỉ có 43 tin ở cùng khung ngân sách."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Tương Bình Hiệp dày hàng dưới 3 tỷ hơn rõ ở cả hai nhóm chính",
+                    "note": "So đúng theo ngân sách thực tế trước khi nhìn sang lớp tín hiệu dữ liệu.",
+                    "alt": "Biểu đồ so nguồn hàng dưới 3 tỷ giữa Phú Tân và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Phú Tân", "value_label": "419 tin dưới 3 tỷ", "width": 53, "color": "#f59e0b"},
+                        {"label": "Tương Bình Hiệp", "value_label": "786 tin dưới 3 tỷ", "width": 100, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Tân cao giá hơn, nhưng cũng có lớp dấu hiệu dày hơn để soi tiếp",
+                    "note": "Giá rao và dấu hiệu là hai lớp lọc khác nhau; đừng gộp thành một kết luận duy nhất.",
+                    "alt": "Biểu đồ so giá và dấu hiệu giữa Phú Tân và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Phú Tân", "value_label": "đất nền 23,8 tr/m² · 516 dấu hiệu", "width": 100, "color": "#2563eb"},
+                        {"label": "Tương Bình Hiệp", "value_label": "đất nền 17,5 tr/m² · 67 dấu hiệu", "width": 74, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-tuong-binh-hiep-truoc",
+                    "heading": "1. Nếu ưu tiên số lượng lựa chọn dưới 3 tỷ, nên mở Tương Bình Hiệp trước",
+                    "paragraphs": [
+                        "Lý do đơn giản là độ dày nguồn hàng. Tương Bình Hiệp hiện có 334 tin đất nền dưới 3 tỷ và 452 tin nhà đất dưới 3 tỷ. Gộp hai nhóm chính, anh có 786 lựa chọn để lọc. Phú Tân tương ứng là 376 tin đất nền và 43 tin nhà đất, tổng 419 tin.",
+                        "Mặt bằng giá cũng đang mềm hơn. Ở Tương Bình Hiệp, đất nền có giá rao trung vị 17,5 tr/m² và tổng giá trung vị khoảng 1,95 tỷ; nhà đất là 29,9 tr/m² và khoảng 2,6 tỷ. Đây là mức dễ tạo danh sách xem trước hơn nếu anh chưa muốn vượt khung ngân sách."
+                    ],
+                    "bullets": [
+                        "Đất nền Tương Bình Hiệp: 375 tin theo dõi · 334 tin dưới 3 tỷ · giá trung vị 17,5 tr/m²",
+                        "Nhà đất Tương Bình Hiệp: 493 tin theo dõi · 452 tin dưới 3 tỷ · giá trung vị 29,9 tr/m²",
+                        "Tổng giá trung vị: đất nền 1,95 tỷ · nhà đất 2,6 tỷ",
+                        "Đây vẫn là giá rao công khai, không phải giá chốt giao dịch"
+                    ]
+                },
+                {
+                    "id": "vi-sao-phu-tan-van-dang-xem",
+                    "heading": "2. Phú Tân vẫn đáng mở vòng hai nếu anh muốn soi thêm lớp dấu hiệu dữ liệu",
+                    "paragraphs": [
+                        "Phú Tân không phải phường nên bỏ qua. Snapshot live hiện tại cho thấy phường này có 516 tin có dấu hiệu đáng kiểm tra, cao hơn nhiều so với 67 ở Tương Bình Hiệp. Nếu anh đã lấy mặt bằng giá ở Tương Bình Hiệp trước, Phú Tân là nơi hợp lý để mở tiếp và soi sâu hơn các tin đất nền đang nổi lên.",
+                        "Nhưng lớp dấu hiệu không thay thế bước so ngân sách. Ở Phú Tân, đất nền đang ở mức 23,8 tr/m² và tổng giá trung vị khoảng 2,8 tỷ, còn nhà đất khoảng 34,4 tr/m² và 3,5 tỷ. Nghĩa là cùng một khung dưới 3 tỷ, cơ hội ở nhà đất Phú Tân mỏng hơn khá rõ."
+                    ],
+                    "bullets": [
+                        "Phú Tân tổng tin theo dõi: 1.020",
+                        "Dấu hiệu ở Phú Tân: 516",
+                        "Đất nền Phú Tân vẫn có 376 tin dưới 3 tỷ",
+                        "Nhà đất Phú Tân dưới 3 tỷ chỉ còn 43 tin"
+                    ]
+                },
+                {
+                    "id": "tach-loai-hinh-truoc-khi-goi",
+                    "heading": "3. Điểm dễ sai nhất là gộp đất nền với nhà đất rồi kết luận phường nào rẻ hơn",
+                    "paragraphs": [
+                        "Ở Phú Tân, đất nền có giá rao trung vị 23,8 tr/m² nhưng nhà đất là 34,4 tr/m². Ở Tương Bình Hiệp là 17,5 và 29,9 tr/m². Đây là hai bài toán mua khác nhau, nên nếu anh chỉ nhìn một con số giá chung theo phường thì rất dễ gọi nhầm nhóm tin.",
+                        "Cách lọc gọn nhất là khóa loại hình trước, sau đó nhìn cả giá trung vị/m² lẫn tổng giá trung vị, rồi mới xem còn bao nhiêu tin nằm trong khung tiền của mình. Làm đúng thứ tự này sẽ giúp anh bớt tốn thời gian gọi dàn trải."
+                    ],
+                    "bullets": [
+                        "Không dùng chung một mốc giá cho đất nền và nhà đất",
+                        "So cùng loại hình trước khi quyết định mở phường nào",
+                        "Nhìn thêm tổng giá vì diện tích và cấu trúc tài sản khác nhau",
+                        "Dùng dấu hiệu như lớp ưu tiên kiểm tra, không phải nhãn quyết định mua"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này ít tốn thời gian hơn",
+                    "paragraphs": [
+                        "Bước đầu, anh có thể mở Tương Bình Hiệp, khóa loại hình rồi giới hạn ngân sách dưới 3 tỷ để lấy danh sách ngắn. Sau đó mới mở thêm Phú Tân để soi các tin đất nền có nhiều dấu hiệu hơn và so lại từng tin cùng loại hình.",
+                        "Nếu đã có vài tin phù hợp, anh nên chuyển sang công cụ định giá để kiểm tra nhanh mặt bằng quanh mức giá đang xem. Sau vòng lọc dữ liệu, vẫn phải kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và mức độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Tương Bình Hiệp để lấy nguồn hàng dày hơn dưới 3 tỷ",
+                        "Bước 2: mở thêm Phú Tân để soi lớp tín hiệu đất nền",
+                        "Bước 3: so cùng loại hình, cùng khung tiền, rồi mới gọi sâu",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã khóa rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị cùng loại hình chưa?",
+                "Đã kiểm tra số tin còn trong khung dưới 3 tỷ ở từng phường chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Phú Tân và Tương Bình Hiệp theo đúng khung tiền",
+            "body": "Bắt đầu bằng phường phù hợp với mục tiêu của anh: Tương Bình Hiệp nếu cần nhiều lựa chọn dưới 3 tỷ hơn, Phú Tân nếu muốn soi thêm nhóm đất nền có nhiều dấu hiệu đáng kiểm tra.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=under3_phu_tan_vs_tuong_binh_hiep"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Dưới 3 tỷ: Phú Tân hay Tương Bình Hiệp", "href": "/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc", "url": "https://radarbds.vn/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
@@ -14149,6 +14411,8 @@ _RB_ANSWER_FIRST_INTROS = {
     "dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon": "Nếu lọc đất nền dưới 3 tỷ giữa Phú Tân và Phú Mỹ, nên mở Phú Tân trước. Dữ liệu Radar BDS ngày 07/08/2026 ghi nhận 299 tin phù hợp tại Phú Tân và 210 tin tại Phú Mỹ. Đây là giá rao Facebook công khai, không phải giá chốt giao dịch.",
     "duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc": "Với trần 3 tỷ, nên mở Định Hòa trước để có nhiều lựa chọn hơn, rồi xem Phú Tân khi muốn soi nhóm đất nền đáng chú ý. Dữ liệu trong bài là giá rao Facebook Radar BDS theo dõi ngày 08/08/2026, không phải giá chốt giao dịch.",
     "phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc": "Nếu ưu tiên đất nền, nên mở Phú Lợi trước; nếu tìm nhà đất dưới 4 tỷ, nên mở Hiệp Thành trước. Dữ liệu Radar BDS ngày 09/08/2026 cho thấy khác biệt chính giữa hai phường nằm ở cơ cấu loại hình và số tin còn trong vùng ngân sách phổ biến.",
+    "duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc": "Nếu giữ trần dưới 3 tỷ, nên mở Tương Bình Hiệp trước để có nhiều lựa chọn hơn; sau đó mở Phú Tân khi anh muốn soi thêm lớp đất nền có nhiều dấu hiệu đáng kiểm tra. Dữ liệu dùng trong bài là giá rao Facebook Radar BDS theo dõi ngày 15/08/2026, không phải giá chốt giao dịch.",
+
 }
 for _rb_slug, _rb_intro in _RB_ANSWER_FIRST_INTROS.items():
     SEO_ARTICLES[_rb_slug]["article"]["intro"][0] = _rb_intro

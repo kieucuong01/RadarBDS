@@ -42,3 +42,9 @@
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-11, joined to latest `valuation_results` and sliced by `mos_pct` thresholds 10/15/20 for Thủ Dầu Một
   - Funnel: `/binh-duong`, dashboard `/?tab=signals&mos_min=15`, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu`, `/tin-tuc/bang-gia-dat-va-gia-rao-khac-nhau-the-nao`
 
+## 2026-08-15
+- `/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc` — **Dưới 3 tỷ nên xem Phú Tân hay Tương Bình Hiệp trước?**
+  - Pillar: So sánh phường / ngân sách
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-15, split by `dat_nen` vs `nha_dat` and compared with the dưới-3-tỷ lens
+  - Funnel: `/binh-duong/phuong-phu-tan`, `/binh-duong/phuong-tuong-binh-hiep`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu`, `/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu`
