@@ -79,7 +79,7 @@ def prune_verified_local_images(
 
 The service will:
 
-1. Reject a missing/non-directory root.
+1. Reject disabled S3 image mode and a missing/non-directory root.
 2. Enumerate local image files only through the existing image-extension
    allowlist.
 3. Fetch the complete `data/images/` S3 key set before deleting anything.
