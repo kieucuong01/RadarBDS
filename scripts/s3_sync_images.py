@@ -12,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from services.s3_image_storage import iter_image_files, list_object_keys, public_url_for_key, upload_file
+from services.s3_local_retention import prune_verified_local_images
 
 
 logger = logging.getLogger("s3_sync_images")
@@ -116,12 +117,37 @@ def verify(root: Path, limit: int | None) -> int:
     return 1 if missing else 0
 
 
+def prune_local(root: Path, *, apply: bool) -> int:
+    stats = prune_verified_local_images(root, apply=apply)
+    logger.info(
+        "prune_complete apply=%s local=%s local_bytes=%s eligible=%s "
+        "eligible_bytes=%s missing=%s missing_bytes=%s deleted=%s "
+        "deleted_bytes=%s delete_failures=%s",
+        apply,
+        stats["local_files"],
+        stats["local_bytes"],
+        stats["eligible_files"],
+        stats["eligible_bytes"],
+        stats["missing_remote_files"],
+        stats["missing_remote_bytes"],
+        stats["deleted_files"],
+        stats["deleted_bytes"],
+        stats["delete_failures"],
+    )
+    return 1 if stats["delete_failures"] else 0
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="Count local image files without uploading.")
     mode.add_argument("--upload", action="store_true", help="Upload local image files to S3.")
     mode.add_argument("--verify", action="store_true", help="Verify local files exist under the S3 prefix.")
+    mode.add_argument(
+        "--prune-local",
+        action="store_true",
+        help="Report local files verified in S3; add --apply to delete them.",
+    )
     parser.add_argument(
         "--root",
         default=str(PROJECT_ROOT / "data" / "images"),
@@ -130,8 +156,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--limit", type=int, default=None, help="Optional max files for canary runs.")
     parser.add_argument("--workers", type=int, default=1, help="Parallel upload workers. Only applies to --upload.")
     parser.add_argument("--skip-existing", action="store_true", help="Skip object keys already present in S3.")
+    parser.add_argument("--apply", action="store_true", help="Delete S3-verified local files in prune mode.")
     parser.add_argument("--log-level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR"))
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.apply and not args.prune_local:
+        parser.error("--apply requires --prune-local")
+    return args
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -141,6 +171,12 @@ def main(argv: list[str] | None = None) -> int:
     if not root.is_dir():
         logger.error("image root does not exist: %s", root)
         return 2
+    if args.prune_local:
+        canonical_root = (PROJECT_ROOT / "data" / "images").resolve()
+        if args.apply and root != canonical_root:
+            logger.error("refusing prune apply outside canonical image root: %s", root)
+            return 2
+        return prune_local(root, apply=args.apply)
     if args.dry_run:
         return dry_run(root, args.limit)
     if args.upload:
