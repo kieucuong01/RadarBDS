@@ -14382,6 +14382,283 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc",
+        "title": "Hiệp Thành hay Phú Hòa: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 16/08/2026: nếu anh ưu tiên đất nền dưới 3 tỷ, Phú Hòa đang dày hàng hơn; nếu nghiêng về nhà đất quanh 3 tỷ và muốn thêm tín hiệu đáng kiểm tra, Hiệp Thành đáng mở song song. Luôn tách đất nền với nhà đất trước khi so.",
+        "keywords": "Hiệp Thành hay Phú Hòa, giá đất Hiệp Thành, giá đất Phú Hòa, đất nền Phú Hòa dưới 3 tỷ, nhà đất Hiệp Thành dưới 3 tỷ, Radar BDS",
+        "breadcrumb_label": "Hiệp Thành hay Phú Hòa",
+        "hero_badge": "So sánh theo nhu cầu mua",
+        "hero_title": "Hiệp Thành hay Phú Hòa: nên xem khu nào trước?",
+        "hero_text": "Nếu anh ưu tiên đất nền dưới 3 tỷ để có nhiều lựa chọn hơn, nên mở Phú Hòa trước. Nếu anh đang nghiêng về nhà đất quanh 3 tỷ và muốn soi thêm nhóm tin có dấu hiệu đáng kiểm tra, Hiệp Thành đáng mở song song hoặc trước. Mấu chốt là đừng gộp đất nền với nhà đất vào một mặt bằng giá chung.",
+        "scope_label": "Thủ Dầu Một · Hiệp Thành / Phú Hòa",
+        "hero_checks": [
+            "Snapshot live ngày 16/08/2026, max crawled_at 15/08/2026 11:05",
+            "Đất nền dưới 3 tỷ: Phú Hòa 154 tin, cao hơn Hiệp Thành 77 tin",
+            "Nhà đất dưới 3 tỷ: Hiệp Thành 195 tin, nhỉnh hơn Phú Hòa 181 tin",
+            "Hiệp Thành có 97 dấu hiệu đáng kiểm tra; Phú Hòa có 68"
+        ],
+        "primary_cta": "Mở dashboard lọc Hiệp Thành và Phú Hòa",
+        "primary_href": "/?tab=signals&ward=Hi%E1%BB%87p%20Th%C3%A0nh&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_phu_hoa",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_phu_hoa",
+        "map_label": "Tin tức / Hiệp Thành · Phú Hòa",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "1.918 tin",
+            "delta": "Hiệp Thành 832 · Phú Hòa 1.086",
+            "note": "Nguồn Facebook live ngày 16/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Phú Hòa hợp để mở đất nền trước; Hiệp Thành dễ so nhà đất quanh 3 tỷ hơn",
+            "price": "Đất nền: 28,4 vs 23,4 tr/m² · Nhà đất: 38,5 vs 38,9 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "335 vs 272 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "68 vs 97 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Mở trang khu vực để xem dữ liệu Hiệp Thành và lọc tiếp nhóm nhà đất quanh 3 tỷ."
+            },
+            {
+                "label": "Trang phường Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Hòa và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Phú Lợi hay Hiệp Thành: nên lọc đất nền hay nhà đất trước?",
+                "href": "/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc",
+                "description": "Đọc thêm một bài so sánh có Hiệp Thành để thấy khác biệt theo loại hình."
+            },
+            {
+                "label": "Tương Bình Hiệp hay Phú Hòa: nên xem khu nào trước?",
+                "href": "/tin-tuc/tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc",
+                "description": "So thêm một phường khác với Phú Hòa để đọc nhịp giá và nguồn hàng."
+            },
+            {
+                "label": "MOS là gì khi lọc tin dưới giá cơ sở?",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Hiểu thêm lớp ưu tiên kiểm tra sau khi đã khóa phường và loại hình."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ưu tiên đất nền dưới 3 tỷ thì nên mở phường nào trước?",
+                "a": "Nên mở Phú Hòa trước. Snapshot live ngày 16/08/2026 cho thấy Phú Hòa có 154 tin đất nền dưới 3 tỷ, trong khi Hiệp Thành có 77 tin. Dù giá rao trung vị/m² ở Phú Hòa cao hơn, tổng giá trung vị đất nền lại đang ở khoảng 2,9 tỷ, thấp hơn mức 3,48 tỷ của Hiệp Thành."
+            },
+            {
+                "q": "Nếu tìm nhà đất quanh 3 tỷ thì Hiệp Thành hay Phú Hòa dễ xem hơn?",
+                "a": "Hiệp Thành đang dễ xem hơn một chút nếu anh giữ khung khoảng 3 tỷ. Phường này có 195 tin nhà đất dưới 3 tỷ, nhỉnh hơn 181 tin ở Phú Hòa, và tổng giá trung vị nhà đất khoảng 3,27 tỷ so với 3,85 tỷ của Phú Hòa."
+            },
+            {
+                "q": "Vì sao vẫn phải tách đất nền với nhà đất khi so Hiệp Thành và Phú Hòa?",
+                "a": "Vì cùng một phường nhưng hai loại hình cho ra bài toán rất khác. Ở Hiệp Thành, đất nền có giá rao trung vị 23,4 tr/m² còn nhà đất là 38,9 tr/m². Ở Phú Hòa là 28,4 và 38,5 tr/m². Nếu gộp chung, anh rất dễ kết luận sai phường nào hợp túi tiền hơn."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-16",
+            "modified_at": "2026-08-16",
+            "intro": [
+                "Nếu anh ưu tiên đất nền dưới 3 tỷ, nên mở Phú Hòa trước. Nếu đang nghiêng về nhà đất quanh 3 tỷ và muốn soi thêm nhóm tin có dấu hiệu đáng kiểm tra, hãy mở Hiệp Thành song song. Kết luận chỉ có ý nghĩa khi tách riêng đất nền với nhà đất.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS ngày 16/08/2026, chỉ lấy tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu mới nhất có max crawled_at 15/08/2026 11:05 nên đây là giá rao công khai để lọc ban đầu, không phải giá giao dịch đã chốt."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "1.918 tin",
+                    "note": "Hiệp Thành 832 · Phú Hòa 1.086"
+                },
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "77 vs 154 tin",
+                    "note": "Hiệp Thành vs Phú Hòa"
+                },
+                {
+                    "label": "Nhà đất dưới 3 tỷ",
+                    "value": "195 vs 181 tin",
+                    "note": "Hiệp Thành vs Phú Hòa"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "97 vs 68 tin",
+                    "note": "Hiệp Thành vs Phú Hòa"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Hiệp Thành và Phú Hòa đang khác nhau thế nào nếu anh mở dashboard hôm nay?",
+                    "note": "Nguồn Facebook live ngày 16/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Hiệp Thành · đất nền", "tracked": "251", "under3": "77", "under4": "140", "median_m2": "23,4 tr/m²", "median_total": "3,48 tỷ", "mid_range": "15,6-28,9 tr/m²"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "tracked": "557", "under3": "195", "under4": "294", "median_m2": "38,9 tr/m²", "median_total": "3,27 tỷ", "mid_range": "30,0-50,0 tr/m²"},
+                        {"ward_type": "Phú Hòa · đất nền", "tracked": "382", "under3": "154", "under4": "238", "median_m2": "28,4 tr/m²", "median_total": "2,9 tỷ", "mid_range": "23,6-31,8 tr/m²"},
+                        {"ward_type": "Phú Hòa · nhà đất", "tracked": "676", "under3": "181", "under4": "425", "median_m2": "38,5 tr/m²", "median_total": "3,85 tỷ", "mid_range": "31,2-43,4 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước tùy đúng mục tiêu mua?",
+                    "note": "Khóa loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều đất nền dưới 3 tỷ", "open_first": "Phú Hòa", "why": "154 tin dưới 3 tỷ, gấp đôi mức 77 tin của Hiệp Thành và tổng giá trung vị vẫn quanh 2,9 tỷ."},
+                        {"need": "Muốn nhà đất quanh 3 tỷ", "open_first": "Hiệp Thành", "why": "195 tin dưới 3 tỷ, nhỉnh hơn Phú Hòa và tổng giá trung vị khoảng 3,27 tỷ, thấp hơn 3,85 tỷ của Phú Hòa."},
+                        {"need": "Muốn soi thêm nhóm tin có dấu hiệu đáng kiểm tra", "open_first": "Hiệp Thành", "why": "Hiệp Thành đang có 97 dấu hiệu đáng kiểm tra, cao hơn 68 ở Phú Hòa."},
+                        {"need": "Muốn nguồn hàng tổng rộng hơn để mở nhiều vòng lọc", "open_first": "Phú Hòa", "why": "Phú Hòa hiện có 1.086 tin đang theo dõi, cao hơn mức 832 tin của Hiệp Thành."}
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới",
+                    "title": "Một vài mức giá gần nhất để hình dung nhịp rao ở hai phường",
+                    "note": "Chỉ dùng như ví dụ về mặt bằng giá rao gần đây, không phải khuyến nghị mua ngay.",
+                    "columns": [
+                        {"key": "sample", "label": "Ví dụ"},
+                        {"key": "price", "label": "Giá rao"},
+                        {"key": "note", "label": "Gợi ý đọc nhanh"}
+                    ],
+                    "rows": [
+                        {"sample": "Hiệp Thành · đất nền gần nhất", "price": "2,35 tỷ · 11,8 tr/m²", "note": "Có mẫu đất nền thấp giá/m² nhưng phân tán mạnh; cần xem kỹ vị trí và diện tích thực."},
+                        {"sample": "Phú Hòa · đất nền gần nhất", "price": "2,25 tỷ · 25,7 tr/m²", "note": "Giá/m² cao hơn nhưng tổng giá vẫn dễ nằm trong khung dưới 3 tỷ."},
+                        {"sample": "Hiệp Thành · nhà đất gần nhất", "price": "4,39 tỷ · 62,2 tr/m²", "note": "Nhịp nhà đất khá rộng; nên lọc tiếp theo tổng giá trước khi gọi."},
+                        {"sample": "Phú Hòa · nhà đất gần nhất", "price": "3,89 tỷ · 53,2 tr/m²", "note": "Nhà đất Phú Hòa dày nguồn hơn ở khung dưới 4 tỷ nhưng tổng giá trung vị vẫn cao hơn Hiệp Thành."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Hòa dày đất nền dưới 3 tỷ hơn rõ",
+                    "note": "Nếu mục tiêu của anh là chốt danh sách đất nền trước, Phú Hòa đang cho nhiều lựa chọn hơn.",
+                    "alt": "Biểu đồ so số tin đất nền dưới 3 tỷ giữa Hiệp Thành và Phú Hòa",
+                    "rows": [
+                        {"label": "Hiệp Thành", "value_label": "77 tin đất nền dưới 3 tỷ", "width": 50, "color": "#f59e0b"},
+                        {"label": "Phú Hòa", "value_label": "154 tin đất nền dưới 3 tỷ", "width": 100, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất quanh 3 tỷ nghiêng nhẹ về Hiệp Thành",
+                    "note": "Khác biệt không quá xa, nhưng Hiệp Thành đang mềm hơn về tổng giá trung vị.",
+                    "alt": "Biểu đồ so nhà đất dưới 3 tỷ giữa Hiệp Thành và Phú Hòa",
+                    "rows": [
+                        {"label": "Hiệp Thành", "value_label": "195 tin nhà đất dưới 3 tỷ", "width": 100, "color": "#2563eb"},
+                        {"label": "Phú Hòa", "value_label": "181 tin nhà đất dưới 3 tỷ", "width": 93, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-phu-hoa-neu-xem-dat-nen",
+                    "heading": "1. Nếu ưu tiên đất nền dưới 3 tỷ, nên mở Phú Hòa trước",
+                    "paragraphs": [
+                        "Phú Hòa đang cho danh sách đất nền rộng hơn hẳn ở khung dưới 3 tỷ. Snapshot live hiện tại ghi nhận 154 tin đất nền dưới 3 tỷ tại Phú Hòa, trong khi Hiệp Thành có 77 tin. Đây là khác biệt đủ lớn để anh tiết kiệm thời gian ngay từ vòng lọc đầu.",
+                        "Điều dễ gây nhầm là giá rao trung vị/m² ở Phú Hòa lại cao hơn: 28,4 tr/m² so với 23,4 tr/m² của Hiệp Thành. Nhưng tổng giá trung vị đất nền ở Phú Hòa chỉ khoảng 2,9 tỷ, thấp hơn mức 3,48 tỷ của Hiệp Thành. Nghĩa là Phú Hòa đang có nhiều lô nhỏ hơn hoặc cấu trúc giá giúp chui vào khung dưới 3 tỷ dễ hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Hòa: 382 tin theo dõi · 154 tin dưới 3 tỷ · giá trung vị 28,4 tr/m²",
+                        "Đất nền Hiệp Thành: 251 tin theo dõi · 77 tin dưới 3 tỷ · giá trung vị 23,4 tr/m²",
+                        "Tổng giá trung vị đất nền: 2,9 tỷ ở Phú Hòa vs 3,48 tỷ ở Hiệp Thành",
+                        "Giá rao/m² cao hơn không đồng nghĩa tổng giá khó với tới hơn"
+                    ]
+                },
+                {
+                    "id": "mo-hiep-thanh-neu-xem-nha-dat",
+                    "heading": "2. Nếu nghiêng về nhà đất quanh 3 tỷ, Hiệp Thành đáng mở song song hoặc trước",
+                    "paragraphs": [
+                        "Nhà đất là nơi Hiệp Thành lấy lại lợi thế. Phường này hiện có 195 tin nhà đất dưới 3 tỷ, nhỉnh hơn 181 tin của Phú Hòa. Chênh lệch không quá lớn, nhưng tổng giá trung vị nhà đất ở Hiệp Thành đang khoảng 3,27 tỷ, thấp hơn khá rõ so với 3,85 tỷ của Phú Hòa.",
+                        "Giá rao trung vị/m² ở hai nơi gần như ngang nhau: 38,9 tr/m² tại Hiệp Thành và 38,5 tr/m² tại Phú Hòa. Vì vậy, khác biệt nằm nhiều hơn ở tổng giá và cơ cấu diện tích. Nếu anh muốn mở nhóm nhà đất quanh 3 tỷ trước, Hiệp Thành dễ cho danh sách sát ngân sách hơn."
+                    ],
+                    "bullets": [
+                        "Nhà đất Hiệp Thành: 557 tin theo dõi · 195 tin dưới 3 tỷ · tổng giá trung vị 3,27 tỷ",
+                        "Nhà đất Phú Hòa: 676 tin theo dõi · 181 tin dưới 3 tỷ · tổng giá trung vị 3,85 tỷ",
+                        "Giá rao/m² nhà đất gần như ngang nhau giữa hai phường",
+                        "Đọc thêm tổng giá để tránh chọn nhầm phường chỉ vì nhìn mỗi giá/m²"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-do-rong-nguon-hang",
+                    "heading": "3. Hiệp Thành nhiều dấu hiệu hơn, còn Phú Hòa rộng nguồn hàng hơn",
+                    "paragraphs": [
+                        "Nếu anh dùng Radar như bộ lọc tín hiệu, Hiệp Thành hiện có 97 dấu hiệu đáng kiểm tra, cao hơn 68 ở Phú Hòa. Điều này hợp với vai trò mở song song sau khi anh đã chốt loại hình và khung tiền, nhất là khi muốn soi thêm từng tin cụ thể.",
+                        "Ngược lại, Phú Hòa có tổng nguồn hàng rộng hơn với 1.086 tin đang theo dõi so với 832 ở Hiệp Thành. Nghĩa là nếu nhu cầu của anh còn khá mở và muốn chạy nhiều vòng lọc khác nhau, Phú Hòa đáng để mở trước ở nhánh đất nền; còn Hiệp Thành hợp hơn khi đã nghiêng về nhà đất hoặc muốn ưu tiên nhóm tín hiệu."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu đáng kiểm tra: Hiệp Thành 97 · Phú Hòa 68",
+                        "Tổng tin đang theo dõi: Phú Hòa 1.086 · Hiệp Thành 832",
+                        "Dấu hiệu là lớp ưu tiên kiểm tra, không phải nhãn quyết định mua",
+                        "Nguồn hàng rộng hơn giúp ích khi anh chưa khóa chặt nhu cầu ngay từ đầu"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này đỡ tốn thời gian",
+                    "paragraphs": [
+                        "Cách nhanh nhất là chọn loại hình trước. Nếu đang tìm đất nền dưới 3 tỷ, mở Phú Hòa trước rồi giới hạn tổng giá. Nếu đang tìm nhà đất quanh 3 tỷ, mở Hiệp Thành trước để lấy danh sách ngắn hơn và dễ bám ngân sách hơn.",
+                        "Sau khi đã có vài tin phù hợp, anh nên dùng thêm công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Và dù dữ liệu có đẹp đến đâu, vẫn cần kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: khóa loại hình trước khi so phường",
+                        "Bước 2: lọc tổng giá theo khung tiền thật của anh",
+                        "Bước 3: nhìn thêm dấu hiệu đáng kiểm tra để ưu tiên gọi trước",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Hiệp Thành và Phú Hòa theo đúng loại hình",
+            "body": "Bắt đầu bằng phường hợp với mục tiêu của anh: Phú Hòa nếu muốn đất nền dưới 3 tỷ dày hàng hơn, Hiệp Thành nếu đang nghiêng về nhà đất quanh 3 tỷ hoặc muốn soi thêm nhóm tín hiệu đáng kiểm tra. Sau đó dùng dashboard và công cụ định giá để kiểm tra từng tin cụ thể.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=Hi%E1%BB%87p%20Th%C3%A0nh&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_phu_hoa"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Hiệp Thành hay Phú Hòa", "href": "/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
