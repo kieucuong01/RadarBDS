@@ -1,4 +1,4 @@
-# Vietnix S3 Local Image Retention Design
+# Vietnix S3 Zero-Persistence Local Image Design
 
 ## Status
 
@@ -16,14 +16,17 @@ the downloader would silently weaken image-quality filtering.
 
 ## Goal
 
-Keep at most seven days of successfully uploaded listing images on the VPS,
-then remove only local files whose exact object keys are present in Vietnix S3.
-The cleanup must not change database image keys, public URLs, image bytes,
-thumbnail quality, request-time behavior, or the broker-image classifier.
+Keep no persistent copy of successfully uploaded listing images on the VPS.
+Local originals and thumbnails may exist only as short-lived working files
+while the crawler validates the download, creates the WebP thumbnail, and runs
+broker/profile-image detection. Immediately after that quality step, remove
+only local files whose exact object keys are present in Vietnix S3.
 
-The first production application should reclaim the verified files older than
-seven days. The same retention pass must then run after the daily download and
-broker-image cleanup sequence so disk usage does not grow without bound again.
+The cleanup must not change database image keys, public URLs, image bytes,
+thumbnail quality, request-time behavior, or the broker-image classifier. The
+first production application should reclaim every currently verified local
+image. The same zero-persistence pass must then run after every download and
+broker-image cleanup sequence so disk usage does not regrow.
 
 ## Non-goals
 
@@ -46,11 +49,12 @@ broker/profile-image detection runs after download and reads the local original
 or thumbnail. Immediate deletion would preserve page rendering while degrading
 content quality.
 
-### 2. Run a verified seven-day retention pass after broker cleanup
+### 2. Run a verified zero-persistence pass after broker cleanup
 
 This is the selected approach. It preserves the complete existing classifier
-sequence, bounds local growth, and performs no work on the public request path.
-The trade-off is one paginated S3 prefix listing during each scheduled crawl.
+sequence, removes all verified local images immediately after their last local
+consumer, and performs no work on the public request path. The trade-off is one
+paginated S3 prefix listing during each scheduled crawl.
 
 ### 3. Keep manual cleanup only
 
@@ -68,34 +72,33 @@ Add `services/s3_local_retention.py` with a focused interface:
 def prune_verified_local_images(
     root: Path,
     *,
-    min_age_days: int = 7,
     apply: bool = False,
-    now: datetime | None = None,
 ) -> dict:
     ...
 ```
 
 The service will:
 
-1. Reject negative retention values and a missing/non-directory root.
+1. Reject a missing/non-directory root.
 2. Enumerate local image files only through the existing image-extension
    allowlist.
 3. Fetch the complete `data/images/` S3 key set before deleting anything.
-4. Classify each local file as too new, missing remotely, eligible, deleted, or
-   failed to delete.
+4. Classify each local file as missing remotely, eligible, deleted, or failed
+   to delete.
 5. In dry-run mode, report counts and bytes without unlinking anything.
 6. In apply mode, unlink only eligible files and preserve both image
    directories.
 
 An S3 authentication, listing, or pagination error must raise before the first
-local deletion. A key missing from S3 must remain local regardless of age.
+local deletion. A key missing from S3 must remain local under all
+circumstances.
 
 ### Operator CLI
 
 Extend `scripts/s3_sync_images.py` with:
 
 ```text
---prune-local --min-age-days 7 [--apply]
+--prune-local [--apply]
 ```
 
 `--prune-local` without `--apply` is a dry-run. Destructive CLI application is
@@ -104,17 +107,16 @@ allowed only when the resolved root is the canonical project
 behavior remains unchanged.
 
 The command prints one bounded summary containing local files/bytes, eligible
-files/bytes, too-new files, remotely missing files, deleted files/bytes, and
-delete failures. It does not print credentials or file contents.
+files/bytes, remotely missing files, deleted files/bytes, and delete failures.
+It does not print credentials or file contents.
 
 ### Daily crawl integration
 
 After `_clean_broker_images_after_download()` returns, the daily crawl invokes
-the retention service with `min_age_days=7` and `apply=True`. The hook is
-best-effort and operationally isolated: a retention failure is logged and
-reported as storage maintenance failure, but it does not relabel successfully
-committed crawl, normalization, valuation, image upload, or database work as
-failed.
+the retention service with `apply=True`. The hook is best-effort and
+operationally isolated: a retention failure is logged and reported as storage
+maintenance failure, but it does not relabel successfully committed crawl,
+normalization, valuation, image upload, or database work as failed.
 
 The hook runs outside Flask request handling and therefore cannot add S3 calls
 to `/`, `/api/signals`, `/api/listings`, `/api/counts`, `/api/dashboard`, Maps,
@@ -127,7 +129,6 @@ download original -> create WebP thumbnail -> put both S3 objects
     -> commit listing_images.local_path
     -> broker/profile-image cleanup using local files
     -> list complete S3 image prefix
-    -> retain files younger than 7 days
     -> retain any key missing from S3
     -> unlink verified eligible local files only
 ```
@@ -142,9 +143,8 @@ calls and never rewrites `listing_images`.
 Tests must prove the following with red-green TDD:
 
 - dry-run reports eligible bytes without deleting files;
-- apply deletes an old original and thumbnail when both keys exist remotely;
+- apply deletes an original and thumbnail when both keys exist remotely;
 - a remotely missing file is preserved;
-- a file younger than seven days is preserved;
 - S3 listing failure leaves every local file untouched;
 - the canonical-root guard blocks CLI apply against another directory;
 - the daily crawl calls retention only after broker cleanup;
@@ -154,8 +154,8 @@ Tests must prove the following with red-green TDD:
 
 ## Production rollout
 
-1. Deploy code with the seven-day policy.
-2. Run `--prune-local --min-age-days 7` and record eligible count/bytes.
+1. Deploy code with the zero-persistence policy.
+2. Run `--prune-local` and record eligible count/bytes.
 3. Re-run full S3 reconciliation and require `missing=0`.
 4. Run apply against the exact production image root.
 5. Measure `df`, file count, and directory bytes.
@@ -171,8 +171,10 @@ objects from S3 using the existing object keys.
 ## Acceptance
 
 - Production dry-run and apply delete no file missing from the S3 prefix.
-- Local files newer than seven days remain available to the classifier.
+- Local files remain available until broker/profile-image classification ends.
 - The image root retains its directory structure.
+- After a successful pass, no verified original or thumbnail remains local;
+  only active temporary files or remotely missing failures may remain.
 - The root filesystem usage decreases by the measured deleted bytes.
 - Public API and browser image URLs are unchanged and continue to bypass the
   VPS image-serving path.
