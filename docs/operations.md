@@ -967,6 +967,42 @@ Secondary job:
 
 BatDongSan is legacy/disabled. Do not add it to production schedules without explicit approval.
 
+### Vietnix S3 zero-local image retention
+
+In S3 mode, downloaded originals and generated thumbnails remain local only
+until broker/profile-image cleanup finishes. The crawl then lists the complete
+`data/images/` S3 prefix and deletes only supported image files whose exact
+object keys exist remotely. Missing keys, disabled S3 mode, or any S3 listing
+failure preserve the local files. Directories and `.part` files are never
+removed, and no S3 request is added to a public Flask request path.
+
+For a production backlog cleanup, load the normal service environment and use
+this mandatory order:
+
+```bash
+cd /opt/radar-bds/current
+set -a
+source /etc/radar-bds/radar.env
+set +a
+/opt/radar-bds/.venv/bin/python -X utf8 scripts/s3_sync_images.py --prune-local
+/opt/radar-bds/.venv/bin/python -X utf8 scripts/s3_sync_images.py --verify
+# Continue only when verify reports missing=0.
+/opt/radar-bds/.venv/bin/python -X utf8 scripts/s3_sync_images.py --prune-local --apply
+```
+
+`--prune-local` without `--apply` is a dry-run. Destructive use is guarded to
+the resolved project `data/images` root. After apply, record the remaining file
+count, directory size, `df -h /`, confirm `data/images` and
+`data/images/thumbs` still exist, then smoke the public API, representative S3
+original/thumbnail objects, and desktop/mobile cards. The removed local files
+remain recoverable from their existing S3 object keys.
+
+Automatic cleanup is best-effort after broker-image classification: a cleanup
+error is reported but must not relabel a successful crawl as failed. Roll back
+by reverting or disabling the automatic post-cleanup call and restarting the
+crawl service; do not copy the image backlog back to the VPS. New files will
+then accumulate locally while public image delivery continues from S3.
+
 ## Logs And Health
 
 First places to inspect:
