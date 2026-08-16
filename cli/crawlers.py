@@ -34,6 +34,28 @@ def _clean_broker_images_after_download(source=None, limit=None):
         f"Clean broker images: scanned={stats.get('scanned', 0)} | "
         f"deleted={stats.get('deleted', 0)} | reasons={stats.get('reasons', {})}"
     )
+    _prune_local_s3_images_after_cleanup()
+    return stats
+
+
+def _prune_local_s3_images_after_cleanup():
+    from services.image_assets import DATA_IMAGES_DIR
+    from services.s3_image_storage import s3_image_storage_enabled
+    from services.s3_local_retention import prune_verified_local_images
+
+    if not s3_image_storage_enabled():
+        return None
+    try:
+        stats = prune_verified_local_images(DATA_IMAGES_DIR, apply=True)
+    except Exception as exc:
+        print(f"[s3-local-prune] failed: {exc}")
+        return None
+    print(
+        f"[s3-local-prune] deleted={stats.get('deleted_files', 0)} | "
+        f"bytes={stats.get('deleted_bytes', 0)} | "
+        f"missing={stats.get('missing_remote_files', 0)} | "
+        f"failures={stats.get('delete_failures', 0)}"
+    )
     return stats
 
 

@@ -38,6 +38,56 @@ class _FailingSecondaryCrawler:
         raise RuntimeError("secondary crawler should not block facebook")
 
 
+def test_broker_cleanup_finishes_before_s3_local_prune(monkeypatch):
+    events = []
+    monkeypatch.setattr(
+        "cleansing.image_cleanup.clean_broker_images",
+        lambda **_kwargs: events.append("broker_cleanup") or {
+            "scanned": 1,
+            "deleted": 0,
+            "reasons": {},
+        },
+    )
+    monkeypatch.setattr(
+        "services.s3_image_storage.s3_image_storage_enabled",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        "services.s3_local_retention.prune_verified_local_images",
+        lambda _root, *, apply: events.append(("prune", apply)) or {
+            "deleted_files": 2,
+            "deleted_bytes": 20,
+            "missing_remote_files": 0,
+            "delete_failures": 0,
+        },
+    )
+
+    crawlers._clean_broker_images_after_download(source="facebook", limit=10)
+
+    assert events == ["broker_cleanup", ("prune", True)]
+
+
+def test_s3_local_prune_failure_does_not_replace_broker_result(monkeypatch, capsys):
+    broker_stats = {"scanned": 2, "deleted": 1, "reasons": {"metadata": 1}}
+    monkeypatch.setattr(
+        "cleansing.image_cleanup.clean_broker_images",
+        lambda **_kwargs: broker_stats,
+    )
+    monkeypatch.setattr(
+        "services.s3_image_storage.s3_image_storage_enabled",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        "services.s3_local_retention.prune_verified_local_images",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("S3 list failed")),
+    )
+
+    result = crawlers._clean_broker_images_after_download(source="facebook", limit=10)
+
+    assert result is broker_stats
+    assert "[s3-local-prune] failed: S3 list failed" in capsys.readouterr().out
+
+
 def test_daily_facebook_crawl_uses_profile_daily_limits():
     captured = {}
 
