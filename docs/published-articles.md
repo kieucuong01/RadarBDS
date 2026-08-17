@@ -55,3 +55,10 @@
   - Score gate: 100/100
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-16, split by `dat_nen` vs `nha_dat`, with dưới-3-tỷ / dưới-4-tỷ counts and current example listings
   - Funnel: `/binh-duong/phuong-hiep-thanh`, `/binh-duong/phuong-phu-hoa`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc`, `/tin-tuc/tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc`
+
+## 2026-08-17
+- `/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc` — **Phú Mỹ hay Hiệp Thành: nên xem khu nào trước?**
+  - Pillar: So sánh phường
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-17, split by `dat_nen` vs `nha_dat`, with dưới-3-tỷ / dưới-4-tỷ counts and current example listings
+  - Funnel: `/binh-duong/phuong-phu-my`, `/binh-duong/phuong-hiep-thanh`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong`, `/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc`

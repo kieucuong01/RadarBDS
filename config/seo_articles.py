@@ -14631,6 +14631,283 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+        "title": "Phú Mỹ hay Hiệp Thành: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 17/08/2026: nếu anh cần nhiều đất nền dưới 3 tỷ và nguồn hàng rộng hơn, nên mở Phú Mỹ trước. Nếu đang soi nhà đất quanh 3-3,5 tỷ để so tổng giá mềm hơn, nên mở thêm Hiệp Thành song song.",
+        "keywords": "Phú Mỹ hay Hiệp Thành, giá đất Phú Mỹ, giá đất Hiệp Thành, đất nền Phú Mỹ dưới 3 tỷ, nhà đất Hiệp Thành, Radar BDS",
+        "breadcrumb_label": "Phú Mỹ hay Hiệp Thành",
+        "hero_badge": "So sánh theo nhu cầu mua",
+        "hero_title": "Phú Mỹ hay Hiệp Thành: nên xem khu nào trước?",
+        "hero_text": "Nếu anh ưu tiên đất nền dưới 3 tỷ và muốn nguồn hàng rộng hơn để lọc nhanh, nên mở Phú Mỹ trước. Nếu anh đang soi nhà đất quanh 3-3,5 tỷ và muốn mặt bằng tổng giá mềm hơn một chút, Hiệp Thành đáng mở song song. Muốn đọc đúng, luôn phải tách đất nền với nhà đất.",
+        "scope_label": "Thủ Dầu Một · Phú Mỹ / Hiệp Thành",
+        "hero_checks": [
+            "Snapshot live ngày 17/08/2026, max crawled_at 15/08/2026 11:05",
+            "Đất nền dưới 3 tỷ: Phú Mỹ 294 tin, cao hơn Hiệp Thành 80 tin",
+            "Nhà đất có tổng giá trung vị: Hiệp Thành 3,27 tỷ, thấp hơn Phú Mỹ 3,5 tỷ",
+            "Phú Mỹ có 245 dấu hiệu đáng kiểm tra và 1.468 tin đang theo dõi; Hiệp Thành có 97 dấu hiệu và 832 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Mỹ và Hiệp Thành",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_hiep_thanh",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_hiep_thanh",
+        "map_label": "Tin tức / Phú Mỹ · Hiệp Thành",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "2.300 tin",
+            "delta": "Phú Mỹ 1.468 · Hiệp Thành 832",
+            "note": "Nguồn Facebook live ngày 17/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Phú Mỹ hợp để mở rộng nguồn hàng; Hiệp Thành đáng mở thêm khi soi nhà đất mềm tổng giá hơn",
+            "price": "Đất nền: 22,7 vs 23,4 tr/m² · Nhà đất: 38,7 vs 38,9 tr/m²",
+            "metric_a": "Đất nền dưới 3 tỷ",
+            "metric_a_value": "294 vs 80 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "245 vs 97 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Mỹ và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Mở trang khu vực để xem dữ liệu Hiệp Thành và lọc tiếp nhóm nhà đất quanh 3 tỷ."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Phú Tân hay Phú Mỹ: nên lọc đất nền và nhà đất theo phường thế nào?",
+                "href": "/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong",
+                "description": "Đọc thêm một bài so sánh có Phú Mỹ để thấy khác biệt theo loại hình."
+            },
+            {
+                "label": "Hiệp Thành hay Phú Hòa: nên xem khu nào trước?",
+                "href": "/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một bài so sánh có Hiệp Thành để nhìn thêm nhịp nguồn hàng và ngân sách."
+            },
+            {
+                "label": "MOS là gì khi lọc tin dưới giá cơ sở?",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Hiểu thêm lớp ưu tiên kiểm tra sau khi đã khóa phường và loại hình."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ưu tiên đất nền dưới 3 tỷ thì nên mở phường nào trước?",
+                "a": "Nên mở Phú Mỹ trước. Snapshot live ngày 17/08/2026 cho thấy Phú Mỹ có 294 tin đất nền dưới 3 tỷ, trong khi Hiệp Thành có 80 tin. Giá trung vị đất nền Phú Mỹ là 22,7 tr/m² và tổng giá trung vị khoảng 2,95 tỷ."
+            },
+            {
+                "q": "Nếu tìm nhà đất quanh 3-3,5 tỷ thì Phú Mỹ hay Hiệp Thành dễ xem hơn?",
+                "a": "Hiệp Thành đáng mở song song nếu anh ưu tiên mặt bằng tổng giá mềm hơn. Nhà đất Hiệp Thành có tổng giá trung vị khoảng 3,27 tỷ, thấp hơn mức 3,5 tỷ ở Phú Mỹ, dù số tin nhà đất dưới 3 tỷ giữa hai phường không chênh quá xa: 200 ở Hiệp Thành và 220 ở Phú Mỹ."
+            },
+            {
+                "q": "Vì sao vẫn phải tách đất nền với nhà đất khi so Phú Mỹ và Hiệp Thành?",
+                "a": "Vì cùng một phường nhưng hai loại hình cho ra bài toán rất khác. Ở Phú Mỹ, đất nền có giá rao trung vị 22,7 tr/m² còn nhà đất là 38,7 tr/m². Ở Hiệp Thành là 23,4 và 38,9 tr/m². Nếu gộp chung, anh rất dễ kết luận sai phường nào hợp túi tiền hơn."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-17",
+            "modified_at": "2026-08-17",
+            "intro": [
+                "Nếu anh cần nhiều đất nền dưới 3 tỷ và muốn nguồn hàng rộng để lọc nhanh, nên mở Phú Mỹ trước. Nếu anh đang soi nhà đất quanh 3-3,5 tỷ và muốn mặt bằng tổng giá mềm hơn một chút, hãy mở thêm Hiệp Thành song song. Kết luận chỉ có ý nghĩa khi tách riêng đất nền với nhà đất.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS ngày 17/08/2026, chỉ lấy tin active, không bị blacklist và không bị ẩn kiểm duyệt. Dữ liệu mới nhất có max crawled_at 15/08/2026 11:05 nên đây là giá rao công khai để lọc ban đầu, không phải giá giao dịch đã chốt."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "2.300 tin",
+                    "note": "Phú Mỹ 1.468 · Hiệp Thành 832"
+                },
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "294 vs 80 tin",
+                    "note": "Phú Mỹ vs Hiệp Thành"
+                },
+                {
+                    "label": "Nhà đất tổng giá trung vị",
+                    "value": "3,5 vs 3,27 tỷ",
+                    "note": "Phú Mỹ vs Hiệp Thành"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "245 vs 97 tin",
+                    "note": "Phú Mỹ vs Hiệp Thành"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Mỹ và Hiệp Thành đang khác nhau thế nào nếu anh mở dashboard hôm nay?",
+                    "note": "Nguồn Facebook live ngày 17/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Mỹ · đất nền", "tracked": "654", "under3": "294", "under4": "440", "median_m2": "22,7 tr/m²", "median_total": "2,95 tỷ", "mid_range": "20,5-28,0 tr/m²"},
+                        {"ward_type": "Phú Mỹ · nhà đất", "tracked": "803", "under3": "220", "under4": "601", "median_m2": "38,7 tr/m²", "median_total": "3,5 tỷ", "mid_range": "28,7-43,0 tr/m²"},
+                        {"ward_type": "Hiệp Thành · đất nền", "tracked": "251", "under3": "80", "under4": "140", "median_m2": "23,4 tr/m²", "median_total": "3,48 tỷ", "mid_range": "15,6-28,9 tr/m²"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "tracked": "557", "under3": "200", "under4": "294", "median_m2": "38,9 tr/m²", "median_total": "3,27 tỷ", "mid_range": "30,0-50,0 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước tùy đúng mục tiêu mua?",
+                    "note": "Khóa loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều đất nền dưới 3 tỷ", "open_first": "Phú Mỹ", "why": "294 tin dưới 3 tỷ, cao hơn nhiều so với 80 tin ở Hiệp Thành và tổng giá trung vị vẫn quanh 2,95 tỷ."},
+                        {"need": "Muốn nguồn hàng tổng rộng để lọc nhiều vòng", "open_first": "Phú Mỹ", "why": "Phú Mỹ có 1.468 tin đang theo dõi và 245 dấu hiệu đáng kiểm tra, đều cao hơn Hiệp Thành."},
+                        {"need": "Muốn so nhà đất quanh 3-3,5 tỷ", "open_first": "Hiệp Thành", "why": "Tổng giá trung vị nhà đất khoảng 3,27 tỷ, thấp hơn mức 3,5 tỷ ở Phú Mỹ, còn số tin dưới 3 tỷ chỉ chênh nhẹ 200 vs 220."},
+                        {"need": "Muốn mặt bằng giá/m² đất nền mềm hơn một chút", "open_first": "Phú Mỹ", "why": "Đất nền Phú Mỹ đang ở 22,7 tr/m², thấp hơn nhẹ so với 23,4 tr/m² ở Hiệp Thành."}
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới",
+                    "title": "Một vài mức giá gần nhất để hình dung nhịp rao ở hai phường",
+                    "note": "Chỉ dùng như ví dụ về mặt bằng giá rao gần đây, không phải khuyến nghị mua ngay.",
+                    "columns": [
+                        {"key": "sample", "label": "Ví dụ"},
+                        {"key": "price", "label": "Giá rao"},
+                        {"key": "note", "label": "Gợi ý đọc nhanh"}
+                    ],
+                    "rows": [
+                        {"sample": "Phú Mỹ · đất nền gần nhất", "price": "3,5 tỷ · 22,7 tr/m²", "note": "Mẫu gần đúng mặt bằng trung vị đất nền của phường, hợp để so nhanh với nhánh dưới 3 tỷ."},
+                        {"sample": "Phú Mỹ · nhà đất gần nhất", "price": "2,8 tỷ · 29,5 tr/m²", "note": "Có nhà đất lọt dưới 3 tỷ, nhưng mặt bằng chung nhà đất Phú Mỹ vẫn quanh 3,5 tỷ."},
+                        {"sample": "Hiệp Thành · đất nền gần nhất", "price": "3,59 tỷ · 30,2 tr/m²", "note": "Đất nền Hiệp Thành có nhịp giá phân tán hơn; nên lọc tiếp theo tổng giá trước khi gọi."},
+                        {"sample": "Hiệp Thành · nhà đất gần nhất", "price": "4,39 tỷ · 62,2 tr/m²", "note": "Nhà đất Hiệp Thành có thể vọt lên khá cao ở từng tin, nên càng cần nhìn tổng giá trung vị của cả nhóm."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Mỹ dày đất nền dưới 3 tỷ hơn rõ",
+                    "note": "Nếu mục tiêu của anh là chốt danh sách đất nền trước, Phú Mỹ đang cho nhiều lựa chọn hơn hẳn.",
+                    "alt": "Biểu đồ so số tin đất nền dưới 3 tỷ giữa Phú Mỹ và Hiệp Thành",
+                    "rows": [
+                        {"label": "Phú Mỹ", "value_label": "294 tin đất nền dưới 3 tỷ", "width": 100, "color": "#16a34a"},
+                        {"label": "Hiệp Thành", "value_label": "80 tin đất nền dưới 3 tỷ", "width": 27, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất Hiệp Thành mềm hơn nhẹ về tổng giá trung vị",
+                    "note": "Khác biệt không lớn ở số tin dưới 3 tỷ, nhưng Hiệp Thành nhỉnh hơn về mặt bằng tổng giá khi so cả nhóm nhà đất.",
+                    "alt": "Biểu đồ so tổng giá trung vị nhà đất giữa Phú Mỹ và Hiệp Thành",
+                    "rows": [
+                        {"label": "Phú Mỹ", "value_label": "3,5 tỷ tổng giá trung vị nhà đất", "width": 100, "color": "#2563eb"},
+                        {"label": "Hiệp Thành", "value_label": "3,27 tỷ tổng giá trung vị nhà đất", "width": 93, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-phu-my-neu-can-nguon-rong",
+                    "heading": "1. Nếu ưu tiên đất nền dưới 3 tỷ và muốn nguồn hàng rộng, nên mở Phú Mỹ trước",
+                    "paragraphs": [
+                        "Phú Mỹ đang cho danh sách đất nền rộng hơn rất rõ. Snapshot live hiện tại ghi nhận 294 tin đất nền dưới 3 tỷ tại Phú Mỹ, trong khi Hiệp Thành có 80 tin. Đây là khác biệt đủ lớn để anh tiết kiệm thời gian ngay từ vòng lọc đầu nếu mục tiêu là gom nhanh một danh sách đủ dày để so tiếp.",
+                        "Không chỉ dưới 3 tỷ, tổng nguồn hàng Phú Mỹ cũng rộng hơn với 654 tin đất nền đang theo dõi và 1.468 tin tổng cộng. Giá trung vị đất nền Phú Mỹ đang là 22,7 tr/m², thấp hơn nhẹ so với 23,4 tr/m² của Hiệp Thành, còn tổng giá trung vị khoảng 2,95 tỷ so với 3,48 tỷ. Nghĩa là Phú Mỹ vừa dày hàng hơn vừa dễ bám trần 3 tỷ hơn ở nhánh đất nền."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Mỹ: 654 tin theo dõi · 294 tin dưới 3 tỷ · giá trung vị 22,7 tr/m²",
+                        "Đất nền Hiệp Thành: 251 tin theo dõi · 80 tin dưới 3 tỷ · giá trung vị 23,4 tr/m²",
+                        "Tổng giá trung vị đất nền: 2,95 tỷ ở Phú Mỹ vs 3,48 tỷ ở Hiệp Thành",
+                        "Đây vẫn là giá rao công khai, không phải giá chốt giao dịch"
+                    ]
+                },
+                {
+                    "id": "mo-hiep-thanh-neu-so-nha-dat",
+                    "heading": "2. Nếu nghiêng về nhà đất quanh 3-3,5 tỷ, Hiệp Thành đáng mở song song",
+                    "paragraphs": [
+                        "Nhà đất là nơi Hiệp Thành lấy lại chút lợi thế về tổng giá. Phường này hiện có tổng giá trung vị nhà đất khoảng 3,27 tỷ, thấp hơn mức 3,5 tỷ ở Phú Mỹ. Số tin nhà đất dưới 3 tỷ không chênh quá xa, với 200 tin ở Hiệp Thành và 220 tin ở Phú Mỹ, nên nếu anh đang bám rất sát khung 3-3,5 tỷ thì Hiệp Thành vẫn đáng mở cùng lúc để tránh bỏ sót nhóm tin mềm hơn về tổng giá.",
+                        "Điểm cần nhớ là giá trung vị/m² nhà đất ở hai nơi gần như ngang nhau: 38,9 tr/m² tại Hiệp Thành và 38,7 tr/m² tại Phú Mỹ. Vì vậy, khác biệt nằm nhiều hơn ở tổng giá và cơ cấu diện tích. Nếu chỉ nhìn giá/m², anh sẽ rất khó thấy lý do vì sao Hiệp Thành đáng so song song ở nhánh nhà đất."
+                    ],
+                    "bullets": [
+                        "Nhà đất Hiệp Thành: 557 tin theo dõi · 200 tin dưới 3 tỷ · tổng giá trung vị 3,27 tỷ",
+                        "Nhà đất Phú Mỹ: 803 tin theo dõi · 220 tin dưới 3 tỷ · tổng giá trung vị 3,5 tỷ",
+                        "Giá rao/m² nhà đất gần như ngang nhau giữa hai phường",
+                        "Đọc thêm tổng giá để tránh chọn nhầm phường chỉ vì nhìn mỗi giá/m²"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-do-rong-nguon-hang",
+                    "heading": "3. Phú Mỹ đang rộng nguồn hàng và cũng dày dấu hiệu hơn",
+                    "paragraphs": [
+                        "Nếu anh dùng Radar như bộ lọc ưu tiên, Phú Mỹ hiện có 245 dấu hiệu đáng kiểm tra, cao hơn 97 ở Hiệp Thành. Kết hợp với tổng nguồn hàng 1.468 tin so với 832, Phú Mỹ phù hợp hơn cho vòng mở đầu khi anh còn muốn chạy nhiều lát cắt theo ngân sách, loại hình hoặc mức độ tín hiệu.",
+                        "Hiệp Thành không vì thế mà nên bỏ qua. Vai trò hợp lý hơn là phường để mở song song sau khi anh đã khóa nhánh nhà đất hoặc muốn so một nhóm tổng giá mềm hơn. Làm theo thứ tự này thường đỡ tốn thời gian hơn so với mở ngẫu nhiên cả hai phường rồi gọi dàn trải."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu đáng kiểm tra: Phú Mỹ 245 · Hiệp Thành 97",
+                        "Tổng tin đang theo dõi: Phú Mỹ 1.468 · Hiệp Thành 832",
+                        "Dấu hiệu là lớp ưu tiên kiểm tra, không phải nhãn quyết định mua",
+                        "Nguồn hàng rộng hơn giúp ích khi anh chưa khóa chặt nhu cầu ngay từ đầu"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này đỡ tốn thời gian",
+                    "paragraphs": [
+                        "Cách nhanh nhất là chọn loại hình trước. Nếu đang tìm đất nền dưới 3 tỷ, mở Phú Mỹ trước rồi giới hạn tổng giá. Nếu đang tìm nhà đất quanh 3-3,5 tỷ, mở thêm Hiệp Thành để so nhóm tổng giá mềm hơn. Sau đó mới nhìn tiếp lớp dấu hiệu đáng kiểm tra để ưu tiên gọi trước.",
+                        "Khi đã có vài tin phù hợp, anh nên dùng công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Và dù dữ liệu có đẹp đến đâu, vẫn cần kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: khóa loại hình trước khi so phường",
+                        "Bước 2: lọc tổng giá theo khung tiền thật của anh",
+                        "Bước 3: nhìn thêm dấu hiệu đáng kiểm tra để ưu tiên gọi trước",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Phú Mỹ và Hiệp Thành theo đúng loại hình",
+            "body": "Bắt đầu bằng Phú Mỹ nếu anh cần nguồn hàng rộng và nhiều đất nền dưới 3 tỷ hơn. Nếu đang nghiêng về nhà đất quanh 3-3,5 tỷ, mở thêm Hiệp Thành để so nhóm tổng giá mềm hơn rồi mới quyết định gọi sâu.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_hiep_thanh"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Mỹ hay Hiệp Thành", "href": "/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
@@ -14661,6 +14938,7 @@ _RB_ANSWER_FIRST_INTROS = {
     "duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc": "Với trần 3 tỷ, nên mở Định Hòa trước để có nhiều lựa chọn hơn, rồi xem Phú Tân khi muốn soi nhóm đất nền đáng chú ý. Dữ liệu trong bài là giá rao Facebook Radar BDS theo dõi ngày 08/08/2026, không phải giá chốt giao dịch.",
     "phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc": "Nếu ưu tiên đất nền, nên mở Phú Lợi trước; nếu tìm nhà đất dưới 4 tỷ, nên mở Hiệp Thành trước. Dữ liệu Radar BDS ngày 09/08/2026 cho thấy khác biệt chính giữa hai phường nằm ở cơ cấu loại hình và số tin còn trong vùng ngân sách phổ biến.",
     "duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc": "Nếu giữ trần dưới 3 tỷ, nên mở Tương Bình Hiệp trước để có nhiều lựa chọn hơn; sau đó mở Phú Tân khi anh muốn soi thêm lớp đất nền có nhiều dấu hiệu đáng kiểm tra. Dữ liệu dùng trong bài là giá rao Facebook Radar BDS theo dõi ngày 15/08/2026, không phải giá chốt giao dịch.",
+    "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc": "Nếu anh cần nhiều đất nền dưới 3 tỷ và muốn nguồn hàng rộng để lọc nhanh, nên mở Phú Mỹ trước. Nếu đang soi nhà đất quanh 3-3,5 tỷ và muốn mặt bằng tổng giá mềm hơn một chút, hãy mở thêm Hiệp Thành song song. Dữ liệu dùng trong bài là giá rao Facebook Radar BDS theo dõi ngày 17/08/2026, không phải giá chốt giao dịch.",
 
 }
 for _rb_slug, _rb_intro in _RB_ANSWER_FIRST_INTROS.items():
