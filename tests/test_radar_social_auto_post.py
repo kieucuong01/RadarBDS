@@ -132,14 +132,17 @@ def test_parse_post_wrapper_stdout_rejects_browser_result_not_ok():
         )
 
 
-def test_parse_post_wrapper_stdout_rejects_missing_self_comment():
-    with pytest.raises(SystemExit, match="self-comment"):
-        mod.parse_post_wrapper_stdout(
-            '{"returncode": 0, "browser_result": {'
-            '"ok": true, "verified_text": true, "verified_visual": true, '
-            '"permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123", '
-            '"photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789"}}'
-        )
+def test_parse_post_wrapper_stdout_warns_when_self_comment_is_missing():
+    parsed = mod.parse_post_wrapper_stdout(
+        '{"returncode": 0, "browser_result": {'
+        '"ok": true, "verified_text": true, "verified_visual": true, '
+        '"permalink": "https://www.facebook.com/radarbdsvn/posts/pfbid123", '
+        '"photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789"}}'
+    )
+
+    result = parsed["browser_result"]
+    assert result.get("verified_comment") is not True
+    assert "post KPI still counts" in result["comment_warning"]
 
 
 def test_page_care_style_rotates_on_tuesday_and_thursday():

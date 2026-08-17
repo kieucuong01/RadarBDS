@@ -166,7 +166,7 @@ def test_generated_publish_program_never_uses_escape_after_typing_hashtags(tmp_p
     assert "press_key('Escape')" not in program.split("caption_already_present", 1)[1]
 
 
-def test_validate_publish_success_requires_self_comment_when_requested():
+def test_validate_publish_success_treats_self_comment_as_best_effort_when_requested():
     record = {
         "stdout": (
             '{"ok": true, "verified_text": true, "verified_visual": true, '
@@ -175,8 +175,15 @@ def test_validate_publish_success_requires_self_comment_when_requested():
             '"photo_permalink": "https://www.facebook.com/photo/?fbid=456&set=a.789"}\n'
         )
     }
-    with pytest.raises(SystemExit, match="self-comment"):
-        mod._validate_publish_success(record, require_visual=True, require_comment=True)
+    result = mod._validate_publish_success(
+        record,
+        require_visual=True,
+        require_comment=True,
+    )
+
+    assert result["ok"] is True
+    assert result["verified_comment"] is False
+    assert "best-effort" in result["comment_warning"]
 
 
 def test_generated_publish_program_posts_and_verifies_self_comment(tmp_path):

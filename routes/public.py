@@ -116,6 +116,11 @@ def seo_bao_cao_index(**kwargs):
     return _impl("seo_report_hub_page", **kwargs)
 
 
+@bp.route("/bao-cao/")
+def seo_bao_cao_index_slash(**kwargs):
+    return redirect("/bao-cao", code=301)
+
+
 @bp.route("/bao-cao/<path:report_slug>")
 def seo_market_report(report_slug, **kwargs):
     return _impl("seo_report_or_article_page", report_slug=report_slug, **kwargs)

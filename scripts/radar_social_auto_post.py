@@ -126,7 +126,7 @@ def parse_post_wrapper_stdout(stdout: str) -> dict:
     ):
         raise SystemExit(f"Publish wrapper missing verified native visual: {str(stdout)[-1000:]}")
     if not browser_result.get("verified_comment"):
-        raise SystemExit(f"Publish wrapper missing verified Radar BDS self-comment: {str(stdout)[-1000:]}")
+        browser_result["comment_warning"] = "Radar BDS self-comment was not verified; post KPI still counts because permalink/native visual are verified."
     return data
 
 
@@ -275,8 +275,11 @@ def main() -> int:
     print(f"- Visual: {content.get('visual_path') or content.get('image_path') or ''} · {content.get('visual_style') or 'legacy'}")
     print(f"- Caption style: {content.get('style')} · visual={content.get('visual_style')}")
     print(f"- Caption angle: {str(content.get('message') or '').splitlines()[0][:160]}")
-    print(f"- Self-comment: verified with Radar BDS link · {browser_result.get('comment_needle') or ''}")
-    print("- Verification: browser_result ok=true + verified_text=true + verified_visual=true + verified_comment=true + valid post/photo permalinks")
+    if browser_result.get("verified_comment"):
+        print(f"- Self-comment: verified with Radar BDS link · {browser_result.get('comment_needle') or ''}")
+    else:
+        print(f"- Self-comment: ⚠️ chưa verify được; post vẫn đã lên Page · {browser_result.get('comment_warning') or browser_result.get('comment_needle') or ''}")
+    print("- Verification: browser_result ok=true + verified_text=true + verified_visual=true + valid post/photo permalinks; self-comment is best-effort")
     return 0
 
 

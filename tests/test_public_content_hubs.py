@@ -65,6 +65,15 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in radar_news_html
 
 
+def test_report_hub_trailing_slash_redirects_to_canonical_path():
+    import app as radar_app
+
+    response = radar_app.app.test_client().get("/bao-cao/", follow_redirects=False)
+
+    assert response.status_code == 301
+    assert response.headers["Location"] == "/bao-cao"
+
+
 def test_radar_data_hub_explains_scope_method_cadence_and_limits():
     import app as radar_app
 
