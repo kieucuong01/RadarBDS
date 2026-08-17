@@ -255,10 +255,22 @@ class FacebookApifyCrawler:
                 else:
                     from crawler.apify_token_pool import acquire_token
 
-                    token_rec = acquire_token(
-                        required_posts=per_profile,
-                        exclude_ids=unusable_token_ids,
-                    )
+                    try:
+                        token_rec = acquire_token(
+                            required_posts=per_profile,
+                            exclude_ids=unusable_token_ids,
+                        )
+                    except RuntimeError:
+                        unattempted = len(pending)
+                        event = (
+                            f"limit={per_profile}: {unattempted} profile(s) unattempted "
+                            "because no token has enough quota"
+                        )
+                        self.last_run_report["partial"] = True
+                        self.last_run_report["unattempted_profiles"] += unattempted
+                        self.last_run_report["messages"].append(event)
+                        print(f"[facebook-apify] {event}")
+                        break
                     if token_rec["id"] == "env":
                         chunk_size = len(pending)
                     else:
@@ -288,7 +300,24 @@ class FacebookApifyCrawler:
                     )
                 except Exception as exc:
                     msg = str(exc)
+                    if token_rec and _is_apify_limit_error(msg):
+                        unusable_token_ids.add(token_rec["id"])
+                        event = (
+                            f"Token {token_rec['label']} exhausted by provider; "
+                            "remaining=0; rotating"
+                        )
+                        self.last_run_report["messages"].append(event)
+                        print(f"[facebook-apify] {event}")
+                        continue
                     if "401" in msg or "Unauthorized" in msg:
+                        if token_rec:
+                            unusable_token_ids.add(token_rec["id"])
+                            event = (
+                                f"Token {token_rec['label']} rejected authentication; rotating"
+                            )
+                            self.last_run_report["messages"].append(event)
+                            print(f"[facebook-apify] {event}")
+                            continue
                         raise RuntimeError("APIFY_TOKEN khong hop le. Kiem tra lai.") from exc
                     if "402" in msg or "Payment" in msg:
                         raise RuntimeError("Het Apify credits. Nap them hoac giam --limit.") from exc
