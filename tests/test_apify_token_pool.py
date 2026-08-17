@@ -137,7 +137,8 @@ def test_facebook_apify_batch_uses_per_profile_results_limit(monkeypatch):
     crawler.actor = "apify/facebook-posts-scraper"
     calls = []
 
-    def fake_run_actor(run_input, required_posts):
+    def fake_run_actor(run_input, required_posts, token_rec=None):
+        assert token_rec is None
         calls.append((run_input, required_posts))
         return [
             {
@@ -171,7 +172,8 @@ def test_facebook_apify_clamps_actor_overfetch_per_profile(monkeypatch):
     crawler._use_token_pool = False
     crawler.actor = "apify/facebook-posts-scraper"
 
-    def fake_run_actor(run_input, required_posts):
+    def fake_run_actor(run_input, required_posts, token_rec=None):
+        assert token_rec is None
         assert required_posts == 4
         return [
             {
@@ -206,6 +208,100 @@ def test_facebook_apify_clamps_actor_overfetch_per_profile(monkeypatch):
     assert len(posts) == 4
     assert [p["broker_name"] for p in posts].count("A") == 2
     assert [p["broker_name"] for p in posts].count("B") == 2
+
+
+def test_facebook_apify_splits_profile_group_by_token_capacity(tmp_path, monkeypatch):
+    monkeypatch.setattr(pool, "TOKEN_PATH", tmp_path / "apify_tokens.json")
+    pool.upsert_token({
+        "label": "Key A",
+        "token": "apify_api_AAAAAAAAAAAAA",
+        "monthly_quota": 25,
+        "active": True,
+    })
+    pool.upsert_token({
+        "label": "Key B",
+        "token": "apify_api_BBBBBBBBBBBBB",
+        "monthly_quota": 25,
+        "active": True,
+    })
+    calls = []
+
+    class FakeActor:
+        def __init__(self, token):
+            self.token = token
+
+        def call(self, run_input):
+            calls.append((self.token, run_input))
+            return {
+                "defaultDatasetId": self.token,
+                "items": [
+                    {
+                        "id": f"post-{index}",
+                        "text": "Ban dat Tan An",
+                        "url": f"https://facebook.test/posts/{index}",
+                        "timestamp": 1893456000,
+                        "inputUrl": start["url"],
+                    }
+                    for index, start in enumerate(run_input["startUrls"], start=1)
+                ],
+            }
+
+    class FakeDataset:
+        def __init__(self, items):
+            self.items = items
+
+        def iterate_items(self):
+            return list(self.items)
+
+    class FakeClient:
+        datasets = {}
+
+        def __init__(self, token):
+            self.token = token
+
+        def actor(self, _actor_id):
+            actor = FakeActor(self.token)
+            original_call = actor.call
+
+            def call(run_input):
+                result = original_call(run_input)
+                self.datasets[result["defaultDatasetId"]] = result["items"]
+                return result
+
+            actor.call = call
+            return actor
+
+        def dataset(self, dataset_id):
+            return FakeDataset(self.datasets[dataset_id])
+
+    crawler = FacebookApifyCrawler.__new__(FacebookApifyCrawler)
+    crawler._use_token_pool = True
+    crawler._client_cls = FakeClient
+    crawler.actor = "apify/facebook-posts-scraper"
+
+    posts = crawler.crawl_all(
+        [
+            {
+                "url": f"https://facebook.com/broker-{index}",
+                "tier": 10,
+                "broker_name": f"Broker {index}",
+                "default_area": "TDM",
+            }
+            for index in range(4)
+        ],
+        mode="incremental",
+    )
+
+    assert [len(call[1]["startUrls"]) for call in calls] == [2, 2]
+    assert calls[0][0] != calls[1][0]
+    assert len(posts) == 4
+    assert crawler.last_run_report == {
+        "partial": False,
+        "messages": [],
+        "completed_profiles": 4,
+        "unattempted_profiles": 0,
+        "actor_runs": 2,
+    }
 
 
 def test_facebook_apify_pool_treats_remaining_usage_error_as_exhausted(tmp_path, monkeypatch):

@@ -189,6 +189,24 @@ class FacebookApifyCrawler:
         self._client_cls = ApifyClient
         self._client = None if self._use_token_pool else ApifyClient(self.token)
 
+    @staticmethod
+    def _token_remaining(token_rec: dict) -> int:
+        return max(
+            0,
+            int(token_rec.get("monthly_quota") or 0)
+            - int(token_rec.get("used_this_month") or 0),
+        )
+
+    @staticmethod
+    def _new_run_report() -> dict:
+        return {
+            "partial": False,
+            "messages": [],
+            "completed_profiles": 0,
+            "unattempted_profiles": 0,
+            "actor_runs": 0,
+        }
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -202,6 +220,7 @@ class FacebookApifyCrawler:
         """
         Crawl nhieu profiles trong cac batch chia theo tier.
         """
+        self.last_run_report = self._new_run_report()
         if not profiles:
             print("[facebook-apify] Khong co profile nao de crawl.")
             return []
@@ -224,48 +243,80 @@ class FacebookApifyCrawler:
 
         adapted_all = []
 
+        unusable_token_ids: set[str] = set()
+
         for per_profile, batch_profiles in by_limit.items():
-            expected_total = per_profile * len(batch_profiles)
-            urls = [p["url"] for p in batch_profiles]
-            run_input = {
-                "startUrls": [{"url": u} for u in urls],
-                "resultsLimit": per_profile,
-            }
+            pending = list(batch_profiles)
 
-            print(
-                f"[facebook-apify] Batch limit={per_profile}/profile | "
-                f"{len(urls)} profiles | expected_max={expected_total} | mode={mode}"
-            )
+            while pending:
+                if not self._use_token_pool:
+                    chunk = pending
+                    token_rec = None
+                else:
+                    from crawler.apify_token_pool import acquire_token
 
-            try:
-                items = self._run_actor(run_input, required_posts=expected_total)
-            except Exception as exc:
-                msg = str(exc)
-                if "401" in msg or "Unauthorized" in msg:
-                    raise RuntimeError("APIFY_TOKEN khong hop le. Kiem tra lai.") from exc
-                if "402" in msg or "Payment" in msg:
-                    raise RuntimeError("Het Apify credits. Nap them hoac giam --limit.") from exc
-                raise
+                    token_rec = acquire_token(
+                        required_posts=per_profile,
+                        exclude_ids=unusable_token_ids,
+                    )
+                    if token_rec["id"] == "env":
+                        chunk_size = len(pending)
+                    else:
+                        chunk_size = min(
+                            len(pending),
+                            self._token_remaining(token_rec) // per_profile,
+                        )
+                    chunk = pending[:chunk_size]
 
-            print(
-                f"[facebook-apify] Nhan duoc {len(items)} raw items "
-                f"(limit={per_profile}/profile, expected_max={expected_total})."
-            )
-
-            limited_items = self._limit_items_per_profile(items, batch_profiles, per_profile)
-            if len(limited_items) < len(items):
+                expected_total = per_profile * len(chunk)
+                run_input = {
+                    "startUrls": [{"url": profile["url"]} for profile in chunk],
+                    "resultsLimit": per_profile,
+                }
+                token_label = token_rec["label"] if token_rec else "APIFY_TOKEN"
                 print(
-                    f"[facebook-apify] Clamp actor overfetch: {len(items)} -> {len(limited_items)} "
-                    f"items theo limit/profile."
+                    f"[facebook-apify] Sub-batch limit={per_profile}/profile | "
+                    f"profiles={len(chunk)} | expected_max={expected_total} | "
+                    f"token={token_label} | mode={mode}"
                 )
 
-            for item, profile in limited_items:
-                post = self._adapt(item)
-                if post:
-                    if profile:
-                        post["default_area"] = profile.get("default_area")
-                        post["broker_name"] = profile.get("broker_name")
-                    adapted_all.append(post)
+                try:
+                    items = self._run_actor(
+                        run_input,
+                        required_posts=expected_total,
+                        token_rec=token_rec,
+                    )
+                except Exception as exc:
+                    msg = str(exc)
+                    if "401" in msg or "Unauthorized" in msg:
+                        raise RuntimeError("APIFY_TOKEN khong hop le. Kiem tra lai.") from exc
+                    if "402" in msg or "Payment" in msg:
+                        raise RuntimeError("Het Apify credits. Nap them hoac giam --limit.") from exc
+                    raise
+
+                print(
+                    f"[facebook-apify] Nhan duoc {len(items)} raw items "
+                    f"(limit={per_profile}/profile, expected_max={expected_total})."
+                )
+
+                limited_items = self._limit_items_per_profile(items, chunk, per_profile)
+                if len(limited_items) < len(items):
+                    print(
+                        f"[facebook-apify] Clamp actor overfetch: {len(items)} -> {len(limited_items)} "
+                        f"items theo limit/profile."
+                    )
+
+                for item, profile in limited_items:
+                    post = self._adapt(item)
+                    if post:
+                        if profile:
+                            post["default_area"] = profile.get("default_area")
+                            post["broker_name"] = profile.get("broker_name")
+                        adapted_all.append(post)
+
+                pending = pending[len(chunk):]
+                self.last_run_report["completed_profiles"] += len(chunk)
+                self.last_run_report["actor_runs"] += 1
 
         # Incremental filter
         if mode == "incremental":
@@ -278,7 +329,12 @@ class FacebookApifyCrawler:
 
         return adapted_all
 
-    def _run_actor(self, run_input: dict, required_posts: int) -> list[dict]:
+    def _run_actor(
+        self,
+        run_input: dict,
+        required_posts: int,
+        token_rec: Optional[dict] = None,
+    ) -> list[dict]:
         if not self._use_token_pool:
             run = self._client.actor(self.actor).call(run_input=run_input)
             return list(self._client.dataset(run["defaultDatasetId"]).iterate_items())
@@ -290,30 +346,43 @@ class FacebookApifyCrawler:
             record_usage,
         )
 
-        excluded: set[str] = set()
-        last_error = None
-        for _ in range(5):
-            token_rec = acquire_token(required_posts=required_posts, exclude_ids=excluded)
-            client = self._client_cls(token_rec["token"])
-            try:
-                print(f"[facebook-apify] Dung token {token_rec['label']} cho limit={required_posts}")
-                run = client.actor(self.actor).call(run_input=run_input)
-                items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
-                record_usage(token_rec["id"], len(items))
-                return items
-            except Exception as exc:
-                msg = str(exc)
-                last_error = exc
-                if _is_apify_limit_error(msg):
-                    mark_limit_exhausted(token_rec["id"], msg)
-                    excluded.add(token_rec["id"])
-                    continue
+        if token_rec is None:
+            excluded: set[str] = set()
+            last_error = None
+            for _ in range(5):
+                selected = acquire_token(
+                    required_posts=required_posts,
+                    exclude_ids=excluded,
+                )
+                try:
+                    return self._run_actor(
+                        run_input,
+                        required_posts=required_posts,
+                        token_rec=selected,
+                    )
+                except Exception as exc:
+                    last_error = exc
+                    msg = str(exc)
+                    if _is_apify_limit_error(msg) or "401" in msg or "Unauthorized" in msg:
+                        excluded.add(selected["id"])
+                        continue
+                    raise
+            raise last_error or RuntimeError("Khong chon duoc APIFY_TOKEN kha dung.")
+
+        client = self._client_cls(token_rec["token"])
+        try:
+            print(f"[facebook-apify] Dung token {token_rec['label']} cho limit={required_posts}")
+            run = client.actor(self.actor).call(run_input=run_input)
+            items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+            record_usage(token_rec["id"], len(items))
+            return items
+        except Exception as exc:
+            msg = str(exc)
+            if _is_apify_limit_error(msg):
+                mark_limit_exhausted(token_rec["id"], msg)
+            else:
                 mark_error(token_rec["id"], msg)
-                if "401" in msg or "Unauthorized" in msg:
-                    excluded.add(token_rec["id"])
-                    continue
-                raise
-        raise last_error or RuntimeError("Khong chon duoc APIFY_TOKEN kha dung.")
+            raise
 
     # ------------------------------------------------------------------
     # Internal helpers
