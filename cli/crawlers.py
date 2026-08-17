@@ -153,11 +153,34 @@ def _facebook_crawl_to_raw(
     except Exception as e:
         finish_crawl_run(run_id, {}, status="error", error_msg=str(e))
         raise
+
+    crawl_report = getattr(crawler, "last_run_report", {}) or {}
+    crawl_partial = bool(crawl_report.get("partial"))
+    crawl_messages = [
+        str(message).strip()[:240]
+        for message in (crawl_report.get("messages") or [])
+        if str(message).strip()
+    ]
+    partial_error = "; ".join(crawl_messages)[:500] or None
+    if crawl_partial and partial_error is None:
+        partial_error = (
+            f"{int(crawl_report.get('unattempted_profiles') or 0)} "
+            "profile(s) unattempted"
+        )
+
     if not raw_posts:
         print("[facebook] Khong co bai nao tu Apify (kiem tra profile URL va APIFY_TOKEN).")
         stats = {"fetched": 0, "inserted": 0, "skipped": 0,
-                 "irrelevant": 0, "out_of_area": 0, "range_filtered": 0}
-        finish_crawl_run(run_id, {"fetched": 0, "new": 0})
+                 "irrelevant": 0, "out_of_area": 0, "range_filtered": 0,
+                 "errors": 1 if crawl_partial else 0,
+                 "crawl_partial": crawl_partial,
+                 "crawl_messages": crawl_messages}
+        finish_crawl_run(
+            run_id,
+            {"fetched": 0, "new": 0},
+            status="partial" if crawl_partial else "done",
+            error_msg=partial_error,
+        )
         return stats
 
     range_filtered = 0
@@ -257,12 +280,20 @@ def _facebook_crawl_to_raw(
              "refreshed_images": refreshed_images,
              "refreshed_raw_ids": refreshed_raw_ids,
              "out_of_area": out_of_area,
-             "range_filtered": range_filtered}
-    finish_crawl_run(run_id, {
-        "fetched": stats["fetched"],
-        "new": inserted + refreshed_images,
-        "skipped": skipped + irrelevant + out_of_area + range_filtered,
-    })
+             "range_filtered": range_filtered,
+             "errors": 1 if crawl_partial else 0,
+             "crawl_partial": crawl_partial,
+             "crawl_messages": crawl_messages}
+    finish_crawl_run(
+        run_id,
+        {
+            "fetched": stats["fetched"],
+            "new": inserted + refreshed_images,
+            "skipped": skipped + irrelevant + out_of_area + range_filtered,
+        },
+        status="partial" if crawl_partial else "done",
+        error_msg=partial_error,
+    )
     return stats
 
 def cmd_crawl_facebook(args):

@@ -204,7 +204,75 @@ def test_facebook_crawl_records_health_row():
     assert stats["fetched"] == 2
     assert stats["inserted"] == 1
     start_run.assert_called_once_with("facebook", "all")
-    finish_run.assert_called_once_with(123, {"fetched": 2, "new": 1, "skipped": 1})
+    finish_run.assert_called_once_with(
+        123,
+        {"fetched": 2, "new": 1, "skipped": 1},
+        status="done",
+        error_msg=None,
+    )
+
+
+def test_facebook_crawl_persists_imported_partial_results():
+    class _FakeFacebookCrawler:
+        last_run_report = {
+            "partial": True,
+            "messages": ["limit=10: 3 profile(s) unattempted"],
+            "completed_profiles": 1,
+            "unattempted_profiles": 3,
+            "actor_runs": 1,
+        }
+
+        def crawl_all(self, *_args, **_kwargs):
+            return [{
+                "url": "https://facebook.test/partial-1",
+                "post_id": "partial-1",
+                "text": "ban dat 100m2",
+                "imgs": [],
+            }]
+
+    record = {
+        "url": "https://facebook.test/partial-1",
+        "post_id": "partial-1",
+        "contact_phone": "",
+        "imgs": [],
+    }
+    with mock.patch(
+        "crawler.facebook_apify.FacebookApifyCrawler",
+        return_value=_FakeFacebookCrawler(),
+    ), mock.patch(
+        "crawler.facebook_apify.load_profiles",
+        return_value=[{"url": "https://facebook.test/a"}],
+    ), mock.patch(
+        "crawler.facebook_chrome.is_relevant",
+        return_value=True,
+    ), mock.patch(
+        "crawler.facebook_chrome.build_record",
+        return_value=record,
+    ), mock.patch(
+        "config.area_profiles.post_mentions_other_city",
+        return_value=False,
+    ), mock.patch(
+        "db.crawl_runs.start_crawl_run",
+        return_value=123,
+    ), mock.patch(
+        "db.crawl_runs.finish_crawl_run",
+    ) as finish_run, mock.patch.object(
+        crawlers,
+        "insert_raw_result",
+        return_value=RawInsertResult("inserted", 456),
+    ):
+        stats = crawlers._facebook_crawl_to_raw(mode="incremental")
+
+    assert stats["fetched"] == 1
+    assert stats["inserted"] == 1
+    assert stats["errors"] == 1
+    assert stats["crawl_partial"] is True
+    finish_run.assert_called_once_with(
+        123,
+        {"fetched": 1, "new": 1, "skipped": 0},
+        status="partial",
+        error_msg="limit=10: 3 profile(s) unattempted",
+    )
 
 
 def test_facebook_crawl_propagates_raw_insert_failure():
