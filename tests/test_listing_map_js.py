@@ -886,3 +886,20 @@ def test_admin_edit_mode_model_keeps_button_copy_stable_when_pressed():
         "ariaPressed": "true",
         "label": "Sửa định vị",
     }
+
+
+def test_admin_edit_target_kind_only_routes_singletons_to_the_expected_editor():
+    assert _run_node(
+        "mapApi.adminEditTargetKind({precision:'exact',listing_count:1},true)"
+    ) == "listing"
+    for precision in ("road", "landmark", "ward"):
+        assert _run_node(
+            "mapApi.adminEditTargetKind("
+            f"{{precision:'{precision}',listing_count:1}},true)"
+        ) == "group"
+    assert _run_node(
+        "mapApi.adminEditTargetKind({precision:'road',listing_count:2},true)"
+    ) is None
+    assert _run_node(
+        "mapApi.adminEditTargetKind({precision:'exact',listing_count:1},false)"
+    ) is None

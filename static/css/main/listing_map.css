@@ -40,6 +40,40 @@
   gap: 14px;
 }
 
+.listing-map-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.listing-map-edit-toggle {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 11px;
+  background: #eef2ff;
+  color: #3730a3;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.listing-map-edit-toggle:hover,
+.listing-map-edit-toggle:focus-visible {
+  border-color: #818cf8;
+  background: #e0e7ff;
+}
+
+.listing-map-edit-toggle[aria-pressed="true"] {
+  border-color: #4338ca;
+  background: #4338ca;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.25);
+}
+
 .listing-map-precision-legend {
   display: flex;
   flex: 1 1 auto;
@@ -745,6 +779,16 @@ textarea.listing-map-admin-input {
 
   .listing-map-head-main {
     gap: 8px;
+  }
+
+  .listing-map-head-actions {
+    gap: 4px;
+  }
+
+  .listing-map-edit-toggle {
+    min-height: 40px;
+    padding: 0 8px;
+    font-size: 0.62rem;
   }
 
   .listing-map-workspace-head h2 {

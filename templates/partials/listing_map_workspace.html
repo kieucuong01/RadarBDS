@@ -25,8 +25,18 @@
         <span class="listing-map-precision-ward">Theo phường</span>
       </div>
     </div>
-    <button id="listingMapClose" type="button" class="listing-map-close"
-      aria-label="Đóng bản đồ" onclick="RadarListingMap.close()">×</button>
+    <div class="listing-map-head-actions">
+      {% if USER_TIER == 'admin' %}
+      <button id="listingMapEditModeToggle" type="button"
+        class="listing-map-edit-toggle" aria-pressed="false"
+        aria-label="Bật chế độ sửa định vị"
+        onclick="RadarListingMap.toggleAdminEditMode()">
+        Sửa định vị
+      </button>
+      {% endif %}
+      <button id="listingMapClose" type="button" class="listing-map-close"
+        aria-label="Đóng bản đồ" onclick="RadarListingMap.close()">×</button>
+    </div>
   </header>
   <div id="listingMapStatus" class="listing-map-status" role="status"
     aria-live="polite" aria-busy="false"></div>

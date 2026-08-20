@@ -81,6 +81,7 @@
     locationRequestId: 0,
     mapFeedbackTimer: null,
     mapFeedbackElement: null,
+    adminEditMode: false,
     adminEdit: null,
     adminReturnView: null,
     adminOldMarker: null,
@@ -191,6 +192,29 @@
         ? (precision === "exact" ? "Sửa vị trí" : "Đặt vị trí chính xác")
         : ""
     };
+  }
+
+  function adminEditModeModel(tier, enabled) {
+    var visible = String(tier || "").toLowerCase() === "admin";
+    var pressed = visible && Boolean(enabled);
+    return {
+      visible: visible,
+      enabled: pressed,
+      ariaPressed: pressed ? "true" : "false",
+      label: visible ? "Sửa định vị" : ""
+    };
+  }
+
+  function adminEditTargetKind(group, enabled) {
+    if (!enabled || !group || safeCount(group.listing_count) !== 1) {
+      return null;
+    }
+    var precision = String(group.precision || "");
+    if (precision === "exact") return "listing";
+    if (["road", "landmark", "ward"].indexOf(precision) >= 0) {
+      return "group";
+    }
+    return null;
   }
 
   function parseAdminCoordinateInput(value) {
@@ -789,6 +813,30 @@
     return Boolean(root && String(root.USER_TIER || "") === "admin");
   }
 
+  function syncAdminEditModeToggle() {
+    var toggle = element("listingMapEditModeToggle");
+    if (!toggle) return;
+    var model = adminEditModeModel(root && root.USER_TIER, state.adminEditMode);
+    toggle.hidden = !model.visible;
+    toggle.textContent = model.label;
+    toggle.setAttribute("aria-pressed", model.ariaPressed);
+    toggle.setAttribute(
+      "aria-label",
+      model.enabled ? "Tắt chế độ sửa định vị" : "Bật chế độ sửa định vị"
+    );
+    toggle.classList.toggle("is-active", model.enabled);
+  }
+
+  function toggleAdminEditMode() {
+    if (!isAdminUser() || !state.open) return false;
+    state.adminEditMode = !state.adminEditMode;
+    if (!state.adminEditMode && state.adminEdit) {
+      cancelAdminEdit();
+    }
+    syncAdminEditModeToggle();
+    return state.adminEditMode;
+  }
+
   function isMobileViewport() {
     return Boolean(state.mediaQuery && state.mediaQuery.matches);
   }
@@ -1361,7 +1409,10 @@
     if (!isAdminUser() || !state.map || !target) return;
     var center = state.map.getCenter();
     var draftPoint = adminDraftPoint(target, center);
-    state.adminReturnView = state.panelView;
+    state.adminReturnView = state.panelView
+      && state.panelView.kind !== "items-loading"
+      ? state.panelView
+      : { kind: "directory", group: null, payload: null };
     state.adminEditToken += 1;
     var token = state.adminEditToken;
     state.adminEdit = {
@@ -1447,15 +1498,7 @@
     clearAdminEditLayers();
     state.adminEdit = null;
     state.adminReturnView = null;
-    return requestSummary({ preserveViewport: true }).then(function (payload) {
-      var expectedKey = target.kind === "group"
-        ? target.locationKey
-        : (!wasReset ? "exact:" + target.listingId : "");
-      var group = expectedKey && payload && (payload.locations || []).find(
-        function (item) { return item.location_key === expectedKey; }
-      );
-      if (group) selectGroup(group);
-    });
+    return requestSummary({ preserveViewport: true });
   }
 
   function submitAdminEdit(form, reset) {
@@ -2132,6 +2175,18 @@
     return { kind: "items", item: null };
   }
 
+  function adminGroupSelectionOutcome(group, adminEditMode, payload) {
+    if (!adminEditMode || !group || safeCount(group.listing_count) !== 1) {
+      return groupSelectionOutcome(group, payload).kind;
+    }
+    var precision = String(group.precision || "");
+    if (precision === "exact") return "listing-editor";
+    if (["road", "landmark", "ward"].indexOf(precision) >= 0) {
+      return "group-editor";
+    }
+    return "items";
+  }
+
   function openListingFromMap(targetRoot, item) {
     var win = targetRoot || root;
     if (!validListingId(item) || !win || typeof win.openListingModal !== "function") {
@@ -2404,8 +2459,20 @@
   function selectGroup(group) {
     if (!state.open || !state.snapshot) return;
     state.selectedGroup = group;
+    var adminTargetKind = adminEditTargetKind(group, state.adminEditMode);
+    if (adminTargetKind === "group") {
+      setMobileSheetExpanded(true);
+      beginAdminEdit({
+        kind: "group",
+        locationKey: group.location_key,
+        label: group.label,
+        lat: group.lat,
+        lng: group.lng
+      });
+      return;
+    }
     var directModalGroup = isDirectModalGroup(group);
-    if (!directModalGroup) {
+    if (!directModalGroup || adminTargetKind === "listing") {
       setMobileSheetExpanded(true);
       setPanelView("items-loading", group);
     }
@@ -2430,6 +2497,21 @@
     });
     fetchJson(url, controller).then(function (payload) {
       if (!state.open || sequence !== itemSequence) return;
+      if (adminTargetKind === "listing") {
+        var listingItem = singletonModalItem(group, payload);
+        if (listingItem) {
+          beginAdminEdit({
+            kind: "listing",
+            listingId: listingItem.id,
+            label: listingItem.title || listingItem.name || "",
+            lat: group.lat,
+            lng: group.lng
+          });
+          return;
+        }
+        setPanelView("items-error", group);
+        return;
+      }
       var outcome = groupSelectionOutcome(group, payload);
       if (outcome.kind === "modal" && openListingFromMap(root, outcome.item)) {
         return;
@@ -2520,6 +2602,7 @@
     state.workspace = workspace;
     state.summary = null;
     state.selectedGroup = null;
+    state.adminEditMode = false;
     state.adminEdit = null;
     state.adminReturnView = null;
     state.panelView = { kind: "directory", group: null, payload: null };
@@ -2527,6 +2610,7 @@
     setMobileSheetExpanded(false);
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
+    syncAdminEditModeToggle();
     var launcher = element("listingMapLauncher");
     if (launcher) launcher.setAttribute("aria-expanded", "true");
     var closeButton = element("listingMapClose");
@@ -2638,7 +2722,9 @@
     state.snapshot = null;
     state.summary = null;
     state.selectedGroup = null;
+    state.adminEditMode = false;
     state.panelView = { kind: "directory", group: null, payload: null };
+    syncAdminEditModeToggle();
     if (shouldReplaceSharedUrl) {
       root.history.replaceState(
         sharedMapHistoryState(root.history.state, false),
@@ -2754,6 +2840,8 @@
     directoryWindow: directoryWindow,
     panelRenderModel: panelRenderModel,
     adminEditActionModel: adminEditActionModel,
+    adminEditModeModel: adminEditModeModel,
+    adminEditTargetKind: adminEditTargetKind,
     parseAdminCoordinateInput: parseAdminCoordinateInput,
     buildAdminOverridePayload: buildAdminOverridePayload,
     adminOverrideEndpoint: adminOverrideEndpoint,
@@ -2775,9 +2863,11 @@
     isDirectModalGroup: isDirectModalGroup,
     singletonModalItem: singletonModalItem,
     groupSelectionOutcome: groupSelectionOutcome,
+    adminGroupSelectionOutcome: adminGroupSelectionOutcome,
     openListingFromMap: openListingFromMap,
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,
+    toggleAdminEditMode: toggleAdminEditMode,
     open: open,
     close: close,
     bind: bind

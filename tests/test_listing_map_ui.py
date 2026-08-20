@@ -67,10 +67,12 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         assert f'id="{hook}"' in html
     assert 'id="listingMapMobileSheet"' in html
     assert 'data-state="collapsed"' in html
+    assert 'id="listingMapEditModeToggle"' not in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-singleton-modal-20260814") == 1
-    assert html.count("listing-map-touch-target-20260814") == 1
+    assert html.count("listing-map-admin-edit-mode-20260820") == 2
+    assert "listing-map-singleton-modal-20260814" not in html
+    assert "listing-map-touch-target-20260814" not in html
     assert "listing-map-marker-hierarchy-20260814" not in html
     assert "listing-map-price-zoom-20260813" not in html
     assert "listing-map-compact-labels-20260813" not in html
@@ -92,6 +94,26 @@ def test_workspace_omits_official_gis_and_nearby_visuals():
     assert "Quy hoạch sử dụng đất &amp; xây dựng" not in html
     assert "listing-map-precision-nearby" not in html
     assert "Gần đúng" not in html
+
+
+def test_listing_map_admin_edit_toggle_is_admin_only_and_accessible():
+    root = Path(__file__).resolve().parent.parent
+    workspace = (root / "templates/partials/listing_map_workspace.html").read_text(
+        encoding="utf-8"
+    )
+    script = (root / "static/js/main/listing_map.js").read_text(encoding="utf-8")
+    styles = (root / "static/css/main/listing_map.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert "{% if USER_TIER == 'admin' %}" in workspace
+    assert 'id="listingMapEditModeToggle"' in workspace
+    assert 'aria-pressed="false"' in workspace
+    assert "Sửa định vị" in workspace
+    assert "toggleAdminEditMode" in workspace
+    assert "state.adminEditMode = false" in script
+    assert "syncAdminEditModeToggle" in script
+    assert '.listing-map-edit-toggle[aria-pressed="true"]' in styles
 
 
 def test_saved_listings_route_omits_map_launcher_and_workspace():
@@ -355,8 +377,9 @@ def test_listing_map_assets_use_touch_target_cache_version():
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-singleton-modal-20260814") == 1
-    assert template.count("listing-map-touch-target-20260814") == 1
+    assert template.count("listing-map-admin-edit-mode-20260820") == 2
+    assert "listing-map-singleton-modal-20260814" not in template
+    assert "listing-map-touch-target-20260814" not in template
     assert "listing-map-marker-hierarchy-20260814" not in template
     assert template.count("listing-map-launch-share-20260814") == 1
     assert template.count("multi-city-ward-filter-20260814") >= 3
