@@ -14907,6 +14907,282 @@ SEO_ARTICLES = {
             {"name": "Phú Mỹ hay Hiệp Thành", "href": "/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc"}
         ]
     }
+,
+    "dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc",
+        "title": "Định Hòa hay Phú Hòa: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 20/08/2026: nếu anh ưu tiên đất nền dưới 3 tỷ và muốn mặt bằng tổng giá mềm hơn, nên mở Định Hòa trước. Nếu đang nghiêng về nhà đất với nguồn hàng dày hơn và chấp nhận mặt bằng giá cao hơn, mở thêm Phú Hòa song song.",
+        "keywords": "Định Hòa hay Phú Hòa, giá đất Định Hòa, giá đất Phú Hòa, đất nền Định Hòa dưới 3 tỷ, nhà đất Phú Hòa, Radar BDS",
+        "breadcrumb_label": "Định Hòa hay Phú Hòa",
+        "hero_badge": "So sánh theo nhu cầu mua",
+        "hero_title": "Định Hòa hay Phú Hòa: nên xem khu nào trước?",
+        "hero_text": "Nếu anh ưu tiên đất nền dưới 3 tỷ và muốn mặt bằng giá rao mềm hơn, nên mở Định Hòa trước. Nếu anh đang nghiêng về nhà đất, cần nguồn hàng dày hơn và chấp nhận tổng giá cao hơn, hãy mở thêm Phú Hòa song song. Muốn đọc đúng, luôn phải tách đất nền với nhà đất.",
+        "scope_label": "Thủ Dầu Một · Định Hòa / Phú Hòa",
+        "hero_checks": [
+            "Snapshot live ngày 20/08/2026, max crawled_at 20/08/2026 11:03",
+            "Đất nền dưới 3 tỷ: Định Hòa 441 tin, cao hơn Phú Hòa 150 tin",
+            "Nhà đất dưới 3 tỷ: Định Hòa 295 tin, cao hơn Phú Hòa 204 tin",
+            "Định Hòa có 182 dấu hiệu đáng kiểm tra; Phú Hòa có 79"
+        ],
+        "primary_cta": "Mở dashboard lọc Định Hòa và Phú Hòa",
+        "primary_href": "/?tab=signals&ward=%C4%90%E1%BB%8Bnh%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_phu_hoa",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_phu_hoa",
+        "map_label": "Tin tức / Định Hòa · Phú Hòa",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "2.339 tin",
+            "delta": "Định Hòa 1.208 · Phú Hòa 1.131",
+            "note": "Nguồn Facebook live ngày 20/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Định Hòa hợp để mở trước nếu anh ưu tiên giá mềm; Phú Hòa đáng xem thêm khi cần nhà đất dày nguồn hơn",
+            "price": "Đất nền: 15,8 vs 28,4 tr/m² · Nhà đất: 28,6 vs 38,5 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "736 vs 354 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "182 vs 79 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Định Hòa",
+                "href": "/binh-duong/phuong-dinh-hoa",
+                "description": "Mở trang khu vực để xem dữ liệu Định Hòa và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Hòa và lọc tiếp theo loại hình."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Giá đất Định Hòa hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Định Hòa nếu anh muốn soi kỹ một phường trước."
+            },
+            {
+                "label": "Giá đất Phú Hòa hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Phú Hòa để so lại theo đúng loại hình."
+            },
+            {
+                "label": "Hiệp Thành hay Phú Hòa: nên xem khu nào trước?",
+                "href": "/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một bài có Phú Hòa để nhìn khác biệt khi đổi phường so sánh."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ưu tiên đất nền dưới 3 tỷ thì nên mở phường nào trước?",
+                "a": "Nên mở Định Hòa trước. Snapshot live ngày 20/08/2026 cho thấy Định Hòa có 441 tin đất nền dưới 3 tỷ, trong khi Phú Hòa có 150 tin. Giá rao trung vị đất nền ở Định Hòa cũng mềm hơn rõ: 15,8 tr/m² so với 28,4 tr/m²."
+            },
+            {
+                "q": "Nếu tìm nhà đất thì Định Hòa hay Phú Hòa dễ xem hơn?",
+                "a": "Nếu anh cần nhiều lựa chọn dưới 3 tỷ, Định Hòa đang dễ xem hơn với 295 tin nhà đất dưới 3 tỷ so với 204 tin ở Phú Hòa. Nhưng nếu muốn nguồn hàng tổng dày hơn để mở nhiều vòng lọc, Phú Hòa vẫn có lợi thế với 716 tin nhà đất đang theo dõi, cao hơn 397 tin của Định Hòa."
+            },
+            {
+                "q": "Vì sao phải tách đất nền với nhà đất khi so hai phường này?",
+                "a": "Vì cùng một phường nhưng hai loại hình cho ra bài toán rất khác. Ở Định Hòa, đất nền có giá rao trung vị 15,8 tr/m² còn nhà đất là 28,6 tr/m². Ở Phú Hòa là 28,4 và 38,5 tr/m². Nếu gộp chung, anh rất dễ kết luận sai phường nào hợp túi tiền hơn."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-20",
+            "modified_at": "2026-08-20",
+            "intro": [
+                "Nếu anh đang lọc nhanh giữa Định Hòa và Phú Hòa, nên mở Định Hòa trước khi ưu tiên đất nền dưới 3 tỷ hoặc nhà đất quanh 2,5-3 tỷ. Phú Hòa đáng mở thêm khi anh cần nguồn nhà đất dày hơn và chấp nhận mặt bằng giá rao cao hơn. Đây là giá rao Facebook Radar BDS theo dõi ngày 20/08/2026, không phải giá giao dịch.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS ngày 20/08/2026, chỉ lấy tin active, không bị blacklist và không bị ẩn kiểm duyệt. Mốc dữ liệu mới nhất có max crawled_at 20/08/2026 11:03 nên các con số phù hợp để lọc ban đầu, không thay cho thẩm định pháp lý hoặc kiểm tra thực địa."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "2.339 tin",
+                    "note": "Định Hòa 1.208 · Phú Hòa 1.131"
+                },
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "441 vs 150 tin",
+                    "note": "Định Hòa vs Phú Hòa"
+                },
+                {
+                    "label": "Nhà đất dưới 3 tỷ",
+                    "value": "295 vs 204 tin",
+                    "note": "Định Hòa vs Phú Hòa"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "182 vs 79 tin",
+                    "note": "Định Hòa vs Phú Hòa"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Định Hòa và Phú Hòa đang khác nhau thế nào nếu anh mở dashboard hôm nay?",
+                    "note": "Nguồn Facebook live ngày 20/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Định Hòa · đất nền", "tracked": "785", "under3": "441", "under4": "536", "median_m2": "15,8 tr/m²", "median_total": "2,38 tỷ", "mid_range": "12,8-21,7 tr/m²"},
+                        {"ward_type": "Định Hòa · nhà đất", "tracked": "397", "under3": "295", "under4": "338", "median_m2": "28,6 tr/m²", "median_total": "2,65 tỷ", "mid_range": "20,6-36,2 tr/m²"},
+                        {"ward_type": "Phú Hòa · đất nền", "tracked": "386", "under3": "150", "under4": "226", "median_m2": "28,4 tr/m²", "median_total": "2,9 tỷ", "mid_range": "23,6-31,2 tr/m²"},
+                        {"ward_type": "Phú Hòa · nhà đất", "tracked": "716", "under3": "204", "under4": "455", "median_m2": "38,5 tr/m²", "median_total": "3,75 tỷ", "mid_range": "31,2-47,8 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước tùy đúng mục tiêu mua?",
+                    "note": "Khóa loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều đất nền dưới 3 tỷ", "open_first": "Định Hòa", "why": "441 tin dưới 3 tỷ, gần gấp 3 Phú Hòa và giá trung vị đất nền chỉ 15,8 tr/m²."},
+                        {"need": "Muốn nhà đất quanh 2,5-3 tỷ", "open_first": "Định Hòa", "why": "295 tin dưới 3 tỷ và tổng giá trung vị khoảng 2,65 tỷ, thấp hơn mức 3,75 tỷ của Phú Hòa."},
+                        {"need": "Muốn nguồn nhà đất tổng rộng hơn để lọc nhiều vòng", "open_first": "Phú Hòa", "why": "716 tin nhà đất đang theo dõi, cao hơn rõ mức 397 tin của Định Hòa."},
+                        {"need": "Muốn ưu tiên nhóm tin có dấu hiệu đáng kiểm tra", "open_first": "Định Hòa", "why": "Định Hòa hiện có 182 dấu hiệu đáng kiểm tra, cao hơn 79 ở Phú Hòa."}
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới",
+                    "title": "Một vài mức giá gần nhất để hình dung nhịp rao ở hai phường",
+                    "note": "Chỉ dùng như ví dụ về mặt bằng giá rao gần đây, không phải khuyến nghị mua ngay.",
+                    "columns": [
+                        {"key": "sample", "label": "Ví dụ"},
+                        {"key": "price", "label": "Giá rao"},
+                        {"key": "note", "label": "Gợi ý đọc nhanh"}
+                    ],
+                    "rows": [
+                        {"sample": "Định Hòa · đất nền gần nhất", "price": "1,45 tỷ · 12,1 tr/m²", "note": "Có mẫu đất nền giảm giá, phù hợp để mở trước nếu anh đang khóa khung dưới 3 tỷ."},
+                        {"sample": "Định Hòa · nhà đất gần nhất", "price": "1,75 tỷ · 15,3 tr/m²", "note": "Nhà đất Định Hòa đang có nhiều mẫu tổng giá mềm, nhưng vẫn cần kiểm tra đường vào và pháp lý."},
+                        {"sample": "Phú Hòa · nhà đất gần nhất", "price": "2,39 tỷ · 37,3 tr/m²", "note": "Phú Hòa có nhiều nhà đất hơn, phù hợp khi anh muốn mở rộng nguồn hàng sau vòng lọc đầu."},
+                        {"sample": "Phú Hòa · nhà đất giảm giá", "price": "2,0 tỷ · 25,0 tr/m²", "note": "Mẫu giảm giá xuất hiện nhưng mặt bằng chung Phú Hòa vẫn cao hơn Định Hòa ở cả giá/m² lẫn tổng giá."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Định Hòa đang dày đất nền dưới 3 tỷ hơn rõ",
+                    "note": "Nếu mục tiêu của anh là chốt danh sách đất nền trước, Định Hòa đang cho nhiều lựa chọn hơn hẳn.",
+                    "alt": "Biểu đồ so số tin đất nền dưới 3 tỷ giữa Định Hòa và Phú Hòa",
+                    "rows": [
+                        {"label": "Định Hòa", "value_label": "441 tin đất nền dưới 3 tỷ", "width": 100, "color": "#16a34a"},
+                        {"label": "Phú Hòa", "value_label": "150 tin đất nền dưới 3 tỷ", "width": 34, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất dưới 3 tỷ cũng nghiêng về Định Hòa",
+                    "note": "Phú Hòa dày nguồn hơn ở tổng số tin, nhưng nếu khóa dưới 3 tỷ thì Định Hòa vẫn dễ lọc hơn.",
+                    "alt": "Biểu đồ so nhà đất dưới 3 tỷ giữa Định Hòa và Phú Hòa",
+                    "rows": [
+                        {"label": "Định Hòa", "value_label": "295 tin nhà đất dưới 3 tỷ", "width": 100, "color": "#2563eb"},
+                        {"label": "Phú Hòa", "value_label": "204 tin nhà đất dưới 3 tỷ", "width": 69, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-dinh-hoa-neu-uu-tien-gia-mem",
+                    "heading": "1. Nếu ưu tiên giá mềm và ngân sách dưới 3 tỷ, nên mở Định Hòa trước",
+                    "paragraphs": [
+                        "Định Hòa đang cho danh sách dễ thở hơn ở cả đất nền lẫn nhà đất khi anh giữ khung dưới 3 tỷ. Snapshot live hiện tại ghi nhận 441 tin đất nền dưới 3 tỷ tại Định Hòa, trong khi Phú Hòa có 150 tin. Ở nhóm nhà đất, Định Hòa cũng có 295 tin dưới 3 tỷ, cao hơn 204 tin của Phú Hòa.",
+                        "Điểm đáng chú ý là Định Hòa không chỉ nhiều tin hơn mà còn mềm hơn về mặt bằng giá. Giá rao trung vị đất nền ở Định Hòa là 15,8 tr/m² và tổng giá trung vị 2,38 tỷ; trong khi Phú Hòa là 28,4 tr/m² và 2,9 tỷ. Với nhà đất, Định Hòa ở mức 28,6 tr/m² và 2,65 tỷ, còn Phú Hòa là 38,5 tr/m² và 3,75 tỷ."
+                    ],
+                    "bullets": [
+                        "Đất nền Định Hòa: 785 tin theo dõi · 441 tin dưới 3 tỷ · giá trung vị 15,8 tr/m²",
+                        "Nhà đất Định Hòa: 397 tin theo dõi · 295 tin dưới 3 tỷ · tổng giá trung vị 2,65 tỷ",
+                        "Định Hòa đang mềm hơn Phú Hòa ở cả giá/m² và tổng giá của hai loại hình chính",
+                        "Nếu anh muốn chốt danh sách nhanh trong khung ngân sách thấp, Định Hòa hợp để mở trước"
+                    ]
+                },
+                {
+                    "id": "phu-hoa-hop-khi-can-nguon-hang-day-hon",
+                    "heading": "2. Phú Hòa đáng mở thêm khi anh cần nguồn nhà đất dày hơn",
+                    "paragraphs": [
+                        "Phú Hòa không phải lựa chọn mở đầu nếu anh đang siết ngân sách, nhưng lại hữu ích khi anh muốn mở rộng nguồn hàng nhà đất sau vòng lọc đầu. Phường này hiện có 716 tin nhà đất đang theo dõi, cao hơn rõ mức 397 tin ở Định Hòa. Điều này giúp anh có nhiều mẫu để so vị trí, hiện trạng nhà và độ rộng đường hơn.",
+                        "Tuy vậy, nguồn hàng dày hơn đi kèm mặt bằng giá cao hơn. Nhà đất Phú Hòa có tổng giá trung vị 3,75 tỷ, cao hơn hơn 1 tỷ so với Định Hòa. Vì vậy, Phú Hòa hợp hơn khi anh có ngân sách thoáng hơn hoặc muốn kiểm tra thêm lựa chọn sau khi đã xem hết lớp giá mềm ở Định Hòa."
+                    ],
+                    "bullets": [
+                        "Nhà đất Phú Hòa: 716 tin theo dõi · 204 tin dưới 3 tỷ · 455 tin dưới 4 tỷ",
+                        "Tổng giá trung vị nhà đất Phú Hòa khoảng 3,75 tỷ",
+                        "Phú Hòa phù hợp để mở rộng lựa chọn, không phải để bắt đầu nếu anh cần giá mềm",
+                        "Luôn so tổng giá cùng với giá/m² để tránh nhìn sai độ vừa túi tiền"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-cach-doc-cho-dung",
+                    "heading": "3. Định Hòa có nhiều dấu hiệu hơn, nhưng đó chỉ là lớp ưu tiên kiểm tra",
+                    "paragraphs": [
+                        "Nếu anh dùng Radar như bộ lọc tín hiệu, Định Hòa hiện có 182 dấu hiệu đáng kiểm tra, cao hơn 79 ở Phú Hòa. Điều này hợp với vai trò mở trước khi anh muốn rà nhanh nhóm tin nên gọi hỏi sớm. Nhưng dấu hiệu chỉ là lớp xếp ưu tiên, không phải kết luận nên mua ngay.",
+                        "Cách đọc an toàn là khóa loại hình trước, sau đó nhìn số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ, rồi mới mở các tin có dấu hiệu để xem mô tả, diện tích, đường vào và giấy tờ. Làm ngược lại rất dễ bị hút vào tin nổi bật nhưng lệch ngân sách hoặc sai nhu cầu."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu đáng kiểm tra: Định Hòa 182 · Phú Hòa 79",
+                        "Dấu hiệu không thay cho pháp lý, quy hoạch hay kiểm tra thực địa",
+                        "Lọc theo loại hình và ngân sách trước khi ưu tiên gọi hỏi sâu",
+                        "Mẫu giảm giá gần nhất ở cả hai phường chỉ nên xem như tín hiệu mở tin trước"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard-de-loc-nhanh",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này đỡ tốn thời gian",
+                    "paragraphs": [
+                        "Nếu đang tìm đất nền hoặc nhà đất dưới 3 tỷ, hãy mở Định Hòa trước rồi giới hạn tiếp theo tổng giá. Sau khi đã có vài tin phù hợp, anh mở thêm Phú Hòa để xem liệu có mẫu nào đáng chấp nhận ở mức giá cao hơn nhưng bù lại vị trí hoặc hiện trạng tốt hơn.",
+                        "Sau khi chốt được 3-5 tin, anh nên dùng thêm công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Và dù dữ liệu có đẹp đến đâu, vẫn cần kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: khóa loại hình trước khi so phường",
+                        "Bước 2: lọc tổng giá theo khung tiền thật của anh",
+                        "Bước 3: xem lớp dấu hiệu đáng kiểm tra để ưu tiên mở tin",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Định Hòa và Phú Hòa theo đúng loại hình",
+            "body": "Bắt đầu bằng Định Hòa nếu anh muốn ưu tiên lớp giá mềm dưới 3 tỷ. Sau đó mở thêm Phú Hòa khi cần nguồn nhà đất dày hơn hoặc muốn so thêm lựa chọn ở mặt bằng giá cao hơn. Dùng dashboard và công cụ định giá để kiểm tra từng tin cụ thể.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=%C4%90%E1%BB%8Bnh%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_phu_hoa"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Định Hòa hay Phú Hòa", "href": "/tin-tuc/dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc"}
+        ]
+    }
 
 }
 
