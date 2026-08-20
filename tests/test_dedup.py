@@ -19,6 +19,7 @@ import cleansing.dedup as dedup_module
 from cleansing.dedup import (
     _ascii_fold,
     _candidate_keys,
+    _reconciled_duplicate_targets,
     _drop_pct,
     _has_reliable_lot_signature,
     _repost_score,
@@ -150,6 +151,57 @@ def test_road_tokens_detect_numbered_tdc_roads():
 def test_road_tokens_detect_contextual_bare_numbered_tdc_roads():
     text = "Duong so 91 TDC Phu My. Dat TDC Phu Chanh duong 104. MT 71."
     assert _road_tokens(text) == {"d91", "d104", "d71"}
+
+
+def test_road_tokens_detect_single_digit_numbered_tdc_road():
+    assert _road_tokens("Duong so 3, TDC Phu Chanh B") == {"d3"}
+
+
+def test_same_broker_same_dimensions_d3_and_d12_are_not_duplicate():
+    road_3 = _listing(
+        source="facebook", source_id="fb-road-3", posted_at="2026-07-30",
+        ward="Phu Tan", property_type="dat_nen", area_m2=200.0,
+        frontage_m=10.0, depth_m=20.0, tho_cu_m2=200.0,
+        contact_phone="0935792868",
+        description="Dat duong so 3, TDC Phu Chanh B, Phu Tan. DT 10x20m full tho cu.",
+    )
+    d12 = _listing(
+        source="facebook", source_id="fb-d12", posted_at="2026-07-20",
+        ward="Phu Tan", property_type="dat_nen", area_m2=200.0,
+        frontage_m=10.0, depth_m=20.0, tho_cu_m2=200.0,
+        contact_phone="0935792868",
+        description="Dat duong D12, TDC Phu My, Phu Tan. DT 10x20m full tho cu.",
+    )
+
+    assert not _is_duplicate(road_3, d12)
+
+
+def test_reconciled_duplicate_targets_split_stale_d3_d12_cluster():
+    canonical_road_3 = _listing(
+        id=103, source="facebook", source_id="fb-road-3-canonical", posted_at="2026-07-10",
+        ward="Phu Tan", property_type="dat_nen", area_m2=200.0,
+        frontage_m=10.0, depth_m=20.0, tho_cu_m2=200.0,
+        contact_phone="0935792868",
+        description="Dat duong so 3, TDC Phu Chanh B, Phu Tan. DT 10x20m full tho cu.",
+    )
+    d12 = _listing(
+        id=102, source="facebook", source_id="fb-d12", posted_at="2026-07-20", duplicate_of_id=103,
+        ward="Phu Tan", property_type="dat_nen", area_m2=200.0,
+        frontage_m=10.0, depth_m=20.0, tho_cu_m2=200.0,
+        contact_phone="0935792868",
+        description="Dat duong D12, TDC Phu My, Phu Tan. DT 10x20m full tho cu.",
+    )
+    newest_road_3 = _listing(
+        id=101, source="facebook", source_id="fb-road-3-new", posted_at="2026-07-30", duplicate_of_id=103,
+        ward="Phu Tan", property_type="dat_nen", area_m2=200.0,
+        frontage_m=10.0, depth_m=20.0, tho_cu_m2=200.0,
+        contact_phone="0935792868",
+        description="Dat duong so 3, TDC Phu Chanh B, Phu Tan. DT 10x20m full tho cu.",
+    )
+
+    assert _reconciled_duplicate_targets(
+        [canonical_road_3, d12, newest_road_3]
+    ) == {101: 103}
 
 
 def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
@@ -965,7 +1017,7 @@ def test_duplicate_group_inherits_missing_area_from_nearest_repost():
     assert hydrated[0]["price_per_m2"] == 38.41
 
 
-def test_duplicate_group_inherits_missing_price_from_nearest_repost():
+def test_duplicate_group_does_not_invent_missing_price_from_nearest_repost():
     older = _listing(
         id=1, source="facebook", source_id="fb-old", posted_at="2026-05-20",
         ward="Dinh Hoa", property_type="nha_dat", area_m2=82.0,
@@ -982,8 +1034,8 @@ def test_duplicate_group_inherits_missing_price_from_nearest_repost():
     hydrated = _inherit_missing_group_values([latest, older])
 
     assert hydrated[0]["area_m2"] == 82.0
-    assert hydrated[0]["price_ty"] == 3.15
-    assert hydrated[0]["price_per_m2"] == 38.41
+    assert hydrated[0]["price_ty"] is None
+    assert hydrated[0]["price_per_m2"] is None
 
 
 def test_guland_phu_tan_template_same_phone_not_same_lot():

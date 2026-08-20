@@ -933,6 +933,60 @@ class PriceHistoryTest(unittest.TestCase):
         admin_history = admin_response.get_json()["history"]
         self.assertEqual(admin_history[0]["url"], f"{self.url_prefix}/dx84")
 
+    def test_history_api_excludes_ambiguous_price_snapshots(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            canonical = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, updated_at, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'TDC Phu Chanh B road 3',
+                    'Phu Tan', 200, 'dat_nen', 6.8, 34, '2026-07-20T12:00:00', 0
+                )
+                """,
+                (f"{self.source_id}-canonical", f"{self.url_prefix}/road-3"),
+            )
+            canonical_id = self._track(canonical.lastrowid)
+            child = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, extraction_quality_flags,
+                    duplicate_of_id, possibly_duplicate, updated_at, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'Masked price repost',
+                    'Phu Tan', 200, 'dat_nen', NULL, NULL, 'ambiguous_price_text',
+                    ?, 1, '2026-07-30T12:00:00', 0
+                )
+                """,
+                (
+                    f"{self.source_id}-ambiguous",
+                    f"{self.url_prefix}/masked-price",
+                    canonical_id,
+                ),
+            )
+            child_id = self._track(child.lastrowid)
+            conn.executemany(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                [
+                    (canonical_id, 6.8, 34.0, "2026-07-20 12:00:00"),
+                    (child_id, 7.0, 35.0, "2026-07-30 12:00:00"),
+                ],
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{canonical_id}"
+        ).get_json()["history"]
+
+        self.assertEqual([row["price_ty"] for row in history], [6.8])
+
     def test_guland_history_keeps_distinct_same_day_price_changes(self):
         from app import app
         from db.connection import get_conn

@@ -5619,7 +5619,7 @@ def get_price_history(listing_id):
         curr = conn.execute("""
             SELECT source, posted_at, crawled_at, updated_at, price_updated_at,
                    price_ty, ward, area_m2, property_type, road_tier,
-                   price_per_m2, title, url
+                   price_per_m2, title, url, extraction_quality_flags
             FROM listings
             WHERE id = ?
         """, (listing_id,)).fetchone()
@@ -5649,6 +5649,7 @@ def get_price_history(listing_id):
                 FROM price_history ph
                 LEFT JOIN listings l ON l.id = ph.listing_id
                 WHERE ph.listing_id IN ({placeholders})
+                  AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
             )
             SELECT listing_id, recorded_at, price_ty, price_per_m2,
                    history_date, url, source
@@ -5673,7 +5674,11 @@ def get_price_history(listing_id):
             last_price = price_ty
             has_last = True
 
-        if curr and curr["price_ty"]:
+        if (
+            curr
+            and curr["price_ty"]
+            and "ambiguous_price_text" not in (curr["extraction_quality_flags"] or "")
+        ):
             current_price = curr["price_ty"]
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
                 item = {

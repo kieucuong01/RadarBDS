@@ -21,7 +21,7 @@ _ROAD_TOKEN_PAT = re.compile(
     re.IGNORECASE,
 )
 _NUMBERED_ROAD_PAT = re.compile(
-    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{2,4}\s*[a-d]?)(?=$|[^\w]|_)",
+    r"\b(?:duong|mat\s*tien|mt|goc|hem|duong\s+so)\s*0*(\d{1,4}\s*[a-d]?)(?=$|[^\w]|_)",
     re.IGNORECASE,
 )
 _STANDALONE_NUMBERED_ROAD_PAT = re.compile(
@@ -89,9 +89,9 @@ def _normalize_road_token(raw: str, number: str | None = None) -> str | None:
             return None
         suffix = number_match.group(2)
         return f"{prefix_match.group(0)}{int(number_match.group(1))}{suffix}"
-    if re.fullmatch(r"\d{2,4}", raw):
+    if re.fullmatch(r"\d{1,4}", raw):
         return f"d{int(raw)}"
-    if re.fullmatch(r"\d{2,4}[a-d]", raw):
+    if re.fullmatch(r"\d{1,4}[a-d]", raw):
         return raw
     return None
 
@@ -733,6 +733,31 @@ def _split_canonical_compatible_groups(
     return compatible_groups
 
 
+def _reconciled_duplicate_targets(rows: Sequence[dict]) -> dict[int, int]:
+    """Return the current duplicate targets after rechecking one stale cluster."""
+    if len(rows) < 2:
+        return {}
+
+    targets: dict[int, int] = {}
+    canonical_indices = [
+        idx for idx, row in enumerate(rows)
+        if row.get("duplicate_of_id") is None
+    ]
+    canonical_idx = (
+        canonical_indices[0]
+        if len(canonical_indices) == 1
+        else max(range(len(rows)), key=lambda i: _listing_date_key(rows[i]))
+    )
+    canonical = rows[canonical_idx]
+    canonical_id = int(canonical["id"])
+    for idx, row in enumerate(rows):
+        if idx == canonical_idx:
+            continue
+        if _canonical_compatible_duplicate(row, canonical):
+            targets[int(row["id"])] = canonical_id
+    return targets
+
+
 def _has_value(value) -> bool:
     return value not in (None, "", 0, 0.0)
 
@@ -769,16 +794,10 @@ def _nearest_field_value(rows: list[dict], target_idx: int, field: str):
 def _inherit_missing_group_values(rows: list[dict]) -> list[dict]:
     hydrated = [dict(row) for row in rows]
     for idx, row in enumerate(hydrated):
-        for field in ("price_ty", "area_m2"):
-            if not _has_value(row.get(field)):
-                inherited = _nearest_field_value(hydrated, idx, field)
-                if _has_value(inherited):
-                    row[field] = inherited
-
-        if not _has_value(row.get("price_per_m2")):
-            inherited_ppm2 = _nearest_field_value(hydrated, idx, "price_per_m2")
-            if _has_value(inherited_ppm2):
-                row["price_per_m2"] = inherited_ppm2
+        if not _has_value(row.get("area_m2")):
+            inherited_area = _nearest_field_value(hydrated, idx, "area_m2")
+            if _has_value(inherited_area):
+                row["area_m2"] = inherited_area
 
         if not _has_value(row.get("price_per_m2")) and _has_value(row.get("price_ty")) and _has_value(row.get("area_m2")):
             row["price_per_m2"] = round(float(row["price_ty"]) * 1000 / float(row["area_m2"]), 2)
@@ -791,12 +810,14 @@ def _reconcile_price_first_from_history(conn: Any) -> None:
     conn.execute("""
         WITH first_history AS (
             SELECT DISTINCT ON (listing_id)
-                   listing_id,
-                   price_ty AS first_price
-            FROM price_history
-            WHERE price_ty IS NOT NULL
-              AND price_ty > 0
-            ORDER BY listing_id, recorded_at ASC, id ASC
+                   ph.listing_id,
+                   ph.price_ty AS first_price
+            FROM price_history ph
+            JOIN listings l ON l.id = ph.listing_id
+            WHERE ph.price_ty IS NOT NULL
+              AND ph.price_ty > 0
+              AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
+            ORDER BY ph.listing_id, ph.recorded_at ASC, ph.id ASC
         )
         UPDATE listings l
         SET price_first_ty = fh.first_price
@@ -964,7 +985,7 @@ def flag_duplicates_in_db(conn: Any) -> dict:
             for idx, hydrated in zip(compatible_indices, hydrated_rows):
                 original = listings[idx]
                 updates = {}
-                for field in ("price_ty", "area_m2", "price_per_m2"):
+                for field in ("area_m2", "price_per_m2"):
                     if not _has_value(original.get(field)) and _has_value(hydrated.get(field)):
                         updates[field] = hydrated[field]
                         original[field] = hydrated[field]
@@ -972,13 +993,11 @@ def flag_duplicates_in_db(conn: Any) -> dict:
                     conn.execute(
                         """
                         UPDATE listings SET
-                            price_ty = CASE WHEN price_ty IS NULL OR price_ty = 0 THEN ? ELSE price_ty END,
                             area_m2 = CASE WHEN area_m2 IS NULL OR area_m2 = 0 THEN ? ELSE area_m2 END,
                             price_per_m2 = CASE WHEN price_per_m2 IS NULL OR price_per_m2 = 0 THEN ? ELSE price_per_m2 END
                         WHERE id = ?
                         """,
                         (
-                            updates.get("price_ty"),
                             updates.get("area_m2"),
                             updates.get("price_per_m2"),
                             original["id"],
@@ -1070,10 +1089,11 @@ def _resolve_duplicate_targets(parent_by_id: dict[int, int]) -> dict[int, int]:
     return resolved
 
 
-def _flatten_duplicate_chains(conn: Any) -> None:
+def _flatten_duplicate_chains(conn: Any) -> set[int]:
     rows = conn.execute(
         "SELECT id, duplicate_of_id FROM listings WHERE duplicate_of_id IS NOT NULL"
     ).fetchall()
+    changed_ids: set[int] = set()
     parent_by_id = {
         int(row["id"]): int(row["duplicate_of_id"])
         for row in rows
@@ -1086,6 +1106,125 @@ def _flatten_duplicate_chains(conn: Any) -> None:
             "UPDATE listings SET duplicate_of_id=? WHERE id=?",
             (target_id, listing_id),
         )
+        changed_ids.add(listing_id)
+    return changed_ids
+
+
+def reconcile_existing_facebook_duplicate_clusters(
+    conn: Any,
+    *,
+    apply: bool = False,
+    max_clusters: int | None = None,
+) -> dict:
+    """Split stale Facebook clusters without creating any new cross-cluster merges."""
+    flattened_ids = _flatten_duplicate_chains(conn) if apply else set()
+
+    try:
+        has_road_name = bool(conn.execute(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema='public'
+              AND table_name='listings'
+              AND column_name='road_name'
+            """
+        ).fetchone())
+    except Exception:
+        has_road_name = False
+    road_name_select = "l.road_name" if has_road_name else "NULL AS road_name"
+
+    limit_sql = ""
+    params: tuple[int, ...] = ()
+    if max_clusters is not None:
+        limit_sql = "LIMIT ?"
+        params = (max(1, int(max_clusters)),)
+
+    rows = conn.execute(f"""
+        WITH duplicate_roots AS (
+            SELECT DISTINCT duplicate_of_id AS id
+            FROM listings
+            WHERE source='facebook'
+              AND duplicate_of_id IS NOT NULL
+              AND COALESCE(probably_sold,0)=0
+            ORDER BY duplicate_of_id
+            {limit_sql}
+        )
+        SELECT l.id, l.source, l.source_id, l.url, l.title, l.area, l.ward,
+               l.property_type, l.area_m2, l.price_ty, l.price_per_m2,
+               l.crawled_at, l.posted_at, l.frontage_m, l.depth_m, l.tho_cu_m2,
+               {road_name_select}, l.contact_phone, l.has_so, l.description,
+               l.content_hash, l.possibly_duplicate, l.duplicate_of_id,
+               roots.id AS cluster_id
+        FROM listings l
+        JOIN duplicate_roots roots
+          ON roots.id=COALESCE(l.duplicate_of_id, l.id)
+        WHERE l.source='facebook'
+          AND COALESCE(l.probably_sold,0)=0
+        ORDER BY roots.id, l.crawled_at ASC, l.id ASC
+    """, params).fetchall()
+
+    from collections import defaultdict
+
+    clusters: dict[int, list[dict]] = defaultdict(list)
+    for row in rows:
+        clusters[int(row["cluster_id"])].append(dict(row))
+
+    changed_ids: set[int] = set(flattened_ids)
+    clusters_changed = 0
+    rows_split = 0
+    rows_reassigned = 0
+    rows_merged = 0
+    for cluster_rows in clusters.values():
+        targets = _reconciled_duplicate_targets(cluster_rows)
+        changed_cluster = False
+        for row in cluster_rows:
+            listing_id = int(row["id"])
+            current_target = (
+                int(row["duplicate_of_id"])
+                if row["duplicate_of_id"] is not None
+                else None
+            )
+            target = targets.get(listing_id)
+            expected_duplicate = 1 if target is not None else 0
+            if current_target == target and int(bool(row["possibly_duplicate"])) == expected_duplicate:
+                continue
+
+            changed_cluster = True
+            changed_ids.add(listing_id)
+            if current_target is not None:
+                changed_ids.add(current_target)
+            if target is not None:
+                changed_ids.add(target)
+            if current_target is not None and target is None:
+                rows_split += 1
+            elif current_target is not None and target != current_target:
+                rows_reassigned += 1
+            elif current_target is None and target is not None:
+                rows_merged += 1
+
+            if apply:
+                conn.execute(
+                    """
+                    UPDATE listings
+                    SET possibly_duplicate=?, duplicate_of_id=?
+                    WHERE id=?
+                    """,
+                    (expected_duplicate, target, listing_id),
+                )
+        if changed_cluster:
+            clusters_changed += 1
+
+    if apply:
+        _apply_dedup_overrides(conn)
+
+    return {
+        "clusters_scanned": len(clusters),
+        "clusters_changed": clusters_changed,
+        "rows_split": rows_split,
+        "rows_reassigned": rows_reassigned,
+        "rows_merged": rows_merged,
+        "changed_ids": sorted(changed_ids),
+    }
 
 
 def _apply_dedup_overrides(conn: Any) -> None:
