@@ -11,6 +11,19 @@ from cleansing.dedup import reconcile_existing_facebook_duplicate_clusters
 from db.connection import connect
 from services.public_data_publish import publish_public_data
 
+PUBLISH_BATCH_SIZE = 400
+
+
+def _publish_changed_ids(changed_ids: list[int]) -> list[dict]:
+    reports = []
+    for start in range(0, len(changed_ids), PUBLISH_BATCH_SIZE):
+        batch = tuple(changed_ids[start:start + PUBLISH_BATCH_SIZE])
+        reports.append(publish_public_data(
+            listing_ids=batch,
+            strict=True,
+        ))
+    return reports
+
 
 def reconcile(*, apply: bool, max_clusters: int | None = None) -> dict:
     conn = connect()
@@ -31,10 +44,7 @@ def reconcile(*, apply: bool, max_clusters: int | None = None) -> dict:
         conn.close()
 
     if apply and stats["changed_ids"]:
-        stats["public_read_model"] = publish_public_data(
-            listing_ids=tuple(stats["changed_ids"]),
-            strict=True,
-        )
+        stats["public_read_model"] = _publish_changed_ids(stats["changed_ids"])
     return stats
 
 
