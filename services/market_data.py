@@ -89,6 +89,13 @@ DATE_RANGE_ALIASES = {
     "365d": "1y",
     "year": "1y",
 }
+PUBLIC_DATE_RANGE_OPTIONS = ("1w", "1m", "3m")
+
+
+def date_range_options_for_tier(tier: str = "guest") -> tuple[str, ...]:
+    if str(tier or "").strip().lower() == "admin":
+        return tuple(DATE_RANGE_OPTIONS)
+    return PUBLIC_DATE_RANGE_OPTIONS
 
 
 def _max_sql(left: str, right: str) -> str:
@@ -129,6 +136,17 @@ def normalize_date_range(value: str | None, default: str | None = "3m") -> str |
         return None
     raw = DATE_RANGE_ALIASES.get(raw, raw)
     return raw if raw in DATE_RANGE_OPTIONS else default
+
+
+def normalize_date_range_for_tier(
+    value: str | None,
+    tier: str = "guest",
+    default: str = "3m",
+) -> str:
+    normalized = normalize_date_range(value, default=default) or default
+    if normalized not in date_range_options_for_tier(tier):
+        return default
+    return normalized
 
 
 def listing_date_range_filter(date_range: str | None, prefix: str = ""):

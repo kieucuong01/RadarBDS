@@ -103,7 +103,7 @@ mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
-from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, load_market_opportunities, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
+from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, load_market_opportunities, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, normalize_date_range_for_tier, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
 from db.guland_publishers import (
     list_publishers,
     publisher_sort_rank_sql,
@@ -4510,7 +4510,11 @@ def _request_keyword(req) -> str:
 
 
 def _request_date_range(req) -> str:
-    return normalize_date_range(req.args.get("date_range") or req.args.get("time_range"), default="3m") or "3m"
+    return normalize_date_range_for_tier(
+        req.args.get("date_range") or req.args.get("time_range"),
+        tier=current_tier(),
+        default="3m",
+    )
 
 
 def _include_guland_high_activity(req, tier: str) -> bool:

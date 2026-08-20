@@ -205,9 +205,11 @@
             <label class="filter-option"><input type="radio" name="date_range" value="1w"> 1 tuần</label>
             <label class="filter-option"><input type="radio" name="date_range" value="1m"> 1 tháng</label>
             <label class="filter-option"><input type="radio" name="date_range" value="3m" checked> 3 tháng</label>
+            {% if USER_TIER == 'admin' %}
             <label class="filter-option"><input type="radio" name="date_range" value="6m"> 6 tháng</label>
             <label class="filter-option"><input type="radio" name="date_range" value="1y"> 1 năm</label>
             <label class="filter-option"><input type="radio" name="date_range" value="all"> Toàn bộ</label>
+            {% endif %}
           </div>
         </button>
       </div>

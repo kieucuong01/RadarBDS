@@ -68,6 +68,9 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'id="listingMapMobileSheet"' in html
     assert 'data-state="collapsed"' in html
     assert 'id="listingMapEditModeToggle"' not in html
+    assert 'name="date_range" value="6m"' not in html
+    assert 'name="date_range" value="1y"' not in html
+    assert 'name="date_range" value="all"' not in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
     assert html.count("listing-map-admin-edit-mode-20260820") == 2
