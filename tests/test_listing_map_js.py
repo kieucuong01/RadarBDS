@@ -873,16 +873,16 @@ def test_admin_edit_mode_model_is_hidden_for_non_admin_and_defaults_off():
         "visible": True,
         "enabled": False,
         "ariaPressed": "false",
-        "label": "Bật sửa vị trí",
+        "label": "Sửa định vị",
     }
 
 
-def test_admin_edit_mode_model_exposes_pressed_state_and_toggle_copy():
+def test_admin_edit_mode_model_keeps_button_copy_stable_when_pressed():
     assert _run_node(
         "mapApi.adminEditModeModel('admin',true)"
     ) == {
         "visible": True,
         "enabled": True,
         "ariaPressed": "true",
-        "label": "Tắt sửa vị trí",
+        "label": "Sửa định vị",
     }
