@@ -5649,6 +5649,8 @@ def get_price_history(listing_id):
                 FROM price_history ph
                 LEFT JOIN listings l ON l.id = ph.listing_id
                 WHERE ph.listing_id IN ({placeholders})
+                  AND l.price_ty IS NOT NULL
+                  AND l.price_ty > 0
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
             )
             SELECT listing_id, recorded_at, price_ty, price_per_m2,
