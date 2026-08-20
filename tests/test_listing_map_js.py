@@ -814,3 +814,75 @@ def test_group_selection_outcome_opens_only_confirmed_exact_or_road_singletons()
         "mapApi.groupSelectionOutcome({precision:'ward',listing_count:1},"
         "{items:[{id:42}]}).kind"
     ) == "items"
+
+
+def test_admin_group_selection_outcome_preserves_normal_singleton_rules_when_off():
+    assert _run_node(
+        "mapApi.adminGroupSelectionOutcome("
+        "{precision:'exact',listing_count:1},false,{items:[{id:42}]})"
+    ) == "modal"
+    assert _run_node(
+        "mapApi.adminGroupSelectionOutcome("
+        "{precision:'road',listing_count:1},false,{items:[{id:42}]})"
+    ) == "modal"
+    assert _run_node(
+        "mapApi.adminGroupSelectionOutcome("
+        "{precision:'landmark',listing_count:1},false,{items:[{id:42}]})"
+    ) == "items"
+    assert _run_node(
+        "mapApi.adminGroupSelectionOutcome("
+        "{precision:'ward',listing_count:1},false,{items:[{id:42}]})"
+    ) == "items"
+
+
+def test_admin_group_selection_outcome_routes_singletons_to_editors_when_on():
+    assert _run_node(
+        "mapApi.adminGroupSelectionOutcome("
+        "{precision:'exact',listing_count:1},true,{items:[{id:42}]})"
+    ) == "listing-editor"
+    for precision in ("road", "landmark", "ward"):
+        assert _run_node(
+            "mapApi.adminGroupSelectionOutcome("
+            f"{{precision:'{precision}',listing_count:1}},true,"
+            "{items:[{id:42}]})"
+        ) == "group-editor"
+
+
+def test_admin_group_selection_outcome_keeps_multi_listing_groups_in_items_view():
+    for admin_edit_mode in ("false", "true"):
+        for precision in ("exact", "road", "landmark", "ward"):
+            assert _run_node(
+                "mapApi.adminGroupSelectionOutcome("
+                f"{{precision:'{precision}',listing_count:2}},"
+                f"{admin_edit_mode},{{items:[{{id:42}},{{id:43}}]}})"
+            ) == "items"
+
+
+def test_admin_edit_mode_model_is_hidden_for_non_admin_and_defaults_off():
+    assert _run_node(
+        "mapApi.adminEditModeModel('guest',false)"
+    ) == {
+        "visible": False,
+        "enabled": False,
+        "ariaPressed": "false",
+        "label": "",
+    }
+    assert _run_node(
+        "mapApi.adminEditModeModel('admin')"
+    ) == {
+        "visible": True,
+        "enabled": False,
+        "ariaPressed": "false",
+        "label": "Bật sửa vị trí",
+    }
+
+
+def test_admin_edit_mode_model_exposes_pressed_state_and_toggle_copy():
+    assert _run_node(
+        "mapApi.adminEditModeModel('admin',true)"
+    ) == {
+        "visible": True,
+        "enabled": True,
+        "ariaPressed": "true",
+        "label": "Tắt sửa vị trí",
+    }
