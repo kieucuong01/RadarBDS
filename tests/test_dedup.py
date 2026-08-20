@@ -204,6 +204,48 @@ def test_reconciled_duplicate_targets_split_stale_d3_d12_cluster():
     ) == {101: 103}
 
 
+def test_reconciled_duplicate_targets_split_road_groups_below_no_road_parent():
+    parent_without_road = _listing(
+        id=500, source="facebook", source_id="fb-parent", posted_at="2026-07-01",
+        ward="Phu Tan", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0,
+        contact_phone="0935792868",
+        description="Dat TDC Phu Tan, DT 5x30m full tho cu.",
+    )
+    d6_old = _listing(
+        id=501, source="facebook", source_id="fb-d6-old", posted_at="2026-07-05", duplicate_of_id=500,
+        ward="Phu Tan", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0,
+        contact_phone="0935792868",
+        description="Dat duong D6 TDC Phu My, DT 5x30m full tho cu.",
+    )
+    d6_new = _listing(
+        id=502, source="facebook", source_id="fb-d6-new", posted_at="2026-07-12", duplicate_of_id=500,
+        ward="Phu Tan", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0,
+        contact_phone="0935792868",
+        description="Dat duong D6 TDC Phu My, DT 5x30m full tho cu.",
+    )
+    road_44_old = _listing(
+        id=503, source="facebook", source_id="fb-44-old", posted_at="2026-07-06", duplicate_of_id=500,
+        ward="Phu Tan", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0,
+        contact_phone="0935792868",
+        description="Dat duong so 44 TDC Phu Chanh, DT 5x30m full tho cu.",
+    )
+    road_44_new = _listing(
+        id=504, source="facebook", source_id="fb-44-new", posted_at="2026-07-15", duplicate_of_id=500,
+        ward="Phu Tan", property_type="dat_nen", area_m2=150.0,
+        frontage_m=5.0, depth_m=30.0, tho_cu_m2=150.0,
+        contact_phone="0935792868",
+        description="Dat duong so 44 TDC Phu Chanh, DT 5x30m full tho cu.",
+    )
+
+    assert _reconciled_duplicate_targets(
+        [parent_without_road, d6_old, d6_new, road_44_old, road_44_new]
+    ) == {501: 502, 503: 504}
+
+
 def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
     d12 = _listing(
         source="facebook",

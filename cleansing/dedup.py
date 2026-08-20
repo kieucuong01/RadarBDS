@@ -750,6 +750,29 @@ def _reconciled_duplicate_targets(rows: Sequence[dict]) -> dict[int, int]:
     )
     canonical = rows[canonical_idx]
     canonical_id = int(canonical["id"])
+    canonical_roads = _road_tokens(_combined_text(canonical))
+    if not canonical_roads:
+        road_groups: dict[tuple[str, ...], list[int]] = {}
+        for idx, row in enumerate(rows):
+            roads = tuple(sorted(_road_tokens(_combined_text(row))))
+            if roads:
+                road_groups.setdefault(roads, []).append(idx)
+
+        if len(road_groups) >= 2:
+            for group_indices in road_groups.values():
+                group_canonical_idx = max(
+                    group_indices,
+                    key=lambda i: _listing_date_key(rows[i]),
+                )
+                group_canonical = rows[group_canonical_idx]
+                group_canonical_id = int(group_canonical["id"])
+                for idx in group_indices:
+                    if idx == group_canonical_idx:
+                        continue
+                    if _canonical_compatible_duplicate(rows[idx], group_canonical):
+                        targets[int(rows[idx]["id"])] = group_canonical_id
+            return targets
+
     for idx, row in enumerate(rows):
         if idx == canonical_idx:
             continue
