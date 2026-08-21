@@ -220,6 +220,10 @@ def build_marketing_source_view(
     cta_stats: defaultdict[tuple[str, str], dict[str, int]] = defaultdict(
         lambda: {"current": 0, "previous": 0}
     )
+    dashboard_handoffs = {
+        "filtered_cta_clicks_current": 0,
+        "filtered_cta_clicks_previous": 0,
+    }
     direct = {
         "lead_events_current": 0,
         "lead_events_previous": 0,
@@ -287,6 +291,11 @@ def build_marketing_source_view(
             name = name or "unknown"
             destination = destination or "unknown"
             cta_stats[(name, destination)][period] += 1
+            if (
+                destination == "/"
+                and str(context.get("dashboard_filter_keys") or "")
+            ):
+                dashboard_handoffs[f"filtered_cta_clicks_{period}"] += 1
             campaign = _campaign_key(context)
             if campaign is not None and period == "current":
                 campaign_stats[campaign]["cta_clicks"] += 1
@@ -404,6 +413,7 @@ def build_marketing_source_view(
         "landing_pages": landing_pages,
         "campaigns": campaigns,
         "cta_targets": cta_targets,
+        "dashboard_handoffs": dashboard_handoffs,
         "directly_attributed": direct,
         "unattributed": unattributed,
     }

@@ -2681,6 +2681,7 @@ function renderGrowthMarketing(marketing) {
   const landingPages = Array.isArray(safeMarketing.landing_pages) ? safeMarketing.landing_pages : [];
   const campaigns = Array.isArray(safeMarketing.campaigns) ? safeMarketing.campaigns : [];
   const ctaTargets = Array.isArray(safeMarketing.cta_targets) ? safeMarketing.cta_targets : [];
+  const dashboardHandoffs = safeMarketing.dashboard_handoffs && typeof safeMarketing.dashboard_handoffs === 'object' ? safeMarketing.dashboard_handoffs : {};
   const directlyAttributed = safeMarketing.directly_attributed && typeof safeMarketing.directly_attributed === 'object' ? safeMarketing.directly_attributed : {};
   const unattributed = safeMarketing.unattributed && typeof safeMarketing.unattributed === 'object' ? safeMarketing.unattributed : {};
   const channelLabels = {
@@ -2705,10 +2706,12 @@ function renderGrowthMarketing(marketing) {
   const directLeadRows = Number(directlyAttributed.lead_rows_current || 0);
   const unattributedEvents = Number(unattributed.lead_events_current || 0);
   const unattributedRows = Number(unattributed.lead_rows_current || 0);
+  const filteredDashboardCtas = Number(dashboardHandoffs.filtered_cta_clicks_current || 0);
   const coverageParts = [
     'Số liệu là lượt sự kiện, không phải số người duy nhất.',
     'Page-view có kênh: ' + growthFmt(coverage.with_stable_channel) + '/' + growthFmt(coverage.event_count) + '.',
     'Lead gán trực tiếp: ' + growthFmt(directLeadEvents) + ' event submit và ' + growthFmt(directLeadRows) + ' dòng lead.',
+    'CTA vào dashboard đã có filter: ' + growthFmt(filteredDashboardCtas) + '.',
     'Chưa gán: ' + growthFmt(unattributedEvents) + ' event và ' + growthFmt(unattributedRows) + ' dòng lead.'
   ];
   if (Number(coverage.without_stable_channel || 0) > 0) {
@@ -2736,7 +2739,7 @@ function renderGrowthMarketing(marketing) {
 
   emptyRoot.hidden = Boolean(
     Number(coverage.event_count || 0) || landingPages.length || campaigns.length ||
-    ctaTargets.length || directLeadEvents || directLeadRows || unattributedEvents || unattributedRows
+    ctaTargets.length || filteredDashboardCtas || directLeadEvents || directLeadRows || unattributedEvents || unattributedRows
   );
 }
 

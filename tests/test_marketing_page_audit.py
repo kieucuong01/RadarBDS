@@ -155,3 +155,16 @@ def test_selected_answer_first_intros_are_bounded():
     for slug in ANSWER_FIRST_REWRITE_SLUGS:
         first = SEO_ARTICLES[slug]["article"]["intro"][0]
         assert 40 <= len(first.split()) <= 60
+LEAD_FIRST_INTRO_SLUGS = (
+    "gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+    "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+    "phu-tan-hay-phu-my-loc-gia-theo-phuong",
+)
+
+
+def test_lead_first_intro_priorities_are_answer_first():
+    from config.seo_articles import SEO_ARTICLES
+
+    for slug in LEAD_FIRST_INTRO_SLUGS:
+        first_intro = SEO_ARTICLES[slug]["article"]["intro"][0]
+        assert 40 <= len(first_intro.split()) <= 60

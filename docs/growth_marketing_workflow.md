@@ -116,7 +116,7 @@ Track only what drives decisions:
 | Which SEO pages bring qualified traffic? | GA4 + `seo_landing_viewed`, `report_viewed` |
 | Which social posts create visits? | UTM + `social_utm_visit` |
 | Which AI tools send visits? | `ai_referral_visit` |
-| Which public pages push users to dashboard? | `cta_clicked` with target path |
+| Which public pages push users to a filtered dashboard? | `cta_clicked` with target path plus PII-free `dashboard_tab` and `dashboard_filter_keys` |
 | Which filtered dashboard sessions contact a deal? | `lead_vip_click`, `vip_cta_click`, lead rows |
 
 Do not treat `watchlist_create` or `telegram_linked` as primary marketing
@@ -134,6 +134,8 @@ is independent of the Facebook/Guland listing-source toggle and contains:
 - `channels`: current/previous view counts in fixed channel order;
 - `landing_pages`, `campaigns`, and `cta_targets`: compact, deterministic top
   tables, capped at 20 display rows by default;
+- `dashboard_handoffs`: current/previous count of CTA clicks that opened the
+  root dashboard with at least one approved response-changing filter name;
 - `directly_attributed`: lead submit event counts and lead-table row counts kept
   as separate measurements, plus statuses from directly attributed rows only;
 - `unattributed`: explicit current/previous counts for evidence that cannot be
@@ -145,6 +147,17 @@ These are **event counts**, not unique visitors or people. The same person may
 produce several page views, CTA clicks, a `lead_capture_submit` event, and one
 `lead_captures` row. Never add those values together and label the sum as leads
 or users.
+
+`dashboard_handoffs.filtered_cta_clicks_*` is a CTA-intent metric, not proof
+that the destination loaded or that a person contacted a listing. It retains
+only the dashboard tab and approved filter *names* (for example `ward` or
+`mos_min`), never their values, free-text search, phone, email, or raw URL
+query. Older events do not gain this field retrospectively.
+
+Use `docs/seo_geo_lead_baseline.md` for the fixed 20-query watchlist and the
+two-week GSC/GA4/admin baseline procedure. Keep Search Console clicks, CTA
+events, and lead rows as separate measurements; do not infer a person-level
+funnel by joining anonymous records.
 
 Canonical page views use exactly one channel with this precedence:
 

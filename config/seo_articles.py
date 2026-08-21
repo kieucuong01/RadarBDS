@@ -4609,16 +4609,13 @@ SEO_ARTICLES = {
                                                                       'trạng.'}],
                                                         'article': {'published_at': '2026-07-22',
                                                                     'modified_at': '2026-07-22',
-                                                                    'intro': ['Trong dữ liệu tin Facebook đang theo '
-                                                                              'dõi của Radar BDS cập nhật đến '
-                                                                              '20/07/2026, đất nền Định Hòa có mức giá '
-                                                                              'ở giữa 15,2 tr/m², còn nhà đất có mức '
-                                                                              'giá ở giữa 32,7 tr/m². Đây là giá người '
-                                                                              'bán đang đăng, đã được Radar lọc bớt '
-                                                                              'tin rác/trùng, chưa chắc là giá chốt '
-                                                                              'mua bán; người mua cần kiểm tra pháp '
-                                                                              'lý, quy hoạch và hiện trạng trước khi '
-                                                                              'quyết định.',
+                                                                    'intro': ['Định Hòa nên được đọc riêng theo loại '
+                                                                              'hình: dữ liệu Facebook Radar BDS cập nhật '
+                                                                              '20/07/2026 ghi nhận đất nền trung vị 15,2 '
+                                                                              'tr/m², còn nhà đất 32,7 tr/m². Đây là giá '
+                                                                              'rao đã lọc bớt tin trùng/rác, không phải '
+                                                                              'giá chốt; trước khi quyết định vẫn cần '
+                                                                              'kiểm tra pháp lý, quy hoạch và hiện trạng.',
                                                                               'Định Hòa là phường có số tin đang theo '
                                                                               'dõi lớn ở Thủ Dầu Một. Điểm quan trọng '
                                                                               'là không nên dùng một mức giá phổ biến '
@@ -8765,7 +8762,7 @@ SEO_ARTICLES = {
             "published_at": "2026-07-29",
             "modified_at": "2026-07-29",
             "intro": [
-                "Nếu anh đang phân vân Phú Tân hay Phú Mỹ, câu trả lời ngắn là: với đất nền hai phường đang cùng giá trung vị 22,0 tr/m², nhưng Phú Tân có tổng giá trung vị thấp hơn và nhiều tín hiệu hơn; với nhà đất, Phú Mỹ có nguồn hàng nhiều hơn nhưng Phú Tân lại có nhiều tin cần kiểm tra hơn.",
+                "Nếu so đất nền, Phú Tân và Phú Mỹ cùng có giá trung vị 22,0 tr/m², nhưng Phú Tân có tổng giá trung vị thấp hơn và nhiều tín hiệu hơn. Nếu tìm nhà đất, Phú Mỹ có nguồn hàng dày hơn. Dữ liệu là giá rao Facebook Radar BDS trong 14 ngày, không phải giá chốt giao dịch.",
                 "Bài này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook, lọc các tin đang theo dõi trong 14 ngày gần nhất và cập nhật đến 29/07/2026. Đây là giá rao theo từng loại hình BĐS để lọc ban đầu, không phải giá chốt hay khuyến nghị mua."
             ],
             "summary_cards": [
@@ -15214,7 +15211,7 @@ _RB_ANSWER_FIRST_INTROS = {
     "duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc": "Với trần 3 tỷ, nên mở Định Hòa trước để có nhiều lựa chọn hơn, rồi xem Phú Tân khi muốn soi nhóm đất nền đáng chú ý. Dữ liệu trong bài là giá rao Facebook Radar BDS theo dõi ngày 08/08/2026, không phải giá chốt giao dịch.",
     "phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc": "Nếu ưu tiên đất nền, nên mở Phú Lợi trước; nếu tìm nhà đất dưới 4 tỷ, nên mở Hiệp Thành trước. Dữ liệu Radar BDS ngày 09/08/2026 cho thấy khác biệt chính giữa hai phường nằm ở cơ cấu loại hình và số tin còn trong vùng ngân sách phổ biến.",
     "duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc": "Nếu giữ trần dưới 3 tỷ, nên mở Tương Bình Hiệp trước để có nhiều lựa chọn hơn; sau đó mở Phú Tân khi anh muốn soi thêm lớp đất nền có nhiều dấu hiệu đáng kiểm tra. Dữ liệu dùng trong bài là giá rao Facebook Radar BDS theo dõi ngày 15/08/2026, không phải giá chốt giao dịch.",
-    "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc": "Nếu anh cần nhiều đất nền dưới 3 tỷ và muốn nguồn hàng rộng để lọc nhanh, nên mở Phú Mỹ trước. Nếu đang soi nhà đất quanh 3-3,5 tỷ và muốn mặt bằng tổng giá mềm hơn một chút, hãy mở thêm Hiệp Thành song song. Dữ liệu dùng trong bài là giá rao Facebook Radar BDS theo dõi ngày 17/08/2026, không phải giá chốt giao dịch.",
+    "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc": "Nếu cần nhiều đất nền dưới 3 tỷ để lọc nhanh, hãy mở Phú Mỹ trước; nếu đang soi nhà đất quanh 3-3,5 tỷ với tổng giá mềm hơn, xem Hiệp Thành song song. Số liệu là giá rao Facebook Radar BDS theo dõi ngày 17/08/2026, không phải giá chốt giao dịch.",
 
 }
 for _rb_slug, _rb_intro in _RB_ANSWER_FIRST_INTROS.items():

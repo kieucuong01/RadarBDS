@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import re
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qsl, unquote, urlsplit
 
 
 MARKETING_TRACK_ACTIONS = frozenset(
@@ -31,6 +31,23 @@ _TOKEN_PATTERN = re.compile(r"[a-z0-9][a-z0-9._+-]*(?: [a-z0-9._+-]+)*")
 _SLUG_PATTERN = re.compile(r"[a-z0-9][a-z0-9/_-]*")
 _HOST_PATTERN = re.compile(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?")
 _PHONE_LIKE_PATTERN = re.compile(r"(?:\+?84|0)\d{8,10}")
+_DASHBOARD_TABS = frozenset({"signals", "all", "market", "insights"})
+_DASHBOARD_FILTER_KEYS = frozenset(
+    {
+        "ward",
+        "city",
+        "source",
+        "prop_type",
+        "price_range",
+        "area_range",
+        "price_min",
+        "price_max",
+        "area_min",
+        "area_max",
+        "date_range",
+        "mos_min",
+    }
+)
 
 
 def _has_control_characters(value: str) -> bool:
@@ -128,6 +145,38 @@ def _safe_destination(value: object) -> str | None:
     return _external_destination_class(parsed.hostname)
 
 
+def _dashboard_handoff_metadata(value: object) -> dict[str, str]:
+    """Retain only dashboard tab and filter names, never filter values."""
+    if _safe_internal_path(value) != "/" or not isinstance(value, str):
+        return {}
+    try:
+        pairs = parse_qsl(urlsplit(value.strip()).query, keep_blank_values=False)
+    except ValueError:
+        return {}
+
+    tabs = {
+        raw_value.strip().lower()
+        for raw_key, raw_value in pairs
+        if raw_key.strip().lower() == "tab" and raw_value.strip()
+    }
+    safe: dict[str, str] = {}
+    if len(tabs) == 1:
+        tab = next(iter(tabs))
+        if tab in _DASHBOARD_TABS:
+            safe["dashboard_tab"] = tab
+
+    filter_keys = sorted(
+        {
+            raw_key.strip().lower()
+            for raw_key, _raw_value in pairs
+            if raw_key.strip().lower() in _DASHBOARD_FILTER_KEYS
+        }
+    )
+    if filter_keys:
+        safe["dashboard_filter_keys"] = ",".join(filter_keys)
+    return safe
+
+
 def _ai_source_for_host(value: object) -> tuple[str, str] | None:
     if not isinstance(value, str) or _has_control_characters(value):
         return None
@@ -202,11 +251,11 @@ def sanitize_marketing_context(
             value = _bounded_token(context.get(field))
             if value is not None:
                 safe[field] = value
-        destination = _safe_destination(
-            context.get("destination", context.get("target"))
-        )
+        destination_value = context.get("destination", context.get("target"))
+        destination = _safe_destination(destination_value)
         if destination is not None:
             safe["destination"] = destination
+        safe.update(_dashboard_handoff_metadata(destination_value))
 
     if action == "lead_capture_submit":
         source_context = _bounded_token(context.get("source_context"))

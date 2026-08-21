@@ -257,6 +257,43 @@ def test_marketing_aggregation_attributes_landing_campaign_and_cta_without_joini
     ]
 
 
+def test_marketing_aggregation_counts_filtered_dashboard_ctas_without_values():
+    conn = _FixtureConnection(
+        [
+            _audit(
+                "cta_clicked",
+                {
+                    "cta_name": "article_dashboard",
+                    "destination": (
+                        "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9"
+                        "&mos_min=15&q=private%40example.test"
+                    ),
+                },
+                START + timedelta(hours=1),
+            ),
+            _audit(
+                "cta_clicked",
+                {"cta_name": "unfiltered_dashboard", "destination": "/?tab=signals"},
+                PREVIOUS + timedelta(hours=1),
+            ),
+        ]
+    )
+
+    view = build_marketing_source_view(
+        conn,
+        start=START,
+        end=END,
+        previous=PREVIOUS,
+    )
+
+    assert view["dashboard_handoffs"] == {
+        "filtered_cta_clicks_current": 1,
+        "filtered_cta_clicks_previous": 0,
+    }
+    assert "phú mỹ" not in json.dumps(view, ensure_ascii=False).lower()
+    assert "private@example.test" not in json.dumps(view, ensure_ascii=False)
+
+
 def test_marketing_aggregation_never_serializes_seeded_pii_or_raw_urls():
     view = build_marketing_source_view(
         _fixture_connection(),

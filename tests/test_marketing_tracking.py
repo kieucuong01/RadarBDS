@@ -68,6 +68,41 @@ def test_cta_destination_is_internal_path_or_stable_external_class():
     assert other["destination"] == "external:other"
 
 
+def test_cta_dashboard_handoff_keeps_only_safe_filter_metadata():
+    safe = sanitize_marketing_context(
+        "cta_clicked",
+        {
+            "destination": (
+                "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=dat_nen"
+                "&mos_min=15&utm_source=seo"
+            ),
+        },
+    )
+
+    assert safe == {
+        "destination": "/",
+        "dashboard_tab": "signals",
+        "dashboard_filter_keys": "mos_min,prop_type,ward",
+    }
+
+
+def test_cta_dashboard_handoff_drops_values_and_invalid_tab_metadata():
+    safe = sanitize_marketing_context(
+        "cta_clicked",
+        {
+            "destination": "/?tab=admin&ward=0900000000&q=private%40example.test",
+        },
+    )
+
+    assert safe == {
+        "destination": "/",
+        "dashboard_filter_keys": "ward",
+    }
+    serialized = str(safe)
+    assert "0900000000" not in serialized
+    assert "private@example.test" not in serialized
+
+
 def test_marketing_context_rejects_unknown_actions_and_malformed_input():
     assert sanitize_marketing_context("not_a_marketing_action", {"path": "/"}) == {}
     assert sanitize_marketing_context("seo_landing_viewed", None) == {}
