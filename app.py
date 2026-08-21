@@ -5647,11 +5647,19 @@ def get_price_history(listing_id):
                        ) AS same_day_rank
                 FROM price_history ph
                 LEFT JOIN listings l ON l.id = ph.listing_id
+                LEFT JOIN LATERAL (
+                    SELECT source_quality_flags
+                    FROM valuation_results
+                    WHERE listing_id = l.id
+                    ORDER BY computed_at DESC, id DESC
+                    LIMIT 1
+                ) latest_valuation ON TRUE
                 WHERE ph.listing_id IN ({placeholders})
                   AND l.price_ty IS NOT NULL
                   AND l.price_ty > 0
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
+                  AND COALESCE(latest_valuation.source_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
             )
             SELECT listing_id, recorded_at, price_ty, price_per_m2,
                    history_date, url, source

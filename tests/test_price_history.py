@@ -1210,6 +1210,49 @@ class PriceHistoryTest(unittest.TestCase):
             "is_current": True,
         }])
 
+    def test_history_api_excludes_multi_lot_valuation_snapshots(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, posted_at, updated_at, probably_sold
+                ) VALUES (
+                    'guland', ?, ?, 'Two offered lots', 'Phu Tan', 150, 'dat_nen',
+                    6.75, 45, '2026-01-06', '2026-08-03T22:49:06', 0
+                )
+                """,
+                (f"{self.source_id}-multi-lot", f"{self.url_prefix}/multi-lot"),
+            )
+            listing_id = self._track(cur.lastrowid)
+            conn.execute(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, 13.5, 45, '2026-05-06 22:58:21')
+                """,
+                (listing_id,),
+            )
+            conn.execute(
+                """
+                INSERT INTO valuation_results (listing_id, source_quality_flags, computed_at)
+                VALUES (?, 'multi_lot_listing', '2026-08-21T10:00:00')
+                """,
+                (listing_id,),
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{listing_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["date"], "2026-01-06")
+        self.assertEqual(history[0]["price_ty"], 6.75)
+        self.assertTrue(history[0]["is_current"])
+        self.assertIn("recorded_at", history[0])
+
 
 if __name__ == "__main__":
     unittest.main()
