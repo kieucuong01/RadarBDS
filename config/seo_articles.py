@@ -15181,6 +15181,287 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "phu-loi-hay-phu-my-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc",
+        "title": "Phú Lợi hay Phú Mỹ: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 21/08/2026: nếu anh cần nhiều lựa chọn dưới 3-4 tỷ và muốn mặt bằng giá rao mềm hơn, nên mở Phú Mỹ trước. Phú Lợi đáng mở thêm khi anh muốn so nhóm mặt bằng cao hơn hoặc tìm vài tin giảm giá để kiểm tra kỹ.",
+        "keywords": "Phú Lợi hay Phú Mỹ, giá đất Phú Lợi, giá đất Phú Mỹ, đất nền Phú Lợi, đất nền Phú Mỹ, nhà đất Phú Lợi, nhà đất Phú Mỹ, Radar BDS",
+        "breadcrumb_label": "Phú Lợi hay Phú Mỹ",
+        "hero_badge": "So sánh theo nhu cầu mua",
+        "hero_title": "Phú Lợi hay Phú Mỹ: nên xem khu nào trước?",
+        "hero_text": "Nếu anh cần nhiều lựa chọn dưới 3-4 tỷ và muốn mặt bằng giá rao mềm hơn, nên mở Phú Mỹ trước. Nếu anh muốn so thêm nhóm giá cao hơn ở cả đất nền lẫn nhà đất, hoặc muốn nhặt vài tin giảm giá để xem kỹ, hãy mở thêm Phú Lợi sau. Muốn đọc đúng, luôn phải tách đất nền với nhà đất.",
+        "scope_label": "Thủ Dầu Một · Phú Lợi / Phú Mỹ",
+        "hero_checks": [
+            "Snapshot live ngày 21/08/2026, max crawled_at 21/08/2026 11:05",
+            "Đất nền dưới 3 tỷ: Phú Mỹ 285 tin, cao hơn Phú Lợi 106 tin",
+            "Nhà đất dưới 4 tỷ: Phú Mỹ 600 tin, cao hơn Phú Lợi 177 tin",
+            "Phú Mỹ có 252 dấu hiệu đáng kiểm tra và 1.530 tin đang theo dõi; Phú Lợi có 102 dấu hiệu và 772 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Lợi và Phú Mỹ",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_phu_my",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_phu_my",
+        "map_label": "Tin tức / Phú Lợi · Phú Mỹ",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "2.302 tin",
+            "delta": "Phú Mỹ 1.530 · Phú Lợi 772",
+            "note": "Nguồn Facebook live ngày 21/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Phú Mỹ hợp để mở trước nếu anh cần nhiều lựa chọn và mặt bằng giá mềm hơn; Phú Lợi đáng mở thêm khi chấp nhận mặt bằng cao hơn để so kỹ từng tin",
+            "price": "Đất nền: 22,7 vs 27,7 tr/m² · Nhà đất: 38,7 vs 39,1 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "489 vs 168 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "252 vs 102 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Mỹ và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Phú Lợi",
+                "href": "/binh-duong/phuong-phu-loi",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Lợi và lọc tiếp theo loại hình."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Giá đất Phú Mỹ hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Phú Mỹ nếu anh muốn soi kỹ phường đang dày hàng hơn."
+            },
+            {
+                "label": "Giá đất Phú Lợi hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Phú Lợi để so lại mặt bằng cao hơn theo đúng loại hình."
+            },
+            {
+                "label": "Phú Mỹ hay Hiệp Thành: nên xem khu nào trước?",
+                "href": "/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một bài có Phú Mỹ để so cách đọc khi đổi phường đối chiếu."
+            },
+            {
+                "label": "Phú Lợi hay Hiệp Thành: nên lọc đất nền hay nhà đất trước?",
+                "href": "/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc",
+                "description": "Đọc thêm một bài có Phú Lợi để thấy vai trò của loại hình khi so phường."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ưu tiên đất nền dưới 3 tỷ thì nên mở phường nào trước?",
+                "a": "Nên mở Phú Mỹ trước. Snapshot live ngày 21/08/2026 cho thấy Phú Mỹ có 285 tin đất nền dưới 3 tỷ, trong khi Phú Lợi có 106 tin. Giá rao trung vị đất nền ở Phú Mỹ cũng mềm hơn: 22,7 tr/m² so với 27,7 tr/m²."
+            },
+            {
+                "q": "Nếu tìm nhà đất quanh 3,5-4 tỷ thì Phú Lợi hay Phú Mỹ dễ xem hơn?",
+                "a": "Phú Mỹ dễ mở trước hơn vì vừa nhiều tin hơn vừa mềm tổng giá hơn. Nhà đất Phú Mỹ có 600 tin dưới 4 tỷ và tổng giá trung vị 3,5 tỷ, trong khi Phú Lợi có 177 tin dưới 4 tỷ và tổng giá trung vị 3,95 tỷ."
+            },
+            {
+                "q": "Vì sao vẫn phải tách đất nền với nhà đất khi so Phú Lợi và Phú Mỹ?",
+                "a": "Vì cùng một phường nhưng hai loại hình cho ra bài toán rất khác. Ở Phú Mỹ, đất nền có giá rao trung vị 22,7 tr/m² còn nhà đất là 38,7 tr/m². Ở Phú Lợi là 27,7 và 39,1 tr/m². Nếu gộp chung, anh rất dễ kết luận sai phường nào hợp túi tiền hơn."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-21",
+            "modified_at": "2026-08-21",
+            "intro": [
+                "Nếu anh đang phân vân giữa Phú Lợi và Phú Mỹ, nên mở Phú Mỹ trước khi mục tiêu là nhiều lựa chọn dưới 3-4 tỷ và mặt bằng giá rao mềm hơn. Phú Lợi hợp để mở thêm sau đó nếu anh muốn so nhóm giá cao hơn hoặc nhặt vài tin giảm giá để kiểm tra kỹ. Đây là giá rao Facebook Radar BDS theo dõi ngày 21/08/2026, không phải giá giao dịch.",
+                "Bài này dùng snapshot live từ tin Facebook đang theo dõi trên Radar BDS ngày 21/08/2026, chỉ lấy tin active, không bị blacklist và không bị ẩn kiểm duyệt. Mốc dữ liệu mới nhất có max crawled_at 21/08/2026 11:05 nên các con số phù hợp để lọc ban đầu, không thay cho thẩm định pháp lý hoặc kiểm tra thực địa."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "2.302 tin",
+                    "note": "Phú Mỹ 1.530 · Phú Lợi 772"
+                },
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "285 vs 106 tin",
+                    "note": "Phú Mỹ vs Phú Lợi"
+                },
+                {
+                    "label": "Nhà đất dưới 4 tỷ",
+                    "value": "600 vs 177 tin",
+                    "note": "Phú Mỹ vs Phú Lợi"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "252 vs 102 tin",
+                    "note": "Phú Mỹ vs Phú Lợi"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Mỹ và Phú Lợi đang khác nhau thế nào nếu anh mở dashboard hôm nay?",
+                    "note": "Nguồn Facebook live ngày 21/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Mỹ · đất nền", "tracked": "680", "under3": "285", "under4": "427", "median_m2": "22,7 tr/m²", "median_total": "2,95 tỷ", "mid_range": "20,4-28,1 tr/m²"},
+                        {"ward_type": "Phú Mỹ · nhà đất", "tracked": "839", "under3": "204", "under4": "600", "median_m2": "38,7 tr/m²", "median_total": "3,5 tỷ", "mid_range": "28,7-43,0 tr/m²"},
+                        {"ward_type": "Phú Lợi · đất nền", "tracked": "344", "under3": "106", "under4": "211", "median_m2": "27,7 tr/m²", "median_total": "3,3 tỷ", "mid_range": "22,1-34,6 tr/m²"},
+                        {"ward_type": "Phú Lợi · nhà đất", "tracked": "399", "under3": "62", "under4": "177", "median_m2": "39,1 tr/m²", "median_total": "3,95 tỷ", "mid_range": "28,3-54,3 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước tùy đúng mục tiêu mua?",
+                    "note": "Khóa loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều đất nền dưới 3 tỷ", "open_first": "Phú Mỹ", "why": "285 tin dưới 3 tỷ, gần gấp 3 Phú Lợi và giá trung vị đất nền chỉ 22,7 tr/m²."},
+                        {"need": "Muốn nhà đất dưới 4 tỷ để lọc nhiều vòng", "open_first": "Phú Mỹ", "why": "600 tin dưới 4 tỷ và tổng giá trung vị khoảng 3,5 tỷ, thấp hơn 3,95 tỷ ở Phú Lợi."},
+                        {"need": "Muốn so thêm nhóm đất nền mặt bằng cao hơn", "open_first": "Phú Lợi", "why": "Đất nền Phú Lợi có giá trung vị 27,7 tr/m² và vùng 25-75% trải rộng hơn, hợp để mở thêm sau khi đã xem lớp giá mềm ở Phú Mỹ."},
+                        {"need": "Muốn ưu tiên nhóm tin có dấu hiệu đáng kiểm tra", "open_first": "Phú Mỹ", "why": "Phú Mỹ hiện có 252 dấu hiệu đáng kiểm tra, cao hơn 102 ở Phú Lợi."}
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới",
+                    "title": "Một vài mức giá gần nhất để hình dung nhịp rao ở hai phường",
+                    "note": "Chỉ dùng như ví dụ về mặt bằng giá rao gần đây, không phải khuyến nghị mua ngay.",
+                    "columns": [
+                        {"key": "sample", "label": "Ví dụ"},
+                        {"key": "price", "label": "Giá rao"},
+                        {"key": "note", "label": "Gợi ý đọc nhanh"}
+                    ],
+                    "rows": [
+                        {"sample": "Phú Mỹ · đất nền gần nhất", "price": "2,29 tỷ · 19,5 tr/m²", "note": "Một mẫu đất nền còn trong khung dưới 3 tỷ, hợp để mở trước nếu anh ưu tiên danh sách rộng."},
+                        {"sample": "Phú Mỹ · nhà đất gần nhất", "price": "3,4 tỷ · 41,2 tr/m²", "note": "Nhà đất Phú Mỹ vẫn có nhiều mẫu dưới 4 tỷ hơn, nên dễ tạo shortlist nhanh hơn."},
+                        {"sample": "Phú Lợi · đất nền giảm giá", "price": "2,0 tỷ · 21,7 tr/m²", "note": "Có tin giảm giá đáng xem, nhưng mặt bằng chung đất nền Phú Lợi vẫn cao hơn Phú Mỹ."},
+                        {"sample": "Phú Lợi · nhà đất gần nhất", "price": "3,3 tỷ · 54,0 tr/m²", "note": "Nhà đất Phú Lợi có thể bật lên cao ở từng tin, nên cần nhìn cả tổng giá trung vị của cả nhóm."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Mỹ đang dày đất nền dưới 3 tỷ hơn rõ",
+                    "note": "Nếu mục tiêu của anh là chốt danh sách đất nền trước, Phú Mỹ đang cho nhiều lựa chọn hơn hẳn.",
+                    "alt": "Biểu đồ so số tin đất nền dưới 3 tỷ giữa Phú Mỹ và Phú Lợi",
+                    "rows": [
+                        {"label": "Phú Mỹ", "value_label": "285 tin đất nền dưới 3 tỷ", "width": 100, "color": "#16a34a"},
+                        {"label": "Phú Lợi", "value_label": "106 tin đất nền dưới 3 tỷ", "width": 37, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất dưới 4 tỷ cũng nghiêng mạnh về Phú Mỹ",
+                    "note": "Phú Lợi có thể hữu ích khi muốn so nhóm giá cao hơn, nhưng nếu khóa dưới 4 tỷ thì Phú Mỹ dễ lọc hơn rõ rệt.",
+                    "alt": "Biểu đồ so nhà đất dưới 4 tỷ giữa Phú Mỹ và Phú Lợi",
+                    "rows": [
+                        {"label": "Phú Mỹ", "value_label": "600 tin nhà đất dưới 4 tỷ", "width": 100, "color": "#2563eb"},
+                        {"label": "Phú Lợi", "value_label": "177 tin nhà đất dưới 4 tỷ", "width": 30, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-phu-my-neu-can-nhieu-lua-chon",
+                    "heading": "1. Nếu ưu tiên nhiều lựa chọn và giá mềm hơn, nên mở Phú Mỹ trước",
+                    "paragraphs": [
+                        "Phú Mỹ đang cho danh sách dễ lọc hơn rõ ở cả đất nền lẫn nhà đất khi anh bám khung dưới 3-4 tỷ. Snapshot live hiện tại ghi nhận 285 tin đất nền dưới 3 tỷ tại Phú Mỹ, trong khi Phú Lợi có 106 tin. Ở nhóm nhà đất, Phú Mỹ cũng có 600 tin dưới 4 tỷ, cao hơn rất nhiều so với 177 tin của Phú Lợi.",
+                        "Điểm quan trọng là Phú Mỹ không chỉ nhiều tin hơn mà còn mềm hơn về mặt bằng đất nền. Giá rao trung vị đất nền ở Phú Mỹ là 22,7 tr/m² và tổng giá trung vị 2,95 tỷ; trong khi Phú Lợi là 27,7 tr/m² và 3,3 tỷ. Với nhà đất, chênh lệch giá/m² không lớn, nhưng tổng giá trung vị vẫn nghiêng về Phú Mỹ ở mức 3,5 tỷ so với 3,95 tỷ."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Mỹ: 680 tin theo dõi · 285 tin dưới 3 tỷ · giá trung vị 22,7 tr/m²",
+                        "Nhà đất Phú Mỹ: 839 tin theo dõi · 600 tin dưới 4 tỷ · tổng giá trung vị 3,5 tỷ",
+                        "Phú Mỹ đang mềm hơn Phú Lợi ở mặt bằng đất nền và cũng rộng hàng hơn ở cả hai loại hình chính",
+                        "Nếu anh muốn chốt shortlist nhanh trong khung phổ biến, Phú Mỹ hợp để mở trước"
+                    ]
+                },
+                {
+                    "id": "phu-loi-hop-khi-so-nhom-gia-cao-hon",
+                    "heading": "2. Phú Lợi đáng mở thêm khi anh muốn so nhóm mặt bằng cao hơn hoặc soi tin giảm giá",
+                    "paragraphs": [
+                        "Phú Lợi không phải lựa chọn mở đầu nếu anh đang siết ngân sách, nhưng lại hữu ích khi anh muốn so thêm một phường có mặt bằng cao hơn sau vòng lọc đầu. Đất nền Phú Lợi hiện có giá rao trung vị 27,7 tr/m², cao hơn Phú Mỹ 5 tr/m². Nhóm nhà đất cũng có tổng giá trung vị khoảng 3,95 tỷ, cao hơn mức 3,5 tỷ ở Phú Mỹ.",
+                        "Điểm đáng để mở thêm là Phú Lợi vẫn có vài tin giảm giá hoặc tin còn trong khung 2-3 tỷ, như mẫu đất nền 2,0 tỷ ở mức 21,7 tr/m². Nghĩa là Phú Lợi phù hợp để kiểm tra lớp ngoại lệ sau khi anh đã lọc hết nguồn hàng rộng hơn ở Phú Mỹ, thay vì mở trước ngay từ đầu."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Lợi: 344 tin theo dõi · 106 tin dưới 3 tỷ · giá trung vị 27,7 tr/m²",
+                        "Nhà đất Phú Lợi: 399 tin theo dõi · 177 tin dưới 4 tỷ · tổng giá trung vị 3,95 tỷ",
+                        "Phú Lợi hợp để so thêm nhóm mặt bằng cao hơn hoặc vài mẫu giảm giá cần đọc kỹ",
+                        "Luôn xem tổng giá cùng với giá/m² để tránh nhìn sai độ vừa túi tiền"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-do-rong-nguon-hang",
+                    "heading": "3. Phú Mỹ đang rộng nguồn hàng và cũng dày dấu hiệu hơn",
+                    "paragraphs": [
+                        "Nếu anh dùng Radar như bộ lọc ưu tiên, Phú Mỹ hiện có 252 dấu hiệu đáng kiểm tra, cao hơn 102 ở Phú Lợi. Kết hợp với tổng nguồn hàng 1.530 tin so với 772, Phú Mỹ hợp hơn cho vòng mở đầu khi anh còn muốn chạy nhiều lát cắt theo ngân sách, loại hình hoặc mức độ tín hiệu.",
+                        "Phú Lợi không vì thế mà nên bỏ qua. Vai trò hợp lý hơn là phường để mở song song sau khi anh đã khóa nhánh tài sản và muốn so thêm nhóm mặt bằng cao hơn. Làm theo thứ tự này thường đỡ tốn thời gian hơn so với mở ngẫu nhiên cả hai phường rồi gọi dàn trải."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu đáng kiểm tra: Phú Mỹ 252 · Phú Lợi 102",
+                        "Tổng tin đang theo dõi: Phú Mỹ 1.530 · Phú Lợi 772",
+                        "Dấu hiệu là lớp ưu tiên kiểm tra, không phải nhãn quyết định mua",
+                        "Nguồn hàng rộng hơn giúp ích khi anh chưa khóa chặt nhu cầu ngay từ đầu"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này đỡ tốn thời gian",
+                    "paragraphs": [
+                        "Cách nhanh nhất là chọn loại hình trước. Nếu đang tìm đất nền dưới 3 tỷ hoặc nhà đất dưới 4 tỷ, mở Phú Mỹ trước rồi giới hạn tổng giá. Nếu sau đó muốn xem thêm nhóm giá cao hơn hoặc tìm vài tin giảm giá để soi kỹ, mở tiếp Phú Lợi để so từng tin một.",
+                        "Khi đã có 3-5 tin phù hợp, anh nên dùng công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Và dù dữ liệu có đẹp đến đâu, vẫn cần kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: khóa loại hình trước khi so phường",
+                        "Bước 2: lọc tổng giá theo khung tiền thật của anh",
+                        "Bước 3: nhìn thêm dấu hiệu đáng kiểm tra để ưu tiên mở tin",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Phú Mỹ và Phú Lợi theo đúng loại hình",
+            "body": "Bắt đầu bằng Phú Mỹ nếu anh muốn nhiều lựa chọn hơn trong khung dưới 3-4 tỷ. Sau đó mở thêm Phú Lợi khi cần so nhóm mặt bằng cao hơn hoặc xem vài tin giảm giá có đáng kiểm tra sâu không.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_phu_my"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Lợi hay Phú Mỹ", "href": "/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc"}
+        ]
+    }
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
