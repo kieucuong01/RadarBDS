@@ -28,6 +28,10 @@ _STANDALONE_NUMBERED_ROAD_PAT = re.compile(
     r"\b(\d{2,4}\s*[a-d])(?=$|[^\w]|_)",
     re.IGNORECASE,
 )
+_TDC_PHU_CHANH_SUBDIVISION_PAT = re.compile(
+    r"\b(?:tdc|tai\s*dinh\s*cu)\s+phu\s+chanh\s*([a-d])\b",
+    re.IGNORECASE,
+)
 _BLOCK_TOKEN_PAT = re.compile(
     r"\b(?:k|l|g|h|ne)\s*0*(\d{1,3})\b",
     re.IGNORECASE,
@@ -116,6 +120,16 @@ def _road_tokens(text: Optional[str]) -> set[str]:
         if token:
             tokens.add(token)
     return tokens
+
+
+def _tdc_phu_chanh_subdivision_tokens(text: Optional[str]) -> set[str]:
+    if not text:
+        return set()
+    text = _ascii_fold(text)
+    return {
+        f"tdcphuchanh{match.group(1).lower()}"
+        for match in _TDC_PHU_CHANH_SUBDIVISION_PAT.finditer(text)
+    }
 
 
 def _road_token_conflict(text1: Optional[str], text2: Optional[str]) -> bool:
@@ -275,6 +289,10 @@ def _lot_attribute_conflict(l1: dict, l2: dict) -> bool:
 
     roads1 = _road_tokens(text1)
     roads2 = _road_tokens(text2)
+    subdivisions1 = _tdc_phu_chanh_subdivision_tokens(text1)
+    subdivisions2 = _tdc_phu_chanh_subdivision_tokens(text2)
+    if subdivisions1 and subdivisions2 and not subdivisions1.intersection(subdivisions2):
+        return True
     named1 = _named_location_tokens(text1)
     named2 = _named_location_tokens(text2)
     if named1 and named2 and not named1.intersection(named2) and not roads1.intersection(roads2):
@@ -750,28 +768,31 @@ def _reconciled_duplicate_targets(rows: Sequence[dict]) -> dict[int, int]:
     )
     canonical = rows[canonical_idx]
     canonical_id = int(canonical["id"])
-    canonical_roads = _road_tokens(_combined_text(canonical))
-    if not canonical_roads:
-        road_groups: dict[tuple[str, ...], list[int]] = {}
-        for idx, row in enumerate(rows):
-            roads = tuple(sorted(_road_tokens(_combined_text(row))))
-            if roads:
-                road_groups.setdefault(roads, []).append(idx)
+    location_groups: dict[tuple[tuple[str, ...], tuple[str, ...]], list[int]] = {}
+    for idx, row in enumerate(rows):
+        text = _combined_text(row)
+        location_key = (
+            tuple(sorted(_road_tokens(text))),
+            tuple(sorted(_tdc_phu_chanh_subdivision_tokens(text))),
+        )
+        if any(location_key):
+            location_groups.setdefault(location_key, []).append(idx)
 
-        if len(road_groups) >= 2:
-            for group_indices in road_groups.values():
-                group_canonical_idx = max(
-                    group_indices,
-                    key=lambda i: _listing_date_key(rows[i]),
-                )
-                group_canonical = rows[group_canonical_idx]
-                group_canonical_id = int(group_canonical["id"])
-                for idx in group_indices:
-                    if idx == group_canonical_idx:
-                        continue
-                    if _canonical_compatible_duplicate(rows[idx], group_canonical):
-                        targets[int(rows[idx]["id"])] = group_canonical_id
-            return targets
+    if len(location_groups) >= 2:
+        for group_indices in location_groups.values():
+            group_canonical_idx = (
+                canonical_idx
+                if canonical_idx in group_indices
+                else max(group_indices, key=lambda i: _listing_date_key(rows[i]))
+            )
+            group_canonical = rows[group_canonical_idx]
+            group_canonical_id = int(group_canonical["id"])
+            for idx in group_indices:
+                if idx == group_canonical_idx:
+                    continue
+                if _canonical_compatible_duplicate(rows[idx], group_canonical):
+                    targets[int(rows[idx]["id"])] = group_canonical_id
+        return targets
 
     for idx, row in enumerate(rows):
         if idx == canonical_idx:
@@ -1138,6 +1159,7 @@ def reconcile_existing_facebook_duplicate_clusters(
     *,
     apply: bool = False,
     max_clusters: int | None = None,
+    cluster_ids: Iterable[int] | None = None,
 ) -> dict:
     """Split stale Facebook clusters without creating any new cross-cluster merges."""
     flattened_ids = _flatten_duplicate_chains(conn) if apply else set()
@@ -1156,11 +1178,26 @@ def reconcile_existing_facebook_duplicate_clusters(
         has_road_name = False
     road_name_select = "l.road_name" if has_road_name else "NULL AS road_name"
 
-    limit_sql = ""
     params: tuple[int, ...] = ()
+    root_filter_sql = ""
+    if cluster_ids is not None:
+        unique_cluster_ids = tuple(sorted({int(value) for value in cluster_ids if value}))
+        if not unique_cluster_ids:
+            return {
+                "clusters_scanned": 0,
+                "clusters_changed": 0,
+                "rows_split": 0,
+                "rows_reassigned": 0,
+                "rows_merged": 0,
+                "changed_ids": sorted(flattened_ids),
+            }
+        root_filter_sql = f"AND duplicate_of_id IN ({','.join('?' for _ in unique_cluster_ids)})"
+        params = unique_cluster_ids
+
+    limit_sql = ""
     if max_clusters is not None:
         limit_sql = "LIMIT ?"
-        params = (max(1, int(max_clusters)),)
+        params += (max(1, int(max_clusters)),)
 
     rows = conn.execute(f"""
         WITH duplicate_roots AS (
@@ -1169,6 +1206,7 @@ def reconcile_existing_facebook_duplicate_clusters(
             WHERE source='facebook'
               AND duplicate_of_id IS NOT NULL
               AND COALESCE(probably_sold,0)=0
+              {root_filter_sql}
             ORDER BY duplicate_of_id
             {limit_sql}
         )

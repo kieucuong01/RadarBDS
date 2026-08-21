@@ -25,13 +25,33 @@ def _publish_changed_ids(changed_ids: list[int]) -> list[dict]:
     return reports
 
 
-def reconcile(*, apply: bool, max_clusters: int | None = None) -> dict:
+def reconcile(
+    *,
+    apply: bool,
+    max_clusters: int | None = None,
+    listing_ids: list[int] | None = None,
+) -> dict:
     conn = connect()
     try:
+        cluster_ids = None
+        if listing_ids:
+            placeholders = ",".join("?" for _ in listing_ids)
+            cluster_ids = [
+                row["cluster_id"]
+                for row in conn.execute(
+                    f"""
+                    SELECT DISTINCT COALESCE(duplicate_of_id, id) AS cluster_id
+                    FROM listings
+                    WHERE id IN ({placeholders})
+                    """,
+                    listing_ids,
+                ).fetchall()
+            ]
         stats = reconcile_existing_facebook_duplicate_clusters(
             conn,
             apply=apply,
             max_clusters=max_clusters,
+            cluster_ids=cluster_ids,
         )
         if apply:
             conn.commit()
@@ -62,10 +82,21 @@ def main() -> None:
         type=int,
         help="Inspect only this many duplicate clusters; unavailable with --apply.",
     )
+    parser.add_argument(
+        "--listing-id",
+        type=int,
+        action="append",
+        dest="listing_ids",
+        help="Inspect only the duplicate cluster containing this listing; repeatable.",
+    )
     args = parser.parse_args()
     if args.apply and args.limit:
         parser.error("--limit is only available for dry-run")
-    stats = reconcile(apply=args.apply, max_clusters=args.limit)
+    stats = reconcile(
+        apply=args.apply,
+        max_clusters=args.limit,
+        listing_ids=args.listing_ids,
+    )
     report = {
         **stats,
         "changed_ids_count": len(stats["changed_ids"]),

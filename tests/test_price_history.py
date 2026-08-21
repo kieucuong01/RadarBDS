@@ -1121,6 +1121,95 @@ class PriceHistoryTest(unittest.TestCase):
             [{"date": "2026-04-02", "price_ty": 2.35}],
         )
 
+    def test_history_api_uses_the_latest_facebook_cluster_snapshot_per_day(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            canonical = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, posted_at, updated_at, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'Current repost', 'Phu Tan', 150, 'dat_nen',
+                    2.5, 16.67, '2026-08-19', '2026-08-20T11:03:10', 0
+                )
+                """,
+                (f"{self.source_id}-cluster-current", f"{self.url_prefix}/cluster-current"),
+            )
+            canonical_id = self._track(canonical.lastrowid)
+            child = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, posted_at, updated_at, probably_sold,
+                    duplicate_of_id, possibly_duplicate
+                ) VALUES (
+                    'facebook', ?, ?, 'Earlier repost', 'Phu Tan', 150, 'dat_nen',
+                    2.55, 17, '2026-08-19', '2026-08-20T11:03:04', 0, ?, 1
+                )
+                """,
+                (
+                    f"{self.source_id}-cluster-earlier",
+                    f"{self.url_prefix}/cluster-earlier",
+                    canonical_id,
+                ),
+            )
+            child_id = self._track(child.lastrowid)
+            conn.executemany(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                [
+                    (child_id, 2.55, 17.0, "2026-08-20 11:03:04"),
+                    (canonical_id, 2.5, 16.67, "2026-08-20 11:03:10"),
+                ],
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{canonical_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(history, [{"date": "2026-08-19", "price_ty": 2.5}])
+
+    def test_history_api_replaces_same_day_facebook_snapshot_with_current_price(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, posted_at, updated_at, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'Asking price update', 'Phu Tan', 100, 'dat_nen',
+                    2.3, 23, '2026-06-01', '2026-06-10T08:15:06', 0
+                )
+                """,
+                (f"{self.source_id}-current-same-day", f"{self.url_prefix}/current-same-day"),
+            )
+            listing_id = self._track(cur.lastrowid)
+            conn.execute(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, 2.0, 20.0, '2026-06-10 08:00:00')
+                """,
+                (listing_id,),
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{listing_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(history, [{
+            "date": "2026-06-01",
+            "price_ty": 2.3,
+            "is_current": True,
+        }])
+
 
 if __name__ == "__main__":
     unittest.main()

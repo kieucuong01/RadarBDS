@@ -270,6 +270,13 @@ def test_detect_multi_lot_listing():
     )
 
 
+def test_multi_lot_detects_unlabelled_dimension_price_pairs():
+    assert is_multi_lot_listing(
+        "Mat tien Le Loi trung tam thanh pho moi",
+        "5x30m gia 6 ty 750. 10x30m gia 13 ty 5.",
+    )
+
+
 def test_detects_numeric_multi_lot_phrase_without_repeated_offer_pairs():
     assert is_multi_lot_listing("Bán gấp 2 lô Chánh Mỹ", "Giá tốt liên hệ")
     assert is_multi_lot_listing("Bán 2 lô nhỏ liền kề", "Giá tốt liên hệ")

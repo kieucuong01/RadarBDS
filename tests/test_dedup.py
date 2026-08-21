@@ -246,6 +246,41 @@ def test_reconciled_duplicate_targets_split_road_groups_below_no_road_parent():
     ) == {501: 502, 503: 504}
 
 
+def test_reconciled_duplicate_targets_split_tdc_subdivisions_below_generic_parent():
+    parent = _listing(
+        id=600, source="facebook", source_id="fb-d51-parent", posted_at="2026-07-01",
+        ward="Phu Tan", property_type="dat_nen", area_m2=100.0,
+        frontage_m=5.0, depth_m=20.0, tho_cu_m2=100.0, price_ty=3.1,
+        contact_phone="0935792868",
+        description="Dat duong so 51 TDC Phu Chanh, DT 5x20m full tho cu.",
+    )
+    chanh_c_old = _listing(
+        id=601, source="facebook", source_id="fb-d51-c-old", posted_at="2026-07-05",
+        duplicate_of_id=600, ward="Phu Tan", property_type="dat_nen", area_m2=100.0,
+        frontage_m=5.0, depth_m=20.0, tho_cu_m2=100.0, price_ty=3.0,
+        contact_phone="0988893838",
+        description="Dat duong so 51 TDC Phu Chanh C, DT 5x20m full tho cu.",
+    )
+    chanh_c_new = _listing(
+        id=602, source="facebook", source_id="fb-d51-c-new", posted_at="2026-07-10",
+        duplicate_of_id=600, ward="Phu Tan", property_type="dat_nen", area_m2=100.0,
+        frontage_m=5.0, depth_m=20.0, tho_cu_m2=100.0, price_ty=3.0,
+        contact_phone="0988893838",
+        description="Dat duong so 51 TDC Phu Chanh C, DT 5x20m full tho cu.",
+    )
+    chanh_d = _listing(
+        id=603, source="facebook", source_id="fb-d51-d", posted_at="2026-07-12",
+        duplicate_of_id=600, ward="Phu Tan", property_type="dat_nen", area_m2=100.0,
+        frontage_m=5.0, depth_m=20.0, tho_cu_m2=100.0, price_ty=3.0,
+        contact_phone="0988893838",
+        description="Dat duong so 51 TDC Phu Chanh D, DT 5x20m full tho cu.",
+    )
+
+    assert _reconciled_duplicate_targets(
+        [parent, chanh_c_old, chanh_c_new, chanh_d]
+    ) == {601: 602}
+
+
 def test_same_broker_same_dimensions_different_tdc_roads_not_duplicate():
     d12 = _listing(
         source="facebook",

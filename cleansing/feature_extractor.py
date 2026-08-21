@@ -569,6 +569,13 @@ _MULTI_LOT_PRICE_RE = re.compile(
     r'\b\d{3,4}\s*(?:tr|trieu)\b',
     re.IGNORECASE,
 )
+_MULTI_LOT_DIMENSION_PRICE_PAIR_RE = re.compile(
+    r'\b\d{1,3}(?:[,.]\d+)?\s*m?\s*[x×]\s*\d{1,3}(?:[,.]\d+)?\s*m?\b'
+    r'[^.;\n]{0,60}?\b(?:gia\s*(?:ban)?\s*:?\s*)?'
+    r'(?:\d{1,3}(?:[,.]\d{1,3})?\s*(?:ty|ti)\b|'
+    r'\d{1,3}\s*(?:t|ty|ti)\s*\d{1,3}\b)',
+    re.IGNORECASE,
+)
 _MULTI_LOT_COUNT_RE = re.compile(
     r'\b(?:ban\s+(?:gap\s+)?)?(?:con\s+)?[2-9]\d?\s+'
     r'(?:lo|nen)(?:\s+(?:dat|lien\s+ke))?\b|'
@@ -622,6 +629,9 @@ def is_multi_lot_listing(title: str, description: str = "") -> bool:
         return True
 
     if _MULTI_LOT_COUNT_RE.search(text):
+        return True
+
+    if len(_MULTI_LOT_DIMENSION_PRICE_PAIR_RE.findall(text)) >= 2:
         return True
 
     if _MULTI_UNIT_INVENTORY_CONTEXT_RE.search(text):

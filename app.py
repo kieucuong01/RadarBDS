@@ -5639,11 +5639,10 @@ def get_price_history(listing_id):
                        END AS history_date,
                        l.url, l.source,
                        ROW_NUMBER() OVER (
-                           PARTITION BY ph.listing_id,
-                               CASE
-                                   WHEN l.source='guland' THEN CAST(ph.id AS TEXT)
-                                   ELSE substr(ph.recorded_at, 1, 10)
-                               END
+                           PARTITION BY CASE
+                               WHEN l.source='guland' THEN CAST(ph.id AS TEXT)
+                               ELSE substr(ph.recorded_at, 1, 10)
+                           END
                            ORDER BY ph.recorded_at DESC, ph.id DESC
                        ) AS same_day_rank
                 FROM price_history ph
@@ -5652,6 +5651,7 @@ def get_price_history(listing_id):
                   AND l.price_ty IS NOT NULL
                   AND l.price_ty > 0
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
+                  AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
             )
             SELECT listing_id, recorded_at, price_ty, price_per_m2,
                    history_date, url, source
@@ -5683,14 +5683,15 @@ def get_price_history(listing_id):
         ):
             current_price = curr["price_ty"]
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
+                current_date = (
+                    curr["price_updated_at"]
+                    or curr["posted_at"]
+                    or curr["crawled_at"]
+                    or curr["updated_at"]
+                    or ''
+                )[:10]
                 item = {
-                    'date': (
-                        curr["price_updated_at"]
-                        or curr["posted_at"]
-                        or curr["crawled_at"]
-                        or curr["updated_at"]
-                        or ''
-                    )[:10],
+                    'date': current_date,
                     'price_ty': current_price,
                     'is_current': True,
                 }
@@ -5703,7 +5704,14 @@ def get_price_history(listing_id):
                     )
                 if tier == "admin" and curr["url"]:
                     item["url"] = curr["url"]
-                history.append(item)
+                if (
+                    curr["source"] != "guland"
+                    and history
+                    and history[-1]["date"] == current_date
+                ):
+                    history[-1] = item
+                else:
+                    history.append(item)
 
         # Shared compact card payload used by both detail surfaces.
         comps = load_listing_comparables(conn, listing_id, tier=tier, limit=18)
