@@ -5691,20 +5691,21 @@ def get_price_history(listing_id):
         ):
             current_price = curr["price_ty"]
             if not history or not _same_price_value(history[-1]['price_ty'], current_price):
-                current_date = (
+                current_timestamp = (
                     curr["price_updated_at"]
                     or curr["posted_at"]
                     or curr["crawled_at"]
                     or curr["updated_at"]
                     or ''
-                )[:10]
+                )
+                current_date = str(current_timestamp)[:10]
                 item = {
                     'date': current_date,
                     'price_ty': current_price,
                     'is_current': True,
                 }
                 if curr["source"] == "guland":
-                    item["recorded_at"] = (
+                    item["recorded_at"] = str(
                         curr["price_updated_at"]
                         or curr["crawled_at"]
                         or curr["updated_at"]
