@@ -15462,6 +15462,290 @@ SEO_ARTICLES = {
             {"name": "Phú Lợi hay Phú Mỹ", "href": "/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc"}
         ]
     }
+,
+    "bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot": {
+        "variant": "knowledge",
+        "category": {
+            "key": "huong-dan-doc-du-lieu",
+            "label": "Hướng dẫn đọc dữ liệu"
+        },
+        "path": "/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot",
+        "title": "Từ báo cáo tháng 07/2026, nên mở phường nào trước ở Thủ Dầu Một? | Radar BDS",
+        "description": "Dùng dữ liệu Radar BDS tháng 07/2026 và snapshot live 22/08/2026 để chọn phường mở trước ở Thủ Dầu Một: Phú Mỹ, Hiệp An, Phú Hòa, Định Hòa hay Phú Tân, luôn tách đất nền với nhà đất.",
+        "keywords": "báo cáo tháng 07 2026 Thủ Dầu Một, nên mở phường nào trước, Phú Mỹ Hiệp An Phú Tân Định Hòa, giá đất Thủ Dầu Một, Radar BDS",
+        "breadcrumb_label": "Nên mở phường nào trước từ báo cáo tháng 07/2026",
+        "hero_badge": "Đọc báo cáo để hành động",
+        "hero_title": "Từ báo cáo tháng 07/2026, nên mở phường nào trước ở Thủ Dầu Một?",
+        "hero_text": "Nếu anh muốn mở nơi có nguồn hàng dày trước, hãy bắt đầu từ Phú Mỹ hoặc Hiệp An. Nếu mục tiêu là nhiều dấu hiệu để rà nhanh từng tin, nên ghim Phú Tân rồi đến Định Hòa. Cách đọc đúng là nhìn báo cáo tháng trước, rồi đối chiếu lại snapshot live hôm nay và luôn tách đất nền với nhà đất.",
+        "scope_label": "Thủ Dầu Một · Báo cáo tháng 07/2026",
+        "hero_checks": [
+            "Báo cáo tháng 07/2026: Phú Mỹ 435 tin, Hiệp An 432, Phú Hòa 412 là 3 phường nguồn hàng dày nhất",
+            "Tín hiệu tháng 07/2026: Phú Tân 138, Định Hòa 55, Phú Mỹ 52 là 3 phường nên ghim trước nếu ưu tiên lớp tin đáng kiểm tra",
+            "Snapshot live 22/08/2026: Phú Tân đang có 1.077 tin theo dõi và 535 dấu hiệu; Phú Mỹ có 1.539 tin và 254 dấu hiệu",
+            "Giá trong bài là giá rao Facebook Radar BDS; luôn đọc riêng đất nền và nhà đất, không xem đây là giá chốt"
+        ],
+        "primary_cta": "Mở dashboard để lọc theo phường",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=report_july_ward_priority",
+        "secondary_cta": "Xem báo cáo Bình Dương tháng 07/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+        "map_label": "Tin tức / Báo cáo tháng 07/2026",
+        "hero_metric": {
+            "label": "Top 3 nguồn hàng tháng 07/2026",
+            "value": "1.279 tin",
+            "delta": "Phú Mỹ 435 · Hiệp An 432 · Phú Hòa 412",
+            "note": "Đây là lượng tin Facebook ghi nhận trong tháng 07/2026, không phải số giao dịch đã chốt"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Muốn nhiều hàng để quét mặt bằng thì mở Phú Mỹ hoặc Hiệp An trước. Muốn nhiều tín hiệu để gọi sớm thì ghim Phú Tân rồi Định Hòa.",
+            "price": "Định Hòa tháng 07: đất nền 16,4 tr/m² · nhà đất 22,0 tr/m². Phú Hòa: 29,7 và 39,6 tr/m².",
+            "metric_a": "Top tín hiệu tháng 07",
+            "metric_a_value": "Phú Tân 138",
+            "metric_b": "Top nguồn hàng live",
+            "metric_b_value": "Phú Mỹ 1.539"
+        },
+        "local_links_title": "Đi tiếp từ bài này",
+        "local_links": [
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Xem toàn cảnh 13 phường trước khi ghim phường ưu tiên."
+            },
+            {
+                "label": "Trang tổng quan Bình Dương",
+                "href": "/binh-duong",
+                "description": "Đi từ hub sang từng phường và vào dashboard đúng khu vực."
+            },
+            {
+                "label": "Trang phường Phú Tân",
+                "href": "/binh-duong/phuong-phu-tan",
+                "description": "Mở nhanh phường đang có lớp dấu hiệu dày nhất trong cả báo cáo tháng lẫn snapshot live."
+            },
+            {
+                "label": "Trang phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Mở phường nguồn hàng dày để quét mặt bằng trước khi gọi hỏi sâu."
+            },
+            {
+                "label": "MOS là gì? Cách lọc tin dưới giá cơ sở",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Kết hợp chọn phường với bộ lọc MOS để danh sách gọn hơn."
+            },
+            {
+                "label": "Giá đất Phú Tân hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+                "description": "Đọc riêng phường đang dẫn đầu về dấu hiệu đáng kiểm tra."
+            },
+            {
+                "label": "Dùng công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đặt từng tin vào mặt bằng phường sau khi anh đã chọn được nơi mở trước."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu muốn mở phường có nhiều hàng trước thì nên bắt đầu từ đâu?",
+                "a": "Theo báo cáo tháng 07/2026, nên mở Phú Mỹ hoặc Hiệp An trước vì đây là hai phường có lượng tin tháng dày nhất: 435 và 432 tin. Snapshot live ngày 22/08/2026 cũng cho thấy cả hai vẫn còn nguồn hàng lớn để lọc tiếp."
+            },
+            {
+                "q": "Nếu muốn ưu tiên nhóm tin đáng kiểm tra thì nên ghim phường nào?",
+                "a": "Phú Tân là phường nên ghim đầu tiên. Tháng 07/2026 phường này có 138 tín hiệu, cao nhất trong 13 phường. Snapshot live ngày 22/08/2026 vẫn còn 535 dấu hiệu trên 1.077 tin theo dõi, cao hơn rõ các phường còn lại."
+            },
+            {
+                "q": "Vì sao bài này vẫn tách đất nền với nhà đất?",
+                "a": "Vì cùng một phường nhưng hai loại hình cho ra mặt bằng giá rất khác. Ví dụ trong báo cáo tháng 07/2026, Định Hòa có giá rao trung vị đất nền 16,4 tr/m² còn nhà đất là 22,0 tr/m². Ở Phú Hòa là 29,7 và 39,6 tr/m². Nếu gộp chung, anh rất dễ mở sai phường cho đúng nhu cầu."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao Facebook công khai Radar BDS ghi nhận. Báo cáo tháng dùng dữ liệu tháng 07/2026; snapshot live dùng tin active ngày 22/08/2026 với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-22",
+            "modified_at": "2026-08-22",
+            "intro": [
+                "Nếu anh hỏi nên mở phường nào trước sau khi đọc báo cáo tháng 07/2026, câu trả lời ngắn là: muốn nhiều hàng thì mở Phú Mỹ hoặc Hiệp An; muốn nhiều tín hiệu để gọi sớm thì ghim Phú Tân rồi đến Định Hòa. Đây là giá rao Facebook Radar BDS, không phải giá giao dịch.",
+                "Bài này ghép 2 lớp dữ liệu thật: báo cáo tháng 07/2026 của 13 phường Thủ Dầu Một và snapshot live ngày 22/08/2026 từ tin Facebook đang theo dõi trên Radar BDS. Lớp tháng giúp nhìn nhịp cung hàng đã chốt, còn lớp live giúp biết hôm nay nên bấm phường nào trước trên dashboard."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Top nguồn hàng tháng 07",
+                    "value": "Phú Mỹ 435 tin",
+                    "note": "Hiệp An 432 · Phú Hòa 412 đứng ngay sau"
+                },
+                {
+                    "label": "Top tín hiệu tháng 07",
+                    "value": "Phú Tân 138",
+                    "note": "Định Hòa 55 · Phú Mỹ 52"
+                },
+                {
+                    "label": "Top nguồn hàng live",
+                    "value": "Hiệp An 1.698 tin",
+                    "note": "Phú Mỹ 1.539 · Tân An 1.305"
+                },
+                {
+                    "label": "Top tín hiệu live",
+                    "value": "Phú Tân 535",
+                    "note": "Phú Mỹ 254 · Định Hòa 181"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Từ báo cáo tháng 07/2026",
+                    "title": "3 phường nên mở trước nếu anh muốn quét nơi có nhiều hàng",
+                    "note": "Số tin là lượng tin Facebook Radar BDS ghi nhận trong tháng 07/2026. Giá trung vị/m² là giá rao, tách riêng đất nền và nhà đất.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "month_count", "label": "Tin tháng 07"},
+                        {"key": "month_signals", "label": "Dấu hiệu tháng 07"},
+                        {"key": "dat_nen", "label": "Đất nền"},
+                        {"key": "nha_dat", "label": "Nhà đất"},
+                        {"key": "why", "label": "Khi nào nên mở trước"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Mỹ", "month_count": "435", "month_signals": "52", "dat_nen": "22,7 tr/m²", "nha_dat": "40,6 tr/m²", "why": "Nguồn hàng tháng dày nhất; hợp để quét mặt bằng trước khi siết thêm ngân sách hoặc MOS."},
+                        {"ward": "Hiệp An", "month_count": "432", "month_signals": "22", "dat_nen": "15,7 tr/m²", "nha_dat": "21,1 tr/m²", "why": "Nguồn hàng rất dày nhưng mặt bằng mềm hơn; hợp khi anh muốn xem nhiều hàng mà chưa lên nhóm giá cao."},
+                        {"ward": "Phú Hòa", "month_count": "412", "month_signals": "20", "dat_nen": "29,7 tr/m²", "nha_dat": "39,6 tr/m²", "why": "Nguồn hàng lớn nhưng mặt bằng cao hơn; nên mở khi anh đã chấp nhận khung giá mạnh hơn."}
+                    ]
+                },
+                {
+                    "eyebrow": "Từ báo cáo tháng 07/2026 + snapshot live 22/08/2026",
+                    "title": "Nếu ưu tiên lớp tin đáng kiểm tra, nên ghim các phường này trước",
+                    "note": "Bảng này dùng số tín hiệu tháng để biết phường nào có nhịp đáng chú ý bền hơn, rồi đối chiếu với lớp live để xem hôm nay còn dày không.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "month_signals", "label": "Dấu hiệu tháng 07"},
+                        {"key": "live_count", "label": "Tin đang theo dõi"},
+                        {"key": "live_signals", "label": "Dấu hiệu live"},
+                        {"key": "suggestion", "label": "Gợi ý mở trước"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Tân", "month_signals": "138", "live_count": "1.077", "live_signals": "535", "suggestion": "Ghim đầu tiên khi anh muốn gọi sớm nhóm tin đáng kiểm tra hoặc lọc thêm theo MOS."},
+                        {"ward": "Định Hòa", "month_signals": "55", "live_count": "1.218", "live_signals": "181", "suggestion": "Mở kế tiếp khi cần mặt bằng giá mềm hơn Phú Mỹ nhưng vẫn còn nhiều dấu hiệu để rà."},
+                        {"ward": "Phú Mỹ", "month_signals": "52", "live_count": "1.539", "live_signals": "254", "suggestion": "Hợp khi anh muốn vừa có nhiều hàng, vừa còn đủ tín hiệu để chọn thứ tự mở tin."}
+                    ]
+                },
+                {
+                    "eyebrow": "Chọn phường theo mục tiêu",
+                    "title": "Mỗi mục tiêu mua nên bắt đầu từ phường khác nhau",
+                    "note": "Làm theo bảng này rồi mới thêm bộ lọc loại hình và ngân sách trên dashboard.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "reason", "label": "Lý do"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn quét nơi có nhiều hàng nhất", "open_first": "Phú Mỹ → Hiệp An", "reason": "Hai phường này dẫn đầu báo cáo tháng 07/2026 về số tin, giúp anh nhìn mặt bằng nhanh hơn."},
+                        {"need": "Muốn nhiều tín hiệu để gọi sớm", "open_first": "Phú Tân → Định Hòa", "reason": "Phú Tân dẫn đầu cả tháng lẫn live về số dấu hiệu; Định Hòa là lớp kế tiếp với mặt bằng giá mềm hơn."},
+                        {"need": "Muốn xem nhà đất ở mặt bằng giá cao hơn", "open_first": "Phú Hòa → Phú Mỹ", "reason": "Nhà đất tháng 07/2026 ở Phú Hòa và Phú Mỹ cao hơn rõ, phù hợp khi anh đã chấp nhận ngưỡng giá mạnh hơn."},
+                        {"need": "Muốn mặt bằng mềm hơn để bắt đầu", "open_first": "Hiệp An → Định Hòa", "reason": "Hai phường này có giá rao trung vị đất nền và nhà đất thấp hơn nhóm Phú Hòa, Phú Lợi, Phú Mỹ."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Mỹ, Hiệp An, Phú Hòa là top nguồn hàng tháng 07/2026",
+                    "note": "Lấy Phú Mỹ = 100 để nhìn nhanh độ dày nguồn hàng giữa 3 phường mở đầu.",
+                    "alt": "Biểu đồ so số tin tháng 07/2026 giữa Phú Mỹ, Hiệp An và Phú Hòa",
+                    "rows": [
+                        {"label": "Phú Mỹ", "value_label": "435 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "Hiệp An", "value_label": "432 tin", "width": 99, "color": "#16a34a"},
+                        {"label": "Phú Hòa", "value_label": "412 tin", "width": 95, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Tân đang bỏ xa phần còn lại về lớp tín hiệu live",
+                    "note": "Nếu anh ưu tiên danh sách nên mở trước để gọi nhanh, Phú Tân là phường nên ghim đầu tiên hôm nay.",
+                    "alt": "Biểu đồ so số dấu hiệu live giữa Phú Tân, Phú Mỹ và Định Hòa",
+                    "rows": [
+                        {"label": "Phú Tân", "value_label": "535 dấu hiệu", "width": 100, "color": "#dc2626"},
+                        {"label": "Phú Mỹ", "value_label": "254 dấu hiệu", "width": 47, "color": "#0f766e"},
+                        {"label": "Định Hòa", "value_label": "181 dấu hiệu", "width": 34, "color": "#7c3aed"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "doc-bao-cao-thang-de-chon-cua-mo",
+                    "heading": "1. Báo cáo tháng giúp chọn cửa mở, không phải chọn ngay một tin cụ thể",
+                    "paragraphs": [
+                        "Điểm mạnh của báo cáo tháng là nó cho anh thấy phường nào thực sự có nhịp cung hàng trong cả tháng, thay vì bị lệch vì vài tin mới nổi trong một ngày. Tháng 07/2026, Phú Mỹ có 435 tin, Hiệp An 432 và Phú Hòa 412. Đây là ba nơi hợp để mở trước nếu mục tiêu của anh là quét nhanh mặt bằng trước khi đi sâu.",
+                        "Nhưng báo cáo tháng chưa đủ để quyết định hôm nay bấm phường nào đầu tiên. Sau khi nhìn lớp tháng, anh vẫn nên đối chiếu snapshot live để xem nguồn hàng còn dày không, dấu hiệu còn nhiều không, rồi mới khóa tiếp loại hình và ngân sách."
+                    ],
+                    "bullets": [
+                        "Báo cáo tháng trả lời: phường nào có nhịp cung hàng bền hơn",
+                        "Snapshot live trả lời: hôm nay nên mở phường nào đầu tiên trên dashboard",
+                        "Hai lớp dữ liệu đi cùng nhau sẽ thực dụng hơn là chỉ nhìn một ngày hoặc chỉ nhìn báo cáo cũ",
+                        "Giá trong bài là giá rao công khai, không phải giá chốt giao dịch"
+                    ]
+                },
+                {
+                    "id": "khi-nao-mo-phu-my-hiep-an-phu-hoa",
+                    "heading": "2. Khi nào nên mở Phú Mỹ, Hiệp An hoặc Phú Hòa trước",
+                    "paragraphs": [
+                        "Phú Mỹ nên đứng đầu nếu anh muốn nguồn hàng dày để quét nhanh nhiều lớp lọc. Báo cáo tháng 07/2026 ghi nhận 435 tin, trong khi snapshot live 22/08/2026 vẫn còn 1.539 tin theo dõi và 254 dấu hiệu đáng kiểm tra. Đây là phường hợp để bắt đầu khi anh chưa khóa quá chặt bài toán mua.",
+                        "Hiệp An lại hợp khi anh muốn nhiều hàng nhưng mặt bằng mềm hơn. Trong báo cáo tháng 07/2026, giá rao trung vị đất nền ở Hiệp An là 15,7 tr/m² và nhà đất là 21,1 tr/m², thấp hơn rõ Phú Mỹ và Phú Hòa. Còn Phú Hòa phù hợp khi anh đã chấp nhận nhóm giá cao hơn, nhất là nếu đang xem nhà đất."
+                    ],
+                    "bullets": [
+                        "Phú Mỹ: dày hàng nhất và lớp tín hiệu vẫn còn nhiều",
+                        "Hiệp An: dày hàng nhưng mặt bằng mềm hơn để bắt đầu",
+                        "Phú Hòa: hợp khi chấp nhận nhịp giá cao hơn",
+                        "Luôn tách đất nền với nhà đất trước khi kết luận phường nào hợp"
+                    ]
+                },
+                {
+                    "id": "vi-sao-phu-tan-dang-nen-ghim",
+                    "heading": "3. Nếu ưu tiên tin đáng kiểm tra, Phú Tân là phường nên ghim đầu tiên",
+                    "paragraphs": [
+                        "Phú Tân là trường hợp rất rõ: tháng 07/2026 có 138 dấu hiệu, cao nhất toàn bộ 13 phường. Đến snapshot live 22/08/2026, phường này vẫn còn 1.077 tin theo dõi và 535 dấu hiệu. Đây là khác biệt đủ lớn để anh ghim sẵn Phú Tân nếu muốn tiết kiệm thời gian mở tin thủ công.",
+                        "Định Hòa là lựa chọn nên đi cùng khi anh muốn thêm mặt bằng giá mềm hơn. Trong báo cáo tháng 07/2026, đất nền Định Hòa có giá rao trung vị 16,4 tr/m² và nhà đất là 22,0 tr/m², thấp hơn đáng kể nhóm Phú Mỹ hoặc Phú Hòa. Vì vậy Định Hòa hợp để mở sau Phú Tân khi anh cần lớp hàng dễ thở hơn."
+                    ],
+                    "bullets": [
+                        "Phú Tân: 138 dấu hiệu tháng 07 · 535 dấu hiệu live",
+                        "Định Hòa: 55 dấu hiệu tháng 07 · 181 dấu hiệu live",
+                        "Ghim Phú Tân để ưu tiên thứ tự mở tin, không phải để bỏ qua bước kiểm tra pháp lý",
+                        "Sau khi ghim phường, có thể siết tiếp bằng MOS hoặc công cụ định giá"
+                    ]
+                },
+                {
+                    "id": "cach-mo-dashboard-sau-khi-doc-bao-cao",
+                    "heading": "4. Cách mở dashboard sau khi đã đọc xong báo cáo tháng",
+                    "paragraphs": [
+                        "Cách làm gọn nhất là chọn một mục tiêu trước. Nếu muốn quét hàng, mở Phú Mỹ hoặc Hiệp An. Nếu muốn tìm nhóm nên gọi sớm, mở Phú Tân rồi Định Hòa. Sau đó khóa tiếp loại hình anh đang cần: đất nền hay nhà đất. Chỉ riêng bước này đã giúp anh bỏ bớt khá nhiều nhầm lẫn.",
+                        "Khi danh sách còn khoảng vài chục tin, anh mới nhìn thêm tổng giá, giá/m² và công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Dù tín hiệu có đẹp đến đâu, vẫn phải kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: chọn mục tiêu mở hàng hay mở tín hiệu",
+                        "Bước 2: chọn phường theo bảng gợi ý trong bài",
+                        "Bước 3: khóa đất nền hoặc nhà đất",
+                        "Bước 4: siết thêm ngân sách, MOS hoặc dùng công cụ định giá",
+                        "Bước 5: kiểm tra thực địa và pháp lý trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã xác định mình muốn quét nhiều hàng hay muốn ưu tiên tín hiệu trước chưa?",
+                "Đã tách đất nền với nhà đất trước khi so phường chưa?",
+                "Đã nhìn cả lớp báo cáo tháng và snapshot live hôm nay chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar theo đúng thứ tự để đỡ tốn thời gian lọc",
+            "body": "Nếu muốn quét nhanh nơi có nhiều hàng, hãy mở Phú Mỹ hoặc Hiệp An trước. Nếu muốn gọi sớm nhóm tin đáng kiểm tra, ghim Phú Tân rồi đến Định Hòa. Sau đó dùng thêm dashboard và công cụ định giá để siết tiếp từng tin.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n&utm_source=seo&utm_medium=article&utm_campaign=report_july_ward_priority"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Nên mở phường nào trước từ báo cáo tháng 07/2026", "href": "/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot", "url": "https://radarbds.vn/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.

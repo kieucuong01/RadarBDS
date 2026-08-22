@@ -1,3 +1,10 @@
+## 2026-08-22
+- `/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot` — **Từ báo cáo tháng 07/2026, nên mở phường nào trước ở Thủ Dầu Một?**
+  - Pillar: Báo cáo → tin tức / hướng dẫn đọc dữ liệu
+  - Score gate: 95/100
+  - Data basis: closed-month Facebook report snapshot for 07/2026 plus live Facebook listings queried on 2026-08-22; month-level ranking and signal counts are paired with live `is_active=1` inventory, split by `dat_nen` vs `nha_dat`
+  - Funnel: `/bao-cao/bds-binh-duong-thang-07-2026`, `/binh-duong`, `/binh-duong/phuong-phu-tan`, `/binh-duong/phuong-phu-my`, dashboard filters, `/dinh-gia-bds`, `/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so`
+
 # Radar BDS published SEO articles
 
 ## 2026-08-01
