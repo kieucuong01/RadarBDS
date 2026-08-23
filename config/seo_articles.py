@@ -15745,6 +15745,282 @@ SEO_ARTICLES = {
             {"name": "Nên mở phường nào trước từ báo cáo tháng 07/2026", "href": "/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot", "url": "https://radarbds.vn/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot"}
         ]
     }
+,
+    "dinh-hoa-hay-phu-loi-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/dinh-hoa-hay-phu-loi-nen-xem-khu-nao-truoc",
+        "title": "Định Hòa hay Phú Lợi: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 23/08/2026: nếu anh cần nhiều lựa chọn đất nền, nhà đất dưới 3-4 tỷ và mặt bằng giá mềm hơn, nên mở Định Hòa trước. Phú Lợi phù hợp hơn khi anh chấp nhận mặt bằng cao hơn để soi kỹ từng tin trung tâm.",
+        "keywords": "Định Hòa hay Phú Lợi, giá đất Định Hòa, giá đất Phú Lợi, đất nền Định Hòa, nhà đất Phú Lợi, Radar BDS",
+        "breadcrumb_label": "Định Hòa hay Phú Lợi",
+        "hero_badge": "So sánh theo nhu cầu mua",
+        "hero_title": "Định Hòa hay Phú Lợi: nên xem khu nào trước?",
+        "hero_text": "Nếu anh đang lọc nhanh giữa Định Hòa và Phú Lợi, nên mở Định Hòa trước khi ưu tiên nguồn hàng dày, đất nền dưới 3 tỷ và nhà đất tổng giá mềm hơn. Phú Lợi hợp hơn khi anh chấp nhận mặt bằng cao hơn để soi nhóm gần trung tâm và vài tin giảm giá. Muốn đọc đúng, luôn phải tách đất nền với nhà đất.",
+        "scope_label": "Thủ Dầu Một · Định Hòa / Phú Lợi",
+        "hero_checks": [
+            "Snapshot live đến 22/08/2026 11:04 từ tin Facebook đang theo dõi",
+            "Đất nền dưới 3 tỷ: Định Hòa 441 tin, cao hơn Phú Lợi 115 tin",
+            "Nhà đất dưới 3 tỷ: Định Hòa 300 tin, cao hơn Phú Lợi 71 tin",
+            "Định Hòa có 181 dấu hiệu đáng kiểm tra; Phú Lợi có 103"
+        ],
+        "primary_cta": "Mở dashboard lọc Định Hòa và Phú Lợi",
+        "primary_href": "/?tab=signals&ward=%C4%90%E1%BB%8Bnh%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_phu_loi",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_phu_loi",
+        "map_label": "Tin tức / Định Hòa · Phú Lợi",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "1.997 tin",
+            "delta": "Định Hòa 1.218 · Phú Lợi 779",
+            "note": "Nguồn Facebook live với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Định Hòa hợp để mở trước nếu anh cần giá mềm và nhiều lựa chọn; Phú Lợi đáng mở thêm khi muốn soi nhóm trung tâm hơn với mặt bằng cao hơn",
+            "price": "Đất nền: 15,8 vs 27,7 tr/m² · Nhà đất: 28,0 vs 39,1 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "741 vs 186 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "181 vs 103 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Định Hòa",
+                "href": "/binh-duong/phuong-dinh-hoa",
+                "description": "Mở trang khu vực để xem dữ liệu Định Hòa và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Phú Lợi",
+                "href": "/binh-duong/phuong-phu-loi",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Lợi và lọc tiếp theo loại hình."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Giá đất Định Hòa hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Định Hòa nếu anh muốn soi một phường trước."
+            },
+            {
+                "label": "Giá đất Phú Lợi hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Phú Lợi để so lại theo đúng loại hình."
+            },
+            {
+                "label": "Phú Lợi hay Phú Mỹ: nên xem khu nào trước?",
+                "href": "/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một bài có Phú Lợi để nhìn khác biệt khi đổi phường so sánh."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ưu tiên đất nền dưới 3 tỷ thì nên mở Định Hòa hay Phú Lợi trước?",
+                "a": "Nên mở Định Hòa trước. Snapshot live đến 22/08/2026 11:04 cho thấy Định Hòa có 441 tin đất nền dưới 3 tỷ, trong khi Phú Lợi có 115 tin. Giá rao trung vị đất nền ở Định Hòa cũng mềm hơn rõ: 15,8 tr/m² so với 27,7 tr/m²."
+            },
+            {
+                "q": "Nếu tìm nhà đất quanh 3 tỷ thì phường nào dễ lọc hơn?",
+                "a": "Định Hòa đang dễ lọc hơn nếu anh siết ngân sách quanh 3 tỷ. Phường này có 300 tin nhà đất dưới 3 tỷ, trong khi Phú Lợi có 71 tin. Tổng giá rao trung vị nhà đất tại Định Hòa khoảng 2,65 tỷ, còn Phú Lợi khoảng 3,95 tỷ."
+            },
+            {
+                "q": "Vậy Phú Lợi phù hợp khi nào?",
+                "a": "Phú Lợi hợp hơn khi anh chấp nhận mặt bằng giá cao hơn để soi nhóm gần trung tâm, hoặc muốn mở thêm lớp tin sau khi đã lọc hết vùng giá mềm ở Định Hòa. Dữ liệu hiện có 219 tin đất nền dưới 4 tỷ và 183 tin nhà đất dưới 4 tỷ tại Phú Lợi."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-23",
+            "modified_at": "2026-08-23",
+            "intro": [
+                "Nếu anh đang cân giữa Định Hòa và Phú Lợi, nên mở Định Hòa trước khi mục tiêu là giá mềm, nhiều đất nền dưới 3 tỷ và nhà đất dễ lọc quanh 3 tỷ. Phú Lợi hợp hơn khi anh chấp nhận mặt bằng giá cao hơn để soi thêm hàng gần trung tâm. Đây là giá rao Facebook Radar BDS theo dõi đến 22/08/2026 11:04, không phải giá giao dịch.",
+                "Bài này chỉ dùng dữ liệu live từ tin Facebook đang theo dõi trên Radar BDS, lọc is_active=1, is_blacklisted=0 và review_hidden=0. Các con số phù hợp để lọc ban đầu, không thay cho kiểm tra pháp lý, quy hoạch, hiện trạng hay đi thực địa."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "1.997 tin",
+                    "note": "Định Hòa 1.218 · Phú Lợi 779"
+                },
+                {
+                    "label": "Đất nền dưới 3 tỷ",
+                    "value": "441 vs 115 tin",
+                    "note": "Định Hòa vs Phú Lợi"
+                },
+                {
+                    "label": "Nhà đất dưới 3 tỷ",
+                    "value": "300 vs 71 tin",
+                    "note": "Định Hòa vs Phú Lợi"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "181 vs 103 tin",
+                    "note": "Định Hòa vs Phú Lợi"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Định Hòa và Phú Lợi đang khác nhau thế nào nếu anh mở dashboard hôm nay?",
+                    "note": "Nguồn Facebook live đến 22/08/2026 11:04, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Định Hòa · đất nền", "tracked": "790", "under3": "441", "under4": "537", "median_m2": "15,8 tr/m²", "median_total": "2,38 tỷ", "mid_range": "12,8-21,7 tr/m²"},
+                        {"ward_type": "Định Hòa · nhà đất", "tracked": "402", "under3": "300", "under4": "343", "median_m2": "28,0 tr/m²", "median_total": "2,65 tỷ", "mid_range": "20,6-36,2 tr/m²"},
+                        {"ward_type": "Phú Lợi · đất nền", "tracked": "349", "under3": "115", "under4": "219", "median_m2": "27,7 tr/m²", "median_total": "3,3 tỷ", "mid_range": "22,0-34,4 tr/m²"},
+                        {"ward_type": "Phú Lợi · nhà đất", "tracked": "401", "under3": "71", "under4": "183", "median_m2": "39,1 tr/m²", "median_total": "3,95 tỷ", "mid_range": "28,3-54,3 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước tùy đúng mục tiêu mua?",
+                    "note": "Khóa loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều đất nền dưới 3 tỷ", "open_first": "Định Hòa", "why": "441 tin dưới 3 tỷ, gần gấp 4 Phú Lợi và giá trung vị đất nền chỉ 15,8 tr/m²."},
+                        {"need": "Muốn nhà đất quanh 2,5-3 tỷ", "open_first": "Định Hòa", "why": "300 tin dưới 3 tỷ và tổng giá trung vị khoảng 2,65 tỷ, thấp hơn rõ mức 3,95 tỷ của Phú Lợi."},
+                        {"need": "Muốn xem thêm nhóm trung tâm hơn sau vòng lọc đầu", "open_first": "Phú Lợi", "why": "Phú Lợi vẫn có 219 tin đất nền dưới 4 tỷ và 183 tin nhà đất dưới 4 tỷ để anh mở rộng lựa chọn sau khi đã lọc lớp giá mềm."},
+                        {"need": "Muốn ưu tiên nhóm tin có dấu hiệu đáng kiểm tra", "open_first": "Định Hòa", "why": "Định Hòa hiện có 181 dấu hiệu đáng kiểm tra, cao hơn 103 ở Phú Lợi."}
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới",
+                    "title": "Một vài mức giá gần nhất để hình dung nhịp rao ở hai phường",
+                    "note": "Chỉ dùng như ví dụ về mặt bằng giá rao gần đây, không phải khuyến nghị mua ngay.",
+                    "columns": [
+                        {"key": "sample", "label": "Ví dụ"},
+                        {"key": "price", "label": "Giá rao"},
+                        {"key": "note", "label": "Gợi ý đọc nhanh"}
+                    ],
+                    "rows": [
+                        {"sample": "Định Hòa · nhà đất gần nhất", "price": "1,75 tỷ · 15,3 tr/m²", "note": "Nhóm nhà cấp 4 Định Hòa đang xuất hiện khá nhiều ở vùng tổng giá mềm, hợp để mở trước nếu anh giữ trần quanh 2 tỷ."},
+                        {"sample": "Định Hòa · đất nền gần nhất", "price": "3,35 tỷ · 16,8 tr/m²", "note": "Đất nền Định Hòa không phải lúc nào cũng dưới 3 tỷ, nhưng mặt bằng giá/m² vẫn mềm hơn rõ so với Phú Lợi."},
+                        {"sample": "Phú Lợi · đất nền gần nhất", "price": "2,0 tỷ · 21,7 tr/m²", "note": "Phú Lợi vẫn có vài mẫu đất nền tổng giá vừa tầm, nhưng giá/m² thường cao hơn Định Hòa nên nên mở ở vòng sau."},
+                        {"sample": "Phú Lợi · nhà đất gần nhất", "price": "3,3 tỷ · 54,0 tr/m²", "note": "Nhà đất Phú Lợi có thể phù hợp khi anh chấp nhận ngân sách cao hơn để đổi lấy vị trí và bối cảnh khu dân cư gần trung tâm hơn."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Định Hòa đang dày đất nền dưới 3 tỷ hơn rất rõ",
+                    "note": "Nếu mục tiêu của anh là chốt danh sách đất nền trước, Định Hòa đang cho nhiều lựa chọn hơn hẳn.",
+                    "alt": "Biểu đồ so số tin đất nền dưới 3 tỷ giữa Định Hòa và Phú Lợi",
+                    "rows": [
+                        {"label": "Định Hòa", "value_label": "441 tin đất nền dưới 3 tỷ", "width": 100, "color": "#16a34a"},
+                        {"label": "Phú Lợi", "value_label": "115 tin đất nền dưới 3 tỷ", "width": 26, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất dưới 3 tỷ cũng nghiêng mạnh về Định Hòa",
+                    "note": "Nếu khóa ngân sách nhà đất quanh 3 tỷ, Định Hòa là nơi nên mở trước.",
+                    "alt": "Biểu đồ so nhà đất dưới 3 tỷ giữa Định Hòa và Phú Lợi",
+                    "rows": [
+                        {"label": "Định Hòa", "value_label": "300 tin nhà đất dưới 3 tỷ", "width": 100, "color": "#2563eb"},
+                        {"label": "Phú Lợi", "value_label": "71 tin nhà đất dưới 3 tỷ", "width": 24, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-dinh-hoa-neu-uu-tien-gia-mem",
+                    "heading": "1. Nếu ưu tiên giá mềm và ngân sách dưới 3 tỷ, nên mở Định Hòa trước",
+                    "paragraphs": [
+                        "Định Hòa đang cho danh sách dễ thở hơn rất rõ ở cả đất nền lẫn nhà đất khi anh giữ trần dưới 3 tỷ. Snapshot live hiện tại ghi nhận 441 tin đất nền dưới 3 tỷ tại Định Hòa, trong khi Phú Lợi có 115 tin. Ở nhóm nhà đất, Định Hòa cũng có 300 tin dưới 3 tỷ, cao hơn nhiều so với 71 tin của Phú Lợi.",
+                        "Điểm quan trọng là Định Hòa không chỉ nhiều tin hơn mà còn mềm hơn về mặt bằng giá. Giá rao trung vị đất nền ở Định Hòa là 15,8 tr/m² và tổng giá trung vị 2,38 tỷ; Phú Lợi là 27,7 tr/m² và 3,3 tỷ. Với nhà đất, Định Hòa ở mức 28,0 tr/m² và 2,65 tỷ, còn Phú Lợi là 39,1 tr/m² và 3,95 tỷ."
+                    ],
+                    "bullets": [
+                        "Đất nền Định Hòa: 790 tin theo dõi · 441 tin dưới 3 tỷ · giá trung vị 15,8 tr/m²",
+                        "Nhà đất Định Hòa: 402 tin theo dõi · 300 tin dưới 3 tỷ · tổng giá trung vị 2,65 tỷ",
+                        "Định Hòa đang mềm hơn Phú Lợi ở cả giá/m² và tổng giá của hai loại hình chính",
+                        "Nếu anh muốn chốt danh sách nhanh trong khung ngân sách thấp, Định Hòa hợp để mở trước"
+                    ]
+                },
+                {
+                    "id": "phu-loi-hop-khi-mo-rong-vong-loc",
+                    "heading": "2. Phú Lợi đáng mở thêm khi anh muốn soi nhóm mặt bằng cao hơn gần trung tâm",
+                    "paragraphs": [
+                        "Phú Lợi không phải điểm mở đầu nếu anh đang siết ngân sách, nhưng vẫn hữu ích ở vòng lọc thứ hai. Phường này hiện có 219 tin đất nền dưới 4 tỷ và 183 tin nhà đất dưới 4 tỷ, đủ để anh mở rộng lựa chọn khi đã xem hết lớp giá mềm ở Định Hòa.",
+                        "Đổi lại, Phú Lợi đi cùng mặt bằng giá cao hơn khá rõ. Đất nền Phú Lợi có giá rao trung vị 27,7 tr/m² và tổng giá khoảng 3,3 tỷ; nhà đất là 39,1 tr/m² và 3,95 tỷ. Vì vậy, Phú Lợi hợp hơn khi anh có ngân sách thoáng hơn hoặc muốn thêm lựa chọn quanh khu vực trung tâm hơn."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Lợi: 349 tin theo dõi · 219 tin dưới 4 tỷ · giá trung vị 27,7 tr/m²",
+                        "Nhà đất Phú Lợi: 401 tin theo dõi · 183 tin dưới 4 tỷ · tổng giá trung vị 3,95 tỷ",
+                        "Phú Lợi phù hợp để mở rộng lựa chọn, không phải để bắt đầu nếu anh cần giá mềm",
+                        "Luôn so tổng giá cùng với giá/m² để tránh nhìn sai độ vừa túi tiền"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-cach-doc-cho-dung",
+                    "heading": "3. Định Hòa có nhiều dấu hiệu hơn, nhưng đó chỉ là lớp ưu tiên kiểm tra",
+                    "paragraphs": [
+                        "Nếu anh dùng Radar như bộ lọc tín hiệu, Định Hòa hiện có 181 dấu hiệu đáng kiểm tra, cao hơn 103 ở Phú Lợi. Điều này hợp với vai trò mở trước khi anh muốn rà nhanh nhóm tin nên gọi hỏi sớm. Nhưng dấu hiệu chỉ là lớp xếp ưu tiên, không phải kết luận nên mua ngay.",
+                        "Cách đọc an toàn là khóa loại hình trước, sau đó nhìn số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ, rồi mới mở các tin có dấu hiệu để xem mô tả, diện tích, đường vào và giấy tờ. Làm ngược lại rất dễ bị hút vào tin nổi bật nhưng lệch ngân sách hoặc sai nhu cầu."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu đáng kiểm tra: Định Hòa 181 · Phú Lợi 103",
+                        "Dấu hiệu không thay cho pháp lý, quy hoạch hay kiểm tra thực địa",
+                        "Lọc theo loại hình và ngân sách trước khi ưu tiên gọi hỏi sâu",
+                        "Các mẫu giảm giá gần đây ở Phú Lợi chỉ nên xem như tín hiệu mở tin trước"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard-de-loc-nhanh",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này đỡ tốn thời gian",
+                    "paragraphs": [
+                        "Nếu đang tìm đất nền hoặc nhà đất dưới 3 tỷ, hãy mở Định Hòa trước rồi giới hạn tiếp theo tổng giá. Sau khi đã có vài tin phù hợp, anh mở thêm Phú Lợi để xem liệu có mẫu nào đáng chấp nhận ở mức giá cao hơn nhưng bù lại vị trí hoặc bối cảnh khu dân cư phù hợp hơn không.",
+                        "Sau khi chốt được 3-5 tin, anh nên dùng thêm công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Và dù dữ liệu có đẹp đến đâu, vẫn cần kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi xuống tiền."
+                    ],
+                    "bullets": [
+                        "Bước 1: khóa loại hình trước khi so phường",
+                        "Bước 2: lọc tổng giá theo khung tiền thật của anh",
+                        "Bước 3: xem lớp dấu hiệu đáng kiểm tra để ưu tiên mở tin",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước khi quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ mình đang lọc đất nền hay nhà đất chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Đã kiểm tra số tin còn trong khung dưới 3 tỷ hoặc dưới 4 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt hay cam kết mua được chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Định Hòa và Phú Lợi theo đúng loại hình",
+            "body": "Bắt đầu bằng Định Hòa nếu anh muốn ưu tiên lớp giá mềm dưới 3 tỷ. Sau đó mở thêm Phú Lợi khi cần soi thêm lựa chọn ở mặt bằng cao hơn hoặc gần trung tâm hơn. Dùng dashboard và công cụ định giá để kiểm tra từng tin cụ thể.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=%C4%90%E1%BB%8Bnh%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=dinh_hoa_vs_phu_loi"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Định Hòa hay Phú Lợi", "href": "/tin-tuc/dinh-hoa-hay-phu-loi-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/dinh-hoa-hay-phu-loi-nen-xem-khu-nao-truoc"}
+        ]
+    }
 
 }
 
