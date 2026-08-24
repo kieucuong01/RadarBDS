@@ -1,4 +1,9 @@
 ## 2026-08-24
+- `/tin-tuc/duoi-4-ty-nen-xem-phu-tan-hay-phu-hoa-truoc` — **Dưới 4 tỷ nên xem Phú Tân hay Phú Hòa trước?**
+  - Pillar: So sánh phường / ngân sách
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-24, split by `dat_nen` vs `nha_dat`, with dưới-4-tỷ counts and price medians by property type
+  - Funnel: `/binh-duong/phuong-phu-tan`, `/binh-duong/phuong-phu-hoa`, dashboard filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu`, `/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu`
 - `/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc` — **Phú Lợi hay Tương Bình Hiệp: nên xem khu nào trước?**
   - Pillar: So sánh phường / ngân sách
   - Score gate: 100/100
@@ -83,4 +88,3 @@
   - Score gate: 100/100
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-20, split by `dat_nen` vs `nha_dat`, with dưới-3-tỷ / dưới-4-tỷ counts and current example listings
   - Funnel: `/binh-duong/phuong-dinh-hoa`, `/binh-duong/phuong-phu-hoa`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu`, `/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu`
-

@@ -16303,6 +16303,245 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "duoi-4-ty-nen-xem-phu-tan-hay-phu-hoa-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/duoi-4-ty-nen-xem-phu-tan-hay-phu-hoa-truoc",
+        "title": "Dưới 4 tỷ nên xem Phú Tân hay Phú Hòa trước? | Radar BDS",
+        "description": "Dữ liệu Facebook Radar BDS ngày 24/08/2026 cho thấy dưới 4 tỷ, Phú Tân hợp người tìm đất nền hơn, còn Phú Hòa nhiều nhà đất hơn. Bài viết tách riêng đất nền và nhà đất để tránh so sai.",
+        "keywords": "dưới 4 tỷ Phú Tân hay Phú Hòa, nhà đất Phú Tân, nhà đất Phú Hòa, đất nền Phú Tân, đất nền Phú Hòa, Radar BDS",
+        "breadcrumb_label": "Dưới 4 tỷ: Phú Tân hay Phú Hòa",
+        "hero_badge": "So sánh phường / ngân sách",
+        "hero_title": "Dưới 4 tỷ nên xem Phú Tân hay Phú Hòa trước?",
+        "hero_text": "Nếu anh đang giữ trần 4 tỷ, câu trả lời không nằm ở một con số giá chung. Phú Tân đang nhiều đất nền dưới 4 tỷ hơn, còn Phú Hòa lại dày nguồn nhà đất dưới 4 tỷ. Muốn lọc đúng, luôn phải tách đất nền và nhà đất.",
+        "scope_label": "Thủ Dầu Một · Phú Tân / Phú Hòa",
+        "hero_checks": [
+            "Đất nền dưới 4 tỷ: Phú Tân 39 tin, Phú Hòa 10 tin",
+            "Nhà đất dưới 4 tỷ: Phú Hòa 75 tin, Phú Tân 18 tin",
+            "Đất nền Phú Tân có giá trung vị 20,9 tr/m²; Phú Hòa là 28,4 tr/m²",
+            "Nhà đất Phú Hòa có giá trung vị 52,6 tr/m²; Phú Tân là 34,4 tr/m²"
+        ],
+        "primary_cta": "Mở Radar lọc dưới 4 tỷ",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=phu_tan_phu_hoa_duoi_4_ty",
+        "secondary_cta": "Xem báo cáo Bình Dương tháng 07/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+        "map_label": "Tin tức / Phú Tân · Phú Hòa",
+        "hero_metric": {
+            "label": "Nhà đất dưới 4 tỷ",
+            "value": "75 vs 18",
+            "delta": "Phú Hòa vs Phú Tân",
+            "note": "Dữ liệu Facebook đang theo dõi, cập nhật 24/08/2026"
+        },
+        "property_card": {
+            "status": "So sánh 2 phường · trần 4 tỷ",
+            "title": "Phú Tân mạnh ở đất nền, Phú Hòa mạnh ở nhà đất",
+            "price": "Đất nền 39 vs 10 tin · Nhà đất 18 vs 75 tin dưới 4 tỷ",
+            "metric_a": "Tin đang theo dõi",
+            "metric_a_value": "119 vs 134",
+            "metric_b": "Dấu hiệu đáng chú ý",
+            "metric_b_value": "67 vs 26"
+        },
+        "local_links_title": "Mở tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang khu vực Phú Tân",
+                "href": "/binh-duong/phuong-phu-tan",
+                "description": "Mở trang phường để xem thêm giá, tín hiệu và tin đang theo dõi ở Phú Tân."
+            },
+            {
+                "label": "Trang khu vực Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Mở trang phường để xem thêm giá, tín hiệu và tin đang theo dõi ở Phú Hòa."
+            },
+            {
+                "label": "Giá đất Phú Tân hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+                "description": "Đọc riêng dữ liệu Phú Tân, luôn tách đất nền và nhà đất."
+            },
+            {
+                "label": "Dùng công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Ước lượng nhanh giá rao theo phường trước khi gọi môi giới hoặc đi xem thực tế."
+            },
+            {
+                "label": "Giá đất Phú Hòa hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu",
+                "description": "Bài riêng để đọc sâu mặt bằng Phú Hòa theo từng loại hình BĐS."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Dưới 4 tỷ nên mở Phú Tân hay Phú Hòa trước nếu tìm đất nền?",
+                "a": "Nếu ưu tiên đất nền dưới 4 tỷ, nên mở Phú Tân trước. Dữ liệu Radar BDS ngày 24/08/2026 ghi nhận Phú Tân có 39 tin đất nền dưới 4 tỷ, còn Phú Hòa có 10 tin. Giá trung vị đất nền Phú Tân cũng thấp hơn: 20,9 tr/m² so với 28,4 tr/m² ở Phú Hòa."
+            },
+            {
+                "q": "Nếu tìm nhà đất xây sẵn dưới 4 tỷ thì sao?",
+                "a": "Với nhà đất dưới 4 tỷ, Phú Hòa đang nhiều lựa chọn hơn rõ rệt: 75 tin so với 18 tin ở Phú Tân. Tuy vậy nhà đất Phú Hòa có giá rao/m² cao hơn, nên anh vẫn cần lọc tiếp theo hẻm, diện tích và hiện trạng căn nhà."
+            },
+            {
+                "q": "Vì sao Phú Hòa giá/m² cao hơn mà vẫn nhiều nhà đất dưới 4 tỷ?",
+                "a": "Trong mẫu 14 ngày, Phú Hòa có nguồn nhà đất dày hơn nhiều: 105 tin đang theo dõi so với 30 tin ở Phú Tân. Vì lượng hàng lớn hơn, nhóm dưới 4 tỷ cũng xuất hiện nhiều hơn dù giá trung vị nhà đất Phú Hòa là 52,6 tr/m², cao hơn Phú Tân 34,4 tr/m²."
+            },
+            {
+                "q": "Số liệu trong bài là giá chốt hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook đang theo dõi trên Radar BDS, lọc nguồn `facebook`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0` và cập nhật ngày 24/08/2026. Giá rao giúp lọc cơ hội ban đầu, không phải giá chốt giao dịch."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-24",
+            "modified_at": "2026-08-24",
+            "intro": [
+                "Nếu giữ trần dưới 4 tỷ, anh nên mở Phú Tân trước khi tìm đất nền và mở Phú Hòa trước khi tìm nhà đất xây sẵn. Dữ liệu Radar BDS ngày 24/08/2026 cho thấy cùng một ngân sách nhưng số lượng tin phù hợp đảo chiều theo loại hình.",
+                "Bài này chỉ dùng dữ liệu production của Radar BDS từ tin Facebook đang theo dõi trong 14 ngày gần nhất. Các mức giá đều là giá rao tham khảo, không phải giá chốt. Vì vậy, mọi kết luận trong bài đều tách riêng đất nền và nhà đất để tránh so sai."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Phú Tân tổng tin",
+                    "value": "119",
+                    "note": "67 dấu hiệu đáng chú ý trong 14 ngày"
+                },
+                {
+                    "label": "Phú Hòa tổng tin",
+                    "value": "134",
+                    "note": "26 dấu hiệu đáng chú ý trong 14 ngày"
+                },
+                {
+                    "label": "Đất nền dưới 4 tỷ",
+                    "value": "39 vs 10",
+                    "note": "Phú Tân vs Phú Hòa"
+                },
+                {
+                    "label": "Nhà đất dưới 4 tỷ",
+                    "value": "18 vs 75",
+                    "note": "Phú Tân vs Phú Hòa"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày",
+                    "title": "So Phú Tân và Phú Hòa theo loại hình BĐS",
+                    "note": "Cập nhật ngày 24/08/2026. Giá/m² là giá trung vị của tin có đủ dữ liệu; luôn phải đọc riêng đất nền và nhà đất.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường / loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Tân · đất nền", "tracked": "87", "signals": "48", "under4": "39", "median_m2": "20,9 tr/m²", "median_total": "2,80 tỷ", "range": "17,3-26,9 tr/m²"},
+                        {"ward_type": "Phú Tân · nhà đất", "tracked": "30", "signals": "19", "under4": "18", "median_m2": "34,4 tr/m²", "median_total": "3,10 tỷ", "range": "23,3-34,4 tr/m²"},
+                        {"ward_type": "Phú Hòa · đất nền", "tracked": "27", "signals": "8", "under4": "10", "median_m2": "28,4 tr/m²", "median_total": "2,60 tỷ", "range": "25,7-34,5 tr/m²"},
+                        {"ward_type": "Phú Hòa · nhà đất", "tracked": "105", "signals": "18", "under4": "75", "median_m2": "52,6 tr/m²", "median_total": "3,49 tỷ", "range": "32,6-53,2 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở khu nào trước với trần 4 tỷ?",
+                    "note": "Bảng này giúp anh chọn bộ lọc mở trước trong dashboard, sau đó mới soi từng tin cụ thể.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Đất nền dưới 4 tỷ", "open_first": "Phú Tân", "why": "39 tin dưới 4 tỷ, nhiều gần gấp 4 lần Phú Hòa 10 tin"},
+                        {"need": "Nhà đất dưới 4 tỷ", "open_first": "Phú Hòa", "why": "75 tin dưới 4 tỷ, cao hơn nhiều so với 18 tin ở Phú Tân"},
+                        {"need": "Ưu tiên mặt bằng giá đất nền mềm hơn", "open_first": "Phú Tân", "why": "Giá trung vị đất nền 20,9 tr/m² thấp hơn Phú Hòa 28,4 tr/m²"},
+                        {"need": "Muốn xem nhiều nhà đất xây sẵn hơn", "open_first": "Phú Hòa", "why": "Nguồn nhà đất dày 105 tin, còn Phú Tân có 30 tin"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Nhà đất dưới 4 tỷ nghiêng rõ về Phú Hòa",
+                    "note": "Khi anh tìm nhà xây sẵn, Phú Hòa hiện có nguồn hàng dày hơn hẳn trong cùng mức ngân sách.",
+                    "alt": "Biểu đồ số lượng nhà đất dưới 4 tỷ ở Phú Hòa và Phú Tân",
+                    "rows": [
+                        {"label": "Phú Hòa", "value_label": "75 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "Phú Tân", "value_label": "18 tin", "width": 24, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Đất nền dưới 4 tỷ lại nghiêng về Phú Tân",
+                    "note": "Cùng trần 4 tỷ nhưng nguồn đất nền phù hợp ở Phú Tân dày hơn rõ rệt.",
+                    "alt": "Biểu đồ số lượng đất nền dưới 4 tỷ ở Phú Tân và Phú Hòa",
+                    "rows": [
+                        {"label": "Phú Tân", "value_label": "39 tin", "width": 100, "color": "#16a34a"},
+                        {"label": "Phú Hòa", "value_label": "10 tin", "width": 26, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "dat-nen-duoi-4-ty",
+                    "heading": "Nếu tìm đất nền dưới 4 tỷ, nên mở Phú Tân trước",
+                    "paragraphs": [
+                        "Phú Tân đang có 39 tin đất nền dưới 4 tỷ, trong khi Phú Hòa có 10 tin. Chỉ riêng chênh lệch này đã đủ để đổi thứ tự mở dashboard nếu anh ưu tiên đất nền. Thêm vào đó, giá trung vị đất nền Phú Tân là 20,9 tr/m², thấp hơn Phú Hòa 28,4 tr/m².",
+                        "Điểm đáng lưu ý là tổng giá trung vị đất nền Phú Hòa vẫn ở mức 2,60 tỷ, không cao hơn Phú Tân 2,80 tỷ quá nhiều. Nghĩa là sự khác biệt chính nằm ở độ dày nguồn hàng và mặt bằng giá/m², chứ không phải mọi tin ở Phú Hòa đều vượt ngân sách."
+                    ],
+                    "bullets": [
+                        "Phú Tân · đất nền: 87 tin theo dõi · 48 dấu hiệu · 39 tin dưới 4 tỷ",
+                        "Phú Hòa · đất nền: 27 tin theo dõi · 8 dấu hiệu · 10 tin dưới 4 tỷ",
+                        "Giá trung vị đất nền: 20,9 tr/m² vs 28,4 tr/m²",
+                        "Tổng giá trung vị đất nền: 2,80 tỷ vs 2,60 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-duoi-4-ty",
+                    "heading": "Nếu tìm nhà đất xây sẵn dưới 4 tỷ, nên mở Phú Hòa trước",
+                    "paragraphs": [
+                        "Với nhà đất, bức tranh đảo chiều hẳn. Phú Hòa có 75 tin nhà đất dưới 4 tỷ, còn Phú Tân có 18 tin. Đây là khác biệt lớn nếu anh muốn xem nhiều mẫu nhà hơn trong cùng buổi lọc đầu tiên.",
+                        "Dù vậy, Phú Hòa không phải là lựa chọn rẻ hơn về mặt giá/m². Giá trung vị nhà đất ở đây là 52,6 tr/m², cao hơn nhiều so với 34,4 tr/m² ở Phú Tân. Anh nên hiểu đây là nơi có nguồn hàng dày hơn trong vùng ngân sách dưới 4 tỷ, chứ không phải nơi nhà đất đang rẻ hơn trên từng mét vuông."
+                    ],
+                    "bullets": [
+                        "Phú Hòa · nhà đất: 105 tin theo dõi · 18 dấu hiệu · 75 tin dưới 4 tỷ",
+                        "Phú Tân · nhà đất: 30 tin theo dõi · 19 dấu hiệu · 18 tin dưới 4 tỷ",
+                        "Giá trung vị nhà đất: 52,6 tr/m² vs 34,4 tr/m²",
+                        "Tổng giá trung vị: 3,49 tỷ vs 3,10 tỷ"
+                    ]
+                },
+                {
+                    "id": "khong-gop-gia-chung",
+                    "heading": "Vì sao không thể gộp một mức giá chung cho hai phường?",
+                    "paragraphs": [
+                        "Nếu chỉ nhìn tổng tin dưới 4 tỷ, anh có thể thấy Phú Hòa nhiều lựa chọn hơn: 85 tin so với 57 ở Phú Tân. Nhưng con số tổng này che mất khác biệt quan trọng giữa đất nền và nhà đất. Người tìm đất nền sẽ ra quyết định khác với người tìm nhà xây sẵn.",
+                        "Đó là lý do bài này luôn tách loại hình trước khi kết luận. Cùng một ngân sách 4 tỷ nhưng câu trả lời thay đổi theo mục tiêu: mua đất để giữ tiền hoặc xây sau thì khác, mua nhà để vào ở sớm thì khác."
+                    ],
+                    "bullets": [
+                        "Tổng tin dưới 4 tỷ: Phú Tân 57 tin vs Phú Hòa 85 tin",
+                        "Đất nền nghiêng về Phú Tân, nhà đất nghiêng về Phú Hòa",
+                        "Giá rao trong bài là giá tham khảo, không phải giá chốt",
+                        "Nên lọc tiếp theo diện tích, đường vào và hiện trạng"
+                    ]
+                },
+                {
+                    "id": "mo-dashboard-the-nao",
+                    "heading": "Nên mở dashboard theo thứ tự nào?",
+                    "paragraphs": [
+                        "Nếu đang tìm đất nền dưới 4 tỷ, anh nên mở Phú Tân trước, sau đó mới mở Phú Hòa để xem thêm phần nguồn hàng còn lại. Nếu đang tìm nhà đất xây sẵn dưới 4 tỷ, hãy làm ngược lại: mở Phú Hòa trước rồi dùng Phú Tân như lớp so sánh giá mềm hơn.",
+                        "Sau khi chọn phường, anh nên so từng tin với giá trung vị cùng loại hình, rồi mở thêm công cụ định giá để kiểm tra nhanh mức rao. Radar BDS chỉ là bộ lọc dữ liệu ban đầu; anh vẫn cần kiểm tra pháp lý, quy hoạch, vị trí và hiện trạng thực tế trước khi giao dịch."
+                    ],
+                    "bullets": [
+                        "Đất nền dưới 4 tỷ: mở Phú Tân trước",
+                        "Nhà đất dưới 4 tỷ: mở Phú Hòa trước",
+                        "Luôn tách đất nền và nhà đất trước khi so giá",
+                        "Dùng thêm công cụ định giá và bộ lọc phường để soi từng tin"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Xác định rõ anh đang tìm đất nền hay nhà đất trước khi mở bộ lọc.",
+                "So giá rao của từng tin với giá trung vị cùng loại hình trong phường đó.",
+                "Kiểm tra tổng giá, diện tích, đường vào và hiện trạng căn nhà hoặc lô đất.",
+                "Xác minh pháp lý, quy hoạch và khả năng thương lượng trước khi đặt lịch đi xem."
+            ]
+        }
+    }
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
