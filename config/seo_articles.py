@@ -16022,6 +16022,287 @@ SEO_ARTICLES = {
         ]
     }
 
+,
+    "phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc",
+        "title": "Phú Lợi hay Tương Bình Hiệp: nên xem khu nào trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 24/08/2026: nếu anh ưu tiên ngân sách dưới 3 tỷ, nên mở Tương Bình Hiệp trước. Phú Lợi đáng mở thêm khi muốn soi nhóm giá cao hơn và nhiều dấu hiệu đáng kiểm tra hơn.",
+        "keywords": "Phú Lợi hay Tương Bình Hiệp, giá đất Phú Lợi, giá đất Tương Bình Hiệp, đất nền Tương Bình Hiệp dưới 3 tỷ, nhà đất Phú Lợi, Radar BDS",
+        "breadcrumb_label": "Phú Lợi hay Tương Bình Hiệp",
+        "hero_badge": "So sánh theo ngân sách mua",
+        "hero_title": "Phú Lợi hay Tương Bình Hiệp: nên xem khu nào trước?",
+        "hero_text": "Nếu anh giữ ngân sách dưới 3 tỷ, nên mở Tương Bình Hiệp trước vì cả đất nền lẫn nhà đất đều có nhiều lựa chọn hơn và giá trung vị mềm hơn. Phú Lợi đáng mở sau khi anh muốn soi thêm nhóm giá cao hơn hoặc ưu tiên tin có dấu hiệu đáng kiểm tra.",
+        "scope_label": "Thủ Dầu Một · Phú Lợi / Tương Bình Hiệp",
+        "hero_checks": [
+            "Snapshot live ngày 24/08/2026, max crawled_at Facebook 23/08/2026 11:04",
+            "Tương Bình Hiệp có 829 tin dưới 3 tỷ ở đất nền + nhà đất; Phú Lợi có 171 tin",
+            "Giá trung vị đất nền: Tương Bình Hiệp 17,5 tr/m²; Phú Lợi 27,7 tr/m²",
+            "Phú Lợi có 103 dấu hiệu đáng kiểm tra; Tương Bình Hiệp có 68"
+        ],
+        "primary_cta": "Mở dashboard lọc Tương Bình Hiệp",
+        "primary_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_tuong_binh_hiep",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_tuong_binh_hiep",
+        "map_label": "Tin tức / Phú Lợi · Tương Bình Hiệp",
+        "hero_metric": {
+            "label": "Tin đang theo dõi ở 2 phường",
+            "value": "1.753 tin",
+            "delta": "Tương Bình Hiệp 974 · Phú Lợi 779",
+            "note": "Nguồn Facebook live ngày 24/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Tương Bình Hiệp hợp để mở trước nếu anh cần nguồn dưới 3 tỷ; Phú Lợi đáng xem thêm khi chấp nhận mặt bằng giá cao hơn",
+            "price": "Đất nền: 17,5 vs 27,7 tr/m² · Nhà đất: 29,4 vs 39,1 tr/m²",
+            "metric_a": "Dưới 3 tỷ",
+            "metric_a_value": "829 vs 171 tin",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "68 vs 103 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và bài liên quan",
+        "local_links": [
+            {
+                "label": "Trang phường Tương Bình Hiệp",
+                "href": "/binh-duong/phuong-tuong-binh-hiep",
+                "description": "Mở trang khu vực để xem dữ liệu Tương Bình Hiệp và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Phú Lợi",
+                "href": "/binh-duong/phuong-phu-loi",
+                "description": "Mở trang khu vực để xem dữ liệu Phú Lợi và lọc tiếp theo loại hình."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "Dưới 3 tỷ nên xem Phú Tân hay Tương Bình Hiệp trước?",
+                "href": "/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc",
+                "description": "Đọc thêm một bài có Tương Bình Hiệp khi anh đang khóa ngân sách dưới 3 tỷ."
+            },
+            {
+                "label": "Phú Lợi hay Phú Mỹ: nên xem khu nào trước?",
+                "href": "/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một bài có Phú Lợi để so vai trò nguồn hàng và mặt bằng giá."
+            },
+            {
+                "label": "Phú Lợi hay Hiệp Thành: nên lọc đất nền hay nhà đất trước?",
+                "href": "/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc",
+                "description": "Xem thêm cách tách đất nền và nhà đất khi so Phú Lợi với phường khác."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu ngân sách dưới 3 tỷ thì nên mở Phú Lợi hay Tương Bình Hiệp trước?",
+                "a": "Nên mở Tương Bình Hiệp trước. Snapshot live ngày 24/08/2026 cho thấy Tương Bình Hiệp có 338 tin đất nền dưới 3 tỷ và 491 tin nhà đất dưới 3 tỷ. Phú Lợi lần lượt có 109 tin đất nền và 62 tin nhà đất dưới 3 tỷ."
+            },
+            {
+                "q": "Đất nền ở hai phường này đang khác nhau thế nào?",
+                "a": "Đất nền Tương Bình Hiệp có giá rao trung vị 17,5 tr/m² và tổng giá trung vị 1,95 tỷ. Đất nền Phú Lợi có giá rao trung vị 27,7 tr/m² và tổng giá trung vị 3,3 tỷ. Vì vậy phải tách đúng đất nền trước khi kết luận phường nào vừa túi tiền hơn."
+            },
+            {
+                "q": "Nhà đất thì nên nhìn số nào trước?",
+                "a": "Với nhà đất, Tương Bình Hiệp có 559 tin đang theo dõi, giá rao trung vị 29,4 tr/m² và tổng giá trung vị 2,59 tỷ. Phú Lợi có 401 tin, giá rao trung vị 39,1 tr/m² và tổng giá trung vị 3,95 tỷ. Nếu đang khóa dưới 3 tỷ, Tương Bình Hiệp dễ mở danh sách hơn."
+            },
+            {
+                "q": "Vì sao Phú Lợi vẫn đáng mở thêm?",
+                "a": "Phú Lợi có ít lựa chọn dưới 3 tỷ hơn nhưng có 103 dấu hiệu đáng kiểm tra, cao hơn 68 ở Tương Bình Hiệp. Vì vậy Phú Lợi hợp để mở vòng sau nếu anh đã chấp nhận mặt bằng giá cao hơn và muốn soi kỹ từng tin nổi bật."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-24",
+            "modified_at": "2026-08-24",
+            "intro": [
+                "Nếu anh đang phân vân Phú Lợi hay Tương Bình Hiệp, câu trả lời 80/20 là: mở Tương Bình Hiệp trước khi ngân sách dưới 3 tỷ là ràng buộc chính. Dữ liệu Facebook Radar BDS đang theo dõi ngày 24/08/2026 cho thấy Tương Bình Hiệp có nhiều tin dưới 3 tỷ hơn rõ ở cả đất nền và nhà đất, đồng thời giá trung vị cũng mềm hơn.",
+                "Phú Lợi không bị loại khỏi danh sách. Phường này hợp để mở vòng sau nếu anh chấp nhận mặt bằng giá rao cao hơn, muốn so nhóm tin có dấu hiệu đáng kiểm tra, hoặc cần kiểm tra các mẫu đất nền/nhà đất gần đây trước khi gọi hỏi sâu. Bài này chỉ dùng giá rao Facebook, không dùng Guland cho ví dụ listing-specific."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "1.753 tin",
+                    "note": "Tương Bình Hiệp 974 · Phú Lợi 779"
+                },
+                {
+                    "label": "Tin dưới 3 tỷ",
+                    "value": "829 vs 171 tin",
+                    "note": "Tương Bình Hiệp vs Phú Lợi, tính đất nền + nhà đất"
+                },
+                {
+                    "label": "Đất nền giá trung vị",
+                    "value": "17,5 vs 27,7 tr/m²",
+                    "note": "Tương Bình Hiệp vs Phú Lợi"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "68 vs 103 tin",
+                    "note": "Tương Bình Hiệp vs Phú Lợi"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Lợi và Tương Bình Hiệp khác nhau thế nào nếu anh mở dashboard hôm nay?",
+                    "note": "Nguồn Facebook live ngày 24/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0. Giá/m² và tổng giá đều là giá rao trung vị, nghĩa là một nửa số tin thấp hơn mức này, một nửa cao hơn.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "mid_range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Tương Bình Hiệp · đất nền", "tracked": "411", "under3": "338", "under4": "345", "median_m2": "17,5 tr/m²", "median_total": "1,95 tỷ", "mid_range": "14,0-20,4 tr/m²"},
+                        {"ward_type": "Tương Bình Hiệp · nhà đất", "tracked": "559", "under3": "491", "under4": "528", "median_m2": "29,4 tr/m²", "median_total": "2,59 tỷ", "mid_range": "21,3-31,4 tr/m²"},
+                        {"ward_type": "Phú Lợi · đất nền", "tracked": "349", "under3": "109", "under4": "215", "median_m2": "27,7 tr/m²", "median_total": "3,3 tỷ", "mid_range": "22,0-34,4 tr/m²"},
+                        {"ward_type": "Phú Lợi · nhà đất", "tracked": "401", "under3": "62", "under4": "177", "median_m2": "39,1 tr/m²", "median_total": "3,95 tỷ", "mid_range": "28,3-54,3 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước theo đúng mục tiêu mua?",
+                    "note": "Khóa loại hình và khung tiền trước; dấu hiệu đáng kiểm tra chỉ là lớp ưu tiên gọi hỏi sau cùng.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều đất nền dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "338 tin đất nền dưới 3 tỷ, cao hơn 109 tin ở Phú Lợi và giá trung vị đất nền thấp hơn 10,2 tr/m²."},
+                        {"need": "Muốn nhà đất dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "491 tin nhà đất dưới 3 tỷ, trong khi Phú Lợi có 62 tin; tổng giá trung vị nhà đất Tương Bình Hiệp là 2,59 tỷ."},
+                        {"need": "Muốn soi thêm nhóm giá cao hơn", "open_first": "Phú Lợi sau vòng lọc đầu", "why": "Phú Lợi có mặt bằng giá rao cao hơn ở cả đất nền và nhà đất, phù hợp khi anh không bị khóa cứng dưới 3 tỷ."},
+                        {"need": "Muốn ưu tiên dấu hiệu đáng kiểm tra", "open_first": "Phú Lợi song song", "why": "Phú Lợi có 103 dấu hiệu đáng kiểm tra, cao hơn 68 ở Tương Bình Hiệp; vẫn cần kiểm tra pháp lý và thực địa."}
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới",
+                    "title": "Một vài mức giá gần nhất để hình dung nhịp rao ở hai phường",
+                    "note": "Chỉ dùng như ví dụ về mặt bằng giá rao gần đây, không phải khuyến nghị mua ngay.",
+                    "columns": [
+                        {"key": "sample", "label": "Ví dụ"},
+                        {"key": "price", "label": "Giá rao"},
+                        {"key": "note", "label": "Gợi ý đọc nhanh"}
+                    ],
+                    "rows": [
+                        {"sample": "Tương Bình Hiệp · nhà đất gần nhất", "price": "2,3 tỷ · 28,5 tr/m²", "note": "Phù hợp để mở trước nếu anh cần nhiều nhà đất dưới 3 tỷ."},
+                        {"sample": "Tương Bình Hiệp · đất nền giảm giá", "price": "1,78 tỷ · 18,4 tr/m²", "note": "Một mẫu đất nền dưới 2 tỷ cho thấy vì sao cần lọc Tương Bình Hiệp trước khi khóa ngân sách thấp."},
+                        {"sample": "Phú Lợi · đất nền gần nhất", "price": "1,95 tỷ · 18,6 tr/m²", "note": "Có mẫu đáng kiểm tra nhưng mặt bằng chung đất nền Phú Lợi vẫn cao hơn Tương Bình Hiệp."},
+                        {"sample": "Phú Lợi · đất nền khác", "price": "3,39 tỷ · 32,8 tr/m²", "note": "Cho thấy biên giá ở Phú Lợi rộng hơn; cần so kỹ từng vị trí, đường vào và diện tích."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Tương Bình Hiệp áp đảo ở nhóm dưới 3 tỷ",
+                    "note": "Nếu mục tiêu là nhanh chóng có danh sách gọi hỏi trong khung ngân sách thấp, Tương Bình Hiệp đang thuận hơn rõ.",
+                    "alt": "Biểu đồ so số tin dưới 3 tỷ giữa Tương Bình Hiệp và Phú Lợi",
+                    "rows": [
+                        {"label": "Tương Bình Hiệp", "value_label": "829 tin đất nền + nhà đất dưới 3 tỷ", "width": 100, "color": "#16a34a"},
+                        {"label": "Phú Lợi", "value_label": "171 tin đất nền + nhà đất dưới 3 tỷ", "width": 21, "color": "#f59e0b"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Phú Lợi nhiều dấu hiệu hơn nhưng giá trung vị cao hơn",
+                    "note": "Dấu hiệu đáng kiểm tra giúp ưu tiên mở tin, không thay thế bước so giá, pháp lý và thực địa.",
+                    "alt": "Biểu đồ so dấu hiệu đáng kiểm tra giữa Phú Lợi và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Phú Lợi", "value_label": "103 dấu hiệu đáng kiểm tra", "width": 100, "color": "#2563eb"},
+                        {"label": "Tương Bình Hiệp", "value_label": "68 dấu hiệu đáng kiểm tra", "width": 66, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-tuong-binh-hiep-neu-uu-tien-duoi-3-ty",
+                    "heading": "1. Nếu ưu tiên dưới 3 tỷ, nên mở Tương Bình Hiệp trước",
+                    "paragraphs": [
+                        "Tương Bình Hiệp đang cho nhiều lựa chọn hơn hẳn khi anh giữ trần dưới 3 tỷ. Ở nhóm đất nền, phường này có 338 tin dưới 3 tỷ, trong khi Phú Lợi có 109 tin. Ở nhóm nhà đất, Tương Bình Hiệp có 491 tin dưới 3 tỷ, còn Phú Lợi chỉ có 62 tin.",
+                        "Chênh lệch không chỉ nằm ở số lượng. Đất nền Tương Bình Hiệp có giá rao trung vị 17,5 tr/m² và tổng giá trung vị 1,95 tỷ. Nhà đất Tương Bình Hiệp có giá rao trung vị 29,4 tr/m² và tổng giá trung vị 2,59 tỷ. Các mức này hợp hơn nếu anh muốn mở danh sách nhanh trong vùng ngân sách phổ biến."
+                    ],
+                    "bullets": [
+                        "Đất nền Tương Bình Hiệp: 411 tin theo dõi · 338 tin dưới 3 tỷ · giá trung vị 17,5 tr/m²",
+                        "Nhà đất Tương Bình Hiệp: 559 tin theo dõi · 491 tin dưới 3 tỷ · tổng giá trung vị 2,59 tỷ",
+                        "Tổng cộng hai loại hình chính: Tương Bình Hiệp có 829 tin dưới 3 tỷ, cao hơn rõ mức 171 tin của Phú Lợi",
+                        "Nếu anh muốn tiết kiệm thời gian, hãy mở Tương Bình Hiệp trước rồi mới mở Phú Lợi ở vòng sau"
+                    ]
+                },
+                {
+                    "id": "phu-loi-hop-khi-chap-nhan-mat-bang-cao-hon",
+                    "heading": "2. Phú Lợi hợp để mở thêm khi anh chấp nhận mặt bằng giá cao hơn",
+                    "paragraphs": [
+                        "Phú Lợi không phải lựa chọn mở đầu nếu anh đang khóa chặt dưới 3 tỷ. Giá rao trung vị đất nền Phú Lợi là 27,7 tr/m² và tổng giá trung vị 3,3 tỷ. Với nhà đất, giá rao trung vị là 39,1 tr/m² và tổng giá trung vị 3,95 tỷ. Đây là mặt bằng cao hơn Tương Bình Hiệp ở cả hai loại hình.",
+                        "Tuy vậy, Phú Lợi vẫn đáng mở khi anh đã có ngân sách thoáng hơn hoặc muốn kiểm tra từng tin nổi bật. Phường này có 103 dấu hiệu đáng kiểm tra, cao hơn 68 ở Tương Bình Hiệp. Vì vậy cách dùng hợp lý là mở Tương Bình Hiệp để lấy nguồn rộng dưới 3 tỷ, rồi mở Phú Lợi để soi thêm nhóm giá cao hơn và các tin đáng kiểm tra."
+                    ],
+                    "bullets": [
+                        "Đất nền Phú Lợi: 349 tin theo dõi · 109 tin dưới 3 tỷ · giá trung vị 27,7 tr/m²",
+                        "Nhà đất Phú Lợi: 401 tin theo dõi · 62 tin dưới 3 tỷ · tổng giá trung vị 3,95 tỷ",
+                        "Phú Lợi có 103 dấu hiệu đáng kiểm tra, nhỉnh hơn Tương Bình Hiệp",
+                        "Đừng chỉ nhìn số dấu hiệu; cần so lại loại hình, tổng giá và điều kiện thực địa"
+                    ]
+                },
+                {
+                    "id": "tach-dat-nen-va-nha-dat-de-tranh-ket-luan-sai",
+                    "heading": "3. Phải tách đất nền và nhà đất trước khi kết luận phường nào hợp hơn",
+                    "paragraphs": [
+                        "Nếu gộp tất cả tin lại, anh dễ thấy Tương Bình Hiệp có 974 tin và Phú Lợi có 779 tin rồi kết luận quá nhanh. Vấn đề là nhu cầu mua đất nền khác nhu cầu mua nhà đất. Hai loại hình có giá/m², tổng giá và số tin dưới 3 tỷ rất khác nhau.",
+                        "Ví dụ, đất nền Tương Bình Hiệp có tổng giá trung vị 1,95 tỷ, còn nhà đất là 2,59 tỷ. Ở Phú Lợi, đất nền là 3,3 tỷ và nhà đất là 3,95 tỷ. Vì vậy câu hỏi đúng không phải chỉ là phường nào nhiều tin hơn, mà là trong đúng loại hình của anh, còn bao nhiêu tin nằm trong khung tiền thật."
+                    ],
+                    "bullets": [
+                        "Luôn chọn đất nền hoặc nhà đất trước khi so phường",
+                        "Nhìn đồng thời giá trung vị/m² và tổng giá trung vị",
+                        "Dùng nhóm dưới 3 tỷ/dưới 4 tỷ để biết còn bao nhiêu tin thật sự vừa túi tiền",
+                        "Giá rao trung vị không phải cam kết mua được ở mức đó"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard-de-loc-hai-phuong",
+                    "heading": "4. Cách dùng dashboard để lọc hai phường này đỡ tốn thời gian",
+                    "paragraphs": [
+                        "Bước nhanh nhất là mở dashboard ở Tương Bình Hiệp, khóa loại hình anh đang tìm, rồi giới hạn tổng giá dưới 3 tỷ hoặc dưới 4 tỷ. Sau khi có danh sách ngắn, anh mở thêm Phú Lợi để so các tin có dấu hiệu đáng kiểm tra hoặc các mẫu vị trí phù hợp hơn nhưng giá cao hơn.",
+                        "Khi chọn được 3-5 tin, hãy dùng công cụ định giá BĐS để đặt từng tin vào mặt bằng chung của phường. Sau đó vẫn phải kiểm tra pháp lý, quy hoạch, đường vào, hiện trạng và độ khớp mô tả trước khi đặt cọc. Radar BDS chỉ là bộ lọc dữ liệu ban đầu."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Tương Bình Hiệp nếu ngân sách dưới 3 tỷ là tiêu chí chính",
+                        "Bước 2: khóa đúng loại hình đất nền hoặc nhà đất",
+                        "Bước 3: mở Phú Lợi ở vòng sau để soi thêm dấu hiệu và mặt bằng giá cao hơn",
+                        "Bước 4: kiểm tra từng tin bằng định giá, pháp lý, quy hoạch và thực địa"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Anh đã chọn rõ đất nền hay nhà đất trước khi so phường chưa?",
+                "Anh đã nhìn cả giá trung vị/m² và tổng giá trung vị chưa?",
+                "Anh đã kiểm tra số tin còn dưới 3 tỷ hoặc dưới 4 tỷ chưa?",
+                "Anh có đang nhầm dấu hiệu đáng kiểm tra với khuyến nghị mua ngay không?",
+                "Anh đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Tương Bình Hiệp trước, rồi so thêm Phú Lợi",
+            "body": "Nếu anh đang giữ ngân sách dưới 3 tỷ, bắt đầu bằng Tương Bình Hiệp để có nhiều lựa chọn hơn. Sau đó mở thêm Phú Lợi khi muốn soi nhóm giá cao hơn hoặc các tin có dấu hiệu đáng kiểm tra. Luôn khóa loại hình trước khi gọi hỏi sâu.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_vs_tuong_binh_hiep"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Lợi hay Tương Bình Hiệp", "href": "/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.

@@ -1,3 +1,10 @@
+## 2026-08-24
+- `/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc` — **Phú Lợi hay Tương Bình Hiệp: nên xem khu nào trước?**
+  - Pillar: So sánh phường / ngân sách
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-24, split by `dat_nen` vs `nha_dat`, with dưới-3-tỷ / dưới-4-tỷ counts and current example listings
+  - Funnel: `/binh-duong/phuong-tuong-binh-hiep`, `/binh-duong/phuong-phu-loi`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc`, `/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc`
+
 ## 2026-08-22
 - `/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot` — **Từ báo cáo tháng 07/2026, nên mở phường nào trước ở Thủ Dầu Một?**
   - Pillar: Báo cáo → tin tức / hướng dẫn đọc dữ liệu
