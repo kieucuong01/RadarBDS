@@ -1,3 +1,10 @@
+## 2026-08-25
+- `/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc` — **Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân nên mở trước?**
+  - Pillar: So sánh phường / loại hình / ngân sách
+  - Score gate: 97/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-25, filtered riêng `property_type='nha_dat'`, with dưới-3-tỷ / dưới-4-tỷ counts, median price/m², median total price, and current examples
+  - Funnel: `/binh-duong/phuong-phu-my`, `/binh-duong/phuong-phu-tan`, dashboard ward filter for `nha_dat`, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong`, `/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon`
+
 ## 2026-08-24
 - `/tin-tuc/duoi-4-ty-nen-xem-phu-tan-hay-phu-hoa-truoc` — **Dưới 4 tỷ nên xem Phú Tân hay Phú Hòa trước?**
   - Pillar: So sánh phường / ngân sách

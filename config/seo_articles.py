@@ -16541,7 +16541,544 @@ SEO_ARTICLES = {
                 "Xác minh pháp lý, quy hoạch và khả năng thương lượng trước khi đặt lịch đi xem."
             ]
         }
-    }
+    },
+    'nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc': {'variant': 'knowledge',
+                                                       'path': '/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc',
+                                                       'title': 'Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân nên mở trước? | '
+                                                                'Radar BDS',
+                                                       'description': 'Radar BDS cập nhật 25/08/2026: nếu anh tìm nhà '
+                                                                      'đất dưới 3 tỷ, Phú Mỹ đang cho nhiều lựa chọn '
+                                                                      'hơn Phú Tân. Bài viết tách riêng nhà đất để '
+                                                                      'tránh so sai với đất nền.',
+                                                       'keywords': 'nhà đất dưới 3 tỷ Phú Mỹ hay Phú Tân, nhà đất Phú '
+                                                                   'Mỹ, nhà đất Phú Tân, giá nhà đất Phú Mỹ, giá nhà '
+                                                                   'đất Phú Tân, Radar BDS',
+                                                       'breadcrumb_label': 'Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân',
+                                                       'hero_badge': 'So sánh phường / nhà đất',
+                                                       'hero_title': 'Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân nên mở '
+                                                                     'trước?',
+                                                       'hero_text': 'Nếu anh đang tìm nhà đất dưới 3 tỷ, nên mở Phú Mỹ '
+                                                                    'trước. Snapshot live ngày 25/08/2026 cho thấy Phú '
+                                                                    'Mỹ có 208 tin nhà đất dưới 3 tỷ, còn Phú Tân có '
+                                                                    '24 tin. Bài này chỉ so riêng nhà đất để tránh '
+                                                                    'nhầm với đất nền.',
+                                                       'scope_label': 'Thủ Dầu Một · Phú Mỹ / Phú Tân · nhà đất dưới 3 '
+                                                                      'tỷ',
+                                                       'hero_checks': ['Snapshot live ngày 25/08/2026 từ tin Facebook '
+                                                                       'đang theo dõi',
+                                                                       'Nhà đất dưới 3 tỷ: Phú Mỹ 208 tin · Phú Tân 24 '
+                                                                       'tin',
+                                                                       'Giá rao trung vị nhà đất: Phú Mỹ 38,7 tr/m² · '
+                                                                       'Phú Tân 34,4 tr/m²',
+                                                                       'Dưới 4 tỷ: Phú Mỹ 606 tin · Phú Tân 79 tin'],
+                                                       'primary_cta': 'Mở dashboard lọc nhà đất Phú Mỹ',
+                                                       'primary_href': '/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=nha_dat&utm_source=seo&utm_medium=article&utm_campaign=nha_dat_duoi_3_ty_phu_my_phu_tan',
+                                                       'secondary_cta': 'Dùng công cụ định giá BĐS',
+                                                       'secondary_href': '/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=nha_dat_duoi_3_ty_phu_my_phu_tan',
+                                                       'map_label': 'Tin tức / Phú Mỹ · Phú Tân / nhà đất',
+                                                       'hero_metric': {'label': 'Nhà đất đang theo dõi',
+                                                                       'value': '1.064 tin',
+                                                                       'delta': 'Phú Mỹ 849 · Phú Tân 215',
+                                                                       'note': 'Nguồn Facebook live ngày 25/08/2026 '
+                                                                               'với is_active=1; đây là giá rao, không '
+                                                                               'phải giá chốt giao dịch'},
+                                                       'property_card': {'status': 'Kết luận nhanh',
+                                                                         'title': 'Nếu ưu tiên nhà đất dưới 3 tỷ, Phú '
+                                                                                  'Mỹ là nơi nên mở trước vì nguồn '
+                                                                                  'hàng dày hơn rõ',
+                                                                         'price': 'Nhà đất dưới 3 tỷ: Phú Mỹ 208 tin · '
+                                                                                  'Phú Tân 24 tin',
+                                                                         'metric_a': 'Giá trung vị/m²',
+                                                                         'metric_a_value': '38,7 vs 34,4 tr/m²',
+                                                                         'metric_b': 'Tổng giá trung vị',
+                                                                         'metric_b_value': '3,5 vs 3,5 tỷ'},
+                                                       'local_links_title': 'Đi tiếp theo đúng intent nhà đất',
+                                                       'local_links': [{'label': 'Trang phường Phú Mỹ',
+                                                                        'href': '/binh-duong/phuong-phu-my',
+                                                                        'description': 'Mở trang khu vực Phú Mỹ để vào '
+                                                                                       'dashboard đúng phường và lọc '
+                                                                                       'tiếp theo nhà đất.'},
+                                                                       {'label': 'Trang phường Phú Tân',
+                                                                        'href': '/binh-duong/phuong-phu-tan',
+                                                                        'description': 'Mở trang khu vực Phú Tân để '
+                                                                                       'kiểm tra thêm khi anh muốn '
+                                                                                       'nguồn hàng gọn hơn.'},
+                                                                       {'label': 'Báo cáo Bình Dương tháng 07/2026',
+                                                                        'href': '/bao-cao/bds-binh-duong-thang-07-2026',
+                                                                        'description': 'Đặt hai phường này vào bối '
+                                                                                       'cảnh chung của toàn Thủ Dầu '
+                                                                                       'Một.'},
+                                                                       {'label': 'Phú Tân hay Phú Mỹ: nên lọc đất nền '
+                                                                                 'và nhà đất theo phường thế nào?',
+                                                                        'href': '/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong',
+                                                                        'description': 'Bài nền để đọc bức tranh rộng '
+                                                                                       'hơn, không khóa riêng intent '
+                                                                                       'nhà đất dưới 3 tỷ.'},
+                                                                       {'label': 'Đất nền dưới 3 tỷ: Phú Tân hay Phú '
+                                                                                 'Mỹ còn nhiều lựa chọn hơn?',
+                                                                        'href': '/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon',
+                                                                        'description': 'Nếu anh chuyển sang đất nền, '
+                                                                                       'bài này là intent khác và cần '
+                                                                                       'đọc riêng.'},
+                                                                       {'label': 'Giá đất Phú Mỹ hiện bao nhiêu?',
+                                                                        'href': '/tin-tuc/gia-dat-phu-my-hien-bao-nhieu',
+                                                                        'description': 'Xem riêng dữ liệu đất nền và '
+                                                                                       'nhà đất của Phú Mỹ trước khi '
+                                                                                       'mở tin cụ thể.'}],
+                                                       'faq': [{'q': 'Nếu tìm nhà đất dưới 3 tỷ thì nên mở Phú Mỹ hay '
+                                                                     'Phú Tân trước?',
+                                                                'a': 'Nên mở Phú Mỹ trước. Snapshot live ngày '
+                                                                     '25/08/2026 cho thấy Phú Mỹ có 208 tin nhà đất '
+                                                                     'dưới 3 tỷ, còn Phú Tân có 24 tin. Nghĩa là cùng '
+                                                                     'một khung tiền, Phú Mỹ cho anh danh sách rộng '
+                                                                     'hơn để lọc.'},
+                                                               {'q': 'Giá nhà đất ở hai phường này đang khác nhau thế '
+                                                                     'nào?',
+                                                                'a': 'Nhà đất Phú Mỹ có giá rao trung vị 38,7 tr/m², '
+                                                                     'còn Phú Tân là 34,4 tr/m². Tổng giá trung vị của '
+                                                                     'cả hai cùng quanh 3,5 tỷ, nên khác biệt lớn hơn '
+                                                                     'nằm ở số lượng tin dưới 3 tỷ và dưới 4 tỷ chứ '
+                                                                     'không chỉ ở một mức giá chung.'},
+                                                               {'q': 'Vì sao Phú Tân vẫn đáng mở thêm dù ít tin dưới 3 '
+                                                                     'tỷ hơn?',
+                                                                'a': 'Phú Tân có 103 dấu hiệu đáng kiểm tra trên 215 '
+                                                                     'tin nhà đất đang theo dõi, trong khi Phú Mỹ có '
+                                                                     '102 dấu hiệu trên 849 tin. Nếu anh đã lọc xong '
+                                                                     'Phú Mỹ và muốn soi nhóm tin nổi bật hơn về tỷ '
+                                                                     'lệ, Phú Tân vẫn đáng mở ở vòng sau.'},
+                                                               {'q': 'Có nên gộp đất nền và nhà đất khi so Phú Mỹ với '
+                                                                     'Phú Tân không?',
+                                                                'a': 'Không nên. Đất nền và nhà đất là hai loại hình '
+                                                                     'khác nhau. Bài này khóa riêng nhà đất dưới 3 tỷ; '
+                                                                     'nếu anh mua đất nền, cần đọc bài đất nền riêng '
+                                                                     'để tránh kết luận sai.'},
+                                                               {'q': 'Các con số trong bài là giá giao dịch hay giá '
+                                                                     'rao?',
+                                                                'a': 'Đây là giá rao từ tin Facebook công khai Radar '
+                                                                     'BDS đang theo dõi với is_active=1, đã loại '
+                                                                     'blacklist và review hidden. Không nên xem đây là '
+                                                                     'giá chốt hay cam kết mua được.'}],
+                                                       'article': {'published_at': '2026-08-25',
+                                                                   'modified_at': '2026-08-25',
+                                                                   'intro': ['Nếu anh đang tìm nhà đất dưới 3 tỷ ở Thủ '
+                                                                             'Dầu Một, câu trả lời 80/20 hôm nay là: '
+                                                                             'mở Phú Mỹ trước. Dữ liệu Facebook live '
+                                                                             'ngày 25/08/2026 trên Radar BDS cho thấy '
+                                                                             'Phú Mỹ có 208 tin nhà đất dưới 3 tỷ, '
+                                                                             'trong khi Phú Tân có 24 tin. Chỉ riêng '
+                                                                             'chênh lệch này đã đủ để quyết định thứ '
+                                                                             'tự mở dashboard.',
+                                                                             'Điểm quan trọng là bài này chỉ so nhà '
+                                                                             'đất. Không gộp đất nền vào, vì gộp hai '
+                                                                             'loại hình sẽ làm anh nhìn sai số lượng '
+                                                                             'tin vừa túi tiền và mặt bằng giá. Tất cả '
+                                                                             'số dưới đây là giá rao công khai, không '
+                                                                             'phải giá chốt giao dịch hay kết quả thẩm '
+                                                                             'định.'],
+                                                                   'summary_cards': [{'label': 'Nhà đất đang theo dõi',
+                                                                                      'value': '1.064 tin',
+                                                                                      'note': 'Phú Mỹ 849 · Phú Tân '
+                                                                                              '215'},
+                                                                                     {'label': 'Nhà đất dưới 3 tỷ',
+                                                                                      'value': '208 vs 24 tin',
+                                                                                      'note': 'Phú Mỹ vs Phú Tân'},
+                                                                                     {'label': 'Nhà đất dưới 4 tỷ',
+                                                                                      'value': '606 vs 79 tin',
+                                                                                      'note': 'Phú Mỹ vs Phú Tân'},
+                                                                                     {'label': 'Dấu hiệu đáng kiểm tra',
+                                                                                      'value': '102 vs 103 tin',
+                                                                                      'note': 'Phú Mỹ vs Phú Tân'}],
+                                                                   'data_tables': [{'eyebrow': 'Bảng so nhanh',
+                                                                                    'title': 'Nếu chỉ nhìn nhà đất, '
+                                                                                             'Phú Mỹ và Phú Tân đang '
+                                                                                             'khác nhau thế nào?',
+                                                                                    'note': 'Nguồn Facebook live ngày '
+                                                                                            '25/08/2026, lọc '
+                                                                                            'is_active=1, '
+                                                                                            'is_blacklisted=0, '
+                                                                                            'review_hidden=0, '
+                                                                                            "property_type='nha_dat'. "
+                                                                                            'Giá trung vị nghĩa là một '
+                                                                                            'nửa số tin thấp hơn mức '
+                                                                                            'này, một nửa cao hơn.',
+                                                                                    'columns': [{'key': 'ward',
+                                                                                                 'label': 'Phường'},
+                                                                                                {'key': 'tracked',
+                                                                                                 'label': 'Tin nhà '
+                                                                                                          'đất'},
+                                                                                                {'key': 'under3',
+                                                                                                 'label': 'Dưới 3 tỷ'},
+                                                                                                {'key': 'under4',
+                                                                                                 'label': 'Dưới 4 tỷ'},
+                                                                                                {'key': 'median_m2',
+                                                                                                 'label': 'Giá trung '
+                                                                                                          'vị/m²'},
+                                                                                                {'key': 'median_total',
+                                                                                                 'label': 'Tổng giá '
+                                                                                                          'trung vị'},
+                                                                                                {'key': 'mid_range',
+                                                                                                 'label': 'Vùng 25-75% '
+                                                                                                          'giá/m²'}],
+                                                                                    'rows': [{'ward': 'Phú Mỹ',
+                                                                                              'tracked': '849 tin',
+                                                                                              'under3': '208 tin',
+                                                                                              'under4': '606 tin',
+                                                                                              'median_m2': '38,7 tr/m²',
+                                                                                              'median_total': '3,5 tỷ',
+                                                                                              'mid_range': '28,7-43,0 '
+                                                                                                           'tr/m²'},
+                                                                                             {'ward': 'Phú Tân',
+                                                                                              'tracked': '215 tin',
+                                                                                              'under3': '24 tin',
+                                                                                              'under4': '79 tin',
+                                                                                              'median_m2': '34,4 tr/m²',
+                                                                                              'median_total': '3,5 tỷ',
+                                                                                              'mid_range': '27,0-38,7 '
+                                                                                                           'tr/m²'}]},
+                                                                                   {'eyebrow': 'Kết luận theo nhu cầu',
+                                                                                    'title': 'Nên mở phường nào trước '
+                                                                                             'theo đúng mục tiêu mua '
+                                                                                             'nhà đất?',
+                                                                                    'note': 'Khóa đúng nhà đất trước, '
+                                                                                            'rồi nhìn số tin còn trong '
+                                                                                            'khung tiền thật. Dấu hiệu '
+                                                                                            'đáng kiểm tra chỉ là lớp '
+                                                                                            'ưu tiên mở tin sau đó.',
+                                                                                    'columns': [{'key': 'need',
+                                                                                                 'label': 'Nhu cầu'},
+                                                                                                {'key': 'open_first',
+                                                                                                 'label': 'Nên mở '
+                                                                                                          'trước'},
+                                                                                                {'key': 'why',
+                                                                                                 'label': 'Vì sao'}],
+                                                                                    'rows': [{'need': 'Muốn nhiều nhà '
+                                                                                                      'đất dưới 3 tỷ',
+                                                                                              'open_first': 'Phú Mỹ',
+                                                                                              'why': 'Có 208 tin dưới '
+                                                                                                     '3 tỷ, cao hơn rõ '
+                                                                                                     'so với 24 tin ở '
+                                                                                                     'Phú Tân.'},
+                                                                                             {'need': 'Muốn nguồn hàng '
+                                                                                                      'rộng dưới 4 tỷ',
+                                                                                              'open_first': 'Phú Mỹ',
+                                                                                              'why': 'Có 606 tin dưới '
+                                                                                                     '4 tỷ, trong khi '
+                                                                                                     'Phú Tân có 79 '
+                                                                                                     'tin.'},
+                                                                                             {'need': 'Muốn soi tỷ lệ '
+                                                                                                      'tin nổi bật hơn',
+                                                                                              'open_first': 'Phú Tân ở '
+                                                                                                            'vòng sau',
+                                                                                              'why': 'Phú Tân có 103 '
+                                                                                                     'dấu hiệu trên '
+                                                                                                     '215 tin, tức mật '
+                                                                                                     'độ tín hiệu cao '
+                                                                                                     'hơn nhiều so với '
+                                                                                                     'Phú Mỹ.'},
+                                                                                             {'need': 'Muốn mặt bằng '
+                                                                                                      'giá/m² mềm hơn '
+                                                                                                      'chút',
+                                                                                              'open_first': 'Phú Tân '
+                                                                                                            'nếu anh '
+                                                                                                            'đã chấp '
+                                                                                                            'nhận ít '
+                                                                                                            'hàng',
+                                                                                              'why': 'Giá trung vị nhà '
+                                                                                                     'đất Phú Tân 34,4 '
+                                                                                                     'tr/m², thấp hơn '
+                                                                                                     'Phú Mỹ 38,7 '
+                                                                                                     'tr/m² nhưng số '
+                                                                                                     'tin dưới 3 tỷ ít '
+                                                                                                     'hơn nhiều.'}]},
+                                                                                   {'eyebrow': 'Ví dụ tin mới',
+                                                                                    'title': 'Một vài mức giá nhà đất '
+                                                                                             'gần đây để anh hình dung '
+                                                                                             'nhanh',
+                                                                                    'note': 'Chỉ dùng như ví dụ về '
+                                                                                            'nhịp rao gần đây, không '
+                                                                                            'phải khuyến nghị mua '
+                                                                                            'ngay.',
+                                                                                    'columns': [{'key': 'sample',
+                                                                                                 'label': 'Ví dụ'},
+                                                                                                {'key': 'price',
+                                                                                                 'label': 'Giá rao'},
+                                                                                                {'key': 'note',
+                                                                                                 'label': 'Gợi ý đọc '
+                                                                                                          'nhanh'}],
+                                                                                    'rows': [{'sample': 'Phú Mỹ · nhà '
+                                                                                                        'gần nhất',
+                                                                                              'price': '2,9 tỷ · 30,5 '
+                                                                                                       'tr/m²',
+                                                                                              'note': 'Mức giá phổ '
+                                                                                                      'biến trong nhóm '
+                                                                                                      'dưới 3 tỷ ở Phú '
+                                                                                                      'Mỹ đang quanh '
+                                                                                                      '2,8-2,95 tỷ.'},
+                                                                                             {'sample': 'Phú Mỹ · nhà '
+                                                                                                        'khác',
+                                                                                              'price': '2,8 tỷ · 29,5 '
+                                                                                                       'tr/m²',
+                                                                                              'note': 'Cho thấy Phú Mỹ '
+                                                                                                      'có nhiều mẫu '
+                                                                                                      'bám sát khung '
+                                                                                                      'dưới 3 tỷ hơn '
+                                                                                                      'để anh lọc.'},
+                                                                                             {'sample': 'Phú Tân · nhà '
+                                                                                                        'gần nhất',
+                                                                                              'price': '2,95 tỷ · 39,3 '
+                                                                                                       'tr/m²',
+                                                                                              'note': 'Phú Tân vẫn có '
+                                                                                                      'mẫu dưới 3 tỷ '
+                                                                                                      'nhưng số lượng '
+                                                                                                      'ít hơn nhiều.'},
+                                                                                             {'sample': 'Phú Tân · nhà '
+                                                                                                        'khác',
+                                                                                              'price': '2,8 tỷ · 28,0 '
+                                                                                                       'tr/m²',
+                                                                                              'note': 'Nên xem như '
+                                                                                                      'hàng hiếm trong '
+                                                                                                      'khung dưới 3 '
+                                                                                                      'tỷ, không phải '
+                                                                                                      'mặt bằng '
+                                                                                                      'rộng.'}]}],
+                                                                   'charts': [{'eyebrow': 'Visual nhanh',
+                                                                               'title': 'Phú Mỹ dày nguồn nhà đất dưới '
+                                                                                        '3 tỷ hơn rõ',
+                                                                               'note': 'Nếu mục tiêu là có danh sách '
+                                                                                       'đủ rộng để gọi hỏi ngay, Phú '
+                                                                                       'Mỹ đang thuận hơn nhiều.',
+                                                                               'alt': 'Biểu đồ so nhà đất dưới 3 tỷ '
+                                                                                      'giữa Phú Mỹ và Phú Tân',
+                                                                               'rows': [{'label': 'Phú Mỹ',
+                                                                                         'value_label': '208 tin nhà '
+                                                                                                        'đất dưới 3 tỷ',
+                                                                                         'width': 100,
+                                                                                         'color': '#16a34a'},
+                                                                                        {'label': 'Phú Tân',
+                                                                                         'value_label': '24 tin nhà '
+                                                                                                        'đất dưới 3 tỷ',
+                                                                                         'width': 12,
+                                                                                         'color': '#f59e0b'}]},
+                                                                              {'eyebrow': 'Visual nhanh',
+                                                                               'title': 'Phú Tân có mật độ tín hiệu '
+                                                                                        'cao hơn, nhưng nguồn hàng ít '
+                                                                                        'hơn',
+                                                                               'note': 'Dấu hiệu đáng kiểm tra giúp ưu '
+                                                                                       'tiên mở tin, không thay thế '
+                                                                                       'bước kiểm tra pháp lý, quy '
+                                                                                       'hoạch và thực địa.',
+                                                                               'alt': 'Biểu đồ so dấu hiệu đáng kiểm '
+                                                                                      'tra giữa Phú Tân và Phú Mỹ ở '
+                                                                                      'nhà đất',
+                                                                               'rows': [{'label': 'Phú Tân',
+                                                                                         'value_label': '103 dấu hiệu '
+                                                                                                        '/ 215 tin nhà '
+                                                                                                        'đất',
+                                                                                         'width': 100,
+                                                                                         'color': '#2563eb'},
+                                                                                        {'label': 'Phú Mỹ',
+                                                                                         'value_label': '102 dấu hiệu '
+                                                                                                        '/ 849 tin nhà '
+                                                                                                        'đất',
+                                                                                         'width': 24,
+                                                                                         'color': '#dc2626'}]}],
+                                                                   'sections': [{'id': 'mo-phu-my-truoc-neu-khoa-duoi-3-ty',
+                                                                                 'heading': '1. Nếu khóa ngân sách '
+                                                                                            'dưới 3 tỷ, nên mở Phú Mỹ '
+                                                                                            'trước',
+                                                                                 'paragraphs': ['Lý do đơn giản là số '
+                                                                                                'lượng. Phú Mỹ đang có '
+                                                                                                '208 tin nhà đất dưới '
+                                                                                                '3 tỷ, cao hơn rất '
+                                                                                                'nhiều so với 24 tin ở '
+                                                                                                'Phú Tân. Khi anh cần '
+                                                                                                'một danh sách đủ rộng '
+                                                                                                'để gọi hỏi, so diện '
+                                                                                                'tích và loại bỏ tin '
+                                                                                                'không phù hợp, khác '
+                                                                                                'biệt này quan trọng '
+                                                                                                'hơn việc chênh vài '
+                                                                                                'triệu mỗi mét vuông.',
+                                                                                                'Phú Mỹ cũng mở rộng '
+                                                                                                'thêm lựa chọn nếu anh '
+                                                                                                'nới trần lên 4 tỷ. Ở '
+                                                                                                'khung dưới 4 tỷ, Phú '
+                                                                                                'Mỹ có 606 tin nhà đất '
+                                                                                                'còn theo dõi, còn Phú '
+                                                                                                'Tân có 79 tin. Vì vậy '
+                                                                                                'trình tự hợp lý là mở '
+                                                                                                'Phú Mỹ trước, lọc '
+                                                                                                'xong rồi mới sang Phú '
+                                                                                                'Tân nếu cần thêm đối '
+                                                                                                'chiếu.'],
+                                                                                 'bullets': ['Phú Mỹ: 849 tin nhà đất '
+                                                                                             'đang theo dõi · 208 tin '
+                                                                                             'dưới 3 tỷ · 606 tin dưới '
+                                                                                             '4 tỷ',
+                                                                                             'Phú Tân: 215 tin nhà đất '
+                                                                                             'đang theo dõi · 24 tin '
+                                                                                             'dưới 3 tỷ · 79 tin dưới '
+                                                                                             '4 tỷ',
+                                                                                             'Tổng giá trung vị cả hai '
+                                                                                             'cùng quanh 3,5 tỷ, nên '
+                                                                                             'khác biệt lớn nằm ở độ '
+                                                                                             'dày nguồn hàng',
+                                                                                             'Đây là giá rao công '
+                                                                                             'khai, không phải giá '
+                                                                                             'chốt']},
+                                                                                {'id': 'phu-tan-van-dang-xem-neu-uu-tien-mat-do-tin-noi-bat',
+                                                                                 'heading': '2. Phú Tân vẫn đáng mở ở '
+                                                                                            'vòng sau nếu anh ưu tiên '
+                                                                                            'nhóm tin nổi bật',
+                                                                                 'paragraphs': ['Phú Tân không mạnh về '
+                                                                                                'số lượng nhà đất dưới '
+                                                                                                '3 tỷ, nhưng lại có '
+                                                                                                'mật độ tín hiệu khá '
+                                                                                                'dày. Phú Tân có 103 '
+                                                                                                'dấu hiệu đáng kiểm '
+                                                                                                'tra trên 215 tin nhà '
+                                                                                                'đất, trong khi Phú Mỹ '
+                                                                                                'có 102 dấu hiệu trên '
+                                                                                                '849 tin. Nói cách '
+                                                                                                'khác, nếu anh đã lọc '
+                                                                                                'xong Phú Mỹ và muốn '
+                                                                                                'xem một nhóm gọn hơn '
+                                                                                                'nhưng tỷ lệ tin nổi '
+                                                                                                'bật cao hơn, Phú Tân '
+                                                                                                'vẫn đáng mở.',
+                                                                                                'Tuy nhiên, đừng để '
+                                                                                                'lớp tín hiệu làm anh '
+                                                                                                'quên lớp ngân sách. '
+                                                                                                'Với người mua cần '
+                                                                                                'nhiều lựa chọn dưới 3 '
+                                                                                                'tỷ, Phú Tân không nên '
+                                                                                                'là nơi mở đầu. Hãy '
+                                                                                                'coi Phú Tân như '
+                                                                                                'phường đối chiếu ở '
+                                                                                                'vòng sau, sau khi anh '
+                                                                                                'đã có khung giá và '
+                                                                                                'tiêu chí rõ từ Phú '
+                                                                                                'Mỹ.'],
+                                                                                 'bullets': ['Phú Tân có mật độ tín '
+                                                                                             'hiệu cao hơn rõ so với '
+                                                                                             'Phú Mỹ',
+                                                                                             'Mật độ tín hiệu không '
+                                                                                             'đồng nghĩa chắc chắn '
+                                                                                             'pháp lý hay chất lượng '
+                                                                                             'tài sản tốt hơn',
+                                                                                             'Nếu cần nhiều hàng để '
+                                                                                             'lọc nhanh, vẫn nên bắt '
+                                                                                             'đầu từ Phú Mỹ',
+                                                                                             'Nếu cần soi nhóm tin nổi '
+                                                                                             'bật hơn, thêm Phú Tân ở '
+                                                                                             'vòng sau']},
+                                                                                {'id': 'vi-sao-phai-khoa-rieng-nha-dat',
+                                                                                 'heading': '3. Vì sao phải khóa riêng '
+                                                                                            'nhà đất thay vì gộp chung '
+                                                                                            'với đất nền?',
+                                                                                 'paragraphs': ['Nhà đất có thêm giá '
+                                                                                                'trị công trình, hiện '
+                                                                                                'trạng sử dụng, số '
+                                                                                                'phòng, chất lượng xây '
+                                                                                                'dựng và chi phí sửa '
+                                                                                                'chữa. Vì vậy mặt bằng '
+                                                                                                'giá/m² của nhà đất '
+                                                                                                'không đọc theo cách '
+                                                                                                'giống đất nền. Nếu '
+                                                                                                'anh gộp chung hai '
+                                                                                                'loại hình, số tin '
+                                                                                                'dưới 3 tỷ sẽ bị méo '
+                                                                                                'và thứ tự ưu tiên '
+                                                                                                'phường cũng sai theo.',
+                                                                                                'Bài này chỉ dùng nhà '
+                                                                                                'đất để giữ intent '
+                                                                                                'thật sát với người '
+                                                                                                'đang tìm nơi ở hoặc '
+                                                                                                'tài sản đã có công '
+                                                                                                'trình. Nếu anh thực '
+                                                                                                'ra đang tìm đất nền, '
+                                                                                                'nên đọc bài đất nền '
+                                                                                                'riêng giữa Phú Tân và '
+                                                                                                'Phú Mỹ thay vì dùng '
+                                                                                                'kết luận ở đây.'],
+                                                                                 'bullets': ['Khóa loại hình trước khi '
+                                                                                             'so phường',
+                                                                                             'Nhìn đồng thời số tin '
+                                                                                             'dưới 3 tỷ, dưới 4 tỷ và '
+                                                                                             'giá trung vị/m²',
+                                                                                             'Không lấy một mức giá '
+                                                                                             'chung cho cả đất nền và '
+                                                                                             'nhà đất',
+                                                                                             'Chỉ mở tin cụ thể sau '
+                                                                                             'khi đã lọc đúng loại '
+                                                                                             'hình']},
+                                                                                {'id': 'cach-dung-dashboard-de-loc-nhanh',
+                                                                                 'heading': '4. Cách dùng dashboard để '
+                                                                                            'lọc nhanh hai phường này',
+                                                                                 'paragraphs': ['Bước nhanh nhất là mở '
+                                                                                                'dashboard ở Phú Mỹ, '
+                                                                                                'khóa nhà đất, rồi '
+                                                                                                'giới hạn tổng giá '
+                                                                                                'dưới 3 tỷ. Khi đã có '
+                                                                                                'danh sách ngắn, anh '
+                                                                                                'mở thêm Phú Tân để '
+                                                                                                'xem liệu nhóm tin nổi '
+                                                                                                'bật có mang lại mẫu '
+                                                                                                'nào đáng mở sâu hơn '
+                                                                                                'không.',
+                                                                                                'Nếu đã chốt được 3-5 '
+                                                                                                'tin, anh nên dùng '
+                                                                                                'thêm công cụ định giá '
+                                                                                                'BĐS để đặt từng tin '
+                                                                                                'vào mặt bằng chung '
+                                                                                                'của phường. Sau đó '
+                                                                                                'vẫn phải kiểm tra '
+                                                                                                'pháp lý, quy hoạch, '
+                                                                                                'đường vào, hiện trạng '
+                                                                                                'và độ khớp mô tả '
+                                                                                                'trước khi xuống tiền. '
+                                                                                                'Radar BDS chỉ là bộ '
+                                                                                                'lọc dữ liệu ban đầu.'],
+                                                                                 'bullets': ['Bước 1: mở Phú Mỹ và '
+                                                                                             'khóa nhà đất',
+                                                                                             'Bước 2: lọc khung dưới 3 '
+                                                                                             'tỷ hoặc dưới 4 tỷ',
+                                                                                             'Bước 3: mở thêm Phú Tân '
+                                                                                             'để soi nhóm tín hiệu cao '
+                                                                                             'hơn',
+                                                                                             'Bước 4: dùng định giá và '
+                                                                                             'kiểm tra thực địa trước '
+                                                                                             'khi quyết định']}],
+                                                                   'checklist': ['Anh đã khóa đúng loại hình nhà đất '
+                                                                                 'trước khi so phường chưa?',
+                                                                                 'Anh đã nhìn cả số tin dưới 3 tỷ và '
+                                                                                 'dưới 4 tỷ chưa?',
+                                                                                 'Anh đã nhớ đây là giá rao công khai, '
+                                                                                 'không phải giá chốt chưa?',
+                                                                                 'Anh có đang nhầm dấu hiệu đáng kiểm '
+                                                                                 'tra với khuyến nghị mua ngay không?',
+                                                                                 'Anh đã chuẩn bị bước kiểm tra pháp '
+                                                                                 'lý, quy hoạch và thực địa chưa?']},
+                                                       'final_cta': {'title': 'Mở Radar để lọc nhà đất Phú Mỹ trước, '
+                                                                              'rồi soi thêm Phú Tân',
+                                                                     'body': 'Nếu anh đang tìm nhà đất dưới 3 tỷ, bắt '
+                                                                             'đầu bằng Phú Mỹ để có nguồn hàng đủ '
+                                                                             'rộng. Sau đó mở thêm Phú Tân khi muốn '
+                                                                             'soi nhóm tin nổi bật hơn theo tỷ lệ. '
+                                                                             'Luôn khóa đúng loại hình và kiểm tra '
+                                                                             'thực địa trước khi quyết định.',
+                                                                     'button': 'Mở Radar BDS',
+                                                                     'button_href': '/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=nha_dat&utm_source=seo&utm_medium=article&utm_campaign=nha_dat_duoi_3_ty_phu_my_phu_tan'},
+                                                       'breadcrumbs': [{'name': 'Trang chủ',
+                                                                        'href': '/',
+                                                                        'url': 'https://radarbds.vn/'},
+                                                                       {'name': 'Tin tức',
+                                                                        'href': '/tin-tuc',
+                                                                        'url': 'https://radarbds.vn/tin-tuc'},
+                                                                       {'name': 'Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân',
+                                                                        'href': '/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc',
+                                                                        'url': 'https://radarbds.vn/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc'}]}
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
