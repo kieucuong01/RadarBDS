@@ -1,3 +1,10 @@
+## 2026-08-26
+- `/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc` — **Phú Mỹ hay Tương Bình Hiệp: nên xem khu nào trước?**
+  - Pillar: So sánh phường
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-26, split by `dat_nen` vs `nha_dat`, with dưới-3-tỷ / dưới-4-tỷ counts, median price/m², median total price, signal counts, and current examples
+  - Funnel: `/binh-duong/phuong-phu-my`, `/binh-duong/phuong-tuong-binh-hiep`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc`, `/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc`
+
 ## 2026-08-25
 - `/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc` — **Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân nên mở trước?**
   - Pillar: So sánh phường / loại hình / ngân sách

@@ -17078,6 +17078,572 @@ SEO_ARTICLES = {
                                                                        {'name': 'Nhà đất dưới 3 tỷ: Phú Mỹ hay Phú Tân',
                                                                         'href': '/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc',
                                                                         'url': 'https://radarbds.vn/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc'}]}
+,
+'phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc': {'variant': 'knowledge',
+                                                      'category': {'key': 'so-sanh-khu-vuc',
+                                                                   'label': 'So sánh khu vực'},
+                                                      'path': '/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc',
+                                                      'title': 'Phú Mỹ hay Tương Bình Hiệp: nên xem khu nào trước? | '
+                                                               'Radar BDS',
+                                                      'description': 'Radar BDS cập nhật 26/08/2026: nếu anh cần nguồn '
+                                                                     'hàng rộng và nhiều dấu hiệu hơn, mở Phú Mỹ '
+                                                                     'trước. Nếu ưu tiên mặt bằng giá mềm hơn ở cả đất '
+                                                                     'nền lẫn nhà đất, Tương Bình Hiệp nên được mở '
+                                                                     'song song ngay từ đầu.',
+                                                      'keywords': 'Phú Mỹ hay Tương Bình Hiệp, giá đất Phú Mỹ, giá đất '
+                                                                  'Tương Bình Hiệp, nhà đất Phú Mỹ, nhà đất Tương Bình '
+                                                                  'Hiệp, Radar BDS',
+                                                      'breadcrumb_label': 'Phú Mỹ hay Tương Bình Hiệp',
+                                                      'hero_badge': 'So sánh phường',
+                                                      'hero_title': 'Phú Mỹ hay Tương Bình Hiệp: nên xem khu nào '
+                                                                    'trước?',
+                                                      'hero_text': 'Nếu anh muốn nhiều tin để lọc và cần thêm lớp dấu '
+                                                                   'hiệu đáng kiểm tra, nên mở Phú Mỹ trước. Nếu anh '
+                                                                   'ưu tiên mặt bằng giá mềm hơn ở cả đất nền lẫn nhà '
+                                                                   'đất, Tương Bình Hiệp đáng mở song song từ vòng '
+                                                                   'đầu. Muốn đọc đúng, luôn phải tách riêng đất nền '
+                                                                   'với nhà đất.',
+                                                      'scope_label': 'Thủ Dầu Một · Phú Mỹ / Tương Bình Hiệp',
+                                                      'hero_checks': ['Snapshot live ngày 26/08/2026, max crawled_at '
+                                                                      'Facebook 11:03 cùng ngày',
+                                                                      'Phú Mỹ có 1.566 tin đang theo dõi và 260 dấu '
+                                                                      'hiệu đáng kiểm tra; Tương Bình Hiệp có 989 tin '
+                                                                      'và 70 dấu hiệu',
+                                                                      'Đất nền giá trung vị: Phú Mỹ 22,9 tr/m²; Tương '
+                                                                      'Bình Hiệp 17,5 tr/m²',
+                                                                      'Nhà đất tổng giá trung vị: Phú Mỹ 3,5 tỷ; Tương '
+                                                                      'Bình Hiệp 2,59 tỷ'],
+                                                      'primary_cta': 'Mở dashboard lọc hai phường này',
+                                                      'primary_href': '/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_tuong_binh_hiep',
+                                                      'secondary_cta': 'Dùng công cụ định giá BĐS',
+                                                      'secondary_href': '/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_tuong_binh_hiep',
+                                                      'map_label': 'Tin tức / Phú Mỹ · Tương Bình Hiệp',
+                                                      'hero_metric': {'label': 'Tin đang theo dõi ở 2 phường',
+                                                                      'value': '2.555 tin',
+                                                                      'delta': 'Phú Mỹ 1.566 · Tương Bình Hiệp 989',
+                                                                      'note': 'Nguồn Facebook live ngày 26/08/2026 với '
+                                                                              'is_active=1; đây là giá rao, không phải '
+                                                                              'giá chốt giao dịch'},
+                                                      'property_card': {'status': 'Kết luận nhanh',
+                                                                        'title': 'Phú Mỹ hợp để mở trước khi cần nguồn '
+                                                                                 'hàng rộng; Tương Bình Hiệp hợp khi '
+                                                                                 'anh muốn mặt bằng giá mềm hơn và dễ '
+                                                                                 'khóa ngân sách hơn',
+                                                                        'price': 'Đất nền: 22,9 vs 17,5 tr/m² · Nhà '
+                                                                                 'đất: 38,7 vs 29,4 tr/m²',
+                                                                        'metric_a': 'Dưới 3 tỷ',
+                                                                        'metric_a_value': '496 vs 842 tin',
+                                                                        'metric_b': 'Dấu hiệu',
+                                                                        'metric_b_value': '260 vs 70 tin'},
+                                                      'local_links_title': 'Đi tiếp theo phường và công cụ',
+                                                      'local_links': [{'label': 'Trang phường Phú Mỹ',
+                                                                       'href': '/binh-duong/phuong-phu-my',
+                                                                       'description': 'Mở trang khu vực để xem dữ liệu '
+                                                                                      'Phú Mỹ và vào dashboard từ đúng '
+                                                                                      'phường.'},
+                                                                      {'label': 'Trang phường Tương Bình Hiệp',
+                                                                       'href': '/binh-duong/phuong-tuong-binh-hiep',
+                                                                       'description': 'Mở trang khu vực để xem dữ liệu '
+                                                                                      'Tương Bình Hiệp và lọc tiếp '
+                                                                                      'theo loại hình.'},
+                                                                      {'label': 'Báo cáo Bình Dương tháng 07/2026',
+                                                                       'href': '/bao-cao/bds-binh-duong-thang-07-2026',
+                                                                       'description': 'Đặt hai phường này vào bối cảnh '
+                                                                                      'chung của toàn Thủ Dầu Một.'},
+                                                                      {'label': 'Phú Lợi hay Tương Bình Hiệp: nên xem '
+                                                                                'khu nào trước?',
+                                                                       'href': '/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc',
+                                                                       'description': 'Đọc thêm một bài có Tương Bình '
+                                                                                      'Hiệp khi anh đang khóa ngân '
+                                                                                      'sách thấp hơn.'},
+                                                                      {'label': 'Phú Mỹ hay Hiệp Thành: nên xem khu '
+                                                                                'nào trước?',
+                                                                       'href': '/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc',
+                                                                       'description': 'Đọc thêm một bài có Phú Mỹ để '
+                                                                                      'so cách dùng nguồn hàng rộng '
+                                                                                      'hơn.'},
+                                                                      {'label': 'MOS là gì khi lọc tin dưới giá cơ sở?',
+                                                                       'href': '/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so',
+                                                                       'description': 'Hiểu thêm lớp ưu tiên kiểm tra '
+                                                                                      'sau khi đã khóa phường và loại '
+                                                                                      'hình.'}],
+                                                      'faq': [{'q': 'Nếu muốn mặt bằng giá mềm hơn thì nên mở Phú Mỹ '
+                                                                    'hay Tương Bình Hiệp trước?',
+                                                               'a': 'Nên mở Tương Bình Hiệp song song ngay từ đầu. '
+                                                                    'Snapshot live ngày 26/08/2026 cho thấy đất nền '
+                                                                    'Tương Bình Hiệp có giá rao trung vị 17,5 tr/m² và '
+                                                                    'tổng giá trung vị 1,95 tỷ, thấp hơn mức 22,9 '
+                                                                    'tr/m² và 2,95 tỷ ở Phú Mỹ. Với nhà đất, tổng giá '
+                                                                    'trung vị tại Tương Bình Hiệp là 2,59 tỷ, thấp hơn '
+                                                                    '3,5 tỷ ở Phú Mỹ.'},
+                                                              {'q': 'Vì sao vẫn nên mở Phú Mỹ trước trong nhiều trường '
+                                                                    'hợp?',
+                                                               'a': 'Vì Phú Mỹ cho nguồn hàng rộng hơn và cũng có '
+                                                                    'nhiều dấu hiệu đáng kiểm tra hơn. Hiện phường này '
+                                                                    'có 1.566 tin đang theo dõi và 260 dấu hiệu, trong '
+                                                                    'khi Tương Bình Hiệp có 989 tin và 70 dấu hiệu. '
+                                                                    'Nếu anh muốn chạy nhiều lát cắt rồi mới rút danh '
+                                                                    'sách, Phú Mỹ tiết kiệm thời gian hơn.'},
+                                                              {'q': 'Nếu khóa ngân sách dưới 3 tỷ thì hai phường này '
+                                                                    'khác nhau thế nào?',
+                                                               'a': 'Khi cộng đất nền với nhà đất, Tương Bình Hiệp có '
+                                                                    '842 tin dưới 3 tỷ, cao hơn 496 tin ở Phú Mỹ. '
+                                                                    'Chênh lệch này đến từ cả đất nền lẫn nhà đất đều '
+                                                                    'có tổng giá trung vị mềm hơn.'},
+                                                              {'q': 'Có được gộp đất nền và nhà đất rồi kết luận '
+                                                                    'phường nào rẻ hơn không?',
+                                                               'a': 'Không nên. Ở Phú Mỹ, đất nền có giá rao trung vị '
+                                                                    '22,9 tr/m² còn nhà đất là 38,7 tr/m². Ở Tương '
+                                                                    'Bình Hiệp lần lượt là 17,5 và 29,4 tr/m². Nếu gộp '
+                                                                    'chung, anh rất dễ kết luận sai vì mỗi loại hình '
+                                                                    'có mặt bằng giá và cơ cấu diện tích khác nhau.'},
+                                                              {'q': 'Các con số trong bài là giá giao dịch hay giá '
+                                                                    'rao?',
+                                                               'a': 'Đây là giá rao từ tin Facebook công khai mà Radar '
+                                                                    'BDS đang theo dõi với is_active=1, đã loại '
+                                                                    'blacklist và review hidden. Không nên xem đây là '
+                                                                    'giá chốt hoặc cam kết mua được.'}],
+                                                      'article': {'published_at': '2026-08-26',
+                                                                  'modified_at': '2026-08-26',
+                                                                  'intro': ['Nếu anh đang phân vân Phú Mỹ hay Tương '
+                                                                            'Bình Hiệp, câu trả lời nhanh là: mở Phú '
+                                                                            'Mỹ trước khi cần nguồn hàng rộng và nhiều '
+                                                                            'dấu hiệu hơn, nhưng mở Tương Bình Hiệp '
+                                                                            'song song nếu mục tiêu là mặt bằng giá '
+                                                                            'mềm hơn. Kết luận chỉ đúng khi anh tách '
+                                                                            'riêng đất nền với nhà đất và nhớ đây là '
+                                                                            'giá rao.',
+                                                                            'Bài này dùng snapshot live từ tin '
+                                                                            'Facebook Radar BDS đang theo dõi ngày '
+                                                                            '26/08/2026, chỉ lấy tin active, không '
+                                                                            'blacklist và không review hidden. Dữ liệu '
+                                                                            'mới nhất có max crawled_at 11:03 cùng '
+                                                                            'ngày, nên phù hợp để lọc ban đầu chứ '
+                                                                            'không thay cho kiểm tra pháp lý, quy '
+                                                                            'hoạch hay thực địa.'],
+                                                                  'summary_cards': [{'label': 'Tổng tin đang theo dõi',
+                                                                                     'value': '2.555 tin',
+                                                                                     'note': 'Phú Mỹ 1.566 · Tương '
+                                                                                             'Bình Hiệp 989'},
+                                                                                    {'label': 'Tin dưới 3 tỷ',
+                                                                                     'value': '496 vs 842 tin',
+                                                                                     'note': 'Phú Mỹ vs Tương Bình '
+                                                                                             'Hiệp, tính đất nền + nhà '
+                                                                                             'đất'},
+                                                                                    {'label': 'Đất nền giá trung vị',
+                                                                                     'value': '22,9 vs 17,5 tr/m²',
+                                                                                     'note': 'Phú Mỹ vs Tương Bình '
+                                                                                             'Hiệp'},
+                                                                                    {'label': 'Dấu hiệu đáng kiểm tra',
+                                                                                     'value': '260 vs 70 tin',
+                                                                                     'note': 'Phú Mỹ vs Tương Bình '
+                                                                                             'Hiệp'}],
+                                                                  'data_tables': [{'eyebrow': 'Bảng so nhanh',
+                                                                                   'title': 'Phú Mỹ và Tương Bình Hiệp '
+                                                                                            'khác nhau thế nào nếu anh '
+                                                                                            'mở dashboard hôm nay?',
+                                                                                   'note': 'Nguồn Facebook live ngày '
+                                                                                           '26/08/2026, lọc '
+                                                                                           'is_active=1, '
+                                                                                           'is_blacklisted=0, '
+                                                                                           'review_hidden=0. Giá/m² và '
+                                                                                           'tổng giá đều là giá rao '
+                                                                                           'trung vị, nghĩa là một nửa '
+                                                                                           'số tin thấp hơn mức này, '
+                                                                                           'một nửa cao hơn.',
+                                                                                   'columns': [{'key': 'ward_type',
+                                                                                                'label': 'Phường · '
+                                                                                                         'loại hình'},
+                                                                                               {'key': 'tracked',
+                                                                                                'label': 'Tin đang '
+                                                                                                         'theo dõi'},
+                                                                                               {'key': 'under3',
+                                                                                                'label': 'Dưới 3 tỷ'},
+                                                                                               {'key': 'under4',
+                                                                                                'label': 'Dưới 4 tỷ'},
+                                                                                               {'key': 'median_m2',
+                                                                                                'label': 'Giá trung '
+                                                                                                         'vị/m²'},
+                                                                                               {'key': 'median_total',
+                                                                                                'label': 'Tổng giá '
+                                                                                                         'trung vị'}],
+                                                                                   'rows': [{'ward_type': 'Phú Mỹ · '
+                                                                                                          'đất nền',
+                                                                                             'tracked': '528',
+                                                                                             'under3': '292',
+                                                                                             'under4': '436',
+                                                                                             'median_m2': '22,9 tr/m²',
+                                                                                             'median_total': '2,95 tỷ'},
+                                                                                            {'ward_type': 'Phú Mỹ · '
+                                                                                                          'nhà đất',
+                                                                                             'tracked': '579',
+                                                                                             'under3': '204',
+                                                                                             'under4': '607',
+                                                                                             'median_m2': '38,7 tr/m²',
+                                                                                             'median_total': '3,5 tỷ'},
+                                                                                            {'ward_type': 'Tương Bình '
+                                                                                                          'Hiệp · đất '
+                                                                                                          'nền',
+                                                                                             'tracked': '370',
+                                                                                             'under3': '341',
+                                                                                             'under4': '348',
+                                                                                             'median_m2': '17,5 tr/m²',
+                                                                                             'median_total': '1,95 tỷ'},
+                                                                                            {'ward_type': 'Tương Bình '
+                                                                                                          'Hiệp · nhà '
+                                                                                                          'đất',
+                                                                                             'tracked': '512',
+                                                                                             'under3': '501',
+                                                                                             'under4': '539',
+                                                                                             'median_m2': '29,4 tr/m²',
+                                                                                             'median_total': '2,59 '
+                                                                                                             'tỷ'}]},
+                                                                                  {'eyebrow': 'Kết luận nhanh theo nhu '
+                                                                                              'cầu',
+                                                                                   'title': 'Nên mở phường nào trước '
+                                                                                            'theo đúng mục tiêu mua?',
+                                                                                   'note': 'Khóa loại hình và khung '
+                                                                                           'tiền trước; dấu hiệu đáng '
+                                                                                           'kiểm tra chỉ là lớp ưu '
+                                                                                           'tiên gọi hỏi sau cùng.',
+                                                                                   'columns': [{'key': 'need',
+                                                                                                'label': 'Nhu cầu'},
+                                                                                               {'key': 'open_first',
+                                                                                                'label': 'Nên mở '
+                                                                                                         'trước'},
+                                                                                               {'key': 'why',
+                                                                                                'label': 'Vì sao'}],
+                                                                                   'rows': [{'need': 'Muốn mặt bằng '
+                                                                                                     'giá mềm hơn',
+                                                                                             'open_first': 'Tương Bình '
+                                                                                                           'Hiệp',
+                                                                                             'why': 'Cả đất nền lẫn '
+                                                                                                    'nhà đất đều có '
+                                                                                                    'giá trung vị/m² '
+                                                                                                    'và tổng giá trung '
+                                                                                                    'vị thấp hơn Phú '
+                                                                                                    'Mỹ.'},
+                                                                                            {'need': 'Muốn nhiều tin '
+                                                                                                     'để lọc nhiều '
+                                                                                                     'vòng',
+                                                                                             'open_first': 'Phú Mỹ',
+                                                                                             'why': 'Phú Mỹ có 1.566 '
+                                                                                                    'tin theo dõi và '
+                                                                                                    '260 dấu hiệu, cao '
+                                                                                                    'hơn rõ so với 989 '
+                                                                                                    'tin và 70 dấu '
+                                                                                                    'hiệu ở Tương Bình '
+                                                                                                    'Hiệp.'},
+                                                                                            {'need': 'Muốn bám ngân '
+                                                                                                     'sách dưới 3 tỷ',
+                                                                                             'open_first': 'Tương Bình '
+                                                                                                           'Hiệp',
+                                                                                             'why': '842 tin dưới 3 tỷ '
+                                                                                                    'khi cộng đất nền '
+                                                                                                    'và nhà đất, cao '
+                                                                                                    'hơn mức 496 tin ở '
+                                                                                                    'Phú Mỹ.'},
+                                                                                            {'need': 'Muốn soi thêm '
+                                                                                                     'nhóm tin nổi bật',
+                                                                                             'open_first': 'Phú Mỹ '
+                                                                                                           'song song',
+                                                                                             'why': 'Phú Mỹ có nhiều '
+                                                                                                    'dấu hiệu đáng '
+                                                                                                    'kiểm tra hơn, phù '
+                                                                                                    'hợp cho vòng gọi '
+                                                                                                    'hỏi sâu sau khi '
+                                                                                                    'đã khóa loại '
+                                                                                                    'hình.'}]},
+                                                                                  {'eyebrow': 'Ví dụ tin mới',
+                                                                                   'title': 'Một vài mức giá gần nhất '
+                                                                                            'để hình dung nhịp rao ở '
+                                                                                            'hai phường',
+                                                                                   'note': 'Chỉ dùng như ví dụ về mặt '
+                                                                                           'bằng giá rao gần đây, '
+                                                                                           'không phải khuyến nghị mua '
+                                                                                           'ngay.',
+                                                                                   'columns': [{'key': 'sample',
+                                                                                                'label': 'Ví dụ'},
+                                                                                               {'key': 'price',
+                                                                                                'label': 'Giá rao'},
+                                                                                               {'key': 'note',
+                                                                                                'label': 'Gợi ý đọc '
+                                                                                                         'nhanh'}],
+                                                                                   'rows': [{'sample': 'Phú Mỹ · nhà '
+                                                                                                       'đất gần nhất',
+                                                                                             'price': '3,5 tỷ · 46,7 '
+                                                                                                      'tr/m²',
+                                                                                             'note': 'Cho thấy nhóm '
+                                                                                                     'nhà đất Phú Mỹ '
+                                                                                                     'có thể chạm vùng '
+                                                                                                     'giá cao hơn dù '
+                                                                                                     'tổng giá trung '
+                                                                                                     'vị là 3,5 tỷ.'},
+                                                                                            {'sample': 'Phú Mỹ · đất '
+                                                                                                       'nền gần nhất',
+                                                                                             'price': '2,95 tỷ · 29,5 '
+                                                                                                      'tr/m²',
+                                                                                             'note': 'Một mẫu đất nền '
+                                                                                                     'sát vùng dưới 3 '
+                                                                                                     'tỷ, phù hợp để '
+                                                                                                     'mở khi anh muốn '
+                                                                                                     'nguồn hàng '
+                                                                                                     'rộng.'},
+                                                                                            {'sample': 'Tương Bình '
+                                                                                                       'Hiệp · nhà đất '
+                                                                                                       'gần nhất',
+                                                                                             'price': '2,5 tỷ · 26,3 '
+                                                                                                      'tr/m²',
+                                                                                             'note': 'Cho thấy vì sao '
+                                                                                                     'Tương Bình Hiệp '
+                                                                                                     'dễ bám ngân sách '
+                                                                                                     'thấp hơn ở nhóm '
+                                                                                                     'nhà đất.'},
+                                                                                            {'sample': 'Tương Bình '
+                                                                                                       'Hiệp · đất nền '
+                                                                                                       'giảm giá',
+                                                                                             'price': '2,0 tỷ · 13,1 '
+                                                                                                      'tr/m²',
+                                                                                             'note': 'Mẫu gần đây có '
+                                                                                                     'giảm giá, nhưng '
+                                                                                                     'vẫn cần kiểm tra '
+                                                                                                     'pháp lý, quy '
+                                                                                                     'hoạch và vị trí '
+                                                                                                     'thực tế.'}]}],
+                                                                  'charts': [{'eyebrow': 'Visual nhanh',
+                                                                              'title': 'Tương Bình Hiệp mềm hơn rõ khi '
+                                                                                       'khóa ngân sách dưới 3 tỷ',
+                                                                              'note': 'Nếu mục tiêu là nhanh chóng có '
+                                                                                      'danh sách vừa túi tiền hơn, '
+                                                                                      'Tương Bình Hiệp đang thuận hơn '
+                                                                                      'rõ.',
+                                                                              'alt': 'Biểu đồ so số tin dưới 3 tỷ giữa '
+                                                                                     'Tương Bình Hiệp và Phú Mỹ',
+                                                                              'rows': [{'label': 'Tương Bình Hiệp',
+                                                                                        'value_label': '842 tin đất '
+                                                                                                       'nền + nhà đất '
+                                                                                                       'dưới 3 tỷ',
+                                                                                        'width': 100,
+                                                                                        'color': '#16a34a'},
+                                                                                       {'label': 'Phú Mỹ',
+                                                                                        'value_label': '496 tin đất '
+                                                                                                       'nền + nhà đất '
+                                                                                                       'dưới 3 tỷ',
+                                                                                        'width': 59,
+                                                                                        'color': '#f59e0b'}]},
+                                                                             {'eyebrow': 'Visual nhanh',
+                                                                              'title': 'Phú Mỹ vượt trội về độ rộng '
+                                                                                       'nguồn hàng và số dấu hiệu',
+                                                                              'note': 'Dấu hiệu đáng kiểm tra giúp ưu '
+                                                                                      'tiên mở tin, không thay thế '
+                                                                                      'bước so giá, pháp lý và thực '
+                                                                                      'địa.',
+                                                                              'alt': 'Biểu đồ so số dấu hiệu đáng kiểm '
+                                                                                     'tra giữa Phú Mỹ và Tương Bình '
+                                                                                     'Hiệp',
+                                                                              'rows': [{'label': 'Phú Mỹ',
+                                                                                        'value_label': '260 dấu hiệu '
+                                                                                                       'đáng kiểm tra',
+                                                                                        'width': 100,
+                                                                                        'color': '#2563eb'},
+                                                                                       {'label': 'Tương Bình Hiệp',
+                                                                                        'value_label': '70 dấu hiệu '
+                                                                                                       'đáng kiểm tra',
+                                                                                        'width': 27,
+                                                                                        'color': '#dc2626'}]}],
+                                                                  'sections': [{'id': 'tuong-binh-hiep-hop-neu-uu-tien-gia-mem',
+                                                                                'heading': '1. Nếu ưu tiên mặt bằng '
+                                                                                           'giá mềm hơn, nên mở Tương '
+                                                                                           'Bình Hiệp song song ngay '
+                                                                                           'từ đầu',
+                                                                                'paragraphs': ['Tương Bình Hiệp đang '
+                                                                                               'mềm hơn ở cả hai loại '
+                                                                                               'hình chính. Đất nền '
+                                                                                               'tại đây có giá rao '
+                                                                                               'trung vị 17,5 tr/m² và '
+                                                                                               'tổng giá trung vị 1,95 '
+                                                                                               'tỷ, thấp hơn mức 22,9 '
+                                                                                               'tr/m² và 2,95 tỷ ở Phú '
+                                                                                               'Mỹ. Với nhà đất, chênh '
+                                                                                               'lệch tiếp tục nghiêng '
+                                                                                               'về Tương Bình Hiệp: '
+                                                                                               '29,4 tr/m² và 2,59 tỷ '
+                                                                                               'so với 38,7 tr/m² và '
+                                                                                               '3,5 tỷ ở Phú Mỹ.',
+                                                                                               'Lợi thế này đi cùng số '
+                                                                                               'tin dưới 3 tỷ cao hơn '
+                                                                                               'rõ. Khi cộng đất nền '
+                                                                                               'và nhà đất, Tương Bình '
+                                                                                               'Hiệp có 842 tin dưới 3 '
+                                                                                               'tỷ, còn Phú Mỹ có 496 '
+                                                                                               'tin. Vì vậy nếu anh '
+                                                                                               'khóa ngân sách khá '
+                                                                                               'chặt hoặc muốn thấy '
+                                                                                               'mặt bằng mềm trước, '
+                                                                                               'Tương Bình Hiệp nên có '
+                                                                                               'mặt ngay ở vòng lọc '
+                                                                                               'đầu.'],
+                                                                                'bullets': ['Đất nền Tương Bình Hiệp: '
+                                                                                            '370 tin theo dõi · 341 '
+                                                                                            'tin dưới 3 tỷ · giá trung '
+                                                                                            'vị 17,5 tr/m²',
+                                                                                            'Nhà đất Tương Bình Hiệp: '
+                                                                                            '512 tin theo dõi · 501 '
+                                                                                            'tin dưới 3 tỷ · tổng giá '
+                                                                                            'trung vị 2,59 tỷ',
+                                                                                            'Cả hai loại hình đều mềm '
+                                                                                            'hơn Phú Mỹ về giá trung '
+                                                                                            'vị',
+                                                                                            'Giá rao mềm hơn không '
+                                                                                            'thay thế bước kiểm tra '
+                                                                                            'pháp lý và thực địa']},
+                                                                               {'id': 'phu-my-hop-neu-can-nguon-rong-va-dau-hieu',
+                                                                                'heading': '2. Phú Mỹ hợp để mở trước '
+                                                                                           'khi anh cần nguồn hàng '
+                                                                                           'rộng và nhiều dấu hiệu hơn',
+                                                                                'paragraphs': ['Phú Mỹ phù hợp hơn khi '
+                                                                                               'anh muốn một phường có '
+                                                                                               'nhiều tin để cắt lọc '
+                                                                                               'nhiều lần. Hiện Phú Mỹ '
+                                                                                               'có 1.566 tin đang theo '
+                                                                                               'dõi, cao hơn 989 tin ở '
+                                                                                               'Tương Bình Hiệp. Số '
+                                                                                               'dấu hiệu đáng kiểm tra '
+                                                                                               'cũng chênh mạnh: 260 '
+                                                                                               'so với 70.',
+                                                                                               'Điểm này quan trọng '
+                                                                                               'nếu anh không chỉ nhìn '
+                                                                                               'ngân sách mà còn muốn '
+                                                                                               'xem nhiều lát cắt như '
+                                                                                               'loại hình, vùng giá, '
+                                                                                               'hay nhóm tin nổi bật '
+                                                                                               'để gọi hỏi trước. Cách '
+                                                                                               'dùng hợp lý là mở Phú '
+                                                                                               'Mỹ để gom danh sách '
+                                                                                               'rộng, rồi dùng Tương '
+                                                                                               'Bình Hiệp làm đối '
+                                                                                               'chứng mặt bằng giá mềm '
+                                                                                               'hơn.'],
+                                                                                'bullets': ['Tổng tin theo dõi: Phú Mỹ '
+                                                                                            '1.566 · Tương Bình Hiệp '
+                                                                                            '989',
+                                                                                            'Dấu hiệu đáng kiểm tra: '
+                                                                                            'Phú Mỹ 260 · Tương Bình '
+                                                                                            'Hiệp 70',
+                                                                                            'Phú Mỹ hợp khi anh cần '
+                                                                                            'nhiều mẫu để sàng lọc '
+                                                                                            'theo nhiều tiêu chí',
+                                                                                            'Đừng nhầm dấu hiệu đáng '
+                                                                                            'kiểm tra với khuyến nghị '
+                                                                                            'mua ngay']},
+                                                                               {'id': 'tach-dat-nen-va-nha-dat',
+                                                                                'heading': '3. Phải tách đất nền và '
+                                                                                           'nhà đất trước khi kết luận '
+                                                                                           'phường nào hợp hơn',
+                                                                                'paragraphs': ['Nếu gộp hết tất cả '
+                                                                                               'tin, anh dễ thấy Phú '
+                                                                                               'Mỹ nhiều tin hơn rồi '
+                                                                                               'kết luận luôn. Vấn đề '
+                                                                                               'là nhu cầu mua đất nền '
+                                                                                               'khác nhu cầu mua nhà '
+                                                                                               'đất. Ở Phú Mỹ, đất nền '
+                                                                                               'có giá rao trung vị '
+                                                                                               '22,9 tr/m² còn nhà đất '
+                                                                                               'là 38,7 tr/m². Ở Tương '
+                                                                                               'Bình Hiệp lần lượt là '
+                                                                                               '17,5 và 29,4 tr/m².',
+                                                                                               'Khác biệt về tổng giá '
+                                                                                               'cũng rất lớn: đất nền '
+                                                                                               '2,95 tỷ vs 1,95 tỷ, '
+                                                                                               'nhà đất 3,5 tỷ vs 2,59 '
+                                                                                               'tỷ. Vì vậy câu hỏi '
+                                                                                               'đúng không phải chỉ là '
+                                                                                               'phường nào nhiều tin '
+                                                                                               'hơn, mà là trong đúng '
+                                                                                               'loại hình anh cần, còn '
+                                                                                               'bao nhiêu tin nằm '
+                                                                                               'trong khung tiền '
+                                                                                               'thật.'],
+                                                                                'bullets': ['Luôn chọn đất nền hoặc '
+                                                                                            'nhà đất trước khi so '
+                                                                                            'phường',
+                                                                                            'Nhìn đồng thời giá trung '
+                                                                                            'vị/m² và tổng giá trung '
+                                                                                            'vị',
+                                                                                            'Dùng nhóm dưới 3 tỷ hoặc '
+                                                                                            'dưới 4 tỷ để biết còn bao '
+                                                                                            'nhiêu tin thật sự vừa túi '
+                                                                                            'tiền',
+                                                                                            'Giá rao trung vị không '
+                                                                                            'phải cam kết mua được ở '
+                                                                                            'mức đó']},
+                                                                               {'id': 'cach-dung-dashboard-de-loc-hai-phuong',
+                                                                                'heading': '4. Cách dùng dashboard để '
+                                                                                           'lọc hai phường này đỡ tốn '
+                                                                                           'thời gian',
+                                                                                'paragraphs': ['Bước nhanh nhất là '
+                                                                                               'chọn loại hình trước. '
+                                                                                               'Nếu anh đang ưu tiên '
+                                                                                               'giá mềm và dưới 3 tỷ, '
+                                                                                               'mở Tương Bình Hiệp rồi '
+                                                                                               'giới hạn tổng giá. Nếu '
+                                                                                               'anh muốn nguồn hàng '
+                                                                                               'rộng và cần thêm dấu '
+                                                                                               'hiệu để ưu tiên gọi '
+                                                                                               'hỏi, mở Phú Mỹ trước '
+                                                                                               'rồi mới hẹp dần bằng '
+                                                                                               'bộ lọc.',
+                                                                                               'Khi đã có 3-5 tin phù '
+                                                                                               'hợp, hãy dùng công cụ '
+                                                                                               'định giá BĐS để đặt '
+                                                                                               'từng tin vào mặt bằng '
+                                                                                               'chung của phường. Sau '
+                                                                                               'đó vẫn phải kiểm tra '
+                                                                                               'pháp lý, quy hoạch, '
+                                                                                               'đường vào, hiện trạng '
+                                                                                               'và độ khớp mô tả trước '
+                                                                                               'khi quyết định. Radar '
+                                                                                               'BDS chỉ là bộ lọc dữ '
+                                                                                               'liệu ban đầu.'],
+                                                                                'bullets': ['Bước 1: khóa đúng loại '
+                                                                                            'hình đất nền hoặc nhà đất',
+                                                                                            'Bước 2: lọc tổng giá theo '
+                                                                                            'khung tiền thật của anh',
+                                                                                            'Bước 3: dùng dấu hiệu '
+                                                                                            'đáng kiểm tra để ưu tiên '
+                                                                                            'gọi trước',
+                                                                                            'Bước 4: kiểm tra định '
+                                                                                            'giá, pháp lý, quy hoạch '
+                                                                                            'và thực địa']}],
+                                                                  'checklist': ['Anh đã chọn rõ đất nền hay nhà đất '
+                                                                                'trước khi so phường chưa?',
+                                                                                'Anh đã nhìn cả giá trung vị/m² và '
+                                                                                'tổng giá trung vị chưa?',
+                                                                                'Anh đã kiểm tra số tin còn dưới 3 tỷ '
+                                                                                'hoặc dưới 4 tỷ chưa?',
+                                                                                'Anh có đang nhầm dấu hiệu đáng kiểm '
+                                                                                'tra với khuyến nghị mua ngay không?',
+                                                                                'Anh đã chuẩn bị bước kiểm tra pháp '
+                                                                                'lý, quy hoạch, đường vào và thực địa '
+                                                                                'chưa?']},
+                                                      'final_cta': {'title': 'Mở Radar để lọc Phú Mỹ và Tương Bình '
+                                                                             'Hiệp theo đúng loại hình',
+                                                                    'body': 'Nếu anh ưu tiên mặt bằng giá mềm hơn, bắt '
+                                                                            'đầu bằng Tương Bình Hiệp. Nếu anh cần '
+                                                                            'nguồn hàng rộng và muốn soi thêm nhóm tin '
+                                                                            'nổi bật, mở thêm Phú Mỹ để chạy tiếp các '
+                                                                            'bộ lọc theo ngân sách và loại hình.',
+                                                                    'button': 'Mở Radar BDS',
+                                                                    'button_href': '/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_tuong_binh_hiep'},
+                                                      'breadcrumbs': [{'name': 'Trang chủ',
+                                                                       'href': '/',
+                                                                       'url': 'https://radarbds.vn/'},
+                                                                      {'name': 'Tin tức',
+                                                                       'href': '/tin-tuc',
+                                                                       'url': 'https://radarbds.vn/tin-tuc'},
+                                                                      {'name': 'Phú Mỹ hay Tương Bình Hiệp',
+                                                                       'href': '/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc',
+                                                                       'url': 'https://radarbds.vn/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc'}]}
 
 }
 
