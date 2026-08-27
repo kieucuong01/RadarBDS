@@ -1192,7 +1192,7 @@ function renderSignalHistoryRows(timeline, opts = {}) {
       <span class="ph-dot" aria-hidden="true"></span>
       <div class="ph-main">
         <span class="ph-date">${escHtml(_historyShortDate(h.date))}</span>
-        <span class="ph-sub">${h._is_latest ? 'Giá mới nhất' : 'Mốc lịch sử'}</span>
+        <span class="ph-sub">${h._is_latest ? 'Mốc ghi nhận gần nhất' : 'Mốc lịch sử'}</span>
       </div>
       <span class="ph-price">${escHtml(_historyPriceLabel(h.price_ty))}</span>
       ${changeHtml}

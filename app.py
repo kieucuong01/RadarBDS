@@ -5616,13 +5616,6 @@ def _admin_valuation_workflow_markdown(listing_id):
 def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
-        curr = conn.execute("""
-            SELECT source, posted_at, crawled_at, updated_at, price_updated_at,
-                   price_ty, ward, area_m2, property_type, road_tier,
-                   price_per_m2, title, url, extraction_quality_flags
-            FROM listings
-            WHERE id = ?
-        """, (listing_id,)).fetchone()
         cluster_ids = _listing_cluster_ids(conn, listing_id)
         placeholders = ",".join("?" for _ in cluster_ids)
         rows = conn.execute(f"""
@@ -5655,8 +5648,8 @@ def get_price_history(listing_id):
                     LIMIT 1
                 ) latest_valuation ON TRUE
                 WHERE ph.listing_id IN ({placeholders})
-                  AND l.price_ty IS NOT NULL
-                  AND l.price_ty > 0
+                  AND ph.price_ty IS NOT NULL
+                  AND ph.price_ty > 0
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
                   AND COALESCE(latest_valuation.source_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
@@ -5683,44 +5676,6 @@ def get_price_history(listing_id):
             history.append(item)
             last_price = price_ty
             has_last = True
-
-        if (
-            curr
-            and curr["price_ty"]
-            and "ambiguous_price_text" not in (curr["extraction_quality_flags"] or "")
-        ):
-            current_price = curr["price_ty"]
-            if not history or not _same_price_value(history[-1]['price_ty'], current_price):
-                current_timestamp = (
-                    curr["price_updated_at"]
-                    or curr["posted_at"]
-                    or curr["crawled_at"]
-                    or curr["updated_at"]
-                    or ''
-                )
-                current_date = str(current_timestamp)[:10]
-                item = {
-                    'date': current_date,
-                    'price_ty': current_price,
-                    'is_current': True,
-                }
-                if curr["source"] == "guland":
-                    item["recorded_at"] = str(
-                        curr["price_updated_at"]
-                        or curr["crawled_at"]
-                        or curr["updated_at"]
-                        or ""
-                    )
-                if tier == "admin" and curr["url"]:
-                    item["url"] = curr["url"]
-                if (
-                    curr["source"] != "guland"
-                    and history
-                    and history[-1]["date"] == current_date
-                ):
-                    history[-1] = item
-                else:
-                    history.append(item)
 
         # Shared compact card payload used by both detail surfaces.
         comps = load_listing_comparables(conn, listing_id, tier=tier, limit=18)

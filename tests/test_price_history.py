@@ -416,6 +416,44 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(row["suspicious_bait"], 0)
         self.assertEqual(row["area_m2"], 150.0)
 
+    def test_facebook_refresh_without_a_price_clears_current_price_but_keeps_history(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+
+        listing_id, _ = upsert_listing(
+            self._rec(
+                source="facebook",
+                price_ty=3.0,
+                price_per_m2=20.0,
+                area_m2=150.0,
+            ),
+            crawl_run_id=1,
+        )
+        self._track(listing_id)
+
+        upsert_listing(
+            self._rec(
+                source="facebook",
+                price_ty=None,
+                price_per_m2=None,
+                area_m2=150.0,
+            ),
+            crawl_run_id=2,
+        )
+
+        with get_conn() as conn:
+            row = conn.execute(
+                "SELECT price_ty, price_per_m2 FROM listings WHERE id=?",
+                (listing_id,),
+            ).fetchone()
+
+        self.assertIsNone(row["price_ty"])
+        self.assertIsNone(row["price_per_m2"])
+        self.assertEqual(
+            [history_row["price_ty"] for history_row in self._history_rows(listing_id)],
+            [3.0],
+        )
+
     def test_upsert_listing_existing_row_enriches_dimensions_from_new_parse(self):
         from db.connection import get_conn
         from db.listings import upsert_listing
@@ -987,7 +1025,7 @@ class PriceHistoryTest(unittest.TestCase):
 
         self.assertEqual([row["price_ty"] for row in history], [6.8])
 
-    def test_history_api_excludes_snapshots_without_a_current_source_price(self):
+    def test_history_api_keeps_child_snapshot_after_the_source_hides_its_current_price(self):
         from app import app
         from db.connection import get_conn
 
@@ -1039,7 +1077,68 @@ class PriceHistoryTest(unittest.TestCase):
             f"/api/history/{canonical_id}"
         ).get_json()["history"]
 
-        self.assertEqual([row["price_ty"] for row in history], [6.8])
+        self.assertEqual([row["price_ty"] for row in history], [6.8, 7.0])
+
+    def test_history_api_keeps_verified_snapshot_after_current_price_is_cleared(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, updated_at, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'Asking price was later hidden',
+                    'Phu Tan', 150, 'dat_nen', NULL, NULL, '2026-08-06T10:00:00', 0
+                )
+                """,
+                (f"{self.source_id}-hidden-price", f"{self.url_prefix}/hidden-price"),
+            )
+            listing_id = self._track(cur.lastrowid)
+            conn.execute(
+                """
+                INSERT INTO price_history (listing_id, price_ty, price_per_m2, recorded_at)
+                VALUES (?, 4.2, 28.0, '2026-08-03 11:05:45')
+                """,
+                (listing_id,),
+            )
+
+        history = app.test_client().get(
+            f"/api/history/{listing_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(history, [{
+            "date": "2026-08-03",
+            "price_ty": 4.2,
+        }])
+
+    def test_history_api_never_synthesizes_a_snapshot_from_current_listing_price(self):
+        from app import app
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, ward, area_m2, property_type,
+                    price_ty, price_per_m2, posted_at, updated_at, probably_sold
+                ) VALUES (
+                    'facebook', ?, ?, 'Unverified retained price',
+                    'Phu Tan', 150, 'dat_nen', 4.2, 28.0,
+                    '2026-08-03', '2026-08-06T10:00:00', 0
+                )
+                """,
+                (f"{self.source_id}-unverified-price", f"{self.url_prefix}/unverified-price"),
+            )
+            listing_id = self._track(cur.lastrowid)
+
+        history = app.test_client().get(
+            f"/api/history/{listing_id}"
+        ).get_json()["history"]
+
+        self.assertEqual(history, [])
 
     def test_guland_history_keeps_distinct_same_day_price_changes(self):
         from app import app
@@ -1174,7 +1273,7 @@ class PriceHistoryTest(unittest.TestCase):
 
         self.assertEqual(history, [{"date": "2026-08-19", "price_ty": 2.5}])
 
-    def test_history_api_replaces_same_day_facebook_snapshot_with_current_price(self):
+    def test_history_api_does_not_replace_a_snapshot_with_an_unrecorded_current_price(self):
         from app import app
         from db.connection import get_conn
 
@@ -1206,8 +1305,7 @@ class PriceHistoryTest(unittest.TestCase):
 
         self.assertEqual(history, [{
             "date": "2026-06-01",
-            "price_ty": 2.3,
-            "is_current": True,
+            "price_ty": 2.0,
         }])
 
     def test_history_api_excludes_multi_lot_valuation_snapshots(self):
@@ -1247,11 +1345,7 @@ class PriceHistoryTest(unittest.TestCase):
             f"/api/history/{listing_id}"
         ).get_json()["history"]
 
-        self.assertEqual(len(history), 1)
-        self.assertEqual(history[0]["date"], "2026-01-06")
-        self.assertEqual(history[0]["price_ty"], 6.75)
-        self.assertTrue(history[0]["is_current"])
-        self.assertIn("recorded_at", history[0])
+        self.assertEqual(history, [])
 
 
 if __name__ == "__main__":

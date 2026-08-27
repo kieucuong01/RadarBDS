@@ -428,6 +428,12 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             clear_stale_measurements = bool(rec.get("_clear_stale_measurements"))
             override_fields = set(rec.get("_llm_extraction_override_fields") or [])
             is_guland = (rec.get("source") or existing["source"]) == "guland"
+            is_facebook = (rec.get("source") or existing["source"]) == "facebook"
+            clear_stale_price = bool(
+                not _present(rec.get("price_ty"))
+                and "price_ty" not in override_fields
+                and (clear_stale_measurements or is_facebook)
+            )
             if clear_stale_measurements:
                 if is_guland and not _present(rec.get("price_ty")):
                     new_price = existing["price_ty"]
@@ -466,6 +472,9 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
                     if "depth_m" in override_fields
                     else _prefer_new_value(rec.get("depth_m"), existing["depth_m"])
                 )
+            if clear_stale_price:
+                new_price = None
+                new_ppm2 = None
             existing_provenance = _measurement_provenance(existing["measurement_provenance"])
             incoming_provenance = _measurement_provenance(rec.get("measurement_provenance"))
             if clear_stale_measurements:
@@ -498,8 +507,8 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             price_drop_pct = None
             suspicious_bait = existing["suspicious_bait"] if "suspicious_bait" in existing.keys() else 0
 
-            clear_price = clear_stale_measurements and not _present(new_price)
-            if (("price_ty" in override_fields) or clear_stale_measurements) and not new_price:
+            clear_price = clear_stale_price and not _present(new_price)
+            if (("price_ty" in override_fields) or clear_stale_price) and not new_price:
                 price_dropped = 0
                 price_drop_pct = None
                 suspicious_bait = 0
