@@ -3848,6 +3848,9 @@ _LEGACY_KNOWLEDGE_REDIRECTS = {
     "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": (
         "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu"
     ),
+    "gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026": (
+        "/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu"
+    ),
     "gia-dat-thu-dau-mot-theo-phuong-vi-sao-phai-tach-phu-my-hiep-an-chanh-nghia": (
         "/tin-tuc/phuong-nao-thu-dau-mot-gia-dat-con-de-mua"
     ),
