@@ -53,9 +53,22 @@
       </section>
       {% endfor %}
     </div>
+
+    <section class="news-dashboard-bridge" aria-label="Mở dashboard Radar BDS">
+      <div>
+        <p class="seo-eyebrow">Bước tiếp theo</p>
+        <h2>Đọc xong, mở signal feed để lọc tin theo khu vực</h2>
+        <p>Chọn đúng phường, xem MOS và cảnh báo nguồn trước khi quyết định liên hệ.</p>
+      </div>
+      <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_portal_bottom_dashboard">Mở dashboard lọc signal</a>
+    </section>
+
+    {% set lead_cta_context = "seo_news_hub_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
   </main>
   {% include "partials/seo_footer.html" %}
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
 </body>
 </html>
