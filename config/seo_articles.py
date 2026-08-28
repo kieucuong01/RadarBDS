@@ -17645,6 +17645,282 @@ SEO_ARTICLES = {
                                                                        'href': '/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc',
                                                                        'url': 'https://radarbds.vn/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc'}]}
 
+,
+    "nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh khu vực"
+        },
+        "path": "/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc",
+        "title": "Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp nên lọc trước? | Radar BDS",
+        "description": "Radar BDS cập nhật 28/08/2026: nếu anh tìm nhà đất dưới 30 triệu/m², nên mở Tương Bình Hiệp trước vì đang có 273 tin phù hợp, cao hơn 197 tin ở Định Hòa. Bài viết giữ riêng nhà đất và không gộp với đất nền.",
+        "keywords": "nhà đất dưới 30 triệu m2 Định Hòa, nhà đất dưới 30 triệu m2 Tương Bình Hiệp, Định Hòa hay Tương Bình Hiệp, giá nhà đất Định Hòa, giá nhà đất Tương Bình Hiệp, Radar BDS",
+        "breadcrumb_label": "Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp",
+        "hero_badge": "So sánh theo loại hình / giá/m²",
+        "hero_title": "Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp nên lọc trước?",
+        "hero_text": "Nếu anh đang khóa riêng nhà đất dưới 30 triệu/m², nên mở Tương Bình Hiệp trước. Snapshot live ngày 28/08/2026 cho thấy phường này có 273 tin phù hợp, còn Định Hòa có 197 tin. Hai phường có giá trung vị nhà đất gần nhau, nên khác biệt chính nằm ở độ dày nguồn hàng và số tin còn dưới 3 tỷ.",
+        "scope_label": "Thủ Dầu Một · Định Hòa / Tương Bình Hiệp · nhà đất dưới 30 triệu/m²",
+        "hero_checks": [
+            "Snapshot live ngày 28/08/2026, max crawled_at khoảng 11:04 ở cả hai phường",
+            "Nhà đất dưới 30 triệu/m²: Tương Bình Hiệp 273 tin · Định Hòa 197 tin",
+            "Giá trung vị nhà đất: Tương Bình Hiệp 28,5 tr/m² · Định Hòa 28,6 tr/m²",
+            "Nhà đất dưới 3 tỷ: Tương Bình Hiệp 503 tin · Định Hòa 307 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc nhà đất Tương Bình Hiệp",
+        "primary_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&prop_type=nha_dat&utm_source=seo&utm_medium=article&utm_campaign=house_under30_dinh_hoa_vs_tuong_binh_hiep",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds?utm_source=seo&utm_medium=article&utm_campaign=house_under30_dinh_hoa_vs_tuong_binh_hiep",
+        "map_label": "Tin tức / Định Hòa · Tương Bình Hiệp / nhà đất",
+        "hero_metric": {
+            "label": "Nhà đất đang theo dõi ở 2 phường",
+            "value": "1.000 tin",
+            "delta": "Định Hòa 423 · Tương Bình Hiệp 577",
+            "note": "Nguồn Facebook live ngày 28/08/2026 với is_active=1; đây là giá rao, không phải giá chốt giao dịch"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Tương Bình Hiệp đáng mở trước nếu anh giữ bộ lọc nhà đất dưới 30 triệu/m²",
+            "price": "Nhà đất: 28,5 vs 28,6 tr/m² · gần như ngang nhau theo giá trung vị",
+            "metric_a": "Dưới 30 triệu/m²",
+            "metric_a_value": "273 vs 197 tin",
+            "metric_b": "Dưới 3 tỷ",
+            "metric_b_value": "503 vs 307 tin"
+        },
+        "local_links_title": "Đi tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Tương Bình Hiệp",
+                "href": "/binh-duong/phuong-tuong-binh-hiep",
+                "description": "Mở trang khu vực để xem dữ liệu Tương Bình Hiệp và vào dashboard từ đúng phường."
+            },
+            {
+                "label": "Trang phường Định Hòa",
+                "href": "/binh-duong/phuong-dinh-hoa",
+                "description": "Mở trang khu vực để xem dữ liệu Định Hòa và so tiếp nhóm nhà đất với cùng bộ lọc."
+            },
+            {
+                "label": "Giá đất Định Hòa hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất ở Định Hòa trước khi mở từng tin."
+            },
+            {
+                "label": "Giá đất Tương Bình Hiệp hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu",
+                "description": "Đọc riêng mặt bằng đất nền và nhà đất ở Tương Bình Hiệp."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường này vào bối cảnh chung của toàn Thủ Dầu Một."
+            },
+            {
+                "label": "MOS là gì khi lọc tin dưới giá cơ sở?",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Hiểu thêm lớp ưu tiên kiểm tra sau khi đã khóa phường và loại hình."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu chỉ lọc nhà đất dưới 30 triệu/m² thì nên mở phường nào trước?",
+                "a": "Nên mở Tương Bình Hiệp trước. Snapshot live ngày 28/08/2026 cho thấy phường này có 273 tin nhà đất dưới 30 triệu/m², còn Định Hòa có 197 tin."
+            },
+            {
+                "q": "Vì sao Tương Bình Hiệp đáng mở trước dù giá trung vị gần bằng Định Hòa?",
+                "a": "Vì khác biệt lớn nằm ở độ dày nguồn hàng. Giá trung vị nhà đất gần như ngang nhau, khoảng 28,5-28,6 tr/m², nhưng Tương Bình Hiệp có nhiều tin phù hợp hơn và cũng dày hàng dưới 3 tỷ hơn, 503 tin so với 307 tin ở Định Hòa."
+            },
+            {
+                "q": "Đất nền ở hai phường này có nên gộp vào cùng bài toán nhà đất không?",
+                "a": "Không nên. Đất nền Định Hòa có giá trung vị 15,8 tr/m², còn Tương Bình Hiệp là 17,5 tr/m². Nhà đất là 28,6 và 28,5 tr/m². Gộp hai loại hình lại sẽ làm anh đọc sai mặt bằng giá."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-28",
+            "modified_at": "2026-08-28",
+            "intro": [
+                "Nếu anh đang lọc riêng nhà đất dưới 30 triệu/m², câu trả lời ngắn là: mở Tương Bình Hiệp trước. Snapshot live ngày 28/08/2026 trên Radar BDS ghi nhận 273 tin phù hợp tại Tương Bình Hiệp, cao hơn 197 tin ở Định Hòa. Đây là giá rao công khai, không phải giá chốt giao dịch.",
+                "Điểm dễ nhầm là thấy hai phường có giá trung vị nhà đất gần bằng nhau rồi nghĩ nơi nào cũng như nhau. Thực tế, khác biệt nằm ở số lượng tin còn trong khung giá/m² này, lượng nhà đất dưới 3 tỷ và việc đất nền ở hai nơi có mặt bằng khác hẳn nên không thể gộp chung."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Nhà đất đang theo dõi",
+                    "value": "1.000 tin",
+                    "note": "Định Hòa 423 · Tương Bình Hiệp 577"
+                },
+                {
+                    "label": "Nhà đất dưới 30 triệu/m²",
+                    "value": "197 vs 273 tin",
+                    "note": "Định Hòa vs Tương Bình Hiệp"
+                },
+                {
+                    "label": "Giá trung vị nhà đất/m²",
+                    "value": "28,6 vs 28,5 tr/m²",
+                    "note": "Gần như ngang nhau giữa hai phường"
+                },
+                {
+                    "label": "Nhà đất dưới 3 tỷ",
+                    "value": "307 vs 503 tin",
+                    "note": "Định Hòa vs Tương Bình Hiệp"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Nhà đất Định Hòa và Tương Bình Hiệp đang khác nhau thế nào khi khóa dưới 30 triệu/m²?",
+                    "note": "Nguồn Facebook live ngày 28/08/2026, lọc is_active=1, is_blacklisted=0, review_hidden=0 và property_type='nha_dat'. Giá trung vị là giá rao, không phải giá giao dịch.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "tracked", "label": "Tin nhà đất"},
+                        {"key": "priced", "label": "Tin có giá/m²"},
+                        {"key": "under30", "label": "Dưới 30 tr/m²"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"}
+                    ],
+                    "rows": [
+                        {"ward": "Định Hòa", "tracked": "423 tin", "priced": "353 tin", "under30": "197 tin", "under3": "307 tin", "median_m2": "28,6 tr/m²", "median_total": "2,65 tỷ"},
+                        {"ward": "Tương Bình Hiệp", "tracked": "577 tin", "priced": "515 tin", "under30": "273 tin", "under3": "503 tin", "median_m2": "28,5 tr/m²", "median_total": "2,59 tỷ"}
+                    ]
+                },
+                {
+                    "eyebrow": "Đừng gộp loại hình",
+                    "title": "Nếu nhìn thêm đất nền, mặt bằng hai phường đổi hẳn",
+                    "note": "Bảng này chỉ để giữ đúng ngữ cảnh. Khi lọc nhà đất, không lấy giá đất nền làm mốc thay thế.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "signals", "label": "Dấu hiệu"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Định Hòa · đất nền", "tracked": "820 tin", "median_m2": "15,8 tr/m²", "median_total": "2,38 tỷ", "signals": "128"},
+                        {"ward_type": "Định Hòa · nhà đất", "tracked": "423 tin", "median_m2": "28,6 tr/m²", "median_total": "2,65 tỷ", "signals": "60"},
+                        {"ward_type": "Tương Bình Hiệp · đất nền", "tracked": "415 tin", "median_m2": "17,5 tr/m²", "median_total": "1,95 tỷ", "signals": "12"},
+                        {"ward_type": "Tương Bình Hiệp · nhà đất", "tracked": "577 tin", "median_m2": "28,5 tr/m²", "median_total": "2,59 tỷ", "signals": "58"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Khóa đúng loại hình trước, rồi mới quyết định thứ tự mở phường và gọi hỏi sâu.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn nhiều nhà đất dưới 30 triệu/m²", "open_first": "Tương Bình Hiệp", "why": "273 tin phù hợp, cao hơn 197 tin ở Định Hòa."},
+                        {"need": "Muốn nhiều nhà đất dưới 3 tỷ", "open_first": "Tương Bình Hiệp", "why": "503 tin dưới 3 tỷ, trong khi Định Hòa có 307 tin."},
+                        {"need": "Muốn bám sát giá trung vị nhà đất", "open_first": "Cả hai, mở Tương Bình Hiệp trước", "why": "Giá trung vị gần như ngang nhau 28,5-28,6 tr/m² nên ưu tiên nơi nguồn hàng dày hơn."},
+                        {"need": "Muốn so thêm đất nền để tránh đọc sai", "open_first": "Định Hòa để lấy mốc đất nền, nhưng tách riêng", "why": "Đất nền Định Hòa 15,8 tr/m² thấp hơn Tương Bình Hiệp 17,5 tr/m², khác nhịp hoàn toàn với nhà đất."}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Tương Bình Hiệp dày nhà đất dưới 30 triệu/m² hơn rõ",
+                    "note": "Hai phường gần nhau về giá trung vị, nhưng số lượng tin phù hợp lại lệch khá rõ.",
+                    "alt": "Biểu đồ so số tin nhà đất dưới 30 triệu một mét vuông giữa Định Hòa và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Định Hòa", "value_label": "197 tin", "width": 72, "color": "#f59e0b"},
+                        {"label": "Tương Bình Hiệp", "value_label": "273 tin", "width": 100, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Giá trung vị nhà đất gần như ngang nhau, nhưng khối lượng tin không ngang nhau",
+                    "note": "Vì vậy, dưới 30 triệu/m² nên ưu tiên nơi có nhiều tin hơn để lọc trước rồi mới soi chi tiết từng căn.",
+                    "alt": "Biểu đồ so giá trung vị nhà đất Định Hòa và Tương Bình Hiệp",
+                    "rows": [
+                        {"label": "Định Hòa", "value_label": "28,6 tr/m² · 307 tin dưới 3 tỷ", "width": 100, "color": "#2563eb"},
+                        {"label": "Tương Bình Hiệp", "value_label": "28,5 tr/m² · 503 tin dưới 3 tỷ", "width": 100, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mo-tuong-binh-hiep-truoc",
+                    "heading": "1. Nếu khóa nhà đất dưới 30 triệu/m², nên mở Tương Bình Hiệp trước",
+                    "paragraphs": [
+                        "Khác biệt lớn nhất là độ dày nguồn hàng. Tương Bình Hiệp hiện có 577 tin nhà đất đang theo dõi, 515 tin có giá/m² và 273 tin còn nằm dưới 30 triệu/m². Định Hòa tương ứng là 423, 353 và 197 tin.",
+                        "Giá trung vị nhà đất giữa hai phường gần như ngang nhau, chỉ 28,5-28,6 tr/m². Vì vậy, nếu anh muốn lấy danh sách đủ dày để lọc nhanh rồi mới gọi hỏi sâu, nơi có nhiều tin hơn sẽ tiết kiệm thời gian hơn rõ."
+                    ],
+                    "bullets": [
+                        "Tương Bình Hiệp: 273 tin nhà đất dưới 30 tr/m²",
+                        "Định Hòa: 197 tin nhà đất dưới 30 tr/m²",
+                        "Giá trung vị nhà đất gần như ngang nhau: 28,5 vs 28,6 tr/m²",
+                        "Đây vẫn là giá rao công khai, không phải giá chốt giao dịch"
+                    ]
+                },
+                {
+                    "id": "duoi-3-ty-khac-nhau-ra-sao",
+                    "heading": "2. Nếu ngân sách chạm mốc 3 tỷ, Tương Bình Hiệp vẫn rộng cửa hơn",
+                    "paragraphs": [
+                        "Ở lớp nhà đất dưới 3 tỷ, Tương Bình Hiệp có 503 tin, còn Định Hòa có 307 tin. Mức chênh này cho thấy lợi thế của Tương Bình Hiệp không chỉ nằm ở giá/m², mà còn ở số lượng căn còn nằm trong khung tổng giá phổ biến.",
+                        "Tổng giá trung vị nhà đất tại Tương Bình Hiệp cũng thấp hơn nhẹ, khoảng 2,59 tỷ so với 2,65 tỷ ở Định Hòa. Chênh lệch không lớn, nhưng khi kết hợp với nguồn hàng rộng hơn, nó đủ để anh nên mở phường này trước trong vòng lọc đầu."
+                    ],
+                    "bullets": [
+                        "Nhà đất dưới 3 tỷ: Tương Bình Hiệp 503 tin",
+                        "Nhà đất dưới 3 tỷ: Định Hòa 307 tin",
+                        "Tổng giá trung vị nhà đất: 2,59 vs 2,65 tỷ",
+                        "Nguồn hàng rộng hơn giúp lọc nhanh hơn ở vòng đầu"
+                    ]
+                },
+                {
+                    "id": "vi-sao-khong-gop-dat-nen",
+                    "heading": "3. Đừng lấy đất nền làm mốc khi anh đang lọc nhà đất",
+                    "paragraphs": [
+                        "Định Hòa và Tương Bình Hiệp có mặt bằng đất nền khác hẳn nhóm nhà đất. Đất nền Định Hòa đang ở 15,8 tr/m², còn Tương Bình Hiệp là 17,5 tr/m². Trong khi đó, nhà đất của hai phường đều quanh 28,5-28,6 tr/m².",
+                        "Nếu anh gộp hai loại hình vào một kết luận chung kiểu “phường này rẻ hơn”, anh sẽ rất dễ mở nhầm bộ lọc. Với bài toán nhà ở sẵn, nên so nhà đất với nhà đất; đất nền chỉ nên dùng như lớp tham chiếu riêng."
+                    ],
+                    "bullets": [
+                        "Đất nền Định Hòa: 15,8 tr/m²",
+                        "Đất nền Tương Bình Hiệp: 17,5 tr/m²",
+                        "Nhà đất Định Hòa: 28,6 tr/m²",
+                        "Nhà đất Tương Bình Hiệp: 28,5 tr/m²"
+                    ]
+                },
+                {
+                    "id": "cach-dung-dashboard",
+                    "heading": "4. Cách dùng dashboard để bớt tốn thời gian gọi dàn trải",
+                    "paragraphs": [
+                        "Bước 1, anh mở Tương Bình Hiệp với bộ lọc nhà đất trước. Bước 2, giới hạn thêm ngưỡng giá/m² hoặc tổng giá theo nhu cầu thực. Bước 3, nếu muốn lấy thêm mặt bằng so sánh, mở Định Hòa ở cùng bộ lọc rồi xem những căn lệch giá mạnh so với trung vị.",
+                        "Sau khi đã có vài tin phù hợp, anh nên mở thêm công cụ định giá để kiểm tra nhanh mặt bằng xung quanh. Radar BDS là bộ lọc dữ liệu ban đầu; trước khi giao dịch vẫn cần xem pháp lý, quy hoạch, đường vào, hiện trạng và mức độ khớp mô tả."
+                    ],
+                    "bullets": [
+                        "Bước 1: mở Tương Bình Hiệp với bộ lọc nhà đất",
+                        "Bước 2: giới hạn dưới 30 tr/m² hoặc dưới 3 tỷ theo nhu cầu",
+                        "Bước 3: mở thêm Định Hòa để so chéo cùng loại hình",
+                        "Bước 4: dùng công cụ định giá và kiểm tra thực địa trước quyết định"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã khóa rõ mình đang lọc nhà đất, không phải đất nền chưa?",
+                "Đã nhìn cả giá trung vị/m² và tổng giá trung vị của nhà đất chưa?",
+                "Đã kiểm tra còn bao nhiêu tin nằm dưới 30 triệu/m² hoặc dưới 3 tỷ chưa?",
+                "Đã nhớ đây là giá rao công khai, không phải giá chốt giao dịch chưa?",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch, đường vào và thực địa sau khi lọc chưa?"
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc nhà đất đúng phường và đúng khung giá",
+            "body": "Bắt đầu bằng Tương Bình Hiệp nếu anh muốn danh sách nhà đất dưới 30 triệu/m² dày hơn, sau đó mở thêm Định Hòa để so chéo cùng loại hình.",
+            "button": "Mở Radar BDS",
+            "button_href": "/?tab=signals&ward=T%C6%B0%C6%A1ng%20B%C3%ACnh%20Hi%E1%BB%87p&prop_type=nha_dat&utm_source=seo&utm_medium=article&utm_campaign=house_under30_dinh_hoa_vs_tuong_binh_hiep"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp", "href": "/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc", "url": "https://radarbds.vn/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc"}
+        ]
+    }
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.

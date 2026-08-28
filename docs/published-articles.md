@@ -1,3 +1,10 @@
+## 2026-08-28
+- `/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc` — **Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp nên lọc trước?**
+  - Pillar: So sánh phường / loại hình / giá-m2
+  - Score gate: 96/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-28, filtered riêng `property_type='nha_dat'`, with dưới-30-tr/m² / dưới-3-tỷ counts, median price/m², median total price, and a guard table that keeps `dat_nen` separate
+  - Funnel: `/binh-duong/phuong-tuong-binh-hiep`, `/binh-duong/phuong-dinh-hoa`, dashboard ward filter for `nha_dat`, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu`, `/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu`
+
 ## 2026-08-26
 - `/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc` — **Phú Mỹ hay Tương Bình Hiệp: nên xem khu nào trước?**
   - Pillar: So sánh phường
