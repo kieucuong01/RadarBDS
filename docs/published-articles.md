@@ -1,3 +1,10 @@
+## 2026-08-29
+- `/tin-tuc/hiep-thanh-hay-chanh-nghia-nen-xem-khu-nao-truoc` — **Hiệp Thành hay Chánh Nghĩa: nên xem khu nào trước?**
+  - Pillar: So sánh phường
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-29, split by `dat_nen` vs `nha_dat`, with dưới-4-tỷ counts, median price/m², median total price, 25-75% range, signal counts, and two current example listings
+  - Funnel: `/binh-duong/phuong-hiep-thanh`, `/binh-duong/phuong-chanh-nghia`, dashboard signals tab, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc`, `/tin-tuc/gia-dat-hiep-thanh-hien-bao-nhieu`
+
 ## 2026-08-28
 - `/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc` — **Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp nên lọc trước?**
   - Pillar: So sánh phường / loại hình / giá-m2

@@ -17920,7 +17920,375 @@ SEO_ARTICLES = {
             {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
             {"name": "Nhà đất dưới 30 triệu/m²: Định Hòa hay Tương Bình Hiệp", "href": "/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc", "url": "https://radarbds.vn/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc"}
         ]
+    },
+    "hiep-thanh-hay-chanh-nghia-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/hiep-thanh-hay-chanh-nghia-nen-xem-khu-nao-truoc",
+        "category": {"key": "so-sanh-khu-vuc", "label": "So sánh phường"},
+        "title": "Hiệp Thành hay Chánh Nghĩa: nên xem khu nào trước? | Radar BDS",
+        "description": "So Hiệp Thành và Chánh Nghĩa theo dữ liệu Facebook live 29/08/2026: số tin, dấu hiệu, giá rao đất nền và nhà đất để biết nên lọc khu nào trước.",
+        "keywords": "Hiệp Thành hay Chánh Nghĩa, giá đất Hiệp Thành, giá đất Chánh Nghĩa, nhà đất Hiệp Thành, nhà đất Chánh Nghĩa, Radar BDS",
+        "breadcrumb_label": "Hiệp Thành hay Chánh Nghĩa",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Hiệp Thành hay Chánh Nghĩa: nên xem khu nào trước?",
+        "hero_text": "Nếu anh cần nhiều tin để lọc trước, nên mở Hiệp Thành vì nguồn hàng live đang dày hơn. Nếu anh muốn mặt bằng đất nền dưới 4 tỷ gọn hơn và giá/m² cao hơn nhưng tập trung hơn, Chánh Nghĩa dễ đọc nhanh. Dù chọn khu nào, vẫn phải tách đất nền và nhà đất trước khi so giá rao.",
+        "scope_label": "Thủ Dầu Một · Hiệp Thành / Chánh Nghĩa",
+        "hero_checks": [
+            "Hiệp Thành đang theo dõi 882 tin; Chánh Nghĩa có 459 tin live từ Facebook",
+            "Đất nền Hiệp Thành giá rao trung vị 23,2 tr/m²; Chánh Nghĩa là 27,0 tr/m²",
+            "Nhà đất Hiệp Thành giá rao trung vị 39,3 tr/m²; Chánh Nghĩa là 45,9 tr/m²",
+            "Dấu hiệu đáng kiểm tra: Hiệp Thành 106 tin, Chánh Nghĩa 70 tin"
+        ],
+        "primary_cta": "Mở dashboard lọc Hiệp Thành và Chánh Nghĩa",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_chanh_nghia",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Hiệp Thành / Chánh Nghĩa",
+        "hero_metric": {
+            "label": "Tổng số tin đang theo dõi",
+            "value": "1.341 tin",
+            "delta": "176 dấu hiệu đáng kiểm tra",
+            "note": "Nguồn Facebook live, lọc theo hai phường ngày 29/08/2026"
+        },
+        "property_card": {
+            "status": "Cập nhật 29/08/2026",
+            "title": "Ưu tiên theo đúng mục tiêu mua",
+            "price": "Hiệp Thành nhiều lựa chọn hơn; Chánh Nghĩa nhỉnh hơn về mặt bằng giá/m²",
+            "metric_a": "Đất nền",
+            "metric_a_value": "23,2 vs 27,0 tr/m²",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "39,3 vs 45,9 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Hiệp Thành hợp người mua muốn lọc nhiều mẫu hơn",
+                "body": "Hiệp Thành đang có 882 tin live, gần gấp đôi Chánh Nghĩa 459 tin. Riêng đất nền đã có 269 tin, còn nhà đất có 588 tin, nên anh dễ mở dashboard và sàng lọc nhiều kịch bản hơn."
+            },
+            {
+                "title": "Chánh Nghĩa hợp người mua muốn đọc mặt bằng giá gọn hơn",
+                "body": "Chánh Nghĩa có ít tin hơn nhưng giá rao đất nền và nhà đất đều cao hơn Hiệp Thành. Điều này giúp anh nhìn nhanh mặt bằng khu gần trung tâm, nhưng không nên hiểu là giá chốt ngoài thực tế."
+            },
+            {
+                "title": "Đừng gộp đất nền và nhà đất vào cùng một giá chung",
+                "body": "Hiệp Thành và Chánh Nghĩa đều có khoảng cách lớn giữa đất nền và nhà đất. Nếu lấy một con số trung bình chung, anh sẽ đọc sai mức giá của từng loại hình và dễ lọc nhầm tin."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc riêng Hiệp Thành và Chánh Nghĩa",
+            "description": "Tách đất nền và nhà đất trước, rồi mới so giá rao, nhóm dưới 4 tỷ và dấu hiệu đáng kiểm tra.",
+            "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS lọc phường Hiệp Thành và Chánh Nghĩa"
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 29/08/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "columns": [
+                {"key": "ward_type", "label": "Phường · loại hình"},
+                {"key": "tracked", "label": "Tin đang theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "under4", "label": "Dưới 4 tỷ"},
+                {"key": "median_m2", "label": "Giá trung vị/m²"},
+                {"key": "median_total", "label": "Tổng giá trung vị"},
+                {"key": "range", "label": "Vùng 25-75%"}
+            ],
+            "rows": [
+                {
+                    "ward_type": "Hiệp Thành · đất nền",
+                    "tracked": "269",
+                    "signals": "29",
+                    "under4": "142",
+                    "median_m2": "23,2 tr/m²",
+                    "median_total": "3,48 tỷ",
+                    "range": "11,9-28,9 tr/m²"
+                },
+                {
+                    "ward_type": "Hiệp Thành · nhà đất",
+                    "tracked": "588",
+                    "signals": "76",
+                    "under4": "292",
+                    "median_m2": "39,3 tr/m²",
+                    "median_total": "3,30 tỷ",
+                    "range": "30,4-50,0 tr/m²"
+                },
+                {
+                    "ward_type": "Chánh Nghĩa · đất nền",
+                    "tracked": "186",
+                    "signals": "29",
+                    "under4": "92",
+                    "median_m2": "27,0 tr/m²",
+                    "median_total": "2,49 tỷ",
+                    "range": "21,1-32,5 tr/m²"
+                },
+                {
+                    "ward_type": "Chánh Nghĩa · nhà đất",
+                    "tracked": "264",
+                    "signals": "41",
+                    "under4": "107",
+                    "median_m2": "45,9 tr/m²",
+                    "median_total": "3,35 tỷ",
+                    "range": "38,1-48,9 tr/m²"
+                }
+            ]
+        },
+        "local_links": [
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Hiệp Thành."
+            },
+            {
+                "label": "Trang phường Chánh Nghĩa",
+                "href": "/binh-duong/phuong-chanh-nghia",
+                "description": "Xem trang tổng hợp dữ liệu và lối vào dashboard của Chánh Nghĩa."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đọc bối cảnh toàn Thủ Dầu Một trước khi so từng phường."
+            },
+            {
+                "label": "Hiệp Thành hay Tân An",
+                "href": "/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc",
+                "description": "So thêm Hiệp Thành với một phường có mặt bằng khác rõ ở nhóm nhà đất."
+            },
+            {
+                "label": "Giá đất Hiệp Thành hiện bao nhiêu",
+                "href": "/tin-tuc/gia-dat-hiep-thanh-hien-bao-nhieu",
+                "description": "Đọc sâu riêng dữ liệu Hiệp Thành trước khi chốt shortlist."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu muốn nhiều tin để lọc trước thì nên mở phường nào?",
+                "a": "Nên mở Hiệp Thành trước vì hiện có 882 tin đang theo dõi, cao hơn Chánh Nghĩa 459 tin. Chênh lệch này thấy rõ ở cả đất nền lẫn nhà đất."
+            },
+            {
+                "q": "Đất nền ở Hiệp Thành hay Chánh Nghĩa đang mềm hơn?",
+                "a": "Theo dữ liệu Radar BDS ngày 29/08/2026, đất nền Hiệp Thành có giá rao trung vị 23,2 tr/m², thấp hơn Chánh Nghĩa 27,0 tr/m². Tuy vậy, anh vẫn cần so tiếp vị trí, hẻm/đường và diện tích của từng tin cụ thể."
+            },
+            {
+                "q": "Nhà đất ở hai phường chênh nhau ra sao?",
+                "a": "Nhà đất Hiệp Thành đang có giá rao trung vị 39,3 tr/m², còn Chánh Nghĩa là 45,9 tr/m². Đây là giá rao tham khảo, không phải giá chốt giao dịch."
+            },
+            {
+                "q": "176 dấu hiệu đáng kiểm tra có nghĩa là nên mua ngay không?",
+                "a": "Không. Dấu hiệu chỉ là bộ lọc để anh ưu tiên thứ tự xem tiếp. Sau đó vẫn phải kiểm tra pháp lý, quy hoạch, hiện trạng nhà đất, đường vào và so lại với mặt bằng cùng loại hình."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-29",
+            "modified_at": "2026-08-29",
+            "intro": [
+                "Nếu anh đang phân vân nên mở Hiệp Thành hay Chánh Nghĩa trước, câu trả lời ngắn là: cần nhiều lựa chọn thì mở Hiệp Thành; cần đọc nhanh mặt bằng giá khu trung tâm hơn thì xem Chánh Nghĩa song song. Dữ liệu dưới đây là giá rao Facebook live trên Radar BDS ngày 29/08/2026.",
+                "Điểm dễ sai nhất là lấy một mức giá chung cho cả hai phường. Bài này tách riêng đất nền và nhà đất, rồi mới so số tin, giá trung vị, nhóm dưới 4 tỷ và dấu hiệu đáng kiểm tra để anh dùng đúng hơn."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng số tin hai phường",
+                    "value": "1.341 tin",
+                    "note": "Hiệp Thành 882 · Chánh Nghĩa 459"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "176 tin",
+                    "note": "Hiệp Thành 106 · Chánh Nghĩa 70"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "23,2 vs 27,0 tr/m²",
+                    "note": "Hiệp Thành thấp hơn Chánh Nghĩa"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "39,3 vs 45,9 tr/m²",
+                    "note": "Chánh Nghĩa cao hơn Hiệp Thành"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Hiệp Thành và Chánh Nghĩa khác nhau thế nào khi tách loại hình?",
+                    "note": "Đây là giá rao đang theo dõi trên Radar BDS, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {
+                            "ward_type": "Hiệp Thành · đất nền",
+                            "tracked": "269",
+                            "signals": "29",
+                            "under4": "142",
+                            "median_m2": "23,2 tr/m²",
+                            "median_total": "3,48 tỷ",
+                            "range": "11,9-28,9 tr/m²"
+                        },
+                        {
+                            "ward_type": "Hiệp Thành · nhà đất",
+                            "tracked": "588",
+                            "signals": "76",
+                            "under4": "292",
+                            "median_m2": "39,3 tr/m²",
+                            "median_total": "3,30 tỷ",
+                            "range": "30,4-50,0 tr/m²"
+                        },
+                        {
+                            "ward_type": "Chánh Nghĩa · đất nền",
+                            "tracked": "186",
+                            "signals": "29",
+                            "under4": "92",
+                            "median_m2": "27,0 tr/m²",
+                            "median_total": "2,49 tỷ",
+                            "range": "21,1-32,5 tr/m²"
+                        },
+                        {
+                            "ward_type": "Chánh Nghĩa · nhà đất",
+                            "tracked": "264",
+                            "signals": "41",
+                            "under4": "107",
+                            "median_m2": "45,9 tr/m²",
+                            "median_total": "3,35 tỷ",
+                            "range": "38,1-48,9 tr/m²"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin mới trong feed live",
+                    "title": "Hai ví dụ để đọc mặt bằng giá đúng cách",
+                    "note": "Ví dụ dưới đây đã ẩn thông tin liên hệ và chỉ dùng để minh hoạ cách đọc giá rao.",
+                    "columns": [
+                        {"key": "example", "label": "Ví dụ"},
+                        {"key": "property_type", "label": "Loại hình"},
+                        {"key": "price_m2", "label": "Giá rao/m²"},
+                        {"key": "price_total", "label": "Tổng giá rao"},
+                        {"key": "read", "label": "Cách đọc nhanh"}
+                    ],
+                    "rows": [
+                        {
+                            "example": "Một tin đất Chánh Nghĩa 103 m² gần bờ kè",
+                            "property_type": "Đất nền",
+                            "price_m2": "21,4 tr/m²",
+                            "price_total": "2,20 tỷ",
+                            "read": "Thấp hơn giá trung vị đất nền Chánh Nghĩa 27,0 tr/m², nên kiểm tra tiếp vị trí và đường vào."
+                        },
+                        {
+                            "example": "Một nhà Hiệp Thành 1 trệt 2 lầu khoảng 99 m²",
+                            "property_type": "Nhà đất",
+                            "price_m2": "50,0 tr/m²",
+                            "price_total": "4,95 tỷ",
+                            "read": "Cao hơn giá trung vị nhà đất Hiệp Thành 39,3 tr/m², nên đối chiếu thêm mặt tiền, hoàn công và công năng thực tế."
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Cùng là nhà đất nhưng mặt bằng Chánh Nghĩa cao hơn",
+                    "note": "Biểu đồ dùng giá rao trung vị/m². Không gộp đất nền và nhà đất thành một giá chung.",
+                    "alt": "Biểu đồ so giá rao trung vị đất nền và nhà đất giữa Hiệp Thành và Chánh Nghĩa",
+                    "rows": [
+                        {"label": "Hiệp Thành · đất nền", "value_label": "23,2 tr/m²", "width": 46, "color": "#2563eb"},
+                        {"label": "Hiệp Thành · nhà đất", "value_label": "39,3 tr/m²", "width": 79, "color": "#16a34a"},
+                        {"label": "Chánh Nghĩa · đất nền", "value_label": "27,0 tr/m²", "width": 54, "color": "#f59e0b"},
+                        {"label": "Chánh Nghĩa · nhà đất", "value_label": "45,9 tr/m²", "width": 92, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "nguon-hang-hiep-thanh-chanh-nghia",
+                    "heading": "Muốn nhiều lựa chọn để lọc trước thì Hiệp Thành rộng cửa hơn",
+                    "paragraphs": [
+                        "Hiệp Thành đang có 882 tin live từ Facebook, trong khi Chánh Nghĩa có 459 tin. Chỉ riêng chênh lệch số lượng đã cho thấy Hiệp Thành hợp người mua muốn mở nhiều mẫu để xem nhanh trước khi khoanh lại shortlist.",
+                        "Trong nhóm live hiện tại, Hiệp Thành có 269 tin đất nền và 588 tin nhà đất. Chánh Nghĩa có 186 tin đất nền và 264 tin nhà đất. Nếu anh cần nhiều phương án hơn theo từng ngân sách, Hiệp Thành dễ bắt đầu hơn."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành: 882 tin đang theo dõi",
+                        "Chánh Nghĩa: 459 tin đang theo dõi",
+                        "Đất nền: 269 vs 186 tin",
+                        "Nhà đất: 588 vs 264 tin"
+                    ]
+                },
+                {
+                    "id": "gia-dat-nen-hai-phuong",
+                    "heading": "Đất nền Chánh Nghĩa cao hơn, nhưng tổng giá trung vị lại thấp hơn Hiệp Thành",
+                    "paragraphs": [
+                        "Đất nền Hiệp Thành có giá rao trung vị 23,2 tr/m², còn Chánh Nghĩa là 27,0 tr/m². Nếu chỉ nhìn giá/m², Chánh Nghĩa đang cao hơn rõ. Nhưng tổng giá trung vị lại khác: Hiệp Thành khoảng 3,48 tỷ, còn Chánh Nghĩa khoảng 2,49 tỷ.",
+                        "Cách đọc đúng là xem đồng thời giá/m², tổng giá và diện tích. Một lô Chánh Nghĩa có thể đắt hơn theo m² nhưng diện tích nhỏ hơn, nên tổng giá vẫn thấp hơn mặt bằng đất nền Hiệp Thành."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành đất nền: 23,2 tr/m² · 3,48 tỷ trung vị",
+                        "Chánh Nghĩa đất nền: 27,0 tr/m² · 2,49 tỷ trung vị",
+                        "Nhóm dưới 4 tỷ: Hiệp Thành 142 tin · Chánh Nghĩa 92 tin",
+                        "Vùng 25-75%: Hiệp Thành 11,9-28,9 · Chánh Nghĩa 21,1-32,5 tr/m²"
+                    ]
+                },
+                {
+                    "id": "nha-dat-hai-phuong",
+                    "heading": "Nhà đất Chánh Nghĩa cũng cao hơn, nhưng chênh tổng giá không lớn",
+                    "paragraphs": [
+                        "Nhà đất Hiệp Thành đang có giá rao trung vị 39,3 tr/m², còn Chánh Nghĩa là 45,9 tr/m². Tuy vậy, tổng giá trung vị của hai phường khá sát nhau: Hiệp Thành khoảng 3,30 tỷ và Chánh Nghĩa khoảng 3,35 tỷ.",
+                        "Điều này cho thấy nếu mục tiêu là mua để ở, anh không nên chỉ nhìn mỗi giá/m². Cần xem thêm diện tích đất, số tầng, hẻm hay đường lớn, tình trạng hoàn công và vị trí so với trục chính."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành nhà đất: 39,3 tr/m² · 3,30 tỷ trung vị",
+                        "Chánh Nghĩa nhà đất: 45,9 tr/m² · 3,35 tỷ trung vị",
+                        "Nhóm dưới 4 tỷ: 292 vs 107 tin",
+                        "Vùng 25-75%: 30,4-50,0 vs 38,1-48,9 tr/m²"
+                    ]
+                },
+                {
+                    "id": "tin-hieu-dang-kiem-tra",
+                    "heading": "Muốn soi nhanh nhóm cần kiểm tra trước thì Hiệp Thành vẫn nhỉnh hơn",
+                    "paragraphs": [
+                        "Radar BDS đang ghi nhận 106 dấu hiệu đáng kiểm tra ở Hiệp Thành và 70 ở Chánh Nghĩa. Đây là nhóm tin hot hoặc có giảm giá để anh ưu tiên mở trước, không phải danh sách khuyến nghị mua ngay.",
+                        "Điểm đáng chú ý là đất nền hai phường cùng có 29 dấu hiệu, nhưng nhà đất Hiệp Thành có 76 dấu hiệu, cao hơn Chánh Nghĩa 41. Nếu anh săn nhà ở sẵn, Hiệp Thành hiện cho nhiều điểm để lọc trước hơn."
+                    ],
+                    "bullets": [
+                        "Tổng dấu hiệu: Hiệp Thành 106 · Chánh Nghĩa 70",
+                        "Tin hot: 99 · 65",
+                        "Tin có giảm giá: 9 · 5",
+                        "Đất nền có dấu hiệu: 29 · 29",
+                        "Nhà đất có dấu hiệu: 76 · 41"
+                    ]
+                },
+                {
+                    "id": "nen-mo-khu-nao-truoc",
+                    "heading": "Kết luận nhanh: mở Hiệp Thành trước nếu cần nhiều hàng, mở Chánh Nghĩa song song nếu ưu tiên khu trung tâm hơn",
+                    "paragraphs": [
+                        "Nếu mục tiêu của anh là có nhiều tin để lọc, nhiều nhà đất dưới 4 tỷ và nhiều dấu hiệu để kiểm tra tiếp, Hiệp Thành là nơi nên mở trước. Đây là lựa chọn hợp lý cho vòng lọc đầu tiên trên dashboard.",
+                        "Nếu anh muốn xem thêm một mặt bằng nhỏ hơn nhưng giá/m² cao hơn, gần nhóm khu trung tâm hơn và dễ đọc nhanh, Chánh Nghĩa là phường nên mở song song sau bước đầu. Cách dùng an toàn là mở Radar, lọc từng phường, tách loại hình rồi mới so từng tin cụ thể."
+                    ],
+                    "bullets": [
+                        "Mở Hiệp Thành trước khi cần nhiều lựa chọn",
+                        "Mở Chánh Nghĩa song song khi cần so mặt bằng khu gần trung tâm",
+                        "Tách đất nền và nhà đất trước khi so",
+                        "Dùng thêm công cụ định giá để kiểm tra mức rao bất thường"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã xác định rõ anh đang tìm đất nền hay nhà đất.",
+                "Đã so giá rao/m² với đúng loại hình ở đúng phường.",
+                "Đã nhìn cả tổng giá và diện tích, không chỉ nhìn giá/m².",
+                "Đã mở dashboard để ưu tiên tin có dấu hiệu đáng kiểm tra.",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và thực địa trước khi đặt cọc."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Hiệp Thành và Chánh Nghĩa",
+            "body": "Mở Radar để tách đất nền và nhà đất, xem nhóm dưới 4 tỷ và ưu tiên các tin có dấu hiệu đáng kiểm tra trước khi liên hệ.",
+            "button": "Mở dashboard so hai phường"
+        }
     }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
