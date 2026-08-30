@@ -18288,6 +18288,312 @@ SEO_ARTICLES = {
             "button": "Mở dashboard so hai phường"
         }
     }
+,
+    "gia-dat-my-phuoc-ben-cat-hien-bao-nhieu": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu",
+        "category": {"key": "du-lieu-gia-dat", "label": "Giá đất theo phường"},
+        "title": "Giá đất Mỹ Phước Bến Cát hiện bao nhiêu? Tách riêng đất nền và nhà đất | Radar BDS",
+        "description": "Cập nhật giá đất Mỹ Phước Bến Cát từ dữ liệu Facebook live 30/08/2026: số tin đang theo dõi, dấu hiệu đáng chú ý, giá rao đất nền và nhà đất để anh lọc đúng trước khi gọi hỏi tin.",
+        "keywords": "giá đất Mỹ Phước Bến Cát, đất Mỹ Phước, nhà đất Mỹ Phước, giá đất Bến Cát, Radar BDS",
+        "breadcrumb_label": "Giá đất Mỹ Phước Bến Cát",
+        "hero_badge": "Giá đất theo khu vực",
+        "hero_title": "Giá đất Mỹ Phước Bến Cát hiện bao nhiêu? Tách riêng đất nền và nhà đất",
+        "hero_text": "Nếu anh đang xem Mỹ Phước theo một mức giá chung, rất dễ đọc sai. Dữ liệu Radar BDS ngày 30/08/2026 cho thấy đất nền và nhà đất ở Mỹ Phước đang nằm ở hai mặt bằng khác nhau khá rõ. Vì vậy, bước đúng là tách loại hình trước, rồi mới so giá rao và nhóm dưới 3 tỷ.",
+        "scope_label": "Bến Cát · Mỹ Phước",
+        "hero_checks": [
+            "115 tin Facebook live đang theo dõi tại Mỹ Phước ngày 30/08/2026",
+            "Đất nền có giá rao trung vị 10,3 tr/m²; nhà đất là 20,0 tr/m²",
+            "Nhà đất đang chiếm nguồn hàng chính với 69 tin; đất nền có 37 tin",
+            "14 tin có dấu hiệu đáng chú ý; phần lớn nằm ở đất nền và nhà đất"
+        ],
+        "primary_cta": "Mở dashboard lọc Mỹ Phước",
+        "primary_href": "/?tab=signals&ward=M%E1%BB%B9%20Ph%C6%B0%E1%BB%9Bc&utm_source=seo&utm_medium=article&utm_campaign=gia_dat_my_phuoc",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Mỹ Phước / Bến Cát",
+        "hero_metric": {
+            "label": "Tin đang theo dõi tại Mỹ Phước",
+            "value": "115 tin",
+            "delta": "14 dấu hiệu đáng chú ý",
+            "note": "Nguồn Facebook live, lọc Mỹ Phước ngày 30/08/2026"
+        },
+        "property_card": {
+            "status": "Cập nhật 30/08/2026",
+            "title": "Mỹ Phước đang nghiêng về nhóm nhà đất dưới 3 tỷ",
+            "price": "Đất nền mềm hơn rõ, nhưng nhà đất lại nhiều mẫu để lọc hơn",
+            "metric_a": "Đất nền",
+            "metric_a_value": "10,3 tr/m² · 1,58 tỷ",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "20,0 tr/m² · 1,80 tỷ"
+        },
+        "value_cards": [
+            {
+                "title": "Mỹ Phước hiện không có một mặt bằng giá chung",
+                "body": "Đất nền ở Mỹ Phước đang có giá rao trung vị 10,3 tr/m², trong khi nhà đất là 20,0 tr/m². Nếu gộp hai nhóm này vào một con số chung, anh sẽ rất dễ so nhầm giữa lô đất trống và căn nhà xây sẵn."
+            },
+            {
+                "title": "Nguồn hàng nhà đất đang dày hơn đất nền",
+                "body": "Radar BDS đang theo dõi 69 tin nhà đất và 37 tin đất nền tại Mỹ Phước. Điều này có nghĩa là người mua cần nhà sẵn để ở hoặc cho thuê có nhiều mẫu hơn để lọc trước, đặc biệt ở vùng giá dưới 3 tỷ."
+            },
+            {
+                "title": "Nhóm dưới 3 tỷ vẫn là vùng dễ mở dashboard nhất",
+                "body": "Trong dữ liệu live hiện tại, có 18 tin đất nền và 61 tin nhà đất nằm dưới 3 tỷ. Đây là nhóm phù hợp để anh mở dashboard, xem tiếp vị trí, đường vào và tình trạng pháp lý trước khi liên hệ."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Lọc nhanh trên Radar",
+            "title": "Xem riêng Mỹ Phước trước khi gọi hỏi tin",
+            "description": "Mở tab Săn Deal hoặc Tin rao, giữ ward Mỹ Phước, rồi tách đất nền và nhà đất để tránh so sai giá rao.",
+            "image": "/static/images/seo/ward-price-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS lọc khu vực Mỹ Phước Bến Cát"
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 30/08/2026",
+            "title": "Mỹ Phước theo từng loại hình BĐS",
+            "columns": [
+                {"key": "type", "label": "Loại hình"},
+                {"key": "tracked", "label": "Tin đang theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "under3", "label": "Dưới 3 tỷ"},
+                {"key": "median_m2", "label": "Giá trung vị/m²"},
+                {"key": "median_total", "label": "Tổng giá trung vị"},
+                {"key": "range", "label": "Vùng 25-75%"}
+            ],
+            "rows": [
+                {
+                    "type": "Đất nền",
+                    "tracked": "37",
+                    "signals": "5",
+                    "under3": "18",
+                    "median_m2": "10,3 tr/m²",
+                    "median_total": "1,58 tỷ",
+                    "range": "8,6-15,8 tr/m²"
+                },
+                {
+                    "type": "Nhà đất",
+                    "tracked": "69",
+                    "signals": "9",
+                    "under3": "61",
+                    "median_m2": "20,0 tr/m²",
+                    "median_total": "1,80 tỷ",
+                    "range": "15,0-30,0 tr/m²"
+                },
+                {
+                    "type": "Nhà trọ",
+                    "tracked": "7",
+                    "signals": "0",
+                    "under3": "7",
+                    "median_m2": "16,7 tr/m²",
+                    "median_total": "2,50 tỷ",
+                    "range": "14,7-17,0 tr/m²"
+                }
+            ]
+        },
+        "local_links": [
+            {
+                "label": "Trang khu vực Mỹ Phước",
+                "href": "/binh-duong/my-phuoc",
+                "description": "Xem trang tổng hợp khu vực Mỹ Phước và các lối vào dashboard liên quan."
+            },
+            {
+                "label": "Trang khu vực Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Đặt Mỹ Phước trong bối cảnh rộng hơn của Bến Cát trước khi so giá."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Tự nhập một tin cụ thể để kiểm tra thêm mức giá tham chiếu."
+            },
+            {
+                "label": "MOS là gì và cách lọc tin dưới giá cơ sở",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Hiểu bộ lọc ưu tiên tin đáng kiểm tra sau khi đã tách loại hình."
+            },
+            {
+                "label": "Giá trung vị là gì khi xem giá đất",
+                "href": "/tin-tuc/gia-trung-vi-la-gi-khi-xem-gia-dat",
+                "description": "Giải thích vì sao Radar BDS dùng giá trung vị thay vì lấy trung bình chung."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Giá đất Mỹ Phước hiện khoảng bao nhiêu?",
+                "a": "Theo dữ liệu Facebook live Radar BDS ngày 30/08/2026, đất nền tại Mỹ Phước có giá rao trung vị 10,3 tr/m², còn nhà đất là 20,0 tr/m². Đây là giá rao đang theo dõi, không phải giá chốt giao dịch."
+            },
+            {
+                "q": "Vì sao phải tách đất nền và nhà đất khi xem Mỹ Phước?",
+                "a": "Vì hai nhóm này đang nằm ở hai mặt bằng giá khác nhau rõ rệt. Nếu gộp chung, anh sẽ dễ hiểu sai mức giá của từng loại hình và lọc nhầm tin."
+            },
+            {
+                "q": "Nhóm dưới 3 tỷ ở Mỹ Phước còn nhiều không?",
+                "a": "Có. Radar BDS đang theo dõi 18 tin đất nền và 61 tin nhà đất dưới 3 tỷ tại Mỹ Phước. Đây là vùng giá phù hợp để anh mở dashboard và lọc tiếp theo vị trí, diện tích và loại đường."
+            },
+            {
+                "q": "14 dấu hiệu đáng chú ý có nghĩa là nên mua ngay không?",
+                "a": "Không. Dấu hiệu chỉ giúp ưu tiên thứ tự kiểm tra. Sau đó anh vẫn cần xem pháp lý, quy hoạch, hiện trạng và so lại với các tin cùng loại hình trong khu vực."
+            }
+        ],
+        "article": {
+            "published_at": "2026-08-30",
+            "modified_at": "2026-08-30",
+            "intro": [
+                "Nếu anh hỏi giá đất Mỹ Phước hiện khoảng bao nhiêu, câu trả lời ngắn là: đất nền đang quanh mức trung vị 10,3 tr/m², còn nhà đất là 20,0 tr/m² theo dữ liệu Facebook live Radar BDS ngày 30/08/2026. Đây là giá rao, không phải giá chốt.",
+                "Điểm cần làm trước là tách loại hình. Mỹ Phước đang có 115 tin theo dõi, nhưng phần lớn là nhà đất. Vì vậy, nếu anh xem một con số chung cho cả khu, khả năng đọc sai mặt bằng giá là rất cao."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng số tin Mỹ Phước",
+                    "value": "115 tin",
+                    "note": "Facebook live ngày 30/08/2026"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "14 tin",
+                    "note": "Đất nền 5 · nhà đất 9"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "10,3 tr/m²",
+                    "note": "Tổng giá trung vị 1,58 tỷ"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "20,0 tr/m²",
+                    "note": "Tổng giá trung vị 1,80 tỷ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng giá theo loại hình",
+                    "title": "Mỹ Phước đang khác nhau ra sao giữa đất nền và nhà đất?",
+                    "note": "Tất cả số liệu là giá rao Facebook live Radar BDS, không phải giá chốt giao dịch ngoài thực tế.",
+                    "columns": [
+                        {"key": "type", "label": "Loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "tracked": "37",
+                            "signals": "5",
+                            "under3": "18",
+                            "median_m2": "10,3 tr/m²",
+                            "median_total": "1,58 tỷ",
+                            "range": "8,6-15,8 tr/m²"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "tracked": "69",
+                            "signals": "9",
+                            "under3": "61",
+                            "median_m2": "20,0 tr/m²",
+                            "median_total": "1,80 tỷ",
+                            "range": "15,0-30,0 tr/m²"
+                        },
+                        {
+                            "type": "Nhà trọ",
+                            "tracked": "7",
+                            "signals": "0",
+                            "under3": "7",
+                            "median_m2": "16,7 tr/m²",
+                            "median_total": "2,50 tỷ",
+                            "range": "14,7-17,0 tr/m²"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Cách đọc nhanh trước khi mở tin",
+                    "title": "Ba mốc đủ dùng để lọc Mỹ Phước trong 2 phút đầu",
+                    "note": "Bảng này giúp anh tránh nhảy vào một tin rao chỉ vì thấy tổng giá thấp.",
+                    "columns": [
+                        {"key": "step", "label": "Bước"},
+                        {"key": "check", "label": "Nên nhìn gì"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {
+                            "step": "1",
+                            "check": "Chọn đúng loại hình trước",
+                            "why": "Đất nền 10,3 tr/m² và nhà đất 20,0 tr/m² đang lệch khá xa."
+                        },
+                        {
+                            "step": "2",
+                            "check": "Ưu tiên nhóm dưới 3 tỷ nếu đang lọc nhanh",
+                            "why": "Mỹ Phước hiện có 79 tin dưới 3 tỷ ở hai nhóm chính, đủ để so tiếp vị trí và pháp lý."
+                        },
+                        {
+                            "step": "3",
+                            "check": "Chỉ xem dấu hiệu như bộ lọc ưu tiên",
+                            "why": "14 dấu hiệu đáng chú ý không thay cho bước xem quy hoạch, sổ và hiện trạng."
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Biểu đồ giá trung vị/m²",
+                    "title": "Nhà đất Mỹ Phước đang cao gần gấp đôi đất nền",
+                    "note": "Đây là khác biệt lớn nhất cần nhìn trước khi anh so từng tin cụ thể.",
+                    "alt": "Biểu đồ so giá trung vị trên mét vuông giữa đất nền, nhà đất và nhà trọ tại Mỹ Phước",
+                    "rows": [
+                        {"label": "Đất nền", "value_label": "10,3 tr/m²", "width": 52, "color": "#3b82f6"},
+                        {"label": "Nhà đất", "value_label": "20,0 tr/m²", "width": 100, "color": "#10b981"},
+                        {"label": "Nhà trọ", "value_label": "16,7 tr/m²", "width": 84, "color": "#f59e0b"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-my-phuoc",
+                    "heading": "1. Giá đất Mỹ Phước hiện đang nằm ở đâu?",
+                    "paragraphs": [
+                        "Nếu chỉ nhìn tổng giá, Mỹ Phước có thể tạo cảm giác mặt bằng còn mềm vì nhiều tin nằm dưới 3 tỷ. Nhưng khi tách theo loại hình, bức tranh rõ hơn nhiều: đất nền đang ở vùng trung vị 10,3 tr/m², còn nhà đất là 20,0 tr/m².",
+                        "Khoảng giá 25-75% cũng cho thấy sự chênh lệch này không phải vài tin lẻ. Đất nền đang tập trung nhiều trong vùng 8,6-15,8 tr/m², còn nhà đất nằm ở 15,0-30,0 tr/m². Vì vậy, anh không nên lấy một con số trung bình chung cho toàn khu Mỹ Phước."
+                    ]
+                },
+                {
+                    "id": "nguon-hang-my-phuoc",
+                    "heading": "2. Người mua nên ưu tiên đọc nhóm nào trước?",
+                    "paragraphs": [
+                        "Nếu anh cần nhiều lựa chọn để so nhanh, nên mở nhóm nhà đất trước vì hiện có 69 tin theo dõi, gần gấp đôi đất nền 37 tin. Trong đó, 61 tin nhà đất đang nằm dưới 3 tỷ, phù hợp với nhu cầu tìm nhà sẵn để ở hoặc cho thuê quy mô nhỏ.",
+                        "Nếu mục tiêu là giữ ngân sách thấp hơn và chấp nhận làm nhà sau, đất nền là nhóm cần xem riêng. Giá trung vị 1,58 tỷ và vùng 8,6-15,8 tr/m² cho thấy Mỹ Phước vẫn có khoảng giá mềm hơn rõ so với nhiều phường Thủ Dầu Một."
+                    ]
+                },
+                {
+                    "id": "loc-tin-my-phuoc",
+                    "heading": "3. Lọc Mỹ Phước thế nào để đỡ gọi nhầm tin?",
+                    "paragraphs": [
+                        "Cách làm đơn giản nhất là vào Radar BDS, giữ ward Mỹ Phước, rồi lọc riêng đất nền hoặc nhà đất. Sau đó mới nhìn thêm tổng giá, giá/m², dấu hiệu đáng chú ý và vị trí cụ thể. Trình tự này giúp anh bớt bị hút vào các tin có tổng giá thấp nhưng giá/m² lại không hề rẻ.",
+                        "Sau bước lọc ban đầu, anh nên dùng thêm công cụ định giá BĐS hoặc so tiếp với trang khu vực Bến Cát để biết tin mình đang xem có lệch nhiều so với mặt bằng cùng khu không. Radar BDS chỉ là bộ lọc dữ liệu ban đầu, không thay cho kiểm tra pháp lý hay đi thực địa."
+                    ],
+                    "bullets": [
+                        "Muốn nhiều mẫu nhà sẵn: mở nhà đất trước.",
+                        "Muốn tìm mặt bằng mềm hơn: mở đất nền trước.",
+                        "Muốn soi tin đáng kiểm tra: giữ loại hình rồi mới bật thêm bộ lọc dấu hiệu."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Tách đất nền và nhà đất trước khi so giá tại Mỹ Phước.",
+                "Đối chiếu giá/m² với vùng 25-75%, không chỉ nhìn tổng giá.",
+                "Nếu đang lọc nhanh, ưu tiên nhóm dưới 3 tỷ trước rồi mới mở rộng ngân sách.",
+                "Kiểm tra pháp lý, quy hoạch, đường vào và hiện trạng sau khi shortlist tin."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc đúng nhóm Mỹ Phước",
+            "body": "Vào radarbds.vn, giữ ward Mỹ Phước, tách loại hình rồi mới so giá rao và dấu hiệu đáng chú ý. Cách này hữu ích hơn nhiều so với xem một con số giá chung cho cả khu.",
+            "button": "Mở dashboard Mỹ Phước"
+        }
+    }
+
 
 }
 

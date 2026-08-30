@@ -1,3 +1,10 @@
+## 2026-08-30
+- `/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu` — **Giá đất Mỹ Phước Bến Cát hiện bao nhiêu? Tách riêng đất nền và nhà đất**
+  - Pillar: Giá đất theo khu vực / Bến Cát - Mỹ Phước expansion
+  - Score gate: 85/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-30 for `ward in ('Mỹ Phước','My Phuoc')`, split by `dat_nen` vs `nha_dat` with nhà trọ as supporting context; includes tracked counts, signal counts, dưới-3-tỷ counts, median price/m², median total price, and 25-75% price ranges
+  - Funnel: `/binh-duong/my-phuoc`, `/binh-duong/ben-cat`, dashboard ward filter for Mỹ Phước, `/dinh-gia-bds`, `/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so`, `/tin-tuc/gia-trung-vi-la-gi-khi-xem-gia-dat`
+
 ## 2026-08-29
 - `/tin-tuc/hiep-thanh-hay-chanh-nghia-nen-xem-khu-nao-truoc` — **Hiệp Thành hay Chánh Nghĩa: nên xem khu nào trước?**
   - Pillar: So sánh phường
