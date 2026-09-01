@@ -1,3 +1,10 @@
+## 2026-09-01
+- `/tin-tuc/mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao` — **Mua đất Thủ Dầu Một hay Bến Cát: khác nhau ở điểm nào?**
+  - Pillar: So sánh khu vực / TDM vs Bến Cát expansion
+  - Score gate: 97/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-09-01 across 13 phường Thủ Dầu Một vs các khu Bến Cát, split by `dat_nen` vs `nha_dat`; includes tracked counts, signal counts, dưới-3-tỷ counts, median price/m², median total price, 25-75% ranges, signal rates, and top live subareas
+  - Funnel: `/binh-duong/thu-dau-mot`, `/binh-duong/ben-cat`, dashboard signals tab, `/bao-cao/bds-binh-duong-thang-06-2026`, `/dinh-gia-bds`, `/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu`, `/tin-tuc/gia-dat-phu-my-hien-bao-nhieu`
+
 ## 2026-08-30
 - `/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu` — **Giá đất Mỹ Phước Bến Cát hiện bao nhiêu? Tách riêng đất nền và nhà đất**
   - Pillar: Giá đất theo khu vực / Bến Cát - Mỹ Phước expansion

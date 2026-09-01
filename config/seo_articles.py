@@ -18593,7 +18593,362 @@ SEO_ARTICLES = {
             "button": "Mở dashboard Mỹ Phước"
         }
     }
-
+,
+    "mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao",
+        "category": {"key": "so-sanh-khu-vuc", "label": "So sánh khu vực"},
+        "title": "Mua đất Thủ Dầu Một hay Bến Cát: khác nhau ở điểm nào? | Radar BDS",
+        "description": "Dữ liệu Facebook live Radar BDS ngày 01/09/2026 cho thấy Thủ Dầu Một và Bến Cát đang lệch rõ về giá rao, lượng tin và nhóm dưới 3 tỷ khi tách riêng đất nền với nhà đất.",
+        "keywords": "mua đất Thủ Dầu Một hay Bến Cát, giá đất Thủ Dầu Một, giá đất Bến Cát, đất nền Bình Dương, Radar BDS",
+        "breadcrumb_label": "Mua đất Thủ Dầu Một hay Bến Cát",
+        "hero_badge": "So sánh khu vực Bình Dương",
+        "hero_title": "Mua đất Thủ Dầu Một hay Bến Cát: khác nhau ở điểm nào?",
+        "hero_text": "Nếu anh cần mặt bằng giá mềm và nhiều đất nền dưới 3 tỷ, Bến Cát dễ mở trước hơn. Nếu anh muốn nguồn tin dày, nhiều phường để so và tỷ lệ dấu hiệu đáng chú ý cao hơn, Thủ Dầu Một đáng xem trước. Quan trọng nhất là tách đất nền và nhà đất trước khi so giá rao.",
+        "scope_label": "Bình Dương · Thủ Dầu Một vs Bến Cát",
+        "hero_checks": [
+            "Snapshot Facebook live Radar BDS lúc 11:03 ngày 01/09/2026",
+            "Thủ Dầu Một có 12.428 tin đang theo dõi; Bến Cát có 3.967 tin",
+            "Đất nền trung vị: Thủ Dầu Một 19,5 tr/m²; Bến Cát 9,3 tr/m²",
+            "Nhà đất trung vị: Thủ Dầu Một 31,0 tr/m²; Bến Cát 17,1 tr/m²"
+        ],
+        "primary_cta": "Mở dashboard để lọc tin đang rao",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=thu_dau_mot_vs_ben_cat",
+        "secondary_cta": "Xem báo cáo Thủ Dầu Một tháng 06/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-06-2026",
+        "map_label": "Tin tức / Thủ Dầu Một vs Bến Cát",
+        "hero_metric": {
+            "label": "Tin dưới 3 tỷ ở hai nhóm chính",
+            "value": "6.454 vs 2.712",
+            "delta": "Thủ Dầu Một vs Bến Cát",
+            "note": "Chỉ tính đất nền và nhà đất có tổng giá hợp lệ"
+        },
+        "property_card": {
+            "status": "Cập nhật 01/09/2026",
+            "title": "Bến Cát mềm hơn, Thủ Dầu Một dày tin hơn",
+            "price": "Đất nền 19,5 vs 9,3 tr/m² · Nhà đất 31,0 vs 17,1 tr/m²",
+            "metric_a": "Tỷ lệ dấu hiệu",
+            "metric_a_value": "15,1% vs 10,9%",
+            "metric_b": "Tin dưới 3 tỷ",
+            "metric_b_value": "6.454 vs 2.712"
+        },
+        "value_cards": [
+            {
+                "title": "Bến Cát hợp hơn nếu anh cần mặt bằng giá mềm",
+                "body": "Ở snapshot live hiện tại, đất nền Bến Cát có giá rao trung vị 9,3 tr/m² và nhà đất là 17,1 tr/m². Cùng cách đọc đó, Thủ Dầu Một đang cao hơn rõ ở cả hai loại hình."
+            },
+            {
+                "title": "Thủ Dầu Một hợp hơn khi anh cần nhiều mẫu để so cùng lúc",
+                "body": "Radar BDS đang theo dõi 12.428 tin Facebook live tại 13 phường Thủ Dầu Một, cao hơn nhiều so với 3.967 tin ở Bến Cát. Nguồn tin dày giúp anh dễ so phường, đường và mặt bằng giá rao hơn."
+            },
+            {
+                "title": "Nhóm dưới 3 tỷ vẫn tồn tại ở cả hai nơi nhưng cấu trúc khác nhau",
+                "body": "Thủ Dầu Một có 6.454 tin đất nền và nhà đất dưới 3 tỷ, còn Bến Cát có 2.712 tin. Tuy nhiên, Bến Cát nghiêng mạnh về đất nền mềm hơn; Thủ Dầu Một cân bằng hơn giữa đất nền và nhà đất."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bài so sánh sang lọc tin thực tế",
+            "title": "Mở Radar rồi tách khu vực trước khi gọi hỏi tin",
+            "body": "Vào tab Săn Deal hoặc Tin rao, mở riêng từng khu vực, rồi tiếp tục tách đất nền và nhà đất. Cách này giúp anh đỡ so nhầm một căn nhà ở Bến Cát với một lô đất ở Thủ Dầu Một chỉ vì tổng giá gần nhau.",
+            "image": "/static/images/seo/ward-price-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS để lọc tin Thủ Dầu Một và Bến Cát",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "16 khu vực", "label": "13 phường TDM + 3 khu Bến Cát nổi bật"},
+                {"value": "2 loại hình", "label": "đất nền và nhà đất"},
+                {"value": "< 3 tỷ", "label": "ngưỡng dễ mở trước để lọc nhanh"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot live 01/09/2026",
+            "title": "So nhanh Thủ Dầu Một và Bến Cát theo đúng loại hình BĐS",
+            "body": "Tất cả mức giá dưới đây là giá rao Facebook đang theo dõi trên Radar BDS, không phải giá chốt giao dịch ngoài thực tế.",
+            "columns": ["Khu vực", "Tin", "Dấu hiệu", "Đất nền", "Nhà đất", "Tin dưới 3 tỷ"],
+            "rows": [
+                {"area": "Thủ Dầu Một", "price": "12.428 tin", "tracked": "1.872", "signal": "19,5 tr/m²", "area_m2": "31,0 tr/m²", "note": "6.454"},
+                {"area": "Bến Cát", "price": "3.967 tin", "tracked": "434", "signal": "9,3 tr/m²", "area_m2": "17,1 tr/m²", "note": "2.712"}
+            ],
+            "cards": [
+                {"title": "Đất nền lệch mạnh", "value": "19,5 vs 9,3 tr/m²", "body": "Đất nền Thủ Dầu Một đang cao hơn khoảng gấp đôi Bến Cát."},
+                {"title": "Nhà đất cũng tách 2 mặt bằng", "value": "31,0 vs 17,1 tr/m²", "body": "Không nên lấy một mức giá chung để so chéo giữa hai khu vực."},
+                {"title": "Tín hiệu đáng chú ý", "value": "15,1% vs 10,9%", "body": "Thủ Dầu Một đang có tỷ lệ tin cần kiểm tra tiếp nhỉnh hơn."}
+            ]
+        },
+        "local_links_title": "Đọc tiếp theo từng khu vực",
+        "local_links": [
+            {
+                "label": "Trang khu vực Thủ Dầu Một",
+                "href": "/binh-duong/thu-dau-mot",
+                "description": "Mở trang tổng hợp 13 phường để đi từ bài so sánh sang từng khu cụ thể."
+            },
+            {
+                "label": "Trang khu vực Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Xem bối cảnh Bến Cát, rồi mở từng khu có mặt bằng giá phù hợp hơn với ngân sách của anh."
+            },
+            {
+                "label": "Giá đất Mỹ Phước Bến Cát hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu",
+                "description": "Đọc riêng Mỹ Phước nếu anh muốn xem một khu Bến Cát đang có nhiều tin dưới 3 tỷ."
+            },
+            {
+                "label": "Giá đất Phú Mỹ hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+                "description": "Đọc riêng Phú Mỹ nếu anh muốn nhìn một phường Thủ Dầu Một có nguồn tin dày."
+            },
+            {
+                "label": "Báo cáo Thủ Dầu Một tháng 06/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-06-2026",
+                "description": "Báo cáo tháng để so 13 phường Thủ Dầu Một trong cùng kỳ đã chốt dữ liệu."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Sau khi lọc được vài tin cụ thể, dùng thêm công cụ định giá để kiểm tra mức rao."
+            }
+        ],
+        "process_title": "Cách chọn khu nào nên mở trước",
+        "process": [
+            {
+                "title": "1. Chọn khu vực theo mục tiêu",
+                "body": "Cần mặt bằng mềm và thiên về đất nền thì mở Bến Cát trước. Cần nhiều mẫu để so và muốn xem nhiều phường khác nhau thì mở Thủ Dầu Một trước."
+            },
+            {
+                "title": "2. Tách đất nền và nhà đất",
+                "body": "Đất nền Thủ Dầu Một 19,5 tr/m² không thể so trực tiếp với nhà đất Bến Cát 17,1 tr/m². Chỉ so trong cùng loại hình."
+            },
+            {
+                "title": "3. Chốt ngân sách rồi mới đọc từng tin",
+                "body": "Nếu đang lọc nhanh, dùng ngưỡng dưới 3 tỷ trước. Sau đó mới xem giá/m², đường vào, hiện trạng và giấy tờ."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Mua đất Thủ Dầu Một hay Bến Cát thì khu nào mềm hơn?",
+                "a": "Ở dữ liệu Facebook live Radar BDS ngày 01/09/2026, Bến Cát mềm hơn rõ ở cả hai loại hình chính. Đất nền Bến Cát có giá rao trung vị 9,3 tr/m², còn Thủ Dầu Một là 19,5 tr/m². Với nhà đất, Bến Cát là 17,1 tr/m² và Thủ Dầu Một là 31,0 tr/m²."
+            },
+            {
+                "q": "Vì sao Thủ Dầu Một lại phù hợp hơn khi cần nhiều lựa chọn để so?",
+                "a": "Radar BDS đang theo dõi 12.428 tin Facebook live ở 13 phường Thủ Dầu Một, trong khi Bến Cát có 3.967 tin. Khi nguồn tin dày hơn, anh có nhiều mẫu để so phường, loại đường, diện tích và mức giá rao hơn."
+            },
+            {
+                "q": "Nhóm dưới 3 tỷ nên mở ở đâu trước?",
+                "a": "Nếu anh cần nhiều mẫu đúng ngân sách, Thủ Dầu Một hiện có 6.454 tin đất nền và nhà đất dưới 3 tỷ, còn Bến Cát có 2.712 tin. Nhưng nếu mục tiêu là mặt bằng mềm hơn, Bến Cát đáng mở song song vì đất nền và nhà đất đều đang thấp hơn đáng kể."
+            },
+            {
+                "q": "Tỷ lệ dấu hiệu đáng chú ý cao hơn có nghĩa là nên mua ở Thủ Dầu Một không?",
+                "a": "Không. Tỷ lệ 15,1% tại Thủ Dầu Một và 10,9% tại Bến Cát chỉ cho anh thứ tự ưu tiên kiểm tra tiếp. Người mua vẫn phải xem pháp lý, quy hoạch, vị trí thực tế, chất lượng tài sản và lịch sử giá trước khi quyết định."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-01",
+            "modified_at": "2026-09-01",
+            "intro": [
+                "Nếu anh cần mặt bằng giá mềm và thiên về đất nền, Bến Cát đáng mở trước. Nếu anh cần nguồn tin dày, nhiều phường để so và tỷ lệ dấu hiệu đáng chú ý cao hơn, nên xem Thủ Dầu Một trước. Đây là giá rao Facebook live Radar BDS ngày 01/09/2026, không phải giá chốt.",
+                "Điểm dễ sai nhất là lấy một con số chung để so chéo giữa hai nơi. Thực tế, cả đất nền lẫn nhà đất ở Thủ Dầu Một đều đang cao hơn rõ so với Bến Cát. Vì vậy, cách đúng là tách khu vực trước, rồi tách tiếp loại hình bất động sản."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tổng tin đang theo dõi",
+                    "value": "12.428 vs 3.967",
+                    "note": "Thủ Dầu Một vs Bến Cát"
+                },
+                {
+                    "label": "Đất nền giá rao trung vị",
+                    "value": "19,5 vs 9,3 tr/m²",
+                    "note": "Thủ Dầu Một vs Bến Cát"
+                },
+                {
+                    "label": "Nhà đất giá rao trung vị",
+                    "value": "31,0 vs 17,1 tr/m²",
+                    "note": "Thủ Dầu Một vs Bến Cát"
+                },
+                {
+                    "label": "Tin dưới 3 tỷ",
+                    "value": "6.454 vs 2.712",
+                    "note": "Chỉ tính đất nền và nhà đất có tổng giá hợp lệ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Snapshot Facebook live Radar BDS · 01/09/2026",
+                    "title": "So nhanh Thủ Dầu Một và Bến Cát",
+                    "note": "Giá trong bảng là giá rao trung vị, không phải giá chốt giao dịch ngoài thực tế.",
+                    "columns": [
+                        {"key": "area", "label": "Khu vực"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "dat_nen", "label": "Đất nền"},
+                        {"key": "nha_dat", "label": "Nhà đất"},
+                        {"key": "under3", "label": "Tin dưới 3 tỷ"}
+                    ],
+                    "rows": [
+                        {
+                            "area": "Thủ Dầu Một",
+                            "tracked": "12.428",
+                            "signals": "1.872",
+                            "dat_nen": "19,5 tr/m²",
+                            "nha_dat": "31,0 tr/m²",
+                            "under3": "6.454"
+                        },
+                        {
+                            "area": "Bến Cát",
+                            "tracked": "3.967",
+                            "signals": "434",
+                            "dat_nen": "9,3 tr/m²",
+                            "nha_dat": "17,1 tr/m²",
+                            "under3": "2.712"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Tách riêng loại hình để tránh so sai",
+                    "title": "Bốn nhóm giá cần nhìn riêng",
+                    "note": "Phần trăm tín hiệu giúp ưu tiên thứ tự kiểm tra, không phải kết luận nên mua.",
+                    "columns": [
+                        {"key": "segment", "label": "Nhóm"},
+                        {"key": "tracked", "label": "Tin"},
+                        {"key": "priced", "label": "Tin có giá/m²"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Vùng 25-75%"},
+                        {"key": "signal_rate", "label": "Tỷ lệ dấu hiệu"}
+                    ],
+                    "rows": [
+                        {
+                            "segment": "Thủ Dầu Một · Đất nền",
+                            "tracked": "6.263",
+                            "priced": "4.700",
+                            "median_m2": "19,5 tr/m²",
+                            "median_total": "2,30 tỷ",
+                            "range": "14,8-24,4 tr/m²",
+                            "signal_rate": "17,6%"
+                        },
+                        {
+                            "segment": "Thủ Dầu Một · Nhà đất",
+                            "tracked": "5.911",
+                            "priced": "4.373",
+                            "median_m2": "31,0 tr/m²",
+                            "median_total": "2,89 tỷ",
+                            "range": "21,5-40,0 tr/m²",
+                            "signal_rate": "11,8%"
+                        },
+                        {
+                            "segment": "Bến Cát · Đất nền",
+                            "tracked": "2.651",
+                            "priced": "2.278",
+                            "median_m2": "9,3 tr/m²",
+                            "median_total": "1,60 tỷ",
+                            "range": "6,5-11,9 tr/m²",
+                            "signal_rate": "9,8%"
+                        },
+                        {
+                            "segment": "Bến Cát · Nhà đất",
+                            "tracked": "1.054",
+                            "priced": "870",
+                            "median_m2": "17,1 tr/m²",
+                            "median_total": "1,90 tỷ",
+                            "range": "14,4-20,0 tr/m²",
+                            "signal_rate": "12,0%"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Các điểm nên mở tiếp từ bài này",
+                    "title": "Khu nào đang dẫn nguồn tin ở mỗi bên?",
+                    "note": "Bảng chỉ dùng để mở đúng khu vực tiếp theo, chưa phải đánh giá chất lượng từng tin cụ thể.",
+                    "columns": [
+                        {"key": "area", "label": "Khu vực"},
+                        {"key": "top1", "label": "Top 1"},
+                        {"key": "top2", "label": "Top 2"},
+                        {"key": "top3", "label": "Top 3"}
+                    ],
+                    "rows": [
+                        {
+                            "area": "Thủ Dầu Một",
+                            "top1": "Hiệp An · 1.766 tin",
+                            "top2": "Phú Mỹ · 1.670 tin",
+                            "top3": "Tân An · 1.331 tin"
+                        },
+                        {
+                            "area": "Bến Cát",
+                            "top1": "Tân Định · 1.251 tin",
+                            "top2": "Phú An · 947 tin",
+                            "top3": "Hòa Lợi · 448 tin"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Biểu đồ giá rao trung vị/m²",
+                    "title": "Cả đất nền lẫn nhà đất ở Thủ Dầu Một đều đang cao hơn",
+                    "note": "Bến Cát mềm hơn rõ, nhưng chỉ nên so trong cùng loại hình.",
+                    "alt": "Biểu đồ so sánh giá rao trung vị trên mét vuông giữa Thủ Dầu Một và Bến Cát",
+                    "rows": [
+                        {"label": "Thủ Dầu Một · Đất nền", "value_label": "19,5 tr/m²", "width": 100, "color": "#2563eb"},
+                        {"label": "Bến Cát · Đất nền", "value_label": "9,3 tr/m²", "width": 48, "color": "#60a5fa"},
+                        {"label": "Thủ Dầu Một · Nhà đất", "value_label": "31,0 tr/m²", "width": 100, "color": "#059669"},
+                        {"label": "Bến Cát · Nhà đất", "value_label": "17,1 tr/m²", "width": 55, "color": "#34d399"}
+                    ]
+                },
+                {
+                    "eyebrow": "Biểu đồ tỷ lệ dấu hiệu đáng chú ý",
+                    "title": "Thủ Dầu Một đang có tỷ lệ tin cần kiểm tra tiếp nhỉnh hơn",
+                    "note": "Tỷ lệ này dùng để ưu tiên lọc tin, không thay cho bước thẩm định pháp lý và thực địa.",
+                    "alt": "Biểu đồ tỷ lệ dấu hiệu đáng chú ý tại Thủ Dầu Một và Bến Cát",
+                    "rows": [
+                        {"label": "Thủ Dầu Một · Đất nền", "value_label": "17,6%", "width": 100, "color": "#f59e0b"},
+                        {"label": "Thủ Dầu Một · Nhà đất", "value_label": "11,8%", "width": 67, "color": "#fbbf24"},
+                        {"label": "Bến Cát · Đất nền", "value_label": "9,8%", "width": 56, "color": "#fcd34d"},
+                        {"label": "Bến Cát · Nhà đất", "value_label": "12,0%", "width": 68, "color": "#fde68a"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-khac-nhau",
+                    "heading": "1. Khác biệt đầu tiên là mặt bằng giá rao",
+                    "paragraphs": [
+                        "Nếu anh đang nghiêng về đất nền, khoảng cách giữa hai nơi khá rõ: Thủ Dầu Một đang ở mức giá rao trung vị 19,5 tr/m², còn Bến Cát là 9,3 tr/m². Với nhà đất, Thủ Dầu Một là 31,0 tr/m², Bến Cát là 17,1 tr/m². Đây không phải vài tin lẻ mà là mặt bằng trung vị của mẫu live đang theo dõi.",
+                        "Điều này có nghĩa là Bến Cát thường phù hợp hơn khi anh ưu tiên mặt bằng mềm, còn Thủ Dầu Một phù hợp hơn khi anh chấp nhận mức giá cao hơn để đổi lấy vị trí trung tâm hơn hoặc nguồn tin dày hơn. Dù vậy, bài này chỉ nói về giá rao hiện tại chứ không thay cho kiểm tra pháp lý, quy hoạch hay chất lượng tài sản cụ thể."
+                    ]
+                },
+                {
+                    "id": "nguon-tin-va-ngan-sach",
+                    "heading": "2. Khác biệt thứ hai là độ dày nguồn tin và vùng ngân sách dưới 3 tỷ",
+                    "paragraphs": [
+                        "Thủ Dầu Một hiện có 12.428 tin Facebook live đang theo dõi, gấp hơn ba lần Bến Cát. Riêng nhóm đất nền và nhà đất dưới 3 tỷ, Thủ Dầu Một có 6.454 tin, còn Bến Cát có 2.712 tin. Nếu mục tiêu của anh là có thật nhiều mẫu để lọc từng phường, Thủ Dầu Một cho cảm giác dễ so hơn.",
+                        "Tuy nhiên, số lượng không phải là toàn bộ câu chuyện. Bến Cát có tỷ trọng đất nền mềm hơn và tổng giá trung vị thấp hơn rõ, nên vẫn đáng mở trước nếu anh đang cố giữ trần vốn ban đầu thấp. Cách thực dụng là mở song song hai khu, nhưng mỗi lần chỉ giữ một loại hình và một khoảng ngân sách."
+                    ],
+                    "bullets": [
+                        "Cần nhiều mẫu để so: ưu tiên Thủ Dầu Một.",
+                        "Cần mặt bằng mềm hơn: ưu tiên Bến Cát.",
+                        "Đang lọc dưới 3 tỷ: giữ khu vực trước, rồi mới nhìn giá/m² và tín hiệu."
+                    ]
+                },
+                {
+                    "id": "mo-khu-nao-truoc",
+                    "heading": "3. Nên mở khu nào trước trên Radar BDS?",
+                    "paragraphs": [
+                        "Nếu anh thích đi từ khu có nhiều dữ liệu để học mặt bằng, hãy mở Thủ Dầu Một trước rồi đi vào các phường như Hiệp An, Phú Mỹ hoặc Tân An. Nếu anh muốn bắt đầu từ vùng giá mềm hơn, mở Bến Cát trước và đi vào Tân Định, Phú An hoặc Mỹ Phước. Đây là ba điểm đang có lượng tin nổi bật hơn trong snapshot live hiện tại.",
+                        "Sau khi chọn được khu đầu tiên, anh nên dùng thêm bài giá theo khu vực hoặc công cụ định giá để xem tin đang rao có lệch quá xa khỏi mặt bằng cùng loại hình hay không. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý, quy hoạch hay kiểm tra thực địa."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Chọn Thủ Dầu Một hay Bến Cát trước theo mục tiêu: nguồn tin dày hay mặt bằng mềm hơn.",
+                "Tách đất nền và nhà đất trước khi so giá rao.",
+                "Giữ một ngưỡng ngân sách, ví dụ dưới 3 tỷ, rồi mới đọc từng tin.",
+                "Kiểm tra pháp lý, quy hoạch, đường vào và hiện trạng trước khi đặt cọc hoặc chốt lịch xem."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Thủ Dầu Một và Bến Cát theo cách dễ so hơn",
+            "body": "Vào radarbds.vn, chọn khu vực anh muốn xem trước, tách riêng đất nền hoặc nhà đất, rồi mới so giá/m² và các dấu hiệu cần kiểm tra. Cách này thực tế hơn nhiều so với nhìn một con số giá chung cho cả Bình Dương.",
+            "button": "Mở dashboard"
+        }
+    }
 
 }
 
