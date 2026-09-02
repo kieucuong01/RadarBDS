@@ -1,3 +1,10 @@
+## 2026-09-02
+- `/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc` — **Hiệp Thành hay Chánh Mỹ: nên xem khu nào trước?**
+  - Pillar: So sánh phường
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-09-02, split by `dat_nen` vs `nha_dat`, with signal counts, dưới-3-tỷ / dưới-4-tỷ counts, median price/m², median total price, and 25-75% ranges
+  - Funnel: `/binh-duong/phuong-hiep-thanh`, `/binh-duong/phuong-chanh-my`, dashboard signals tab, `/bao-cao/bds-binh-duong-thang-08-2026`, `/dinh-gia-bds`, `/tin-tuc/gia-dat-hiep-thanh-hien-bao-nhieu`, `/tin-tuc/gia-dat-chanh-my-hien-bao-nhieu`
+
 ## 2026-09-01
 - `/tin-tuc/mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao` — **Mua đất Thủ Dầu Một hay Bến Cát: khác nhau ở điểm nào?**
   - Pillar: So sánh khu vực / TDM vs Bến Cát expansion

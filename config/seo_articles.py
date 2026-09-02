@@ -18950,6 +18950,282 @@ SEO_ARTICLES = {
         }
     }
 
+,
+    "hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc",
+        "title": "Hiệp Thành hay Chánh Mỹ: nên xem khu nào trước? | Radar BDS",
+        "description": "Dữ liệu Radar BDS cập nhật 02/09/2026: Hiệp Thành nhiều dấu hiệu đáng kiểm tra hơn, còn Chánh Mỹ dễ lọc đất nền và nhà đất dưới 3-4 tỷ hơn. Luôn tách đất nền và nhà đất trước khi so giá rao.",
+        "keywords": "Hiệp Thành hay Chánh Mỹ, giá đất Hiệp Thành, giá đất Chánh Mỹ, nhà đất Hiệp Thành, nhà đất Chánh Mỹ, Radar BDS",
+        "breadcrumb_label": "Hiệp Thành hay Chánh Mỹ",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Hiệp Thành hay Chánh Mỹ: nên xem khu nào trước?",
+        "hero_text": "Nếu anh ưu tiên nhiều tin có dấu hiệu đáng kiểm tra, nên mở Hiệp Thành trước. Nếu anh đang lọc đất nền hoặc nhà đất trong khung dưới 3-4 tỷ để đi xem sớm, Chánh Mỹ là nơi dễ mở hơn. Điểm quan trọng nhất là không gộp đất nền và nhà đất vào cùng một mặt bằng giá.",
+        "scope_label": "Thủ Dầu Một · Hiệp Thành / Chánh Mỹ",
+        "hero_checks": [
+            "Hiệp Thành đang theo dõi 914 tin; Chánh Mỹ có 493 tin",
+            "Đất nền Hiệp Thành có giá trung vị 23,2 tr/m²; Chánh Mỹ là 24,3 tr/m²",
+            "Nhà đất Hiệp Thành có giá trung vị 40,0 tr/m²; Chánh Mỹ là 34,9 tr/m²",
+            "Nhóm dấu hiệu nghiêng về Hiệp Thành 109 tin so với 40 tin ở Chánh Mỹ"
+        ],
+        "primary_cta": "Mở dashboard lọc Hiệp Thành và Chánh Mỹ",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_chanh_my",
+        "secondary_cta": "Xem báo cáo Bình Dương tháng 08/2026",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-08-2026",
+        "map_label": "Tin tức / Hiệp Thành · Chánh Mỹ",
+        "hero_metric": {
+            "label": "Tổng số tin đang theo dõi",
+            "value": "1.407 tin",
+            "delta": "Hiệp Thành 914 · Chánh Mỹ 493",
+            "note": "Nguồn Facebook live, lọc is_active=1 ngày 02/09/2026"
+        },
+        "property_card": {
+            "status": "Cập nhật 02/09/2026",
+            "title": "Chọn phường theo mục tiêu lọc tin",
+            "price": "Hiệp Thành mạnh ở nhóm dấu hiệu; Chánh Mỹ mạnh ở nguồn hàng dưới 3-4 tỷ",
+            "metric_a": "Đất nền",
+            "metric_a_value": "23,2 vs 24,3 tr/m²",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "40,0 vs 34,9 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Hiệp Thành hợp người muốn soi nhóm tin đáng kiểm tra trước",
+                "body": "Hiệp Thành đang có 109 tin có dấu hiệu đáng kiểm tra, cao hơn rõ so với 40 tin ở Chánh Mỹ. Đây không phải khuyến nghị mua, nhưng đủ để ưu tiên thứ tự mở dashboard nếu anh muốn tiết kiệm thời gian lọc."
+            },
+            {
+                "title": "Chánh Mỹ dễ lọc hơn khi giữ trần dưới 3-4 tỷ",
+                "body": "Đất nền Chánh Mỹ có 247 tin dưới 3 tỷ và 254 tin dưới 4 tỷ. Nhà đất Chánh Mỹ cũng có 77 tin dưới 3 tỷ và 110 tin dưới 4 tỷ, dày hơn đáng kể so với Hiệp Thành ở cùng khung ngân sách."
+            },
+            {
+                "title": "Không có một con số giá chung cho cả hai phường",
+                "body": "Đất nền hai phường khá gần nhau về giá trung vị/m², nhưng nhà đất Hiệp Thành cao hơn Chánh Mỹ. Nếu gộp hai loại hình lại, anh rất dễ đọc sai nơi nào hợp ngân sách thật của mình."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc riêng Hiệp Thành và Chánh Mỹ",
+            "description": "Tách loại hình trước, rồi mới so giá rao, ngân sách và nhóm dấu hiệu.",
+            "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS lọc phường Hiệp Thành và Chánh Mỹ"
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 02/09/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "columns": [
+                {"key": "ward_type", "label": "Phường · loại hình"},
+                {"key": "tracked", "label": "Tin đang theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "under4", "label": "Dưới 4 tỷ"},
+                {"key": "median_m2", "label": "Giá trung vị/m²"},
+                {"key": "median_total", "label": "Tổng giá trung vị"},
+                {"key": "range", "label": "Vùng 25-75%"}
+            ],
+            "rows": [
+                {"ward_type": "Hiệp Thành · đất nền", "tracked": "280", "signals": "29", "under4": "144", "median_m2": "23,2 tr/m²", "median_total": "3,48 tỷ", "range": "11,8-28,9 tr/m²"},
+                {"ward_type": "Hiệp Thành · nhà đất", "tracked": "609", "signals": "79", "under4": "295", "median_m2": "40,0 tr/m²", "median_total": "3,39 tỷ", "range": "30,4-51,6 tr/m²"},
+                {"ward_type": "Chánh Mỹ · đất nền", "tracked": "307", "signals": "22", "under4": "254", "median_m2": "24,3 tr/m²", "median_total": "2,10 tỷ", "range": "20,7-24,9 tr/m²"},
+                {"ward_type": "Chánh Mỹ · nhà đất", "tracked": "181", "signals": "18", "under4": "110", "median_m2": "34,9 tr/m²", "median_total": "2,99 tỷ", "range": "23,0-36,9 tr/m²"}
+            ]
+        },
+        "local_links_title": "Đọc tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Hiệp Thành",
+                "href": "/binh-duong/phuong-hiep-thanh",
+                "description": "Xem dữ liệu nền và lối vào dashboard riêng cho Hiệp Thành."
+            },
+            {
+                "label": "Trang phường Chánh Mỹ",
+                "href": "/binh-duong/phuong-chanh-my",
+                "description": "Xem dữ liệu nền và lối vào dashboard riêng cho Chánh Mỹ."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đối chiếu nhanh giá rao trước khi gọi môi giới."
+            },
+            {
+                "label": "Giá đất Hiệp Thành hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-hiep-thanh-hien-bao-nhieu",
+                "description": "Đọc sâu riêng mặt bằng Hiệp Thành trước khi lọc từng tin."
+            },
+            {
+                "label": "Giá đất Chánh Mỹ hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-chanh-my-hien-bao-nhieu",
+                "description": "Đọc sâu riêng mặt bằng Chánh Mỹ trước khi chốt shortlist."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu muốn mở phường có nhiều tin đáng kiểm tra trước thì nên chọn nơi nào?",
+                "a": "Nên mở Hiệp Thành trước vì hiện có 109 tin có dấu hiệu đáng kiểm tra, cao hơn 40 tin ở Chánh Mỹ. Dấu hiệu chỉ là lớp ưu tiên xem trước, không phải khuyến nghị mua ngay."
+            },
+            {
+                "q": "Đất nền Hiệp Thành và Chánh Mỹ chênh nhau nhiều không?",
+                "a": "Không chênh quá mạnh ở giá rao trung vị/m². Đất nền Hiệp Thành hiện khoảng 23,2 tr/m², còn Chánh Mỹ khoảng 24,3 tr/m². Khác biệt lớn hơn nằm ở tổng giá: Chánh Mỹ có tổng giá trung vị 2,10 tỷ, thấp hơn Hiệp Thành 3,48 tỷ."
+            },
+            {
+                "q": "Nếu ngân sách dưới 3-4 tỷ thì nên xem Chánh Mỹ trước không?",
+                "a": "Thường là nên. Chánh Mỹ có nhiều lựa chọn hơn trong vùng ngân sách phổ biến: đất nền dưới 3 tỷ là 247 tin và nhà đất dưới 4 tỷ là 110 tin. Hiệp Thành vẫn có nguồn hàng, nhưng mỏng hơn ở nhóm ngân sách này."
+            },
+            {
+                "q": "Có nên lấy một giá chung để so Hiệp Thành với Chánh Mỹ không?",
+                "a": "Không nên. Đất nền hai phường gần nhau hơn, nhưng nhà đất Hiệp Thành lại cao hơn Chánh Mỹ khá rõ. Anh cần tách riêng đất nền và nhà đất rồi mới so giá rao, tổng giá và số tin hợp ngân sách."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-02",
+            "modified_at": "2026-09-02",
+            "intro": [
+                "Nếu anh đang phân vân Hiệp Thành hay Chánh Mỹ, câu trả lời ngắn là: muốn soi nhóm tin có dấu hiệu đáng kiểm tra thì mở Hiệp Thành trước; muốn lọc nhiều lựa chọn dưới 3-4 tỷ thì mở Chánh Mỹ trước. Dữ liệu dưới đây là giá rao Facebook Radar BDS đang theo dõi ngày 02/09/2026, không phải giá chốt giao dịch.",
+                "Điểm dễ sai nhất là nhìn một mức giá chung cho cả hai phường. Trong dữ liệu live hiện tại, đất nền và nhà đất cho ra hai bức khác nhau, nên bài này tách riêng số tin, giá trung vị, tổng giá và vùng ngân sách để anh đọc nhanh hơn."
+            ],
+            "summary_cards": [
+                {"label": "Tổng số tin hai phường", "value": "1.407 tin", "note": "Hiệp Thành 914 · Chánh Mỹ 493"},
+                {"label": "Dấu hiệu đáng kiểm tra", "value": "149 tin", "note": "Hiệp Thành 109 · Chánh Mỹ 40"},
+                {"label": "Đất nền giá trung vị/m²", "value": "23,2 vs 24,3 tr/m²", "note": "Hiệp Thành thấp hơn nhẹ"},
+                {"label": "Nhà đất giá trung vị/m²", "value": "40,0 vs 34,9 tr/m²", "note": "Hiệp Thành cao hơn Chánh Mỹ"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Hiệp Thành và Chánh Mỹ khác nhau thế nào khi tách loại hình?",
+                    "note": "Đây là giá rao đang theo dõi trên Radar BDS, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin đang theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "range", "label": "Vùng 25-75%"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Hiệp Thành · đất nền", "tracked": "280", "signals": "29", "under4": "144", "median_m2": "23,2 tr/m²", "median_total": "3,48 tỷ", "range": "11,8-28,9 tr/m²"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "tracked": "609", "signals": "79", "under4": "295", "median_m2": "40,0 tr/m²", "median_total": "3,39 tỷ", "range": "30,4-51,6 tr/m²"},
+                        {"ward_type": "Chánh Mỹ · đất nền", "tracked": "307", "signals": "22", "under4": "254", "median_m2": "24,3 tr/m²", "median_total": "2,10 tỷ", "range": "20,7-24,9 tr/m²"},
+                        {"ward_type": "Chánh Mỹ · nhà đất", "tracked": "181", "signals": "18", "under4": "110", "median_m2": "34,9 tr/m²", "median_total": "2,99 tỷ", "range": "23,0-36,9 tr/m²"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kết luận nhanh theo nhu cầu",
+                    "title": "Nên mở phường nào trước trong dashboard?",
+                    "note": "Bảng này giúp chọn bộ lọc mở trước; sau đó anh vẫn cần đọc từng tin cụ thể.",
+                    "columns": [
+                        {"key": "need", "label": "Nhu cầu"},
+                        {"key": "open_first", "label": "Nên mở trước"},
+                        {"key": "why", "label": "Vì sao"}
+                    ],
+                    "rows": [
+                        {"need": "Muốn soi nhóm dấu hiệu trước", "open_first": "Hiệp Thành", "why": "109 tin có dấu hiệu đáng kiểm tra, cao hơn Chánh Mỹ 40 tin"},
+                        {"need": "Đất nền dưới 3 tỷ", "open_first": "Chánh Mỹ", "why": "247 tin, cao hơn Hiệp Thành 79 tin"},
+                        {"need": "Nhà đất dưới 3 tỷ", "open_first": "Hiệp Thành", "why": "Hiệp Thành có 191 tin, cao hơn Chánh Mỹ 77 tin; nhưng vẫn cần đọc tiếp theo tổng giá, vị trí và tình trạng nhà"},
+                        {"need": "Muốn mặt bằng nhà đất mềm hơn", "open_first": "Chánh Mỹ", "why": "Giá trung vị nhà đất 34,9 tr/m², thấp hơn Hiệp Thành 40,0 tr/m²"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Hiệp Thành dẫn rõ ở nhóm dấu hiệu đáng kiểm tra",
+                    "note": "Dùng nhóm này để ưu tiên thứ tự mở tin trước, không dùng để kết luận nên mua ngay.",
+                    "alt": "Biểu đồ số tin có dấu hiệu đáng kiểm tra ở Hiệp Thành và Chánh Mỹ",
+                    "rows": [
+                        {"label": "Hiệp Thành", "value_label": "109 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "Chánh Mỹ", "value_label": "40 tin", "width": 37, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Chánh Mỹ dày nguồn đất nền dưới 3 tỷ hơn",
+                    "note": "Nếu anh lọc theo ngân sách phổ biến, con số dưới 3 tỷ giúp mở đúng phường trước.",
+                    "alt": "Biểu đồ số tin đất nền dưới 3 tỷ ở Hiệp Thành và Chánh Mỹ",
+                    "rows": [
+                        {"label": "Hiệp Thành · đất nền dưới 3 tỷ", "value_label": "79 tin", "width": 32, "color": "#f59e0b"},
+                        {"label": "Chánh Mỹ · đất nền dưới 3 tỷ", "value_label": "247 tin", "width": 100, "color": "#dc2626"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "tin-hieu-hiep-thanh-chanh-my",
+                    "heading": "1. Hiệp Thành nên mở trước khi anh muốn soi nhóm tin đáng kiểm tra",
+                    "paragraphs": [
+                        "Điểm nổi bật nhất trong dữ liệu live hiện tại là số tin có dấu hiệu đáng kiểm tra. Hiệp Thành có 109 tin, gần gấp 3 lần Chánh Mỹ với 40 tin. Với người mua đang muốn đi nhanh vào lớp tin đáng xem trước, đây là khác biệt đủ lớn để mở Hiệp Thành trước trong dashboard.",
+                        "Nhưng cần hiểu đúng: dấu hiệu chỉ là bộ lọc ưu tiên. Anh vẫn phải đọc lại mô tả, xem ảnh, đối chiếu tổng giá, kiểm tra đường vào, pháp lý và vị trí thực tế trước khi quyết định đi xem."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành: 914 tin theo dõi · 109 dấu hiệu",
+                        "Chánh Mỹ: 493 tin theo dõi · 40 dấu hiệu",
+                        "Tin hot riêng Hiệp Thành: 102 · Chánh Mỹ: 30",
+                        "Tin giảm giá: Hiệp Thành 9 · Chánh Mỹ 11"
+                    ]
+                },
+                {
+                    "id": "dat-nen-hiep-thanh-chanh-my",
+                    "heading": "2. Đất nền hai phường gần nhau về giá/m², nhưng Chánh Mỹ dễ lọc hơn theo tổng giá",
+                    "paragraphs": [
+                        "Nếu chỉ nhìn giá trung vị/m², đất nền Hiệp Thành khoảng 23,2 tr/m² và Chánh Mỹ khoảng 24,3 tr/m². Hai mức này không lệch quá xa, nên nhiều người dễ nghĩ hai phường gần như ngang nhau ở nhóm đất nền.",
+                        "Khác biệt lớn hơn nằm ở tổng giá và số tin hợp ngân sách. Chánh Mỹ có tổng giá trung vị khoảng 2,10 tỷ, thấp hơn Hiệp Thành 3,48 tỷ. Đồng thời Chánh Mỹ có 247 tin đất nền dưới 3 tỷ và 254 tin dưới 4 tỷ, cao hơn rõ so với 79 và 144 tin ở Hiệp Thành."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành đất nền: 280 tin · 23,2 tr/m² · 3,48 tỷ trung vị",
+                        "Chánh Mỹ đất nền: 307 tin · 24,3 tr/m² · 2,10 tỷ trung vị",
+                        "Dưới 3 tỷ: 79 vs 247",
+                        "Dưới 4 tỷ: 144 vs 254"
+                    ]
+                },
+                {
+                    "id": "nha-dat-hiep-thanh-chanh-my",
+                    "heading": "3. Nhà đất Hiệp Thành nhiều hơn, nhưng Chánh Mỹ mềm giá hơn",
+                    "paragraphs": [
+                        "Nhà đất là nơi hai phường tách nhau rõ hơn. Hiệp Thành có 609 tin nhà đất đang theo dõi, giá trung vị khoảng 40,0 tr/m² và tổng giá trung vị 3,39 tỷ. Chánh Mỹ có 181 tin, giá trung vị 34,9 tr/m² và tổng giá trung vị 2,99 tỷ.",
+                        "Nghĩa là nếu anh cần nhiều mẫu nhà đất để soi nguồn cung, Hiệp Thành đáng mở. Nhưng nếu ưu tiên mặt bằng mềm hơn để ở hoặc đi xem sớm, Chánh Mỹ dễ chịu hơn về giá hơn. Cách đúng là lọc riêng nhà đất, đặt trần tổng giá rồi mới nhìn sâu từng tin."
+                    ],
+                    "bullets": [
+                        "Hiệp Thành nhà đất: 609 tin · 191 tin dưới 3 tỷ · 295 tin dưới 4 tỷ",
+                        "Chánh Mỹ nhà đất: 181 tin · 77 tin dưới 3 tỷ · 110 tin dưới 4 tỷ",
+                        "Giá trung vị/m²: 40,0 vs 34,9",
+                        "Tổng giá trung vị: 3,39 tỷ vs 2,99 tỷ"
+                    ]
+                },
+                {
+                    "id": "cach-loc-tren-radar",
+                    "heading": "4. Cách lọc thực tế trên Radar BDS để khỏi mở sai phường",
+                    "paragraphs": [
+                        "Nếu mục tiêu là đi từ lớp tin nổi bật, anh mở Hiệp Thành trước ở tab Săn Deal. Nếu mục tiêu là lọc nhiều đất nền hoặc nhà đất trong vùng dưới 3-4 tỷ, anh mở Chánh Mỹ trước rồi giữ Hiệp Thành làm bước so đối chiếu tiếp theo.",
+                        "Trên Radar BDS, thứ tự lọc nên là: chọn phường, tách đất nền với nhà đất, đặt khung tổng giá, rồi mới nhìn giá/m² và dấu hiệu đáng kiểm tra. Cách này thực tế hơn nhiều so với việc nhìn một giá chung cho cả phường."
+                    ],
+                    "bullets": [
+                        "Mở Hiệp Thành trước nếu ưu tiên dấu hiệu đáng kiểm tra",
+                        "Mở Chánh Mỹ trước nếu ưu tiên ngân sách dưới 3-4 tỷ",
+                        "Tách đất nền và nhà đất trước khi so giá",
+                        "Dùng thêm /dinh-gia-bds trước khi gọi môi giới"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn phường theo mục tiêu: dấu hiệu hay ngân sách.",
+                "Đã tách đất nền và nhà đất trước khi so giá.",
+                "Đã nhìn cả giá/m² lẫn tổng giá trung vị.",
+                "Đã kiểm tra số tin dưới 3 tỷ hoặc 4 tỷ theo đúng loại hình.",
+                "Đã chuẩn bị bước kiểm tra pháp lý, quy hoạch và hiện trạng sau khi lọc dữ liệu."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc Hiệp Thành và Chánh Mỹ",
+            "body": "Chọn đúng phường, tách đất nền và nhà đất, rồi xem nhóm dấu hiệu hoặc vùng ngân sách phù hợp trước khi liên hệ từng tin cụ thể.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=hiep_thanh_vs_chanh_my"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Hiệp Thành hay Chánh Mỹ", "href": "/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc"}
+        ]
+    }
+
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
