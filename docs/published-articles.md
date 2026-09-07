@@ -1,3 +1,10 @@
+## 2026-09-06
+- `/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc` — **Phú Hòa hay Chánh Mỹ: nên xem khu nào trước?**
+  - Pillar: So sánh phường
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) queried on 2026-09-06 for the 14-day window ending 2026-09-06; split by `dat_nen` vs `nha_dat`, with tracked counts, signal counts, dưới-3-tỷ / dưới-4-tỷ counts, median asking price/m², median total asking price, and anonymized current examples
+  - Funnel: `/binh-duong/phuong-phu-hoa`, `/binh-duong/phuong-chanh-my`, dashboard signals tab, `/bao-cao/bds-binh-duong-thang-07-2026`, `/dinh-gia-bds`, `/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc`, `/tin-tuc/dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc`
+
 ## 2026-09-02
 - `/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc` — **Hiệp Thành hay Chánh Mỹ: nên xem khu nào trước?**
   - Pillar: So sánh phường

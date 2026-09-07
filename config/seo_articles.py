@@ -19225,6 +19225,524 @@ SEO_ARTICLES = {
             {"name": "Hiệp Thành hay Chánh Mỹ", "href": "/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc"}
         ]
     }
+,
+    "phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh phường"
+        },
+        "title": "Phú Hòa hay Chánh Mỹ: nên xem khu nào trước? | Radar BDS",
+        "description": "Phú Hòa hay Chánh Mỹ nên xem khu nào trước? So sánh tin Facebook, dấu hiệu, giá rao đất nền và nhà đất trong 14 ngày để chọn bộ lọc phù hợp.",
+        "keywords": "Phú Hòa hay Chánh Mỹ, giá đất Phú Hòa, giá đất Chánh Mỹ, nhà đất Phú Hòa, nhà đất Chánh Mỹ, Radar BDS",
+        "breadcrumb_label": "Phú Hòa hay Chánh Mỹ",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Phú Hòa hay Chánh Mỹ: nên xem khu nào trước?",
+        "hero_text": "Nếu bạn cần nhiều tin nhà đất để lọc, nên mở Phú Hòa trước. Nếu ưu tiên mặt bằng giá mềm hơn và nhóm tin dưới 3-4 tỷ, Chánh Mỹ đáng xem trước. Dữ liệu phải đọc riêng theo đất nền và nhà đất; không nên lấy một mức giá chung cho hai phường.",
+        "scope_label": "Thủ Dầu Một · Phú Hòa / Chánh Mỹ",
+        "hero_checks": [
+            "Phú Hòa có 159 tin đang theo dõi; Chánh Mỹ có 60 tin trong 14 ngày đến 06/09/2026",
+            "Đất nền: giá rao trung vị 30,1 tr/m² ở Phú Hòa và 23,1 tr/m² ở Chánh Mỹ",
+            "Nhà đất: giá rao trung vị 44,0 tr/m² ở Phú Hòa và 31,8 tr/m² ở Chánh Mỹ",
+            "Dấu hiệu đáng kiểm tra: Phú Hòa 25 tin; Chánh Mỹ 12 tin"
+        ],
+        "primary_cta": "Mở danh sách tin Phú Hòa",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_vs_chanh_my",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Phú Hòa · Chánh Mỹ",
+        "hero_metric": {
+            "label": "Tổng số tin đang theo dõi",
+            "value": "219 tin",
+            "delta": "37 dấu hiệu đáng kiểm tra",
+            "note": "Nguồn Facebook, is_active=1, theo dõi trong 14 ngày đến 06/09/2026"
+        },
+        "property_card": {
+            "status": "Cập nhật 06/09/2026 · giá rao 14 ngày",
+            "title": "Chọn phường theo mục tiêu lọc",
+            "price": "Phú Hòa có mặt bằng giá cao hơn; Chánh Mỹ dễ lọc nhóm ngân sách thấp hơn",
+            "metric_a": "Đất nền",
+            "metric_a_value": "30,1 vs 23,1 tr/m²",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "44,0 vs 31,8 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Phú Hòa hợp người muốn có nhiều tin để so",
+                "body": "Phú Hòa có 159 tin đang theo dõi, trong đó 42 tin đất nền và 112 tin nhà đất có phân loại. Đây là điểm bắt đầu hợp lý nếu bạn muốn xem nhiều mẫu nhà đất hoặc tìm tin có dấu hiệu đáng kiểm tra."
+            },
+            {
+                "title": "Chánh Mỹ hợp người giữ trần ngân sách thấp hơn",
+                "body": "Giá rao trung vị đất nền Chánh Mỹ là 23,1 tr/m², còn nhà đất là 31,8 tr/m². Trong dữ liệu có giá tổng, Chánh Mỹ có 9 tin đất nền dưới 3 tỷ và 38 tin nhà đất dưới 4 tỷ."
+            },
+            {
+                "title": "Giá trung vị chỉ là mốc đọc nhanh",
+                "body": "Giá trung vị nghĩa là một nửa số tin thấp hơn mức này và một nửa cao hơn. Đây là giá rao Facebook đang theo dõi, không phải giá chốt giao dịch; bạn vẫn cần xem diện tích, đường vào và pháp lý từng tin."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc Phú Hòa và Chánh Mỹ theo đúng loại hình",
+            "body": "Chọn phường, tách đất nền hoặc nhà đất, đặt trần tổng giá rồi mới xem giá/m² và dấu hiệu đáng kiểm tra.",
+            "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS so sánh bộ lọc Phú Hòa và Chánh Mỹ",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {
+                    "value": "219 tin",
+                    "label": "đang theo dõi"
+                },
+                {
+                    "value": "2 loại",
+                    "label": "đất nền / nhà đất"
+                },
+                {
+                    "value": "14 ngày",
+                    "label": "cửa sổ dữ liệu"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 06/09/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "body": "Bảng dùng dữ liệu Facebook có giá hợp lệ trong 14 ngày gần nhất. Các mức giá là giá rao trung vị, không phải giá giao dịch.",
+            "columns": [
+                {
+                    "key": "ward_type",
+                    "label": "Phường · loại hình"
+                },
+                {
+                    "key": "tracked",
+                    "label": "Tin theo dõi"
+                },
+                {
+                    "key": "signals",
+                    "label": "Dấu hiệu"
+                },
+                {
+                    "key": "under3",
+                    "label": "Dưới 3 tỷ"
+                },
+                {
+                    "key": "under4",
+                    "label": "Dưới 4 tỷ"
+                },
+                {
+                    "key": "median_m2",
+                    "label": "Giá trung vị/m²"
+                },
+                {
+                    "key": "median_total",
+                    "label": "Tổng giá trung vị"
+                }
+            ],
+            "rows": [
+                {
+                    "ward_type": "Phú Hòa · đất nền",
+                    "tracked": "42",
+                    "signals": "6",
+                    "under3": "9",
+                    "under4": "25",
+                    "median_m2": "30,1 tr/m²",
+                    "median_total": "3,49 tỷ"
+                },
+                {
+                    "ward_type": "Phú Hòa · nhà đất",
+                    "tracked": "112",
+                    "signals": "19",
+                    "under3": "20",
+                    "under4": "52",
+                    "median_m2": "44,0 tr/m²",
+                    "median_total": "3,89 tỷ"
+                },
+                {
+                    "ward_type": "Chánh Mỹ · đất nền",
+                    "tracked": "10",
+                    "signals": "1",
+                    "under3": "9",
+                    "under4": "9",
+                    "median_m2": "23,1 tr/m²",
+                    "median_total": "2,20 tỷ"
+                },
+                {
+                    "ward_type": "Chánh Mỹ · nhà đất",
+                    "tracked": "50",
+                    "signals": "11",
+                    "under3": "23",
+                    "under4": "38",
+                    "median_m2": "31,8 tr/m²",
+                    "median_total": "2,74 tỷ"
+                }
+            ],
+            "cards": [
+                {
+                    "title": "Nguồn nhà đất",
+                    "value": "159 vs 60 tin",
+                    "body": "Phú Hòa có nguồn theo dõi rộng hơn Chánh Mỹ."
+                },
+                {
+                    "title": "Đất nền",
+                    "value": "30,1 vs 23,1 tr/m²",
+                    "body": "Phú Hòa cao hơn theo giá rao trung vị."
+                },
+                {
+                    "title": "Nhà đất",
+                    "value": "44,0 vs 31,8 tr/m²",
+                    "body": "Chánh Mỹ mềm hơn theo giá rao trung vị."
+                }
+            ]
+        },
+        "local_links_title": "Đọc tiếp theo phường và công cụ",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Hòa",
+                "href": "/binh-duong/phuong-phu-hoa",
+                "description": "Xem dữ liệu nền và mở dashboard riêng cho Phú Hòa."
+            },
+            {
+                "label": "Trang phường Chánh Mỹ",
+                "href": "/binh-duong/phuong-chanh-my",
+                "description": "Xem dữ liệu nền và mở dashboard riêng cho Chánh Mỹ."
+            },
+            {
+                "label": "Báo cáo Bình Dương tháng 07/2026",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "Đặt hai phường vào mặt bằng báo cáo rộng hơn."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đối chiếu nhanh giá rao trước khi gọi hỏi từng tin."
+            },
+            {
+                "label": "Hiệp Thành hay Chánh Mỹ",
+                "href": "/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc",
+                "description": "So thêm Chánh Mỹ với Hiệp Thành theo nguồn tin và ngân sách."
+            },
+            {
+                "label": "Định Hòa hay Phú Hòa",
+                "href": "/tin-tuc/dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một so sánh có Phú Hòa ở nhóm phường lân cận."
+            }
+        ],
+        "process_title": "Cách chọn phường mở trước",
+        "process": [
+            {
+                "title": "1. Chốt loại hình",
+                "body": "Bạn đang tìm đất nền hay nhà đất? Chọn một loại trước để không trộn hai mặt bằng giá."
+            },
+            {
+                "title": "2. Đặt trần tổng giá",
+                "body": "Dùng nhóm dưới 3 tỷ hoặc dưới 4 tỷ làm bộ lọc ban đầu, sau đó xem lại giá/m²."
+            },
+            {
+                "title": "3. Đọc từng tin",
+                "body": "Kiểm tra vị trí, kích thước, đường vào, giấy tờ và lý do có dấu hiệu trước khi đi xem."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu cần nhiều tin nhà đất để lọc trước, nên mở phường nào?",
+                "a": "Nên mở Phú Hòa trước. Dữ liệu 14 ngày đến 06/09/2026 có 159 tin đang theo dõi ở Phú Hòa, trong đó 112 tin nhà đất có phân loại; Chánh Mỹ có 60 tin, trong đó 50 tin nhà đất."
+            },
+            {
+                "q": "Đất nền Phú Hòa hay Chánh Mỹ đang có giá rao thấp hơn?",
+                "a": "Chánh Mỹ thấp hơn trong snapshot này: giá rao trung vị đất nền là 23,1 tr/m², so với 30,1 tr/m² ở Phú Hòa. Chánh Mỹ có 10 tin đất nền nên bạn cần xem thêm vị trí và diện tích từng tin."
+            },
+            {
+                "q": "Nhà đất phường nào dễ lọc dưới 4 tỷ hơn?",
+                "a": "Chánh Mỹ có 38 tin nhà đất dưới 4 tỷ trên 50 tin nhà đất được phân loại, còn Phú Hòa có 52 trên 112 tin. Phú Hòa có nhiều tin tuyệt đối hơn, nhưng Chánh Mỹ có tỷ trọng nhóm dưới 4 tỷ cao hơn trong snapshot này."
+            },
+            {
+                "q": "37 dấu hiệu đáng kiểm tra có phải 37 tin nên mua không?",
+                "a": "Không. Đây là số tin được ưu tiên theo các dấu hiệu dữ liệu như tin hot hoặc có giảm giá. Bạn vẫn phải đọc mô tả, xem ảnh, kiểm tra pháp lý, quy hoạch, đường vào và giá chốt thực tế trước khi giao dịch."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-06",
+            "modified_at": "2026-09-06",
+            "intro": [
+                "Nếu bạn muốn có nhiều tin để lọc trước, hãy mở Phú Hòa. Nếu bạn giữ ngân sách thấp hơn, Chánh Mỹ đáng xem trước vì giá rao trung vị đất nền và nhà đất đều thấp hơn trong snapshot này. Dữ liệu là 219 tin Facebook Radar BDS đang theo dõi trong 14 ngày đến 06/09/2026.",
+                "Bài này tách riêng đất nền và nhà đất. Các con số là giá rao, không phải giá chốt giao dịch; giá trung vị chỉ giúp bạn đọc nhanh mặt bằng trước khi xem từng tin."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin Phú Hòa / Chánh Mỹ 14 ngày",
+                    "value": "219",
+                    "note": "Phú Hòa 159 · Chánh Mỹ 60 tin đang theo dõi"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "37",
+                    "note": "Phú Hòa 25 · Chánh Mỹ 12 tin"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "30,1 vs 23,1 tr/m²",
+                    "note": "Phú Hòa vs Chánh Mỹ"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "44,0 vs 31,8 tr/m²",
+                    "note": "Phú Hòa vs Chánh Mỹ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Hòa và Chánh Mỹ khác nhau thế nào khi tách loại hình?",
+                    "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0; cửa sổ 14 ngày đến 06/09/2026. Giá là giá rao trung vị.",
+                    "columns": [
+                        {
+                            "key": "ward_type",
+                            "label": "Phường · loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin theo dõi"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "under3",
+                            "label": "Dưới 3 tỷ"
+                        },
+                        {
+                            "key": "under4",
+                            "label": "Dưới 4 tỷ"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward_type": "Phú Hòa · đất nền",
+                            "tracked": "42",
+                            "signals": "6",
+                            "under3": "9",
+                            "under4": "25",
+                            "median_m2": "30,1 tr/m²",
+                            "median_total": "3,49 tỷ"
+                        },
+                        {
+                            "ward_type": "Phú Hòa · nhà đất",
+                            "tracked": "112",
+                            "signals": "19",
+                            "under3": "20",
+                            "under4": "52",
+                            "median_m2": "44,0 tr/m²",
+                            "median_total": "3,89 tỷ"
+                        },
+                        {
+                            "ward_type": "Chánh Mỹ · đất nền",
+                            "tracked": "10",
+                            "signals": "1",
+                            "under3": "9",
+                            "under4": "9",
+                            "median_m2": "23,1 tr/m²",
+                            "median_total": "2,20 tỷ"
+                        },
+                        {
+                            "ward_type": "Chánh Mỹ · nhà đất",
+                            "tracked": "50",
+                            "signals": "11",
+                            "under3": "23",
+                            "under4": "38",
+                            "median_m2": "31,8 tr/m²",
+                            "median_total": "2,74 tỷ"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Ví dụ tin rao đã ẩn liên hệ",
+                    "title": "Một vài mức giá để đọc cách lọc",
+                    "note": "Các ví dụ chỉ minh họa cách đọc dữ liệu, không phải khuyến nghị mua hoặc xác nhận chất lượng tài sản.",
+                    "columns": [
+                        {
+                            "key": "example",
+                            "label": "Ví dụ"
+                        },
+                        {
+                            "key": "property_type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "price_m2",
+                            "label": "Giá rao/m²"
+                        },
+                        {
+                            "key": "price_total",
+                            "label": "Tổng giá rao"
+                        },
+                        {
+                            "key": "read",
+                            "label": "Cách đọc nhanh"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "example": "Một tin mới ở Phú Hòa",
+                            "property_type": "Nhà đất",
+                            "price_m2": "29,5 tr/m²",
+                            "price_total": "3,25 tỷ",
+                            "read": "Thấp hơn giá trung vị nhà đất Phú Hòa 44,0 tr/m²; cần kiểm tra vị trí và hiện trạng."
+                        },
+                        {
+                            "example": "Một tin mới ở Phú Hòa",
+                            "property_type": "Đất nền",
+                            "price_m2": "27,5 tr/m²",
+                            "price_total": "3,09 tỷ",
+                            "read": "Thấp hơn giá trung vị đất nền Phú Hòa 30,1 tr/m²; cần đối chiếu đường vào và pháp lý."
+                        },
+                        {
+                            "example": "Một tin mới ở Chánh Mỹ",
+                            "property_type": "Nhà đất",
+                            "price_m2": "39,1 tr/m²",
+                            "price_total": "2,50 tỷ",
+                            "read": "Cao hơn giá trung vị nhà đất Chánh Mỹ 31,8 tr/m²; cần xem diện tích và mặt tiền."
+                        },
+                        {
+                            "example": "Một tin mới ở Chánh Mỹ",
+                            "property_type": "Đất nền",
+                            "price_m2": "23,1 tr/m²",
+                            "price_total": "2,20 tỷ",
+                            "read": "Gần giá trung vị đất nền Chánh Mỹ; vẫn phải xác minh tin và vị trí thực tế."
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Visual nhanh",
+                    "title": "Giá rao trung vị/m² tách theo loại hình",
+                    "note": "Không gộp đất nền và nhà đất vào một mức giá chung.",
+                    "alt": "Biểu đồ giá rao trung vị đất nền và nhà đất giữa Phú Hòa và Chánh Mỹ",
+                    "rows": [
+                        {
+                            "label": "Phú Hòa · đất nền",
+                            "value_label": "30,1 tr/m²",
+                            "width": 68,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Phú Hòa · nhà đất",
+                            "value_label": "44,0 tr/m²",
+                            "width": 100,
+                            "color": "#16a34a"
+                        },
+                        {
+                            "label": "Chánh Mỹ · đất nền",
+                            "value_label": "23,1 tr/m²",
+                            "width": 53,
+                            "color": "#f59e0b"
+                        },
+                        {
+                            "label": "Chánh Mỹ · nhà đất",
+                            "value_label": "31,8 tr/m²",
+                            "width": 72,
+                            "color": "#dc2626"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "nguon-hang-va-dau-hieu",
+                    "heading": "1. Phú Hòa có nguồn tin rộng hơn, Chánh Mỹ có tỷ trọng dấu hiệu cao hơn",
+                    "paragraphs": [
+                        "Trong 14 ngày đến 06/09/2026, Phú Hòa có 159 tin đang theo dõi và Chánh Mỹ có 60 tin. Nếu tính theo số tuyệt đối, Phú Hòa có nhiều lựa chọn hơn cho cả đất nền lẫn nhà đất.",
+                        "Phú Hòa có 25 tin có dấu hiệu đáng kiểm tra, Chánh Mỹ có 12. Tuy nhiên, tỷ lệ thô lần lượt khoảng 15,7% và 20,0% trên số tin đang theo dõi. Tỷ lệ này chỉ giúp chọn thứ tự mở feed, không phải xác suất mua được tài sản tốt."
+                    ],
+                    "bullets": [
+                        "Muốn nhiều mẫu để so: mở Phú Hòa trước.",
+                        "Muốn đọc một danh sách tin nhỏ hơn: mở Chánh Mỹ trước.",
+                        "Muốn xem dấu hiệu theo tỷ lệ: Chánh Mỹ đang cao hơn trong snapshot này."
+                    ]
+                },
+                {
+                    "id": "dat-nen-phu-hoa-chanh-my",
+                    "heading": "2. Đất nền Chánh Mỹ thấp hơn theo giá rao trung vị, nhưng mẫu nhỏ hơn",
+                    "paragraphs": [
+                        "Đất nền Phú Hòa có giá rao trung vị 30,1 tr/m² và tổng giá trung vị 3,49 tỷ. Chánh Mỹ lần lượt là 23,1 tr/m² và 2,20 tỷ. Với trần dưới 3 tỷ, dữ liệu có 9 tin đất nền ở Chánh Mỹ và 9 tin ở Phú Hòa; dưới 4 tỷ là 9 so với 25 tin.",
+                        "Chánh Mỹ có 10 tin đất nền được phân loại trong cửa sổ dữ liệu, nên không nên coi 23,1 tr/m² là một mức giá áp cho mọi vị trí. Bạn nên mở từng tin, đối chiếu diện tích, lộ giới, đường vào và tình trạng giấy tờ."
+                    ],
+                    "bullets": [
+                        "Phú Hòa đất nền: 42 tin · 30,1 tr/m² · 3,49 tỷ trung vị.",
+                        "Chánh Mỹ đất nền: 10 tin · 23,1 tr/m² · 2,20 tỷ trung vị.",
+                        "Dưới 4 tỷ: Phú Hòa 25 tin · Chánh Mỹ 9 tin.",
+                        "Chánh Mỹ có mẫu đất nền nhỏ hơn nên cần đọc từng tin kỹ hơn."
+                    ]
+                },
+                {
+                    "id": "nha-dat-phu-hoa-chanh-my",
+                    "heading": "3. Nhà đất Phú Hòa nhiều hơn, Chánh Mỹ mềm hơn về giá",
+                    "paragraphs": [
+                        "Nhà đất Phú Hòa có 112 tin, giá rao trung vị 44,0 tr/m² và tổng giá trung vị 3,89 tỷ. Chánh Mỹ có 50 tin, giá rao trung vị 31,8 tr/m² và tổng giá trung vị 2,74 tỷ.",
+                        "Nếu cần nhiều căn để so vị trí, diện tích và hiện trạng, Phú Hòa là nơi nên mở trước. Nếu giữ trần dưới 4 tỷ, Chánh Mỹ có 38 tin trong nhóm này, chiếm tỷ trọng cao hơn Phú Hòa; nhưng số tuyệt đối ở Phú Hòa vẫn là 52 tin."
+                    ],
+                    "bullets": [
+                        "Phú Hòa nhà đất: 112 tin · 44,0 tr/m² · 3,89 tỷ trung vị.",
+                        "Chánh Mỹ nhà đất: 50 tin · 31,8 tr/m² · 2,74 tỷ trung vị.",
+                        "Dưới 3 tỷ: Phú Hòa 20 tin · Chánh Mỹ 23 tin.",
+                        "Dưới 4 tỷ: Phú Hòa 52 tin · Chánh Mỹ 38 tin."
+                    ]
+                },
+                {
+                    "id": "nen-mo-phuong-nao-truoc",
+                    "heading": "4. Chọn phường mở trước theo mục tiêu mua",
+                    "paragraphs": [
+                        "Bạn nên mở Phú Hòa trước nếu cần nhiều lựa chọn nhà đất, muốn xem cả các tin quanh mức 3-4 tỷ và muốn ưu tiên số lượng dấu hiệu tuyệt đối. Sau đó, dùng Chánh Mỹ làm nhóm so giá mềm hơn.",
+                        "Bạn nên mở Chánh Mỹ trước nếu trần vốn thấp hơn hoặc muốn đọc nhanh một danh sách tin nhỏ. Với đất nền, Chánh Mỹ đang có giá trung vị thấp hơn; với nhà đất, nhóm dưới 4 tỷ chiếm tỷ trọng cao hơn. Dù chọn nơi nào, thứ tự lọc nên là phường → loại hình → tổng giá → giá/m² → kiểm tra pháp lý và thực địa."
+                    ],
+                    "bullets": [
+                        "Phú Hòa: nhiều tin hơn, nhiều tin nhà đất hơn, giá rao trung vị cao hơn.",
+                        "Chánh Mỹ: giá rao trung vị thấp hơn, hợp để lọc nhóm ngân sách thấp hơn.",
+                        "Không dùng dấu hiệu đáng kiểm tra như kết luận nên mua.",
+                        "Radar BDS chỉ là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay kiểm tra thực địa."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn đúng loại hình: đất nền hay nhà đất.",
+                "Đã xem cả giá/m² và tổng giá, không chỉ một con số.",
+                "Đã kiểm tra nhóm dưới 3 tỷ hoặc dưới 4 tỷ theo đúng loại hình.",
+                "Đã đọc mô tả, ảnh, vị trí, đường vào và giấy tờ của từng tin.",
+                "Đã nhớ đây là giá rao Facebook, không phải giá chốt giao dịch."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc Phú Hòa và Chánh Mỹ",
+            "body": "Chọn phường, tách đất nền hoặc nhà đất, đặt khung tổng giá rồi xem từng tin đáng kiểm tra trước khi liên hệ.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_vs_chanh_my"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Phú Hòa hay Chánh Mỹ",
+                "href": "/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc",
+                "url": "https://radarbds.vn/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc"
+            }
+        ]
+    }
 
 }
 
