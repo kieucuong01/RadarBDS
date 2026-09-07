@@ -6703,7 +6703,7 @@ SEO_ARTICLES = {
                                                   {'q': 'Radar BDS dùng dữ liệu gì cho bài so sánh này?',
                                                    'a': 'Bài viết dùng tin Facebook đang theo dõi trên Radar BDS trong '
                                                         '14 ngày từ 10/07 đến 23/07/2026, đã lọc source=facebook, '
-                                                        'is_active=0, is_blacklisted=0 và review_hidden=0. Giá là giá '
+                                                        'is_active=1, is_blacklisted=0 và review_hidden=0. Giá là giá '
                                                         'rao trung vị theo loại hình BĐS.'}],
                                           'article': {'published_at': '2026-07-26',
                                                       'modified_at': '2026-07-26',
@@ -9022,7 +9022,7 @@ SEO_ARTICLES = {
             "modified_at": "2026-07-30",
             "intro": [
                 "Nếu anh đang giữ ngân sách dưới 3 tỷ, câu trả lời nhanh là: đất nền nên mở Phú Tân trước, còn nhà đất xây sẵn nên xem Hiệp Thành song song hoặc trước. Lý do là Phú Tân dày nguồn hàng đất nền dưới 3 tỷ hơn rõ rệt, còn Hiệp Thành lại nhỉnh hơn ở số tin nhà đất dưới 3 tỷ.",
-                "Bài này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook, lọc các tin đang theo dõi trong 14 ngày gần nhất với is_active=0, is_blacklisted=0 và review_hidden=0. Dữ liệu cập nhật đến 28/07/2026; đây là giá rao theo từng loại hình BĐS để lọc ban đầu, không phải giá chốt hay khuyến nghị mua."
+                "Bài này dùng dữ liệu production của Radar BDS, chỉ lấy nguồn Facebook, lọc các tin đang theo dõi trong 14 ngày gần nhất với is_active=1, is_blacklisted=0 và review_hidden=0. Dữ liệu cập nhật đến 28/07/2026; đây là giá rao theo từng loại hình BĐS để lọc ban đầu, không phải giá chốt hay khuyến nghị mua."
             ],
             "summary_cards": [
                 {
@@ -19260,7 +19260,12 @@ _RB_ANSWER_FIRST_INTROS = {
 
 }
 for _rb_slug, _rb_intro in _RB_ANSWER_FIRST_INTROS.items():
-    SEO_ARTICLES[_rb_slug]["article"]["intro"][0] = _rb_intro
+    _rb_article = SEO_ARTICLES.get(_rb_slug)
+    if not _rb_article:
+        continue
+    _rb_intro_list = _rb_article.get("article", {}).get("intro")
+    if isinstance(_rb_intro_list, list) and _rb_intro_list:
+        _rb_intro_list[0] = _rb_intro
 
 
 KNOWLEDGE_HUB = {'path': '/tin-tuc',
