@@ -19743,7 +19743,487 @@ SEO_ARTICLES = {
             }
         ]
     }
-
+,
+"mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa",
+    "category": {
+        "key": "so-sanh-khu-vuc",
+        "label": "So sánh khu vực"
+    },
+    "title": "Mỹ Phước, Hòa Lợi hay Thới Hòa: khu nào hợp ngân sách khi mua đất Bến Cát? | Radar BDS",
+    "description": "Đang mua đất Bến Cát? So sánh Mỹ Phước, Hòa Lợi và Thới Hòa bằng tin Facebook, giá rao đất nền/nhà đất, nhóm dưới 3 tỷ và dấu hiệu đáng kiểm tra.",
+    "keywords": "mua đất Bến Cát, giá đất Bến Cát, Mỹ Phước, Hòa Lợi, Thới Hòa, đất nền Bến Cát, nhà đất Bến Cát, Radar BDS",
+    "breadcrumb_label": "Mua đất Bến Cát: Mỹ Phước, Hòa Lợi hay Thới Hòa",
+    "hero_badge": "So sánh khu vực Bến Cát",
+    "hero_title": "Mỹ Phước, Hòa Lợi hay Thới Hòa: khu nào hợp ngân sách khi mua đất Bến Cát?",
+    "hero_text": "Nếu đang tìm đất Bến Cát, đừng bắt đầu bằng một mức giá chung cho cả khu vực. Hãy tách đất nền và nhà đất, sau đó xem số tin có giá hợp lệ và nhóm ngân sách phù hợp.",
+    "scope_label": "Bến Cát · Mỹ Phước / Hòa Lợi / Thới Hòa",
+    "hero_checks": [
+        "780 tin Facebook đang theo dõi tại ba khu vào ngày 07/09/2026",
+        "Đất nền có giá rao trung vị 7,0 tr/m² ở Thới Hòa, 10,3 tr/m² ở Mỹ Phước và 11,7 tr/m² ở Hòa Lợi",
+        "Nhà đất có giá rao trung vị 18,3 tr/m² ở Thới Hòa, 19,5 tr/m² ở Hòa Lợi và 20,6 tr/m² ở Mỹ Phước",
+        "Nhóm dưới 3 tỷ có 70 tin ở Mỹ Phước, 244 tin ở Hòa Lợi và 158 tin ở Thới Hòa"
+    ],
+    "primary_cta": "Mở dashboard lọc Hòa Lợi",
+    "primary_href": "/?tab=signals&ward=H%C3%B2a%20L%E1%BB%A3i&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=ben_cat_compare",
+    "secondary_cta": "Dùng công cụ định giá BĐS",
+    "secondary_href": "/dinh-gia-bds",
+    "map_label": "Tin tức / Bến Cát / Mỹ Phước · Hòa Lợi · Thới Hòa",
+    "hero_metric": {
+        "label": "Tổng tin đang theo dõi",
+        "value": "780 tin",
+        "delta": "148 dấu hiệu đáng chú ý",
+        "note": "Nguồn Facebook, snapshot ngày 07/09/2026"
+    },
+    "property_card": {
+        "status": "Snapshot 07/09/2026 · giá rao",
+        "title": "Hòa Lợi có nguồn hàng rộng nhất trong ba khu",
+        "price": "Đất nền Thới Hòa có giá rao trung vị thấp nhất: 7,0 tr/m²",
+        "metric_a": "Tin dưới 3 tỷ",
+        "metric_a_value": "244 · Hòa Lợi",
+        "metric_b": "Nhà đất trung vị",
+        "metric_b_value": "18,3 tr/m² · Thới Hòa"
+    },
+    "value_cards": [
+        {
+            "title": "Hòa Lợi hợp người cần nhiều tin để so",
+            "body": "Hòa Lợi có 457 tin đang theo dõi, trong đó 223 tin đất nền và 58 tin nhà đất có đủ giá tổng và giá/m² hợp lệ. Nhóm dưới 3 tỷ có 244 tin đủ điều kiện trong hai loại hình."
+        },
+        {
+            "title": "Thới Hòa có giá đất nền mềm hơn trong snapshot",
+            "body": "Giá rao trung vị đất nền Thới Hòa là 7,0 tr/m², thấp hơn Mỹ Phước 10,3 tr/m² và Hòa Lợi 11,7 tr/m². Nhà đất Thới Hòa có giá rao trung vị 18,3 tr/m² trên 99 tin có dữ liệu hợp lệ."
+        },
+        {
+            "title": "Mỹ Phước nên được xem như một nhóm riêng",
+            "body": "Mỹ Phước có 116 tin đang theo dõi; trong số tin có giá hợp lệ, giá rao trung vị đất nền là 10,3 tr/m² và nhà đất là 20,6 tr/m². Nhóm dưới 3 tỷ có 70 tin để lọc tiếp."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Mở Radar theo khu vực",
+        "title": "Lọc từng phường trước khi so giá",
+        "body": "Mở Hòa Lợi để xem nguồn hàng lớn, sau đó đổi sang Thới Hòa hoặc Mỹ Phước. Luôn chọn đất nền hoặc nhà đất trước khi đọc giá/m².",
+        "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+        "alt": "Dashboard Radar BDS so sánh bộ lọc nhà đất tại Bến Cát",
+        "cta": "Mở dashboard",
+        "metrics": [
+            {
+                "value": "780 tin",
+                "label": "ba khu đang theo dõi"
+            },
+            {
+                "value": "3 khu",
+                "label": "Mỹ Phước · Hòa Lợi · Thới Hòa"
+            },
+            {
+                "value": "2 loại",
+                "label": "đất nền / nhà đất"
+            }
+        ]
+    },
+    "market_snapshot": {
+        "eyebrow": "Snapshot 07/09/2026",
+        "title": "So nhanh ba khu theo loại hình BĐS",
+        "body": "Các mức giá dưới đây là giá rao trung vị từ tin Facebook đang theo dõi. Số tin theo loại hình chỉ tính những dòng có giá tổng và giá/m² hợp lệ.",
+        "columns": [
+            {
+                "key": "area",
+                "label": "Khu vực"
+            },
+            {
+                "key": "price",
+                "label": "Tin theo dõi"
+            },
+            {
+                "key": "tracked",
+                "label": "Dấu hiệu"
+            },
+            {
+                "key": "signal",
+                "label": "Giá đất nền / nhà đất"
+            },
+            {
+                "key": "area_m2",
+                "label": "Dưới 3 tỷ"
+            },
+            {
+                "key": "note",
+                "label": "Ghi chú"
+            }
+        ],
+        "rows": [
+            {
+                "area": "Mỹ Phước",
+                "price": "116",
+                "tracked": "14",
+                "signal": "10,3 / 20,6 tr/m²",
+                "area_m2": "70",
+                "note": "29 đất nền · 54 nhà đất"
+            },
+            {
+                "area": "Hòa Lợi",
+                "price": "457",
+                "tracked": "116",
+                "signal": "11,7 / 19,5 tr/m²",
+                "area_m2": "244",
+                "note": "223 đất nền · 58 nhà đất"
+            },
+            {
+                "area": "Thới Hòa",
+                "price": "207",
+                "tracked": "18",
+                "signal": "7,0 / 18,3 tr/m²",
+                "area_m2": "158",
+                "note": "63 đất nền · 99 nhà đất"
+            }
+        ],
+        "cards": [
+            {
+                "title": "Nguồn theo dõi",
+                "value": "457 tin",
+                "body": "Hòa Lợi có nhiều tin nhất trong ba khu."
+            },
+            {
+                "title": "Đất nền",
+                "value": "7,0 tr/m²",
+                "body": "Giá rao trung vị thấp nhất nằm ở Thới Hòa."
+            },
+            {
+                "title": "Nhà đất",
+                "value": "18,3 tr/m²",
+                "body": "Giá rao trung vị thấp nhất cũng nằm ở Thới Hòa."
+            }
+        ]
+    },
+    "local_links_title": "Đọc tiếp theo khu vực và công cụ",
+    "local_links": [
+        {
+            "label": "Trang nhà đất Bến Cát",
+            "href": "/binh-duong/ben-cat",
+            "description": "Mở landing Bến Cát để đi tiếp đến các khu đang được theo dõi."
+        },
+        {
+            "label": "Giá đất Mỹ Phước Bến Cát",
+            "href": "/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu",
+            "description": "Đọc sâu hơn về giá rao đất nền và nhà đất tại Mỹ Phước."
+        },
+        {
+            "label": "Mua đất Thủ Dầu Một hay Bến Cát",
+            "href": "/tin-tuc/mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao",
+            "description": "So sánh Bến Cát với Thủ Dầu Một trước khi chốt khu vực."
+        },
+        {
+            "label": "Công cụ định giá BĐS",
+            "href": "/dinh-gia-bds",
+            "description": "Đối chiếu giá rao theo diện tích trước khi liên hệ từng tin."
+        }
+    ],
+    "process_title": "Cách lọc khu phù hợp ở Bến Cát",
+    "process": [
+        {
+            "title": "1. Chọn loại hình",
+            "body": "Bạn đang tìm đất nền hay nhà đất? Chọn một nhóm trước để không so chéo hai mặt bằng giá."
+        },
+        {
+            "title": "2. Đặt trần tổng giá",
+            "body": "Dùng nhóm dưới 3 tỷ hoặc dưới 4 tỷ làm bộ lọc ban đầu, rồi xem lại giá/m² và diện tích từng tin."
+        },
+        {
+            "title": "3. Đọc dấu hiệu đúng cách",
+            "body": "Tin hot hoặc giảm giá chỉ là dấu hiệu để mở trước. Hãy kiểm tra vị trí, đường vào, kích thước, giấy tờ và giá chốt thực tế."
+        }
+    ],
+    "faq": [
+        {
+            "q": "Nếu muốn nhiều tin đất nền dưới 3 tỷ, nên mở khu nào trước?",
+            "a": "Nên mở Hòa Lợi trước trong snapshot này: có 193 tin đất nền dưới 3 tỷ có đủ giá tổng và giá/m² hợp lệ. Thới Hòa có 61 tin và Mỹ Phước có 16 tin. Đây là số tin đang theo dõi, không phải số giao dịch thành công."
+        },
+        {
+            "q": "Khu nào có giá rao trung vị đất nền thấp nhất?",
+            "a": "Thới Hòa có giá rao trung vị đất nền thấp nhất trong ba khu, ở mức 7,0 tr/m². Mỹ Phước là 10,3 tr/m² và Hòa Lợi là 11,7 tr/m². Giá trung vị nghĩa là một nửa số tin thấp hơn mức này và một nửa cao hơn."
+        },
+        {
+            "q": "Nhà đất ở ba khu có thể so chung với đất nền không?",
+            "a": "Không nên. Nhà đất gồm phần nhà xây sẵn nên giá/m² chịu ảnh hưởng của hiện trạng, diện tích xây dựng và vị trí. Trong snapshot này, giá rao trung vị nhà đất là 20,6 tr/m² ở Mỹ Phước, 19,5 tr/m² ở Hòa Lợi và 18,3 tr/m² ở Thới Hòa."
+        },
+        {
+            "q": "148 dấu hiệu có phải là 148 tin nên mua không?",
+            "a": "Không. Đây là số tin được đánh dấu theo các dấu hiệu dữ liệu như tin hot hoặc có giảm giá: Mỹ Phước 14, Hòa Lợi 116 và Thới Hòa 18. Bạn vẫn phải đọc từng tin, kiểm tra pháp lý, quy hoạch, hiện trạng và giá chốt trước khi quyết định."
+        }
+    ],
+    "article": {
+        "published_at": "2026-09-07",
+        "modified_at": "2026-09-07",
+        "intro": [
+            "Nếu ngân sách dưới 3 tỷ, Hòa Lợi có nhiều lựa chọn nhất; nếu ưu tiên giá đất nền theo m² thấp hơn, nên mở Thới Hòa trước. Ở Mỹ Phước, giá tổng trung vị nhà đất là 1,8 tỷ. Số liệu là tin Facebook đang theo dõi ngày 07/09/2026, tức giá rao, không phải giá chốt.",
+            "Bài này tách riêng đất nền và nhà đất. Giá trung vị chỉ là mốc đọc nhanh; mỗi tin vẫn cần được kiểm tra theo vị trí, diện tích, đường vào, giấy tờ và hiện trạng."
+        ],
+        "summary_cards": [
+            {
+                "label": "Tin Mỹ Phước · Hòa Lợi · Thới Hòa",
+                "value": "780",
+                "note": "116 · 457 · 207 tin đang theo dõi"
+            },
+            {
+                "label": "Dấu hiệu đáng chú ý",
+                "value": "148",
+                "note": "14 · 116 · 18 tin theo từng khu"
+            },
+            {
+                "label": "Đất nền giá trung vị/m²",
+                "value": "7,0–11,7 tr/m²",
+                "note": "Thới Hòa thấp nhất · Hòa Lợi cao nhất"
+            },
+            {
+                "label": "Nhà đất giá trung vị/m²",
+                "value": "18,3–20,6 tr/m²",
+                "note": "Thới Hòa thấp nhất · Mỹ Phước cao nhất"
+            }
+        ],
+        "data_tables": [
+            {
+                "eyebrow": "Bảng so nhanh",
+                "title": "Mặt bằng giá rao theo khu và loại hình",
+                "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0; snapshot 07/09/2026. Tin theo loại hình chỉ tính dòng có giá tổng và giá/m² hợp lệ. Giá là giá rao trung vị.",
+                "columns": [
+                    {
+                        "key": "area",
+                        "label": "Khu vực"
+                    },
+                    {
+                        "key": "tracked",
+                        "label": "Tin theo dõi"
+                    },
+                    {
+                        "key": "signals",
+                        "label": "Dấu hiệu"
+                    },
+                    {
+                        "key": "land",
+                        "label": "Đất nền · tin / giá trung vị/m²"
+                    },
+                    {
+                        "key": "house",
+                        "label": "Nhà đất · tin / giá trung vị/m²"
+                    },
+                    {
+                        "key": "under3",
+                        "label": "Dưới 3 tỷ*"
+                    }
+                ],
+                "rows": [
+                    {
+                        "area": "Mỹ Phước",
+                        "tracked": "116",
+                        "signals": "14",
+                        "land": "29 · 10,3 tr/m²",
+                        "house": "54 · 20,6 tr/m²",
+                        "under3": "70 tin"
+                    },
+                    {
+                        "area": "Hòa Lợi",
+                        "tracked": "457",
+                        "signals": "116",
+                        "land": "223 · 11,7 tr/m²",
+                        "house": "58 · 19,5 tr/m²",
+                        "under3": "244 tin"
+                    },
+                    {
+                        "area": "Thới Hòa",
+                        "tracked": "207",
+                        "signals": "18",
+                        "land": "63 · 7,0 tr/m²",
+                        "house": "99 · 18,3 tr/m²",
+                        "under3": "158 tin"
+                    }
+                ]
+            },
+            {
+                "eyebrow": "Lọc theo ngân sách",
+                "title": "Nhóm giá dưới 3 tỷ và dưới 4 tỷ",
+                "note": "*Chỉ tính tin đất nền và nhà đất có cả giá tổng lẫn giá/m² hợp lệ. Đây là số tin đang theo dõi, không phải số căn đã bán.",
+                "columns": [
+                    {
+                        "key": "area",
+                        "label": "Khu vực"
+                    },
+                    {
+                        "key": "land_under3",
+                        "label": "Đất nền dưới 3 tỷ"
+                    },
+                    {
+                        "key": "house_under3",
+                        "label": "Nhà đất dưới 3 tỷ"
+                    },
+                    {
+                        "key": "land_under4",
+                        "label": "Đất nền dưới 4 tỷ"
+                    },
+                    {
+                        "key": "house_under4",
+                        "label": "Nhà đất dưới 4 tỷ"
+                    }
+                ],
+                "rows": [
+                    {
+                        "area": "Mỹ Phước",
+                        "land_under3": "16",
+                        "house_under3": "54",
+                        "land_under4": "19",
+                        "house_under4": "54"
+                    },
+                    {
+                        "area": "Hòa Lợi",
+                        "land_under3": "193",
+                        "house_under3": "51",
+                        "land_under4": "197",
+                        "house_under4": "57"
+                    },
+                    {
+                        "area": "Thới Hòa",
+                        "land_under3": "61",
+                        "house_under3": "97",
+                        "land_under4": "61",
+                        "house_under4": "97"
+                    }
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Visual giá rao",
+                "title": "Giá rao trung vị/m² theo khu và loại hình",
+                "note": "Đất nền và nhà đất được tách riêng; chiều dài thanh chỉ để so nhanh tương đối.",
+                "alt": "Biểu đồ giá rao trung vị đất nền và nhà đất tại Mỹ Phước, Hòa Lợi và Thới Hòa",
+                "rows": [
+                    {
+                        "label": "Mỹ Phước · đất nền",
+                        "value_label": "10,3 tr/m²",
+                        "width": 50,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Mỹ Phước · nhà đất",
+                        "value_label": "20,6 tr/m²",
+                        "width": 100,
+                        "color": "#16a34a"
+                    },
+                    {
+                        "label": "Hòa Lợi · đất nền",
+                        "value_label": "11,7 tr/m²",
+                        "width": 57,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Hòa Lợi · nhà đất",
+                        "value_label": "19,5 tr/m²",
+                        "width": 95,
+                        "color": "#16a34a"
+                    },
+                    {
+                        "label": "Thới Hòa · đất nền",
+                        "value_label": "7,0 tr/m²",
+                        "width": 34,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Thới Hòa · nhà đất",
+                        "value_label": "18,3 tr/m²",
+                        "width": 89,
+                        "color": "#16a34a"
+                    }
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "chon-khu-theo-ngan-sach",
+                "heading": "1. Chọn khu theo mục tiêu ngân sách",
+                "paragraphs": [
+                    "Nếu ưu tiên nhiều lựa chọn dưới 3 tỷ, Hòa Lợi là điểm mở đầu hợp lý: 244 tin đất nền và nhà đất có giá hợp lệ nằm trong nhóm này. Con số này cao hơn Thới Hòa 158 tin và Mỹ Phước 70 tin.",
+                    "Nếu ưu tiên giá đất nền theo m², Thới Hòa có mốc thấp hơn trong snapshot: 7,0 tr/m². Tuy vậy, giá/m² thấp không tự động có nghĩa là tài sản phù hợp; diện tích, đường vào và pháp lý vẫn quyết định khả năng mua thực tế.",
+                    "Mỹ Phước có quy mô theo dõi nhỏ hơn hai khu còn lại nhưng vẫn có 80 tin dưới 3 tỷ khi gộp hai loại hình có dữ liệu hợp lệ. Nên mở riêng Mỹ Phước khi bạn muốn kiểm tra đúng các cụm trong khu, thay vì dùng số của cả Bến Cát."
+                ],
+                "bullets": [
+                    "Cần nhiều tin để so: mở Hòa Lợi trước.",
+                    "Ưu tiên giá đất nền theo m² thấp hơn: mở Thới Hòa trước.",
+                    "Muốn kiểm tra riêng cụm Mỹ Phước: mở bộ lọc Mỹ Phước và không gộp với Hòa Lợi."
+                ]
+            },
+            {
+                "id": "gia-rao-theo-loai-hinh",
+                "heading": "2. Đừng dùng giá đất nền để đọc nhà đất",
+                "paragraphs": [
+                    "Ba khu đều có khoảng cách rõ giữa hai loại hình. Ở Mỹ Phước, giá rao trung vị nhà đất là 20,6 tr/m², gần gấp đôi mốc 10,3 tr/m² của đất nền. Ở Hòa Lợi, hai mốc lần lượt là 19,5 và 11,7 tr/m². Thới Hòa có 18,3 tr/m² cho nhà đất và 7,0 tr/m² cho đất nền.",
+                    "Giá trung vị nghĩa là một nửa số tin thấp hơn mốc này và một nửa cao hơn. Đây là cách đọc mặt bằng nhanh, không phải mức giá chốt. Các tin có nhà xây sẵn còn chịu ảnh hưởng của chất lượng công trình, tuổi nhà và phần diện tích xây dựng."
+                ],
+                "bullets": [
+                    "So đất nền với đất nền trong cùng khu.",
+                    "So nhà đất với nhà đất, không lấy median đất nền làm giá tham chiếu cho nhà xây sẵn.",
+                    "Khi một tin lệch xa median, kiểm tra lại diện tích, đơn vị giá và vị trí trước khi gọi hỏi."
+                ]
+            },
+            {
+                "id": "doc-dau-hieu",
+                "heading": "3. Đọc số dấu hiệu mà không biến thành kết luận mua",
+                "paragraphs": [
+                    "Hòa Lợi có 116 tin được đánh dấu theo các dấu hiệu dữ liệu như tin hot hoặc có giảm giá, cao hơn Mỹ Phước 14 tin và Thới Hòa 18 tin. Nguồn theo dõi lớn hơn cũng làm số tuyệt đối lớn hơn, nên không thể chỉ nhìn 116 để kết luận Hòa Lợi tốt hơn.",
+                    "Hãy dùng con số này để sắp thứ tự mở feed. Sau đó đọc mô tả, xem ảnh, kiểm tra vị trí trên bản đồ, đối chiếu diện tích và xác minh giấy tờ. Nếu giá giảm nhưng dữ liệu vị trí thiếu, tin đó vẫn cần được xem là chưa đủ thông tin."
+                ],
+                "bullets": [
+                    "Mở nhóm có dấu hiệu để tiết kiệm thời gian, không xem đó là danh sách nên mua.",
+                    "Ưu tiên tin có đủ loại hình, giá, diện tích và vị trí để đối chiếu.",
+                    "Không dùng số dấu hiệu làm dự báo lợi nhuận hoặc khẳng định pháp lý."
+                ]
+            },
+            {
+                "id": "quy-trinh-loc-bds-ben-cat",
+                "heading": "4. Quy trình lọc nhanh trước khi đi xem",
+                "paragraphs": [
+                    "Bắt đầu tại landing Bến Cát, chọn khu muốn xem rồi chuyển sang dashboard. Với bài này, Hòa Lợi là bộ lọc đầu tiên nếu bạn cần nhiều nguồn; Thới Hòa là bộ lọc so giá đất nền; Mỹ Phước là bộ lọc kiểm tra riêng một cụm thị trường.",
+                    "Sau khi chốt loại hình và trần tổng giá, hãy dùng công cụ định giá để có thêm một mốc tham khảo. Kết quả trên Radar chỉ là lớp sàng lọc ban đầu, không thay cho thẩm định pháp lý, quy hoạch, hiện trạng hay thương lượng giá."
+                ],
+                "bullets": [
+                    "Chọn khu vực và loại hình trên dashboard.",
+                    "Đặt trần tổng giá dưới 3 tỷ hoặc dưới 4 tỷ.",
+                    "Mở từng tin, kiểm tra dữ liệu và gọi hỏi những điểm còn thiếu.",
+                    "Chỉ đi xem sau khi đã xác minh thông tin cơ bản độc lập."
+                ]
+            }
+        ],
+        "checklist": [
+            "Xác định bạn đang tìm đất nền hay nhà đất.",
+            "Đặt trần tổng giá trước khi so giá/m².",
+            "Đối chiếu diện tích, chiều ngang, chiều sâu và đường vào.",
+            "Kiểm tra giấy tờ, quy hoạch và hiện trạng bằng nguồn độc lập.",
+            "Hỏi rõ lý do giảm giá hoặc dấu hiệu được gắn trên tin.",
+            "Không coi giá rao, median hoặc dấu hiệu dữ liệu là giá chốt hay cam kết lợi nhuận."
+        ]
+    },
+    "final_cta": {
+        "title": "Mở Radar để lọc từng khu Bến Cát",
+        "body": "Bắt đầu từ Hòa Lợi nếu cần nhiều tin, so sang Thới Hòa khi ưu tiên đất nền, rồi kiểm tra riêng Mỹ Phước theo đúng loại hình và ngân sách.",
+        "button": "Mở dashboard",
+        "button_href": "/?tab=signals&ward=H%C3%B2a%20L%E1%BB%A3i&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=ben_cat_compare"
+    },
+    "breadcrumbs": [
+        {
+            "name": "Trang chủ",
+            "href": "/",
+            "url": "https://radarbds.vn/"
+        },
+        {
+            "name": "Tin tức",
+            "href": "/tin-tuc",
+            "url": "https://radarbds.vn/tin-tuc"
+        },
+        {
+            "name": "Mua đất Bến Cát: Mỹ Phước, Hòa Lợi hay Thới Hòa",
+            "href": "/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa",
+            "url": "https://radarbds.vn/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa"
+        }
+    ]
+},
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.

@@ -1,3 +1,10 @@
+## 2026-09-07
+- `/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa` — **Mỹ Phước, Hòa Lợi hay Thới Hòa: khu nào hợp ngân sách khi mua đất Bến Cát?**
+  - Pillar: So sánh khu vực / ngân sách / loại hình
+  - Score gate: 95/100 (intent 25, Radar data 25, funnel 20, anti-dup 15, social reuse 10)
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) snapshot ngày 07/09/2026; 780 tin đang theo dõi và 148 dấu hiệu trên Mỹ Phước, Hòa Lợi, Thới Hòa; tách `dat_nen` và `nha_dat`, giá rao trung vị/m² và nhóm dưới 3/4 tỷ chỉ tính dòng có dữ liệu giá hợp lệ
+  - Funnel: `/binh-duong/ben-cat`, dashboard lọc Hòa Lợi, `/dinh-gia-bds`, `/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu`, `/tin-tuc/mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao`
+
 ## 2026-09-06
 - `/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc` — **Phú Hòa hay Chánh Mỹ: nên xem khu nào trước?**
   - Pillar: So sánh phường
