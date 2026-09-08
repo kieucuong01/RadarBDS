@@ -1,3 +1,10 @@
+## 2026-09-08
+- `/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat` — **Bến Cát có những khu nào nên theo dõi khi mua đất? Tách riêng đất nền và nhà đất**
+  - Pillar: Hướng dẫn chọn khu / Bến Cát overview / loại hình
+  - Score gate: 100/100 (intent 25, Radar data 25, funnel 20, anti-dup 15, social reuse 15)
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) queried on 2026-09-08 across 8 Bến Cát areas; 4.318 tracked records and 468 signals; split by `dat_nen` vs `nha_dat`, with median asking price/m² calculated only from valid price/m² rows
+  - Funnel: `/binh-duong/ben-cat`, dashboard filters, `/dinh-gia-bds`, `/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa`, `/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu`
+
 ## 2026-09-07
 - `/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa` — **Mỹ Phước, Hòa Lợi hay Thới Hòa: khu nào hợp ngân sách khi mua đất Bến Cát?**
   - Pillar: So sánh khu vực / ngân sách / loại hình

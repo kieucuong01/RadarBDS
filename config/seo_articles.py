@@ -20224,6 +20224,639 @@ SEO_ARTICLES = {
         }
     ]
 },
+"ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat",
+    "category": {
+        "key": "so-sanh-khu-vuc",
+        "label": "Hướng dẫn mua nhà đất"
+    },
+    "title": "Bến Cát có những khu nào nên theo dõi khi mua đất? Tách riêng đất nền và nhà đất | Radar BDS",
+    "description": "Bến Cát có 8 khu đang được Radar BDS theo dõi. Bài này tách đất nền và nhà đất, so nguồn tin, dấu hiệu và giá rao trung vị để bạn chọn khu cần xem trước.",
+    "keywords": "Bến Cát có những khu nào, mua đất Bến Cát, giá đất Bến Cát, đất nền Bến Cát, nhà đất Bến Cát, Radar BDS",
+    "breadcrumb_label": "Bến Cát có những khu nào nên theo dõi khi mua đất",
+    "hero_badge": "Hướng dẫn chọn khu ở Bến Cát",
+    "hero_title": "Bến Cát có những khu nào nên theo dõi khi mua đất?",
+    "hero_text": "Nếu chưa biết nên mở khu nào ở Bến Cát, hãy nhìn nguồn tin và loại hình trước khi nhìn một mức giá chung. Snapshot Radar BDS ngày 08/09/2026 có 4.318 tin Facebook đang theo dõi: Tân Định và Phú An nhiều tin nhất, còn Hòa Lợi và Chánh Phú Hòa có nhóm dấu hiệu đáng mở riêng để kiểm tra.",
+    "scope_label": "Bến Cát · 8 khu đang theo dõi",
+    "hero_checks": [
+        "4.318 tin Facebook đang theo dõi tại 8 khu Bến Cát vào ngày 08/09/2026",
+        "468 tin có dấu hiệu đáng chú ý theo bộ lọc dữ liệu Radar",
+        "Tân Định có 1.315 tin và Phú An có 1.062 tin, là hai nguồn lớn nhất trong snapshot",
+        "Giá rao trung vị đất nền là 10,0 tr/m²; nhà đất là 18,0 tr/m² trong các dòng có giá/m² hợp lệ"
+    ],
+    "primary_cta": "Mở dashboard lọc Tân Định",
+    "primary_href": "/?tab=signals&ward=T%C3%A2n%20%C4%90%E1%BB%8Bnh&utm_source=seo&utm_medium=article&utm_campaign=ben_cat_overview",
+    "secondary_cta": "Xem trang nhà đất Bến Cát",
+    "secondary_href": "/binh-duong/ben-cat",
+    "map_label": "Tin tức / Bến Cát / Chọn khu theo dữ liệu",
+    "hero_metric": {
+        "label": "Tin đang theo dõi tại 8 khu",
+        "value": "4.318 tin",
+        "delta": "468 dấu hiệu đáng chú ý",
+        "note": "Nguồn Facebook, snapshot ngày 08/09/2026"
+    },
+    "property_card": {
+        "status": "Snapshot 08/09/2026 · giá rao",
+        "title": "Tân Định và Phú An là hai điểm mở đầu nếu cần nhiều tin",
+        "price": "Đất nền Bến Cát: 10,0 tr/m² · nhà đất Bến Cát: 18,0 tr/m²",
+        "metric_a": "Nguồn tin lớn nhất",
+        "metric_a_value": "1.315 · Tân Định",
+        "metric_b": "Đất nền / nhà đất",
+        "metric_b_value": "10,0 / 18,0 tr/m²"
+    },
+    "value_cards": [
+        {
+            "title": "Tân Định và Phú An có nguồn tin dày",
+            "body": "Tân Định có 1.315 tin đang theo dõi, Phú An có 1.062 tin. Đây là hai khu nên mở trước nếu bạn cần nhiều mẫu để lọc theo loại hình, tổng giá và vị trí."
+        },
+        {
+            "title": "Hòa Lợi và Chánh Phú Hòa cần đọc thêm lớp dấu hiệu",
+            "body": "Hòa Lợi có 118 tin có dấu hiệu và Chánh Phú Hòa có 71 tin. Số này chỉ giúp sắp thứ tự mở feed; nó không phải danh sách tin nên mua."
+        },
+        {
+            "title": "Đọc giá theo đúng loại hình",
+            "body": "Trong các dòng có giá/m² hợp lệ, giá rao trung vị đất nền toàn nhóm là 10,0 tr/m² và nhà đất là 18,0 tr/m². Hai nhóm này không nên gộp khi so giá."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Mở Radar theo khu vực",
+        "title": "Chọn khu rồi mới lọc từng tin",
+        "body": "Bắt đầu với Tân Định hoặc Phú An nếu cần nhiều mẫu. Sau đó đổi sang Hòa Lợi, Chánh Phú Hòa hoặc khu khác để so cùng loại hình.",
+        "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+        "alt": "Dashboard Radar BDS lọc tin nhà đất theo khu vực Bến Cát",
+        "cta": "Mở dashboard",
+        "metrics": [
+            {
+                "value": "4.318 tin",
+                "label": "8 khu Bến Cát"
+            },
+            {
+                "value": "468",
+                "label": "dấu hiệu đáng chú ý"
+            },
+            {
+                "value": "2 loại",
+                "label": "đất nền / nhà đất"
+            }
+        ]
+    },
+    "market_snapshot": {
+        "eyebrow": "Snapshot 08/09/2026",
+        "title": "Nguồn tin theo 8 khu ở Bến Cát",
+        "body": "Các số dưới đây là tin Facebook đang theo dõi. Giá rao trung vị chỉ tính các dòng có giá/m² hợp lệ và được tách riêng đất nền với nhà đất.",
+        "columns": [
+            {
+                "key": "area",
+                "label": "Khu vực"
+            },
+            {
+                "key": "tracked",
+                "label": "Tin theo dõi"
+            },
+            {
+                "key": "signals",
+                "label": "Dấu hiệu"
+            },
+            {
+                "key": "land",
+                "label": "Đất nền"
+            },
+            {
+                "key": "house",
+                "label": "Nhà đất"
+            },
+            {
+                "key": "note",
+                "label": "Ghi chú"
+            }
+        ],
+        "rows": [
+            {
+                "area": "Tân Định",
+                "tracked": "1.315",
+                "signals": "156",
+                "land": "700 · 13,0 tr/m²",
+                "house": "485 · 18,0 tr/m²",
+                "note": "Nguồn lớn nhất"
+            },
+            {
+                "area": "Phú An",
+                "tracked": "1.062",
+                "signals": "58",
+                "land": "925 · 9,0 tr/m²",
+                "house": "102 · 17,0 tr/m²",
+                "note": "Đất nền chiếm phần lớn"
+            },
+            {
+                "area": "Hòa Lợi",
+                "tracked": "462",
+                "signals": "118",
+                "land": "360 · 15,0 tr/m²",
+                "house": "88 · 20,0 tr/m²",
+                "note": "Nhiều dấu hiệu"
+            },
+            {
+                "area": "An Điền",
+                "tracked": "437",
+                "signals": "25",
+                "land": "310 · 11,0 tr/m²",
+                "house": "117 · 16,0 tr/m²",
+                "note": "Cần đọc theo loại hình"
+            },
+            {
+                "area": "An Tây",
+                "tracked": "360",
+                "signals": "8",
+                "land": "316 · 10,0 tr/m²",
+                "house": "27 · chưa đủ mẫu",
+                "note": "Nhà đất thiếu giá/m² hợp lệ"
+            },
+            {
+                "area": "Chánh Phú Hòa",
+                "tracked": "358",
+                "signals": "71",
+                "land": "177 · 10,0 tr/m²",
+                "house": "128 · 12,0 tr/m²",
+                "note": "Có nhóm nhà đất để so"
+            },
+            {
+                "area": "Thới Hòa",
+                "tracked": "208",
+                "signals": "18",
+                "land": "71 · 10,0 tr/m²",
+                "house": "119 · 24,0 tr/m²",
+                "note": "Nhà đất có giá/m² cao hơn đất nền"
+            },
+            {
+                "area": "Mỹ Phước",
+                "tracked": "116",
+                "signals": "14",
+                "land": "37 · 12,0 tr/m²",
+                "house": "70 · 20,0 tr/m²",
+                "note": "Nguồn nhỏ hơn trong snapshot"
+            }
+        ]
+    },
+    "local_links_title": "Đọc tiếp về Bến Cát và công cụ",
+    "local_links": [
+        {
+            "label": "Trang nhà đất Bến Cát",
+            "href": "/binh-duong/ben-cat",
+            "description": "Mở landing Bến Cát để đi tiếp đến các khu đang được theo dõi."
+        },
+        {
+            "label": "Mỹ Phước, Hòa Lợi hay Thới Hòa?",
+            "href": "/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa",
+            "description": "So sâu ba khu theo ngân sách và loại hình."
+        },
+        {
+            "label": "Giá đất Mỹ Phước Bến Cát",
+            "href": "/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu",
+            "description": "Đọc riêng mặt bằng đất nền và nhà đất tại Mỹ Phước."
+        },
+        {
+            "label": "Công cụ định giá BĐS",
+            "href": "/dinh-gia-bds",
+            "description": "Đối chiếu giá rao theo diện tích trước khi liên hệ từng tin."
+        }
+    ],
+    "process_title": "Cách chọn khu để xem trước",
+    "process": [
+        {
+            "title": "1. Chốt loại hình",
+            "body": "Chọn đất nền hoặc nhà đất trước. Hai nhóm có mặt bằng giá và cách kiểm tra khác nhau."
+        },
+        {
+            "title": "2. Chọn khu theo mục tiêu",
+            "body": "Cần nhiều mẫu thì mở Tân Định hoặc Phú An. Muốn đọc nhóm dấu hiệu thì mở Hòa Lợi hoặc Chánh Phú Hòa sau đó."
+        },
+        {
+            "title": "3. Đối chiếu từng tin",
+            "body": "So giá/m², tổng giá, diện tích, đường vào và giấy tờ. Không dùng số tin hoặc dấu hiệu để thay cho kiểm tra thực tế."
+        }
+    ],
+    "faq": [
+        {
+            "q": "Bến Cát có những khu nào nên theo dõi khi mua đất?",
+            "a": "Snapshot này theo dõi 8 khu: Tân Định, Phú An, Hòa Lợi, An Điền, An Tây, Chánh Phú Hòa, Thới Hòa và Mỹ Phước. Mỗi khu có cơ cấu đất nền và nhà đất khác nhau nên nên lọc từng khu thay vì dùng một mức giá chung."
+        },
+        {
+            "q": "Khu nào có nhiều tin Facebook đang theo dõi nhất?",
+            "a": "Tân Định có 1.315 tin và Phú An có 1.062 tin, cao nhất trong snapshot ngày 08/09/2026. Đây là số tin đang theo dõi, không phải số giao dịch đã chốt hay số lô đất độc lập."
+        },
+        {
+            "q": "Giá rao trung vị đất nền và nhà đất Bến Cát hiện là bao nhiêu?",
+            "a": "Trong các dòng có giá/m² hợp lệ, giá rao trung vị đất nền toàn nhóm là 10,0 tr/m² và nhà đất là 18,0 tr/m². Giá trung vị nghĩa là một nửa số tin thấp hơn mức này và một nửa cao hơn; đây không phải giá chốt."
+        },
+        {
+            "q": "468 dấu hiệu có phải là 468 tin nên mua không?",
+            "a": "Không. 468 là số tin được gắn các dấu hiệu dữ liệu như tin hot hoặc có giảm giá trong snapshot. Bạn vẫn cần đọc từng tin, kiểm tra vị trí, pháp lý, quy hoạch, hiện trạng và giá chốt trước khi quyết định."
+        }
+    ],
+    "article": {
+        "published_at": "2026-09-08",
+        "modified_at": "2026-09-08",
+        "intro": [
+            "Nếu chưa biết nên mở khu nào ở Bến Cát, hãy bắt đầu từ nguồn tin và loại hình, không phải một mức giá chung. Snapshot Radar BDS ngày 08/09/2026 có 4.318 tin Facebook đang theo dõi và 468 dấu hiệu. Tân Định, Phú An có nhiều tin nhất; Hòa Lợi và Chánh Phú Hòa đáng mở riêng để kiểm tra.",
+            "Các mức dưới đây là giá rao từ tin công khai, không phải giá giao dịch đã chốt. Giá rao trung vị chỉ được tính khi cột giá/m² hợp lệ, vì vậy mỗi bảng đều ghi số tin làm cơ sở."
+        ],
+        "summary_cards": [
+            {
+                "label": "Tin tại 8 khu",
+                "value": "4.318",
+                "note": "Facebook đang theo dõi ngày 08/09/2026"
+            },
+            {
+                "label": "Dấu hiệu đáng chú ý",
+                "value": "468",
+                "note": "Tin hot hoặc có giảm giá theo bộ lọc dữ liệu"
+            },
+            {
+                "label": "Đất nền",
+                "value": "10,0 tr/m²",
+                "note": "Giá rao trung vị · 340 tin có giá/m² hợp lệ"
+            },
+            {
+                "label": "Nhà đất",
+                "value": "18,0 tr/m²",
+                "note": "Giá rao trung vị · 184 tin có giá/m² hợp lệ"
+            }
+        ],
+        "data_tables": [
+            {
+                "eyebrow": "Bảng nguồn cung",
+                "title": "8 khu Bến Cát đang có bao nhiêu tin để lọc?",
+                "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0; snapshot 08/09/2026. Số tin là bản ghi đang theo dõi, không phải số bất động sản duy nhất.",
+                "columns": [
+                    {
+                        "key": "area",
+                        "label": "Khu vực"
+                    },
+                    {
+                        "key": "tracked",
+                        "label": "Tin theo dõi"
+                    },
+                    {
+                        "key": "signals",
+                        "label": "Dấu hiệu"
+                    },
+                    {
+                        "key": "land",
+                        "label": "Đất nền · số tin"
+                    },
+                    {
+                        "key": "house",
+                        "label": "Nhà đất · số tin"
+                    },
+                    {
+                        "key": "note",
+                        "label": "Đọc nhanh"
+                    }
+                ],
+                "rows": [
+                    {
+                        "area": "Tân Định",
+                        "tracked": "1.315",
+                        "signals": "156",
+                        "land": "700",
+                        "house": "485",
+                        "note": "Nguồn lớn nhất"
+                    },
+                    {
+                        "area": "Phú An",
+                        "tracked": "1.062",
+                        "signals": "58",
+                        "land": "925",
+                        "house": "102",
+                        "note": "Nghiêng về đất nền"
+                    },
+                    {
+                        "area": "Hòa Lợi",
+                        "tracked": "462",
+                        "signals": "118",
+                        "land": "360",
+                        "house": "88",
+                        "note": "Nhiều dấu hiệu"
+                    },
+                    {
+                        "area": "An Điền",
+                        "tracked": "437",
+                        "signals": "25",
+                        "land": "310",
+                        "house": "117",
+                        "note": "Hai loại hình đều có mẫu"
+                    },
+                    {
+                        "area": "An Tây",
+                        "tracked": "360",
+                        "signals": "8",
+                        "land": "316",
+                        "house": "27",
+                        "note": "Nhà đất ít tin hơn"
+                    },
+                    {
+                        "area": "Chánh Phú Hòa",
+                        "tracked": "358",
+                        "signals": "71",
+                        "land": "177",
+                        "house": "128",
+                        "note": "Đáng mở theo dấu hiệu"
+                    },
+                    {
+                        "area": "Thới Hòa",
+                        "tracked": "208",
+                        "signals": "18",
+                        "land": "71",
+                        "house": "119",
+                        "note": "Nhà đất nhiều hơn đất nền"
+                    },
+                    {
+                        "area": "Mỹ Phước",
+                        "tracked": "116",
+                        "signals": "14",
+                        "land": "37",
+                        "house": "70",
+                        "note": "Nên xem riêng từng cụm"
+                    }
+                ]
+            },
+            {
+                "eyebrow": "Giá rao theo loại hình",
+                "title": "Không nên gộp đất nền với nhà đất khi đọc giá",
+                "note": "Giá là giá rao trung vị/m². Con số trong ngoặc là số tin có giá/m² hợp lệ; khu An Tây chưa đủ dữ liệu nhà đất để tính mốc này.",
+                "columns": [
+                    {
+                        "key": "area",
+                        "label": "Khu vực"
+                    },
+                    {
+                        "key": "land_price",
+                        "label": "Đất nền · giá rao trung vị/m²"
+                    },
+                    {
+                        "key": "house_price",
+                        "label": "Nhà đất · giá rao trung vị/m²"
+                    },
+                    {
+                        "key": "price_note",
+                        "label": "Số liệu hợp lệ"
+                    }
+                ],
+                "rows": [
+                    {
+                        "area": "Tân Định",
+                        "land_price": "13,0 tr/m²",
+                        "house_price": "18,0 tr/m²",
+                        "price_note": "Đất nền 111 · nhà đất 55"
+                    },
+                    {
+                        "area": "Phú An",
+                        "land_price": "9,0 tr/m²",
+                        "house_price": "17,0 tr/m²",
+                        "price_note": "Đất nền 104 · nhà đất 22"
+                    },
+                    {
+                        "area": "Hòa Lợi",
+                        "land_price": "15,0 tr/m²",
+                        "house_price": "20,0 tr/m²",
+                        "price_note": "Đất nền 56 · nhà đất 7"
+                    },
+                    {
+                        "area": "An Điền",
+                        "land_price": "11,0 tr/m²",
+                        "house_price": "16,0 tr/m²",
+                        "price_note": "Đất nền 9 · nhà đất 6"
+                    },
+                    {
+                        "area": "An Tây",
+                        "land_price": "10,0 tr/m²",
+                        "house_price": "Chưa đủ dữ liệu",
+                        "price_note": "Đất nền 32 · nhà đất 0"
+                    },
+                    {
+                        "area": "Chánh Phú Hòa",
+                        "land_price": "10,0 tr/m²",
+                        "house_price": "12,0 tr/m²",
+                        "price_note": "Đất nền 17 · nhà đất 29"
+                    },
+                    {
+                        "area": "Thới Hòa",
+                        "land_price": "10,0 tr/m²",
+                        "house_price": "24,0 tr/m²",
+                        "price_note": "Đất nền 8 · nhà đất 38"
+                    },
+                    {
+                        "area": "Mỹ Phước",
+                        "land_price": "12,0 tr/m²",
+                        "house_price": "20,0 tr/m²",
+                        "price_note": "Đất nền 3 · nhà đất 27"
+                    }
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Nguồn tin",
+                "title": "Số tin đang theo dõi theo khu",
+                "note": "Thanh dài hơn chỉ phản ánh số bản ghi đang theo dõi, không phải số lô đất duy nhất.",
+                "alt": "Biểu đồ số tin Facebook đang theo dõi tại tám khu Bến Cát",
+                "rows": [
+                    {
+                        "label": "Tân Định",
+                        "value_label": "1.315 tin",
+                        "width": 100,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Phú An",
+                        "value_label": "1.062 tin",
+                        "width": 81,
+                        "color": "#2563eb"
+                    },
+                    {
+                        "label": "Hòa Lợi",
+                        "value_label": "462 tin",
+                        "width": 35,
+                        "color": "#16a34a"
+                    },
+                    {
+                        "label": "An Điền",
+                        "value_label": "437 tin",
+                        "width": 33,
+                        "color": "#16a34a"
+                    },
+                    {
+                        "label": "An Tây",
+                        "value_label": "360 tin",
+                        "width": 27,
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "label": "Chánh Phú Hòa",
+                        "value_label": "358 tin",
+                        "width": 27,
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "label": "Thới Hòa",
+                        "value_label": "208 tin",
+                        "width": 16,
+                        "color": "#64748b"
+                    },
+                    {
+                        "label": "Mỹ Phước",
+                        "value_label": "116 tin",
+                        "width": 9,
+                        "color": "#64748b"
+                    }
+                ]
+            },
+            {
+                "eyebrow": "Dấu hiệu đáng chú ý",
+                "title": "Nhóm tin nên mở kiểm tra trước",
+                "note": "Dấu hiệu là tin hot hoặc có giảm giá theo bộ lọc dữ liệu; không phải kết luận nên mua.",
+                "alt": "Biểu đồ số dấu hiệu đáng chú ý tại tám khu Bến Cát",
+                "rows": [
+                    {
+                        "label": "Tân Định",
+                        "value_label": "156 tin",
+                        "width": 100,
+                        "color": "#ef4444"
+                    },
+                    {
+                        "label": "Hòa Lợi",
+                        "value_label": "118 tin",
+                        "width": 76,
+                        "color": "#ef4444"
+                    },
+                    {
+                        "label": "Chánh Phú Hòa",
+                        "value_label": "71 tin",
+                        "width": 45,
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "label": "Phú An",
+                        "value_label": "58 tin",
+                        "width": 37,
+                        "color": "#f59e0b"
+                    },
+                    {
+                        "label": "An Điền",
+                        "value_label": "25 tin",
+                        "width": 16,
+                        "color": "#64748b"
+                    },
+                    {
+                        "label": "Thới Hòa",
+                        "value_label": "18 tin",
+                        "width": 12,
+                        "color": "#64748b"
+                    },
+                    {
+                        "label": "Mỹ Phước",
+                        "value_label": "14 tin",
+                        "width": 9,
+                        "color": "#64748b"
+                    },
+                    {
+                        "label": "An Tây",
+                        "value_label": "8 tin",
+                        "width": 5,
+                        "color": "#64748b"
+                    }
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "chon-khu-theo-nguon-tin",
+                "heading": "1. Chọn khu theo nguồn tin trước",
+                "paragraphs": [
+                    "Tân Định có 1.315 tin đang theo dõi và Phú An có 1.062 tin. Nếu bạn chưa có khu mục tiêu cụ thể, hai nơi này cho nhiều mẫu để bắt đầu lọc. Tuy nhiên, số tin lớn không có nghĩa là mọi tin đều còn phù hợp hoặc là những bất động sản khác nhau.",
+                    "Hòa Lợi có 462 tin, An Điền 437 tin, An Tây 360 tin và Chánh Phú Hòa 358 tin. Đây là nhóm đủ lớn để so theo đất nền và nhà đất. Thới Hòa có 208 tin, Mỹ Phước có 116 tin; nên xem theo từng cụm, không lấy số của toàn Bến Cát áp vào một vị trí cụ thể."
+                ],
+                "bullets": [
+                    "Cần nhiều mẫu để lọc: mở Tân Định hoặc Phú An.",
+                    "Muốn so hai loại hình: mở Hòa Lợi hoặc An Điền.",
+                    "Đã có vị trí cụ thể: lọc đúng Mỹ Phước, Thới Hòa hoặc khu tương ứng thay vì đọc số toàn Bến Cát."
+                ]
+            },
+            {
+                "id": "tach-dat-nen-nha-dat",
+                "heading": "2. Tách đất nền và nhà đất trước khi đọc giá",
+                "paragraphs": [
+                    "Trong 8 khu, giá rao trung vị đất nền của các dòng có giá/m² hợp lệ là 10,0 tr/m²; nhà đất là 18,0 tr/m². Hai mốc này chỉ dùng để đọc mặt bằng nhanh. Nhà đất có phần công trình, tuổi nhà và hiện trạng sử dụng nên không thể lấy giá đất nền làm mốc thay thế.",
+                    "Một vài khu có số tin đủ giá/m² khá khác nhau. Tân Định có 111 tin đất nền và 55 tin nhà đất làm cơ sở tính mốc; Mỹ Phước chỉ có 3 tin đất nền có giá/m² hợp lệ. Vì vậy, mốc 12,0 tr/m² của đất nền Mỹ Phước cần được xem thận trọng hơn mốc có mẫu lớn."
+                ],
+                "bullets": [
+                    "So đất nền với đất nền trong cùng khu.",
+                    "So nhà đất với nhà đất và đọc thêm hiện trạng công trình.",
+                    "Nhìn số tin hợp lệ trước khi dùng một mức giá làm mốc tham khảo."
+                ]
+            },
+            {
+                "id": "doc-dau-hieu-theo-khu",
+                "heading": "3. Dùng dấu hiệu để sắp thứ tự mở feed",
+                "paragraphs": [
+                    "Tân Định có 156 tin có dấu hiệu, Hòa Lợi 118 tin và Chánh Phú Hòa 71 tin. Những con số này giúp bạn biết nên mở nhóm nào trước, nhưng không nói rằng tin đó rẻ, pháp lý tốt hay phù hợp với nhu cầu.",
+                    "Khi mở một tin có dấu hiệu, hãy kiểm tra lại giá tổng, giá/m², diện tích, đường vào, loại hình và lý do giảm giá nếu có. Tin thiếu vị trí hoặc thiếu giấy tờ vẫn là tin chưa đủ thông tin, dù có gắn dấu hiệu."
+                ],
+                "bullets": [
+                    "Mở nhóm có dấu hiệu để tiết kiệm thời gian.",
+                    "Không biến dấu hiệu thành kết luận nên mua.",
+                    "Đối chiếu lại dữ liệu trong từng tin trước khi liên hệ."
+                ]
+            },
+            {
+                "id": "quy-trinh-loc-ben-cat",
+                "heading": "4. Quy trình lọc nhanh trước khi đi xem",
+                "paragraphs": [
+                    "Bước đầu là chọn khu và loại hình trên trang Bến Cát hoặc dashboard. Nếu cần nhiều mẫu, bắt đầu với Tân Định hoặc Phú An; nếu muốn xem nhóm dấu hiệu, mở Hòa Lợi hoặc Chánh Phú Hòa. Sau đó đặt trần tổng giá và so các tin cùng loại hình.",
+                    "Bạn có thể dùng công cụ định giá để thêm một mốc tham khảo trước khi gọi hỏi. Radar BDS chỉ hỗ trợ sàng lọc dữ liệu ban đầu, không thay cho thẩm định pháp lý, quy hoạch, hiện trạng, giá chốt hoặc kiểm tra thực địa."
+                ],
+                "bullets": [
+                    "Chọn một khu và một loại hình.",
+                    "Đặt trần tổng giá trước khi so giá/m².",
+                    "Mở từng tin để kiểm tra thông tin còn thiếu.",
+                    "Chỉ đi xem hoặc đặt cọc sau khi xác minh độc lập."
+                ]
+            }
+        ],
+        "checklist": [
+            "Đã chọn đất nền hay nhà đất.",
+            "Đã chọn khu cụ thể thay vì dùng số toàn Bến Cát.",
+            "Đã đọc số tin có giá/m² hợp lệ trước khi so giá.",
+            "Đã nhớ đây là giá rao, không phải giá chốt.",
+            "Đã kiểm tra pháp lý, quy hoạch, hiện trạng và đường vào bằng nguồn độc lập.",
+            "Không coi dấu hiệu dữ liệu là cam kết lợi nhuận hoặc kết luận nên mua."
+        ]
+    },
+    "final_cta": {
+        "title": "Mở Radar để lọc từng khu Bến Cát",
+        "body": "Bắt đầu với Tân Định hoặc Phú An nếu cần nhiều tin, sau đó so Hòa Lợi, An Điền, Chánh Phú Hòa và các khu còn lại theo đúng loại hình.",
+        "button": "Mở dashboard",
+        "button_href": "/?tab=signals&ward=T%C3%A2n%20%C4%90%E1%BB%8Bnh&utm_source=seo&utm_medium=article&utm_campaign=ben_cat_overview"
+    },
+    "breadcrumbs": [
+        {
+            "name": "Trang chủ",
+            "href": "/",
+            "url": "https://radarbds.vn/"
+        },
+        {
+            "name": "Tin tức",
+            "href": "/tin-tuc",
+            "url": "https://radarbds.vn/tin-tuc"
+        },
+        {
+            "name": "Bến Cát có những khu nào nên theo dõi khi mua đất",
+            "href": "/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat",
+            "url": "https://radarbds.vn/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat"
+        }
+    ]
+}
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
