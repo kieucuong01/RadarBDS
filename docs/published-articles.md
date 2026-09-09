@@ -1,3 +1,10 @@
+## 2026-09-09
+- `/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat` — **Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất?**
+  - Pillar: So sánh tiểu khu / Bến Cát / loại hình
+  - Score gate: 100/100 (intent 25, Radar data 25, funnel 20, anti-dup 15, social reuse 15)
+  - Data basis: snapshot Facebook live ngày 09/09/2026 với `source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`; 2.052 tin đang theo dõi và 460 dấu hiệu tại Mỹ Phước 1, 2, 3; tách `dat_nen` và `nha_dat`, giá rao trung vị/m² và nhóm dưới 3 tỷ chỉ tính dòng có dữ liệu hợp lệ
+  - Funnel: `/binh-duong/my-phuoc-1`, `/binh-duong/my-phuoc-2`, `/binh-duong/my-phuoc-3`, dashboard lọc Mỹ Phước 3, `/dinh-gia-bds`, `/bao-cao`, `/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu`
+
 ## 2026-09-08
 - `/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat` — **Bến Cát có những khu nào nên theo dõi khi mua đất? Tách riêng đất nền và nhà đất**
   - Pillar: Hướng dẫn chọn khu / Bến Cát overview / loại hình

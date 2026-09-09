@@ -20856,7 +20856,301 @@ SEO_ARTICLES = {
             "url": "https://radarbds.vn/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat"
         }
     ]
-}
+},
+    "my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat",
+        "category": {"key": "so-sanh-khu-vuc", "label": "Hướng dẫn mua nhà đất"},
+        "title": "Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất? | Radar BDS",
+        "description": "Mỹ Phước 1, 2, 3 khác nhau thế nào? So sánh tin Facebook, giá rao đất nền và nhà đất, dấu hiệu đáng chú ý và nhóm dưới 3 tỷ tại Bến Cát ngày 09/09/2026.",
+        "keywords": "Mỹ Phước 1 2 3, giá đất Mỹ Phước 1, giá đất Mỹ Phước 2, giá đất Mỹ Phước 3, mua đất Bến Cát, Radar BDS",
+        "breadcrumb_label": "Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất",
+        "hero_badge": "So sánh khu vực Bến Cát",
+        "hero_title": "Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất?",
+        "hero_text": "Ba khu Mỹ Phước 1, 2, 3 không có cùng nguồn hàng và cùng mặt bằng giá. Snapshot Facebook live của Radar BDS ngày 09/09/2026 ghi nhận 262, 281 và 1.509 tin đang theo dõi. Bài này tách đất nền với nhà đất để bạn biết nên mở khu nào trước.",
+        "scope_label": "Bến Cát · Mỹ Phước 1 / 2 / 3",
+        "hero_checks": [
+            "2.052 tin Facebook đang theo dõi tại ba khu vào ngày 09/09/2026",
+            "Đất nền có giá rao trung vị 12,98 · 13,67 · 12,00 tr/m² tại Mỹ Phước 1 · 2 · 3",
+            "Nhà đất có giá rao trung vị 17,24 · 19,44 · 17,33 tr/m² tại Mỹ Phước 1 · 2 · 3",
+            "460 tin có dấu hiệu theo bộ lọc dữ liệu; đây không phải kết luận nên mua"
+        ],
+        "primary_cta": "Mở dashboard lọc Mỹ Phước 3",
+        "primary_href": "/?tab=signals&ward=M%E1%BB%B9%20Ph%C6%B0%E1%BB%9Bc%203&utm_source=seo&utm_medium=article&utm_campaign=my_phuoc_zones_compare",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Bến Cát / Mỹ Phước 1 · 2 · 3",
+        "hero_metric": {
+            "label": "Tin đang theo dõi tại ba khu",
+            "value": "2.052 tin",
+            "delta": "460 dấu hiệu đáng chú ý",
+            "note": "Nguồn Facebook live, snapshot ngày 09/09/2026"
+        },
+        "property_card": {
+            "status": "Snapshot 09/09/2026 · giá rao",
+            "title": "Mỹ Phước 3 có nguồn tin dày nhất",
+            "price": "Đất nền: 12,00 tr/m² · nhà đất: 17,33 tr/m² tại Mỹ Phước 3",
+            "metric_a": "Nguồn tin",
+            "metric_a_value": "1.509 · Mỹ Phước 3",
+            "metric_b": "Đất nền / nhà đất",
+            "metric_b_value": "12,00 / 17,33 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Mỹ Phước 3 có nhiều mẫu nhất",
+                "body": "Mỹ Phước 3 có 1.509 tin đang theo dõi, cao hơn Mỹ Phước 1 với 262 tin và Mỹ Phước 2 với 281 tin. Số lượng lớn giúp bạn có nhiều mẫu để lọc, nhưng không có nghĩa mọi tin đều phù hợp."
+            },
+            {
+                "title": "Đất nền và nhà đất không cùng một mặt bằng",
+                "body": "Giá rao trung vị đất nền lần lượt là 12,98; 13,67 và 12,00 tr/m² tại Mỹ Phước 1, 2 và 3. Với nhà đất, ba mốc là 17,24; 19,44 và 17,33 tr/m²."
+            },
+            {
+                "title": "Dưới 3 tỷ nên đọc cả số lượng lẫn loại hình",
+                "body": "Mỹ Phước 3 có 408 tin đất nền và 394 tin nhà đất dưới 3 tỷ theo các dòng có giá tổng hợp lệ. Hai con số lớn một phần vì nguồn tin tại khu này cũng lớn hơn nhiều."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Lọc nhanh trên Radar",
+            "title": "Chọn đúng khu trước khi so từng tin",
+            "body": "Mở dashboard, chọn Mỹ Phước 1, 2 hoặc 3, sau đó tách đất nền và nhà đất. Bạn có thể xem tiếp tổng giá, giá/m² và dấu hiệu trong cùng một bộ lọc.",
+            "image": "/static/images/seo/ward-compare-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất tại Mỹ Phước 1, Mỹ Phước 2 và Mỹ Phước 3",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "3 khu", "label": "Mỹ Phước 1 · 2 · 3"},
+                {"value": "2.052", "label": "tin đang theo dõi"},
+                {"value": "2 loại", "label": "đất nền / nhà đất"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot Facebook live 09/09/2026",
+            "title": "So sánh ba khu Mỹ Phước theo loại hình",
+            "body": "Giá trung vị/m² chỉ tính các tin có giá/m² hợp lệ. Số tin dưới 3 tỷ chỉ tính các tin có tổng giá hợp lệ và được tách theo đất nền, nhà đất.",
+            "columns": [
+                {"key": "area", "label": "Khu vực"},
+                {"key": "tracked", "label": "Tin theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "land", "label": "Đất nền"},
+                {"key": "house", "label": "Nhà đất"},
+                {"key": "under3", "label": "Dưới 3 tỷ"}
+            ],
+            "rows": [
+                {"area": "Mỹ Phước 1", "tracked": "262", "signals": "32", "land": "56 tin · 12,98 tr/m²", "house": "139 tin · 17,24 tr/m²", "under3": "Đất nền 33 · nhà đất 100"},
+                {"area": "Mỹ Phước 2", "tracked": "281", "signals": "22", "land": "66 tin · 13,67 tr/m²", "house": "178 tin · 19,44 tr/m²", "under3": "Đất nền 49 · nhà đất 148"},
+                {"area": "Mỹ Phước 3", "tracked": "1.509", "signals": "406", "land": "569 tin · 12,00 tr/m²", "house": "503 tin · 17,33 tr/m²", "under3": "Đất nền 408 · nhà đất 394"}
+            ]
+        },
+        "local_links_title": "Xem tiếp theo khu và dữ liệu",
+        "local_links": [
+            {
+                "label": "Đất Mỹ Phước 1 Bình Dương",
+                "href": "/binh-duong/my-phuoc-1",
+                "description": "Mở landing khu vực và lọc riêng các tin Mỹ Phước 1."
+            },
+            {
+                "label": "Đất Mỹ Phước 2 Bình Dương",
+                "href": "/binh-duong/my-phuoc-2",
+                "description": "Xem nguồn tin Mỹ Phước 2 trước khi so tổng giá và giá/m²."
+            },
+            {
+                "label": "Đất Mỹ Phước 3 Bình Dương",
+                "href": "/binh-duong/my-phuoc-3",
+                "description": "Mở khu có nguồn tin lớn nhất trong snapshot này."
+            },
+            {
+                "label": "Giá đất Mỹ Phước Bến Cát hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu",
+                "description": "Đọc bài tổng quan Mỹ Phước trước khi đi vào ba khu nhỏ hơn."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Mỹ Phước 1, 2 hay 3 có nhiều tin đang theo dõi nhất?",
+                "a": "Mỹ Phước 3 có 1.509 tin đang theo dõi, cao hơn Mỹ Phước 2 với 281 tin và Mỹ Phước 1 với 262 tin. Đây là tổng tin Facebook live trong snapshot ngày 09/09/2026, không phải số bất động sản duy nhất hay số giao dịch thành công."
+            },
+            {
+                "q": "Giá đất nền ở Mỹ Phước 1, 2 và 3 khác nhau thế nào?",
+                "a": "Giá rao đất nền trung vị là 12,98 tr/m² tại Mỹ Phước 1, 13,67 tr/m² tại Mỹ Phước 2 và 12,00 tr/m² tại Mỹ Phước 3. Mỗi mốc chỉ tính các tin đất nền có giá/m² hợp lệ."
+            },
+            {
+                "q": "Nhà đất khu nào có giá rao trung vị thấp hơn trong ba khu?",
+                "a": "Trong snapshot này, nhà đất Mỹ Phước 1 có giá rao trung vị thấp nhất trong ba khu, ở mức 17,24 tr/m². Mỹ Phước 3 là 17,33 tr/m² và Mỹ Phước 2 là 19,44 tr/m². Nhà đất có phần công trình nên không nên so trực tiếp với đất nền."
+            },
+            {
+                "q": "460 dấu hiệu ở ba khu có nghĩa là nên mua ngay không?",
+                "a": "Không. Dấu hiệu là bộ lọc để sắp thứ tự mở và kiểm tra tin, không phải kết luận về pháp lý, chất lượng tài sản, giá chốt hay khả năng sinh lời. Bạn vẫn cần xác minh độc lập trước khi giao dịch."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-09",
+            "modified_at": "2026-09-09",
+            "intro": [
+                "Nếu cần câu trả lời ngắn: Mỹ Phước 3 là nơi có nhiều tin để lọc nhất; Mỹ Phước 1 có giá rao trung vị nhà đất thấp nhất trong ba khu; còn đất nền Mỹ Phước 3 có mốc giá rao trung vị thấp nhất. Đây là snapshot Facebook live ngày 09/09/2026, không phải giá chốt giao dịch.",
+                "Đừng gộp ba khu thành một mức giá chung. Nguồn tin, cơ cấu đất nền - nhà đất và số tin dưới 3 tỷ khác nhau rõ, nên khu phù hợp còn tùy mục tiêu và loại hình bạn đang tìm."
+            ],
+            "summary_cards": [
+                {"label": "Tổng tin ba khu", "value": "2.052 tin", "note": "Facebook live · 09/09/2026"},
+                {"label": "Dấu hiệu", "value": "460 tin", "note": "Hot hoặc có giảm giá theo bộ lọc"},
+                {"label": "Nguồn lớn nhất", "value": "1.509 tin", "note": "Mỹ Phước 3"},
+                {"label": "Đất nền Mỹ Phước 3", "value": "12,00 tr/m²", "note": "Giá rao trung vị · 463 tin có giá/m² hợp lệ"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so sánh nhanh",
+                    "title": "Mỹ Phước 1, 2, 3 theo nguồn tin và loại hình",
+                    "note": "Nguồn: listings Facebook với is_active=1, is_blacklisted=0, review_hidden=0. Giá rao trung vị/m² chỉ tính tin có giá/m² hợp lệ; dưới 3 tỷ chỉ tính tin có tổng giá hợp lệ.",
+                    "columns": [
+                        {"key": "area", "label": "Khu vực"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "land", "label": "Đất nền"},
+                        {"key": "house", "label": "Nhà đất"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"}
+                    ],
+                    "rows": [
+                        {"area": "Mỹ Phước 1", "tracked": "262", "signals": "32", "land": "56 · 12,98 tr/m²", "house": "139 · 17,24 tr/m²", "under3": "33 / 100"},
+                        {"area": "Mỹ Phước 2", "tracked": "281", "signals": "22", "land": "66 · 13,67 tr/m²", "house": "178 · 19,44 tr/m²", "under3": "49 / 148"},
+                        {"area": "Mỹ Phước 3", "tracked": "1.509", "signals": "406", "land": "569 · 12,00 tr/m²", "house": "503 · 17,33 tr/m²", "under3": "408 / 394"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Nguồn tin",
+                    "title": "Mỹ Phước 3 có nguồn theo dõi lớn hơn nhiều",
+                    "note": "Thanh biểu diễn số tin Facebook đang theo dõi tại từng khu.",
+                    "alt": "Biểu đồ số tin đang theo dõi tại Mỹ Phước 1, Mỹ Phước 2 và Mỹ Phước 3",
+                    "rows": [
+                        {"label": "Mỹ Phước 1", "value_label": "262 tin", "width": 17.4, "color": "#3b82f6"},
+                        {"label": "Mỹ Phước 2", "value_label": "281 tin", "width": 18.6, "color": "#3b82f6"},
+                        {"label": "Mỹ Phước 3", "value_label": "1.509 tin", "width": 100, "color": "#10b981"}
+                    ]
+                },
+                {
+                    "eyebrow": "Giá rao theo loại hình",
+                    "title": "Đất nền và nhà đất cần được đọc riêng",
+                    "note": "Giá trung vị/m² trong các tin có dữ liệu hợp lệ; không phải giá chốt.",
+                    "alt": "Biểu đồ giá rao trung vị trên mét vuông của đất nền và nhà đất tại ba khu Mỹ Phước",
+                    "rows": [
+                        {"label": "MP1 · đất nền", "value_label": "12,98 tr/m²", "width": 66.8, "color": "#3b82f6"},
+                        {"label": "MP1 · nhà đất", "value_label": "17,24 tr/m²", "width": 88.7, "color": "#f59e0b"},
+                        {"label": "MP2 · đất nền", "value_label": "13,67 tr/m²", "width": 70.3, "color": "#3b82f6"},
+                        {"label": "MP2 · nhà đất", "value_label": "19,44 tr/m²", "width": 100, "color": "#f59e0b"},
+                        {"label": "MP3 · đất nền", "value_label": "12,00 tr/m²", "width": 61.7, "color": "#3b82f6"},
+                        {"label": "MP3 · nhà đất", "value_label": "17,33 tr/m²", "width": 89.2, "color": "#f59e0b"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "doc-ket-luan",
+                    "heading": "Kết luận nhanh: Mỹ Phước 3 nhiều mẫu nhất, Mỹ Phước 1 có nhà đất thấp hơn",
+                    "paragraphs": [
+                        "Mỹ Phước 3 có 1.509 tin đang theo dõi, chiếm phần lớn nguồn tin trong ba khu. Nếu mục tiêu là có nhiều mẫu để lọc theo diện tích, đường và tổng giá, đây là điểm mở đầu dễ nhất. Tuy nhiên, số lượng lớn cũng làm số dấu hiệu cao hơn: Mỹ Phước 3 có 406 tin có dấu hiệu, trong khi Mỹ Phước 1 có 32 và Mỹ Phước 2 có 22.",
+                        "Nếu chỉ nhìn giá rao trung vị/m², đất nền Mỹ Phước 3 ở mức 12,00 tr/m², thấp hơn Mỹ Phước 1 là 12,98 tr/m² và Mỹ Phước 2 là 13,67 tr/m². Với nhà đất, Mỹ Phước 1 thấp nhất ở 17,24 tr/m²; Mỹ Phước 3 gần tương đương ở 17,33 tr/m²; Mỹ Phước 2 cao hơn ở 19,44 tr/m²."
+                    ],
+                    "bullets": [
+                        "Cần nhiều lựa chọn: mở Mỹ Phước 3 trước.",
+                        "Ưu tiên nhà đất theo giá/m²: xem Mỹ Phước 1 và Mỹ Phước 3 song song.",
+                        "Ưu tiên đất nền theo giá/m²: mở Mỹ Phước 3, rồi đối chiếu Mỹ Phước 1 và 2.",
+                        "Không dùng số dấu hiệu để kết luận tin nào nên mua."
+                    ]
+                },
+                {
+                    "id": "doc-dat-nen",
+                    "heading": "Đất nền: Mỹ Phước 3 có giá rao trung vị thấp nhất",
+                    "paragraphs": [
+                        "Đất nền Mỹ Phước 1 có 56 tin, trong đó 43 tin có giá/m² hợp lệ; giá rao trung vị là 12,98 tr/m² và tổng giá trung vị là 1,80 tỷ. Mỹ Phước 2 có 66 tin, 48 tin có giá/m² hợp lệ; hai mốc tương ứng là 13,67 tr/m² và 1,90 tỷ.",
+                        "Mỹ Phước 3 có 569 tin đất nền, 463 tin có giá/m² hợp lệ; giá rao trung vị là 12,00 tr/m² và tổng giá trung vị là 1,80 tỷ. Nhóm dưới 3 tỷ có 408 tin theo tổng giá hợp lệ. Con số này lớn hơn Mỹ Phước 1 có 33 tin và Mỹ Phước 2 có 49 tin, nhưng một phần nguyên nhân là nguồn tin Mỹ Phước 3 lớn hơn nhiều."
+                    ],
+                    "bullets": [
+                        "So cùng đất nền với đất nền, không lấy giá nhà đất làm mốc thay thế.",
+                        "Đọc cả tổng giá và diện tích vì giá/m² trung vị không cho biết toàn bộ khả năng mua.",
+                        "Mẫu có giá/m² hợp lệ ít hơn tổng tin thì cần thận trọng khi diễn giải."
+                    ]
+                },
+                {
+                    "id": "doc-nha-dat",
+                    "heading": "Nhà đất: Mỹ Phước 1 và 3 gần nhau hơn Mỹ Phước 2",
+                    "paragraphs": [
+                        "Nhà đất Mỹ Phước 1 có 139 tin, trong đó 100 tin có giá/m² hợp lệ. Giá rao trung vị là 17,24 tr/m² và tổng giá trung vị là 2,50 tỷ; có 100 tin dưới 3 tỷ theo tổng giá hợp lệ.",
+                        "Mỹ Phước 2 có 178 tin nhà đất và 130 tin có giá/m² hợp lệ. Giá rao trung vị 19,44 tr/m² cao hơn hai khu còn lại; tổng giá trung vị là 2,10 tỷ và có 148 tin dưới 3 tỷ. Mỹ Phước 3 có 503 tin nhà đất, 381 tin có giá/m² hợp lệ; giá rao trung vị 17,33 tr/m², tổng giá trung vị 2,50 tỷ và có 394 tin dưới 3 tỷ.",
+                        "Nhà đất bao gồm phần công trình, hiện trạng và khả năng sử dụng. Vì vậy, giá/m² chỉ là mốc sàng lọc ban đầu; khi xem từng tin cần đọc tuổi nhà, diện tích xây dựng, đường vào và giấy tờ riêng."
+                    ],
+                    "bullets": [
+                        "Nhà đất Mỹ Phước 1 và 3 có giá/m² trung vị gần nhau trong snapshot này.",
+                        "Mỹ Phước 2 có median nhà đất cao hơn, nhưng không thể kết luận mọi tin đều đắt hơn.",
+                        "Không so nhà đất với đất nền chỉ bằng một con số/m²."
+                    ]
+                },
+                {
+                    "id": "doc-dau-hieu",
+                    "heading": "Dấu hiệu đáng chú ý giúp sắp thứ tự mở feed",
+                    "paragraphs": [
+                        "Bộ lọc dữ liệu ghi nhận 32 tin có dấu hiệu tại Mỹ Phước 1, 22 tin tại Mỹ Phước 2 và 406 tin tại Mỹ Phước 3. Trong bối cảnh Mỹ Phước 3 có 1.509 tin, số tuyệt đối cao hơn không tự động có nghĩa là chất lượng tin tốt hơn hay cơ hội mua tốt hơn.",
+                        "Khi mở một tin có dấu hiệu, hãy kiểm tra lại giá tổng, giá/m², loại hình, diện tích, lộ giới hoặc đường vào và lý do giảm giá nếu tin có cập nhật giảm. Tin thiếu vị trí hoặc thiếu giấy tờ vẫn cần xếp vào nhóm chưa đủ thông tin."
+                    ],
+                    "bullets": [
+                        "Dùng dấu hiệu để ưu tiên thứ tự kiểm tra.",
+                        "Không biến dấu hiệu thành khuyến nghị mua.",
+                        "Đối chiếu các tin cùng khu và cùng loại hình trước khi liên hệ."
+                    ]
+                },
+                {
+                    "id": "doc-chon-khu",
+                    "heading": "Chọn Mỹ Phước 1, 2 hay 3 theo mục tiêu tìm kiếm",
+                    "paragraphs": [
+                        "Nếu bạn chưa có vị trí cụ thể và muốn xem nhiều lựa chọn, mở Mỹ Phước 3 trước. Nguồn tin ở đây đủ lớn để lọc tiếp theo đất nền, nhà đất, tổng giá và đường vào. Nếu bạn đang tìm nhà đất với giá/m² thấp hơn trong snapshot, Mỹ Phước 1 là điểm so đầu tiên; Mỹ Phước 3 là lựa chọn kế bên có mốc gần tương đương.",
+                        "Mỹ Phước 2 không có nguồn tin lớn bằng Mỹ Phước 3 nhưng vẫn có 281 tin đang theo dõi và 178 tin nhà đất. Đây là khu nên mở riêng khi vị trí hoặc nhu cầu của bạn đã trỏ vào khu này, thay vì loại bỏ chỉ vì median nhà đất cao hơn."
+                    ],
+                    "bullets": [
+                        "Nguồn tin dày: Mỹ Phước 3.",
+                        "Nhà đất có median/m² thấp hơn trong snapshot: Mỹ Phước 1.",
+                        "Đã có vị trí cụ thể: lọc đúng khu đó, không dùng số của khu bên cạnh.",
+                        "Đang so ngân sách: chọn đúng loại hình trước rồi mới đọc giá."
+                    ]
+                },
+                {
+                    "id": "doc-quy-trinh-loc",
+                    "heading": "Cách lọc tin Mỹ Phước trong vài phút đầu",
+                    "paragraphs": [
+                        "Bước đầu là chọn đúng ward Mỹ Phước 1, 2 hoặc 3 trên dashboard. Sau đó chọn đất nền hoặc nhà đất; không để hai nhóm nằm chung khi bạn đang so giá. Tiếp theo, đặt trần tổng giá, nhìn diện tích và giá/m², rồi mới ưu tiên các tin có dấu hiệu để đọc kỹ hơn.",
+                        "Bạn có thể dùng công cụ định giá BĐS để có thêm một mốc tham khảo cho từng tin. Dù dùng dashboard hay công cụ, hãy kiểm tra pháp lý, quy hoạch, hiện trạng và giá chốt bằng nguồn độc lập trước khi đi xem hoặc đặt cọc."
+                    ],
+                    "bullets": [
+                        "Chọn một trong ba khu và một loại hình.",
+                        "Đặt trần tổng giá trước khi so giá/m².",
+                        "Mở tin để kiểm tra diện tích, đường vào và thông tin còn thiếu.",
+                        "Chỉ đi xem hoặc đặt cọc sau khi xác minh độc lập."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn đúng Mỹ Phước 1, 2 hoặc 3 thay vì dùng số chung cho toàn Bến Cát.",
+                "Đã tách đất nền và nhà đất trước khi đọc giá/m².",
+                "Đã kiểm tra số tin có giá/m² hợp lệ và không coi median là giá chốt.",
+                "Đã hiểu dấu hiệu dữ liệu chỉ dùng để sắp thứ tự kiểm tra.",
+                "Đã kiểm tra pháp lý, quy hoạch, hiện trạng và đường vào bằng nguồn độc lập."
+            ]
+        },
+        "process_title": "Quy trình lọc tin Mỹ Phước",
+        "process": [
+            {"title": "1. Chọn đúng khu", "body": "Mở Mỹ Phước 1, 2 hoặc 3 theo vị trí bạn đang quan tâm."},
+            {"title": "2. Tách loại hình", "body": "So đất nền với đất nền, nhà đất với nhà đất; không trộn hai nhóm."},
+            {"title": "3. Kiểm tra từng tin", "body": "Đọc tổng giá, diện tích, giá/m², đường vào và thông tin pháp lý còn thiếu."}
+        ],
+        "final_cta": {
+            "title": "Mở Radar để lọc đúng khu Mỹ Phước",
+            "body": "Bắt đầu với Mỹ Phước 3 nếu cần nhiều mẫu, sau đó so Mỹ Phước 1 và 2 theo đúng loại hình và ngân sách.",
+            "button": "Mở dashboard Mỹ Phước 3",
+            "button_href": "/?tab=signals&ward=M%E1%BB%B9%20Ph%C6%B0%E1%BB%9Bc%203&utm_source=seo&utm_medium=article&utm_campaign=my_phuoc_zones_compare"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất", "href": "/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat", "url": "https://radarbds.vn/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat"}
+        ]
+    },
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
