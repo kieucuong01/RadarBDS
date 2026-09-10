@@ -402,6 +402,18 @@ def test_extract_area_and_dimensions_handle_compact_decimal_frontage():
     assert dims["depth_m"] == 22.0
 
 
+def test_extract_area_and_dimensions_handle_spaced_compact_decimal_frontage():
+    text = "Diện tích 5m40 x18 tc 50m giá 1ty450"
+    assert extract_area(text) == 97.2
+    dims = extract_dimensions(text)
+    assert dims["frontage_m"] == 5.4
+    assert dims["depth_m"] == 18.0
+    parsed = parse_facebook_post(text)
+    assert parsed["area_m2"] == 97.2
+    assert parsed["frontage_m"] == 5.4
+    assert parsed["depth_m"] == 18.0
+
+
 def test_extract_dimensions_keeps_bare_ngang_value_before_no_hau_phrase():
     dims = extract_dimensions("Đất chánh mỹ ngang 13 nở hậu tdt 432m2 thổ cư 25m2")
     assert dims["frontage_m"] == 13.0

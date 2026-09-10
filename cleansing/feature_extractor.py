@@ -307,7 +307,13 @@ _DIM_PAIR_RE = re.compile(
 )
 
 
-_COMPACT_DIM_VALUE_RE = re.compile(r'(?<!\d)(\d{1,2})m(\d{1,2})(?=[xÃ—\*])', re.IGNORECASE)
+# Vietnamese broker shorthand such as "5m40 x 18" means 5.40 x 18.
+# Keep the separator whitespace in the lookahead so the compact value is
+# normalized before the regular dimension-pair parser runs.
+_COMPACT_DIM_VALUE_RE = re.compile(
+    r'(?<!\d)(\d{1,2})m(\d{1,2})(?=\s*[x×Ã—\*])',
+    re.IGNORECASE,
+)
 
 
 def _normalize_compact_dimension_text(text: str) -> str:
