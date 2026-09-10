@@ -1,8 +1,8 @@
 """Repair listings whose structured area conflicts with labeled dimensions.
 
 The command is dry-run by default. It re-normalizes raw source payloads first,
-then optionally runs the deterministic listing, dedup, valuation, map, and
-public-read-model refresh for only the affected raw rows.
+then optionally runs the deterministic listing and valuation refresh for only
+the affected raw rows, followed by price-history and public-read-model updates.
 """
 
 import argparse
@@ -14,8 +14,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cleansing.normalizer import normalize_record
-from cleansing.reprocess import run_targeted_reprocess
-from db.connection import get_conn
+from cleansing.reprocess import reprocess_listings, reprocess_valuation
+from db.connection import advisory_lock, get_conn
 from services.public_data_publish import publish_public_data
 
 
@@ -140,17 +140,20 @@ def repair(*, apply: bool, listing_ids: list[int], limit: int) -> dict:
         return result
 
     raw_ids = [candidate["raw_id"] for candidate in candidates]
-    pipeline = run_targeted_reprocess(raw_ids)
-    processed_ids = list(
-        dict.fromkeys(pipeline.get("listings", {}).get("processed_ids") or [])
-    )
-    result["pipeline"] = pipeline
-    result["processed_listing_ids"] = processed_ids
-
-    with get_conn() as conn:
-        result["price_history_rows_updated"] = _refresh_price_history(
-            conn, processed_ids
+    with advisory_lock("reprocess"):
+        listing_stats = reprocess_listings(raw_ids=raw_ids)
+        processed_ids = list(
+            dict.fromkeys(listing_stats.get("processed_ids") or [])
         )
+        result["listings"] = listing_stats
+        result["valuation"] = reprocess_valuation(
+            incremental_ids=tuple(processed_ids)
+        )
+        with get_conn() as conn:
+            result["price_history_rows_updated"] = _refresh_price_history(
+                conn, processed_ids
+            )
+    result["processed_listing_ids"] = processed_ids
 
     if processed_ids:
         result["public_read_model"] = publish_public_data(
