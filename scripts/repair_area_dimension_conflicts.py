@@ -57,6 +57,12 @@ def _area_changed(current, repaired) -> bool:
     return abs(float(current) - float(repaired)) > max(1.0, abs(float(current)) * 0.05)
 
 
+def _value_changed(current, repaired) -> bool:
+    if current is None or repaired is None:
+        return False
+    return abs(float(current) - float(repaired)) > max(0.1, abs(float(current)) * 0.05)
+
+
 def find_candidates(*, listing_ids: list[int], limit: int) -> list[dict]:
     with get_conn() as conn:
         params: list[int] = []
@@ -69,11 +75,18 @@ def find_candidates(*, listing_ids: list[int], limit: int) -> list[dict]:
         rows = conn.execute(
             f"""
             SELECT l.id AS listing_id, l.raw_id, l.area_m2 AS current_area_m2,
-                   l.price_ty AS current_price_ty,
                    l.price_per_m2 AS current_price_per_m2,
+                   v.actual_ppm2 AS current_valuation_actual_ppm2,
                    r.source, r.source_id, r.url AS raw_url, r.raw_json
             FROM listings l
             JOIN raw_listings r ON r.id = l.raw_id
+            LEFT JOIN valuation_results v ON v.id = (
+                SELECT vv.id
+                FROM valuation_results vv
+                WHERE vv.listing_id = l.id
+                ORDER BY vv.computed_at DESC, vv.id DESC
+                LIMIT 1
+            )
             WHERE {where}
             ORDER BY l.id
             LIMIT ?
@@ -87,9 +100,15 @@ def find_candidates(*, listing_ids: list[int], limit: int) -> list[dict]:
         if not raw:
             continue
         normalized = normalize_record(raw)
-        if not normalized or not _area_changed(
+        if not normalized:
+            continue
+        area_changed = _area_changed(
             row["current_area_m2"], normalized.get("area_m2")
-        ):
+        )
+        valuation_changed = _value_changed(
+            row["current_valuation_actual_ppm2"], normalized.get("price_per_m2")
+        )
+        if not (listing_ids or area_changed or valuation_changed):
             continue
         candidates.append(
             {
@@ -100,6 +119,7 @@ def find_candidates(*, listing_ids: list[int], limit: int) -> list[dict]:
                 "current_area_m2": row["current_area_m2"],
                 "repaired_area_m2": normalized.get("area_m2"),
                 "current_price_per_m2": row["current_price_per_m2"],
+                "current_valuation_actual_ppm2": row["current_valuation_actual_ppm2"],
                 "repaired_price_per_m2": normalized.get("price_per_m2"),
                 "price_ty": normalized.get("price_ty"),
                 "measurement_provenance": normalized.get("measurement_provenance") or {},
