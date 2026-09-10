@@ -117,7 +117,9 @@ def find_candidates(*, listing_ids: list[int], limit: int) -> list[dict]:
         valuation_changed = _value_changed(
             row["current_valuation_actual_ppm2"], normalized.get("price_per_m2")
         )
-        if not (listing_ids or area_changed or valuation_changed):
+        area_provenance = (normalized.get("measurement_provenance") or {}).get("area_m2")
+        text_backed_area = area_provenance in {"declared_text", "derived_dimensions"}
+        if not (listing_ids or area_changed or (valuation_changed and text_backed_area)):
             continue
         candidates.append(
             {
