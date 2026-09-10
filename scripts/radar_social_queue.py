@@ -106,25 +106,89 @@ def _extract_ward(page: dict[str, Any], cards: list[dict[str, Any]]) -> str:
     for card in cards:
         label = _plain(card.get("label") or card.get("title") or "")
         m = re.search(r"(?:Tin|Đất nền|Nhà đất)\s+(.+?)\s+(?:14 ngày|$)", label)
-        if m:
+        if m and _is_real_ward(m.group(1)):
             return m.group(1).strip()
     title = _short_title(page)
     m = re.search(r"Giá đất\s+(.+?)\s+Thủ Dầu Một", title, flags=re.I)
-    if m:
+    if m and _is_real_ward(m.group(1)):
         return m.group(1).strip()
-    return _plain(page.get("scope_label") or page.get("map_label") or "khu vực này")
+    # A dataset scope is not an administrative ward. Returning it produced a
+    # fake ward CTA and hashtag on 2026-09-10; fall back to a neutral label,
+    # then prefer the concrete place name when the slug/title identifies one.
+    for candidate in (page.get("map_label"), page.get("scope_label")):
+        text = _plain(candidate).split("·")[0].strip()
+        if _is_real_ward(text):
+            return text
+    return "khu vực này"
 
 
 def _value(card: dict[str, str], fallback: str = "chưa đủ dữ liệu") -> str:
     return card.get("value") or fallback
 
 
+PRICE_UNIT_RE = re.compile(r"(?:tr(?:iệu)?\s*/\s*m|đồng\s*/\s*m|/m²|/m2)", re.I)
+COUNT_RATIO_RE = re.compile(r"^\s*\d[\d.,]*\s*/\s*\d[\d.,]*\s*(?:·|,|-|–|\()")
+PERCENT_ONLY_RE = re.compile(r"^\s*[\d.,]+\s*%\s*$")
+
+
+def _is_price_value(value: str) -> bool:
+    """True only when a card value carries a real price unit.
+
+    Production defect 2026-09-10: the card value "14/432 · 3,2%" is a COUNT of
+    listings carrying a price-reduction flag, plus that flag's rate. It was
+    rendered as "giá rao trung vị 14/432 · 3,2%". A count/ratio/percentage is
+    not a price, so any value without a price unit is rejected here.
+    """
+    text = _plain(value)
+    if not text:
+        return False
+    if PERCENT_ONLY_RE.match(text) or COUNT_RATIO_RE.match(text):
+        return False
+    return bool(PRICE_UNIT_RE.search(text))
+
+
+def _price_card_value(card: dict[str, str]) -> str:
+    """Return the card value only when it is genuinely a price, else ''."""
+    value = card.get("value") or ""
+    return value if _is_price_value(value) else ""
+
+
 def _signal_phrase(signal_card: dict[str, str]) -> str:
-    value = _value(signal_card, "0")
+    """Describe a signal card. A missing card is UNKNOWN, never zero.
+
+    Production defect 2026-09-10: `_value(signal_card, "0")` mapped a missing
+    card to the number 0, so a missing measurement was published as
+    "chưa có tin nổi bật cần kiểm tra gấp" — an unsupported claim.
+    """
+    value = _plain(signal_card.get("value") or "")
+    if not value:
+        return ""
     digits = re.search(r"\d+", value)
     if digits and int(digits.group(0)) <= 0:
-        return "chưa có tin nổi bật cần kiểm tra gấp"
+        return ""
     return f"{value} tin có dấu hiệu đáng kiểm tra"
+
+
+VALID_WARD_RE = re.compile(r"^[A-Za-zÀ-ỹĐđ][A-Za-zÀ-ỹĐđ\s'.-]{2,40}$")
+SCOPE_MARKERS = ("·", "/", "dữ liệu", "cửa sổ", "ngày", "phường", "toàn", "khu vực")
+
+
+def _is_real_ward(name: str) -> bool:
+    """Reject dataset scope labels masquerading as an administrative ward.
+
+    "Thủ Dầu Một · 13 phường · dữ liệu Facebook" is a dataset scope, not a
+    ward. Production defect 2026-09-10 turned it into a ward name, a ward
+    filter CTA and the hashtag #ThuDauMot13PhuongDuLieuFacebook.
+    """
+    text = _plain(name)
+    if not text or text == "khu vực này":
+        return False
+    low = text.casefold()
+    if any(marker in low for marker in SCOPE_MARKERS):
+        return False
+    if re.search(r"\d", text):
+        return False
+    return bool(VALID_WARD_RE.match(text))
 
 
 def _slug_hashtag(ward: str) -> str:
@@ -529,7 +593,7 @@ def _make_visual(slug: str, page: dict[str, Any], now: dt.datetime) -> str:
 
 def _hashtags_for_page(page: dict[str, Any]) -> list[str]:
     ward = _extract_ward(page, _article_cards(page))
-    ward_tag = _slug_hashtag(ward)
+    ward_tag = _slug_hashtag(ward) if _is_real_ward(ward) else ""
     if ward_tag and ward_tag != "ThuDauMot":
         return ["RadarBDS", "BinhDuong", ward_tag]
     return ["RadarBDS", "BinhDuong", "ThuDauMot"]
@@ -633,8 +697,10 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
     signal = _find_card(cards, "dấu hiệu")
     window = "14 ngày"
     listing_count = _value(listing, "nhiều")
-    land_price = _value(land)
-    house_price = _value(house)
+    # Only treat a card as a price when its value actually carries a price unit.
+    # "14/432 · 3,2%" is a count + reduction-flag rate, not an asking price.
+    land_price = _price_card_value(land)
+    house_price = _price_card_value(house)
     signal_text = _signal_phrase(signal)
     tracked_line = f"Giá rao {ward} {window} qua có {listing_count} tin Radar đang theo dõi."
     slug_key = slug or _plain(page.get("path") or "daily_article")
@@ -643,18 +709,22 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
     ward_cta = _ward_filter_cta(ward)
     # Keep f-string body indentation consistent so textwrap.dedent can remove it.
     ward_cta_block = ward_cta.replace("\n", "\n        ")
-    ward_hashtag = _slug_hashtag(ward)
-    hashtags = f"#RadarBDS #BinhDuong #{ward_hashtag if ward_hashtag != 'ThuDauMot' else 'ThuDauMot'}"
+    ward_hashtag = _slug_hashtag(ward) if _is_real_ward(ward) else ""
+    base_tags = ["#RadarBDS", "#BinhDuong"]
+    if ward_hashtag and ward_hashtag != "ThuDauMot":
+        base_tags.append(f"#{ward_hashtag}")
+    hashtags = " ".join(base_tags)
     visual_kind = _visual_kind(slug_key, page)
 
     if visual_kind == "budget_filter":
         title = _short_title(page).rstrip("?")
         bullets = "\n".join(_budget_bullets(cards)) or f"• {listing_count} tin đang theo dõi"
+        cta = ward_cta if ward != "khu vực này" else "Link Radar BDS nằm ở bình luận đầu tiên để anh chị mở lọc theo ngân sách/loại hình và đọc bài phân tích chi tiết."
         return "\n\n".join([
             f"{title}?",
             "Theo dữ liệu 14 ngày Radar đang theo dõi, nhóm đáng mở trước là:\n" + bullets,
             "Đây là giá rao/nhóm tin để lọc ban đầu, không phải giá giao dịch. Vẫn cần kiểm tra sổ, đường/hẻm, quy hoạch và thực địa.",
-            "Link Radar BDS nằm ở bình luận đầu tiên để anh chị mở lọc theo ngân sách/loại hình và đọc bài phân tích chi tiết.",
+            cta,
             "#RadarBDS #BinhDuong #ThuDauMot",
         ])
 
@@ -662,45 +732,71 @@ def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slu
     if style == "market_pulse":
         variant = "data_first"
 
+    # Build only the lines that carry verified meaning. Missing measurements are
+    # omitted entirely — never asserted, never rendered as zero.
+    context_lines: list[str] = []
+    if land_price and house_price and land_price != house_price:
+        context_lines.append(f"Đất nền giá rao trung vị {land_price}, nhà đất giá rao trung vị {house_price}.")
+    elif land_price:
+        context_lines.append(f"Đất nền giá rao trung vị {land_price}.")
+    elif house_price:
+        context_lines.append(f"Nhà đất giá rao trung vị {house_price}.")
+    context_block = "\n".join(context_lines)
+
     if variant == "signal_first":
-        body = f"""
-        {signal_text.capitalize()} tại {ward} trên Radar BDS.
+        lead_parts: list[str] = []
+        if signal_text:
+            lead_parts.append(f"{signal_text.capitalize()} tại {ward} trên Radar BDS.")
+        if listing_count:
+            lead_parts.append(f"{window.capitalize()} gần nhất: {listing_count} tin rao.")
+        lead = "\n\n".join(lead_parts) or f"Dữ liệu {window} tại {ward} trên Radar BDS."
+        sections = [lead]
+        if context_block:
+            sections.append(context_block)
+        if ward_cta:
+            sections.append(ward_cta)
+        sections.append(hashtags)
+        return _scrub_marketing_copy("\n\n".join(sections))
 
-        Bối cảnh: {listing_count} tin trong {window}; đất nền giá rao trung vị {land_price}, nhà đất giá rao trung vị {house_price}.
+    if variant == "problem_first":
+        lines = [f"Đang so giá {ward}? Một con số chung dễ làm bạn so sai."]
+        if listing_count:
+            lines.append(f"{window.capitalize()} gần nhất: {listing_count} tin rao.")
+        if context_block:
+            lines.append(context_block)
+        lines.append(
+            "Radar BDS tách dữ liệu theo loại hình để bạn kiểm tra từng tin trước khi gọi môi giới."
+        )
+        if ward_cta:
+            lines.append(ward_cta)
+        lines.append(hashtags)
+        return _scrub_marketing_copy("\n\n".join(lines))
 
-        {ward_cta_block}
-
-        {hashtags}
-        """
-    elif variant == "problem_first":
-        body = f"""
-        Đang so giá {ward}? Một con số chung dễ làm bạn so sai.
-
-        {window.capitalize()} gần nhất: {listing_count} tin rao.
-        Đất nền: giá rao trung vị {land_price}.
-        Nhà đất: giá rao trung vị {house_price}.
-
-        Radar BDS tách dữ liệu theo loại hình để bạn kiểm tra từng tin trước khi gọi môi giới.
-
-        {ward_cta_block}
-
-        {hashtags}
-        """
-    else:
-        body = f"""
-        {tracked_line}
-
-        • Đất nền: giá rao trung vị {land_price}
-        • Nhà đất: giá rao trung vị {house_price}
-        • {signal_text}
-
-        Đừng gộp 2 loại hình khi so giá.
-
-        {ward_cta_block}
-
-        {hashtags}
-        """
-    return _scrub_marketing_copy(textwrap.dedent(body).strip())
+    lines = []
+    # When a property-type card exists but is not a price, keep its real
+    # meaning (count / flag rate) instead of dropping the reader-facing fact.
+    # Drop raw technical notes (e.g. "property_type = dat_nen"): they are
+    # data-pipeline labels, not reader-facing copy.
+    if not (context_block and ("Đất nền" in context_block or "Nhà đất" in context_block)):
+        meaning_lines = []
+        for card, name in ((land, "Đất nền"), (house, "Nhà đất")):
+            raw = _plain(card.get("value") or "")
+            if raw and not _is_price_value(raw):
+                meaning_lines.append(f"• {name}: {raw}")
+        if meaning_lines:
+            lines.append("Số liệu đang ghi nhận:\n" + "\n".join(meaning_lines))
+    if listing_count:
+        lines.append(f"Giá rao {ward} {window} qua có {listing_count} tin Radar đang theo dõi.")
+    if context_block:
+        lines.append(context_block)
+    if signal_text:
+        lines.append(f"• {signal_text}")
+    if land_price and house_price:
+        lines.append("Đừng gộp 2 loại hình khi so giá.")
+    if ward_cta:
+        lines.append(ward_cta)
+    lines.append(hashtags)
+    return _scrub_marketing_copy("\n\n".join(line for line in lines if line))
 
 
 def _scrub_marketing_copy(text: str) -> str:
