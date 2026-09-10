@@ -5,6 +5,7 @@ from cleansing.extraction_integrity import (
     geometry_difference_ratio,
     has_declared_total_area,
     is_irregular_geometry,
+    normalize_structured_area,
     reconcile_measurements,
     severe_geometry_conflict,
 )
@@ -94,6 +95,18 @@ def test_declared_total_area_understands_vietnamese_thousands_separator(text, ex
     assert declared_total_area(text) == expected
 
 
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("1.826 m²", 1826.0),
+        ("100 m2", 100.0),
+        (1.0, 1000.0),
+    ],
+)
+def test_normalize_structured_area_preserves_source_badge_semantics(value, expected):
+    assert normalize_structured_area(value) == expected
+
+
 def test_explicit_total_replaces_structured_residential_area():
     result = reconcile_measurements(
         text="DT 85m2, thổ cư 60m2, giá 1,7 tỷ",
@@ -133,6 +146,28 @@ def test_explicit_area_is_not_overwritten_by_dimensions_at_thirty_percent():
     assert result.area_m2 == 100
     assert result.price_per_m2 == 20
     assert result.flags == ()
+
+
+def test_labeled_dimensions_replace_severely_conflicting_structured_area():
+    result = reconcile_measurements(
+        text="Diện tích: 4x25m",
+        structured_price_ty=2.83,
+        structured_area_m2=1000,
+        source_price_per_m2=2.83,
+        parsed_price_ty=None,
+        parsed_area_m2=100,
+        parsed_tho_cu_m2=None,
+        frontage_m=4,
+        depth_m=25,
+        parsed_area_is_declared_total=False,
+        ambiguous_price=False,
+        multi_lot=False,
+        parsed_area_is_labeled_dimension=True,
+    )
+    assert result.area_m2 == 100
+    assert result.price_per_m2 == 28.3
+    assert result.flags == ()
+    assert "structured_area_was_dimension_conflict" in result.repairs
 
 
 def test_irregular_missing_area_is_not_inferred_from_dimensions():

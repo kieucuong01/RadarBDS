@@ -248,6 +248,13 @@ def test_build_record_adds_valid_source_coordinate_fields():
     assert record["ward"] == "Tân An"
 
 
+def test_parse_area_m2_preserves_vietnamese_thousands_separator():
+    crawler = GulandCrawler()
+
+    assert crawler.parse_area_m2("1.000 m²") == 1000.0
+    assert crawler.parse_area_m2("100 m²") == 100.0
+
+
 def test_build_record_keeps_listing_when_coordinate_is_invalid():
     crawler = GulandCrawler()
     card = {

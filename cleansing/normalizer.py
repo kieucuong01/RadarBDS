@@ -12,7 +12,11 @@ from typing import List, Dict, Optional
 from config.settings import WATCH_AREAS, ALERT_KEYWORDS
 from config.area_profiles import detect_subward_from_street, infer_standard_lot
 from config.location_aliases import resolve_post_merger_location
-from cleansing.extraction_integrity import declared_total_area, reconcile_measurements
+from cleansing.extraction_integrity import (
+    declared_total_area,
+    normalize_structured_area,
+    reconcile_measurements,
+)
 from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
@@ -702,16 +706,8 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
 
         # Giá — hỗ trợ cả price_ty (SQLite) và price_total (legacy)
         price_ty     = raw.get("price_ty") or raw.get("price_total")
-        area_m2      = raw.get("area_m2")
+        area_m2      = normalize_structured_area(raw.get("area_m2"))
         price_per_m2 = raw.get("price_per_m2")
-
-        # Fix BDS structured area: "1.826" → 1826 (dấu chấm hàng nghìn kiểu VN)
-        # BDS serializes 1826m² as 1.826 trong JSON → Python reads as float 1.826
-        if area_m2 and isinstance(area_m2, float) and area_m2 < 10:
-            import re as _re2
-            if _re2.match(r'^\d{1,2}\.\d{3}$', f'{area_m2:.3f}'):
-                area_m2 = round(area_m2 * 1000)
-                price_per_m2 = None  # buộc tính lại từ price_ty / area_m2 mới
 
         # Parse visible text once, then reconcile structured and parsed measurements
         # through the shared deterministic policy. Source dimensions are kept separate
@@ -772,6 +768,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             ),
             ambiguous_price=_has_ambiguous_masked_price,
             multi_lot=is_multi_lot_listing(title, description),
+            parsed_area_is_labeled_dimension=_has_labeled_dimensions,
         )
         price_ty = integrity.price_ty
         area_m2 = integrity.area_m2
@@ -857,7 +854,9 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         )
         measurement_provenance = {}
         if area_m2 is not None:
-            if _declared_area is not None:
+            if "structured_area_was_dimension_conflict" in integrity.repairs:
+                measurement_provenance["area_m2"] = "derived_dimensions"
+            elif _declared_area is not None:
                 measurement_provenance["area_m2"] = "declared_text"
             elif _float_or_none(raw.get("area_m2")) is not None:
                 measurement_provenance["area_m2"] = "source_structured"

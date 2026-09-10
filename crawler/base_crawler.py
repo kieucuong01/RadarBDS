@@ -21,6 +21,8 @@ from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from cleansing.extraction_integrity import normalize_structured_area
+
 logger = logging.getLogger(__name__)
 
 # ── Stealth init script (inject vào mỗi page) ─────────────────────────────
@@ -437,13 +439,7 @@ class BaseCrawler(ABC):
 
     @staticmethod
     def parse_area_m2(raw: str) -> Optional[float]:
-        if not raw:
-            return None
-        try:
-            num = re.sub(r"[^\d.]", "", raw.replace(",", "."))
-            return float(num) if num else None
-        except Exception:
-            return None
+        return normalize_structured_area(raw)
 
     @staticmethod
     def parse_ppm2(raw: str) -> Optional[float]:

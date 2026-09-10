@@ -758,6 +758,28 @@ def test_normalizer_parses_dimensions_even_when_area_is_structured():
     assert round(rec["price_per_m2"], 2) == 20.42
 
 
+def test_normalizer_repairs_guland_area_badge_from_labeled_dimensions():
+    rec = normalize_record({
+        "source": "guland",
+        "external_id": "guland-area-badge-conflict",
+        "url": "https://guland.vn/post/guland-area-badge-conflict",
+        "default_area": "Thủ Dầu Một",
+        "title": "Bán nhà Tương Bình Hiệp",
+        "description": "Diện tích: 4x25m. Giá chính chủ 2,83 tỷ. Sổ hồng riêng.",
+        "price_ty": 2.83,
+        "area_m2": 1000.0,
+        "price_per_m2": 2.83,
+    })
+
+    assert rec is not None
+    assert rec["area_m2"] == 100.0
+    assert rec["frontage_m"] == 4.0
+    assert rec["depth_m"] == 25.0
+    assert rec["price_per_m2"] == 28.3
+    assert rec["measurement_provenance"]["area_m2"] == "derived_dimensions"
+    assert rec["extraction_quality_flags"] == ""
+
+
 def test_normalizer_prefers_dimension_area_over_residential_area():
     rec = normalize_record({
         "source": "facebook",

@@ -66,6 +66,24 @@ def parse_area_number(value) -> float | None:
     return area if 0 < area < 100_000 else None
 
 
+def normalize_structured_area(value) -> float | None:
+    """Normalize source area badges, including Vietnamese thousands notation."""
+    if value in (None, ""):
+        return None
+    if isinstance(value, str):
+        match = re.match(r"^\s*([\d.,]+)", value)
+        return parse_area_number(match.group(1)) if match else None
+
+    area = _number(value)
+    if area is None:
+        return None
+    # Legacy crawlers may have already converted a value such as "1.000"
+    # to the float 1.0 before it reaches the normalizer.
+    if 0 < area < 10 and re.fullmatch(r"\d{1,2}\.\d{3}", f"{area:.3f}"):
+        return round(area * 1000)
+    return area if 0 < area < 100_000 else None
+
+
 def _area_number(value: str) -> float | None:
     return parse_area_number(value)
 
@@ -199,6 +217,7 @@ def reconcile_measurements(
     parsed_area_is_declared_total,
     ambiguous_price,
     multi_lot,
+    parsed_area_is_labeled_dimension=False,
 ) -> MeasurementIntegrity:
     price = _number(structured_price_ty)
     parsed_price = _number(parsed_price_ty)
@@ -236,6 +255,16 @@ def reconcile_measurements(
         area = parsed_area
         repairs.append("structured_area_was_residential_area")
     elif (
+        parsed_area_is_labeled_dimension
+        and parsed_area
+        and area is not None
+        and not multi_lot
+        and not is_irregular_geometry(text)
+        and severe_geometry_conflict(text, area, frontage_m, depth_m)
+    ):
+        area = parsed_area
+        repairs.append("structured_area_was_dimension_conflict")
+    elif (
         area is None
         and parsed_area
         and not multi_lot
@@ -254,7 +283,10 @@ def reconcile_measurements(
     derived_ppm = round(price * 1000 / area, 3) if price and area and area > 0 else None
     if derived_ppm and source_ppm:
         mismatch = abs(derived_ppm - source_ppm) / max(derived_ppm, source_ppm)
-        has_text_support = bool(parsed_price and (parsed_area_is_declared_total or parsed_area))
+        has_text_support = bool(
+            parsed_price
+            and (parsed_area_is_declared_total or parsed_area)
+        ) or bool(parsed_area_is_labeled_dimension and parsed_area)
         if mismatch > 0.20 and not has_text_support:
             flags.append("price_area_inconsistent")
 
