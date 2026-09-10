@@ -23,9 +23,11 @@
     'area_min',
     'area_max',
   ]);
+  const NO_FILTER_OVERRIDE = {};
   let areaScopeDraft = null;
   let areaScopeDraftCity = '';
   let currentScope = null;
+  let pendingFilterOverride = NO_FILTER_OVERRIDE;
 
   const PRESET_SCOPES = Object.freeze([
     Object.freeze({
@@ -620,15 +622,29 @@
   function syncStoredFiltersControls(scopeOrFilters, doc) {
     const documentRef = doc || root.document;
     const filters = filtersFromScopeOrFilters(scopeOrFilters);
-    if (!filters || !documentRef || typeof documentRef.querySelectorAll !== 'function') return null;
-    if (filters.price_range) setSidebarRangeSelection('price', filters.price_range, documentRef);
-    else if (filters.price_min || filters.price_max) setManualRangeSelection('price', filters.price_min || '', filters.price_max || '', documentRef);
-    if (filters.area_range) setSidebarRangeSelection('area', filters.area_range, documentRef);
-    else if (filters.area_min || filters.area_max) setManualRangeSelection('area', filters.area_min || '', filters.area_max || '', documentRef);
-    if (filters.prop_type) {
+    if (!documentRef || typeof documentRef.querySelectorAll !== 'function') return null;
+    if (filters && filters.price_range) {
+      setSidebarRangeSelection('price', filters.price_range, documentRef);
+    } else if (filters && (filters.price_min || filters.price_max)) {
+      setManualRangeSelection('price', filters.price_min || '', filters.price_max || '', documentRef);
+    } else {
+      setManualRangeSelection('price', '', '', documentRef);
+    }
+    if (filters && filters.area_range) {
+      setSidebarRangeSelection('area', filters.area_range, documentRef);
+    } else if (filters && (filters.area_min || filters.area_max)) {
+      setManualRangeSelection('area', filters.area_min || '', filters.area_max || '', documentRef);
+    } else {
+      setManualRangeSelection('area', '', '', documentRef);
+    }
+    if (filters && filters.prop_type) {
       const allowed = new Set(filters.prop_type);
       documentRef.querySelectorAll('#filterForm input[name="prop_type"]').forEach((box) => {
         box.checked = allowed.has(box.value);
+      });
+    } else {
+      documentRef.querySelectorAll('#filterForm input[name="prop_type"]').forEach((box) => {
+        box.checked = true;
       });
     }
     return filters;
@@ -894,12 +910,17 @@
   function applyDashboardScope(scope, options) {
     const opts = options || {};
     const wardsByCity = root.INITIAL_WARDS_BY_CITY || {};
+    const hasOptionalFilters = Object.prototype.hasOwnProperty.call(opts, 'optionalFilters');
+    const hasExplicitFilters = hasOptionalFilters || Object.prototype.hasOwnProperty.call(opts, 'filters');
     const normalized = validateScope(scope, wardsByCity);
     if (!normalized) return null;
     currentScope = normalized;
     syncScopeControls(normalized, wardsByCity, root.document, root.updateWardFilters);
+    const filtersToPersist = hasOptionalFilters
+      ? opts.optionalFilters
+      : (hasExplicitFilters ? opts.filters : currentFilterParamsFromControls(root.document));
+    if (hasExplicitFilters) syncStoredFiltersControls(filtersToPersist, root.document);
     updateScopeUi(normalized, root.document);
-    const filtersToPersist = opts.optionalFilters || opts.filters || currentFilterParamsFromControls(root.document);
     if (opts.persist !== false) saveScope(normalized, root.localStorage, filtersToPersist);
     if (opts.updateUrl !== false) {
       const urlScope = Object.assign({}, normalized);
@@ -907,7 +928,16 @@
       if (storedFilters) urlScope.filters = storedFilters;
       replaceUrlWithScope(urlScope, opts.optionalFilters || null);
     }
-    if (opts.apply !== false && typeof root.applyFilters === 'function') root.applyFilters();
+    if (opts.apply !== false && typeof root.applyFilters === 'function') {
+      pendingFilterOverride = hasExplicitFilters
+        ? normalizeStoredFilters(filtersToPersist)
+        : NO_FILTER_OVERRIDE;
+      try {
+        root.applyFilters();
+      } finally {
+        pendingFilterOverride = NO_FILTER_OVERRIDE;
+      }
+    }
     return normalized;
   }
 
@@ -1031,7 +1061,9 @@
     const scope = selectedScopeFromControls(root.document, root.INITIAL_WARDS_BY_CITY || {});
     if (!scope) return null;
     updateScopeUi(scope, root.document);
-    const filters = currentFilterParamsFromControls(root.document);
+    const filters = pendingFilterOverride === NO_FILTER_OVERRIDE
+      ? currentFilterParamsFromControls(root.document)
+      : pendingFilterOverride;
     const storedFilters = normalizeStoredFilters(filters);
     saveScope(scope, root.localStorage, storedFilters);
     if (options && options.updateUrl) {

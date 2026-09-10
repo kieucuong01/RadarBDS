@@ -555,4 +555,91 @@ assert.equal(toggleCount, 1);
 assert.equal(sidebarClasses.has('show'), true);
 assert.equal(wardSearch.focused, true);
 
+const popupApplyStorage = {
+  value: '',
+  setItem(key, value) {
+    assert.equal(key, api.STORAGE_KEY);
+    this.value = value;
+  },
+  getItem(key) {
+    if (key === api.STORAGE_KEY) return this.value;
+    if (key === api.LEGACY_STORAGE_KEY) return '';
+    return null;
+  },
+  removeItem() {},
+};
+window.INITIAL_WARDS_BY_CITY = {
+  'THỦ DẦU MỘT': ['Tân An', 'Phú Tân'],
+};
+window.localStorage = popupApplyStorage;
+window.document = {
+  getElementById(id) {
+    return id === 'cityInput' ? { value: 'THỦ DẦU MỘT' } : null;
+  },
+  querySelectorAll() {
+    return [];
+  },
+};
+let popupApplyCalls = 0;
+window.applyFilters = function applyFiltersAfterPopup() {
+  popupApplyCalls += 1;
+  window.persistCurrentAreaScope();
+};
+api.applyDashboardScope({
+  version: 2,
+  activeCity: 'THỦ DẦU MỘT',
+  selections: { 'THỦ DẦU MỘT': ['Tân An'] },
+  mode: 'custom',
+}, {
+  optionalFilters: {
+    price_range: ['1:2'],
+    area_range: ['500:'],
+    prop_type: ['dat_nen'],
+  },
+  updateUrl: false,
+  apply: true,
+});
+assert.equal(popupApplyCalls, 1);
+assert.deepEqual(plain(api.readStoredScope(popupApplyStorage, window.INITIAL_WARDS_BY_CITY).filters), {
+  price_range: ['1:2'],
+  area_range: ['500:'],
+  prop_type: ['dat_nen'],
+});
+
+const sidebarFilterInputs = {
+  priceMin: { value: '' },
+  priceMax: { value: '' },
+  areaMin: { value: '' },
+  areaMax: { value: '' },
+};
+window.document = {
+  getElementById(id) {
+    if (id === 'cityInput') return { value: 'THỦ DẦU MỘT' };
+    return sidebarFilterInputs[id] || null;
+  },
+  querySelectorAll(selector) {
+    if (selector === '.range-chip.active[data-range-kind="price"]') {
+      return [{ dataset: { min: '2', max: '' } }];
+    }
+    if (selector === '.range-chip.active[data-range-kind="area"]') {
+      return [{ dataset: { min: '', max: '150' } }];
+    }
+    if (selector === '#filterForm input[name="prop_type"]') {
+      return [
+        { checked: false, value: 'dat_nen' },
+        { checked: true, value: 'nha_dat' },
+        { checked: false, value: 'chung_cu' },
+        { checked: false, value: 'nha_tro' },
+      ];
+    }
+    return [];
+  },
+};
+window.persistCurrentAreaScope();
+assert.deepEqual(plain(api.readStoredScope(popupApplyStorage, window.INITIAL_WARDS_BY_CITY).filters), {
+  price_range: ['2:'],
+  area_range: [':150'],
+  prop_type: ['nha_dat'],
+});
+
 console.log('area scope: ok');
