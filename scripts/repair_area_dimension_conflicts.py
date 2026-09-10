@@ -66,7 +66,16 @@ def _value_changed(current, repaired) -> bool:
 def find_candidates(*, listing_ids: list[int], limit: int) -> list[dict]:
     with get_conn() as conn:
         params: list[int] = []
-        where = "l.area_m2 >= 500"
+        where = """
+            l.area_m2 >= 500
+            OR v.actual_ppm2 IS NULL
+            OR (
+                v.actual_ppm2 > 0
+                AND l.price_per_m2 > 0
+                AND ABS(v.actual_ppm2 - l.price_per_m2) >
+                    GREATEST(0.1, ABS(v.actual_ppm2) * 0.05)
+            )
+        """
         if listing_ids:
             placeholders = ",".join("?" for _ in listing_ids)
             where = f"l.id IN ({placeholders})"
