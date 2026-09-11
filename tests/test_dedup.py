@@ -892,6 +892,32 @@ def test_same_source_id_always_duplicate():
     assert _is_duplicate(l1, l2), "Same source + source_id → always duplicate"
 
 
+def test_same_facebook_source_id_different_property_type_shares_candidate_bucket():
+    land = _listing(
+        source="facebook",
+        source_id="fb-cross-type-post",
+        ward="Hiệp Thành",
+        property_type="dat_nen",
+        crawled_at="2026-08-21",
+        area_m2=561.0,
+        description="Bán đất tặng 2 căn nhà cấp 4, Hiệp Thành, diện tích 561m2.",
+    )
+    house = _listing(
+        source="facebook",
+        source_id="fb-cross-type-post",
+        ward="Hiệp Thành",
+        property_type="nha_dat",
+        crawled_at="2026-08-22",
+        area_m2=561.0,
+        description="Bán đất tặng 2 căn nhà cấp 4, Hiệp Thành, diện tích 561m2.",
+    )
+
+    assert ("source_id", "facebook", "fb-cross-type-post") in (
+        _candidate_keys(land) & _candidate_keys(house)
+    )
+    assert _is_duplicate(land, house)
+
+
 def test_facebook_same_source_different_id_uses_scoring():
     l1 = _listing(source="facebook", source_id="POST111", crawled_at="2026-04-19", description=LONG_DESC_COPY)
     l2 = _listing(source="facebook", source_id="POST222", crawled_at="2026-04-20", description=LONG_DESC_COPY)
@@ -1526,6 +1552,7 @@ if __name__ == "__main__":
         test_case3_no_text_no_match,
         test_case3_low_similarity_no_match,
         test_same_source_id_always_duplicate,
+        test_same_facebook_source_id_different_property_type_shares_candidate_bucket,
         test_facebook_same_source_different_id_uses_scoring,
         test_non_facebook_cross_source_does_not_use_scoring,
         test_reliable_drop_facebook_same_area_different_post,

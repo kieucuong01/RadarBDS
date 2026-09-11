@@ -612,6 +612,8 @@ def _candidate_keys(listing: dict) -> set[tuple]:
     source = listing.get("source") or ""
     source_id = (listing.get("source_id") or "").strip()
     if source and source_id:
+        # source_id is the source-level identity; classification can change between crawls.
+        keys.add(("source_id", source, source_id))
         keys.add(base + ("source_id", source, source_id))
     content_hash = (listing.get("content_hash") or "").strip()
     if source and content_hash:
