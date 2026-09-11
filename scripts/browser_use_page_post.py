@@ -35,6 +35,22 @@ def _load_queue(path: Path) -> dict:
     return data
 
 
+def _assert_queue_publishable(queue: dict) -> None:
+    """The final publisher cannot revive a blocked or legacy review artifact."""
+    import re
+    target = queue.get("target") or {}
+    status = queue.get("status")
+    if status not in {"queued", "ready"}:
+        raise SystemExit(f"Queue status is blocked from publishing: {status}")
+    if target.get("mode") != "publish" or target.get("requires_review") is not False:
+        raise SystemExit("Queue is review-only; regenerated text is not an approved old draft")
+    if (queue.get("source") or {}).get("http_status") != 200:
+        raise SystemExit("Queue source is not verified HTTP 200")
+    text = str((queue.get("content") or {}).get("message") or "")
+    if not text or re.search(r"trung vị|property_type|\btin\s+tin\b|Số liệu đang ghi nhận|\d[\d.,]*\s*/\s*\d[\d.,]*\s*[·|]\s*\d", text, re.I):
+        raise SystemExit("Queue contains legacy machine copy; regenerate before publishing")
+
+
 def _extract_browser_result(stdout: str) -> dict:
     """Return the last JSON status object printed by the browser-use program."""
     for line in reversed((stdout or "").splitlines()):
@@ -500,6 +516,7 @@ def run(args: argparse.Namespace) -> dict:
             raise SystemExit("Page publish requires a native visual path in content.visual_path or content.image")
         if not Path(visual_path).is_file():
             raise SystemExit(f"Queue visual/image file missing: {visual_path}")
+        _assert_queue_publishable(queue)
     if not BROWSER_USE.exists():
         raise SystemExit(f"browser-use CLI not found: {BROWSER_USE}")
 

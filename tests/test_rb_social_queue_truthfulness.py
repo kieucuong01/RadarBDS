@@ -1,26 +1,18 @@
-"""Regression tests for Radar BDS Facebook caption truthfulness.
+"""Regression tests for Radar BDS Facebook editorial truthfulness.
 
-Reproduces the 2026-09-10 production defect:
-  "Đất nền: giá rao trung vị 14/432 · 3,2%"
-The card value "14/432 · 3,2%" is a COUNT (14 of 432 listings) and a reduction
-FLAG RATE. It is not a price and must never be rendered as one.
-
-Also pins:
-  - a missing signal card must not become "0" / "chưa có tin nổi bật";
-  - a dataset scope label must not become a ward name / ward filter CTA;
-  - a genuine price card must keep its own value and unit.
+The Page generator should no longer publish metric-heavy legacy captions. Raw
+ratios/prices and pipeline labels stay in backstage evidence; the caption must
+give a useful, plain-Vietnamese buyer takeaway without laundering counts into
+prices or missing data into zero.
 """
 
 from __future__ import annotations
 
-import re
-
 import pytest
 
 import scripts.radar_social_queue as q
+import scripts.rb_social_editorial as editorial
 
-
-# --- Fixtures: the real 2026-09-10 snapshot shape ---------------------------
 
 REDUCTION_ARTICLE = {
     "path": "/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra",
@@ -64,7 +56,6 @@ NO_SIGNAL_ARTICLE = {
     },
 }
 
-# A count/percentage card whose value looks numeric but is NOT a price.
 COUNT_ONLY_ARTICLE = {
     "path": "/tin-tuc/vi-du-chi-co-so-tin",
     "title": "Ví dụ bài chỉ có số tin và tỷ lệ",
@@ -81,58 +72,91 @@ def _msg(page, slug="", style="data_post"):
     return q._build_message(page, "https://radarbds.vn/x", style, slug)
 
 
-# --- The production defect ---------------------------------------------------
-
 @pytest.mark.parametrize("style", ["data_post", "market_pulse"])
-def test_count_value_is_never_rendered_as_price(style):
-    """'14/432 · 3,2%' must never appear after a price phrase."""
+def test_count_value_stays_out_of_reader_caption(style):
+    """'14/432 · 3,2%' is backstage evidence, not Page-caption copy."""
     out = _msg(REDUCTION_ARTICLE, REDUCTION_ARTICLE["path"], style)
-    for bad in ("trung vị 14/432", "trung vị 26/610", "trung vị 40 tin"):
-        assert bad not in out, f"count rendered as price: {bad}"
-    assert "14/432" not in out.split("trung vị")[1] if "trung vị" in out else True
+    assert "14/432" not in out
+    assert "26/610" not in out
+    assert "3,2%" not in out
+    assert "4,3%" not in out
+    assert "trung vị" not in out
 
 
 @pytest.mark.parametrize("style", ["data_post", "market_pulse"])
-def test_no_price_phrase_at_all_when_no_price_card(style):
-    """With no price card the caption must not claim a median price."""
+def test_no_price_or_raw_ratio_phrase_when_no_price_card(style):
+    """A count-only article should become a buyer lesson, not a raw table row."""
     out = _msg(COUNT_ONLY_ARTICLE, COUNT_ONLY_ARTICLE["path"], style)
     assert "trung vị" not in out
     assert "giá rao trung vị" not in out
-    # the true meaning may still be shown, as a count/rate
-    assert "14/432" in out
+    assert "14/432" not in out
+    assert "26/610" not in out
+    assert "Số liệu đang ghi nhận" not in out
 
 
-def test_price_card_keeps_value_and_unit():
+def test_price_card_keeps_value_in_evidence_not_caption():
     out = _msg(PRICE_ARTICLE, PRICE_ARTICLE["path"], "data_post")
-    assert "7,0–11,7 tr/m²" in out
-    assert "18,3–20,6 tr/m²" in out
-    assert re.search(r"(Đất nền|đất nền).{0,60}7,0", out)
+    assert "7,0–11,7 tr/m²" not in out
+    assert "18,3–20,6 tr/m²" not in out
+    draft = editorial.build_editorial(
+        PRICE_ARTICLE,
+        "https://radarbds.vn/tin-tuc/x",
+        "mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa",
+        make_visual=False,
+        source_http_status=200,
+    )
+    evidence_text = "\n".join(str(item) for item in draft["metadata"]["evidence"])
+    assert "7,0–11,7 tr/m²" in evidence_text
+    assert "18,3–20,6 tr/m²" in evidence_text
 
 
 def test_missing_signal_is_omitted_not_zero():
     out = _msg(NO_SIGNAL_ARTICLE, NO_SIGNAL_ARTICLE["path"], "data_post")
     assert "0 tin có dấu hiệu" not in out
     assert "chưa có tin nổi bật" not in out
+    assert "chưa có" not in out.casefold()
 
 
-def test_real_signal_card_still_reported():
+def test_real_signal_card_kept_as_evidence_not_forced_caption_line():
     out = _msg(PRICE_ARTICLE, PRICE_ARTICLE["path"], "data_post")
-    assert "41 tin" in out
+    assert "41 tin" not in out
+    draft = editorial.build_editorial(
+        PRICE_ARTICLE,
+        "https://radarbds.vn/tin-tuc/x",
+        "mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa",
+        make_visual=False,
+        source_http_status=200,
+    )
+    assert any("41 tin" in str(item) for item in draft["metadata"]["evidence"])
 
 
 def test_scope_label_is_not_used_as_ward_or_hashtag():
     out = _msg(REDUCTION_ARTICLE, REDUCTION_ARTICLE["path"], "market_pulse")
     assert "ThuDauMot13PhuongDuLieuFacebook" not in out
-    assert "13 phường · dữ liệu Facebook" not in out.split("bình luận")[0] or True
-    assert "#ThuDauMot" in out or "#RadarBDS" in out
+    assert "13 phường · dữ liệu Facebook" not in out
+    assert "#ThuDauMot13" not in out
 
 
 def test_ward_filter_link_has_no_fake_ward():
     ward = q._extract_ward(REDUCTION_ARTICLE, q._article_cards(REDUCTION_ARTICLE))
-    assert "phường" not in ward.casefold() or ward == "Thủ Dầu Một"
+    assert ward == "khu vực này"
 
 
 def test_self_comment_url_is_not_scope_sentence():
     url = q._ward_filter_url(REDUCTION_ARTICLE, "Thủ Dầu Một", "slug-x")
     assert "13%20ph%C6%B0%E1%BB%9Dng" not in url
     assert "%C2%B7" not in url  # the '·' separator must not leak into a query value
+
+
+def test_editorial_caption_has_no_forbidden_legacy_terms():
+    draft = editorial.build_editorial(
+        REDUCTION_ARTICLE,
+        "https://radarbds.vn/tin-tuc/x",
+        "ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra",
+        make_visual=False,
+        source_http_status=200,
+    )
+    assert draft["status"] == "ready"
+    assert draft["pillar"] == "radar_insight"
+    assert editorial.caption_quality_issues(draft["caption"]) == []
+    assert any("14/432" in str(item) for item in draft["metadata"]["evidence"])

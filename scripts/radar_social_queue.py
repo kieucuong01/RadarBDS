@@ -181,7 +181,7 @@ def _is_real_ward(name: str) -> bool:
     filter CTA and the hashtag #ThuDauMot13PhuongDuLieuFacebook.
     """
     text = _plain(name)
-    if not text or text == "khu vực này":
+    if not text or text == "khu vực này" or text in {"Thủ Dầu Một", "Bến Cát", "Bình Dương"}:
         return False
     low = text.casefold()
     if any(marker in low for marker in SCOPE_MARKERS):
@@ -625,6 +625,9 @@ def _ward_filter_url(
     ward query parameter.
     """
     href = _plain(page.get("primary_href") or "")
+    if not _is_real_ward(ward) or ward == "Thủ Dầu Một":
+        href = href or page.get("path") or "/"
+        return _utm_url(_absolute_url(str(href)), f"{slug}-article", campaign="page_article", medium=medium)
     if not href:
         href = "/?tab=signals&ward=" + urllib.parse.quote(ward)
     return _utm_url(_absolute_url(href), f"{slug}-ward-filter", campaign="ward_filter", medium=medium)
@@ -689,6 +692,10 @@ def _variant_for_slug(slug: str, signal_card: dict[str, str]) -> str:
 
 
 def _build_message(page: dict[str, Any], url: str, style: str = "data_post", slug: str = "") -> str:
+    from scripts import rb_social_editorial
+
+    return rb_social_editorial.build_message(page, url, style, slug)
+
     cards = _article_cards(page)
     ward = _extract_ward(page, cards)
     listing = _find_card(cards, "tin")
@@ -832,11 +839,26 @@ def _check_url(url: str, timeout: int = 12) -> int | None:
 
 
 def create(args: argparse.Namespace) -> dict[str, Any]:
+    from scripts import rb_social_editorial
+
     slug, page = _choose_article(args.slug)
     url = _absolute_url(str(page.get("path", "")))
     status = _check_url(url) if not args.skip_verify else None
     if status is not None and status >= 400:
         raise SystemExit(f"Source URL is not healthy: {url} => {status}")
+    try:
+        editorial = rb_social_editorial.build_editorial(
+            page,
+            url,
+            slug,
+            mode=args.mode,
+            skip_verify=args.skip_verify,
+            source_http_status=status,
+            asset_dir=ASSET_DIR,
+            make_visual=True,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     now = dt.datetime.now(dt.timezone.utc).astimezone()
     item = {
         "schema": "radar_social_queue.v1",
@@ -858,16 +880,34 @@ def create(args: argparse.Namespace) -> dict[str, Any]:
         },
         "content": {
             "style": args.style,
-            "message": _build_message(page, url, args.style, slug),
+            "message": editorial["caption"],
             "link": _utm_url(url, slug),
             "ward_filter_link": _ward_filter_url(page, _extract_ward(page, _article_cards(page)), slug),
-            "self_comment": _build_self_comment(page, url, slug),
+            "self_comment": editorial["self_comment"],
             "hashtags": _hashtags_for_page(page),
-            "visual_style": _visual_kind(slug, page),
-            "visual_prompt": _visual_design_prompt(_visual_kind(slug, page), page),
-            "visual_path": _make_visual(slug, page, now),
+            # Editorial owns the visual contract now: style/prompt come from the
+            # chosen pillar, so no legacy ward-card text can leak back in.
+            "visual_style": editorial["pillar"],
+            "visual_prompt": str((editorial.get("visual") or {}).get("prompt") or ""),
+            "visual_path": (editorial.get("visual") or {}).get("path") or _make_visual(slug, page, now),
+            "generated_by": "rb_social_editorial",
+            "editorial": {
+                "schema": editorial["schema"],
+                "version": editorial["version"],
+                "status": editorial["status"],
+                "pillar": editorial["pillar"],
+                "topic": editorial["metadata"]["topic"],
+                "source": editorial["metadata"]["source"],
+                "source_date": editorial["metadata"]["source_date"],
+                "evidence": editorial["metadata"]["evidence"],
+                "reader_benefit": editorial["metadata"]["reader_benefit"],
+                "blocking_reasons": editorial["blocking_reasons"],
+                "quality_issues": editorial["metadata"]["quality_issues"],
+                "caption": editorial["caption"],
+                "visual": editorial["visual"],
+            },
         },
-        "status": "queued",
+        "status": "queued" if editorial["status"] == "ready" else "blocked",
         "guards": {
             "no_password_storage": True,
             "stop_on_checkpoint": True,
