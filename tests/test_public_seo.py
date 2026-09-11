@@ -77,6 +77,22 @@ def test_public_report_copy_uses_signal_contact_funnel_not_vip_matching():
     assert "Xem tin phù hợp" in html
 
 
+def test_placeholder_seo_paths_redirect_to_their_canonical_hubs():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    expected = {
+        "/null": "/",
+        "/tin-tuc/null": "/tin-tuc",
+        "/bao-cao/null": "/bao-cao",
+    }
+
+    for path, target in expected.items():
+        response = client.get(path, follow_redirects=False)
+        assert response.status_code == 301
+        assert response.headers["Location"] == target
+
+
 def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
     import app as radar_app
 

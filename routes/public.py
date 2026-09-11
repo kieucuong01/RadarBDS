@@ -51,6 +51,11 @@ def index(**kwargs):
     return _impl("index", **kwargs)
 
 
+@bp.route("/null")
+def null_redirect():
+    return redirect("/", code=301)
+
+
 @bp.route("/dashboard")
 def dashboard(**kwargs):
     return _impl("dashboard", **kwargs)
@@ -121,6 +126,11 @@ def seo_bao_cao_index_slash(**kwargs):
     return redirect("/bao-cao", code=301)
 
 
+@bp.route("/bao-cao/null")
+def seo_bao_cao_null_redirect():
+    return redirect("/bao-cao", code=301)
+
+
 @bp.route("/bao-cao/<path:report_slug>")
 def seo_market_report(report_slug, **kwargs):
     return _impl("seo_report_or_article_page", report_slug=report_slug, **kwargs)
@@ -156,6 +166,11 @@ def seo_legal_document_hub(**kwargs):
 @bp.route("/tin-tuc/quyet-dinh-van-ban/<slug>")
 def seo_legal_document_detail(slug, **kwargs):
     return _impl("legal_document_page", slug=slug, **kwargs)
+
+
+@bp.route("/tin-tuc/null")
+def seo_news_null_redirect():
+    return redirect("/tin-tuc", code=301)
 
 
 @bp.route("/tai-lieu/van-ban/<slug>.pdf")
