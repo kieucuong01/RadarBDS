@@ -59,9 +59,12 @@ def load_state() -> dict:
     if not STATE_PATH.exists():
         return {"posted": {}}
     try:
-        return json.loads(STATE_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        return {"posted": {}}
+        data = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or not isinstance(data.get("posted"), dict):
+            raise ValueError("expected posted object")
+        return data
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"Cannot read posted state; refusing a possible duplicate: {exc}") from exc
 
 
 def save_state(state: dict) -> None:
@@ -146,9 +149,10 @@ def article_candidates() -> list[tuple[str, str]]:
     return sorted(candidates, reverse=True)
 
 
-def create_queue(slug: str = "latest", *, style: str = "data_post") -> Path:
-    QUEUE_DIR.mkdir(parents=True, exist_ok=True)
-    cmd = [str(QUEUE_SCRIPT), "--slug", slug, "--mode", "publish", "--style", style, "--out-dir", str(QUEUE_DIR)]
+def create_queue(slug: str = "latest", *, style: str = "data_post", preview: bool = False) -> Path:
+    output_dir = Path("/opt/radar-bds/var/social_preview") if preview else QUEUE_DIR
+    output_dir.mkdir(parents=True, exist_ok=True)
+    cmd = [sys.executable, str(QUEUE_SCRIPT), "--slug", slug, "--mode", "review" if preview else "publish", "--style", style, "--out-dir", str(output_dir)]
     proc = subprocess.run(cmd, cwd=str(REPO), text=True, capture_output=True, timeout=60, check=False)
     if proc.returncode != 0:
         raise SystemExit(f"Queue creation failed for slug={slug} style={style}\nSTDOUT:\n{proc.stdout}\nSTDERR:\n{proc.stderr}")
@@ -167,20 +171,98 @@ def page_care_style_for_date(day: dt.date | None = None) -> str:
     return "market_pulse" if day.weekday() in {1, 3} else "data_post"
 
 
-def create_unposted_queue(posted: dict) -> Path:
-    """Create queue for newest article not already recorded as posted.
-
-    This avoids reposting the same latest article when Page Care is manually
-    rerun, while still regenerating caption/visual metadata from current code.
-    """
-    style = page_care_style_for_date()
-    for article_date, slug in article_candidates():
-        key = f"{slug}:{article_date}"
-        if key in posted:
-            log(f"Skip already posted candidate: {key}")
+def was_slug_posted(slug: str, posted: dict) -> bool:
+    """Only real published records count; review previews are not history."""
+    for key, entry in posted.items():
+        if not isinstance(entry, dict):
             continue
-        return create_queue(slug, style=style)
-    raise SystemExit("No unposted /tin-tuc article candidate found for Page Care")
+        if (entry.get("slug") or key.rsplit(":", 1)[0]) != slug:
+            continue
+        if entry.get("post_url") or entry.get("posted_at"):
+            return True
+    return False
+
+
+def refresh_preview_artifacts(slug: str) -> int:
+    """Rebuild existing review previews for a slug from current code.
+
+    Preview JSON files are review-only scratch artifacts, never publish history.
+    Without this, a preview written before a code fix keeps showing the old
+    caption/visual metadata and hides the fix. Returns files refreshed.
+    """
+    import subprocess as _sp
+    preview_dir = Path("/opt/radar-bds/var/social_preview")
+    if not preview_dir.is_dir():
+        return 0
+    refreshed = 0
+    cmd = [sys.executable, str(QUEUE_SCRIPT), "--slug", slug, "--mode", "review", "--style", "data_post", "--out-dir", str(preview_dir)]
+    proc = _sp.run(cmd, cwd=str(REPO), text=True, capture_output=True, timeout=60, check=False)
+    if proc.returncode == 0 and proc.stdout.strip():
+        refreshed += 1
+    return refreshed
+
+
+def rank_editorial_candidates(rows: list[dict], recent: list[dict]) -> list[dict]:
+    """Prefer a different, underrepresented pillar; never repeat a recent angle.
+
+    recent is newest first. If no source-qualified angle survives, return no
+    candidate rather than a generic filler post. Publication frequency unchanged.
+    """
+    from collections import Counter
+    used = {r.get("topic") for r in recent[:6] if r.get("topic")}
+    counts = Counter(r.get("pillar") for r in recent[:10])
+    last = recent[0].get("pillar") if recent else None
+    eligible = [r for r in rows if r.get("topic") not in used]
+    eligible.sort(key=lambda r: (r.get("date", ""), r["slug"]), reverse=True)
+    eligible.sort(key=lambda r: (r.get("pillar") == last, counts[r.get("pillar")]))
+    return eligible
+
+
+def editorial_candidates(posted: dict) -> list[dict]:
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+    from config.seo_articles import SEO_ARTICLES
+    from scripts.rb_social_editorial import build_editorial
+    rows = []
+    recent = []
+    for key, entry in sorted(posted.items(), key=lambda x: x[1].get("posted_at", ""), reverse=True)[:10]:
+        slug = entry.get("slug") or key.rsplit(":", 1)[0]
+        if entry.get("editorial_pillar"):
+            recent.append({"pillar": entry["editorial_pillar"], "topic": entry.get("editorial_topic")})
+        elif slug in SEO_ARTICLES:
+            draft = build_editorial(SEO_ARTICLES[slug], "", slug, make_visual=False)
+            recent.append({"pillar": draft["pillar"], "topic": draft["metadata"]["topic"]})
+    from collections import Counter
+    pillar_seen = Counter(r.get("pillar") for r in recent[:10])
+    rows = []
+    for article_date, slug in article_candidates():
+        if was_slug_posted(slug, posted):
+            continue
+        page = SEO_ARTICLES[slug]
+        draft = build_editorial(page, "https://radarbds.vn" + page["path"], slug, make_visual=False)
+        if draft["status"] != "ready":
+            continue
+        rows.append({"date": article_date, "slug": slug, "pillar": draft["pillar"], "topic": draft["metadata"]["topic"]})
+    # rank_editorial_candidates drops any topic already used recently. That guard
+    # is meant to stop repeating the *same angle*, not to starve the queue when a
+    # whole pillar family shares one generic topic label. On starvation, rank by
+    # pillar balance and recency instead of returning nothing.
+    ranked = rank_editorial_candidates(rows, recent)
+    if ranked:
+        return ranked
+    fallback = sorted(rows, key=lambda r: (pillar_seen[r["pillar"]], r["date"], r["slug"]))
+    return fallback
+
+
+def create_unposted_queue(posted: dict, *, preview: bool = False) -> Path:
+    """Choose a new editorial angle with a real source, then verify and render."""
+    for row in editorial_candidates(posted):
+        try:
+            return create_queue(row["slug"], style="data_post", preview=preview)
+        except SystemExit as exc:
+            # One dead/blocked article must not cause publishing stale content.
+            log(f"Skip blocked editorial candidate {row['slug']}: {exc}")
+    raise SystemExit("No source-qualified, non-repeating editorial candidate; no post made")
 
 
 def queue_key(queue_path: Path) -> tuple[str, str, str]:
@@ -218,9 +300,28 @@ def publish(queue_path: Path) -> dict:
     return record
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     state = load_state()
     posted = state.setdefault("posted", {})
+    import argparse as _argparse
+    ap = _argparse.ArgumentParser(description="Radar BDS Page Care auto-post")
+    ap.add_argument("--preview", action="store_true", help="Build review-only preview artifacts; never touch the browser or the Page.")
+    args = ap.parse_args(argv)
+    if args.preview:
+        os.chdir(REPO)
+        queue_path = create_unposted_queue(posted, preview=True)
+        data = json.loads(queue_path.read_text(encoding="utf-8"))
+        content = data.get("content") or {}
+        editorial = data.get("editorial") or {}
+        print("## @rb Facebook Page Care — PREVIEW (no publish)")
+        print(f"- Pillar: {(editorial.get('metadata') or {}).get('pillar') or content.get('visual_style')}")
+        print(f"- Queue: {queue_path}")
+        print(f"- Source: {data.get('source', {}).get('url')} (HTTP {data.get('source', {}).get('http_status')}, ngày dữ liệu {data.get('source', {}).get('article_date')})")
+        print(f"- Visual: {content.get('visual_path')}")
+        print(f"- Self-comment: {content.get('self_comment')}")
+        print("- Caption:")
+        print(content.get("message"))
+        return 0
     already_done, done_item = posted_today(posted)
     if already_done:
         post_url = done_item.get("post_url") or ((done_item.get("browser_result") or {}).get("permalink"))
@@ -256,6 +357,8 @@ def main() -> int:
         "queue": str(queue_path),
         "style": content.get("style"),
         "visual_style": content.get("visual_style"),
+        "editorial_pillar": (data.get("editorial") or {}).get("metadata", {}).get("pillar"),
+        "editorial_topic": (data.get("editorial") or {}).get("metadata", {}).get("topic"),
         "posted_at": dt.datetime.now(dt.timezone.utc).astimezone().isoformat(timespec="seconds"),
         "post_url": result.get("post_url"),
         "photo_url": browser_result.get("photo_permalink"),

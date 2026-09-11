@@ -89,7 +89,7 @@ def test_main_checks_daily_cap_before_browser_health(monkeypatch):
         raise AssertionError("daily-cap no-op must not depend on CDP")
 
     monkeypatch.setattr(mod, "ensure_browser", browser_must_not_be_touched)
-    assert mod.main() == 0
+    assert mod.main([]) == 0
 
 
 def test_parse_post_wrapper_stdout_requires_browser_permalink():

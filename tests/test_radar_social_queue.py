@@ -17,7 +17,8 @@ def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path):
     social_queue.ASSET_DIR = tmp_path
     args = argparse.Namespace(
         slug="gia-dat-tan-an-thu-dau-mot-hien-nay",
-        skip_verify=True,
+        skip_verify=False,
+        source_http_status=200,
         platform="facebook",
         surface="page",
         page_url="https://www.facebook.com/radarbdsvn/",
@@ -27,25 +28,26 @@ def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path):
 
     item = social_queue.create(args)
     message = item["content"]["message"]
-    ward_filter_link = item["content"]["ward_filter_link"]
-
     self_comment = item["content"]["self_comment"]
 
-    assert "Link Radar BDS nằm ở bình luận đầu tiên" in message
-    assert "https://radarbds.vn/?tab=signals&ward=T%C3%A2n+An" in self_comment
-    assert "utm_campaign=ward_filter" in self_comment
+    # New contract: the caption stands alone; the Radar link lives in the
+    # self-comment with attribution, never as raw URL text inside the caption.
+    assert item["content"]["generated_by"] == "rb_social_editorial"
+    assert message.strip()
     assert "utm_medium=pinned_comment" in self_comment
+    assert "utm_campaign=" in self_comment
+    assert "radarbds.vn" in self_comment
     assert "utm_campaign=page_article" in item["content"]["link"]
-    assert "utm_campaign=page_native" in self_comment
     assert item["content"]["link"] not in message
-    assert ward_filter_link not in message
     assert "\n        •" not in message
 
 
 def _queue_args(slug, style="data_post"):
+    # New contract: publish mode requires a verified source HTTP status.
     return argparse.Namespace(
         slug=slug,
-        skip_verify=True,
+        skip_verify=False,
+        source_http_status=200,
         platform="facebook",
         surface="page",
         page_url="https://www.facebook.com/radarbdsvn/",
@@ -54,20 +56,27 @@ def _queue_args(slug, style="data_post"):
     )
 
 
-def test_visual_style_metadata_for_comparison_article(tmp_path):
+def test_editorial_contract_replaces_legacy_ward_card_copy(tmp_path):
+    """Legacy ward-card assertions are obsolete: captions are editorial now."""
     social_queue = _load_queue_module()
     social_queue.ASSET_DIR = tmp_path
 
-    item = social_queue.create(_queue_args("phu-tan-hay-phu-my-loc-gia-theo-phuong"))
+    item = social_queue.create(_queue_args("gia-dat-phu-tan-hien-bao-nhieu"))
     content = item["content"]
 
-    assert content["visual_style"] == "ward_compare"
-    assert "maximum 2 key metrics" in content["visual_prompt"]
-    assert "no long paragraph" in content["visual_prompt"]
+    assert content["generated_by"] == "rb_social_editorial"
+    editorial = content["editorial"]
+    assert editorial["status"] == "ready"
+    assert editorial["pillar"] in {"radar_insight", "radar_howto", "buyer_checklist"}
+    message = content["message"]
+    # Reader-facing text must not carry raw ratios, sample sizes or jargon.
+    for forbidden in ("14/432", "trung vị", "Số liệu đang ghi nhận", "property_type"):
+        assert forbidden not in message
+    assert message.strip()
     assert Path(content["visual_path"]).exists()
 
 
-def test_visual_style_variants_for_budget_and_risk_articles():
+def test_legacy_visual_kind_helpers_still_supported():
     social_queue = _load_queue_module()
 
     assert social_queue._visual_kind(
@@ -78,33 +87,4 @@ def test_visual_style_variants_for_budget_and_risk_articles():
         "tin-re-bat-thuong-binh-duong-can-kiem-tra-gi",
         {"title": "Tin rẻ bất thường Bình Dương cần kiểm tra gì?"},
     ) == "risk_checklist"
-
-
-def test_ward_price_uses_classic_visual_style_prompt_and_asset(tmp_path):
-    social_queue = _load_queue_module()
-    social_queue.ASSET_DIR = tmp_path
-
-    item = social_queue.create(_queue_args("gia-dat-phu-tan-hien-bao-nhieu"))
-    content = item["content"]
-
-    assert content["visual_style"] == "ward_price"
-    assert "classic ward price card" in content["visual_prompt"]
-    assert "ĐANG SO GIÁ PHÚ TÂN?" in content["visual_prompt"]
-    assert Path(content["visual_path"]).exists()
-
-
-def test_budget_article_caption_is_specific_and_not_generic_ward_copy(tmp_path):
-    social_queue = _load_queue_module()
-    social_queue.ASSET_DIR = tmp_path
-
-    item = social_queue.create(_queue_args("nha-dat-thu-dau-mot-duoi-3-ty-phuong-nao-nhieu-lua-chon"))
-    message = item["content"]["message"]
-
-    assert item["content"]["visual_style"] == "budget_filter"
-    assert "Theo dữ liệu 14 ngày" in message
-    assert "Hiệp An: 197 tin" in message
-    assert "Link Radar BDS nằm ở bình luận đầu tiên" in message
-    assert "utm_medium=pinned_comment" in item["content"]["self_comment"]
-    assert "lọc phường Thủ Dầu Một · dữ liệu 14 ngày" not in message
-    assert "chưa đủ dữ liệu" not in message
 
