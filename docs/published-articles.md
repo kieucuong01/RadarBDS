@@ -1,3 +1,17 @@
+## 2026-09-12
+- `/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc` — **Chánh Mỹ hay Phú Lợi: nên xem khu nào trước?**
+  - Pillar: So sánh phường / ngân sách / loại hình
+  - Score gate: 100/100 (intent 25, Radar data 25, funnel 20, anti-dup 15, social reuse 15)
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) queried on 2026-09-12 for 29/08–12/09/2026; 123 tin đang theo dõi và 27 dấu hiệu trên Chánh Mỹ + Phú Lợi; tách `dat_nen` và `nha_dat`, kèm giá rao trung vị/m², tổng giá trung vị và nhóm dưới 3/4 tỷ chỉ tính dòng có dữ liệu hợp lệ; Phú Lợi có thêm 3 tin chung cư và 1 tin nhà trọ ngoài bảng so chính
+  - Funnel: `/binh-duong/phuong-chanh-my`, `/binh-duong/phuong-phu-loi`, dashboard ward filters, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc`, `/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc`
+
+## 2026-09-11
+- `/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc` — **Phú Lợi hay Hiệp An: nên xem khu nào trước?**
+  - Pillar: So sánh phường / ngân sách / loại hình
+  - Score gate: 100/100 (intent 25, Radar data 25, funnel 20, anti-dup 15, social reuse 15)
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) queried on 2026-09-11 for 28/08–11/09/2026; 172 tin đang theo dõi và 22 dấu hiệu ở Phú Lợi + Hiệp An; tách `dat_nen` và `nha_dat`, kèm giá rao trung vị/m², tổng giá trung vị và nhóm dưới 3/4 tỷ chỉ tính dòng có dữ liệu hợp lệ
+  - Funnel: `/binh-duong/phuong-phu-loi`, `/binh-duong/phuong-hiep-an`, dashboard signals filter, `/dinh-gia-bds`, `/bao-cao`, `/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc`
+
 ## 2026-09-09
 - `/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat` — **Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất?**
   - Pillar: So sánh tiểu khu / Bến Cát / loại hình

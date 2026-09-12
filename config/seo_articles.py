@@ -21151,6 +21151,1097 @@ SEO_ARTICLES = {
             {"name": "Mỹ Phước 1, 2, 3 khác nhau thế nào khi xem giá đất", "href": "/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat", "url": "https://radarbds.vn/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat"}
         ]
     },
+    "ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra",
+        "title": "Tỷ lệ cắt máu nhà đất Thủ Dầu Một: phường nào cần kiểm tra kỹ? | Radar BDS",
+        "description": "Tỷ lệ tin giảm giá tại 13 phường Thủ Dầu Một là bao nhiêu? Xem riêng đất nền, nhà đất và checklist đọc cờ cắt máu từ dữ liệu giá rao Facebook trước khi liên hệ.",
+        "keywords": "tỷ lệ cắt máu Thủ Dầu Một, tin giảm giá nhà đất, giá đất Thủ Dầu Một, đất nền, nhà đất, Radar BDS",
+        "breadcrumb_label": "Tỷ lệ cắt máu nhà đất Thủ Dầu Một",
+        "hero_badge": "Dữ liệu giá rao · 14 ngày",
+        "hero_title": "Tỷ lệ cắt máu nhà đất Thủ Dầu Một: phường nào cần kiểm tra kỹ?",
+        "hero_text": "Trong 14 ngày từ 28/08 đến 10/09/2026, Radar BDS ghi nhận 40/1.062 tin Facebook ở 13 phường Thủ Dầu Một có cờ giảm giá, tương đương 3,8%. Nhà đất là 4,3%, đất nền 3,2%. Đây là giá rao và dấu hiệu để ưu tiên kiểm tra, không phải giá chốt hay bằng chứng người bán đang kẹt vốn.",
+        "scope_label": "Thủ Dầu Một · 13 phường · dữ liệu Facebook",
+        "map_label": "Tỷ lệ tin giảm giá theo phường",
+        "hero_checks": [
+            "40/1.062 tin có cờ giảm giá trong cửa sổ 14 ngày",
+            "Nhà đất: 26/610 tin, tương đương 4,3%",
+            "Đất nền: 14/432 tin, tương đương 3,2%",
+            "Phú Lợi, Định Hòa và Phú Hòa đáng đặt thứ tự kiểm tra cao hơn khi mẫu đủ lớn"
+        ],
+        "hero_metric": {
+            "label": "Tỷ lệ tin có cờ giảm giá",
+            "value": "3,8%",
+            "delta": "40/1.062 tin",
+            "note": "Giá rao Facebook đang được Radar BDS theo dõi trong 14 ngày"
+        },
+        "primary_cta": "Mở nhóm tin đáng kiểm tra",
+        "primary_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=ty_le_cat_mau_tdm_20260910",
+        "secondary_cta": "Đọc báo cáo tháng",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+        "property_card": {
+            "status": "Cờ giảm giá — cần kiểm tra thêm",
+            "title": "40 tin trong 14 ngày có cập nhật giảm giá",
+            "price": "3,8% trên tổng 1.062 tin đang theo dõi",
+            "metric_a": "Nhà đất",
+            "metric_a_value": "4,3%",
+            "metric_b": "Đất nền",
+            "metric_b_value": "3,2%"
+        },
+        "value_cards": [
+            {
+                "title": "Đọc tỷ lệ cùng quy mô mẫu",
+                "body": "Hòa Phú có tỷ lệ 10,0% nhưng chỉ có 10 tin. Phú Lợi và Định Hòa có mẫu lớn hơn nên đáng ưu tiên đọc kỹ hơn."
+            },
+            {
+                "title": "Tách đất nền với nhà đất",
+                "body": "Trong snapshot này, cờ giảm giá xuất hiện ở 4,3% tin nhà đất và 3,2% tin đất nền. Gộp hai nhóm sẽ làm sai cách so."
+            },
+            {
+                "title": "Cờ giảm giá không phải kết luận mua",
+                "body": "Giá có thể đổi vì nhiều lý do. Hãy kiểm tra lại diện tích, giá/m², vị trí, pháp lý và giá chốt bằng nguồn độc lập."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ dữ liệu sang bước kiểm tra",
+            "title": "Mở nhóm tin đáng kiểm tra trên Radar",
+            "body": "Sau khi đọc tỷ lệ theo phường, hãy lọc từng tin theo loại hình và ngân sách thay vì gọi theo một con số chung.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất Bình Dương",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "13 phường", "label": "so sánh trong snapshot"},
+                {"value": "2 nhóm", "label": "đất nền và nhà đất"},
+                {"value": "14 ngày", "label": "cửa sổ dữ liệu"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 28/08–10/09/2026",
+            "title": "Tỷ lệ tin giảm giá theo phường",
+            "body": "Bảng này dùng tổng số tin Facebook đang theo dõi làm mẫu số. Các con số là số tin/listing rows, có thể gồm bài đăng lại của cùng một bất động sản.",
+            "columns": ["Phường", "Tin theo dõi", "Tin giảm giá", "Tỷ lệ", "Dấu hiệu"],
+            "rows": [
+                {"area": "Phú Lợi", "price": "74", "tracked": "5", "signal": "6,8%", "area_m2": "12"},
+                {"area": "Định Hòa", "price": "106", "tracked": "6", "signal": "5,7%", "area_m2": "40"},
+                {"area": "Phú Hòa", "price": "144", "tracked": "8", "signal": "5,6%", "area_m2": "23"},
+                {"area": "Phú Mỹ", "price": "200", "tracked": "8", "signal": "4,0%", "area_m2": "48"},
+                {"area": "Hiệp An", "price": "90", "tracked": "3", "signal": "3,3%", "area_m2": "8"}
+            ],
+            "cards": [
+                {"title": "Toàn vùng", "value": "40/1.062 tin", "body": "Tỷ lệ chung 3,8%"},
+                {"title": "Nhóm cần đọc kỹ", "value": "Phú Lợi 6,8%", "body": "74 tin, mẫu đủ lớn hơn Hòa Phú"},
+                {"title": "Không gộp loại hình", "value": "4,3% / 3,2%", "body": "Nhà đất / đất nền"}
+            ]
+        },
+        "local_links_title": "Mở dữ liệu liên quan",
+        "local_links": [
+            {
+                "label": "Mở dashboard Săn Deal",
+                "href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=ty_le_cat_mau_tdm_20260910",
+                "description": "Lọc tin đáng kiểm tra theo phường, loại hình và ngân sách."
+            },
+            {
+                "label": "Tổng quan nhà đất Bình Dương",
+                "href": "/binh-duong",
+                "description": "Xem các khu vực và dữ liệu BĐS Bình Dương trước khi đi sâu."
+            },
+            {
+                "label": "Cách định giá nhà đất bằng giá rao",
+                "href": "/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong",
+                "description": "Đọc giá rao theo phường, loại hình và mốc so sánh phù hợp."
+            },
+            {
+                "label": "MOS là gì trên Radar BDS?",
+                "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so",
+                "description": "Hiểu thêm một lớp lọc khác trước khi mở từng tin."
+            },
+            {
+                "label": "Báo cáo thị trường Thủ Dầu Một",
+                "href": "/bao-cao/bds-binh-duong-thang-07-2026",
+                "description": "So sánh nguồn cung, giá rao và dấu hiệu theo kỳ báo cáo."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Dùng thêm một mốc tham khảo, không thay thẩm định chính thức."
+            }
+        ],
+        "process_title": "Cách đọc một tin có cờ giảm giá",
+        "process": [
+            {"title": "1. Xác định loại hình", "body": "Chọn đất nền hoặc nhà đất trước khi so giá và tỷ lệ giảm."},
+            {"title": "2. Kiểm tra giá/m²", "body": "Đối chiếu giá/m², tổng giá và diện tích với các tin cùng phường."},
+            {"title": "3. Xác minh lý do", "body": "Hỏi lại thời điểm giảm, vị trí, giấy tờ, đường vào và giá có còn hiệu lực không."}
+        ],
+        "faq": [
+            {
+                "q": "Cắt máu trong bài này có nghĩa là gì?",
+                "a": "Trong bài, cắt máu là cách gọi dễ hiểu cho tin có cờ price_dropped=1 trong dữ liệu Radar BDS. Cờ này cho biết tin có ghi nhận giảm giá so với lần theo dõi trước; nó không chứng minh người bán đang kẹt vốn hay giá đã rẻ hơn giá thị trường."
+            },
+            {
+                "q": "Phường nào có tỷ lệ tin giảm giá cao nhất?",
+                "a": "Hòa Phú đứng đầu với 1/10 tin, tương đương 10,0%, nhưng mẫu chỉ có 10 tin nên chưa nên kết luận. Nếu xét cả tỷ lệ và quy mô mẫu, Phú Lợi là 5/74 tin, Định Hòa 6/106 tin và Phú Hòa 8/144 tin đáng đặt thứ tự kiểm tra cao hơn."
+            },
+            {
+                "q": "Vì sao phải tách đất nền và nhà đất?",
+                "a": "Hai nhóm có giá/m², tổng giá và nhu cầu khác nhau. Trong cùng snapshot, đất nền có 14/432 tin giảm giá, còn nhà đất có 26/610 tin. So riêng giúp bạn tránh lấy nhịp giá của nhà đất để đánh giá đất nền hoặc ngược lại."
+            },
+            {
+                "q": "Tin giảm giá có phải là tin nên mua không?",
+                "a": "Không. Đây chỉ là dấu hiệu để ưu tiên kiểm tra. Bạn vẫn cần đối chiếu giá rao cùng loại hình, kiểm tra pháp lý và quy hoạch, xem hiện trạng, rồi xác minh giá chốt trước khi giao dịch."
+            },
+            {
+                "q": "Dữ liệu trong bài được cập nhật khi nào?",
+                "a": "Snapshot được truy vấn từ listings nguồn Facebook, chỉ lấy tin đang theo dõi với is_active=1, không bị loại bởi is_blacklisted hoặc review_hidden, trong cửa sổ từ 28/08 đến hết 10/09/2026. Đây là giá rao, không phải giá giao dịch."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-10",
+            "modified_at": "2026-09-10",
+            "intro": [
+                "Trong 14 ngày từ 28/08 đến 10/09/2026, Radar BDS ghi nhận 40/1.062 tin Facebook ở 13 phường Thủ Dầu Một có cờ giảm giá, tương đương 3,8%. Nhà đất là 4,3%, đất nền 3,2%. Đây là giá rao và dấu hiệu để ưu tiên kiểm tra, không phải giá chốt hay bằng chứng người bán đang kẹt vốn."
+            ],
+            "summary_cards": [
+                {"label": "Tin Facebook theo dõi", "value": "1.062", "note": "13 phường, cửa sổ 14 ngày"},
+                {"label": "Có cờ giảm giá", "value": "40 tin · 3,8%", "note": "Tính trên tổng tin trong snapshot"},
+                {"label": "Đất nền", "value": "14/432 · 3,2%", "note": "Chỉ tính property_type = dat_nen"},
+                {"label": "Nhà đất", "value": "26/610 · 4,3%", "note": "Chỉ tính property_type = nha_dat"}
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Nhìn nhanh theo tỷ lệ",
+                    "title": "Nhóm phường có tỷ lệ giảm giá cao và mẫu đủ đọc",
+                    "note": "Không xếp Hòa Phú vào nhóm chính vì chỉ có 10 tin; tỷ lệ cao nhưng mẫu nhỏ.",
+                    "alt": "Biểu đồ thanh tỷ lệ tin giảm giá tại Phú Lợi, Tân An, Định Hòa, Phú Hòa, Tương Bình Hiệp và Phú Mỹ",
+                    "rows": [
+                        {"label": "Phú Lợi", "value_label": "6,8% · 5/74", "width": 100, "color": "#0f766e"},
+                        {"label": "Tân An", "value_label": "6,1% · 2/33", "width": 90, "color": "#0f766e"},
+                        {"label": "Định Hòa", "value_label": "5,7% · 6/106", "width": 84, "color": "#0f766e"},
+                        {"label": "Phú Hòa", "value_label": "5,6% · 8/144", "width": 82, "color": "#0f766e"},
+                        {"label": "Tương Bình Hiệp", "value_label": "5,5% · 3/55", "width": 81, "color": "#0f766e"},
+                        {"label": "Phú Mỹ", "value_label": "4,0% · 8/200", "width": 59, "color": "#0f766e"}
+                    ]
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng 1 · Toàn vùng",
+                    "title": "Tỷ lệ tin giảm giá theo 13 phường",
+                    "note": "Tỷ lệ = tin có cờ price_dropped=1 chia cho tổng tin trong cùng snapshot. Số liệu là listing rows, có thể gồm bài đăng lại của cùng một bất động sản.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "dropped", "label": "Tin giảm giá"},
+                        {"key": "rate", "label": "Tỷ lệ"},
+                        {"key": "notable", "label": "Dấu hiệu"}
+                    ],
+                    "rows": [
+                        {"ward": "Toàn 13 phường", "tracked": "1.062", "dropped": "40", "rate": "3,8%", "notable": "253"},
+                        {"ward": "Phú Mỹ", "tracked": "200", "dropped": "8", "rate": "4,0%", "notable": "48"},
+                        {"ward": "Phú Hòa", "tracked": "144", "dropped": "8", "rate": "5,6%", "notable": "23"},
+                        {"ward": "Định Hòa", "tracked": "106", "dropped": "6", "rate": "5,7%", "notable": "40"},
+                        {"ward": "Phú Lợi", "tracked": "74", "dropped": "5", "rate": "6,8%", "notable": "12"},
+                        {"ward": "Hiệp An", "tracked": "90", "dropped": "3", "rate": "3,3%", "notable": "8"},
+                        {"ward": "Tương Bình Hiệp", "tracked": "55", "dropped": "3", "rate": "5,5%", "notable": "4"},
+                        {"ward": "Chánh Mỹ", "tracked": "53", "dropped": "2", "rate": "3,8%", "notable": "17"},
+                        {"ward": "Tân An", "tracked": "33", "dropped": "2", "rate": "6,1%", "notable": "3"},
+                        {"ward": "Phú Tân", "tracked": "132", "dropped": "1", "rate": "0,8%", "notable": "77"},
+                        {"ward": "Hiệp Thành", "tracked": "123", "dropped": "1", "rate": "0,8%", "notable": "11"},
+                        {"ward": "Hòa Phú", "tracked": "10", "dropped": "1", "rate": "10,0%", "notable": "4"},
+                        {"ward": "Chánh Nghĩa", "tracked": "29", "dropped": "0", "rate": "0,0%", "notable": "4"},
+                        {"ward": "Phú Cường", "tracked": "13", "dropped": "0", "rate": "0,0%", "notable": "2"}
+                    ]
+                },
+                {
+                    "eyebrow": "Bảng 2 · Tách loại hình",
+                    "title": "Giá rao trung vị và cờ giảm giá ở nhóm có nhiều tin",
+                    "note": "Giá luôn đi cùng loại hình. Trung vị nghĩa là một nửa số tin thấp hơn mức này và một nửa cao hơn; đây vẫn là giá rao, không phải giá chốt.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "type", "label": "Loại hình"},
+                        {"key": "tracked", "label": "Tin"},
+                        {"key": "dropped", "label": "Giảm giá"},
+                        {"key": "rate", "label": "Tỷ lệ"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Hòa", "type": "Đất nền", "tracked": "36", "dropped": "1", "rate": "2,8%", "median_m2": "28,6 tr/m²", "median_total": "3,09 tỷ"},
+                        {"ward": "Phú Hòa", "type": "Nhà đất", "tracked": "105", "dropped": "7", "rate": "6,7%", "median_m2": "44,0 tr/m²", "median_total": "3,89 tỷ"},
+                        {"ward": "Định Hòa", "type": "Đất nền", "tracked": "51", "dropped": "2", "rate": "3,9%", "median_m2": "15,0 tr/m²", "median_total": "1,95 tỷ"},
+                        {"ward": "Định Hòa", "type": "Nhà đất", "tracked": "50", "dropped": "4", "rate": "8,0%", "median_m2": "26,5 tr/m²", "median_total": "2,65 tỷ"},
+                        {"ward": "Phú Lợi", "type": "Đất nền", "tracked": "38", "dropped": "2", "rate": "5,3%", "median_m2": "27,7 tr/m²", "median_total": "3,38 tỷ"},
+                        {"ward": "Phú Lợi", "type": "Nhà đất", "tracked": "32", "dropped": "3", "rate": "9,4%", "median_m2": "48,2 tr/m²", "median_total": "4,15 tỷ"},
+                        {"ward": "Phú Mỹ", "type": "Đất nền", "tracked": "72", "dropped": "4", "rate": "5,6%", "median_m2": "20,9 tr/m²", "median_total": "2,29 tỷ"},
+                        {"ward": "Phú Mỹ", "type": "Nhà đất", "tracked": "124", "dropped": "4", "rate": "3,2%", "median_m2": "39,0 tr/m²", "median_total": "3,40 tỷ"},
+                        {"ward": "Hiệp An", "type": "Đất nền", "tracked": "20", "dropped": "0", "rate": "0,0%", "median_m2": "11,4 tr/m²", "median_total": "1,85 tỷ"},
+                        {"ward": "Hiệp An", "type": "Nhà đất", "tracked": "70", "dropped": "3", "rate": "4,3%", "median_m2": "24,9 tr/m²", "median_total": "2,39 tỷ"},
+                        {"ward": "Phú Tân", "type": "Đất nền", "tracked": "90", "dropped": "1", "rate": "1,1%", "median_m2": "20,0 tr/m²", "median_total": "2,50 tỷ"},
+                        {"ward": "Phú Tân", "type": "Nhà đất", "tracked": "40", "dropped": "0", "rate": "0,0%", "median_m2": "34,4 tr/m²", "median_total": "3,10 tỷ"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "ty-le-toan-vung",
+                    "heading": "Tỷ lệ giảm giá toàn vùng là 3,8%, nhưng không nên nhìn mỗi tỷ lệ",
+                    "paragraphs": [
+                        "Trong 1.062 tin Facebook đang được theo dõi ở 13 phường Thủ Dầu Một, có 40 tin được gắn cờ giảm giá trong cửa sổ 14 ngày. Con số này tương đương 3,8%. Có 253 tin thuộc nhóm dấu hiệu đáng chú ý khi tính cả cờ is_hot và price_dropped; hai khái niệm này không đồng nghĩa với việc tin chắc chắn rẻ.",
+                        "Tỷ lệ giúp bạn quyết định mở khu nào trước, không giúp bạn kết luận nên mua khu nào. Một phường có 1 tin giảm trên 10 tin sẽ ra 10,0%, nhưng độ chắc của tỷ lệ thấp hơn phường có 8 tin giảm trên 144 tin. Vì vậy, luôn đọc cả tỷ lệ và số tin làm mẫu."
+                    ],
+                    "bullets": [
+                        "Mẫu số là tin/listing rows đang theo dõi, không phải số lô duy nhất.",
+                        "Cờ giảm giá phản ánh thay đổi trong dữ liệu theo dõi, không phải xác nhận giá chốt.",
+                        "Tỷ lệ thấp không có nghĩa là khu đó không có tin cần kiểm tra."
+                    ]
+                },
+                {
+                    "id": "phuong-can-uu-tien",
+                    "heading": "Phú Lợi, Định Hòa và Phú Hòa đáng đặt thứ tự kiểm tra cao hơn",
+                    "paragraphs": [
+                        "Phú Lợi có 5/74 tin giảm giá, tương đương 6,8%; Định Hòa có 6/106 tin, tương đương 5,7%; Phú Hòa có 8/144 tin, tương đương 5,6%. Đây là các nhóm có tỷ lệ cao hơn mức chung 3,8% và mẫu đủ lớn để mở dashboard kiểm tra tiếp.",
+                        "Hòa Phú đứng ở mức 10,0% nhưng chỉ có 10 tin trong snapshot. Tân An là 2/33 tin, tương đương 6,1%, còn Tương Bình Hiệp là 3/55 tin, tương đương 5,5%. Các tỷ lệ này nên được dùng để sắp thứ tự đọc tin, không dùng để xếp hạng cơ hội đầu tư."
+                    ],
+                    "bullets": [
+                        "Ưu tiên nơi có tỷ lệ cao và số tin không quá nhỏ.",
+                        "Mở từng tin để xem giá tổng, diện tích và giá/m² sau khi giảm.",
+                        "So với tin cùng loại hình trong cùng phường, không so với một tin bất kỳ.",
+                        "Nếu tỷ lệ cao nhưng mẫu nhỏ, giữ ở nhóm cần theo dõi thêm."
+                    ]
+                },
+                {
+                    "id": "tach-loai-hinh",
+                    "heading": "Nhà đất có tỷ lệ giảm giá cao hơn đất nền trong snapshot",
+                    "paragraphs": [
+                        "Trong nhóm được phân loại rõ, đất nền có 14/432 tin giảm giá, tương đương 3,2%. Nhà đất có 26/610 tin, tương đương 4,3%. Chênh lệch này không đủ để nói nhà đất luôn dễ thương lượng hơn; nó chỉ cho biết hai nhóm đang có nhịp thay đổi khác nhau trong cửa sổ dữ liệu này.",
+                        "Ở Phú Lợi, nhà đất có 3/32 tin giảm giá, tương đương 9,4%, trong khi đất nền là 2/38 tin, tương đương 5,3%. Ở Định Hòa, nhà đất là 4/50 tin, tương đương 8,0%, còn đất nền là 2/51 tin, tương đương 3,9%. Khi xem giá, nhà đất Phú Lợi có giá trung vị khoảng 48,2 tr/m² và 4,15 tỷ; đất nền Phú Lợi khoảng 27,7 tr/m² và 3,38 tỷ."
+                    ],
+                    "bullets": [
+                        "Đất nền và nhà đất có tổng giá, diện tích và cách định giá khác nhau.",
+                        "Giá trung vị nhà đất Phú Hòa trong snapshot là 44,0 tr/m²; đất nền là 28,6 tr/m².",
+                        "Không lấy tỷ lệ giảm của nhà đất để suy ra giá đất nền cùng phường."
+                    ]
+                },
+                {
+                    "id": "doc-co-giam-gia",
+                    "heading": "Một tin giảm giá cần kiểm tra những gì?",
+                    "paragraphs": [
+                        "Cờ giảm giá chỉ trả lời câu hỏi “tin có thay đổi giá hay không”. Nó chưa trả lời vì sao giảm, mức giá mới có còn hiệu lực không, tài sản có đúng vị trí mô tả không, hay pháp lý đã đủ để giao dịch chưa. Đây là lý do bài viết không gọi các tin này là cơ hội mua.",
+                        "Với một tin đất nền, hãy đối chiếu diện tích, giá/m², thổ cư, đường vào và các tin đất nền lân cận. Với một tin nhà đất, thêm hiện trạng nhà, diện tích sử dụng, tình trạng giấy tờ và chi phí sửa chữa. Giá rao mới chỉ là điểm bắt đầu của cuộc kiểm tra."
+                    ],
+                    "bullets": [
+                        "Xác nhận thời điểm và mức giá sau khi giảm.",
+                        "Tách đất nền hay nhà đất trước khi so sánh.",
+                        "Kiểm tra vị trí, diện tích, đường vào và thông tin pháp lý.",
+                        "Hỏi giá chốt tham khảo và xác minh độc lập trước khi đặt cọc."
+                    ]
+                },
+                {
+                    "id": "dung-radar",
+                    "heading": "Dùng Radar để lọc thứ tự, không thay việc thẩm định",
+                    "paragraphs": [
+                        "Bạn có thể mở nhóm tin đáng kiểm tra trên Radar, chọn đúng phường rồi tách đất nền và nhà đất. Nếu đang so mức giá, hãy đọc thêm bài hướng dẫn định giá bằng giá rao và dùng công cụ định giá như một mốc tham khảo; đừng xem một cờ giảm giá là kết luận cuối cùng.",
+                        "Nguồn của snapshot là listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0, truy vấn từ 28/08 đến hết 10/09/2026. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận."
+                    ],
+                    "bullets": [
+                        "Mở dashboard để lọc tin theo phường và loại hình.",
+                        "Đọc giá trung vị cùng loại hình trước khi gọi môi giới.",
+                        "Xác minh thực địa, pháp lý, quy hoạch và giá chốt bằng nguồn độc lập."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã hiểu 3,8% là tỷ lệ tin có cờ giảm giá trong cửa sổ 14 ngày, không phải tỷ lệ bất động sản chắc chắn đang bán tháo.",
+                "Đã đọc cả số tin làm mẫu, không chỉ nhìn phường có tỷ lệ cao nhất.",
+                "Đã tách đất nền và nhà đất trước khi so giá và tỷ lệ.",
+                "Đã kiểm tra giá tổng, giá/m², diện tích, vị trí và thông tin pháp lý của từng tin.",
+                "Đã nhớ rằng giá rao không phải giá chốt giao dịch."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để kiểm tra từng tin giảm giá",
+            "body": "Bắt đầu với Phú Lợi, Định Hòa hoặc Phú Hòa, sau đó tách đất nền và nhà đất để đọc đúng mức giá.",
+            "button": "Mở nhóm tin đáng kiểm tra",
+            "button_href": "/?tab=signals&utm_source=seo&utm_medium=article&utm_campaign=ty_le_cat_mau_tdm_20260910"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Tỷ lệ cắt máu nhà đất Thủ Dầu Một", "href": "/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra", "url": "https://radarbds.vn/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra"}
+        ]
+    },
+    "phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc",
+        "title": "Phú Lợi hay Hiệp An: nên xem khu nào trước? | Radar BDS",
+        "description": "Phú Lợi hay Hiệp An? So sánh giá rao đất nền, nhà đất, tin dưới 3 tỷ và dấu hiệu đáng chú ý từ dữ liệu Facebook Thủ Dầu Một ngày 11/09/2026 cho người mua.",
+        "keywords": "Phú Lợi hay Hiệp An, giá đất Phú Lợi, giá đất Hiệp An, đất nền Thủ Dầu Một, nhà đất Thủ Dầu Một, Radar BDS",
+        "breadcrumb_label": "Phú Lợi hay Hiệp An: nên xem khu nào trước?",
+        "hero_badge": "So sánh phường · snapshot 14 ngày",
+        "hero_title": "Phú Lợi hay Hiệp An: nên xem khu nào trước?",
+        "hero_text": "Trong snapshot Facebook từ 28/08 đến 11/09/2026, Phú Lợi có 76 tin đang theo dõi và 12 tin có dấu hiệu đáng chú ý; Hiệp An có 96 tin và 10 dấu hiệu. Hiệp An có nhiều tin dưới 3 tỷ hơn ở cả đất nền và nhà đất, còn Phú Lợi có giá rao trung vị cao hơn ở hai loại hình chính.",
+        "scope_label": "Thủ Dầu Một · Phú Lợi và Hiệp An · dữ liệu Facebook",
+        "map_label": "Phú Lợi và Hiệp An",
+        "hero_checks": [
+            "Phú Lợi: 76 tin đang theo dõi · 12 dấu hiệu đáng chú ý",
+            "Hiệp An: 96 tin đang theo dõi · 10 dấu hiệu đáng chú ý",
+            "Đất nền: 27,7 tr/m² ở Phú Lợi và 11,9 tr/m² ở Hiệp An",
+            "Nhà đất: 52,0 tr/m² ở Phú Lợi và 24,9 tr/m² ở Hiệp An"
+        ],
+        "hero_metric": {
+            "label": "Tổng tin đang theo dõi",
+            "value": "172 tin",
+            "delta": "22 dấu hiệu",
+            "note": "Snapshot Facebook từ 28/08 đến 11/09/2026"
+        },
+        "primary_cta": "Mở bộ lọc Radar",
+        "primary_href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_hiep_an_20260911",
+        "secondary_cta": "Xem báo cáo thị trường",
+        "secondary_href": "/bao-cao",
+        "property_card": {
+            "status": "Cập nhật 11/09/2026 · giá rao 14 ngày",
+            "title": "Chọn thứ tự mở phường theo ngân sách",
+            "price": "Hiệp An có nhóm dưới 3 tỷ rộng hơn; Phú Lợi có mặt bằng giá rao trung vị cao hơn",
+            "metric_a": "Đất nền",
+            "metric_a_value": "27,7 vs 11,9 tr/m²",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "52,0 vs 24,9 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Hiệp An hợp để lọc nhóm dưới 3 tỷ",
+                "body": "Trong dữ liệu có tổng giá hợp lệ, Hiệp An có 22 tin đất nền dưới 3 tỷ và 63 tin nhà đất dưới 3 tỷ. Đây là số tin trong snapshot, không phải cam kết còn hàng tại thời điểm bạn gọi."
+            },
+            {
+                "title": "Phú Lợi hợp để so mặt bằng cao hơn",
+                "body": "Giá rao trung vị đất nền Phú Lợi là 27,7 tr/m² và nhà đất là 52,0 tr/m². Nếu chấp nhận khung giá cao hơn, bạn có thể mở Phú Lợi để đọc kỹ từng tin."
+            },
+            {
+                "title": "Không gộp đất nền với nhà đất",
+                "body": "Hai loại hình có mặt bằng rất khác nhau ở cả hai phường. Giá trung vị chỉ là mốc đọc nhanh từ tin Facebook, không thay cho kiểm tra vị trí, giấy tờ và giá chốt."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc Phú Lợi và Hiệp An trước khi gọi hỏi",
+            "body": "Chọn đúng phường, tách đất nền hoặc nhà đất, đặt trần tổng giá rồi mới đọc các tin có dấu hiệu đáng chú ý.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất theo phường ở Thủ Dầu Một",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {
+                    "value": "172 tin",
+                    "label": "trong snapshot"
+                },
+                {
+                    "value": "2 loại",
+                    "label": "đất nền / nhà đất"
+                },
+                {
+                    "value": "14 ngày",
+                    "label": "cửa sổ dữ liệu"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 28/08–11/09/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "body": "Nguồn là listings Facebook đang theo dõi với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0. Giá trong bảng là giá rao trung vị.",
+            "columns": [
+                {
+                    "key": "ward_type",
+                    "label": "Phường · loại hình"
+                },
+                {
+                    "key": "tracked",
+                    "label": "Tin theo dõi"
+                },
+                {
+                    "key": "signals",
+                    "label": "Dấu hiệu"
+                },
+                {
+                    "key": "under3",
+                    "label": "Dưới 3 tỷ"
+                },
+                {
+                    "key": "under4",
+                    "label": "Dưới 4 tỷ"
+                },
+                {
+                    "key": "median_m2",
+                    "label": "Giá trung vị/m²"
+                },
+                {
+                    "key": "median_total",
+                    "label": "Tổng giá trung vị"
+                }
+            ],
+            "rows": [
+                {
+                    "ward_type": "Phú Lợi · đất nền",
+                    "tracked": "39",
+                    "signals": "5",
+                    "under3": "9",
+                    "under4": "22",
+                    "median_m2": "27,7 tr/m²",
+                    "median_total": "3,38 tỷ"
+                },
+                {
+                    "ward_type": "Phú Lợi · nhà đất",
+                    "tracked": "33",
+                    "signals": "5",
+                    "under3": "1",
+                    "under4": "8",
+                    "median_m2": "52,0 tr/m²",
+                    "median_total": "4,15 tỷ"
+                },
+                {
+                    "ward_type": "Hiệp An · đất nền",
+                    "tracked": "23",
+                    "signals": "1",
+                    "under3": "22",
+                    "under4": "22",
+                    "median_m2": "11,9 tr/m²",
+                    "median_total": "1,85 tỷ"
+                },
+                {
+                    "ward_type": "Hiệp An · nhà đất",
+                    "tracked": "73",
+                    "signals": "9",
+                    "under3": "63",
+                    "under4": "69",
+                    "median_m2": "24,9 tr/m²",
+                    "median_total": "2,39 tỷ"
+                }
+            ],
+            "cards": [
+                {
+                    "title": "Tin đang theo dõi",
+                    "value": "76 vs 96 tin",
+                    "body": "Phú Lợi vs Hiệp An"
+                },
+                {
+                    "title": "Đất nền",
+                    "value": "27,7 vs 11,9 tr/m²",
+                    "body": "Giá rao trung vị · Phú Lợi vs Hiệp An"
+                },
+                {
+                    "title": "Nhà đất",
+                    "value": "52,0 vs 24,9 tr/m²",
+                    "body": "Giá rao trung vị · Phú Lợi vs Hiệp An"
+                }
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và bài liên quan",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Lợi",
+                "href": "/binh-duong/phuong-phu-loi",
+                "description": "Xem dữ liệu khu vực và mở bộ lọc tin Phú Lợi."
+            },
+            {
+                "label": "Trang phường Hiệp An",
+                "href": "/binh-duong/phuong-hiep-an",
+                "description": "Xem dữ liệu khu vực và mở bộ lọc tin Hiệp An."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đối chiếu nhanh giá rao trước khi xem từng tin."
+            },
+            {
+                "label": "Phú Lợi hay Phú Mỹ: nên xem khu nào trước?",
+                "href": "/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc",
+                "description": "Đọc thêm một so sánh có Phú Lợi với mặt bằng dữ liệu khác."
+            },
+            {
+                "label": "Báo cáo thị trường Bình Dương",
+                "href": "/bao-cao",
+                "description": "Xem các báo cáo theo tháng khi cần bối cảnh rộng hơn."
+            },
+            {
+                "label": "Mở dashboard Săn Deal",
+                "href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_hiep_an_20260911",
+                "description": "Lọc tiếp theo phường, loại hình và ngân sách."
+            }
+        ],
+        "process_title": "Cách chọn phường mở trước",
+        "process": [
+            {
+                "title": "1. Chốt loại hình",
+                "body": "Bạn đang tìm đất nền hay nhà đất? Chọn một loại trước để không trộn hai mặt bằng giá."
+            },
+            {
+                "title": "2. Đặt trần tổng giá",
+                "body": "Dùng nhóm dưới 3 tỷ hoặc dưới 4 tỷ làm bộ lọc ban đầu, sau đó xem lại giá/m²."
+            },
+            {
+                "title": "3. Đọc từng tin",
+                "body": "Kiểm tra vị trí, kích thước, đường vào, giấy tờ và lý do có dấu hiệu trước khi đi xem."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-11",
+            "modified_at": "2026-09-11",
+            "intro": [
+                "Nếu đang phân vân Phú Lợi hay Hiệp An, hãy chọn theo loại hình và trần tổng giá trước. Trong snapshot Facebook 28/08–11/09/2026, Hiệp An có 96 tin đang theo dõi, Phú Lợi có 76 tin. Giá rao trung vị của đất nền và nhà đất ở Phú Lợi đều cao hơn Hiệp An; ngược lại, Hiệp An có nhiều tin dưới 3 tỷ hơn.",
+                "Số liệu dưới đây là giá rao để lọc ban đầu, không phải giá chốt giao dịch."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin Phú Lợi và Hiệp An 14 ngày",
+                    "value": "172 tin",
+                    "note": "Phú Lợi 76 · Hiệp An 96"
+                },
+                {
+                    "label": "Đất nền Phú Lợi và Hiệp An 14 ngày",
+                    "value": "27,7 vs 11,9 tr/m²",
+                    "note": "Phú Lợi · Hiệp An · giá rao trung vị"
+                },
+                {
+                    "label": "Nhà đất Phú Lợi và Hiệp An 14 ngày",
+                    "value": "52,0 vs 24,9 tr/m²",
+                    "note": "Phú Lợi · Hiệp An · giá rao trung vị"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "22 tin",
+                    "note": "Phú Lợi 12 · Hiệp An 10"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Lợi và Hiệp An khác nhau thế nào khi tách loại hình?",
+                    "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0; cửa sổ 28/08–11/09/2026. Giá là giá rao trung vị; số tin là listing rows, có thể gồm bài đăng lại.",
+                    "columns": [
+                        {
+                            "key": "ward_type",
+                            "label": "Phường · loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin theo dõi"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "valid_m2",
+                            "label": "Tin có giá/m²"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward_type": "Phú Lợi · đất nền",
+                            "tracked": "39",
+                            "signals": "5",
+                            "valid_m2": "25",
+                            "median_m2": "27,7 tr/m²",
+                            "median_total": "3,38 tỷ"
+                        },
+                        {
+                            "ward_type": "Phú Lợi · nhà đất",
+                            "tracked": "33",
+                            "signals": "5",
+                            "valid_m2": "23",
+                            "median_m2": "52,0 tr/m²",
+                            "median_total": "4,15 tỷ"
+                        },
+                        {
+                            "ward_type": "Hiệp An · đất nền",
+                            "tracked": "23",
+                            "signals": "1",
+                            "valid_m2": "22",
+                            "median_m2": "11,9 tr/m²",
+                            "median_total": "1,85 tỷ"
+                        },
+                        {
+                            "ward_type": "Hiệp An · nhà đất",
+                            "tracked": "73",
+                            "signals": "9",
+                            "valid_m2": "67",
+                            "median_m2": "24,9 tr/m²",
+                            "median_total": "2,39 tỷ"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Lọc theo tổng giá",
+                    "title": "Nhóm dưới 3 tỷ và dưới 4 tỷ",
+                    "note": "Đếm các tin có tổng giá hợp lệ trong từng loại hình. Không nên hiểu là toàn bộ nguồn hàng còn nguyên trạng khi bạn liên hệ.",
+                    "columns": [
+                        {
+                            "key": "ward_type",
+                            "label": "Phường · loại hình"
+                        },
+                        {
+                            "key": "under3",
+                            "label": "Dưới 3 tỷ"
+                        },
+                        {
+                            "key": "under4",
+                            "label": "Dưới 4 tỷ"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin theo dõi"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward_type": "Phú Lợi · đất nền",
+                            "under3": "9",
+                            "under4": "22",
+                            "tracked": "39"
+                        },
+                        {
+                            "ward_type": "Phú Lợi · nhà đất",
+                            "under3": "1",
+                            "under4": "8",
+                            "tracked": "33"
+                        },
+                        {
+                            "ward_type": "Hiệp An · đất nền",
+                            "under3": "22",
+                            "under4": "22",
+                            "tracked": "23"
+                        },
+                        {
+                            "ward_type": "Hiệp An · nhà đất",
+                            "under3": "63",
+                            "under4": "69",
+                            "tracked": "73"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Dấu hiệu theo loại hình",
+                    "title": "Tỷ lệ tin có dấu hiệu đáng chú ý",
+                    "note": "Tỷ lệ được tính trên số tin đang theo dõi của từng phường và loại hình; đây là thứ tự ưu tiên đọc, không phải xác suất giao dịch.",
+                    "alt": "Tỷ lệ dấu hiệu đáng chú ý: Phú Lợi đất nền 12,8 phần trăm, Phú Lợi nhà đất 15,2 phần trăm, Hiệp An đất nền 4,3 phần trăm, Hiệp An nhà đất 12,3 phần trăm",
+                    "rows": [
+                        {
+                            "label": "Phú Lợi · đất nền",
+                            "value_label": "12,8%",
+                            "width": 84,
+                            "color": "#14b8a6"
+                        },
+                        {
+                            "label": "Phú Lợi · nhà đất",
+                            "value_label": "15,2%",
+                            "width": 100,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Hiệp An · đất nền",
+                            "value_label": "4,3%",
+                            "width": 28,
+                            "color": "#60a5fa"
+                        },
+                        {
+                            "label": "Hiệp An · nhà đất",
+                            "value_label": "12,3%",
+                            "width": 81,
+                            "color": "#2563eb"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mat-bang-va-loai-hinh",
+                    "heading": "1. Phú Lợi có mặt bằng giá rao cao hơn, Hiệp An có nguồn nhà đất rộng hơn",
+                    "paragraphs": [
+                        "Trong 14 ngày, Phú Lợi có 76 tin đang theo dõi, còn Hiệp An có 96 tin. Phần lớn dữ liệu của hai phường nằm ở đất nền và nhà đất; Phú Lợi còn 4 tin thuộc chung cư hoặc nhà trọ nên không đưa vào bảng so giá chính.",
+                        "Đất nền Phú Lợi có giá rao trung vị 27,7 tr/m² và tổng giá trung vị 3,38 tỷ. Hiệp An lần lượt là 11,9 tr/m² và 1,85 tỷ. Với nhà đất, Phú Lợi ở mức 52,0 tr/m² và 4,15 tỷ; Hiệp An là 24,9 tr/m² và 2,39 tỷ.",
+                        "Khoảng cách này không nói rằng mọi tin ở Phú Lợi đều đắt hơn hoặc mọi tin Hiệp An đều phù hợp. Nó chỉ cho biết nên bắt đầu bộ lọc ở đâu khi hai phường đang có mặt bằng tin rao khác nhau."
+                    ],
+                    "bullets": [
+                        "Muốn mở rộng nhóm nhà đất dưới 3 tỷ: xem Hiệp An trước.",
+                        "Muốn so thêm nhóm giá rao cao hơn: mở Phú Lợi sau vòng lọc đầu.",
+                        "Không dùng giá/m² đất nền để suy ra giá nhà đất cùng phường."
+                    ]
+                },
+                {
+                    "id": "loc-theo-ngan-sach",
+                    "heading": "2. Nếu ngân sách dưới 3 tỷ, Hiệp An có nhiều tin để lọc hơn",
+                    "paragraphs": [
+                        "Trong nhóm đất nền, Hiệp An có 22 tin dưới 3 tỷ trên 23 tin theo dõi; Phú Lợi có 9 trên 39 tin. Trong nhóm nhà đất, Hiệp An có 63 tin dưới 3 tỷ trên 73 tin; Phú Lợi có 1 trên 33 tin.",
+                        "Đây là lý do Hiệp An nên được mở trước nếu trần tổng giá của bạn là 3 tỷ. Tuy vậy, con số dưới 3 tỷ chưa cho biết vị trí, đường vào, diện tích hay hồ sơ có phù hợp. Hãy dùng nó để rút ngắn danh sách, không dùng làm kết luận mua.",
+                        "Nếu trần là 4 tỷ, Hiệp An vẫn có 22 tin đất nền và 69 tin nhà đất trong dữ liệu hợp lệ. Phú Lợi có 22 tin đất nền và 8 tin nhà đất ở cùng ngưỡng."
+                    ],
+                    "bullets": [
+                        "Đất nền dưới 3 tỷ: Hiệp An 22 tin · Phú Lợi 9 tin.",
+                        "Nhà đất dưới 3 tỷ: Hiệp An 63 tin · Phú Lợi 1 tin.",
+                        "Nhà đất dưới 4 tỷ: Hiệp An 69 tin · Phú Lợi 8 tin.",
+                        "Luôn đọc tổng giá cùng giá/m² và diện tích."
+                    ]
+                },
+                {
+                    "id": "dau-hieu-dang-chu-y",
+                    "heading": "3. Dấu hiệu đáng chú ý: Phú Lợi có tỷ lệ cao hơn, Hiệp An có nhiều tin nhà đất hơn",
+                    "paragraphs": [
+                        "Radar BDS ghi nhận 12 tin có dấu hiệu đáng chú ý ở Phú Lợi và 10 tin ở Hiệp An. Nhóm này được tính từ các cờ dữ liệu như tin hot hoặc có giảm giá; đó không phải danh sách tin chắc chắn nên mua.",
+                        "Nếu nhìn theo tỷ lệ trong từng loại hình, Phú Lợi là 5/39 tin đất nền và 5/33 tin nhà đất, tương ứng khoảng 12,8% và 15,2%. Hiệp An là 1/23 tin đất nền và 9/73 tin nhà đất, tương ứng khoảng 4,3% và 12,3%.",
+                        "Phú Lợi vì vậy đáng được đọc kỹ theo tỷ lệ, còn Hiệp An có nhiều tin nhà đất hơn về số tuyệt đối. Thứ tự này chỉ giúp bạn phân bổ thời gian xem feed; vẫn phải kiểm tra từng tin."
+                    ],
+                    "bullets": [
+                        "Tin có dấu hiệu là bộ lọc ưu tiên, không phải khuyến nghị giao dịch.",
+                        "Tin hot hoặc giảm giá vẫn cần xem lịch sử, vị trí và giấy tờ.",
+                        "Mẫu số nhỏ làm tỷ lệ dao động mạnh; đừng so tỷ lệ mà bỏ qua số tin."
+                    ]
+                },
+                {
+                    "id": "chon-phuong-mo-truoc",
+                    "heading": "4. Nên mở Phú Lợi hay Hiệp An trước?",
+                    "paragraphs": [
+                        "Chọn Hiệp An trước nếu bạn tìm đất nền hoặc nhà đất dưới 3 tỷ, muốn có nhiều tin để sàng lọc theo tổng giá. Sau đó có thể mở Phú Lợi để kiểm tra nhóm giá rao cao hơn hoặc tìm các tin có dấu hiệu đáng chú ý theo tỷ lệ.",
+                        "Chọn Phú Lợi trước nếu bạn đã biết mình chấp nhận mặt bằng tổng giá cao hơn và muốn đọc kỹ một phường có 12 tin mang dấu hiệu dữ liệu. Với cả hai lựa chọn, hãy so các tin cùng loại hình, gần nhau về diện tích và đường vào.",
+                        "Cách làm thực tế là mở bộ lọc theo phường, chọn đất nền hoặc nhà đất, đặt trần tổng giá rồi mới đọc mô tả. Khi thấy tin phù hợp, hỏi vị trí, đường vào và giấy tờ trước khi hẹn xem."
+                    ],
+                    "bullets": [
+                        "Ngân sách dưới 3 tỷ: bắt đầu ở Hiệp An.",
+                        "Muốn kiểm tra thêm mặt bằng cao hơn: mở Phú Lợi.",
+                        "Muốn so đúng: dùng cùng loại hình, khoảng diện tích và trần tổng giá."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Chọn đất nền hoặc nhà đất trước, không gộp hai loại hình.",
+                "Đặt trần tổng giá 3 tỷ hoặc 4 tỷ rồi kiểm tra lại giá/m².",
+                "Đối chiếu diện tích, kích thước, đường vào và vị trí thực tế.",
+                "Hỏi rõ giấy tờ, quy hoạch và tình trạng sử dụng trước khi hẹn xem.",
+                "Xem dấu hiệu Radar như thứ tự ưu tiên đọc, không xem là kết luận nên mua."
+            ]
+        },
+        "faq": [
+            {
+                "q": "Nếu ngân sách dưới 3 tỷ thì nên xem Phú Lợi hay Hiệp An trước?",
+                "a": "Nên mở Hiệp An trước trong snapshot này. Hiệp An có 22 tin đất nền dưới 3 tỷ và 63 tin nhà đất dưới 3 tỷ; Phú Lợi lần lượt có 9 và 1 tin. Đây là số tin trong dữ liệu 28/08–11/09/2026, không phải cam kết còn hàng."
+            },
+            {
+                "q": "Giá đất nền Phú Lợi và Hiệp An hiện chênh nhau thế nào?",
+                "a": "Giá rao trung vị đất nền Phú Lợi là 27,7 tr/m², còn Hiệp An là 11,9 tr/m² trong snapshot Facebook này. Đây là mốc đọc nhanh theo các tin có giá hợp lệ, không phải giá chốt cho mọi vị trí."
+            },
+            {
+                "q": "Nhà đất phường nào có giá rao trung vị thấp hơn?",
+                "a": "Nhà đất Hiệp An có giá rao trung vị 24,9 tr/m² và tổng giá trung vị 2,39 tỷ; Phú Lợi lần lượt là 52,0 tr/m² và 4,15 tỷ. Bạn vẫn cần so từng tin theo diện tích, đường vào và hồ sơ."
+            },
+            {
+                "q": "22 dấu hiệu đáng chú ý có nghĩa là 22 tin nên mua không?",
+                "a": "Không. Đây là số tin được ưu tiên theo các cờ dữ liệu như tin hot hoặc có giảm giá. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch, định giá chính thức hoặc kiểm tra thực địa."
+            }
+        ],
+        "final_cta": {
+            "title": "Mở Radar để lọc tiếp theo phường",
+            "body": "Chọn đúng loại hình, đặt trần tổng giá rồi đọc các tin đáng kiểm tra trước khi liên hệ.",
+            "button": "Mở bộ lọc Radar",
+            "button_href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_loi_hiep_an_20260911"
+        },
+        "social_editorial": {
+            "pillar": "radar_insight",
+            "topic": "So sánh Phú Lợi và Hiệp An",
+            "source_url": "https://radarbds.vn/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc",
+            "source_date": "2026-09-11",
+            "source_status": "production DB snapshot",
+            "source_scope": "Phú Lợi và Hiệp An · Facebook · 14 ngày",
+            "radar_url": "/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc",
+            "caption": "Phú Lợi hay Hiệp An nếu đang xem nhà đất ở Thủ Dầu Một?\n\nDữ liệu 14 ngày gần nhất của Radar BDS: Phú Lợi 76 tin đang theo dõi, Hiệp An 96 tin.\n\nPhú Lợi có mặt bằng giá rao cao hơn ở cả đất nền lẫn nhà đất trong snapshot này. Hiệp An lại có nhóm tin tổng giá thấp hơn rộng hơn: 22 tin đất nền và 63 tin nhà đất; Phú Lợi lần lượt có 9 và 1 tin.\n\nPhú Lợi có 12 dấu hiệu đáng chú ý, Hiệp An có 10. Đây là dữ liệu để lọc ban đầu, không phải kết luận nên mua. Link bài phân tích và bộ lọc sẽ để ở bình luận đầu tiên."
+        }
+    },
+    "chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh phường"
+        },
+        "path": "/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc",
+        "title": "Chánh Mỹ hay Phú Lợi: nên xem khu nào trước? | Radar BDS",
+        "description": "Chánh Mỹ hay Phú Lợi? So sánh giá rao đất nền, nhà đất, nhóm dưới 3–4 tỷ và dấu hiệu đáng chú ý từ dữ liệu Facebook Thủ Dầu Một cập nhật 12/09/2026 để lọc nhanh.",
+        "keywords": "Chánh Mỹ hay Phú Lợi, giá đất Chánh Mỹ, giá đất Phú Lợi, đất nền Thủ Dầu Một, nhà đất Thủ Dầu Một, Radar BDS",
+        "breadcrumb_label": "Chánh Mỹ hay Phú Lợi: nên xem khu nào trước?",
+        "hero_badge": "So sánh phường · dữ liệu 14 ngày",
+        "hero_title": "Chánh Mỹ hay Phú Lợi: nên xem khu nào trước?",
+        "hero_text": "Trong dữ liệu Facebook từ 29/08 đến 12/09/2026, Chánh Mỹ có 47 tin đang theo dõi và Phú Lợi có 76 tin. Nếu ngân sách dưới 3 tỷ, Chánh Mỹ có 12 tin đất nền và 11 tin nhà đất trong nhóm có tổng giá hợp lệ; Phú Lợi lần lượt có 10 và 1. Phú Lợi có giá rao trung vị cao hơn ở cả hai loại hình chính.",
+        "scope_label": "Thủ Dầu Một · Chánh Mỹ và Phú Lợi · dữ liệu Facebook",
+        "map_label": "Chánh Mỹ và Phú Lợi",
+        "hero_checks": [
+            "Chánh Mỹ: 47 tin đang theo dõi · 15 dấu hiệu đáng chú ý",
+            "Phú Lợi: 76 tin đang theo dõi · 12 dấu hiệu đáng chú ý",
+            "Đất nền: 23,1 tr/m² ở Chánh Mỹ và 26,8 tr/m² ở Phú Lợi",
+            "Nhà đất: 36,9 tr/m² ở Chánh Mỹ và 44,6 tr/m² ở Phú Lợi"
+        ],
+        "hero_metric": {
+            "label": "Tổng tin đang theo dõi",
+            "value": "123 tin",
+            "delta": "27 dấu hiệu",
+            "note": "Dữ liệu Facebook từ 29/08 đến 12/09/2026"
+        },
+        "primary_cta": "Mở bộ lọc Radar",
+        "primary_href": "/?tab=signals&ward=Ch%C3%A1nh%20M%E1%BB%B9&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=chanh_my_phu_loi_20260912",
+        "secondary_cta": "Xem báo cáo thị trường",
+        "secondary_href": "/bao-cao/bds-binh-duong-thang-07-2026",
+        "property_card": {
+            "status": "Cập nhật 12/09/2026 · giá rao 14 ngày",
+            "title": "Chọn phường theo trần tổng giá",
+            "price": "Chánh Mỹ: 23 tin dưới 3 tỷ · Phú Lợi: 11 tin dưới 3 tỷ có giá hợp lệ",
+            "metric_a": "Đất nền",
+            "metric_a_value": "23,1 vs 26,8 tr/m²",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "36,9 vs 44,6 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Chánh Mỹ hợp để lọc dưới 3 tỷ",
+                "body": "Trong nhóm có tổng giá hợp lệ, Chánh Mỹ có 12 tin đất nền và 11 tin nhà đất dưới 3 tỷ. Phú Lợi lần lượt có 10 và 1 tin. Đây là số tin trong cửa sổ dữ liệu, không phải cam kết còn hàng khi bạn liên hệ."
+            },
+            {
+                "title": "Phú Lợi có nguồn tin rộng hơn",
+                "body": "Phú Lợi có 76 tin đang theo dõi, cao hơn 47 tin ở Chánh Mỹ. Giá rao trung vị của đất nền và nhà đất tại Phú Lợi cũng cao hơn trong dữ liệu kỳ này."
+            },
+            {
+                "title": "Tách loại hình trước khi so giá",
+                "body": "Đất nền và nhà đất có mặt bằng khác nhau ở cả hai phường. Giá trung vị là mốc đọc nhanh từ tin Facebook, không thay cho kiểm tra vị trí, hồ sơ và giá chốt."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc Chánh Mỹ và Phú Lợi theo ngân sách",
+            "body": "Chọn phường, tách đất nền hoặc nhà đất, đặt trần tổng giá rồi mới đọc từng tin có dấu hiệu đáng chú ý.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất theo phường ở Thủ Dầu Một",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "123 tin", "label": "trong snapshot"},
+                {"value": "2 loại", "label": "đất nền / nhà đất"},
+                {"value": "14 ngày", "label": "cửa sổ dữ liệu"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Dữ liệu 29/08–12/09/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "body": "Nguồn là các tin Facebook đang được Radar theo dõi và còn ở trạng thái hoạt động. Giá trong bảng là giá rao trung vị; số tin có thể gồm bài đăng lại.",
+            "columns": [
+                {"key": "ward_type", "label": "Phường · loại hình"},
+                {"key": "tracked", "label": "Tin theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "valid_m2", "label": "Tin có giá/m²"},
+                {"key": "median_m2", "label": "Giá trung vị/m²"},
+                {"key": "median_total", "label": "Tổng giá trung vị"}
+            ],
+            "rows": [
+                {"ward_type": "Chánh Mỹ · đất nền", "tracked": "12", "signals": "6", "valid_m2": "11", "median_m2": "23,1 tr/m²", "median_total": "2,20 tỷ"},
+                {"ward_type": "Chánh Mỹ · nhà đất", "tracked": "35", "signals": "9", "valid_m2": "17", "median_m2": "36,9 tr/m²", "median_total": "3,60 tỷ"},
+                {"ward_type": "Phú Lợi · đất nền", "tracked": "40", "signals": "5", "valid_m2": "25", "median_m2": "26,8 tr/m²", "median_total": "3,25 tỷ"},
+                {"ward_type": "Phú Lợi · nhà đất", "tracked": "32", "signals": "5", "valid_m2": "22", "median_m2": "44,6 tr/m²", "median_total": "4,15 tỷ"}
+            ],
+            "cards": [
+                {"title": "Tin đang theo dõi", "value": "47 vs 76 tin", "body": "Chánh Mỹ vs Phú Lợi"},
+                {"title": "Đất nền", "value": "23,1 vs 26,8 tr/m²", "body": "Giá rao trung vị · Chánh Mỹ vs Phú Lợi"},
+                {"title": "Nhà đất", "value": "36,9 vs 44,6 tr/m²", "body": "Giá rao trung vị · Chánh Mỹ vs Phú Lợi"}
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và bài liên quan",
+        "local_links": [
+            {"label": "Trang phường Chánh Mỹ", "href": "/binh-duong/phuong-chanh-my", "description": "Xem dữ liệu khu vực và mở bộ lọc tin Chánh Mỹ."},
+            {"label": "Trang phường Phú Lợi", "href": "/binh-duong/phuong-phu-loi", "description": "Xem dữ liệu khu vực và mở bộ lọc tin Phú Lợi."},
+            {"label": "Lọc tin Chánh Mỹ trên Radar", "href": "/?tab=signals&ward=Ch%C3%A1nh%20M%E1%BB%B9&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=chanh_my_phu_loi_20260912", "description": "Lọc tiếp theo loại hình và trần tổng giá."},
+            {"label": "Lọc tin Phú Lợi trên Radar", "href": "/?tab=signals&ward=Ph%C3%BA%20L%E1%BB%A3i&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=chanh_my_phu_loi_20260912", "description": "Mở thêm nguồn tin Phú Lợi để so từng tin."},
+            {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Đối chiếu nhanh giá rao trước khi xem từng tin."},
+            {"label": "Báo cáo thị trường Bình Dương", "href": "/bao-cao/bds-binh-duong-thang-07-2026", "description": "Xem bối cảnh theo tháng khi cần phạm vi rộng hơn."},
+            {"label": "Phú Lợi hay Hiệp An: nên xem khu nào trước?", "href": "/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc", "description": "Đọc thêm một so sánh khác có Phú Lợi."},
+            {"label": "Phú Hòa hay Chánh Mỹ: nên xem khu nào trước?", "href": "/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc", "description": "So thêm Chánh Mỹ với một phường lân cận."}
+        ],
+        "process_title": "Cách chọn phường mở trước",
+        "process": [
+            {"title": "1. Chốt loại hình", "body": "Bạn đang tìm đất nền hay nhà đất? Chọn một loại trước để không trộn hai mặt bằng giá."},
+            {"title": "2. Đặt trần tổng giá", "body": "Dùng nhóm dưới 3 tỷ hoặc dưới 4 tỷ làm bộ lọc đầu tiên, sau đó xem lại giá/m² và diện tích."},
+            {"title": "3. Đọc từng tin", "body": "Kiểm tra vị trí, kích thước, đường vào, giấy tờ và lý do có dấu hiệu trước khi đi xem."}
+        ],
+        "article": {
+            "published_at": "2026-09-12",
+            "modified_at": "2026-09-12",
+            "intro": [
+                "Với ngân sách dưới 3 tỷ, nên mở Chánh Mỹ trước trong dữ liệu kỳ này: có 12 tin đất nền và 11 tin nhà đất trong nhóm có tổng giá hợp lệ; Phú Lợi có lần lượt 10 và 1 tin. Phú Lợi có nhiều tin đang theo dõi hơn và giá rao trung vị cao hơn ở cả hai loại hình chính.",
+                "Các con số dưới đây là giá rao để lọc ban đầu, không phải giá chốt giao dịch."
+            ],
+            "summary_cards": [
+                {"label": "Tin Chánh Mỹ và Phú Lợi 14 ngày", "value": "123 tin", "note": "Chánh Mỹ 47 · Phú Lợi 76"},
+                {"label": "Đất nền", "value": "23,1 vs 26,8 tr/m²", "note": "Chánh Mỹ · Phú Lợi · giá rao trung vị"},
+                {"label": "Nhà đất", "value": "36,9 vs 44,6 tr/m²", "note": "Chánh Mỹ · Phú Lợi · giá rao trung vị"},
+                {"label": "Dấu hiệu đáng chú ý", "value": "27 tin", "note": "Chánh Mỹ 15 · Phú Lợi 12"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Chánh Mỹ và Phú Lợi khác nhau thế nào khi tách loại hình?",
+                    "note": "Nguồn: các tin Facebook đang hoạt động được Radar theo dõi; cửa sổ 29/08–12/09/2026. Giá là giá rao trung vị; số tin là dòng tin và có thể gồm bài đăng lại.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "valid_m2", "label": "Tin có giá/m²"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Chánh Mỹ · đất nền", "tracked": "12", "signals": "6", "valid_m2": "11", "median_m2": "23,1 tr/m²", "median_total": "2,20 tỷ"},
+                        {"ward_type": "Chánh Mỹ · nhà đất", "tracked": "35", "signals": "9", "valid_m2": "17", "median_m2": "36,9 tr/m²", "median_total": "3,60 tỷ"},
+                        {"ward_type": "Phú Lợi · đất nền", "tracked": "40", "signals": "5", "valid_m2": "25", "median_m2": "26,8 tr/m²", "median_total": "3,25 tỷ"},
+                        {"ward_type": "Phú Lợi · nhà đất", "tracked": "32", "signals": "5", "valid_m2": "22", "median_m2": "44,6 tr/m²", "median_total": "4,15 tỷ"}
+                    ]
+                },
+                {
+                    "eyebrow": "Lọc theo tổng giá",
+                    "title": "Nhóm dưới 3 tỷ và dưới 4 tỷ",
+                    "note": "Đếm các tin có tổng giá hợp lệ trong từng loại hình. Mẫu số của bảng này có thể thấp hơn tổng tin theo dõi vì một số tin thiếu giá hoặc giá chưa đủ dữ liệu để tính.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "valid_total", "label": "Tin có tổng giá"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Chánh Mỹ · đất nền", "under3": "12", "under4": "12", "valid_total": "12"},
+                        {"ward_type": "Chánh Mỹ · nhà đất", "under3": "11", "under4": "26", "valid_total": "28"},
+                        {"ward_type": "Phú Lợi · đất nền", "under3": "10", "under4": "21", "valid_total": "25"},
+                        {"ward_type": "Phú Lợi · nhà đất", "under3": "1", "under4": "8", "valid_total": "25"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Mặt bằng giá rao",
+                    "title": "Giá rao trung vị/m² theo loại hình",
+                    "note": "Đọc riêng đất nền và nhà đất; không dùng một loại hình để suy ra loại hình còn lại.",
+                    "alt": "Giá rao trung vị theo loại hình tại Chánh Mỹ và Phú Lợi",
+                    "rows": [
+                        {"label": "Chánh Mỹ · đất nền", "value_label": "23,1 tr/m²", "width": 52, "color": "#2563eb"},
+                        {"label": "Phú Lợi · đất nền", "value_label": "26,8 tr/m²", "width": 60, "color": "#60a5fa"},
+                        {"label": "Chánh Mỹ · nhà đất", "value_label": "36,9 tr/m²", "width": 83, "color": "#0f766e"},
+                        {"label": "Phú Lợi · nhà đất", "value_label": "44,6 tr/m²", "width": 100, "color": "#14b8a6"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "nguon-cung-va-loai-hinh",
+                    "heading": "1. Phú Lợi có nhiều tin hơn, Chánh Mỹ cân đối hơn ở nhóm dưới 3 tỷ",
+                    "paragraphs": [
+                        "Trong cửa sổ 29/08–12/09/2026, Chánh Mỹ có 47 tin đang theo dõi; Phú Lợi có 76 tin. Phú Lợi có thêm 3 tin chung cư và 1 tin nhà trọ, nên bảng so giá chính chỉ tập trung vào 2 loại hình là đất nền và nhà đất.",
+                        "Chánh Mỹ có 12 tin đất nền và 35 tin nhà đất. Phú Lợi có 40 tin đất nền và 32 tin nhà đất. Số tin này là số dòng dữ liệu được theo dõi, không phải số bất động sản độc nhất; bài đăng lại có thể cùng xuất hiện trong nguồn."
+                    ],
+                    "bullets": [
+                        "Muốn có nhiều tin để đọc tổng thể: mở Phú Lợi trước.",
+                        "Muốn lọc ngân sách thấp ở cả đất nền và nhà đất: mở Chánh Mỹ trước.",
+                        "Không gộp 3 tin chung cư và 1 tin nhà trọ của Phú Lợi vào bảng so đất nền và nhà đất."
+                    ]
+                },
+                {
+                    "id": "loc-theo-ngan-sach",
+                    "heading": "2. Dưới 3 tỷ, Chánh Mỹ có nhiều tin để lọc hơn",
+                    "paragraphs": [
+                        "Trong nhóm có tổng giá hợp lệ, Chánh Mỹ có 12 tin đất nền dưới 3 tỷ và 11 tin nhà đất dưới 3 tỷ. Phú Lợi có 10 tin đất nền và 1 tin nhà đất ở cùng ngưỡng.",
+                        "Nếu nâng trần lên 4 tỷ, Chánh Mỹ có 12 tin đất nền và 26 tin nhà đất; Phú Lợi có 21 tin đất nền và 8 tin nhà đất. Đây là lý do Chánh Mỹ phù hợp hơn để bắt đầu khi ngân sách là bộ lọc chính.",
+                        "Con số dưới 3 tỷ hoặc dưới 4 tỷ chỉ giúp rút ngắn danh sách. Bạn vẫn cần xem diện tích, đường vào, vị trí và tình trạng hồ sơ của từng tin."
+                    ],
+                    "bullets": [
+                        "Đất nền dưới 3 tỷ: Chánh Mỹ 12 tin · Phú Lợi 10 tin.",
+                        "Nhà đất dưới 3 tỷ: Chánh Mỹ 11 tin · Phú Lợi 1 tin.",
+                        "Nhà đất dưới 4 tỷ: Chánh Mỹ 26 tin · Phú Lợi 8 tin.",
+                        "Đọc tổng giá cùng giá/m² và diện tích, không dùng một con số riêng lẻ."
+                    ]
+                },
+                {
+                    "id": "mat-bang-gia-rao",
+                    "heading": "3. Giá rao Phú Lợi cao hơn ở cả đất nền và nhà đất",
+                    "paragraphs": [
+                        "Giá rao trung vị đất nền Chánh Mỹ là 23,1 tr/m², còn Phú Lợi là 26,8 tr/m². Với nhà đất, Chánh Mỹ ở mức 36,9 tr/m² và Phú Lợi là 44,6 tr/m².",
+                        "Tổng giá trung vị của đất nền lần lượt là 2,20 tỷ và 3,25 tỷ; nhà đất là 3,60 tỷ và 4,15 tỷ. Các mốc này được tính trên những tin có dữ liệu giá phù hợp, không đại diện cho mọi tuyến đường hoặc mọi thửa đất trong phường.",
+                        "Khoảng cách giá không có nghĩa mọi tin Phú Lợi đều cao hơn mọi tin Chánh Mỹ. Khi mở dashboard, hãy giữ cùng loại hình, gần nhau về diện tích và cùng trần tổng giá rồi mới so."
+                    ],
+                    "bullets": [
+                        "Đất nền: so 23,1 với 26,8 tr/m², không so lẫn với nhà đất.",
+                        "Nhà đất: so 36,9 với 44,6 tr/m² và xem thêm tổng giá.",
+                        "Giá trong bài là giá rao, không phải giá chốt giao dịch."
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-thu-tu-xem",
+                    "heading": "4. Nên mở Chánh Mỹ hay Phú Lợi trước?",
+                    "paragraphs": [
+                        "Toàn phường, Chánh Mỹ có 15 tin mang dấu hiệu đáng chú ý; Phú Lợi có 12. Riêng hai loại hình chính trong bảng, Chánh Mỹ có 6 tin đất nền và 9 tin nhà đất; Phú Lợi có 5 tin ở mỗi loại hình.",
+                        "Nếu trần ngân sách dưới 3 tỷ, nên mở Chánh Mỹ trước vì có 23 tin thuộc đất nền hoặc nhà đất trong nhóm này, so với 11 tin ở Phú Lợi. Nếu muốn đọc nguồn tin rộng hơn hoặc kiểm tra mặt bằng giá cao hơn, mở thêm Phú Lợi sau vòng lọc đầu.",
+                        "Dấu hiệu đáng chú ý chỉ là thứ tự ưu tiên đọc từ dữ liệu như tin hot hoặc giảm giá. Nó không phải kết luận nên mua. Trước khi hẹn xem, hãy hỏi vị trí, đường vào, giấy tờ và lý do thay đổi giá."
+                    ],
+                    "bullets": [
+                        "Ngân sách dưới 3 tỷ: bắt đầu ở Chánh Mỹ.",
+                        "Muốn có nhiều dòng tin để so thêm: mở Phú Lợi.",
+                        "Muốn so đúng: dùng cùng loại hình, diện tích tương đương và trần tổng giá giống nhau."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Chọn đất nền hoặc nhà đất trước, không gộp hai loại hình.",
+                "Đặt trần tổng giá 3 tỷ hoặc 4 tỷ rồi kiểm tra lại giá/m².",
+                "Đối chiếu diện tích, kích thước, đường vào và vị trí thực tế.",
+                "Hỏi rõ giấy tờ, quy hoạch và tình trạng sử dụng trước khi hẹn xem.",
+                "Xem dấu hiệu Radar như thứ tự ưu tiên đọc, không xem là kết luận nên mua."
+            ]
+        },
+        "faq": [
+            {
+                "q": "Nếu ngân sách dưới 3 tỷ thì nên xem Chánh Mỹ hay Phú Lợi trước?",
+                "a": "Nên mở Chánh Mỹ trước trong dữ liệu 29/08–12/09/2026. Chánh Mỹ có 12 tin đất nền và 11 tin nhà đất dưới 3 tỷ; Phú Lợi lần lượt có 10 và 1 tin. Đây là số tin có tổng giá hợp lệ trong snapshot, không phải cam kết còn hàng."
+            },
+            {
+                "q": "Giá đất nền Chánh Mỹ và Phú Lợi hiện chênh nhau thế nào?",
+                "a": "Giá rao trung vị đất nền Chánh Mỹ là 23,1 tr/m², còn Phú Lợi là 26,8 tr/m² trong dữ liệu Facebook kỳ này. Đây là mốc đọc nhanh, không phải giá chốt cho mọi vị trí."
+            },
+            {
+                "q": "Nhà đất phường nào có giá rao trung vị thấp hơn?",
+                "a": "Nhà đất Chánh Mỹ có giá rao trung vị 36,9 tr/m² và tổng giá trung vị 3,60 tỷ; Phú Lợi lần lượt là 44,6 tr/m² và 4,15 tỷ. Bạn vẫn cần so từng tin theo diện tích, đường vào và hồ sơ."
+            },
+            {
+                "q": "27 dấu hiệu đáng chú ý có nghĩa là 27 tin nên mua không?",
+                "a": "Không. Đây là số tin được ưu tiên theo các cờ dữ liệu như tin hot hoặc có giảm giá. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch, định giá chính thức hoặc kiểm tra thực địa."
+            }
+        ],
+        "final_cta": {
+            "title": "Mở Radar để lọc tiếp theo phường",
+            "body": "Chọn đúng loại hình, đặt trần tổng giá rồi đọc từng tin trước khi liên hệ.",
+            "button": "Mở bộ lọc Radar",
+            "button_href": "/?tab=signals&ward=Ch%C3%A1nh%20M%E1%BB%B9&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=chanh_my_phu_loi_20260912"
+        },
+        "social_editorial": {
+            "pillar": "radar_insight",
+            "topic": "So sánh Chánh Mỹ và Phú Lợi theo ngân sách",
+            "source_url": "https://radarbds.vn/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc",
+            "source_date": "2026-09-12",
+            "source_status": "production DB snapshot",
+            "source_scope": "Chánh Mỹ và Phú Lợi · Facebook · 14 ngày",
+            "radar_url": "/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc",
+            "reader_benefit": "Biết nên mở phường nào trước khi lọc theo trần tổng giá.",
+            "caption": "Chánh Mỹ hay Phú Lợi nếu anh đang lọc nhà đất ở Thủ Dầu Một?\n\nNếu trần dưới 3 tỷ, dữ liệu 14 ngày có 12 tin đất nền và 11 tin nhà đất ở Chánh Mỹ. Phú Lợi có lần lượt 10 và 1 tin.\n\nPhú Lợi có nhiều tin đang theo dõi hơn, còn Chánh Mỹ có nhóm dưới 3 tỷ cân đối hơn giữa hai loại hình. Hai phường cũng có mặt bằng giá rao khác nhau, nên đừng gộp đất nền với nhà đất khi so.\n\nĐây là dữ liệu lọc ban đầu, không phải giá chốt hay lời khuyên mua. Bài đầy đủ và bộ lọc sẽ để ở bình luận đầu tiên."
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Chánh Mỹ hay Phú Lợi: nên xem khu nào trước?", "href": "/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc"}
+        ]
+    },
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
