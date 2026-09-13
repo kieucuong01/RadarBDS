@@ -1,3 +1,11 @@
+## 2026-09-13
+- `/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong` — **5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương**
+  - Pillar: Buyer guide / đọc giá rao / checklist trước khi đi xem
+  - Score gate: 100/100 (intent 25, Radar data 25, funnel 20, anti-dup 15, social reuse 15)
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) queried on 2026-09-13 for 30/08–12/09/2026; 640 dòng tin ở 6 phường, 185 dấu hiệu; tách đất nền và nhà đất, gồm giá rao trung vị/m², nhóm dưới 3/4 tỷ và độ đầy đủ của diện tích, tổng giá, thổ cư, độ rộng đường; số dòng có thể gồm bài đăng lại, không phải số lô đất duy nhất
+  - Funnel: `/binh-duong`, dashboard lọc phường/loại hình, `/dinh-gia-bds`, `/bao-cao`, `/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao`, `/tin-tuc/cach-doc-gia-m2-dat-nen-binh-duong`
+  - Social: draft review queue `/opt/radar-bds/var/social_queue/2026-09-13-5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong-draft-review.json`; chưa đăng Facebook Page
+
 ## 2026-09-12
 - `/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc` — **Chánh Mỹ hay Phú Lợi: nên xem khu nào trước?**
   - Pillar: So sánh phường / ngân sách / loại hình

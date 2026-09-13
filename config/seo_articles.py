@@ -22242,6 +22242,355 @@ SEO_ARTICLES = {
             {"name": "Chánh Mỹ hay Phú Lợi: nên xem khu nào trước?", "href": "/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc"}
         ]
     },
+    "5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong",
+        "title": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương | Radar BDS",
+        "description": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương: tách đất nền, nhà đất, so giá/m², tổng giá, đường vào và giấy tờ bằng dữ liệu Radar. trước khi hẹn xem.",
+        "keywords": "kiểm tra giá rao trước khi đi xem đất, giá đất Bình Dương, cách đọc giá nhà đất, đất nền Bình Dương, Radar BDS",
+        "breadcrumb_label": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương",
+        "hero_badge": "Buyer guide · snapshot Facebook 14 ngày",
+        "hero_title": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương",
+        "hero_text": "Trước khi hẹn xem, đừng chỉ nhìn con số thấp nhất. Hãy xác định đúng loại hình, so giá/m² với các tin cùng phường, kiểm tra tổng giá, đọc đường vào và đối chiếu diện tích–thổ cư. Snapshot Facebook ngày 30/08–12/09/2026 cho thấy mỗi phường có mặt bằng khác nhau giữa đất nền và nhà đất.",
+        "scope_label": "Bình Dương · hướng dẫn đọc giá rao · dữ liệu Facebook",
+        "map_label": "6 phường có nhiều dữ liệu ở Thủ Dầu Một",
+        "hero_checks": [
+            "Tách đất nền và nhà đất trước khi so giá",
+            "Đọc cùng lúc giá/m² và tổng giá",
+            "Xem dấu hiệu giảm giá hoặc tin hot như thứ tự ưu tiên, không phải kết luận mua",
+            "Kiểm tra diện tích, đường vào và thổ cư trước khi hẹn xem"
+        ],
+        "hero_metric": {
+            "label": "Snapshot 6 phường",
+            "value": "640 dòng tin",
+            "delta": "185 dấu hiệu",
+            "note": "Facebook đang theo dõi, 30/08–12/09/2026; số dòng có thể gồm bài đăng lại"
+        },
+        "primary_cta": "Mở bộ lọc Radar",
+        "primary_href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=checklist_gia_rao_20260913",
+        "secondary_cta": "Dùng công cụ định giá",
+        "secondary_href": "/dinh-gia-bds",
+        "property_card": {
+            "status": "Snapshot Facebook · 30/08–12/09/2026",
+            "title": "Đừng lấy giá thấp nhất làm mốc duy nhất",
+            "price": "So giá theo đúng loại hình, phường và diện tích trước khi gọi hỏi",
+            "metric_a": "Có giá/m²",
+            "metric_a_value": "398/623 dòng đất nền + nhà đất",
+            "metric_b": "Có độ rộng đường",
+            "metric_b_value": "126/623 dòng"
+        },
+        "value_cards": [
+            {
+                "title": "Tách loại hình trước khi so",
+                "body": "Trong 6 phường, giá rao trung vị nhà đất Phú Mỹ là 39,0 tr/m², còn đất nền là 20,9 tr/m². Hai con số này không nên gộp thành một mặt bằng chung."
+            },
+            {
+                "title": "Đọc giá/m² cùng tổng giá",
+                "body": "Một tin có giá/m² thấp chưa đủ để kết luận rẻ. Cần đặt cạnh diện tích, tổng giá, đường vào và phần diện tích thổ cư nếu dữ liệu có ghi nhận."
+            },
+            {
+                "title": "Dấu hiệu chỉ giúp xếp thứ tự đọc",
+                "body": "Snapshot có 185 dòng mang cờ tin hot hoặc giảm giá trong 640 dòng. Đây là lớp ưu tiên để mở trước, không phải khuyến nghị giao dịch."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ checklist sang feed thực tế",
+            "title": "Lọc đúng phường rồi mới gọi hỏi",
+            "body": "Mở dashboard, chọn đất nền hoặc nhà đất, đặt trần tổng giá và đọc từng tin theo 5 bước trong bài.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất theo phường và loại hình",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "6 phường", "label": "snapshot minh họa"},
+                {"value": "2 loại", "label": "đất nền / nhà đất"},
+                {"value": "5 bước", "label": "trước khi đi xem"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot Facebook 30/08–12/09/2026",
+            "title": "Mặt bằng giá rao để học cách so đúng",
+            "body": "Tin theo dõi là số dòng Facebook đang được Radar giữ trong cửa sổ dữ liệu; có thể gồm bài đăng lại. Giá trong hai cột loại hình là giá rao trung vị, chỉ tính dòng có giá/m² hợp lệ.",
+            "columns": [
+                "Phường",
+                "Tin",
+                "Dấu hiệu",
+                "Đất nền",
+                "Nhà đất",
+                "Dưới 3 tỷ",
+                "Dưới 4 tỷ"
+            ],
+            "rows": [
+                {"area": "Phú Mỹ", "price": "187 tin", "tracked": "39", "signal": "20,9 tr/m²", "area_m2": "39,0 tr/m²", "note": "61", "note_2": "133"},
+                {"area": "Phú Hòa", "price": "129 tin", "tracked": "18", "signal": "28,4 tr/m²", "area_m2": "44,0 tr/m²", "note": "25", "note_2": "61"},
+                {"area": "Phú Tân", "price": "119 tin", "tracked": "69", "signal": "20,0 tr/m²", "area_m2": "34,4 tr/m²", "note": "34", "note_2": "50"},
+                {"area": "Định Hòa", "price": "89 tin", "tracked": "33", "signal": "12,8 tr/m²", "area_m2": "26,5 tr/m²", "note": "54", "note_2": "63"},
+                {"area": "Phú Lợi", "price": "72 tin", "tracked": "12", "signal": "26,8 tr/m²", "area_m2": "44,6 tr/m²", "note": "14", "note_2": "30"},
+                {"area": "Chánh Mỹ", "price": "44 tin", "tracked": "14", "signal": "23,1 tr/m²", "area_m2": "39,1 tr/m²", "note": "20", "note_2": "35"}
+            ],
+            "cards": [
+                {"title": "Không gộp hai loại hình", "value": "20,9 vs 39,0 tr/m²", "body": "Phú Mỹ · đất nền vs nhà đất"},
+                {"title": "Nhóm dưới 3 tỷ", "value": "61 dòng", "body": "Phú Mỹ · mọi loại hình trong snapshot"},
+                {"title": "Dữ liệu cần đọc kỹ", "value": "398/623 dòng", "body": "Có giá/m² trong nhóm đất nền và nhà đất"}
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và bài liên quan",
+        "local_links": [
+            {
+                "label": "Hub BĐS Bình Dương",
+                "href": "/binh-duong",
+                "description": "Chọn khu vực và đi vào các trang phường trước khi lọc tin."
+            },
+            {
+                "label": "Mở dashboard Săn Deal",
+                "href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=checklist_gia_rao_20260913",
+                "description": "Tách loại hình, phường và ngân sách để đọc từng dòng tin."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đối chiếu thêm trước khi gọi hỏi hoặc hẹn xem."
+            },
+            {
+                "label": "Báo cáo thị trường Bình Dương",
+                "href": "/bao-cao",
+                "description": "Xem bối cảnh theo tháng khi cần nhìn rộng hơn snapshot 14 ngày."
+            },
+            {
+                "label": "Giá rao khác giá giao dịch thế nào?",
+                "href": "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",
+                "description": "Phân biệt mức người bán đang chào với giá chốt thực tế."
+            },
+            {
+                "label": "Cách đọc giá/m² đất nền Bình Dương",
+                "href": "/tin-tuc/cach-doc-gia-m2-dat-nen-binh-duong",
+                "description": "Đọc giá/m² theo diện tích, vị trí và điều kiện của từng tin."
+            }
+        ],
+        "process_title": "Quy trình 5 bước trước khi đi xem",
+        "process": [
+            {
+                "title": "1. Chọn đúng loại hình",
+                "body": "Xác định bạn đang tìm đất nền hay nhà đất. Không dùng giá/m² của loại này để kết luận cho loại kia."
+            },
+            {
+                "title": "2. So giá/m² với tin cùng phường",
+                "body": "Lấy giá rao trung vị của đúng loại hình làm mốc đọc nhanh, rồi xem diện tích và vị trí của từng tin."
+            },
+            {
+                "title": "3. Đặt cạnh tổng giá",
+                "body": "Giá/m² chỉ là một phần. Hãy lọc thêm nhóm dưới 3 hoặc 4 tỷ nếu đó là trần ngân sách thực tế."
+            },
+            {
+                "title": "4. Đọc dấu hiệu như lời nhắc",
+                "body": "Tin hot hoặc giảm giá giúp bạn biết nên mở trước. Sau đó vẫn phải hỏi lý do, lịch sử giá và điều kiện giao dịch."
+            },
+            {
+                "title": "5. Kiểm tra dữ liệu trước khi hẹn",
+                "body": "Đối chiếu diện tích, đường vào, thổ cư, kích thước, vị trí và giấy tờ. Nếu thiếu trường quan trọng, coi đó là việc cần hỏi thêm."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-13",
+            "modified_at": "2026-09-13",
+            "intro": [
+                "Muốn tránh đi xem một tin chỉ rẻ trên tiêu đề, hãy kiểm tra theo 5 bước: tách đất nền với nhà đất, so giá/m² cùng phường, đối chiếu tổng giá, đọc dấu hiệu và kiểm tra dữ liệu vị trí–diện tích. Snapshot Facebook 30/08–12/09/2026 của Radar cho thấy giá rao trung vị nhà đất Phú Mỹ là 39,0 tr/m², trong khi đất nền là 20,9 tr/m².",
+                "Các số liệu dưới đây là giá rao và số dòng tin Facebook đang theo dõi, không phải giá chốt giao dịch hay số lượng lô đất duy nhất."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Snapshot 6 phường",
+                    "value": "640 dòng tin",
+                    "note": "Mọi loại hình · cửa sổ 30/08–12/09/2026"
+                },
+                {
+                    "label": "Giá/m² có thể so",
+                    "value": "398/623 dòng",
+                    "note": "Đất nền + nhà đất có giá/m² hợp lệ"
+                },
+                {
+                    "label": "Dấu hiệu cần mở trước",
+                    "value": "185 dòng",
+                    "note": "Cờ tin hot hoặc giảm giá trong snapshot"
+                },
+                {
+                    "label": "Trường dữ liệu cần hỏi",
+                    "value": "126/623 dòng",
+                    "note": "Có ghi nhận độ rộng đường"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng mốc đọc nhanh",
+                    "title": "Giá rao khác nhau thế nào giữa đất nền và nhà đất?",
+                    "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0; cửa sổ crawled_at 30/08–12/09/2026. Giá là giá rao trung vị theo loại hình; dòng tin có thể gồm bài đăng lại.",
+                    "columns": [
+                        {"key": "area", "label": "Phường"},
+                        {"key": "tracked", "label": "Dòng tin"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "land_m2", "label": "Đất nền tr/m²"},
+                        {"key": "house_m2", "label": "Nhà đất tr/m²"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"}
+                    ],
+                    "rows": [
+                        {"area": "Phú Mỹ", "tracked": "187", "signals": "39", "land_m2": "20,9", "house_m2": "39,0", "under3": "61", "under4": "133"},
+                        {"area": "Phú Hòa", "tracked": "129", "signals": "18", "land_m2": "28,4", "house_m2": "44,0", "under3": "25", "under4": "61"},
+                        {"area": "Phú Tân", "tracked": "119", "signals": "69", "land_m2": "20,0", "house_m2": "34,4", "under3": "34", "under4": "50"},
+                        {"area": "Định Hòa", "tracked": "89", "signals": "33", "land_m2": "12,8", "house_m2": "26,5", "under3": "54", "under4": "63"},
+                        {"area": "Phú Lợi", "tracked": "72", "signals": "12", "land_m2": "26,8", "house_m2": "44,6", "under3": "14", "under4": "30"},
+                        {"area": "Chánh Mỹ", "tracked": "44", "signals": "14", "land_m2": "23,1", "house_m2": "39,1", "under3": "20", "under4": "35"}
+                    ]
+                },
+                {
+                    "eyebrow": "Kiểm tra độ đầy đủ của tin",
+                    "title": "Không phải dòng nào cũng đủ dữ liệu để so ngay",
+                    "note": "Trong 623 dòng đất nền và nhà đất ở 6 phường, các trường dưới đây được đếm theo giá trị đã lưu; thiếu trường không đồng nghĩa tin sai, nhưng là điểm cần hỏi lại.",
+                    "columns": [
+                        {"key": "field", "label": "Trường cần kiểm tra"},
+                        {"key": "count", "label": "Số dòng có dữ liệu"},
+                        {"key": "why", "label": "Vì sao cần đọc"}
+                    ],
+                    "rows": [
+                        {"field": "Diện tích", "count": "536/623", "why": "Tính lại tổng giá và giá/m²"},
+                        {"field": "Tổng giá", "count": "454/623", "why": "So với trần ngân sách"},
+                        {"field": "Giá/m²", "count": "398/623", "why": "So cùng loại hình và phường"},
+                        {"field": "Thổ cư", "count": "495/623", "why": "Hỏi rõ phần diện tích được công nhận"},
+                        {"field": "Độ rộng đường", "count": "126/623", "why": "Không suy đoán chỉ từ tên đường"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Mốc so giá",
+                    "title": "Giá rao trung vị/m² theo loại hình",
+                    "note": "Đất nền và nhà đất được tách riêng; giá chỉ dùng để lọc ban đầu.",
+                    "alt": "Giá rao trung vị theo loại hình ở sáu phường Thủ Dầu Một",
+                    "rows": [
+                        {"label": "Phú Mỹ · đất nền", "value_label": "20,9", "width": 47, "color": "#38bdf8"},
+                        {"label": "Phú Mỹ · nhà đất", "value_label": "39,0", "width": 87, "color": "#14b8a6"},
+                        {"label": "Phú Hòa · đất nền", "value_label": "28,4", "width": 64, "color": "#38bdf8"},
+                        {"label": "Phú Hòa · nhà đất", "value_label": "44,0", "width": 99, "color": "#14b8a6"},
+                        {"label": "Phú Tân · đất nền", "value_label": "20,0", "width": 45, "color": "#38bdf8"},
+                        {"label": "Phú Tân · nhà đất", "value_label": "34,4", "width": 77, "color": "#14b8a6"},
+                        {"label": "Định Hòa · đất nền", "value_label": "12,8", "width": 29, "color": "#38bdf8"},
+                        {"label": "Định Hòa · nhà đất", "value_label": "26,5", "width": 59, "color": "#14b8a6"},
+                        {"label": "Phú Lợi · đất nền", "value_label": "26,8", "width": 60, "color": "#38bdf8"},
+                        {"label": "Phú Lợi · nhà đất", "value_label": "44,6", "width": 100, "color": "#14b8a6"},
+                        {"label": "Chánh Mỹ · đất nền", "value_label": "23,1", "width": 52, "color": "#38bdf8"},
+                        {"label": "Chánh Mỹ · nhà đất", "value_label": "39,1", "width": 88, "color": "#14b8a6"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "tach-dung-loai-hinh",
+                    "heading": "1. Tách đất nền và nhà đất trước khi nhìn giá",
+                    "paragraphs": [
+                        "Bước đầu tiên là chọn đúng loại tài sản. Đất nền và nhà đất có giá/m² khác nhau vì người mua đang trả cho những thứ khác nhau: hiện trạng xây dựng, diện tích sử dụng, thổ cư, đường vào và chất lượng căn nhà.",
+                        "Trong snapshot 6 phường, Phú Mỹ có giá rao trung vị đất nền 20,9 tr/m² và nhà đất 39,0 tr/m². Phú Hòa lần lượt là 28,4 và 44,0 tr/m². Nếu gộp hai nhóm, bạn sẽ có một con số khó dùng để quyết định tin nào đáng mở trước.",
+                        "Khi mở dashboard, hãy chọn đất nền hoặc nhà đất trước. Nếu đang tìm cả hai, lập hai danh sách riêng rồi so từng danh sách với đúng mặt bằng giá."
+                    ],
+                    "bullets": [
+                        "Đất nền: xem diện tích, thổ cư, mặt tiền, chiều sâu và đường vào.",
+                        "Nhà đất: xem thêm hiện trạng nhà, diện tích sử dụng và tình trạng bàn giao.",
+                        "Không lấy giá/m² đất nền để kết luận một căn nhà cùng phường là đắt hay rẻ."
+                    ]
+                },
+                {
+                    "id": "so-gia-m2-cung-phuong",
+                    "heading": "2. So giá/m² với tin cùng phường, cùng loại hình",
+                    "paragraphs": [
+                        "Giá/m² là mốc lọc nhanh, không phải giá chốt. Hãy so những tin gần nhau về loại hình, diện tích và vị trí. Một tin 12,8 tr/m² ở Định Hòa không nên so trực tiếp với nhà đất 44,6 tr/m² ở Phú Lợi.",
+                        "Bảng trên cho thấy Định Hòa có giá rao trung vị đất nền 12,8 tr/m² và nhà đất 26,5 tr/m², trong khi Phú Lợi là 26,8 và 44,6 tr/m². Khoảng cách này giúp bạn chọn mốc kiểm tra ban đầu, nhưng không thay cho việc đọc đường, thổ cư và giấy tờ của từng tin.",
+                        "Nếu giá một tin lệch xa mốc cùng loại hình, đừng vội gọi đó là cơ hội. Hãy chuyển sang bước 3 và 5 để xem tổng giá và dữ liệu đi kèm."
+                    ],
+                    "bullets": [
+                        "So theo phường trước, rồi mới mở rộng sang phường liền kề.",
+                        "Giữ cùng loại hình và khoảng diện tích khi so.",
+                        "Ghi lại ngày snapshot vì giá rao và nguồn tin có thể thay đổi."
+                    ]
+                },
+                {
+                    "id": "doi-chieu-tong-gia",
+                    "heading": "3. Đặt giá/m² cạnh tổng giá và trần ngân sách",
+                    "paragraphs": [
+                        "Một tin có giá/m² thấp vẫn có thể vượt ngân sách nếu diện tích lớn. Ngược lại, tổng giá thấp chưa chắc là tin dễ mua nếu diện tích nhỏ, đường vào khó hoặc phần thổ cư không rõ.",
+                        "Trong cùng snapshot, Phú Mỹ có 61 dòng dưới 3 tỷ và 133 dòng dưới 4 tỷ khi đếm mọi loại hình. Định Hòa có 54 dòng dưới 3 tỷ và 63 dòng dưới 4 tỷ. Đây là số dòng có tổng giá hợp lệ trong cửa sổ dữ liệu, không phải số sản phẩm chắc chắn còn hàng.",
+                        "Bạn nên đặt trần tổng giá trước, sau đó xem lại giá/m² và diện tích. Cách này tránh việc bị thu hút bởi một đơn giá thấp nhưng không phù hợp số tiền có thể chuẩn bị."
+                    ],
+                    "bullets": [
+                        "Lọc theo tổng giá trước nếu ngân sách là giới hạn cứng.",
+                        "Sau khi lọc, kiểm tra giá/m² để phát hiện tin lệch mặt bằng.",
+                        "Không coi nhóm dưới 3 hoặc 4 tỷ là danh sách giao dịch sẵn có."
+                    ]
+                },
+                {
+                    "id": "doc-dau-hieu",
+                    "heading": "4. Đọc dấu hiệu giảm giá hoặc tin hot như lời nhắc",
+                    "paragraphs": [
+                        "Radar dùng các cờ dữ liệu như tin hot hoặc giảm giá để giúp bạn mở một số dòng trước. Trong snapshot 640 dòng của 6 phường, có 185 dòng mang ít nhất một cờ. Phú Tân có 69 dòng, Phú Mỹ 39 dòng và Định Hòa 33 dòng.",
+                        "Con số này không phải tỷ lệ bán được, mức chiết khấu chắc chắn hay lời khuyên nên mua. Một tin giảm giá có thể cần kiểm tra nguyên nhân; một tin hot vẫn có thể thiếu diện tích, vị trí hoặc thông tin pháp lý.",
+                        "Sau khi mở tin có dấu hiệu, hãy hỏi người đăng về lý do thay đổi giá, thời điểm cập nhật, vị trí chính xác và hồ sơ trước khi sắp lịch xem."
+                    ],
+                    "bullets": [
+                        "Cờ dữ liệu giúp xếp thứ tự đọc, không thay cho thẩm định.",
+                        "Ưu tiên hỏi lý do giảm giá và lịch sử giá nếu có.",
+                        "Không dùng số dấu hiệu để suy ra phường đó chắc chắn có giao dịch tốt."
+                    ]
+                },
+                {
+                    "id": "kiem-tra-du-lieu-truoc-khi-xem",
+                    "heading": "5. Kiểm tra diện tích, đường vào và thổ cư trước khi hẹn",
+                    "paragraphs": [
+                        "Bước cuối cùng là xem tin có đủ dữ liệu để gọi hỏi hay chưa. Trong 623 dòng đất nền và nhà đất của 6 phường, có 536 dòng có diện tích, 454 dòng có tổng giá, 398 dòng có giá/m² và 495 dòng có trường thổ cư. Chỉ 126 dòng có ghi nhận độ rộng đường.",
+                        "Một ví dụ đã ẩn thông tin liên hệ: dòng đất nền ở Định Hòa ghi 120m², tổng giá 1,40 tỷ, giá 11,7 tr/m², hẻm xe hơi và 60m² thổ cư; dòng này đồng thời có cờ tin hot và giảm giá. Dữ liệu đó đủ để đặt câu hỏi tiếp theo, nhưng chưa đủ để kết luận nên mua.",
+                        "Nếu thiếu độ rộng đường, phần thổ cư hoặc vị trí cụ thể, hãy coi đó là mục cần xác minh. Chỉ hẹn xem sau khi người đăng trả lời được các câu hỏi cơ bản và bạn đã đối chiếu thông tin độc lập."
+                    ],
+                    "bullets": [
+                        "Hỏi lại diện tích thực tế và phần diện tích được công nhận.",
+                        "Xác minh đường vào bằng vị trí cụ thể, không suy đoán từ tên khu.",
+                        "Đối chiếu giấy tờ, quy hoạch và hiện trạng trước khi đặt cọc."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Chọn đất nền hoặc nhà đất trước khi so giá.",
+                "So giá/m² với các tin cùng phường, cùng loại hình và gần nhau về diện tích.",
+                "Đặt cạnh tổng giá và trần ngân sách 3 tỷ hoặc 4 tỷ nếu phù hợp.",
+                "Xem tin hot hoặc giảm giá như thứ tự ưu tiên, không phải kết luận nên mua.",
+                "Hỏi diện tích, thổ cư, đường vào, vị trí, giấy tờ và quy hoạch trước khi hẹn xem.",
+                "Nhớ rằng Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận."
+            ]
+        },
+        "faq": [
+            {
+                "q": "Giá rao trong bài có phải giá chốt giao dịch không?",
+                "a": "Không. Đây là giá người bán đang chào trong các dòng tin Facebook Radar theo dõi. Giá chốt có thể khác và cần được xác minh độc lập."
+            },
+            {
+                "q": "Vì sao phải tách đất nền và nhà đất khi xem giá?",
+                "a": "Hai loại hình có hiện trạng, công năng, diện tích sử dụng và mặt bằng giá khác nhau. Gộp chung dễ tạo ra một mốc giá khó dùng."
+            },
+            {
+                "q": "Một tin thấp hơn giá rao trung vị có nên đi xem ngay không?",
+                "a": "Chưa nên kết luận. Hãy kiểm tra tổng giá, diện tích, đường vào, thổ cư, vị trí, giấy tờ và lý do mức giá thấp trước khi hẹn xem."
+            },
+            {
+                "q": "Dấu hiệu tin hot hoặc giảm giá có nghĩa là tài sản tốt không?",
+                "a": "Không. Dấu hiệu chỉ giúp xếp thứ tự mở tin. Người mua vẫn phải đọc thông tin chi tiết và thẩm định độc lập."
+            }
+        ],
+        "final_cta": {
+            "title": "Lọc nhanh, rồi kiểm tra kỹ",
+            "body": "Mở Radar để chọn đúng phường và loại hình, sau đó dùng công cụ định giá và checklist này trước khi liên hệ.",
+            "button": "Mở Radar"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương", "href": "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong", "url": "https://radarbds.vn/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong"}
+        ]
+    },
 }
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
