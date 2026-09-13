@@ -22451,7 +22451,7 @@ SEO_ARTICLES = {
                         {"key": "why", "label": "Vì sao cần đọc"}
                     ],
                     "rows": [
-                        {"field": "Diện tích", "count": "536/623", "why": "Tính lại tổng giá và giá/m²"},
+                        {"field": "Diện tích đọc được dạng số", "count": "536/623", "why": "Tính lại tổng giá và giá/m²"},
                         {"field": "Tổng giá", "count": "454/623", "why": "So với trần ngân sách"},
                         {"field": "Giá/m²", "count": "398/623", "why": "So cùng loại hình và phường"},
                         {"field": "Thổ cư", "count": "495/623", "why": "Hỏi rõ phần diện tích được công nhận"},
