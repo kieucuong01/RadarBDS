@@ -22616,7 +22616,312 @@ SEO_ARTICLES = {
             {"name": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương", "href": "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong", "url": "https://radarbds.vn/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong"}
         ]
     },
+    "gia-dat-phu-an-ben-cat-hien-bao-nhieu": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu",
+        "category": {"key": "du-lieu-gia-dat", "label": "Giá đất theo phường"},
+        "title": "Giá đất Phú An Bến Cát hiện bao nhiêu? Đọc riêng đất nền và nhà đất | Radar BDS",
+        "description": "Giá đất Phú An Bến Cát cập nhật 14/09/2026: 223 tin Facebook, đất nền 7,4 tr/m², nhà đất 11,7 tr/m² và 15 dấu hiệu đáng kiểm tra.",
+        "keywords": "giá đất Phú An Bến Cát, giá đất nền Phú An, nhà đất Phú An, giá/m² Bến Cát, Radar BDS",
+        "breadcrumb_label": "Giá đất Phú An Bến Cát",
+        "hero_badge": "Tin tức BĐS Bến Cát",
+        "hero_title": "Giá đất Phú An Bến Cát hiện bao nhiêu? Đọc riêng đất nền và nhà đất",
+        "hero_text": "Dữ liệu Facebook Radar BDS trong cửa sổ 14 ngày cho thấy đất nền và nhà đất Phú An đang nằm ở hai mặt bằng giá khác nhau. Người mua nên tách loại hình trước khi so giá rao và mở từng tin để kiểm tra tiếp.",
+        "scope_label": "Bến Cát · Phú An",
+        "hero_checks": [
+            "223 dòng tin Facebook đang theo dõi trong cửa sổ 14 ngày; đây là số tin/bản ghi, không phải số bất động sản duy nhất",
+            "Đất nền: 192 tin, 184 tin có giá/m² đủ điều kiện, giá rao trung vị 7,4 tr/m²",
+            "Nhà đất: 21 tin, 21 tin có giá/m² đủ điều kiện, giá rao trung vị 11,7 tr/m²",
+            "15 dấu hiệu đáng kiểm tra: 6 tin được đánh dấu đáng chú ý và 9 tin có giảm giá"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú An",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20An&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_an_price_20260914",
+        "secondary_cta": "Dùng công cụ định giá",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Giá đất Phú An Bến Cát",
+        "hero_metric": {
+            "label": "Tin Phú An trong 14 ngày",
+            "value": "223 tin",
+            "delta": "15 dấu hiệu",
+            "note": "Nguồn Facebook; cập nhật 14/09/2026, crawl mới nhất trong mẫu 12/09/2026"
+        },
+        "property_card": {
+            "status": "Tách riêng loại hình",
+            "title": "Đất nền và nhà đất Phú An không nên đọc bằng một giá chung",
+            "price": "Đất nền 7,4 tr/m² · nhà đất 11,7 tr/m²",
+            "metric_a": "Đất nền đang theo dõi",
+            "metric_a_value": "192 tin",
+            "metric_b": "Nhà đất đang theo dõi",
+            "metric_b_value": "21 tin"
+        },
+        "value_cards": [
+            {
+                "title": "Đất nền là nhóm có mẫu lớn nhất",
+                "body": "Radar BDS đang theo dõi 192 tin đất nền Phú An; 184 tin có giá/m² đủ điều kiện tính. Giá rao trung vị là 7,4 tr/m², còn tổng giá rao trung vị khoảng 2,30 tỷ."
+            },
+            {
+                "title": "Nhà đất có mặt bằng khác đất nền",
+                "body": "Nhà đất có 21 tin và cả 21 tin đều có giá/m² đủ điều kiện. Giá rao trung vị là 11,7 tr/m², tổng giá rao trung vị khoảng 1,65 tỷ; mẫu nhỏ hơn nên cần đọc từng tin cùng hiện trạng nhà."
+            },
+            {
+                "title": "15 dấu hiệu chỉ dùng để xếp thứ tự kiểm tra",
+                "body": "Mẫu Phú An có 6 tin được hệ thống đánh dấu đáng chú ý và 9 tin có giảm giá, không chồng lấp trong lần truy vấn này. Đây không phải kết luận nên mua."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Lọc nhanh trên Radar",
+            "title": "Xem riêng Phú An trước khi liên hệ",
+            "body": "Giữ phường Phú An trên dashboard, tách đất nền hoặc nhà đất, rồi mới so giá/m², tổng giá và dấu hiệu của từng tin.",
+            "image": "/static/images/seo/ward-price-dashboard-preview.webp",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất Phú An Bến Cát",
+            "cta": "Mở dashboard Phú An",
+            "metrics": [
+                {"value": "223", "label": "tin theo dõi"},
+                {"value": "7,4", "label": "tr/m² đất nền"},
+                {"value": "11,7", "label": "tr/m² nhà đất"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 14/09/2026",
+            "title": "Phú An theo từng loại hình bất động sản",
+            "body": "Các mức dưới đây là giá rao trung vị từ tin Facebook được lọc theo Phú An, is_active = 1, không bị blacklist và không bị ẩn. Giá/m² chỉ tính trên giá trị hợp lệ.",
+            "columns": ["Loại hình", "Tin đang theo dõi", "Tin có giá/m²", "Giá rao trung vị/m²", "Tổng giá trung vị", "Dấu hiệu"],
+            "rows": [
+                {"type": "Đất nền", "tracked": "192", "priced": "184", "median_m2": "7,4 tr/m²", "median_total": "2,30 tỷ", "signals": "11"},
+                {"type": "Nhà đất", "tracked": "21", "priced": "21", "median_m2": "11,7 tr/m²", "median_total": "1,65 tỷ", "signals": "2"},
+                {"type": "Kho/xưởng", "tracked": "10", "priced": "9", "median_m2": "6,6 tr/m²", "median_total": "10,25 tỷ", "signals": "2"}
+            ],
+            "cards": [
+                {"title": "Đất nền 7,4 tr/m²", "value": "184 tin có giá/m²", "body": "Nhóm dữ liệu lớn nhất trong mẫu Phú An."},
+                {"title": "Nhà đất 11,7 tr/m²", "value": "21 tin có giá/m²", "body": "Không nên gộp với lô đất trống."},
+                {"title": "15 dấu hiệu", "value": "6 đáng chú ý · 9 giảm giá", "body": "Chỉ là thứ tự ưu tiên kiểm tra."}
+            ]
+        },
+        "local_links_title": "Đọc tiếp và lọc Phú An bằng dữ liệu",
+        "local_links": [
+            {
+                "label": "Trang khu vực Phú An",
+                "href": "/binh-duong/phuong-phu-an",
+                "description": "Xem tổng hợp nhà đất Phú An và mở bộ lọc khu vực."
+            },
+            {
+                "label": "Trang nhà đất Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Đặt Phú An trong nguồn tin Bến Cát trước khi so giá."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Kiểm tra thêm một tin cụ thể sau khi đã lọc theo loại hình."
+            },
+            {
+                "label": "Giá đất Mỹ Phước Bến Cát hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu",
+                "description": "So thêm một khu Bến Cát bằng đất nền và nhà đất riêng biệt."
+            },
+            {
+                "label": "Bến Cát có những khu nào nên theo dõi?",
+                "href": "/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat",
+                "description": "Đọc cách chọn khu và thứ tự mở feed trước khi đi xem."
+            }
+        ],
+        "process_title": "Quy trình đọc giá Phú An trước khi đi xem",
+        "process": [
+            {"title": "1. Chọn đúng loại hình", "body": "Tách đất nền, nhà đất và kho/xưởng. Không lấy giá trung vị của nhóm này để kết luận cho nhóm khác."},
+            {"title": "2. So cả giá/m² và tổng giá", "body": "Giá/m² giúp so các tin khác diện tích; tổng giá cho biết tin có nằm trong ngân sách thực tế hay không."},
+            {"title": "3. Mở từng tin đáng kiểm tra", "body": "Đọc mô tả, ảnh, đường vào, diện tích, thổ cư và lịch sử giá trước khi gọi hoặc đi xem."},
+            {"title": "4. Xác minh độc lập", "body": "Kiểm tra sổ, quy hoạch, tranh chấp và hiện trạng thực tế. Radar BDS chỉ là bộ lọc dữ liệu ban đầu."}
+        ],
+        "faq": [
+            {
+                "q": "Giá đất nền Phú An Bến Cát hiện khoảng bao nhiêu?",
+                "a": "Trong dữ liệu Facebook Radar BDS 14 ngày cập nhật 14/09/2026, đất nền Phú An có giá rao trung vị 7,4 tr/m² từ 184 tin có giá/m² đủ điều kiện. Đây là giá rao tham khảo, không phải giá giao dịch đã chốt."
+            },
+            {
+                "q": "Nhà đất Phú An có nên so chung với đất nền không?",
+                "a": "Không nên. Nhà đất Phú An có giá rao trung vị 11,7 tr/m² từ 21 tin có giá/m², vì mức giá còn phụ thuộc hiện trạng nhà, công trình, đường vào và công năng sử dụng."
+            },
+            {
+                "q": "15 dấu hiệu đáng kiểm tra ở Phú An có nghĩa là nên mua ngay không?",
+                "a": "Không. 15 dấu hiệu gồm 6 tin được hệ thống đánh dấu đáng chú ý và 9 tin có giảm giá trong mẫu này. Dấu hiệu chỉ giúp người mua chọn tin để kiểm tra trước; vẫn phải xác minh pháp lý, quy hoạch và thực địa."
+            },
+            {
+                "q": "223 tin Phú An có phải là 223 lô đất khác nhau không?",
+                "a": "Không thể kết luận như vậy. 223 là số dòng tin Facebook đang theo dõi trong cửa sổ dữ liệu, có thể có tin đăng lại hoặc cùng tài sản xuất hiện nhiều lần. Hãy xem đây là nguồn để sàng lọc, không phải số lượng bất động sản duy nhất."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-14",
+            "modified_at": "2026-09-14",
+            "intro": [
+                "Giá đất Phú An Bến Cát trong dữ liệu Facebook Radar BDS 14 ngày đang được đọc theo từng loại hình: đất nền có giá rao trung vị 7,4 tr/m² từ 184 tin có giá/m²; nhà đất là 11,7 tr/m² từ 21 tin. Đây là giá rao đang theo dõi, cập nhật ngày 14/09/2026, không phải giá giao dịch đã chốt.",
+                "Mẫu có 223 dòng tin đang theo dõi, gồm 192 tin đất nền, 21 tin nhà đất và 10 tin kho/xưởng. Con số này là số tin/bản ghi, không đại diện cho 223 bất động sản duy nhất; một tài sản có thể xuất hiện lại qua các lần đăng hoặc nguồn tin."
+            ],
+            "summary_cards": [
+                {"label": "Tin Phú An 14 ngày", "value": "223 tin", "note": "Nguồn Facebook, cập nhật 14/09/2026"},
+                {"label": "Đất nền", "value": "7,4 tr/m²", "note": "192 tin; 184 tin có giá/m²"},
+                {"label": "Nhà đất", "value": "11,7 tr/m²", "note": "21 tin; 21 tin có giá/m²"},
+                {"label": "Dấu hiệu", "value": "15 tin", "note": "6 đáng chú ý và 9 có giảm giá"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Nguồn Facebook · cửa sổ 14 ngày",
+                    "title": "Giá rao Phú An theo loại hình",
+                    "note": "Giá trung vị dùng PERCENTILE_CONT(0.5). Giá/m² hợp lệ nằm trong khoảng lớn hơn 0 và nhỏ hơn 500 tr/m²; đây là giá rao, không phải giá chốt.",
+                    "columns": [
+                        {"key": "type", "label": "Loại hình"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "priced", "label": "Có giá/m²"},
+                        {"key": "median_m2", "label": "Giá rao trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"},
+                        {"key": "signals", "label": "Dấu hiệu"}
+                    ],
+                    "rows": [
+                        {"type": "Đất nền", "tracked": "192", "priced": "184", "median_m2": "7,4 tr/m²", "median_total": "2,30 tỷ", "signals": "11"},
+                        {"type": "Nhà đất", "tracked": "21", "priced": "21", "median_m2": "11,7 tr/m²", "median_total": "1,65 tỷ", "signals": "2"},
+                        {"type": "Kho/xưởng", "tracked": "10", "priced": "9", "median_m2": "6,6 tr/m²", "median_total": "10,25 tỷ", "signals": "2"}
+                    ]
+                },
+                {
+                    "eyebrow": "Đối chiếu cùng cửa sổ dữ liệu",
+                    "title": "Nguồn tin và giá/m² tại một số khu vực Bến Cát",
+                    "note": "Các dòng dùng cùng bộ lọc Facebook, đang theo dõi, không blacklist và không ẩn. Dấu gạch ngang nghĩa là mẫu có giá/m² chưa đủ để tính trung vị.",
+                    "columns": [
+                        {"key": "area", "label": "Khu vực"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "land", "label": "Đất nền"},
+                        {"key": "house", "label": "Nhà đất"}
+                    ],
+                    "rows": [
+                        {"area": "Phú An", "tracked": "223", "land": "7,4 tr/m²", "house": "11,7 tr/m²"},
+                        {"area": "An Điền", "tracked": "109", "land": "6,3 tr/m²", "house": "17,0 tr/m²"},
+                        {"area": "Tân Định", "tracked": "96", "land": "12,0 tr/m²", "house": "18,7 tr/m²"},
+                        {"area": "An Tây", "tracked": "73", "land": "9,6 tr/m²", "house": "—"},
+                        {"area": "Chánh Phú Hòa", "tracked": "49", "land": "8,3 tr/m²", "house": "13,9 tr/m²"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Giá rao trung vị theo nhóm",
+                    "title": "Không nên gộp đất nền với nhà đất",
+                    "note": "Thanh dài hơn chỉ thể hiện giá rao trung vị cao hơn trong cùng mẫu; không phải chất lượng hay khuyến nghị mua.",
+                    "alt": "So sánh giá rao trung vị trên mỗi mét vuông của đất nền, nhà đất và kho xưởng tại Phú An",
+                    "rows": [
+                        {"label": "Đất nền", "value_label": "7,4 tr/m²", "width": 64, "color": "#2563eb"},
+                        {"label": "Nhà đất", "value_label": "11,7 tr/m²", "width": 100, "color": "#0f766e"},
+                        {"label": "Kho/xưởng", "value_label": "6,6 tr/m²", "width": 57, "color": "#d97706"}
+                    ]
+                },
+                {
+                    "eyebrow": "Số dòng tin Facebook",
+                    "title": "Phú An có nguồn tin dày hơn trong mẫu đối chiếu",
+                    "note": "Số tin cao hơn chỉ giúp có thêm mẫu để lọc; không đồng nghĩa có nhiều bất động sản duy nhất hơn.",
+                    "alt": "So sánh số dòng tin theo dõi giữa Phú An và một số khu vực Bến Cát",
+                    "rows": [
+                        {"label": "Phú An", "value_label": "223 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "An Điền", "value_label": "109 tin", "width": 49, "color": "#0f766e"},
+                        {"label": "Tân Định", "value_label": "96 tin", "width": 43, "color": "#0f766e"},
+                        {"label": "An Tây", "value_label": "73 tin", "width": 33, "color": "#0f766e"},
+                        {"label": "Chánh Phú Hòa", "value_label": "49 tin", "width": 22, "color": "#0f766e"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-dat-nen-phu-an",
+                    "heading": "Đất nền Phú An: giá rao trung vị 7,4 tr/m² từ 184 tin có giá/m²",
+                    "paragraphs": [
+                        "Đất nền là nhóm lớn nhất trong mẫu Phú An với 192 tin đang theo dõi. Có 184 tin đủ điều kiện tính giá/m², cho mức giá rao trung vị 7,4 tr/m² và tổng giá rao trung vị khoảng 2,30 tỷ.",
+                        "Khoảng giữa của mẫu nằm khoảng 5,4–10,0 tr/m² theo vùng 25–75%. Vì vậy, một tin thấp hơn 5,4 tr/m² hoặc cao hơn 10,0 tr/m² cần được đọc cùng diện tích, thổ cư, đường vào và vị trí; không nên xem riêng giá/m² là kết luận rẻ hay đắt."
+                    ],
+                    "bullets": [
+                        "192 tin đất nền đang theo dõi",
+                        "184 tin có giá/m² đủ điều kiện",
+                        "Giá rao trung vị: 7,4 tr/m²",
+                        "Tổng giá rao trung vị: 2,30 tỷ"
+                    ]
+                },
+                {
+                    "id": "nha-dat-phu-an",
+                    "heading": "Nhà đất Phú An: giá rao trung vị 11,7 tr/m² từ 21 tin",
+                    "paragraphs": [
+                        "Nhà đất Phú An có 21 tin trong cửa sổ 14 ngày và cả 21 tin đều có giá/m² đủ điều kiện tính. Giá rao trung vị là 11,7 tr/m², tổng giá rao trung vị khoảng 1,65 tỷ; vùng 25–75% nằm khoảng 8,8–14,5 tr/m².",
+                        "Mẫu nhà đất nhỏ hơn nhiều so với đất nền. Người mua nên dùng 11,7 tr/m² làm mốc tham khảo để mở và so tin cùng hiện trạng nhà, không xem đó là mặt bằng chắc chắn cho toàn Phú An."
+                    ],
+                    "bullets": [
+                        "21 tin nhà đất đang theo dõi",
+                        "21 tin có giá/m² đủ điều kiện",
+                        "Giá rao trung vị: 11,7 tr/m²",
+                        "Tổng giá rao trung vị: 1,65 tỷ"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-phu-an",
+                    "heading": "15 dấu hiệu đáng kiểm tra: 6 tin được đánh dấu đáng chú ý, 9 tin có giảm giá",
+                    "paragraphs": [
+                        "Trong 223 tin Phú An, Radar BDS ghi nhận 15 dấu hiệu đáng kiểm tra: 6 tin được hệ thống đánh dấu đáng chú ý và 9 tin có giảm giá. Hai nhóm không chồng lấp trong lần truy vấn này nên tổng là 15.",
+                        "Dấu hiệu chỉ giúp xếp thứ tự mở tin. Trước khi liên hệ, người mua vẫn cần đọc mô tả, xem ảnh, kiểm tra giá cập nhật, diện tích, loại đường và giấy tờ. Một tin giảm giá không tự động là tin tốt."
+                    ],
+                    "bullets": [
+                        "Dấu hiệu đáng kiểm tra: 15 tin",
+                        "Tin được đánh dấu đáng chú ý: 6",
+                        "Tin có giảm giá: 9",
+                        "Nguồn crawl mới nhất trong mẫu: 12/09/2026"
+                    ]
+                },
+                {
+                    "id": "so-sanh-ben-cat",
+                    "heading": "Phú An có nguồn tin dày hơn một số khu Bến Cát trong cùng mẫu",
+                    "paragraphs": [
+                        "Phú An có 223 dòng tin, nhiều hơn An Điền 109, Tân Định 96, An Tây 73 và Chánh Phú Hòa 49 trong cùng cửa sổ 14 ngày. Đây là lợi thế về số mẫu để lọc, không phải bằng chứng rằng Phú An có 223 bất động sản khác nhau.",
+                        "Nếu chỉ so đất nền, giá rao trung vị Phú An 7,4 tr/m² cao hơn An Điền 6,3 tr/m² nhưng thấp hơn An Tây 9,6 tr/m² và Tân Định 12,0 tr/m². Với nhà đất, Phú An 11,7 tr/m² thấp hơn An Điền 17,0 tr/m², Tân Định 18,7 tr/m² và Chánh Phú Hòa 13,9 tr/m²; An Tây chưa đủ mẫu có giá/m² để tính mốc so sánh."
+                    ],
+                    "bullets": [
+                        "Phú An: 223 dòng tin",
+                        "Đất nền Phú An: 7,4 tr/m²",
+                        "Nhà đất Phú An: 11,7 tr/m²",
+                        "Luôn so cùng loại hình và cùng điều kiện lọc"
+                    ]
+                },
+                {
+                    "id": "loc-dashboard-phu-an",
+                    "heading": "Cách lọc Phú An trước khi gọi hỏi tin",
+                    "paragraphs": [
+                        "Bước đầu tiên là mở dashboard với phường Phú An, sau đó chọn một loại hình: đất nền hoặc nhà đất. Tiếp theo, đặt khoảng tổng giá phù hợp ngân sách, xem giá/m² và mở các tin có dấu hiệu để đọc chi tiết. Không nên vừa gộp loại hình vừa so các mức giá khác nhau.",
+                        "Sau khi có danh sách ngắn, người mua có thể dùng công cụ định giá BĐS để tham khảo thêm, rồi kiểm tra sổ, quy hoạch, đường vào, thổ cư, tranh chấp và hiện trạng thực địa. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý hay định giá chính thức."
+                    ],
+                    "bullets": [
+                        "Chọn Phú An trên dashboard",
+                        "Tách đất nền và nhà đất",
+                        "So giá/m² cùng loại hình và tổng giá cùng ngân sách",
+                        "Mở tin có dấu hiệu để kiểm tra trước",
+                        "Xác minh pháp lý và thực địa trước khi đặt cọc"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã xác định tin thuộc đất nền, nhà đất hay kho/xưởng.",
+                "Đã so giá/m² với đúng loại hình tại Phú An.",
+                "Đã nhìn cả tổng giá, không chỉ giá/m².",
+                "Đã phân biệt số dòng tin với số bất động sản duy nhất.",
+                "Đã kiểm tra pháp lý, quy hoạch và thực địa trước khi đặt cọc."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar để lọc đúng nhóm Phú An",
+            "body": "Giữ phường Phú An, tách đất nền hoặc nhà đất, rồi mới so giá rao và dấu hiệu của từng tin. Đây là bước sàng lọc ban đầu trước khi liên hệ và đi xem.",
+            "button": "Mở dashboard Phú An",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20An&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_an_price_20260914"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Giá đất Phú An Bến Cát", "href": "/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu", "url": "https://radarbds.vn/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu"}
+        ]
+    },
 }
+
 
 # Normalize wording for moved July data articles: @rb uses “giá trung vị”, not “giá ở giữa”.
 def _rb_normalize_median_wording(value):
