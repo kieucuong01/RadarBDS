@@ -11,29 +11,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 class AdminControlRoomGateTest(unittest.TestCase):
-    def setUp(self):
-        from db import connection
+    @classmethod
+    def setUpClass(cls):
         from db.schema import init_schema
+
+        init_schema()
+
+    def setUp(self):
         import app as app_module
 
         self.tmpdir = Path(tempfile.mkdtemp())
-        self.db_path = self.tmpdir / "radar_admin_gate.db"
         self.admin_identifier = f"admin-{uuid.uuid4().hex}@example.test"
         self.admin_token = f"admin-control-room-token-{uuid.uuid4().hex}"
-        connection.close_all()
-        self.patches = [
-            mock.patch.object(connection, "DB_PATH", self.db_path),
-            mock.patch.object(app_module.db_mod, "DB_PATH", self.db_path),
-        ]
-        for patcher in self.patches:
-            patcher.start()
-
         app_module.clear_admin_read_cache()
-        init_schema()
         self.client = app_module.app.test_client()
 
     def tearDown(self):
-        from db import connection
         from db.connection import get_conn
 
         try:
@@ -57,9 +50,6 @@ class AdminControlRoomGateTest(unittest.TestCase):
         except Exception:
             pass
 
-        connection.close_all()
-        for patcher in reversed(self.patches):
-            patcher.stop()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def _login_as_admin(self):

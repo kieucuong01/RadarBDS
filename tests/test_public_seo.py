@@ -203,7 +203,12 @@ def test_report_hub_prefers_master_report_and_news_hub_is_reader_facing():
     news_html = client.get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
     landing_html = client.get("/binh-duong").get_data(as_text=True)
 
-    assert '<a class="seo-primary-cta" href="/bao-cao/bds-binh-duong-thang-07-2026"' in report_html
+    latest_report = max(
+        radar_app._published_report_pages(),
+        key=radar_app._report_sort_key,
+    )
+    assert latest_report["path"].startswith("/bao-cao/bds-binh-duong-thang-")
+    assert f'<a class="seo-primary-cta" href="{latest_report["path"]}"' in report_html
     assert "SEO / AIO / AI-SEO" not in news_html
     assert "Dữ liệu thị trường" in news_html
     assert "Tìm nhanh bài phân tích phù hợp" in news_html
