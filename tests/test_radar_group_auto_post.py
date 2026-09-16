@@ -3,7 +3,7 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-ROOT=Path('/opt/radar-bds/current')
+ROOT = Path(__file__).resolve().parents[1]
 
 def load_module(name,path):
     spec=importlib.util.spec_from_file_location(name,path)

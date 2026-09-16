@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-MODULE_PATH = Path("/opt/radar-bds/current/scripts/radar_social_auto_post.py")
+MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "radar_social_auto_post.py"
 spec = importlib.util.spec_from_file_location("radar_social_auto_post", MODULE_PATH)
 assert spec and spec.loader
 mod = importlib.util.module_from_spec(spec)
