@@ -594,7 +594,7 @@ class SourcePolicyTest(unittest.TestCase):
             },
         )
 
-    def test_signal_feed_supports_all_time_listing_window(self):
+    def test_admin_signal_feed_supports_all_time_listing_window(self):
         old_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d %H:%M:%S")
         self._seed_signal(
             source="facebook",
@@ -603,6 +603,7 @@ class SourcePolicyTest(unittest.TestCase):
             posted_at=old_date,
         )
 
+        self._login_as_admin()
         response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=20")
         self.assertEqual(response.status_code, 200)
 
@@ -634,6 +635,7 @@ class SourcePolicyTest(unittest.TestCase):
             },
         )
 
+        self._login_as_admin()
         all_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&date_range=all&limit=20")
         self.assertEqual(all_response.status_code, 200)
         all_payload = all_response.get_json()

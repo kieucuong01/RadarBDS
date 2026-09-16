@@ -61,6 +61,9 @@ jobs:
       - name: Verify installed dependencies
         run: python -m pip check
 
+      - name: Install Playwright Chromium
+        run: python -m playwright install --with-deps chromium
+
       - name: Audit Python dependencies
         run: python -m pip_audit -r requirements.txt --progress-spinner off
 
