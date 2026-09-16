@@ -22920,6 +22920,581 @@ SEO_ARTICLES = {
             {"name": "Giá đất Phú An Bến Cát", "href": "/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu", "url": "https://radarbds.vn/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu"}
         ]
     },
+    "phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc",
+        "title": "Phú Hòa hay Hiệp An: nên xem khu nào trước? | Radar BDS",
+        "description": "Phú Hòa hay Hiệp An? So sánh giá rao đất nền, nhà đất, nhóm 2–4 tỷ và dấu hiệu đáng chú ý từ dữ liệu Facebook Thủ Dầu Một cập nhật 15/09/2026.",
+        "keywords": "Phú Hòa hay Hiệp An, giá đất Phú Hòa, giá đất Hiệp An, đất nền Thủ Dầu Một, nhà đất Thủ Dầu Một, Radar BDS",
+        "breadcrumb_label": "Phú Hòa hay Hiệp An: nên xem khu nào trước?",
+        "hero_badge": "So sánh phường · snapshot 14 ngày",
+        "hero_title": "Phú Hòa hay Hiệp An: nên xem khu nào trước?",
+        "hero_text": "Trong dữ liệu Facebook được Radar BDS theo dõi, Phú Hòa có 103 tin và Hiệp An có 59 tin. Hiệp An có giá rao trung vị thấp hơn ở cả đất nền và nhà đất; Phú Hòa lại có nhiều tin trong nhóm tổng giá 2–4 tỷ hơn. Hãy chọn phường theo loại hình và ngân sách, không gộp hai mặt bằng giá.",
+        "scope_label": "Thủ Dầu Một · Phú Hòa và Hiệp An · dữ liệu Facebook",
+        "map_label": "Phú Hòa và Hiệp An",
+        "hero_checks": [
+            "Phú Hòa: 103 tin đang theo dõi · 11 dấu hiệu đáng chú ý",
+            "Hiệp An: 59 tin đang theo dõi · 11 dấu hiệu đáng chú ý",
+            "Đất nền: 27,9 tr/m² ở Phú Hòa và 12,3 tr/m² ở Hiệp An",
+            "Nhà đất: 45,8 tr/m² ở Phú Hòa và 24,9 tr/m² ở Hiệp An"
+        ],
+        "hero_metric": {
+            "label": "Tổng tin đang theo dõi",
+            "value": "162 tin",
+            "delta": "22 dấu hiệu",
+            "note": "Truy vấn 15/09/2026 · các dòng trong mẫu được thu thập 01–12/09/2026"
+        },
+        "primary_cta": "Mở bộ lọc Radar",
+        "primary_href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_hiep_an_20260915",
+        "secondary_cta": "Xem báo cáo thị trường",
+        "secondary_href": "/bao-cao",
+        "property_card": {
+            "status": "Cập nhật 15/09/2026 · giá rao Facebook 14 ngày",
+            "title": "Chọn phường theo loại hình và ngân sách",
+            "price": "Đất nền: 27,9 vs 12,3 tr/m² · nhà đất: 45,8 vs 24,9 tr/m²",
+            "metric_a": "Tin tổng giá 2–4 tỷ",
+            "metric_a_value": "51 vs 39 tin",
+            "metric_b": "Dấu hiệu đáng chú ý",
+            "metric_b_value": "11 vs 11 tin"
+        },
+        "value_cards": [
+            {
+                "title": "Hiệp An có mốc giá thấp hơn",
+                "body": "Giá rao trung vị đất nền Hiệp An là 12,3 tr/m², nhà đất là 24,9 tr/m². Phú Hòa lần lượt là 27,9 và 45,8 tr/m². Đây là mốc đọc nhanh, không phải giá chốt."
+            },
+            {
+                "title": "Phú Hòa có nhiều tin trong nhóm 2–4 tỷ hơn",
+                "body": "Trong nhóm đất nền và nhà đất có tổng giá từ 2 đến 4 tỷ, Phú Hòa có 51 tin, Hiệp An có 39 tin. Riêng nhà đất, hai phường cùng có 33 tin trong mẫu."
+            },
+            {
+                "title": "Không trộn đất nền với nhà đất",
+                "body": "Phú Hòa và Hiệp An đều có khoảng cách giá rõ giữa đất nền và nhà đất. Khi so, hãy dùng cùng loại hình, gần nhau về diện tích và cùng trần tổng giá."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc Phú Hòa và Hiệp An trước khi gọi hỏi",
+            "body": "Chọn đất nền hoặc nhà đất, đặt trần tổng giá rồi đọc các tin có dấu hiệu đáng chú ý.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất theo phường ở Thủ Dầu Một",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "162 tin", "label": "trong snapshot"},
+                {"value": "2 loại", "label": "đất nền / nhà đất"},
+                {"value": "14 ngày", "label": "cửa sổ dữ liệu"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 01–12/09/2026 · truy vấn 15/09/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "body": "Nguồn là listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0. Giá trong bảng là giá rao trung vị; số tin là listing rows và có thể gồm bài đăng lại.",
+            "columns": [
+                {"key": "ward_type", "label": "Phường · loại hình"},
+                {"key": "tracked", "label": "Tin theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "valid_m2", "label": "Tin có giá/m²"},
+                {"key": "median_m2", "label": "Giá trung vị/m²"},
+                {"key": "median_total", "label": "Tổng giá trung vị"}
+            ],
+            "rows": [
+                {"ward_type": "Phú Hòa · đất nền", "tracked": "28", "signals": "3", "valid_m2": "20", "median_m2": "27,9 tr/m²", "median_total": "3,09 tỷ"},
+                {"ward_type": "Phú Hòa · nhà đất", "tracked": "72", "signals": "8", "valid_m2": "47", "median_m2": "45,8 tr/m²", "median_total": "3,89 tỷ"},
+                {"ward_type": "Hiệp An · đất nền", "tracked": "13", "signals": "1", "valid_m2": "13", "median_m2": "12,3 tr/m²", "median_total": "1,85 tỷ"},
+                {"ward_type": "Hiệp An · nhà đất", "tracked": "46", "signals": "10", "valid_m2": "40", "median_m2": "24,9 tr/m²", "median_total": "2,39 tỷ"}
+            ],
+            "cards": [
+                {"title": "Tin đang theo dõi", "value": "103 vs 59 tin", "body": "Phú Hòa vs Hiệp An"},
+                {"title": "Đất nền", "value": "27,9 vs 12,3 tr/m²", "body": "Giá rao trung vị · Phú Hòa vs Hiệp An"},
+                {"title": "Nhà đất", "value": "45,8 vs 24,9 tr/m²", "body": "Giá rao trung vị · Phú Hòa vs Hiệp An"}
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và bài liên quan",
+        "local_links": [
+            {"label": "Trang phường Phú Hòa", "href": "/binh-duong/phuong-phu-hoa", "description": "Xem dữ liệu khu vực và mở bộ lọc tin Phú Hòa."},
+            {"label": "Trang phường Hiệp An", "href": "/binh-duong/phuong-hiep-an", "description": "Xem dữ liệu khu vực và mở bộ lọc tin Hiệp An."},
+            {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Đối chiếu nhanh giá rao trước khi xem từng tin."},
+            {"label": "Phú Lợi hay Hiệp An: nên xem khu nào trước?", "href": "/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc", "description": "Đọc thêm một so sánh khác có Hiệp An."},
+            {"label": "Báo cáo thị trường Bình Dương", "href": "/bao-cao", "description": "Xem bối cảnh dữ liệu theo tháng."},
+            {"label": "Mở dashboard Săn Deal", "href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_hiep_an_20260915", "description": "Lọc tiếp theo phường, loại hình và ngân sách."}
+        ],
+        "process_title": "Cách chọn phường mở trước",
+        "process": [
+            {"title": "1. Chốt loại hình", "body": "Bạn đang tìm đất nền hay nhà đất? Chọn một loại trước để không trộn hai mặt bằng giá."},
+            {"title": "2. Đặt trần tổng giá", "body": "Nếu ngân sách nằm trong khoảng 2–4 tỷ, dùng nhóm này để rút ngắn danh sách rồi kiểm tra lại giá/m²."},
+            {"title": "3. Đọc từng tin", "body": "Kiểm tra vị trí, kích thước, đường vào, giấy tờ và lý do có dấu hiệu trước khi đi xem."}
+        ],
+        "article": {
+            "published_at": "2026-09-15",
+            "modified_at": "2026-09-15",
+            "intro": [
+                "Nếu đang phân vân Phú Hòa hay Hiệp An, hãy chọn theo loại hình và trần tổng giá trước. Trong snapshot Facebook được Radar BDS theo dõi, Phú Hòa có 103 tin và Hiệp An có 59 tin. Hiệp An có giá rao trung vị thấp hơn ở đất nền lẫn nhà đất; Phú Hòa có nhiều tin hơn trong nhóm tổng giá 2–4 tỷ.",
+                "Các con số dưới đây là giá rao để lọc ban đầu, không phải giá chốt giao dịch. Số tin là listing rows, có thể gồm bài đăng lại và không đại diện cho số lô độc lập."
+            ],
+            "summary_cards": [
+                {"label": "Tin Phú Hòa và Hiệp An 14 ngày", "value": "162 tin", "note": "Phú Hòa 103 · Hiệp An 59"},
+                {"label": "Đất nền Phú Hòa và Hiệp An", "value": "27,9 vs 12,3 tr/m²", "note": "Giá rao trung vị · Phú Hòa · Hiệp An"},
+                {"label": "Nhà đất Phú Hòa và Hiệp An", "value": "45,8 vs 24,9 tr/m²", "note": "Giá rao trung vị · Phú Hòa · Hiệp An"},
+                {"label": "Tin tổng giá 2–4 tỷ", "value": "51 vs 39 tin", "note": "Phú Hòa · Hiệp An · đất nền và nhà đất"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Hòa và Hiệp An khác nhau thế nào khi tách loại hình?",
+                    "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0; mẫu thu thập 01–12/09/2026. Giá là giá rao trung vị; số tin có thể gồm bài đăng lại.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "valid_m2", "label": "Tin có giá/m²"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Hòa · đất nền", "tracked": "28", "signals": "3", "valid_m2": "20", "median_m2": "27,9 tr/m²", "median_total": "3,09 tỷ"},
+                        {"ward_type": "Phú Hòa · nhà đất", "tracked": "72", "signals": "8", "valid_m2": "47", "median_m2": "45,8 tr/m²", "median_total": "3,89 tỷ"},
+                        {"ward_type": "Hiệp An · đất nền", "tracked": "13", "signals": "1", "valid_m2": "13", "median_m2": "12,3 tr/m²", "median_total": "1,85 tỷ"},
+                        {"ward_type": "Hiệp An · nhà đất", "tracked": "46", "signals": "10", "valid_m2": "40", "median_m2": "24,9 tr/m²", "median_total": "2,39 tỷ"}
+                    ]
+                },
+                {
+                    "eyebrow": "Lọc theo tổng giá",
+                    "title": "Nhóm từ 2 tỷ đến 4 tỷ",
+                    "note": "Đếm các tin đất nền và nhà đất có tổng giá hợp lệ từ 2 đến 4 tỷ, hai đầu mút được tính. Đây là số tin trong snapshot, không phải cam kết còn hàng khi bạn liên hệ.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "budget_2_4", "label": "Tin 2–4 tỷ"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "budget_median", "label": "Tổng giá trung vị nhóm"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Phú Hòa · đất nền", "budget_2_4": "18", "tracked": "28", "budget_median": "2,79 tỷ"},
+                        {"ward_type": "Phú Hòa · nhà đất", "budget_2_4": "33", "tracked": "72", "budget_median": "3,49 tỷ"},
+                        {"ward_type": "Hiệp An · đất nền", "budget_2_4": "6", "tracked": "13", "budget_median": "2,25 tỷ"},
+                        {"ward_type": "Hiệp An · nhà đất", "budget_2_4": "33", "tracked": "46", "budget_median": "2,39 tỷ"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Giá rao theo loại hình",
+                    "title": "Giá/m² chênh ở cả đất nền và nhà đất",
+                    "note": "Chiều dài thanh chỉ để nhìn nhanh tương quan; số bên phải là giá rao trung vị từ các tin có giá/m² hợp lệ.",
+                    "alt": "Giá rao trung vị: Phú Hòa đất nền 27,9 triệu mỗi mét vuông, Hiệp An đất nền 12,3, Phú Hòa nhà đất 45,8, Hiệp An nhà đất 24,9",
+                    "rows": [
+                        {"label": "Phú Hòa · đất nền", "value_label": "27,9 tr/m²", "width": 61, "color": "#0f766e"},
+                        {"label": "Hiệp An · đất nền", "value_label": "12,3 tr/m²", "width": 27, "color": "#60a5fa"},
+                        {"label": "Phú Hòa · nhà đất", "value_label": "45,8 tr/m²", "width": 100, "color": "#14b8a6"},
+                        {"label": "Hiệp An · nhà đất", "value_label": "24,9 tr/m²", "width": 54, "color": "#2563eb"}
+                    ]
+                },
+                {
+                    "eyebrow": "Dấu hiệu theo phường",
+                    "title": "Cùng 11 dấu hiệu, khác tỷ lệ trên số tin",
+                    "note": "Tỷ lệ tính trên tin đang theo dõi của từng phường; đây là thứ tự ưu tiên đọc, không phải xác suất giao dịch.",
+                    "alt": "Tỷ lệ dấu hiệu đáng chú ý: Phú Hòa 10,7 phần trăm và Hiệp An 18,6 phần trăm",
+                    "rows": [
+                        {"label": "Phú Hòa · 11/103 tin", "value_label": "10,7%", "width": 57, "color": "#14b8a6"},
+                        {"label": "Hiệp An · 11/59 tin", "value_label": "18,6%", "width": 100, "color": "#2563eb"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "mat-bang-va-loai-hinh",
+                    "heading": "1. Hiệp An có mốc giá thấp hơn, Phú Hòa có nguồn tin lớn hơn",
+                    "paragraphs": [
+                        "Trong 14 ngày, Phú Hòa có 103 tin đang theo dõi, còn Hiệp An có 59 tin. Phú Hòa có thêm 3 tin nhà trọ; phần so sánh giá bên dưới chỉ dùng đất nền và nhà đất để tránh trộn loại hình.",
+                        "Đất nền Phú Hòa có giá rao trung vị 27,9 tr/m² và tổng giá trung vị 3,09 tỷ. Hiệp An lần lượt là 12,3 tr/m² và 1,85 tỷ. Với nhà đất, Phú Hòa ở mức 45,8 tr/m² và 3,89 tỷ; Hiệp An là 24,9 tr/m² và 2,39 tỷ.",
+                        "Khoảng cách này không có nghĩa mọi tin Phú Hòa đều cao hơn hoặc mọi tin Hiệp An đều phù hợp. Nó chỉ cho biết nên bắt đầu bộ lọc ở đâu khi hai phường đang có mặt bằng giá rao khác nhau."
+                    ],
+                    "bullets": [
+                        "Muốn đọc mốc giá thấp hơn: mở Hiệp An trước.",
+                        "Muốn có nhiều tin để lọc trong snapshot: mở Phú Hòa trước.",
+                        "Không dùng giá/m² đất nền để suy ra giá nhà đất cùng phường."
+                    ]
+                },
+                {
+                    "id": "loc-theo-ngan-sach",
+                    "heading": "2. Trong nhóm 2–4 tỷ, Phú Hòa có nhiều tin đất nền hơn; nhà đất hai phường ngang số",
+                    "paragraphs": [
+                        "Với đất nền có tổng giá từ 2 đến 4 tỷ, Phú Hòa có 18 tin trong mẫu, Hiệp An có 6 tin. Với nhà đất, hai phường cùng có 33 tin. Cộng hai loại hình, Phú Hòa có 51 tin và Hiệp An có 39 tin.",
+                        "Tổng giá trung vị của nhóm đất nền 2–4 tỷ là 2,79 tỷ ở Phú Hòa và 2,25 tỷ ở Hiệp An. Với nhà đất, hai mốc tương ứng là 3,49 tỷ và 2,39 tỷ. Đây là giá rao của các tin lọt vào khoảng lọc, không phải mức giá mọi tài sản trong phường.",
+                        "Nếu ngân sách của bạn dưới 2 tỷ, bảng này không trả lời đủ vì nhóm được đo bắt đầu từ 2 tỷ. Khi đó nên mở bộ lọc theo tổng giá cụ thể và đọc thêm diện tích, hiện trạng nhà cùng đường vào."
+                    ],
+                    "bullets": [
+                        "Đất nền 2–4 tỷ: Phú Hòa 18 tin · Hiệp An 6 tin.",
+                        "Nhà đất 2–4 tỷ: Phú Hòa 33 tin · Hiệp An 33 tin.",
+                        "Không gọi nhóm 2–4 tỷ là toàn bộ nguồn hàng còn nguyên trạng."
+                    ]
+                },
+                {
+                    "id": "dau-hieu-dang-chu-y",
+                    "heading": "3. Hai phường cùng có 11 dấu hiệu, nhưng Hiệp An có tỷ lệ cao hơn",
+                    "paragraphs": [
+                        "Radar BDS ghi nhận 11 tin có dấu hiệu đáng chú ý ở mỗi phường. Nhóm này được tính từ các cờ dữ liệu như tin hot hoặc có giảm giá; đó không phải danh sách tin chắc chắn nên mua.",
+                        "Vì Phú Hòa có 103 tin còn Hiệp An có 59 tin, tỷ lệ tương ứng là 10,7% và 18,6%. Hiệp An có tỷ lệ cao hơn trong snapshot, nhưng mẫu nhỏ hơn và tỷ lệ này chỉ giúp sắp xếp thứ tự đọc.",
+                        "Khi mở một tin có dấu hiệu, hãy xem lại lịch sử giá, vị trí, diện tích, đường vào và giấy tờ. Một cờ dữ liệu không thay thế việc kiểm tra tài sản."
+                    ],
+                    "bullets": [
+                        "Tin có dấu hiệu là bộ lọc ưu tiên, không phải khuyến nghị giao dịch.",
+                        "Tin hot hoặc giảm giá vẫn cần xem lịch sử và hồ sơ.",
+                        "Luôn nhìn tỷ lệ cùng số tin, vì mẫu số khác nhau."
+                    ]
+                },
+                {
+                    "id": "chon-phuong-mo-truoc",
+                    "heading": "4. Nên mở Phú Hòa hay Hiệp An trước?",
+                    "paragraphs": [
+                        "Chọn Hiệp An trước nếu bạn ưu tiên mốc giá rao thấp hơn ở cả đất nền và nhà đất, hoặc muốn kiểm tra nhóm nhà đất có tổng giá trung vị 2,39 tỷ trong khoảng 2–4 tỷ. Chọn Phú Hòa trước nếu bạn muốn có nhiều tin đất nền trong cùng khoảng ngân sách để sàng lọc.",
+                        "Nếu đang tìm nhà đất trong nhóm 2–4 tỷ, số tin hai phường bằng nhau trong mẫu: mỗi nơi 33 tin. Khi đó không nên quyết định chỉ bằng số lượng; hãy tiếp tục so diện tích, hiện trạng công trình, đường vào và vị trí.",
+                        "Cách làm thực tế là mở bộ lọc theo phường, chọn đất nền hoặc nhà đất, đặt trần tổng giá rồi mới đọc mô tả. Khi thấy tin phù hợp, hỏi vị trí, đường vào và giấy tờ trước khi hẹn xem."
+                    ],
+                    "bullets": [
+                        "Ưu tiên mốc giá thấp hơn: bắt đầu ở Hiệp An.",
+                        "Muốn nhiều tin đất nền trong nhóm 2–4 tỷ: mở Phú Hòa.",
+                        "Tìm nhà đất 2–4 tỷ: hai phường cùng có 33 tin trong snapshot, cần so chất lượng từng tin."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Chọn đất nền hoặc nhà đất trước, không gộp hai loại hình.",
+                "Đặt trần tổng giá cụ thể rồi kiểm tra lại giá/m².",
+                "Đối chiếu diện tích, kích thước, đường vào và vị trí thực tế.",
+                "Hỏi rõ giấy tờ, quy hoạch và tình trạng sử dụng trước khi hẹn xem.",
+                "Xem dấu hiệu Radar như thứ tự ưu tiên đọc, không xem là kết luận nên mua."
+            ]
+        },
+        "faq": [
+            {
+                "q": "Nếu ưu tiên giá rao thấp hơn thì nên xem Phú Hòa hay Hiệp An trước?",
+                "a": "Nên mở Hiệp An trước trong snapshot này. Giá rao trung vị đất nền Hiệp An là 12,3 tr/m² và nhà đất là 24,9 tr/m²; Phú Hòa lần lượt là 27,9 và 45,8 tr/m². Đây là mốc đọc nhanh, không phải giá chốt."
+            },
+            {
+                "q": "Trong khoảng 2–4 tỷ, phường nào có nhiều tin hơn?",
+                "a": "Phú Hòa có 51 tin đất nền và nhà đất trong khoảng 2–4 tỷ, Hiệp An có 39 tin. Riêng nhà đất, hai phường cùng có 33 tin; chênh lệch tổng số đến từ nhóm đất nền, Phú Hòa có 18 tin và Hiệp An có 6 tin."
+            },
+            {
+                "q": "Dấu hiệu đáng chú ý ở Phú Hòa và Hiệp An có phải tin nên mua không?",
+                "a": "Không. Mỗi phường có 11 tin được ưu tiên theo các cờ dữ liệu như tin hot hoặc có giảm giá. Đây là bộ lọc để đọc trước, không phải khuyến nghị giao dịch hay bảo đảm tài sản phù hợp."
+            },
+            {
+                "q": "Giá trong bài có phải giá giao dịch thực tế không?",
+                "a": "Không. Đây là giá rao từ các tin Facebook được Radar BDS theo dõi, tính theo giá trung vị trên các tin có dữ liệu hợp lệ. Giá chốt có thể khác sau thương lượng và kiểm tra tài sản."
+            }
+        ],
+        "final_cta": {
+            "title": "Mở Radar để lọc tiếp theo phường",
+            "body": "Chọn đúng loại hình, đặt trần tổng giá rồi đọc các tin đáng kiểm tra trước khi liên hệ.",
+            "button": "Mở bộ lọc Radar",
+            "button_href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_hiep_an_20260915"
+        },
+        "social_editorial": {
+            "pillar": "radar_insight",
+            "topic": "So sánh Phú Hòa và Hiệp An",
+            "source_url": "https://radarbds.vn/tin-tuc/phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc",
+            "source_date": "2026-09-15",
+            "source_status": "production DB snapshot",
+            "source_scope": "Phú Hòa và Hiệp An · Facebook · 14 ngày",
+            "radar_url": "/tin-tuc/phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc",
+            "caption": "Phú Hòa hay Hiệp An nếu đang xem nhà đất ở Thủ Dầu Một?\n\nTrong dữ liệu Facebook Radar BDS được theo dõi 14 ngày: Phú Hòa có 103 tin, Hiệp An có 59 tin.\n\nNếu tìm đất nền khoảng 2–4 tỷ, Phú Hòa có 18 tin và Hiệp An có 6 tin. Với nhà đất cùng khoảng giá, hai phường đều có 33 tin trong mẫu.\n\nHiệp An có mặt bằng giá rao thấp hơn ở cả đất nền và nhà đất. Phú Hòa có nhiều tin đất nền hơn trong khoảng ngân sách này. Đây là dữ liệu để lọc ban đầu, không phải kết luận nên mua. Link bài phân tích và bộ lọc sẽ để ở bình luận đầu tiên."
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Hòa hay Hiệp An: nên xem khu nào trước?", "href": "/tin-tuc/phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc"}
+        ]
+    },
+"hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh phường"
+        },
+        "path": "/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+        "title": "Hiệp An hay Hiệp Thành: nên xem khu nào trước? | Radar BDS",
+        "description": "Hiệp An hay Hiệp Thành? So sánh giá rao đất nền, nhà đất, nhóm dưới 3–4 tỷ và dấu hiệu đáng chú ý từ dữ liệu Facebook Thủ Dầu Một cập nhật 16/09/2026.",
+        "keywords": "Hiệp An hay Hiệp Thành, giá đất Hiệp An, giá đất Hiệp Thành, đất nền Thủ Dầu Một, nhà đất Thủ Dầu Một, Radar BDS",
+        "breadcrumb_label": "Hiệp An hay Hiệp Thành: nên xem khu nào trước?",
+        "hero_badge": "So sánh phường · dữ liệu 14 ngày",
+        "hero_title": "Hiệp An hay Hiệp Thành: nên xem khu nào trước?",
+        "hero_text": "Nếu ngân sách dưới 3 tỷ và bạn tìm nhà đất, nên mở Hiệp An trước: 32 tin có tổng giá hợp lệ so với 2 tin ở Hiệp Thành. Nếu tìm đất nền dưới 3 tỷ, Hiệp Thành nhỉnh hơn với 14 tin so với 13. Hiệp Thành có nhiều tin hơn, còn Hiệp An có mốc giá rao thấp hơn ở cả hai loại hình.",
+        "scope_label": "Thủ Dầu Một · Hiệp An và Hiệp Thành · dữ liệu Facebook",
+        "map_label": "Hiệp An và Hiệp Thành",
+        "hero_checks": [
+            "Hiệp An: 52 tin đang theo dõi · 11 dấu hiệu đáng chú ý",
+            "Hiệp Thành: 99 tin đang theo dõi · 10 dấu hiệu đáng chú ý",
+            "Đất nền: 12,3 tr/m² ở Hiệp An và 19,8 tr/m² ở Hiệp Thành",
+            "Nhà đất: 24,9 tr/m² ở Hiệp An và 45,2 tr/m² ở Hiệp Thành"
+        ],
+        "hero_metric": {
+            "label": "Tổng tin đang theo dõi",
+            "value": "151 tin",
+            "delta": "21 dấu hiệu",
+            "note": "Cửa sổ dữ liệu 02–16/09/2026 · truy vấn 16/09/2026"
+        },
+        "primary_cta": "Mở bộ lọc Radar",
+        "primary_href": "/?tab=signals&ward=Hi%E1%BB%87p%20An&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=hiep_an_hiep_thanh_20260916",
+        "secondary_cta": "Xem báo cáo thị trường",
+        "secondary_href": "/bao-cao",
+        "property_card": {
+            "status": "Cập nhật 16/09/2026 · giá rao Facebook 14 ngày",
+            "title": "Chọn phường theo loại hình và ngân sách",
+            "price": "Đất nền: 12,3 vs 19,8 tr/m² · nhà đất: 24,9 vs 45,2 tr/m²",
+            "metric_a": "Nhà đất dưới 3 tỷ",
+            "metric_a_value": "32 vs 2 tin",
+            "metric_b": "Đất nền dưới 4 tỷ",
+            "metric_b_value": "13 vs 25 tin"
+        },
+        "value_cards": [
+            {
+                "title": "Hiệp An hợp để lọc nhà đất dưới 3 tỷ",
+                "body": "Hiệp An có 32 tin nhà đất dưới 3 tỷ trong nhóm có tổng giá hợp lệ; Hiệp Thành có 2 tin. Giá rao trung vị nhà đất cũng là 24,9 tr/m² ở Hiệp An và 45,2 tr/m² ở Hiệp Thành."
+            },
+            {
+                "title": "Hiệp Thành có nguồn tin đất nền rộng hơn",
+                "body": "Hiệp Thành có 44 tin đất nền đang theo dõi, Hiệp An có 13. Ở nhóm đất nền dưới 4 tỷ, Hiệp Thành có 25 tin so với 13 tin ở Hiệp An."
+            },
+            {
+                "title": "Đừng gộp hai loại hình khi so giá",
+                "body": "Đất nền và nhà đất có mặt bằng khác nhau ở cả hai phường. Giá rao trung vị là mốc đọc nhanh từ tin Facebook, không thay cho kiểm tra vị trí, hồ sơ và giá chốt."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Mở Radar theo phường",
+            "title": "Lọc Hiệp An và Hiệp Thành trước khi gọi hỏi",
+            "body": "Chọn đất nền hoặc nhà đất, đặt trần tổng giá rồi đọc các tin có dấu hiệu đáng chú ý.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất theo phường ở Thủ Dầu Một",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "151 tin", "label": "trong snapshot"},
+                {"value": "2 loại", "label": "đất nền / nhà đất"},
+                {"value": "14 ngày", "label": "cửa sổ dữ liệu"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Dữ liệu 02–16/09/2026",
+            "title": "So nhanh hai phường theo loại hình",
+            "body": "Nguồn là các tin Facebook đang được Radar theo dõi và còn ở trạng thái hoạt động. Giá trong bảng là giá rao trung vị; số tin là dòng dữ liệu và có thể gồm bài đăng lại.",
+            "columns": [
+                {"key": "ward_type", "label": "Phường · loại hình"},
+                {"key": "tracked", "label": "Tin theo dõi"},
+                {"key": "signals", "label": "Dấu hiệu"},
+                {"key": "valid_m2", "label": "Tin có giá/m²"},
+                {"key": "median_m2", "label": "Giá trung vị/m²"},
+                {"key": "median_total", "label": "Tổng giá trung vị"}
+            ],
+            "rows": [
+                {"ward_type": "Hiệp An · đất nền", "tracked": "13", "signals": "1", "valid_m2": "13", "median_m2": "12,3 tr/m²", "median_total": "1,85 tỷ"},
+                {"ward_type": "Hiệp An · nhà đất", "tracked": "39", "signals": "10", "valid_m2": "33", "median_m2": "24,9 tr/m²", "median_total": "2,39 tỷ"},
+                {"ward_type": "Hiệp Thành · đất nền", "tracked": "44", "signals": "2", "valid_m2": "27", "median_m2": "19,8 tr/m²", "median_total": "2,55 tỷ"},
+                {"ward_type": "Hiệp Thành · nhà đất", "tracked": "55", "signals": "8", "valid_m2": "30", "median_m2": "45,2 tr/m²", "median_total": "4,29 tỷ"}
+            ],
+            "cards": [
+                {"title": "Tin đang theo dõi", "value": "52 vs 99 tin", "body": "Hiệp An vs Hiệp Thành"},
+                {"title": "Đất nền", "value": "12,3 vs 19,8 tr/m²", "body": "Giá rao trung vị · Hiệp An vs Hiệp Thành"},
+                {"title": "Nhà đất", "value": "24,9 vs 45,2 tr/m²", "body": "Giá rao trung vị · Hiệp An vs Hiệp Thành"}
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và bài liên quan",
+        "local_links": [
+            {"label": "Trang phường Hiệp An", "href": "/binh-duong/phuong-hiep-an", "description": "Xem dữ liệu khu vực và mở bộ lọc tin Hiệp An."},
+            {"label": "Trang phường Hiệp Thành", "href": "/binh-duong/phuong-hiep-thanh", "description": "Xem dữ liệu khu vực và mở bộ lọc tin Hiệp Thành."},
+            {"label": "Lọc tin Hiệp An trên Radar", "href": "/?tab=signals&ward=Hi%E1%BB%87p%20An&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=hiep_an_hiep_thanh_20260916", "description": "Lọc tiếp theo loại hình, diện tích và trần tổng giá."},
+            {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Đối chiếu nhanh giá rao trước khi xem từng tin."},
+            {"label": "Báo cáo thị trường Bình Dương", "href": "/bao-cao", "description": "Xem bối cảnh dữ liệu theo tháng khi cần phạm vi rộng hơn."},
+            {"label": "Phú Lợi hay Hiệp An: nên xem khu nào trước?", "href": "/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc", "description": "Đọc thêm một so sánh khác có Hiệp An."},
+            {"label": "Hiệp Thành hay Phú Hòa: nên xem khu nào trước?", "href": "/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc", "description": "Đọc thêm một so sánh khác có Hiệp Thành."}
+        ],
+        "process_title": "Cách chọn phường mở trước",
+        "process": [
+            {"title": "1. Chốt loại hình", "body": "Bạn đang tìm đất nền hay nhà đất? Chọn một loại trước để không trộn hai mặt bằng giá."},
+            {"title": "2. Đặt trần tổng giá", "body": "Dùng nhóm dưới 3 tỷ hoặc dưới 4 tỷ làm bộ lọc đầu tiên, sau đó xem lại giá/m² và diện tích."},
+            {"title": "3. Đọc từng tin", "body": "Kiểm tra vị trí, kích thước, đường vào, giấy tờ và lý do có dấu hiệu trước khi đi xem."}
+        ],
+        "article": {
+            "published_at": "2026-09-16",
+            "modified_at": "2026-09-16",
+            "intro": [
+                "Nếu tìm nhà đất dưới 3 tỷ, nên mở Hiệp An trước: 32 tin có tổng giá hợp lệ so với 2 tin ở Hiệp Thành. Với đất nền dưới 3 tỷ, Hiệp Thành có 14 tin, Hiệp An có 13. Hiệp Thành nhiều tin hơn; Hiệp An có giá rao thấp hơn ở cả hai loại hình.",
+                "Các con số là giá rao từ tin Facebook đang được Radar BDS theo dõi, không phải giá chốt giao dịch."
+            ],
+            "summary_cards": [
+                {"label": "Tin Hiệp An và Hiệp Thành 14 ngày", "value": "151 tin", "note": "Hiệp An 52 · Hiệp Thành 99"},
+                {"label": "Đất nền", "value": "12,3 vs 19,8 tr/m²", "note": "Giá rao trung vị · Hiệp An · Hiệp Thành"},
+                {"label": "Nhà đất", "value": "24,9 vs 45,2 tr/m²", "note": "Giá rao trung vị · Hiệp An · Hiệp Thành"},
+                {"label": "Dấu hiệu đáng chú ý", "value": "21 tin", "note": "Hiệp An 11 · Hiệp Thành 10"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Hiệp An và Hiệp Thành khác nhau thế nào khi tách loại hình?",
+                    "note": "Nguồn: các tin Facebook đang hoạt động được Radar theo dõi; cửa sổ 02–16/09/2026. Giá là giá rao trung vị; số tin là dòng dữ liệu và có thể gồm bài đăng lại.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "tracked", "label": "Tin theo dõi"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "valid_m2", "label": "Tin có giá/m²"},
+                        {"key": "median_m2", "label": "Giá trung vị/m²"},
+                        {"key": "median_total", "label": "Tổng giá trung vị"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Hiệp An · đất nền", "tracked": "13", "signals": "1", "valid_m2": "13", "median_m2": "12,3 tr/m²", "median_total": "1,85 tỷ"},
+                        {"ward_type": "Hiệp An · nhà đất", "tracked": "39", "signals": "10", "valid_m2": "33", "median_m2": "24,9 tr/m²", "median_total": "2,39 tỷ"},
+                        {"ward_type": "Hiệp Thành · đất nền", "tracked": "44", "signals": "2", "valid_m2": "27", "median_m2": "19,8 tr/m²", "median_total": "2,55 tỷ"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "tracked": "55", "signals": "8", "valid_m2": "30", "median_m2": "45,2 tr/m²", "median_total": "4,29 tỷ"}
+                    ]
+                },
+                {
+                    "eyebrow": "Lọc theo tổng giá",
+                    "title": "Nhóm dưới 3 tỷ và dưới 4 tỷ",
+                    "note": "Đếm các tin có tổng giá hợp lệ trong từng loại hình. Mẫu số của bảng này có thể thấp hơn tổng tin theo dõi vì một số tin thiếu giá hoặc chưa đủ dữ liệu để tính.",
+                    "columns": [
+                        {"key": "ward_type", "label": "Phường · loại hình"},
+                        {"key": "under3", "label": "Dưới 3 tỷ"},
+                        {"key": "under4", "label": "Dưới 4 tỷ"},
+                        {"key": "valid_total", "label": "Tin có tổng giá"}
+                    ],
+                    "rows": [
+                        {"ward_type": "Hiệp An · đất nền", "under3": "13", "under4": "13", "valid_total": "13"},
+                        {"ward_type": "Hiệp An · nhà đất", "under3": "32", "under4": "35", "valid_total": "35"},
+                        {"ward_type": "Hiệp Thành · đất nền", "under3": "14", "under4": "25", "valid_total": "27"},
+                        {"ward_type": "Hiệp Thành · nhà đất", "under3": "2", "under4": "16", "valid_total": "37"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Mặt bằng giá rao",
+                    "title": "Giá rao trung vị/m² theo loại hình",
+                    "note": "Đọc riêng đất nền và nhà đất; không dùng một loại hình để suy ra loại hình còn lại.",
+                    "alt": "Giá rao trung vị theo loại hình tại Hiệp An và Hiệp Thành",
+                    "rows": [
+                        {"label": "Hiệp An · đất nền", "value_label": "12,3 tr/m²", "width": 27, "color": "#2563eb"},
+                        {"label": "Hiệp Thành · đất nền", "value_label": "19,8 tr/m²", "width": 44, "color": "#60a5fa"},
+                        {"label": "Hiệp An · nhà đất", "value_label": "24,9 tr/m²", "width": 55, "color": "#0f766e"},
+                        {"label": "Hiệp Thành · nhà đất", "value_label": "45,2 tr/m²", "width": 100, "color": "#14b8a6"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "nguon-cung-va-loai-hinh",
+                    "heading": "1. Hiệp Thành có nhiều tin hơn, Hiệp An tập trung ở nhà đất dưới 3 tỷ",
+                    "paragraphs": [
+                        "Trong cửa sổ 02–16/09/2026, Hiệp An có 52 tin đang theo dõi; Hiệp Thành có 99 tin. Hiệp An gồm 13 tin đất nền và 39 tin nhà đất. Hiệp Thành gồm 44 tin đất nền và 55 tin nhà đất.",
+                        "Hiệp Thành vì vậy cho nhiều dòng tin hơn để sàng lọc. Nhưng số tin lớn không tự nói lên chất lượng tài sản hay khả năng giao dịch. Đây là số dòng dữ liệu từ Facebook, không phải số bất động sản độc nhất; bài đăng lại có thể cùng xuất hiện trong nguồn."
+                    ],
+                    "bullets": [
+                        "Muốn có nhiều tin đất nền để đọc: mở Hiệp Thành trước.",
+                        "Muốn lọc nhà đất dưới 3 tỷ: bắt đầu ở Hiệp An.",
+                        "Không gộp đất nền với nhà đất khi so số lượng hoặc giá."
+                    ]
+                },
+                {
+                    "id": "loc-theo-ngan-sach",
+                    "heading": "2. Dưới 3 tỷ, nhà đất nghiêng rõ về Hiệp An; đất nền gần như ngang nhau",
+                    "paragraphs": [
+                        "Trong nhóm có tổng giá hợp lệ, Hiệp An có 32 tin nhà đất dưới 3 tỷ, còn Hiệp Thành có 2 tin. Với đất nền, Hiệp An có 13 tin và Hiệp Thành có 14 tin ở cùng ngưỡng.",
+                        "Nếu nâng trần lên 4 tỷ, Hiệp An có 35 tin nhà đất và Hiệp Thành có 16. Ở đất nền, Hiệp Thành có 25 tin so với 13 tin ở Hiệp An. Vì vậy, loại hình cần tìm quan trọng hơn việc chọn phường theo tổng số tin.",
+                        "Nhóm dưới 3 tỷ hoặc dưới 4 tỷ chỉ giúp rút ngắn danh sách. Bạn vẫn cần xem diện tích, đường vào, vị trí và tình trạng hồ sơ của từng tin."
+                    ],
+                    "bullets": [
+                        "Nhà đất dưới 3 tỷ: Hiệp An 32 tin · Hiệp Thành 2 tin.",
+                        "Đất nền dưới 3 tỷ: Hiệp An 13 tin · Hiệp Thành 14 tin.",
+                        "Đất nền dưới 4 tỷ: Hiệp An 13 tin · Hiệp Thành 25 tin.",
+                        "Đọc tổng giá cùng giá/m² và diện tích, không dùng một con số riêng lẻ."
+                    ]
+                },
+                {
+                    "id": "mat-bang-gia-rao",
+                    "heading": "3. Giá rao Hiệp An thấp hơn ở cả đất nền và nhà đất",
+                    "paragraphs": [
+                        "Giá rao trung vị đất nền Hiệp An là 12,3 tr/m², còn Hiệp Thành là 19,8 tr/m². Với nhà đất, Hiệp An ở mức 24,9 tr/m² và Hiệp Thành là 45,2 tr/m².",
+                        "Tổng giá trung vị của đất nền lần lượt là 1,85 tỷ và 2,55 tỷ; nhà đất là 2,39 tỷ và 4,29 tỷ. Các mốc này được tính trên những tin có dữ liệu giá phù hợp, không đại diện cho mọi tuyến đường hoặc mọi thửa đất trong phường.",
+                        "Khoảng cách giá không có nghĩa mọi tin Hiệp Thành đều cao hơn mọi tin Hiệp An. Khi mở dashboard, hãy giữ cùng loại hình, gần nhau về diện tích và cùng trần tổng giá rồi mới so."
+                    ],
+                    "bullets": [
+                        "Đất nền: so 12,3 với 19,8 tr/m², không so lẫn với nhà đất.",
+                        "Nhà đất: so 24,9 với 45,2 tr/m² và xem thêm tổng giá.",
+                        "Giá trong bài là giá rao, không phải giá chốt giao dịch."
+                    ]
+                },
+                {
+                    "id": "dau-hieu-va-thu-tu-xem",
+                    "heading": "4. Nên mở Hiệp An hay Hiệp Thành trước?",
+                    "paragraphs": [
+                        "Nếu tìm nhà đất dưới 3 tỷ, nên mở Hiệp An trước vì có 32 tin so với 2 tin ở Hiệp Thành. Nếu tìm đất nền, có thể mở Hiệp Thành trước khi muốn có nhiều lựa chọn hơn, nhất là khi trần tổng giá là 4 tỷ: 25 tin so với 13 tin ở Hiệp An.",
+                        "Nếu ưu tiên mặt bằng giá rao thấp hơn, Hiệp An là điểm bắt đầu hợp lý trong snapshot này ở cả đất nền và nhà đất. Nếu muốn đọc nhiều dòng tin hơn, Hiệp Thành có lợi thế về số lượng. Hai kết luận này không mâu thuẫn vì chúng trả lời hai nhu cầu khác nhau.",
+                        "Dấu hiệu đáng chú ý chỉ là thứ tự ưu tiên đọc từ các cờ dữ liệu như tin hot hoặc có giảm giá. Nó không phải kết luận nên mua. Trước khi hẹn xem, hãy hỏi vị trí, đường vào, giấy tờ và giá chào hiện tại."
+                    ],
+                    "bullets": [
+                        "Nhà đất dưới 3 tỷ: bắt đầu ở Hiệp An.",
+                        "Đất nền dưới 4 tỷ: mở Hiệp Thành để có nhiều tin hơn.",
+                        "Ưu tiên giá rao thấp hơn: xem Hiệp An trước, rồi đối chiếu Hiệp Thành.",
+                        "Muốn so đúng: dùng cùng loại hình, diện tích tương đương và trần tổng giá giống nhau."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Chọn đất nền hoặc nhà đất trước, không gộp hai loại hình.",
+                "Đặt trần tổng giá 3 tỷ hoặc 4 tỷ rồi kiểm tra lại giá/m².",
+                "Đối chiếu diện tích, kích thước, đường vào và vị trí thực tế.",
+                "Hỏi rõ giấy tờ, quy hoạch và tình trạng sử dụng trước khi hẹn xem.",
+                "Xem dấu hiệu Radar như thứ tự ưu tiên đọc, không xem là kết luận nên mua."
+            ]
+        },
+        "faq": [
+            {
+                "q": "Nếu tìm nhà đất dưới 3 tỷ thì nên xem Hiệp An hay Hiệp Thành trước?",
+                "a": "Nên mở Hiệp An trước trong dữ liệu 02–16/09/2026. Hiệp An có 32 tin nhà đất dưới 3 tỷ, còn Hiệp Thành có 2 tin trong nhóm có tổng giá hợp lệ. Đây là số tin trong snapshot, không phải cam kết còn hàng."
+            },
+            {
+                "q": "Giá đất nền Hiệp An và Hiệp Thành hiện chênh nhau thế nào?",
+                "a": "Giá rao trung vị đất nền Hiệp An là 12,3 tr/m², còn Hiệp Thành là 19,8 tr/m² trong dữ liệu Facebook kỳ này. Đây là mốc đọc nhanh, không phải giá chốt cho mọi vị trí."
+            },
+            {
+                "q": "Nếu tìm đất nền dưới 4 tỷ thì phường nào có nhiều tin hơn?",
+                "a": "Hiệp Thành có 25 tin đất nền dưới 4 tỷ, còn Hiệp An có 13 tin trong nhóm có tổng giá hợp lệ. Nên dùng con số này để mở rộng danh sách đọc, sau đó kiểm tra diện tích, đường vào và hồ sơ từng tin."
+            },
+            {
+                "q": "21 dấu hiệu đáng chú ý có nghĩa là 21 tin nên mua không?",
+                "a": "Không. Đây là số tin được ưu tiên theo các cờ dữ liệu như tin hot hoặc có giảm giá. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch, định giá chính thức hoặc kiểm tra thực địa."
+            },
+            {
+                "q": "Các con số trong bài là giá giao dịch hay giá rao?",
+                "a": "Đây là giá rao từ tin Facebook công khai mà Radar BDS đang theo dõi với is_active=1, đã loại blacklist và review hidden. Không nên xem đây là giá chốt hoặc cam kết mua được."
+            }
+        ],
+        "final_cta": {
+            "title": "Mở Radar để lọc tiếp theo phường",
+            "body": "Chọn đúng loại hình, đặt trần tổng giá rồi đọc từng tin trước khi liên hệ.",
+            "button": "Mở bộ lọc Radar",
+            "button_href": "/?tab=signals&ward=Hi%E1%BB%87p%20An&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=hiep_an_hiep_thanh_20260916"
+        },
+        "social_editorial": {
+            "pillar": "radar_insight",
+            "topic": "So sánh Hiệp An và Hiệp Thành",
+            "source_url": "https://radarbds.vn/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+            "source_date": "2026-09-16",
+            "source_status": "production DB snapshot",
+            "source_scope": "Hiệp An và Hiệp Thành · Facebook · 02–16/09/2026",
+            "source_verified": True,
+            "radar_url": "/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc",
+            "reader_benefit": "Biết nên mở phường nào trước theo loại hình và ngân sách, thay vì dùng một mức giá chung.",
+            "evidence": [
+                {"label": "Tin theo dõi", "value": "Hiệp An 52 · Hiệp Thành 99", "note": "Facebook, 02–16/09/2026"},
+                {"label": "Nhà đất dưới 3 tỷ", "value": "Hiệp An 32 · Hiệp Thành 2", "note": "Tin có tổng giá hợp lệ"},
+                {"label": "Đất nền dưới 4 tỷ", "value": "Hiệp An 13 · Hiệp Thành 25", "note": "Tin có tổng giá hợp lệ"}
+            ],
+            "caption": "Hiệp An hay Hiệp Thành nếu đang tìm nhà đất ở Thủ Dầu Một?\n\nDữ liệu Radar từ 02–16/09/2026 ghi nhận Hiệp Thành có 99 tin đang theo dõi, Hiệp An có 52 tin.\n\nNếu tìm nhà đất dưới 3 tỷ, Hiệp An có 32 tin, Hiệp Thành có 2. Nếu tìm đất nền dưới 3 tỷ, Hiệp Thành có 14 tin, Hiệp An có 13.\n\nHiệp An có mốc giá rao thấp hơn ở cả đất nền và nhà đất; Hiệp Thành lại có nhiều dòng tin hơn để sàng lọc. Đây là dữ liệu để đọc trước, không phải kết luận nên mua. Bài phân tích và bộ lọc từng phường ở bình luận đầu tiên."
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Hiệp An hay Hiệp Thành: nên xem khu nào trước?", "href": "/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc"}
+        ]
+    },
 }
 
 
@@ -22976,5 +23551,6 @@ KNOWLEDGE_HUB = {'path': '/tin-tuc',
  'featured_slug': 'dat-nen-hay-nha-dat-thu-dau-mot-dang-de-so-gia-hon',
  'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
                  {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'}],
+
 
 }
