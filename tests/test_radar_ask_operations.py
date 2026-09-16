@@ -4,6 +4,7 @@ import configparser
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -11,6 +12,11 @@ from services.radar_ask.contracts import ProviderResponse, ProviderUsage, ToolCa
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _powershell_command() -> str:
+    """Use Windows PowerShell locally and the GitHub runner's pwsh on Linux."""
+    return shutil.which("powershell.exe") or shutil.which("pwsh") or "pwsh"
 
 
 def _unit(name: str) -> configparser.ConfigParser:
@@ -138,7 +144,7 @@ def test_production_verifier_config_check_exposes_required_gates_and_capacity():
     script = ROOT / "scripts" / "verify_radar_ask_production.ps1"
     result = subprocess.run(
         [
-            "powershell.exe",
+            _powershell_command(),
             "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
@@ -184,7 +190,7 @@ def test_production_verifier_authenticated_smoke_is_explicit_and_secret_safe(tmp
         encoding="utf-8",
     )
     base = [
-        "powershell.exe",
+        _powershell_command(),
         "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",

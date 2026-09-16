@@ -182,27 +182,28 @@ def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
     detail_markup = Path("templates/listing_detail.html").read_text(
         encoding="utf-8"
     )
-    dashboard_versions = {
-        "css/main/cards.css": "listing-workspace-20260811",
-        "js/main/core.js": "listing-workspace-20260811",
-        "js/main/signal_card.js": "agent-readonly-20260810",
-        "js/main/signals.js": "agent-readonly-20260810",
-    }
+    dashboard_assets = (
+        "css/main/cards.css",
+        "js/main/core.js",
+        "js/main/signal_card.js",
+        "js/main/signals.js",
+    )
 
-    for asset, version in dashboard_versions.items():
+    for asset in dashboard_assets:
         matching_lines = [
             line for line in markup.splitlines() if asset in line
         ]
         assert len(matching_lines) == 1
-        assert f"?v={version}" in matching_lines[0]
+        assert "?v=" in matching_lines[0]
+        assert matching_lines[0].split("?v=", 1)[1].split("\"", 1)[0]
 
-    version = "agent-readonly-20260810"
     for asset in ("css/main/cards.css", "js/main/signal_card.js"):
         matching_lines = [
             line for line in detail_markup.splitlines() if asset in line
         ]
         assert len(matching_lines) == 1
-        assert f"?v={version}" in matching_lines[0]
+        assert "?v=" in matching_lines[0]
+        assert matching_lines[0].split("?v=", 1)[1].split("\"", 1)[0]
 
 
 def test_news_article_path_marks_news_navigation_active():

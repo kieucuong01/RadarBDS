@@ -311,7 +311,9 @@ _DIM_PAIR_RE = re.compile(
 # Keep the separator whitespace in the lookahead so the compact value is
 # normalized before the regular dimension-pair parser runs.
 _COMPACT_DIM_VALUE_RE = re.compile(
-    r'(?<!\d)(\d{1,2})m(\d{1,2})(?=\s*[x×Ã—\*])',
+    # Do not reinterpret "9m2 x 12.6m" as compact decimal "9.2".  In
+    # listing copy that is a common m² typo for the frontage, handled below.
+    r'(?<!\d)(\d{1,2})m(?![²2]\s*[x×Ã—\*])(\d{1,2})(?=\s*[x×Ã—\*])',
     re.IGNORECASE,
 )
 
