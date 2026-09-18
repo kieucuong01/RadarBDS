@@ -163,7 +163,7 @@
           <p class="seo-eyebrow">Đọc tiếp</p>
           <h2>Bài và trang liên quan</h2>
           <div class="related-link-grid">
-            {% for link in page.local_links[:4] %}
+            {% for link in page.local_links[:6] %}
             <a href="{{ link.href }}"><strong>{{ link.label }}</strong><span>{{ link.description or 'Xem nội dung liên quan' }}</span></a>
             {% endfor %}
           </div>
