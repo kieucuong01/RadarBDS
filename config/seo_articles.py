@@ -23495,6 +23495,253 @@ SEO_ARTICLES = {
             {"name": "Hiệp An hay Hiệp Thành: nên xem khu nào trước?", "href": "/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc"}
         ]
     },
+"dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban": {
+    "variant": "knowledge",
+    "path": "/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban",
+    "title": "Đất nền Bình Dương bao nhiêu m² thì dễ bán? Đọc theo khoảng diện tích | Radar BDS",
+    "description": "Đất nền Bình Dương bao nhiêu m² thì dễ bán? Dữ liệu Facebook 14 ngày cho thấy đất 120-200 m² chiếm nhiều tin nhất, còn giá/m² giảm dần khi diện tích tăng. Xem bảng theo khoảng diện tích và cách chọn trước khi đi xem.",
+    "keywords": "đất nền Bình Dương bao nhiêu m2 thì dễ bán, diện tích đất nền Bình Dương, chọn diện tích đất nền Thủ Dầu Một, đất nền 120m2 Bình Dương, đất nền bao nhiêu m2 dễ bán",
+    "breadcrumb_label": "Đất nền bao nhiêu m² thì dễ bán",
+    "hero_badge": "Buyer guide · snapshot Facebook 14 ngày",
+    "hero_title": "Đất nền Bình Dương bao nhiêu m² thì dễ bán?",
+    "hero_text": "Không có một con số m² nào đúng cho mọi khu. Dữ liệu 495 tin đất nền đang theo dõi ở Thủ Dầu Một cho thấy khoảng 120-200 m² là phổ biến nhất, nhưng giá/m² lại giảm rõ khi diện tích tăng. Bài này đọc theo từng khoảng diện tích để bạn chọn trước khi hẹn xem.",
+    "scope_label": "Thủ Dầu Một · đất nền theo khoảng diện tích · dữ liệu Facebook 14 ngày",
+    "map_label": "Thủ Dầu Một và các phường có nhiều đất nền",
+    "hero_checks": [
+        "120-200 m² là khoảng có nhiều tin đất nền nhất (170/475 tin có đủ dữ liệu)",
+        "Giá/m² đất nền giảm từ 32,5 xuống 7,0 tr/m² khi diện tích tăng",
+        "Nhà đất dưới 80 m² có giá/m² cao nhất, tới 45,3 tr/m²"
+    ],
+    "hero_metric": {
+        "label": "Snapshot đất nền Thủ Dầu Một",
+        "value": "495 tin rao",
+        "delta": "348 tin dưới 3 tỷ",
+        "note": "Tin đang theo dõi từ Facebook, cửa sổ 14 ngày gần 18/09/2026; số dòng có thể gồm bài đăng lại của cùng một lô."
+    },
+    "primary_cta": "Lọc đất nền theo phường",
+    "primary_href": "/?tab=listings&property_type=dat_nen&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat-nen-dien-tich",
+    "secondary_cta": "Dùng công cụ định giá",
+    "secondary_href": "/dinh-gia-bds",
+    "property_card": {
+        "status": "Kết luận nhanh",
+        "title": "Diện tích là biến ảnh hưởng mạnh tới giá/m²",
+        "price": "Đất càng lớn, giá/m² càng thấp — nhưng tổng tiền lại cao hơn",
+        "metric_a": "Khoảng phổ biến nhất",
+        "metric_a_value": "120-200 m²",
+        "metric_b": "Chênh lệch giá/m²",
+        "metric_b_value": "32,5 vs 7,0 tr/m²"
+    },
+    "value_cards": [
+        {
+            "title": "Khoảng 120-200 m² chiếm ưu thế",
+            "body": "Trong 475 tin đất nền có đủ cả diện tích và giá, khoảng 120-200 m² có 170 tin — nhiều hơn hẳn khoảng dưới 80 m² (12 tin). Nhóm này cũng dễ tìm người mua lại nhất vì nằm giữa nhu cầu ở thật và nhu cầu đầu tư."
+        },
+        {
+            "title": "Giá/m² giảm khi diện tích tăng",
+            "body": "Đất nền dưới 80 m² có giá rao trung vị 32,5 tr/m², nhưng đất trên 200 m² chỉ còn 7,0 tr/m². Đây là lý do không thể so giá/m² của một lô 60 m² với một lô 300 m² rồi kết luận lô nào rẻ hơn."
+        },
+        {
+            "title": "Tổng tiền mới là ngưỡng thật",
+            "body": "Đất trên 200 m² có giá/m² thấp nhất nhưng tổng giá trung vị lại cao nhất, 2,90 tỷ. Ngược lại khoảng 120-200 m² có tổng giá trung vị 1,55 tỷ — dễ nằm trong ngưỡng vay hoặc ngân sách phổ biến."
+        }
+    ],
+    "dashboard_preview": {
+        "eyebrow": "Từ khoảng diện tích sang tin thật",
+        "title": "Chọn loại hình và khoảng diện tích trước khi gọi hỏi",
+        "body": "Mở dashboard, chọn đất nền, lọc theo phường bạn nhắm, rồi đặt trần tổng giá. Cách này giúp bạn loại nhanh những tin chỉ rẻ trên tiêu đề nhưng sai diện tích hoặc nằm ở đường đất.",
+        "image": "/static/images/seo/dashboard-preview.png",
+        "alt": "Dashboard Radar BDS lọc đất nền theo phường, diện tích và tổng giá",
+        "cta": "Mở dashboard",
+        "metrics": [
+            {"value": "495 tin", "label": "đất nền đang theo dõi"},
+            {"value": "348 tin", "label": "đất nền dưới 3 tỷ"},
+            {"value": "14 ngày", "label": "cửa sổ dữ liệu"}
+        ]
+    },
+    "market_snapshot": {
+        "eyebrow": "Snapshot Facebook 14 ngày gần 18/09/2026",
+        "title": "Đất nền Thủ Dầu Một theo khoảng diện tích",
+        "body": "Bảng dưới tách đất nền theo khoảng diện tích. Giá trong bài là giá đang rao, không phải giá chốt giao dịch; mỗi khoảng diện tích được tính riêng nên số tin chênh nhau nhiều.",
+        "columns": ["Khoảng diện tích", "Số tin", "Giá trung vị", "Giá/m² trung vị", "Khoảng giá"],
+        "rows": [
+            {"area": "Dưới 80 m²", "price": "12 tin", "tracked": "1,95 tỷ", "signal": "32,5 tr/m²", "area_m2": "1,5 – 3,59 tỷ", "note": "12", "note_2": "32,5"},
+            {"area": "80-120 m²", "price": "100 tin", "tracked": "2,20 tỷ", "signal": "23,1 tr/m²", "area_m2": "0,85 – 4,00 tỷ", "note": "100", "note_2": "23,1"},
+            {"area": "120-200 m²", "price": "170 tin", "tracked": "1,55 tỷ", "signal": "11,8 tr/m²", "area_m2": "1,00 – 12,50 tỷ", "note": "170", "note_2": "11,8"},
+            {"area": "Trên 200 m²", "price": "193 tin", "tracked": "2,90 tỷ", "signal": "7,0 tr/m²", "area_m2": "0,60 – 24,00 tỷ", "note": "193", "note_2": "7,0"}
+        ],
+        "cards": [
+            {"title": "Đất nền vs nhà đất", "value": "495 vs 430 tin", "body": "Hai loại hình có mặt bằng giá rất khác nhau"},
+            {"title": "Ngưỡng dưới 3 tỷ", "value": "348/495 tin", "body": "Đất nền Thủ Dầu Một · 14 ngày"},
+            {"title": "Diện tích trung vị", "value": "157 m²", "body": "Đất nền · so với 100 m² ở nhà đất"}
+        ]
+    },
+    "local_links_title": "Mở dữ liệu và đọc thêm",
+    "local_links": [
+        {"label": "Hub BĐS Bình Dương", "href": "/binh-duong", "description": "Chọn khu vực và đi vào từng trang phường trước khi lọc tin."},
+        {"label": "Tỷ lệ cắt máu nhà đất Thủ Dầu Một", "href": "/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra", "description": "Phường nào đang có nhiều tin giảm giá cần kiểm tra lại."},
+        {"label": "MOS là gì và lọc tin dưới giá cơ sở", "href": "/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so", "description": "Cách Radar tính mức chênh so với giá cơ sở của khu."},
+        {"label": "Trang công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Nhập diện tích, loại hình và đường vào để xem khoảng giá tham chiếu."}
+    ],
+    "process_title": "Cách chọn diện tích trước khi đi xem",
+    "process": [
+        {"title": "1. Chốt ngân sách tổng trước, rồi mới tới m²", "body": "Đất trên 200 m² có giá/m² rẻ nhất nhưng tổng giá trung vị lại cao nhất. Nếu bạn chỉ nhìn giá/m² mà không tính tổng tiền, bạn sẽ mất thời gian đi xem những lô vượt ngân sách."},
+        {"title": "2. Chọn khoảng diện tích theo mục đích", "body": "Ở thật thường cần 80-150 m². Đầu tư chia lô thường nhắm 120-200 m². Đất trên 200 m² hợp làm nhà vườn, kho bãi hoặc xây nhiều phòng, nhưng khó bán lại hơn vì ít người mua."},
+        {"title": "3. So giá/m² chỉ trong cùng một khoảng", "body": "Một lô 60 m² ở mức 32,5 tr/m² không đắt hơn lô 300 m² ở mức 7,0 tr/m². Hai con số đo hai thứ khác nhau. Muốn so công bằng, hãy so trong cùng khoảng diện tích, cùng phường và cùng loại đường."},
+        {"title": "4. Kiểm tra đường vào và thổ cư", "body": "Đất mặt tiền kinh doanh có giá rao trung vị 34,8 tr/m², còn đất đường đất chỉ 3,0 tr/m². Chênh lệch này lớn hơn cả chênh lệch do diện tích. Hỏi rõ đường nhựa, bê tông hay đường đất, và bao nhiêu m² thổ cư."},
+        {"title": "5. Đối chiếu lại trên Radar trước khi hẹn", "body": "Mở tin trong dashboard, xem giá/m² của chính lô đó so với các tin cùng phường, cùng khoảng diện tích. Nếu lệch quá xa mặt bằng, hãy đọc kỹ phần diện tích và chiều sâu trước khi gọi."}
+    ],
+    "faq": [
+        {"q": "Đất nền Bình Dương bao nhiêu m² thì dễ bán?", "a": "Theo dữ liệu 14 ngày, khoảng 120-200 m² là nhóm có nhiều tin rao nhất ở Thủ Dầu Một với 170 tin, nhiều hơn hẳn nhóm dưới 80 m² (12 tin). Nhóm 80-120 m² cũng đông người xem với 100 tin. Đây là số liệu tin đang rao, cho biết mức cung phổ biến chứ không phải cam kết bán nhanh."},
+        {"q": "Vì sao đất càng lớn giá/m² càng thấp?", "a": "Vì tổng tiền mới là thứ quyết định người mua có đủ khả năng hay không. Một lô 300 m² ở 7,0 tr/m² vẫn là hơn 2 tỷ, bằng một lô 120 m² ở 11,8 tr/m² nhưng khó tìm người mua hơn. Chênh lệch giá/m² phản ánh thanh khoản, không chỉ phản ánh vị trí."},
+        {"q": "Đất nền dưới 80 m² có nên mua không?", "a": "Nhóm này chỉ có 12 tin trong 14 ngày, giá/m² trung vị 32,5 tr/m² — cao nhất trong các khoảng diện tích. Đất nhỏ thường nằm ở vị trí đặc biệt hoặc dùng để ở ngay. Vì nguồn cung ít, bạn nên kiểm tra kỹ quy hoạch và hiện trạng trước khi trả giá."},
+        {"q": "Hai lô cùng giá 2 tỷ thì chọn lô nào?", "a": "So theo giá/m² trong cùng khoảng diện tích, rồi so loại đường và thổ cư. Hai lô cùng 2 tỷ có thể là 100 m² ở 20 tr/m² hoặc 250 m² ở 8 tr/m² — hai mục đích khác nhau. Đọc từng lô trong dashboard thay vì so con số tổng."},
+        {"q": "Số liệu trong bài lấy từ đâu và có phải giá chốt không?", "a": "Số liệu lấy từ tin rao Facebook đang được Radar theo dõi, cửa sổ 14 ngày gần 18/09/2026, chỉ tính tin đang hiển thị. Đây là giá đang rao, không phải giá chốt giao dịch, và một lô có thể xuất hiện nhiều lần do đăng lại."}
+    ],
+    "article": {
+        "published_at": "2026-09-18",
+        "modified_at": "2026-09-18",
+        "intro": [
+            "495 tin đất nền Thủ Dầu Một đang được Radar theo dõi trong 14 ngày gần đây. Khoảng 120-200 m² chiếm nhiều nhất với 170 tin, và giá/m² trung vị giảm từ 32,5 tr/m² ở nhóm dưới 80 m² xuống còn 7,0 tr/m² ở nhóm trên 200 m².",
+            "Không có con số m² nào dễ bán cho mọi khu và mọi người. Nhưng có một cách chọn đúng: tách theo khoảng diện tích, giữ ngân sách tổng làm mốc, rồi mới so giá/m² trong cùng khoảng với cùng loại đường."
+        ],
+        "summary_cards": [
+            {"label": "Đất nền đang theo dõi", "value": "495 tin", "note": "Facebook · Thủ Dầu Một · 14 ngày"},
+            {"label": "Khoảng phổ biến nhất", "value": "120-200 m²", "note": "170 tin có đủ diện tích và giá"},
+            {"label": "Dưới 3 tỷ", "value": "348/495 tin", "note": "Đất nền · ngưỡng ngân sách phổ biến"}
+        ],
+        "data_tables": [
+            {
+                "eyebrow": "Bảng đọc nhanh",
+                "title": "Đất nền Thủ Dầu Một theo khoảng diện tích",
+                "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0, cửa sổ 14 ngày gần 18/09/2026. Giá là giá đang rao, không phải giá chốt giao dịch.",
+                "columns": [
+                    {"key": "area", "label": "Khoảng diện tích"},
+                    {"key": "tracked", "label": "Số tin"},
+                    {"key": "signals", "label": "Giá trung vị"},
+                    {"key": "land_m2", "label": "Giá/m² trung vị"}
+                ],
+                "rows": [
+                    {"area": "Dưới 80 m²", "tracked": 12, "signals": "1,95 tỷ", "land_m2": "32,5 tr/m²"},
+                    {"area": "80-120 m²", "tracked": 100, "signals": "2,20 tỷ", "land_m2": "23,1 tr/m²"},
+                    {"area": "120-200 m²", "tracked": 170, "signals": "1,55 tỷ", "land_m2": "11,8 tr/m²"},
+                    {"area": "Trên 200 m²", "tracked": 193, "signals": "2,90 tỷ", "land_m2": "7,0 tr/m²"}
+                ]
+            },
+            {
+                "eyebrow": "Đối chiếu loại đường",
+                "title": "Cùng là đất nền, loại đường làm giá khác hẳn",
+                "note": "Cùng cửa sổ dữ liệu 14 ngày. Một số tin không ghi rõ loại đường nên được để riêng, không gộp vào nhóm khác.",
+                "columns": [
+                    {"key": "area", "label": "Loại đường"},
+                    {"key": "tracked", "label": "Số tin"},
+                    {"key": "signals", "label": "Giá/m² trung vị"},
+                    {"key": "land_m2", "label": "Diện tích trung vị"}
+                ],
+                "rows": [
+                    {"area": "Đường nhựa", "tracked": 206, "signals": "9,8 tr/m²", "land_m2": "181 m²"},
+                    {"area": "Mặt tiền kinh doanh", "tracked": 16, "signals": "34,8 tr/m²", "land_m2": "132 m²"},
+                    {"area": "Bê tông", "tracked": 70, "signals": "12,1 tr/m²", "land_m2": "127 m²"},
+                    {"area": "Hẻm xe hơi", "tracked": 25, "signals": "11,8 tr/m²", "land_m2": "132 m²"},
+                    {"area": "Đường đất", "tracked": 18, "signals": "3,0 tr/m²", "land_m2": "608 m²"}
+                ]
+            }
+        ],
+        "charts": [
+            {
+                "eyebrow": "Mốc so giá",
+                "title": "Giá/m² đất nền giảm dần khi diện tích tăng",
+                "note": "Đất nền Thủ Dầu Một, cửa sổ 14 ngày gần 18/09/2026. Giá chỉ dùng để lọc ban đầu.",
+                "alt": "Biểu đồ giá rao trung vị mỗi m² đất nền theo khoảng diện tích ở Thủ Dầu Một",
+                "rows": [
+                    {"label": "Dưới 80 m²", "value_label": "32,5", "width": 93, "color": "#38bdf8"},
+                    {"label": "80-120 m²", "value_label": "23,1", "width": 66, "color": "#34d399"},
+                    {"label": "120-200 m²", "value_label": "11,8", "width": 34, "color": "#fbbf24"},
+                    {"label": "Trên 200 m²", "value_label": "7,0", "width": 20, "color": "#f87171"}
+                ]
+            }
+        ],
+        "sections": [
+            {
+                "id": "khoang-120-200-pho-bien-nhat",
+                "heading": "Khoảng 120-200 m² là mức cung phổ biến nhất",
+                "paragraphs": [
+                    "Trong 475 tin đất nền có đủ cả diện tích và giá, khoảng 120-200 m² có 170 tin, chiếm hơn một phần ba. Nhóm 80-120 m² đứng sau với 100 tin. Nhóm dưới 80 m² chỉ có 12 tin, còn nhóm trên 200 m² có 193 tin nhưng trải rộng từ lô 250 m² tới lô hơn 700 m².",
+                    "Khoảng 120-200 m² hợp với cả hai nhu cầu: đủ rộng để xây nhà có sân, và vẫn nằm trong tầm tiền của người mua ở thật. Đó là lý do nhóm này vừa có nhiều người bán vừa có nhiều người mua lại. Tổng giá trung vị của nhóm này là 1,55 tỷ, thấp nhất trong bốn khoảng dù giá/m² không thấp nhất."
+                ],
+                "bullets": [
+                    "120-200 m²: 170 tin, giá/m² trung vị 11,8 tr/m², tổng giá trung vị 1,55 tỷ.",
+                    "80-120 m²: 100 tin, giá/m² trung vị 23,1 tr/m², tổng giá trung vị 2,20 tỷ.",
+                    "Dưới 80 m²: chỉ 12 tin, giá/m² trung vị 32,5 tr/m² — cao nhất trong các khoảng."
+                ]
+            },
+            {
+                "id": "gia-tren-m2-giam-khi-dien-tich-tang",
+                "heading": "Vì sao đất càng lớn, giá/m² càng thấp",
+                "paragraphs": [
+                    "Giá/m² giảm gần 5 lần từ nhóm đất nhỏ nhất sang nhóm đất lớn nhất: 32,5 tr/m² còn 7,0 tr/m². Không phải vì đất lớn kém chất lượng. Vì tổng tiền mới là thứ quyết định người mua có kham được hay không.",
+                    "Một lô 300 m² ở 7,0 tr/m² vẫn là hơn 2 tỷ. Một lô 100 m² ở 23,1 tr/m² là 2,3 tỷ. Hai lô ngang tiền, nhưng lô lớn cần người mua có nhu cầu dùng đất rộng — nhóm này ít hơn nhiều so với người mua nhà ở thật.",
+                    "Điều này dẫn tới hệ quả quan trọng: đừng dùng giá/m² để so hai lô khác khoảng diện tích. Đó là hai đại lượng đo hai thứ khác nhau. Hãy so trong cùng khoảng, cùng phường, cùng loại đường."
+                ],
+                "bullets": [
+                    "Đất dưới 80 m²: 32,5 tr/m² · tổng giá trung vị 1,95 tỷ.",
+                    "Đất trên 200 m²: 7,0 tr/m² · tổng giá trung vị 2,90 tỷ — rẻ hơn mỗi m² nhưng đắt hơn mỗi lô.",
+                    "Diện tích trung vị của đất nền là 157 m², cao hơn nhà đất (100 m²)."
+                ]
+            },
+            {
+                "id": "loai-duong-con-quyet-dinh-hon-dien-tich",
+                "heading": "Loại đường ảnh hưởng mạnh hơn cả diện tích",
+                "paragraphs": [
+                    "Nếu chỉ nhìn diện tích, bạn sẽ bỏ qua biến quan trọng nhất. Đất mặt tiền kinh doanh có giá rao trung vị 34,8 tr/m². Đất đường đất chỉ 3,0 tr/m². Chênh lệch hơn 11 lần, lớn hơn chênh lệch giữa các khoảng diện tích.",
+                    "Đường nhựa là nhóm phổ biến nhất với 206 tin, giá/m² trung vị 9,8 tr/m², diện tích trung vị 181 m². Bê tông và hẻm xe hơi có mức giá gần nhau, quanh 11,8-12,1 tr/m², nhưng diện tích trung vị nhỏ hơn nhiều so với đường nhựa.",
+                    "Nhóm đường đất có diện tích trung vị tới 608 m² — gấp hơn ba lần các nhóm khác. Đây thường là đất vườn, đất nông nghiệp hoặc lô lớn ngoài khu dân cư. Giá/m² rất thấp nhưng cần kiểm tra kỹ pháp lý, quy hoạch và khả năng lên thổ cư trước khi tính chuyện xây dựng."
+                ],
+                "bullets": [
+                    "Mặt tiền kinh doanh: 34,8 tr/m² · 16 tin — cao nhất.",
+                    "Đường nhựa: 9,8 tr/m² · 206 tin — phổ biến nhất, diện tích trung vị 181 m².",
+                    "Bê tông và hẻm xe hơi: 12,1 và 11,8 tr/m².",
+                    "Đường đất: 3,0 tr/m² nhưng diện tích trung vị 608 m² — cần kiểm tra pháp lý kỹ."
+                ]
+            },
+            {
+                "id": "chon-theo-phuong",
+                "heading": "Chọn theo phường: nơi nào còn nhiều lựa chọn dưới 3 tỷ",
+                "paragraphs": [
+                    "Trong 14 ngày, các phường có nhiều đất nền đang rao nhất ở Thủ Dầu Một là Hiệp Thành (19 tin), Phú Tân (16 tin), Định Hòa (15 tin), Phú Lợi và Phú Mỹ (cùng 14 tin).",
+                    "Nhưng số tin nhiều chưa chắc đã là nơi dễ chọn. Định Hòa, Hiệp An và Phú Tân có toàn bộ hoặc gần toàn bộ tin đất nền nằm dưới 3 tỷ, trong khi Phú Hòa chỉ có 6/13 tin dưới ngưỡng đó. Nếu ngân sách của bạn quanh 2 tỷ, Định Hòa và Hiệp An có nhiều lựa chọn hơn về số lượng.",
+                    "Cũng cần chú ý nhóm có tin giảm giá. Trong 14 ngày, Định Hòa và Phú Mỹ mỗi nơi có 3 tin đất nền giảm giá, Phú Tân, Hiệp An và Phú Hòa mỗi nơi có 1 tin. Tin giảm giá thường là điểm bắt đầu tốt để kiểm tra, nhưng phải xem lại diện tích và loại đường vì đó là hai biến giải thích phần lớn chênh lệch."
+                ],
+                "bullets": [
+                    "Hiệp Thành: 19 tin, giá/m² trung vị 23,3 tr/m², 8 tin dưới 3 tỷ.",
+                    "Phú Tân: 16 tin, 21,7 tr/m², 12 tin dưới 3 tỷ.",
+                    "Định Hòa: 15 tin, 12,1 tr/m² — toàn bộ 15 tin dưới 3 tỷ, 3 tin giảm giá.",
+                    "Hiệp An: 13 tin, 12,3 tr/m² — toàn bộ 13 tin dưới 3 tỷ.",
+                    "Phú Hòa: 13 tin, 28,7 tr/m² — chỉ 6 tin dưới 3 tỷ, mặt bằng giá cao nhất nhóm."
+                ]
+            }
+        ],
+        "checklist": [
+            "Chốt ngân sách tổng trước, rồi mới chọn khoảng diện tích.",
+            "Chọn khoảng diện tích theo mục đích: ở thật 80-150 m², đầu tư 120-200 m², làm vườn hoặc kho trên 200 m².",
+            "Chỉ so giá/m² trong cùng khoảng diện tích, cùng phường và cùng loại đường.",
+            "Hỏi rõ đường nhựa, bê tông, hẻm xe hơi hay đường đất — chênh lệch tới hơn 11 lần.",
+            "Kiểm tra bao nhiêu m² thổ cư và phần còn lại là loại đất gì.",
+            "Đối chiếu giá/m² của lô đó với các tin cùng phường trong dashboard trước khi hẹn xem."
+        ]
+    },
+    "faq_note": "Giá trong bài là giá đang rao từ tin Facebook, không phải giá chốt giao dịch. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+    "final_cta": {
+        "title": "Chọn đúng khoảng diện tích rồi mới đi xem",
+        "body": "Mở Radar để lọc đất nền theo phường và ngân sách, rồi dùng công cụ định giá để đối chiếu khoảng giá tham chiếu trước khi hẹn chủ đất.",
+        "button": "Mở Radar",
+        "button_href": "/?tab=listings&property_type=dat_nen&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat-nen-dien-tich"
+    },
+    "breadcrumbs": [
+        {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+        {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+        {"name": "Đất nền bao nhiêu m² thì dễ bán", "href": "/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban", "url": "https://radarbds.vn/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban"}
+    ]
+},
 }
 
 
