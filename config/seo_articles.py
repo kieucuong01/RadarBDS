@@ -23742,6 +23742,466 @@ SEO_ARTICLES = {
         {"name": "Đất nền bao nhiêu m² thì dễ bán", "href": "/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban", "url": "https://radarbds.vn/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban"}
     ]
 },
+    "gia-dat-an-dien-ben-cat-hien-bao-nhieu": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/gia-dat-an-dien-ben-cat-hien-bao-nhieu",
+        "category": {
+            "key": "du-lieu-gia-dat",
+            "label": "Giá đất theo phường"
+        },
+        "title": "Giá đất An Điền Bến Cát hiện bao nhiêu? Đọc riêng đất nền và nhà đất | Radar BDS",
+        "description": "Giá đất An Điền Bến Cát theo 60 tin Facebook trong cửa sổ 14 ngày: đất nền 6,3 tr/m², nhà đất 17,0 tr/m². Xem bảng và cách lọc tin trước khi đi xem đất.",
+        "keywords": "giá đất An Điền Bến Cát, giá đất nền An Điền, nhà đất An Điền, giá đất Bến Cát, giá/m² An Điền, Radar BDS",
+        "breadcrumb_label": "Giá đất An Điền Bến Cát",
+        "hero_badge": "Tin tức BĐS Bến Cát",
+        "hero_title": "Giá đất An Điền Bến Cát hiện bao nhiêu? Đọc riêng đất nền và nhà đất",
+        "hero_text": "Dữ liệu Facebook Radar BDS trong cửa sổ 14 ngày cho thấy đất nền và nhà đất An Điền đang ở hai mặt bằng giá khác nhau. Người mua nên tách loại hình trước, sau đó mới so giá rao, tổng tiền và các dấu hiệu cần kiểm tra.",
+        "scope_label": "Bến Cát · An Điền",
+        "hero_checks": [
+            "60 dòng tin Facebook trong cửa sổ 14 ngày; đây là số tin/bản ghi, không phải số bất động sản duy nhất",
+            "Đất nền: 42 tin theo dõi; 41 tin đủ giá/m², giá rao trung vị 6,3 tr/m²",
+            "Nhà đất: 12 tin theo dõi; 7 tin đủ giá/m², giá rao trung vị 17,0 tr/m²",
+            "7 dấu hiệu đáng chú ý: 6 ở đất nền và 1 ở nhà đất"
+        ],
+        "primary_cta": "Mở dashboard lọc An Điền",
+        "primary_href": "/?tab=signals&ward=An%20%C4%90i%E1%BB%81n&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=gia_dat_an_dien_20260919",
+        "secondary_cta": "Dùng công cụ định giá BĐS",
+        "secondary_href": "/dinh-gia-bds",
+        "map_label": "Tin tức / Giá đất An Điền Bến Cát",
+        "hero_metric": {
+            "label": "Tin An Điền trong cửa sổ 14 ngày",
+            "value": "60 tin",
+            "delta": "7 dấu hiệu đáng chú ý",
+            "note": "Nguồn Facebook; dữ liệu crawl mới nhất trong mẫu là 12/09/2026"
+        },
+        "property_card": {
+            "status": "Tách riêng loại hình",
+            "title": "An Điền không nên đọc bằng một mức giá chung",
+            "price": "Đất nền 6,3 tr/m² · nhà đất 17,0 tr/m²",
+            "metric_a": "Đất nền",
+            "metric_a_value": "42 tin · 2,30 tỷ",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "12 tin · 1,85 tỷ"
+        },
+        "value_cards": [
+            {
+                "title": "Đất nền là nhóm có nhiều tin hơn",
+                "body": "Radar BDS đang theo dõi 42 tin đất nền và 12 tin nhà đất tại An Điền trong cửa sổ 14 ngày. Tuy nhiên, chỉ nên so giá/m² trong cùng loại hình vì hai nhóm có mặt bằng giá khác nhau."
+            },
+            {
+                "title": "Giá/m² nhà đất cao hơn đất nền",
+                "body": "Giá rao trung vị của 41 tin đất nền đủ dữ liệu là 6,3 tr/m². Với nhà đất, 7 tin đủ giá/m² có mốc trung vị 17,0 tr/m². Đây là giá đang rao, không phải giá chốt."
+            },
+            {
+                "title": "Nhóm dưới 3 tỷ có thể dùng để lọc nhanh",
+                "body": "Có 26 tin đất nền và 11 tin nhà đất dưới 3 tỷ trong mẫu. Đây là bộ lọc ban đầu theo tổng giá; người mua vẫn cần mở từng tin để kiểm tra diện tích, đường vào và giấy tờ."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bài viết sang tin thực tế",
+            "title": "Xem riêng An Điền trước khi gọi hỏi tin",
+            "body": "Mở dashboard, giữ phường An Điền, chọn đất nền hoặc nhà đất rồi mới so giá/m² và tổng giá trong cùng nhóm.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin nhà đất theo khu vực An Điền Bến Cát",
+            "cta": "Mở dashboard An Điền",
+            "metrics": [
+                {
+                    "value": "60 tin",
+                    "label": "Facebook trong 14 ngày"
+                },
+                {
+                    "value": "6,3 tr/m²",
+                    "label": "đất nền trung vị"
+                },
+                {
+                    "value": "17,0 tr/m²",
+                    "label": "nhà đất trung vị"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot Facebook 14 ngày",
+            "title": "An Điền theo từng loại hình BĐS",
+            "body": "Bảng tách đất nền và nhà đất để tránh lấy một giá chung cho hai nhóm khác nhau.",
+            "columns": [
+                {
+                    "key": "type",
+                    "label": "Loại hình"
+                },
+                {
+                    "key": "tracked",
+                    "label": "Tin theo dõi"
+                },
+                {
+                    "key": "m2_n",
+                    "label": "Có giá/m²"
+                },
+                {
+                    "key": "median_m2",
+                    "label": "Giá trung vị/m²"
+                },
+                {
+                    "key": "median_total",
+                    "label": "Tổng giá trung vị"
+                }
+            ],
+            "rows": [
+                {
+                    "type": "Đất nền",
+                    "tracked": "42",
+                    "m2_n": "41",
+                    "median_m2": "6,3 tr/m²",
+                    "median_total": "2,30 tỷ"
+                },
+                {
+                    "type": "Nhà đất",
+                    "tracked": "12",
+                    "m2_n": "7",
+                    "median_m2": "17,0 tr/m²",
+                    "median_total": "1,85 tỷ"
+                }
+            ],
+            "cards": [
+                {
+                    "title": "Nguồn tin chính",
+                    "value": "60 dòng tin",
+                    "body": "Facebook, cửa sổ 14 ngày"
+                },
+                {
+                    "title": "Đất nền",
+                    "value": "6,3 tr/m²",
+                    "body": "41 tin đủ giá/m²"
+                },
+                {
+                    "title": "Nhà đất",
+                    "value": "17,0 tr/m²",
+                    "body": "7 tin đủ giá/m²"
+                }
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và đọc thêm",
+        "local_links": [
+            {
+                "label": "Trang khu vực An Điền",
+                "href": "/binh-duong/phuong-an-dien",
+                "description": "Xem trang khu vực An Điền và các đường vào dashboard liên quan."
+            },
+            {
+                "label": "Lọc tin An Điền trên Radar",
+                "href": "/?tab=signals&ward=An%20%C4%90i%E1%BB%81n&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=gia_dat_an_dien_20260919",
+                "description": "Tách đất nền, nhà đất và lọc tiếp theo tổng giá."
+            },
+            {
+                "label": "Báo cáo thị trường BĐS",
+                "href": "/bao-cao",
+                "description": "Xem kho báo cáo theo tháng để có thêm bối cảnh thị trường."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Đối chiếu thêm một tin cụ thể sau khi đã lọc theo khu vực."
+            },
+            {
+                "label": "Giá đất Phú An Bến Cát",
+                "href": "/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu",
+                "description": "Đọc một khu Bến Cát khác, vẫn tách riêng đất nền và nhà đất."
+            },
+            {
+                "label": "Bến Cát có những khu nào nên theo dõi?",
+                "href": "/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat",
+                "description": "Đặt An Điền trong danh sách các khu vực Bến Cát cần theo dõi."
+            }
+        ],
+        "process_title": "Cách lọc An Điền trước khi đi xem",
+        "process": [
+            {
+                "title": "1. Chọn đúng loại hình",
+                "body": "Bắt đầu bằng đất nền hoặc nhà đất, không gộp hai nhóm. Trong mẫu hiện tại, giá rao trung vị/m² của hai nhóm chênh khá xa."
+            },
+            {
+                "title": "2. Đặt trần tổng giá",
+                "body": "Nếu đang lọc nhanh quanh 3 tỷ, có thể bắt đầu với 26 tin đất nền và 11 tin nhà đất dưới ngưỡng này. Sau đó xem lại diện tích và vị trí từng tin."
+            },
+            {
+                "title": "3. Đọc giá/m² cùng điều kiện",
+                "body": "Giá/m² chỉ có ý nghĩa khi so cùng loại hình, diện tích tương đương và loại đường tương đương. Đừng dùng giá thấp trên tiêu đề để kết luận một tin rẻ."
+            },
+            {
+                "title": "4. Mở dấu hiệu để ưu tiên kiểm tra",
+                "body": "Bảy tin có dấu hiệu đáng chú ý có thể giúp sắp thứ tự mở tin. Dấu hiệu không thay cho việc kiểm tra sổ, quy hoạch, đường vào, thổ cư và hiện trạng."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Giá đất An Điền Bến Cát hiện khoảng bao nhiêu?",
+                "a": "Theo 14 ngày dữ liệu Facebook mà Radar BDS đang theo dõi, đất nền An Điền có giá rao trung vị 6,3 tr/m² trên 41 tin đủ dữ liệu; nhà đất là 17,0 tr/m² trên 7 tin đủ dữ liệu. Đây là giá rao, không phải giá chốt giao dịch."
+            },
+            {
+                "q": "Vì sao giá/m² nhà đất An Điền cao hơn đất nền?",
+                "a": "Đất nền và nhà đất là hai loại hình khác nhau: một bên là lô đất trống, một bên đã có nhà và tài sản gắn liền với đất. Vì vậy, nên tách loại hình trước khi so giá, thay vì lấy một mức chung cho cả khu."
+            },
+            {
+                "q": "An Điền có nhiều tin dưới 3 tỷ không?",
+                "a": "Có. Mẫu hiện tại có 26 tin đất nền và 11 tin nhà đất dưới 3 tỷ. Con số này chỉ giúp lọc bước đầu; người mua vẫn cần kiểm tra diện tích, đường vào, thổ cư, pháp lý và hiện trạng."
+            },
+            {
+                "q": "7 dấu hiệu đáng chú ý có nghĩa là nên mua ngay không?",
+                "a": "Không. Bảy dấu hiệu chỉ dùng để ưu tiên thứ tự kiểm tra, gồm 6 tin đất nền và 1 tin nhà đất. Người mua cần đọc mô tả, xem vị trí và thẩm định độc lập trước khi liên hệ hoặc đặt cọc."
+            },
+            {
+                "q": "Số liệu trong bài lấy từ đâu và có phải giá chốt không?",
+                "a": "Số liệu lấy từ listings Facebook đang hoạt động mà Radar BDS theo dõi trong cửa sổ 14 ngày; mẫu có dữ liệu crawl từ 06/09 đến 12/09/2026. Đây là giá đang rao, không phải giá chốt, và số dòng tin có thể gồm bài đăng lại."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-19",
+            "modified_at": "2026-09-19",
+            "intro": [
+                "Giá đất An Điền Bến Cát trong mẫu Facebook 14 ngày đang ở hai mức rõ rệt: đất nền có giá rao trung vị 6,3 tr/m², còn nhà đất là 17,0 tr/m². Có 60 dòng tin được theo dõi, nhưng người mua nên tách loại hình trước khi so giá.",
+                "Đây là giá đang rao, không phải giá chốt giao dịch. Sáu tin kho/xưởng được tách khỏi bảng so sánh đất nền và nhà đất vì không đủ dữ liệu giá/m²."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin Facebook trong mẫu",
+                    "value": "60 tin",
+                    "note": "Cửa sổ 14 ngày · crawl mới nhất 12/09/2026"
+                },
+                {
+                    "label": "Dấu hiệu đáng chú ý",
+                    "value": "7 tin",
+                    "note": "Đất nền 6 · nhà đất 1"
+                },
+                {
+                    "label": "Đất nền giá trung vị/m²",
+                    "value": "6,3 tr/m²",
+                    "note": "41 tin đủ giá/m² · tổng giá 2,30 tỷ"
+                },
+                {
+                    "label": "Nhà đất giá trung vị/m²",
+                    "value": "17,0 tr/m²",
+                    "note": "7 tin đủ giá/m² · tổng giá 1,85 tỷ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng giá theo loại hình",
+                    "title": "Giá rao An Điền: đất nền và nhà đất nên đọc riêng",
+                    "note": "Nguồn: listings với source='facebook', is_active=1, is_blacklisted=0, review_hidden=0, cửa sổ 14 ngày. Giá là mức đang rao, không phải giá chốt giao dịch.",
+                    "columns": [
+                        {
+                            "key": "type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin theo dõi"
+                        },
+                        {
+                            "key": "m2_n",
+                            "label": "Có giá/m²"
+                        },
+                        {
+                            "key": "under3",
+                            "label": "Dưới 3 tỷ"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá trung vị/m²"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Tổng giá trung vị"
+                        },
+                        {
+                            "key": "range",
+                            "label": "Khoảng 25–75%"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "tracked": "42",
+                            "m2_n": "41",
+                            "under3": "26",
+                            "median_m2": "6,3 tr/m²",
+                            "median_total": "2,30 tỷ",
+                            "range": "4,1–11,0 tr/m²"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "tracked": "12",
+                            "m2_n": "7",
+                            "under3": "11",
+                            "median_m2": "17,0 tr/m²",
+                            "median_total": "1,85 tỷ",
+                            "range": "13,5–17,0 tr/m²"
+                        },
+                        {
+                            "type": "Kho/xưởng",
+                            "tracked": "6",
+                            "m2_n": "0",
+                            "under3": "0",
+                            "median_m2": "Chưa đủ mẫu",
+                            "median_total": "Chưa đủ mẫu",
+                            "range": "Chưa đủ mẫu"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Lớp ưu tiên kiểm tra",
+                    "title": "7 dấu hiệu đáng chú ý nằm chủ yếu ở đất nền",
+                    "note": "Bảy tin là hợp của hai cờ dữ liệu; trong mẫu này không có tin đồng thời mang cả hai cờ.",
+                    "columns": [
+                        {
+                            "key": "type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "hot",
+                            "label": "Được đánh dấu đáng chú ý"
+                        },
+                        {
+                            "key": "drops",
+                            "label": "Có giảm giá"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "signals": "6",
+                            "hot": "4",
+                            "drops": "2"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "signals": "1",
+                            "hot": "0",
+                            "drops": "1"
+                        },
+                        {
+                            "type": "Kho/xưởng",
+                            "signals": "0",
+                            "hot": "0",
+                            "drops": "0"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Mốc so giá rao",
+                    "title": "Nhà đất An Điền có giá/m² cao hơn đất nền",
+                    "note": "So sánh trung vị trên các tin có đủ giá/m²; không gộp kho/xưởng vào biểu đồ.",
+                    "alt": "Biểu đồ so sánh giá rao trung vị mỗi mét vuông giữa đất nền và nhà đất tại An Điền",
+                    "rows": [
+                        {
+                            "label": "Đất nền",
+                            "value_label": "6,3 tr/m²",
+                            "width": 37,
+                            "color": "#3b82f6"
+                        },
+                        {
+                            "label": "Nhà đất",
+                            "value_label": "17,0 tr/m²",
+                            "width": 100,
+                            "color": "#10b981"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "gia-rao-an-dien-theo-loai-hinh",
+                    "heading": "1. Giá đất An Điền hiện nằm ở đâu?",
+                    "paragraphs": [
+                        "Nếu chỉ cần một mốc để lọc nhanh, hãy nhớ hai con số: đất nền An Điền có giá rao trung vị 6,3 tr/m² và nhà đất là 17,0 tr/m². Mức tổng giá trung vị lần lượt là 2,30 tỷ và 1,85 tỷ. Hai cách đọc này không mâu thuẫn: nhà đất có giá/m² cao hơn nhưng diện tích và cơ cấu tin khác đất nền.",
+                        "Đất nền có 41 tin đủ giá/m² trong tổng 42 tin theo dõi. Nhà đất chỉ có 7 tin đủ giá/m² trong tổng 12 tin. Vì vậy, mốc nhà đất nên được xem như một chỉ báo của mẫu hiện tại, không phải bảng giá cho toàn bộ An Điền."
+                    ],
+                    "bullets": [
+                        "Đất nền: 42 tin theo dõi, 6,3 tr/m² trung vị.",
+                        "Nhà đất: 12 tin theo dõi, 17,0 tr/m² trung vị trên 7 tin đủ giá/m².",
+                        "Kho/xưởng: 6 tin, chưa đủ mẫu để tính giá/m² trong bài này."
+                    ]
+                },
+                {
+                    "id": "loc-duoi-3-ty-an-dien",
+                    "heading": "2. Nhóm dưới 3 tỷ có thể là điểm bắt đầu để lọc",
+                    "paragraphs": [
+                        "Trong mẫu hiện tại, 26 tin đất nền và 11 tin nhà đất có tổng giá dưới 3 tỷ. Nếu anh đang tìm theo ngân sách, hãy dùng tổng giá để thu hẹp danh sách trước, rồi mới so giá/m² trong cùng loại hình. Cách này tránh việc thấy một mức giá/m² thấp nhưng tổng tiền lại vượt khả năng.",
+                        "Tổng giá trung vị của đất nền là 2,30 tỷ, còn nhà đất là 1,85 tỷ. Nhà đất dưới 3 tỷ có 11/12 tin trong mẫu, nhưng số tin có đủ giá/m² ít hơn. Khi mở tin nhà đất, nên đọc cả mô tả tài sản và phần diện tích trước khi so tiếp."
+                    ],
+                    "bullets": [
+                        "Đất nền dưới 3 tỷ: 26 tin.",
+                        "Nhà đất dưới 3 tỷ: 11 tin.",
+                        "Luôn kiểm tra tổng giá, diện tích và loại hình cùng lúc."
+                    ]
+                },
+                {
+                    "id": "dau-hieu-dang-chu-y-an-dien",
+                    "heading": "3. Bảy dấu hiệu chỉ giúp xếp thứ tự kiểm tra",
+                    "paragraphs": [
+                        "Radar BDS ghi nhận 7 tin có ít nhất một dấu hiệu đáng chú ý trong cửa sổ dữ liệu: 6 tin đất nền và 1 tin nhà đất. Trong đó có 4 tin được đánh dấu đáng chú ý và 3 tin có cờ giảm giá. Đây là lớp ưu tiên để mở tin trước, không phải kết luận rằng tài sản đang rẻ hoặc nên mua.",
+                        "Một tin giảm giá có thể liên quan đến diện tích, loại đường, giấy tờ hoặc nhu cầu bán của chủ tin. Người mua cần mở mô tả, xem vị trí, hỏi rõ thổ cư và kiểm tra quy hoạch trước khi quyết định đi xem."
+                    ],
+                    "bullets": [
+                        "Đất nền: 6 dấu hiệu, gồm 4 tin được đánh dấu đáng chú ý và 2 tin giảm giá.",
+                        "Nhà đất: 1 dấu hiệu, là tin có cờ giảm giá.",
+                        "Không dùng dấu hiệu thay cho thẩm định pháp lý và thực địa."
+                    ]
+                },
+                {
+                    "id": "loc-dashboard-an-dien",
+                    "heading": "4. Cách lọc An Điền trước khi gọi hỏi tin",
+                    "paragraphs": [
+                        "Bước đầu tiên là mở dashboard với phường An Điền, sau đó chọn đất nền hoặc nhà đất. Tiếp theo đặt trần tổng giá, nhìn giá/m² và mở các tin có dấu hiệu. Nếu cần so khu vực, hãy đặt An Điền cạnh một phường Bến Cát khác nhưng vẫn giữ nguyên loại hình.",
+                        "Sau khi có danh sách ngắn, dùng công cụ định giá BĐS như một lớp tham khảo thêm. Hãy hỏi lại đường vào, diện tích thực, phần thổ cư, giấy chứng nhận, quy hoạch và hiện trạng. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý hay kiểm tra thực địa."
+                    ],
+                    "bullets": [
+                        "Chọn phường An Điền trên dashboard.",
+                        "Tách đất nền và nhà đất trước khi so giá.",
+                        "Lọc tổng giá dưới 3 tỷ nếu đó là ngân sách mục tiêu.",
+                        "Mở tin có dấu hiệu để kiểm tra trước.",
+                        "Xác minh pháp lý, quy hoạch và hiện trạng trước khi đặt cọc."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã tách đất nền, nhà đất và kho/xưởng trước khi so giá.",
+                "Đã phân biệt giá rao trung vị với giá chốt giao dịch.",
+                "Đã so giá/m² cùng loại hình và đọc cả tổng giá.",
+                "Đã xem dấu hiệu như một lớp ưu tiên, không phải kết luận mua.",
+                "Đã kiểm tra diện tích, đường vào, thổ cư, quy hoạch và giấy tờ trước khi đi tiếp."
+            ]
+        },
+        "faq_note": "Giá trong bài là giá đang rao từ tin Facebook, không phải giá chốt giao dịch. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+        "final_cta": {
+            "title": "Mở Radar để lọc đúng nhóm An Điền",
+            "body": "Giữ phường An Điền, tách đất nền hoặc nhà đất, rồi mới so giá rao và dấu hiệu của từng tin. Đây là bước sàng lọc ban đầu trước khi liên hệ và đi xem.",
+            "button": "Mở dashboard An Điền",
+            "button_href": "/?tab=signals&ward=An%20%C4%90i%E1%BB%81n&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=gia_dat_an_dien_20260919"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Giá đất An Điền Bến Cát",
+                "href": "/tin-tuc/gia-dat-an-dien-ben-cat-hien-bao-nhieu",
+                "url": "https://radarbds.vn/tin-tuc/gia-dat-an-dien-ben-cat-hien-bao-nhieu"
+            }
+        ]
+    },
 }
 
 
