@@ -23749,7 +23749,7 @@ SEO_ARTICLES = {
             "key": "du-lieu-gia-dat",
             "label": "Giá đất theo phường"
         },
-        "title": "Giá đất An Điền Bến Cát hiện bao nhiêu? Đọc riêng đất nền và nhà đất | Radar BDS",
+        "title": "Giá đất An Điền Bến Cát hiện bao nhiêu? | Radar BDS",
         "description": "Giá đất An Điền Bến Cát theo 60 tin Facebook trong cửa sổ 14 ngày: đất nền 6,3 tr/m², nhà đất 17,0 tr/m². Xem bảng và cách lọc tin trước khi đi xem đất.",
         "keywords": "giá đất An Điền Bến Cát, giá đất nền An Điền, nhà đất An Điền, giá đất Bến Cát, giá/m² An Điền, Radar BDS",
         "breadcrumb_label": "Giá đất An Điền Bến Cát",
