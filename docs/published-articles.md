@@ -187,3 +187,10 @@
   - Score gate: 100/100
   - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`) queried on 2026-08-20, split by `dat_nen` vs `nha_dat`, with dưới-3-tỷ / dưới-4-tỷ counts and current example listings
   - Funnel: `/binh-duong/phuong-dinh-hoa`, `/binh-duong/phuong-phu-hoa`, dashboard ward filter, `/dinh-gia-bds`, `/bao-cao/bds-binh-duong-thang-07-2026`, `/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu`, `/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu`
+
+## 2026-09-20
+- `/tin-tuc/dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia` — **Đất nền Thủ Dầu Một phường nào có nhiều tin giảm giá?**
+  - Pillar: Kiểm tra tin rao / dữ liệu giảm giá
+  - Score gate: 100/100
+  - Data basis: live Facebook listings (`source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`) queried in the 07–20/09/2026 window; `crawled_at` rows in the sample run 07–12/09/2026; split `dat_nen` vs `nha_dat`
+  - Funnel: `/binh-duong/thu-dau-mot`, dashboard Thủ Dầu Một + đất nền, `/bao-cao`, `/dinh-gia-bds`, `/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra`, `/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong`

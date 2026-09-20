@@ -24202,6 +24202,535 @@ SEO_ARTICLES = {
             }
         ]
     },
+    "dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia",
+        "category": {
+            "key": "kiem-tra-tin-rao",
+            "label": "Kiểm tra tin rao"
+        },
+        "title": "Đất nền Thủ Dầu Một phường nào có nhiều tin giảm giá? | Radar BDS",
+        "description": "Đất nền Thủ Dầu Một phường nào có nhiều tin giảm giá? Xem 121 tin Facebook, tỷ lệ theo phường, giá rao trung vị đất nền và cách kiểm tra trước khi đi xem.",
+        "keywords": "đất nền Thủ Dầu Một giảm giá, tin đất nền giảm giá, giá đất Thủ Dầu Một, Định Hòa, Phú Hòa, Radar BDS",
+        "breadcrumb_label": "Đất nền Thủ Dầu Một phường nào có nhiều tin giảm giá?",
+        "hero_badge": "Kiểm tra tin rao · dữ liệu Facebook",
+        "hero_title": "Đất nền Thủ Dầu Một phường nào có nhiều tin giảm giá?",
+        "hero_text": "Trong snapshot dữ liệu Facebook từ 07 đến 12/09/2026, Định Hòa có tỷ lệ tin đất nền giảm giá cao nhất trong 12 phường có dữ liệu: 3/18 tin, tương đương 16,7%. Phú Hòa là 1/10 tin và Hiệp An là 1/11 tin. Đây là dấu hiệu để xếp thứ tự kiểm tra, không phải kết luận một tin đang rẻ.",
+        "scope_label": "Thủ Dầu Một · đất nền · dữ liệu Facebook",
+        "map_label": "Tin đất nền giảm giá theo phường",
+        "hero_checks": [
+            "121 tin đất nền Facebook trong snapshot; đây là số dòng tin, không phải số lô duy nhất",
+            "6 tin có cờ giảm giá, tương đương 5,0% tổng mẫu đất nền",
+            "Định Hòa: 3/18 tin, tỷ lệ 16,7%; giá rao trung vị đất nền 12,2 tr/m²",
+            "Nhà đất trong cùng snapshot: 13/179 tin giảm giá, tương đương 7,3%"
+        ],
+        "primary_cta": "Mở dashboard Thủ Dầu Một",
+        "primary_href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_giam_gia_tdm_20260920",
+        "secondary_cta": "Xem báo cáo thị trường",
+        "secondary_href": "/bao-cao",
+        "property_card": {
+            "status": "Tin đất nền giảm giá — cần kiểm tra thêm",
+            "title": "Định Hòa đứng đầu tỷ lệ trong mẫu đất nền",
+            "price": "Đất nền Định Hòa: 12,2 tr/m² giá rao trung vị",
+            "metric_a": "Tin đất nền",
+            "metric_a_value": "18 tin",
+            "metric_b": "Có cờ giảm giá",
+            "metric_b_value": "3 tin · 16,7%"
+        },
+        "hero_metric": {
+            "label": "Tin đất nền có cờ giảm giá",
+            "value": "6 tin",
+            "delta": "5,0% trên 121 tin",
+            "note": "Snapshot crawl 07–12/09/2026, nguồn Facebook"
+        },
+        "value_cards": [
+            {
+                "title": "Định Hòa có tỷ lệ cao nhất trong mẫu",
+                "body": "Định Hòa có 3/18 tin đất nền có cờ giảm giá, tương đương 16,7%. Mẫu 18 tin vẫn cần đọc cùng giá/m², diện tích và vị trí."
+            },
+            {
+                "title": "Phải tách đất nền với nhà đất",
+                "body": "Đất nền có 6/121 tin giảm giá, còn nhà đất có 13/179 tin. Giá rao trung vị là 19,7 tr/m² cho đất nền và 34,4 tr/m² cho nhà đất."
+            },
+            {
+                "title": "Giảm giá chỉ là điểm bắt đầu",
+                "body": "Cờ giảm giá cho biết tin đã thay đổi giá trong dữ liệu theo dõi. Người mua vẫn cần xác minh giá mới, giấy tờ, quy hoạch, đường vào và hiện trạng."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bảng số liệu sang tin thực tế",
+            "title": "Lọc riêng đất nền Thủ Dầu Một",
+            "body": "Mở dashboard, chọn Thủ Dầu Một, tách đất nền rồi đọc từng tin có dấu hiệu giảm giá.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin đất nền giảm giá tại Thủ Dầu Một",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {
+                    "value": "121 tin",
+                    "label": "đất nền"
+                },
+                {
+                    "value": "6 tin",
+                    "label": "có cờ giảm giá"
+                },
+                {
+                    "value": "12 phường",
+                    "label": "có dữ liệu"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot crawl 07–12/09/2026",
+            "title": "Tin đất nền giảm giá theo phường",
+            "body": "Nguồn là listings Facebook đang theo dõi với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0.",
+            "columns": [
+                "Phường",
+                "Tin đất nền",
+                "Tin giảm giá",
+                "Tỷ lệ",
+                "Giá rao trung vị/m² đất nền"
+            ],
+            "rows": [
+                {
+                    "ward": "Định Hòa",
+                    "tracked": "18",
+                    "dropped": "3",
+                    "rate": "16,7%",
+                    "median_m2": "12,2 tr/m²"
+                },
+                {
+                    "ward": "Phú Hòa",
+                    "tracked": "10",
+                    "dropped": "1",
+                    "rate": "10,0%",
+                    "median_m2": "29,7 tr/m²"
+                },
+                {
+                    "ward": "Hiệp An",
+                    "tracked": "11",
+                    "dropped": "1",
+                    "rate": "9,1%",
+                    "median_m2": "12,3 tr/m²"
+                },
+                {
+                    "ward": "Phú Mỹ",
+                    "tracked": "16",
+                    "dropped": "1",
+                    "rate": "6,3%",
+                    "median_m2": "19,0 tr/m²"
+                },
+                {
+                    "ward": "Phú Tân",
+                    "tracked": "16",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "20,0 tr/m²"
+                },
+                {
+                    "ward": "Phú Lợi",
+                    "tracked": "15",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "27,7 tr/m²"
+                },
+                {
+                    "ward": "Hiệp Thành",
+                    "tracked": "15",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "23,3 tr/m²"
+                },
+                {
+                    "ward": "Tân An",
+                    "tracked": "6",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "15,2 tr/m²"
+                },
+                {
+                    "ward": "Chánh Mỹ",
+                    "tracked": "5",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "23,1 tr/m²"
+                },
+                {
+                    "ward": "Phú Cường",
+                    "tracked": "4",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "26,5 tr/m²"
+                },
+                {
+                    "ward": "Chánh Nghĩa",
+                    "tracked": "3",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "32,5 tr/m²"
+                },
+                {
+                    "ward": "Tương Bình Hiệp",
+                    "tracked": "2",
+                    "dropped": "0",
+                    "rate": "0,0%",
+                    "median_m2": "28,8 tr/m²"
+                }
+            ],
+            "cards": [
+                {
+                    "title": "Toàn mẫu đất nền",
+                    "value": "121 tin",
+                    "body": "6 tin có cờ giảm giá · 5,0%"
+                },
+                {
+                    "title": "Tỷ lệ cao nhất",
+                    "value": "Định Hòa 16,7%",
+                    "body": "3/18 tin đất nền"
+                }
+            ]
+        },
+        "local_links_title": "Mở dữ liệu và đọc thêm",
+        "local_links": [
+            {
+                "label": "Trang khu vực Thủ Dầu Một",
+                "href": "/binh-duong/thu-dau-mot",
+                "description": "Xem tổng quan khu vực và các phường trước khi lọc tin."
+            },
+            {
+                "label": "Lọc tin Thủ Dầu Một trên Radar",
+                "href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_giam_gia_tdm_20260920",
+                "description": "Chọn đất nền, phường và ngân sách để mở từng tin cần kiểm tra."
+            },
+            {
+                "label": "Báo cáo thị trường Bình Dương",
+                "href": "/bao-cao",
+                "description": "Đọc các báo cáo theo tháng để có thêm bối cảnh giá rao."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Dùng thêm một mốc tham khảo cho tin cụ thể, không thay thẩm định."
+            },
+            {
+                "label": "Tỷ lệ giảm giá nhà đất Thủ Dầu Một",
+                "href": "/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra",
+                "description": "Đọc bài phân tích riêng cho nhà đất để tránh gộp hai loại hình."
+            },
+            {
+                "label": "5 bước kiểm tra giá rao trước khi đi xem đất",
+                "href": "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong",
+                "description": "Checklist sau khi đã lọc được nhóm tin cần mở trước."
+            }
+        ],
+        "process_title": "Cách kiểm tra một tin đất nền giảm giá",
+        "process": [
+            {
+                "title": "1. Xác nhận giá mới",
+                "body": "Hỏi lại giá hiện tại, thời điểm thay đổi và xem mức giá trên tin có còn hiệu lực không."
+            },
+            {
+                "title": "2. So cùng loại hình",
+                "body": "Đối chiếu với đất nền cùng phường, diện tích tương đương và loại đường tương đương; không lấy nhà đất làm mốc thay thế."
+            },
+            {
+                "title": "3. Kiểm tra điều kiện lô đất",
+                "body": "Đọc lại diện tích, thổ cư, mặt tiền, đường vào, vị trí thực tế và thông tin giấy tờ."
+            },
+            {
+                "title": "4. Xác minh độc lập",
+                "body": "Giá rao không phải giá chốt. Hãy kiểm tra quy hoạch, pháp lý và giá giao dịch tham khảo trước khi đặt cọc."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Phường nào có nhiều tin đất nền giảm giá nhất ở Thủ Dầu Một?",
+                "a": "Trong snapshot 07–12/09/2026, Định Hòa có 3 tin đất nền có cờ giảm giá trên 18 tin, tương đương 16,7%. Phú Hòa, Hiệp An và Phú Mỹ mỗi phường có 1 tin. Đây là số liệu trong mẫu theo dõi, không phải xếp hạng toàn bộ thị trường."
+            },
+            {
+                "q": "Tỷ lệ 16,7% ở Định Hòa có nghĩa là đất nền đang bán rẻ không?",
+                "a": "Không. Tỷ lệ này chỉ cho biết 3/18 dòng tin đất nền có ghi nhận giảm giá trong dữ liệu theo dõi. Người mua vẫn phải kiểm tra lý do giảm, giá mới, vị trí, giấy tờ, quy hoạch và giá chốt tham khảo."
+            },
+            {
+                "q": "Vì sao phải tách đất nền và nhà đất khi đọc tin giảm giá?",
+                "a": "Hai loại hình có giá/m², tổng giá và điều kiện tài sản khác nhau. Trong cùng snapshot, đất nền có 6/121 tin giảm giá, còn nhà đất có 13/179 tin; giá rao trung vị lần lượt là 19,7 tr/m² và 34,4 tr/m²."
+            },
+            {
+                "q": "Giá đất nền Thủ Dầu Một trong bài là giá chốt giao dịch phải không?",
+                "a": "Không. Các mốc trong bài là giá rao trung vị từ tin Facebook đang được Radar BDS theo dõi, không phải giá chốt."
+            },
+            {
+                "q": "Dữ liệu trong bài được cập nhật từ nguồn nào?",
+                "a": "Bài dùng listings nguồn Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0. Cửa sổ truy vấn là 07–20/09/2026, còn các dòng trong mẫu có crawled_at từ 07 đến 12/09/2026. Số dòng tin có thể gồm bài đăng lại của cùng một bất động sản."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-20",
+            "modified_at": "2026-09-20",
+            "intro": [
+                "Trong snapshot dữ liệu Facebook từ 07 đến 12/09/2026, Định Hòa có tỷ lệ tin đất nền giảm giá cao nhất trong 12 phường có dữ liệu: 3/18 tin, tương đương 16,7%. Phú Hòa là 1/10 tin và Hiệp An là 1/11 tin. Đây là dấu hiệu để xếp thứ tự kiểm tra, không phải kết luận một tin đang rẻ.",
+                "Bài này chỉ dùng tin đất nền để tránh gộp lẫn với nhà đất. Số liệu là giá rao và listing rows trong dữ liệu Facebook, có thể gồm bài đăng lại của cùng một bất động sản."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin đất nền Facebook",
+                    "value": "121 tin",
+                    "note": "12 phường · crawl 07–12/09/2026"
+                },
+                {
+                    "label": "Có cờ giảm giá",
+                    "value": "6 tin · 5,0%",
+                    "note": "Trên mẫu đất nền"
+                },
+                {
+                    "label": "Giá rao trung vị đất nền",
+                    "value": "19,7 tr/m²",
+                    "note": "84 tin đủ giá/m²"
+                },
+                {
+                    "label": "Nhà đất đối chiếu",
+                    "value": "13/179 · 7,3%",
+                    "note": "Giá rao trung vị 34,4 tr/m²"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng · Tách theo phường",
+                    "title": "Phường nào có tin đất nền giảm giá?",
+                    "note": "Tỷ lệ = tin đất nền có price_dropped=1 chia cho tổng tin đất nền trong cùng snapshot. Giá là giá rao trung vị/m² đất nền.",
+                    "columns": [
+                        {
+                            "key": "ward",
+                            "label": "Phường"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đất nền"
+                        },
+                        {
+                            "key": "dropped",
+                            "label": "Tin giảm giá"
+                        },
+                        {
+                            "key": "rate",
+                            "label": "Tỷ lệ"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá rao trung vị/m² đất nền"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Định Hòa",
+                            "tracked": "18",
+                            "dropped": "3",
+                            "rate": "16,7%",
+                            "median_m2": "12,2 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Hòa",
+                            "tracked": "10",
+                            "dropped": "1",
+                            "rate": "10,0%",
+                            "median_m2": "29,7 tr/m²"
+                        },
+                        {
+                            "ward": "Hiệp An",
+                            "tracked": "11",
+                            "dropped": "1",
+                            "rate": "9,1%",
+                            "median_m2": "12,3 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Mỹ",
+                            "tracked": "16",
+                            "dropped": "1",
+                            "rate": "6,3%",
+                            "median_m2": "19,0 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Tân",
+                            "tracked": "16",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "20,0 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Lợi",
+                            "tracked": "15",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "27,7 tr/m²"
+                        },
+                        {
+                            "ward": "Hiệp Thành",
+                            "tracked": "15",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "23,3 tr/m²"
+                        },
+                        {
+                            "ward": "Tân An",
+                            "tracked": "6",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "15,2 tr/m²"
+                        },
+                        {
+                            "ward": "Chánh Mỹ",
+                            "tracked": "5",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "23,1 tr/m²"
+                        },
+                        {
+                            "ward": "Phú Cường",
+                            "tracked": "4",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "26,5 tr/m²"
+                        },
+                        {
+                            "ward": "Chánh Nghĩa",
+                            "tracked": "3",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "32,5 tr/m²"
+                        },
+                        {
+                            "ward": "Tương Bình Hiệp",
+                            "tracked": "2",
+                            "dropped": "0",
+                            "rate": "0,0%",
+                            "median_m2": "28,8 tr/m²"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Nhìn nhanh theo tỷ lệ",
+                    "title": "Bốn phường có tin đất nền giảm giá trong mẫu",
+                    "note": "Các phường còn lại không có dòng đất nền mang cờ giảm giá trong snapshot này.",
+                    "alt": "Biểu đồ tỷ lệ tin đất nền giảm giá tại Định Hòa, Phú Hòa, Hiệp An và Phú Mỹ",
+                    "rows": [
+                        {
+                            "label": "Định Hòa",
+                            "value_label": "16,7% · 3/18",
+                            "width": 100,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Phú Hòa",
+                            "value_label": "10,0% · 1/10",
+                            "width": 60,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Hiệp An",
+                            "value_label": "9,1% · 1/11",
+                            "width": 55,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Phú Mỹ",
+                            "value_label": "6,3% · 1/16",
+                            "width": 38,
+                            "color": "#0f766e"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "dinh-hoa-dan-dau-ty-le",
+                    "heading": "Định Hòa đứng đầu tỷ lệ, nhưng phải nhìn cùng số tin",
+                    "paragraphs": [
+                        "Định Hòa có 3 tin đất nền giảm giá trên 18 tin đang theo dõi, tương đương 16,7%. Đây là tỷ lệ cao nhất trong 12 phường có dữ liệu đất nền. Giá rao trung vị của đất nền Định Hòa là 12,2 tr/m² trên 12 tin đủ giá/m².",
+                        "Phú Hòa là 1/10 tin, Hiệp An 1/11 tin và Phú Mỹ 1/16 tin. Không nên xếp hạng chỉ theo phần trăm: 1 tin trên 10 tin có thể biến động mạnh hơn 3 tin trên 18 tin."
+                    ],
+                    "bullets": [
+                        "Định Hòa: 3/18 tin đất nền, 16,7%.",
+                        "Phú Hòa: 1/10 tin đất nền, 10,0%.",
+                        "Hiệp An: 1/11 tin đất nền, 9,1%.",
+                        "Phú Mỹ: 1/16 tin đất nền, 6,3%."
+                    ]
+                },
+                {
+                    "id": "tach-dat-nen-nha-dat",
+                    "heading": "Đất nền và nhà đất không thể dùng chung một tỷ lệ",
+                    "paragraphs": [
+                        "Trong cùng cửa sổ dữ liệu, đất nền có 6/121 tin giảm giá, tương đương 5,0%. Nhà đất có 13/179 tin, tương đương 7,3%. Giá rao trung vị là 19,7 tr/m² cho đất nền và 34,4 tr/m² cho nhà đất.",
+                        "Chênh lệch này không có nghĩa nhà đất luôn dễ thương lượng hơn hoặc đất nền đang giữ giá hơn. Hai nhóm có diện tích, tài sản gắn liền với đất và cách rao khác nhau."
+                    ],
+                    "bullets": [
+                        "Đất nền: 121 tin, 6 tin giảm giá, 19,7 tr/m².",
+                        "Nhà đất: 179 tin, 13 tin giảm giá, 34,4 tr/m².",
+                        "Không lấy tỷ lệ nhà đất để suy ra đất nền cùng phường."
+                    ]
+                },
+                {
+                    "id": "kiem-tra-tin-dat-nen-giam-gia",
+                    "heading": "Một tin đất nền giảm giá cần kiểm tra gì?",
+                    "paragraphs": [
+                        "Cờ giảm giá chỉ trả lời tin có thay đổi giá trong dữ liệu theo dõi hay không. Nó chưa trả lời vì sao giảm, giá mới còn hiệu lực không, lô đất có đúng vị trí mô tả không hay giấy tờ đã đủ để giao dịch chưa.",
+                        "Sau khi mở tin, hãy ghi lại giá cũ nếu có, giá mới, diện tích, giá/m², thổ cư, mặt tiền và loại đường. Tiếp đó đối chiếu với tin đất nền khác cùng phường."
+                    ],
+                    "bullets": [
+                        "Xác nhận thời điểm và mức giá sau khi giảm.",
+                        "So giá/m² với đất nền cùng phường và điều kiện tương đương.",
+                        "Kiểm tra diện tích, thổ cư, đường vào, vị trí và giấy tờ.",
+                        "Xác minh quy hoạch và giá chốt tham khảo bằng nguồn độc lập."
+                    ]
+                },
+                {
+                    "id": "loc-radar-thu-dau-mot",
+                    "heading": "Dùng Radar để lọc thứ tự, không thay việc thẩm định",
+                    "paragraphs": [
+                        "Bạn có thể mở dashboard Thủ Dầu Một, chọn đất nền rồi đọc Định Hòa, Phú Hòa, Hiệp An và Phú Mỹ trước. Hãy đặt ngân sách, diện tích và phường cần xem; sau đó mở từng tin thay vì xem tỷ lệ tổng như một kết luận mua.",
+                        "Nguồn của snapshot là listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận."
+                    ],
+                    "bullets": [
+                        "Mở dashboard và chọn đúng khu vực Thủ Dầu Một.",
+                        "Tách đất nền với nhà đất trước khi so giá.",
+                        "Đọc giá rao trung vị cùng số tin làm mẫu.",
+                        "Kiểm tra thực địa, pháp lý, quy hoạch và giá chốt trước khi đặt cọc."
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã hiểu tỷ lệ giảm giá là tỷ lệ dòng tin có thay đổi giá, không phải tỷ lệ lô đất chắc chắn đang bán rẻ.",
+                "Đã đọc cả tỷ lệ và số tin làm mẫu.",
+                "Đã tách đất nền và nhà đất trước khi so giá.",
+                "Đã kiểm tra giá mới, diện tích, giá/m², thổ cư, đường vào và vị trí.",
+                "Đã nhớ rằng giá rao không phải giá chốt giao dịch."
+            ]
+        },
+        "faq_note": "Giá trong bài là giá đang rao từ tin Facebook, không phải giá chốt giao dịch. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+        "final_cta": {
+            "title": "Mở Radar để kiểm tra từng tin đất nền",
+            "body": "Bắt đầu với Định Hòa, Phú Hòa, Hiệp An hoặc Phú Mỹ, sau đó tách đất nền và đọc giá rao cùng điều kiện của từng tin.",
+            "button": "Mở dashboard Thủ Dầu Một",
+            "button_href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_giam_gia_tdm_20260920"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Đất nền Thủ Dầu Một phường nào có nhiều tin giảm giá?",
+                "href": "/tin-tuc/dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia",
+                "url": "https://radarbds.vn/tin-tuc/dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia"
+            }
+        ]
+    }
 }
 
 
