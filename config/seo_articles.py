@@ -24718,7 +24718,617 @@ SEO_ARTICLES = {
                 "url": "https://radarbds.vn/tin-tuc/dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia"
             }
         ]
-    }
+    },
+    "dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin",
+        "category": {
+            "key": "kiem-tra-tin-rao",
+            "label": "Kiểm tra tin rao"
+        },
+        "title": "Đất nền Bến Cát dưới 2 tỷ: khu nào còn nhiều tin? | Radar BDS",
+        "description": "Trong dữ liệu Facebook 08–21/09/2026, Bến Cát có 99 tin đất nền dưới 2 tỷ. Phú An dẫn đầu với 50 tin; xem bảng theo khu và cách lọc trước khi đi xem.",
+        "keywords": "đất nền Bến Cát dưới 2 tỷ, đất nền Phú An, đất nền An Điền, giá đất Bến Cát, mua đất Bến Cát, Radar BDS",
+        "breadcrumb_label": "Đất nền Bến Cát dưới 2 tỷ",
+        "hero_badge": "Ngân sách · dữ liệu Facebook",
+        "hero_title": "Đất nền Bến Cát dưới 2 tỷ: khu nào còn nhiều tin?",
+        "hero_text": "Trong cửa sổ dữ liệu Facebook 08–21/09/2026, Radar BDS ghi nhận 99 tin đất nền có tổng giá rao không quá 2 tỷ ở 7/8 khu Bến Cát đang theo dõi. Phú An có 50 tin, An Điền 18, Tân Định 11 và An Tây 10. Đây là số dòng tin, không phải số lô duy nhất.",
+        "scope_label": "Bến Cát · đất nền ≤ 2 tỷ · dữ liệu Facebook",
+        "map_label": "Tin đất nền Bến Cát không quá 2 tỷ",
+        "hero_checks": [
+            "176 tin đất nền Facebook trong cửa sổ 14 ngày; gồm cả tin đăng lại nếu xuất hiện trong mẫu",
+            "99 tin có tổng giá rao không quá 2 tỷ, chiếm 56,2% số tin đất nền có giá tổng hợp lệ",
+            "Phú An: 50 tin; An Điền: 18; Tân Định: 11; An Tây: 10",
+            "16 tin đất nền dưới 2 tỷ có ít nhất một dấu hiệu để mở kiểm tra trước"
+        ],
+        "primary_cta": "Lọc đất nền Bến Cát dưới 2 tỷ",
+        "primary_href": "/?tab=signals&city=B%E1%BA%BEN%20C%C3%81T&prop_type=dat_nen&price_max=2&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_ben_cat_duoi_2_ty_20260921",
+        "secondary_cta": "Xem trang nhà đất Bến Cát",
+        "secondary_href": "/binh-duong/ben-cat",
+        "property_card": {
+            "status": "Đất nền dưới 2 tỷ — cần lọc theo khu",
+            "title": "Phú An đang có nhiều tin nhất trong nhóm ngân sách",
+            "price": "Giá rao trung vị đất nền dưới 2 tỷ: 1,50 tỷ tổng giá",
+            "metric_a": "Tin đất nền dưới 2 tỷ",
+            "metric_a_value": "99 tin",
+            "metric_b": "Khu có dữ liệu",
+            "metric_b_value": "7/8 khu"
+        },
+        "hero_metric": {
+            "label": "Tin đất nền ≤ 2 tỷ",
+            "value": "99 tin",
+            "delta": "7/8 khu Bến Cát",
+            "note": "Nguồn Facebook; cửa sổ dữ liệu 08–21/09/2026"
+        },
+        "value_cards": [
+            {
+                "title": "Phú An có nhiều lựa chọn nhất",
+                "body": "Phú An có 50 tin đất nền có tổng giá rao không quá 2 tỷ, tiếp theo là An Điền 18, Tân Định 11 và An Tây 10. Số tin nhiều hơn chỉ giúp có thêm mẫu để lọc, không có nghĩa là có từng ấy lô đất khác nhau."
+            },
+            {
+                "title": "Đất nền dưới 2 tỷ có giá rao trung vị 1,50 tỷ",
+                "body": "Nhóm 99 tin đất nền dưới 2 tỷ có tổng giá rao trung vị 1,50 tỷ và giá rao trung vị 9,4 tr/m² từ 98 tin đủ giá/m². Đây là giá rao trong mẫu Facebook, không phải giá chốt."
+            },
+            {
+                "title": "Dấu hiệu chỉ giúp xếp thứ tự mở tin",
+                "body": "Có 16 tin đất nền dưới 2 tỷ có ít nhất một dấu hiệu đáng kiểm tra; 14 tin có ghi nhận giảm giá. Người mua vẫn cần hỏi lại giá, xem đường vào, diện tích, thổ cư và giấy tờ."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ ngân sách sang danh sách tin",
+            "title": "Lọc Bến Cát theo đất nền và giá tối đa 2 tỷ",
+            "body": "Mở dashboard với Bến Cát, chọn đất nền, đặt giá tối đa 2 tỷ rồi đọc từng khu. Có thể bắt đầu từ Phú An và An Điền vì đây là hai khu có nhiều tin nhất trong mẫu.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc đất nền Bến Cát dưới 2 tỷ",
+            "cta": "Mở bộ lọc Bến Cát",
+            "metrics": [
+                {
+                    "value": "Bến Cát",
+                    "label": "phạm vi khu vực"
+                },
+                {
+                    "value": "Đất nền",
+                    "label": "loại hình"
+                },
+                {
+                    "value": "≤ 2 tỷ",
+                    "label": "giá tối đa"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Snapshot 21/09/2026 · dữ liệu 08–21/09/2026",
+            "title": "Đất nền Bến Cát dưới 2 tỷ theo từng khu",
+            "body": "Nguồn là listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0. Số liệu là số dòng tin trong cửa sổ 14 ngày; giá là giá rao trung vị của đúng nhóm đất nền không quá 2 tỷ.",
+            "columns": [
+                "Khu vực",
+                "Tin đất nền ≤ 2 tỷ",
+                "Giá rao trung vị tổng giá — đất nền",
+                "Giá rao trung vị/m² — đất nền",
+                "Dấu hiệu"
+            ],
+            "rows": [
+                {
+                    "area": "Phú An",
+                    "tracked": "50",
+                    "median_total": "1,50 tỷ",
+                    "median_m2": "9,0 tr/m²",
+                    "signal": "6"
+                },
+                {
+                    "area": "An Điền",
+                    "tracked": "18",
+                    "median_total": "1,19 tỷ",
+                    "median_m2": "6,3 tr/m²",
+                    "signal": "3"
+                },
+                {
+                    "area": "Tân Định",
+                    "tracked": "11",
+                    "median_total": "1,60 tỷ",
+                    "median_m2": "11,9 tr/m²",
+                    "signal": "1"
+                },
+                {
+                    "area": "An Tây",
+                    "tracked": "10",
+                    "median_total": "1,23 tỷ",
+                    "median_m2": "9,7 tr/m²",
+                    "signal": "3"
+                },
+                {
+                    "area": "Hòa Lợi",
+                    "tracked": "7",
+                    "median_total": "1,60 tỷ",
+                    "median_m2": "11,0 tr/m²",
+                    "signal": "2"
+                },
+                {
+                    "area": "Chánh Phú Hòa",
+                    "tracked": "2",
+                    "median_total": "1,10 tỷ",
+                    "median_m2": "9,1 tr/m²",
+                    "signal": "1"
+                },
+                {
+                    "area": "Thới Hòa",
+                    "tracked": "1",
+                    "median_total": "1,25 tỷ",
+                    "median_m2": "5,8 tr/m²",
+                    "signal": "0"
+                },
+                {
+                    "area": "Mỹ Phước",
+                    "tracked": "0",
+                    "median_total": "—",
+                    "median_m2": "—",
+                    "signal": "0"
+                }
+            ],
+            "cards": [
+                {
+                    "title": "99 tin đất nền",
+                    "value": "≤ 2 tỷ",
+                    "body": "Tập trung ở 7/8 khu trong mẫu."
+                },
+                {
+                    "title": "Phú An dẫn đầu",
+                    "value": "50 tin",
+                    "body": "Có nhiều mẫu nhất để mở và so."
+                },
+                {
+                    "title": "An Điền có mốc thấp hơn",
+                    "value": "1,19 tỷ",
+                    "body": "Giá rao trung vị tổng giá đất nền dưới 2 tỷ."
+                }
+            ]
+        },
+        "local_links_title": "Mở dữ liệu Bến Cát và đọc thêm",
+        "local_links": [
+            {
+                "label": "Trang nhà đất Bến Cát",
+                "href": "/binh-duong/ben-cat",
+                "description": "Xem tổng hợp các khu Bến Cát trước khi chọn phường để lọc."
+            },
+            {
+                "label": "Lọc đất nền Bến Cát dưới 2 tỷ trên Radar",
+                "href": "/?tab=signals&city=B%E1%BA%BEN%20C%C3%81T&prop_type=dat_nen&price_max=2&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_ben_cat_duoi_2_ty_20260921",
+                "description": "Mở feed với đúng khu vực, loại hình và ngân sách của bài."
+            },
+            {
+                "label": "Bến Cát có những khu nào nên theo dõi?",
+                "href": "/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat",
+                "description": "Đọc overview trước khi đi sâu vào nhóm ngân sách dưới 2 tỷ."
+            },
+            {
+                "label": "Giá đất Phú An Bến Cát hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu",
+                "description": "Xem riêng đất nền và nhà đất tại khu có nhiều tin dưới 2 tỷ nhất."
+            },
+            {
+                "label": "Giá đất An Điền Bến Cát hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-an-dien-ben-cat-hien-bao-nhieu",
+                "description": "Đối chiếu một khu có 18 tin đất nền dưới 2 tỷ trong mẫu."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Tham khảo thêm một tin cụ thể sau khi đã lọc theo ngân sách."
+            }
+        ],
+        "process_title": "Cách lọc đất nền Bến Cát dưới 2 tỷ",
+        "process": [
+            {
+                "title": "1. Chọn đúng loại hình",
+                "body": "Chọn đất nền trước khi đọc giá. Nhà đất dưới 2 tỷ là nhóm khác vì còn phụ thuộc hiện trạng nhà, công trình và công năng sử dụng."
+            },
+            {
+                "title": "2. Mở khu có nhiều mẫu trước",
+                "body": "Bắt đầu từ Phú An, An Điền, Tân Định hoặc An Tây. Sau đó mới mở các khu có ít tin hơn để tránh bỏ sót một lựa chọn phù hợp."
+            },
+            {
+                "title": "3. So cả tổng giá và giá/m²",
+                "body": "Tổng giá giúp kiểm tra ngân sách. Giá/m² giúp so các lô khác diện tích, nhưng phải đọc cùng diện tích, mặt tiền, đường vào và thổ cư."
+            },
+            {
+                "title": "4. Kiểm tra trước khi đi xem",
+                "body": "Hỏi lại giá hiện tại, xem ảnh và mô tả, xác minh giấy tờ, quy hoạch, tranh chấp và hiện trạng thực tế. Radar BDS chỉ là bộ lọc dữ liệu ban đầu."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Khu nào có nhiều tin đất nền Bến Cát dưới 2 tỷ nhất?",
+                "a": "Trong dữ liệu Facebook 08–21/09/2026, Phú An có 50 tin đất nền có tổng giá rao không quá 2 tỷ, tiếp theo là An Điền 18, Tân Định 11 và An Tây 10. Đây là số dòng tin trong mẫu, không phải số lô đất duy nhất."
+            },
+            {
+                "q": "Có bao nhiêu tin đất nền Bến Cát dưới 2 tỷ?",
+                "a": "Radar BDS ghi nhận 99 tin đất nền có tổng giá rao không quá 2 tỷ trong cửa sổ 14 ngày, phân bố ở 7/8 khu Bến Cát đang theo dõi. Mỹ Phước không có dòng đất nền đủ điều kiện trong mẫu này."
+            },
+            {
+                "q": "Giá đất nền Bến Cát dưới 2 tỷ trong bài là giá chốt phải không?",
+                "a": "Không. Các mốc trong bài là giá rao từ tin Facebook được Radar BDS theo dõi. Giá rao trung vị của nhóm 99 tin là khoảng 1,50 tỷ tổng giá và 9,4 tr/m² từ 98 tin có giá/m² hợp lệ, không phải giá giao dịch đã chốt."
+            },
+            {
+                "q": "Nhà đất dưới 2 tỷ có được tính chung với đất nền không?",
+                "a": "Không. Mẫu có 29 tin nhà đất dưới 2 tỷ, nhưng đây là loại hình khác với đất nền. Nhà đất còn phụ thuộc hiện trạng nhà, công trình, đường vào và giấy tờ nên cần so riêng."
+            },
+            {
+                "q": "99 tin có phải là 99 bất động sản khác nhau không?",
+                "a": "Không thể kết luận như vậy. Đây là số dòng tin Facebook trong cửa sổ theo dõi và có thể gồm tin đăng lại hoặc cùng tài sản xuất hiện qua nhiều bài. Người mua nên xem đây là nguồn sàng lọc ban đầu."
+            }
+        ],
+        "article": {
+            "published_at": "2026-09-21",
+            "modified_at": "2026-09-21",
+            "intro": [
+                "Trong cửa sổ dữ liệu Facebook 08–21/09/2026, Radar BDS ghi nhận 99 tin đất nền Bến Cát có tổng giá rao không quá 2 tỷ. Phú An có 50 tin, An Điền 18, Tân Định 11 và An Tây 10. Giá rao trung vị của nhóm là khoảng 1,50 tỷ tổng giá và 9,4 tr/m² từ 98 tin có giá/m² hợp lệ.",
+                "Các con số này là số dòng tin đang được theo dõi, có thể gồm bài đăng lại của cùng một bất động sản. Bài chỉ dùng nguồn Facebook và tách đất nền khỏi nhà đất để tránh so sai loại hình."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin đất nền Bến Cát",
+                    "value": "176 tin",
+                    "note": "Cửa sổ 14 ngày · nguồn Facebook"
+                },
+                {
+                    "label": "Có tổng giá ≤ 2 tỷ",
+                    "value": "99 tin",
+                    "note": "7/8 khu có dữ liệu"
+                },
+                {
+                    "label": "Giá rao trung vị tổng giá — đất nền",
+                    "value": "1,50 tỷ",
+                    "note": "Trong nhóm 99 tin dưới 2 tỷ"
+                },
+                {
+                    "label": "Dấu hiệu trong nhóm đất nền",
+                    "value": "16 tin",
+                    "note": "14 tin có ghi nhận giảm giá"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Nguồn Facebook · cửa sổ 14 ngày",
+                    "title": "Đất nền Bến Cát dưới 2 tỷ theo từng khu",
+                    "note": "Giá trong bảng là giá rao trung vị của nhóm đất nền có tổng giá không quá 2 tỷ. Dấu gạch ngang nghĩa là mẫu không có tin đủ điều kiện để tính.",
+                    "columns": [
+                        {
+                            "key": "ward",
+                            "label": "Khu vực"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đất nền ≤ 2 tỷ"
+                        },
+                        {
+                            "key": "median_total",
+                            "label": "Giá rao trung vị tổng giá — đất nền"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá rao trung vị/m² — đất nền"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Phú An",
+                            "tracked": "50",
+                            "median_total": "1,50 tỷ",
+                            "median_m2": "9,0 tr/m²",
+                            "signals": "6"
+                        },
+                        {
+                            "ward": "An Điền",
+                            "tracked": "18",
+                            "median_total": "1,19 tỷ",
+                            "median_m2": "6,3 tr/m²",
+                            "signals": "3"
+                        },
+                        {
+                            "ward": "Tân Định",
+                            "tracked": "11",
+                            "median_total": "1,60 tỷ",
+                            "median_m2": "11,9 tr/m²",
+                            "signals": "1"
+                        },
+                        {
+                            "ward": "An Tây",
+                            "tracked": "10",
+                            "median_total": "1,23 tỷ",
+                            "median_m2": "9,7 tr/m²",
+                            "signals": "3"
+                        },
+                        {
+                            "ward": "Hòa Lợi",
+                            "tracked": "7",
+                            "median_total": "1,60 tỷ",
+                            "median_m2": "11,0 tr/m²",
+                            "signals": "2"
+                        },
+                        {
+                            "ward": "Chánh Phú Hòa",
+                            "tracked": "2",
+                            "median_total": "1,10 tỷ",
+                            "median_m2": "9,1 tr/m²",
+                            "signals": "1"
+                        },
+                        {
+                            "ward": "Thới Hòa",
+                            "tracked": "1",
+                            "median_total": "1,25 tỷ",
+                            "median_m2": "5,8 tr/m²",
+                            "signals": "0"
+                        },
+                        {
+                            "ward": "Mỹ Phước",
+                            "tracked": "0",
+                            "median_total": "—",
+                            "median_m2": "—",
+                            "signals": "0"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Đối chiếu loại hình · cùng cửa sổ dữ liệu",
+                    "title": "Không gộp nhà đất vào nhóm đất nền",
+                    "note": "Nhà đất dưới 2 tỷ được nêu để đối chiếu số lượng, không dùng làm mốc thay thế cho giá đất nền. Các giá/m² trong bảng đều ghi rõ loại hình.",
+                    "columns": [
+                        {
+                            "key": "type",
+                            "label": "Loại hình"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tổng tin"
+                        },
+                        {
+                            "key": "under2",
+                            "label": "Tin tổng giá ≤ 2 tỷ"
+                        },
+                        {
+                            "key": "priced",
+                            "label": "Có giá/m² trong nhóm ≤ 2 tỷ"
+                        },
+                        {
+                            "key": "median_m2",
+                            "label": "Giá rao trung vị/m² đúng loại hình"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu trong nhóm ≤ 2 tỷ"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "type": "Đất nền",
+                            "tracked": "176",
+                            "under2": "99",
+                            "priced": "98",
+                            "median_m2": "9,4 tr/m²",
+                            "signals": "16"
+                        },
+                        {
+                            "type": "Nhà đất",
+                            "tracked": "54",
+                            "under2": "29",
+                            "priced": "24",
+                            "median_m2": "14,8 tr/m²",
+                            "signals": "3"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Số dòng tin Facebook",
+                    "title": "Phú An có nhiều tin đất nền dưới 2 tỷ nhất",
+                    "note": "Số tin là số dòng trong mẫu, không phải số bất động sản duy nhất.",
+                    "alt": "Số tin đất nền Bến Cát có tổng giá rao không quá 2 tỷ theo từng khu",
+                    "rows": [
+                        {
+                            "label": "Phú An",
+                            "value_label": "50 tin",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "An Điền",
+                            "value_label": "18 tin",
+                            "width": 36,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Tân Định",
+                            "value_label": "11 tin",
+                            "width": 22,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "An Tây",
+                            "value_label": "10 tin",
+                            "width": 20,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Hòa Lợi",
+                            "value_label": "7 tin",
+                            "width": 14,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Chánh Phú Hòa",
+                            "value_label": "2 tin",
+                            "width": 4,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Thới Hòa",
+                            "value_label": "1 tin",
+                            "width": 2,
+                            "color": "#0f766e"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Giá rao trung vị theo khu",
+                    "title": "Giá rao trung vị/m² của đất nền dưới 2 tỷ",
+                    "note": "Chỉ so trong đúng nhóm đất nền có tổng giá không quá 2 tỷ; không dùng để kết luận giá chốt.",
+                    "alt": "Giá rao trung vị trên mỗi mét vuông của đất nền Bến Cát dưới 2 tỷ theo khu",
+                    "rows": [
+                        {
+                            "label": "Tân Định",
+                            "value_label": "11,9 tr/m²",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Hòa Lợi",
+                            "value_label": "11,0 tr/m²",
+                            "width": 92,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "An Tây",
+                            "value_label": "9,7 tr/m²",
+                            "width": 82,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Chánh Phú Hòa",
+                            "value_label": "9,1 tr/m²",
+                            "width": 76,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Phú An",
+                            "value_label": "9,0 tr/m²",
+                            "width": 76,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "An Điền",
+                            "value_label": "6,3 tr/m²",
+                            "width": 53,
+                            "color": "#0f766e"
+                        },
+                        {
+                            "label": "Thới Hòa",
+                            "value_label": "5,8 tr/m²",
+                            "width": 49,
+                            "color": "#0f766e"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "tong-quan-dat-nen-ben-cat-duoi-2-ty",
+                    "heading": "Phú An và An Điền đang có nhiều tin đất nền dưới 2 tỷ nhất",
+                    "paragraphs": [
+                        "Trong 176 tin đất nền Bến Cát của cửa sổ 08–21/09/2026, có 99 tin có tổng giá rao không quá 2 tỷ. Phú An dẫn đầu với 50 tin, chiếm hơn một nửa nhóm ngân sách này; An Điền có 18, Tân Định 11 và An Tây 10.",
+                        "Số lượng tin cao hơn không đồng nghĩa khu đó có nhiều lô đất khác nhau hơn. Một bất động sản có thể xuất hiện qua tin đăng lại hoặc nhiều lần crawl. Con số này nên được dùng để chọn nơi mở feed trước, không phải để đếm nguồn cung duy nhất."
+                    ],
+                    "bullets": [
+                        "99 tin đất nền có tổng giá rao không quá 2 tỷ",
+                        "7/8 khu Bến Cát có ít nhất một tin trong nhóm",
+                        "Phú An: 50 tin; An Điền: 18 tin",
+                        "Tân Định: 11 tin; An Tây: 10 tin"
+                    ]
+                },
+                {
+                    "id": "gia-rao-trung-vi-dat-nen-duoi-2-ty",
+                    "heading": "Giá rao trung vị của nhóm đất nền dưới 2 tỷ là 1,50 tỷ tổng giá",
+                    "paragraphs": [
+                        "Trong 99 tin đất nền dưới 2 tỷ, giá rao trung vị tổng giá là 1,50 tỷ. Có 98 tin có giá/m² hợp lệ; giá rao trung vị theo đơn vị diện tích là 9,4 tr/m². Hai mốc này trả lời hai câu hỏi khác nhau: tổng giá để kiểm tra ngân sách, giá/m² để so các lô khác diện tích.",
+                        "An Điền có giá rao trung vị đất nền dưới 2 tỷ thấp nhất trong nhóm có từ 2 tin trở lên, khoảng 1,19 tỷ tổng giá và 6,3 tr/m². Tân Định và Hòa Lợi có giá rao trung vị/m² đất nền cao hơn, nhưng mẫu lần lượt chỉ có 11 và 7 tin; cần đọc cùng diện tích, đường vào và thổ cư."
+                    ],
+                    "bullets": [
+                        "Giá rao trung vị tổng giá — đất nền: 1,50 tỷ",
+                        "Giá rao trung vị/m² — đất nền: 9,4 tr/m²",
+                        "98/99 tin đất nền có giá/m² hợp lệ",
+                        "An Điền: 1,19 tỷ và 6,3 tr/m² đất nền trong mẫu"
+                    ]
+                },
+                {
+                    "id": "nha-dat-doi-chieu-ben-cat-duoi-2-ty",
+                    "heading": "Nhà đất dưới 2 tỷ là nhóm khác, không lấy để thay cho đất nền",
+                    "paragraphs": [
+                        "Cùng cửa sổ dữ liệu có 54 tin nhà đất, trong đó 29 tin có tổng giá rao không quá 2 tỷ. Có 24 tin nhà đất trong nhóm này có giá/m² hợp lệ, với giá rao trung vị khoảng 14,8 tr/m². Mốc này không thể dùng để kết luận đất nền Bến Cát đắt hay rẻ.",
+                        "Nhà đất còn có hiện trạng nhà, công trình, tuổi nhà, công năng và điều kiện đường vào. Khi lọc theo ngân sách, hãy chọn đúng loại hình trước rồi mới so giá; nếu gộp hai nhóm, bảng sẽ trả lời sai câu hỏi của người mua đất nền."
+                    ],
+                    "bullets": [
+                        "Nhà đất: 54 tin trong cùng cửa sổ",
+                        "29 tin nhà đất có tổng giá rao không quá 2 tỷ",
+                        "24 tin nhà đất dưới 2 tỷ có giá/m² hợp lệ",
+                        "Giá rao trung vị/m² nhà đất trong nhóm: 14,8 tr/m²"
+                    ]
+                },
+                {
+                    "id": "dau-hieu-dat-nen-ben-cat-duoi-2-ty",
+                    "heading": "16 tin đất nền dưới 2 tỷ có dấu hiệu để mở kiểm tra trước",
+                    "paragraphs": [
+                        "Trong nhóm 99 tin đất nền dưới 2 tỷ, Radar BDS ghi nhận 16 tin có ít nhất một dấu hiệu đáng kiểm tra; 14 tin có ghi nhận giảm giá. Đây là cách xếp thứ tự mở tin, không phải kết luận rằng những tin đó đang rẻ hoặc nên mua.",
+                        "Phú An có 6 tin trong nhóm có dấu hiệu, An Điền và An Tây mỗi khu có 3, Hòa Lợi có 2. Khi mở một tin, người mua nên hỏi lại giá hiện tại, kiểm tra diện tích, thổ cư, loại đường, giấy tờ và vị trí thực tế."
+                    ],
+                    "bullets": [
+                        "16 tin đất nền dưới 2 tỷ có ít nhất một dấu hiệu",
+                        "14 tin có ghi nhận giảm giá",
+                        "Phú An: 6 tin; An Điền: 3; An Tây: 3",
+                        "Dấu hiệu không thay cho kiểm tra pháp lý và thực địa"
+                    ]
+                },
+                {
+                    "id": "loc-dashboard-ben-cat-duoi-2-ty",
+                    "heading": "Cách lọc nhanh trước khi đi xem đất",
+                    "paragraphs": [
+                        "Mở dashboard với Bến Cát, chọn loại hình đất nền và đặt giá tối đa 2 tỷ. Bắt đầu từ Phú An hoặc An Điền để có nhiều dòng tin hơn, sau đó mở Tân Định, An Tây và các khu còn lại để so cùng ngân sách.",
+                        "Sau khi có danh sách ngắn, đọc cả tổng giá và giá/m²; kiểm tra đường vào, diện tích, thổ cư, quy hoạch và giấy tờ. Có thể dùng công cụ định giá BĐS như một mốc tham khảo cho từng tin, nhưng không thay thẩm định pháp lý hay giá giao dịch thực tế."
+                    ],
+                    "bullets": [
+                        "Chọn Bến Cát → đất nền → giá tối đa 2 tỷ",
+                        "Mở Phú An và An Điền trước vì có nhiều mẫu hơn",
+                        "So giá/m² cùng loại hình và tổng giá cùng ngân sách",
+                        "Xác minh pháp lý, quy hoạch và thực địa trước khi đặt cọc"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn đúng loại hình đất nền, không gộp nhà đất vào mốc so sánh.",
+                "Đã nhìn cả tổng giá và giá/m² trong đúng nhóm ngân sách.",
+                "Đã hiểu số tin là số dòng tin, không phải số bất động sản duy nhất.",
+                "Đã hỏi lại giá hiện tại và kiểm tra diện tích, đường vào, thổ cư.",
+                "Đã xác minh giấy tờ, quy hoạch và hiện trạng trước khi đặt cọc."
+            ]
+        },
+        "faq_note": "Giá trong bài là giá rao từ tin Facebook, không phải giá chốt giao dịch. Số tin có thể gồm bài đăng lại của cùng một bất động sản. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+        "final_cta": {
+            "title": "Mở Radar để lọc đất nền Bến Cát dưới 2 tỷ",
+            "body": "Chọn Bến Cát, tách đất nền, đặt giá tối đa 2 tỷ rồi mở từng tin theo khu. Đây là bước sàng lọc ban đầu trước khi liên hệ và đi xem.",
+            "button": "Mở bộ lọc Bến Cát",
+            "button_href": "/?tab=signals&city=B%E1%BA%BEN%20C%C3%81T&prop_type=dat_nen&price_max=2&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=dat_nen_ben_cat_duoi_2_ty_20260921"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Đất nền Bến Cát dưới 2 tỷ",
+                "href": "/tin-tuc/dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin",
+                "url": "https://radarbds.vn/tin-tuc/dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin"
+            }
+        ]
+    },
 }
 
 
