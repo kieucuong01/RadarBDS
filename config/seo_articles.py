@@ -24799,7 +24799,7 @@ SEO_ARTICLES = {
         "market_snapshot": {
             "eyebrow": "Snapshot 21/09/2026 · dữ liệu 08–21/09/2026",
             "title": "Đất nền Bến Cát dưới 2 tỷ theo từng khu",
-            "body": "Nguồn là listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0. Số liệu là số dòng tin trong cửa sổ 14 ngày; giá là giá rao trung vị của đúng nhóm đất nền không quá 2 tỷ.",
+            "body": "Nguồn là các tin Facebook đang được Radar BDS theo dõi; tin bị ẩn hoặc bị loại khỏi dữ liệu được bỏ qua. Số liệu là số dòng tin trong cửa sổ 14 ngày; giá là giá rao trung vị của đúng nhóm đất nền không quá 2 tỷ.",
             "columns": [
                 "Khu vực",
                 "Tin đất nền ≤ 2 tỷ",
