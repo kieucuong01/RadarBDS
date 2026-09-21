@@ -159,9 +159,13 @@
       </div>
       <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-track-cta="planning_hub_bottom_dashboard">Lọc tin đang bán theo khu vực</a>
     </section>
+
+    {% set lead_cta_context = "seo_planning_hub_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
   </main>
 
   {% include "partials/seo_footer.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>
