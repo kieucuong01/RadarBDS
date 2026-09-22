@@ -22259,12 +22259,12 @@ SEO_ARTICLES = {
         "variant": "knowledge",
         "path": "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong",
         "title": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương | Radar BDS",
-        "description": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương: tách đất nền, nhà đất, so giá/m², tổng giá, đường vào và giấy tờ bằng dữ liệu Radar. trước khi hẹn xem.",
+        "description": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương: tách đất nền, nhà đất, so giá/m², tổng giá, đường vào và giấy tờ bằng dữ liệu Radar trước khi hẹn xem.",
         "keywords": "kiểm tra giá rao trước khi đi xem đất, giá đất Bình Dương, cách đọc giá nhà đất, đất nền Bình Dương, Radar BDS",
         "breadcrumb_label": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương",
-        "hero_badge": "Buyer guide · snapshot Facebook 14 ngày",
+        "hero_badge": "Buyer guide · giá rao Facebook 14 ngày gần nhất",
         "hero_title": "5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương",
-        "hero_text": "Trước khi hẹn xem, đừng chỉ nhìn con số thấp nhất. Hãy xác định đúng loại hình, so giá/m² với các tin cùng phường, kiểm tra tổng giá, đọc đường vào và đối chiếu diện tích–thổ cư. Snapshot Facebook ngày 30/08–12/09/2026 cho thấy mỗi phường có mặt bằng khác nhau giữa đất nền và nhà đất.",
+        "hero_text": "Trước khi hẹn xem, đừng chỉ nhìn con số thấp nhất. Hãy xác định đúng loại hình, so giá/m² với các tin cùng phường, kiểm tra tổng giá, đọc đường vào và đối chiếu diện tích–thổ cư. Cửa sổ 14 ngày gần nhất (09/09–22/09/2026) cho thấy mỗi phường có mặt bằng khác nhau giữa đất nền và nhà đất.",
         "scope_label": "Bình Dương · hướng dẫn đọc giá rao · dữ liệu Facebook",
         "map_label": "6 phường có nhiều dữ liệu ở Thủ Dầu Một",
         "hero_checks": [
@@ -22274,28 +22274,28 @@ SEO_ARTICLES = {
             "Kiểm tra diện tích, đường vào và thổ cư trước khi hẹn xem"
         ],
         "hero_metric": {
-            "label": "Snapshot 6 phường",
-            "value": "640 dòng tin",
-            "delta": "185 dấu hiệu",
-            "note": "Facebook đang theo dõi, 30/08–12/09/2026; số dòng có thể gồm bài đăng lại"
+            "label": "14 ngày gần nhất · 6 phường",
+            "value": "247 dòng tin",
+            "delta": "75 dòng có dấu hiệu",
+            "note": "Tin Facebook đang theo dõi, 09/09–22/09/2026; số dòng có thể gồm bài đăng lại"
         },
         "primary_cta": "Mở bộ lọc Radar",
         "primary_href": "/?tab=signals&date_range=all&utm_source=seo&utm_medium=article&utm_campaign=checklist_gia_rao_20260913",
         "secondary_cta": "Dùng công cụ định giá",
         "secondary_href": "/dinh-gia-bds",
         "property_card": {
-            "status": "Snapshot Facebook · 30/08–12/09/2026",
+            "status": "Giá rao Facebook · 09/09–22/09/2026",
             "title": "Đừng lấy giá thấp nhất làm mốc duy nhất",
             "price": "So giá theo đúng loại hình, phường và diện tích trước khi gọi hỏi",
             "metric_a": "Có giá/m²",
-            "metric_a_value": "398/623 dòng đất nền + nhà đất",
+            "metric_a_value": "162/243 dòng đất nền + nhà đất",
             "metric_b": "Có độ rộng đường",
-            "metric_b_value": "126/623 dòng"
+            "metric_b_value": "40/243 dòng"
         },
         "value_cards": [
             {
                 "title": "Tách loại hình trước khi so",
-                "body": "Trong 6 phường, giá rao trung vị nhà đất Phú Mỹ là 39,0 tr/m², còn đất nền là 20,9 tr/m². Hai con số này không nên gộp thành một mặt bằng chung."
+                "body": "Trong 6 phường, giá rao trung vị nhà đất Phú Mỹ là 38,7 tr/m², còn đất nền là 23,8 tr/m². Hai con số này không nên gộp thành một mặt bằng chung."
             },
             {
                 "title": "Đọc giá/m² cùng tổng giá",
@@ -22303,7 +22303,7 @@ SEO_ARTICLES = {
             },
             {
                 "title": "Dấu hiệu chỉ giúp xếp thứ tự đọc",
-                "body": "Snapshot có 185 dòng mang cờ tin hot hoặc giảm giá trong 640 dòng. Đây là lớp ưu tiên để mở trước, không phải khuyến nghị giao dịch."
+                "body": "Cửa sổ 14 ngày gần nhất có 75 dòng mang cờ tin hot hoặc giảm giá trong 247 dòng. Đây là lớp ưu tiên để mở trước, không phải khuyến nghị giao dịch."
             }
         ],
         "dashboard_preview": {
@@ -22320,30 +22320,30 @@ SEO_ARTICLES = {
             ]
         },
         "market_snapshot": {
-            "eyebrow": "Snapshot Facebook 30/08–12/09/2026",
+            "eyebrow": "Giá rao Facebook · 09/09–22/09/2026",
             "title": "Mặt bằng giá rao để học cách so đúng",
-            "body": "Tin theo dõi là số dòng Facebook đang được Radar giữ trong cửa sổ dữ liệu; có thể gồm bài đăng lại. Giá trong hai cột loại hình là giá rao trung vị, chỉ tính dòng có giá/m² hợp lệ.",
+            "body": "Dòng tin là số dòng Facebook Radar đang giữ trong cửa sổ 14 ngày gần nhất theo từng phường; có thể gồm bài đăng lại nên không phải số lô đất duy nhất. Hai cột giá là giá rao trung vị tính riêng cho đất nền và nhà đất, chỉ tính dòng có giá/m² hợp lệ. Hai cột cuối đếm số dòng có tổng giá dưới 3 tỷ và dưới 4 tỷ.",
             "columns": [
                 "Phường",
-                "Tin",
+                "Dòng tin",
                 "Dấu hiệu",
-                "Đất nền",
-                "Nhà đất",
+                "Đất nền (tr/m²)",
+                "Nhà đất (tr/m²)",
                 "Dưới 3 tỷ",
                 "Dưới 4 tỷ"
             ],
             "rows": [
-                {"area": "Phú Mỹ", "price": "187 tin", "tracked": "39", "signal": "20,9 tr/m²", "area_m2": "39,0 tr/m²", "note": "61", "note_2": "133"},
-                {"area": "Phú Hòa", "price": "129 tin", "tracked": "18", "signal": "28,4 tr/m²", "area_m2": "44,0 tr/m²", "note": "25", "note_2": "61"},
-                {"area": "Phú Tân", "price": "119 tin", "tracked": "69", "signal": "20,0 tr/m²", "area_m2": "34,4 tr/m²", "note": "34", "note_2": "50"},
-                {"area": "Định Hòa", "price": "89 tin", "tracked": "33", "signal": "12,8 tr/m²", "area_m2": "26,5 tr/m²", "note": "54", "note_2": "63"},
-                {"area": "Phú Lợi", "price": "72 tin", "tracked": "12", "signal": "26,8 tr/m²", "area_m2": "44,6 tr/m²", "note": "14", "note_2": "30"},
-                {"area": "Chánh Mỹ", "price": "44 tin", "tracked": "14", "signal": "23,1 tr/m²", "area_m2": "39,1 tr/m²", "note": "20", "note_2": "35"}
+                {"area": "Phú Mỹ", "tracked": "94", "flags": "21", "land_m2": "23,8", "house_m2": "38,7", "under3": "25", "under4": "63"},
+                {"area": "Phú Tân", "tracked": "44", "flags": "23", "land_m2": "23,2", "house_m2": "36,9", "under3": "14", "under4": "20"},
+                {"area": "Phú Hòa", "tracked": "36", "flags": "4", "land_m2": "29,4", "house_m2": "37,3", "under3": "13", "under4": "23"},
+                {"area": "Phú Lợi", "tracked": "36", "flags": "4", "land_m2": "27,1", "house_m2": "62,2", "under3": "8", "under4": "14"},
+                {"area": "Định Hòa", "tracked": "26", "flags": "16", "land_m2": "12,2", "house_m2": "15,7", "under3": "20", "under4": "20"},
+                {"area": "Chánh Mỹ", "tracked": "11", "flags": "7", "land_m2": "23,1", "house_m2": "39,1", "under3": "9", "under4": "11"}
             ],
             "cards": [
-                {"title": "Không gộp hai loại hình", "value": "20,9 vs 39,0 tr/m²", "body": "Phú Mỹ · đất nền vs nhà đất"},
-                {"title": "Nhóm dưới 3 tỷ", "value": "61 dòng", "body": "Phú Mỹ · mọi loại hình trong snapshot"},
-                {"title": "Dữ liệu cần đọc kỹ", "value": "398/623 dòng", "body": "Có giá/m² trong nhóm đất nền và nhà đất"}
+                {"title": "Không gộp hai loại hình", "value": "23,8 vs 38,7 tr/m²", "body": "Phú Mỹ · đất nền vs nhà đất"},
+                {"title": "Nhóm dưới 3 tỷ", "value": "25 dòng", "body": "Phú Mỹ · mọi loại hình trong 14 ngày"},
+                {"title": "Dữ liệu cần đọc kỹ", "value": "162/243 dòng", "body": "Có giá/m² trong nhóm đất nền và nhà đất"}
             ]
         },
         "local_links_title": "Mở dữ liệu và bài liên quan",
@@ -22406,28 +22406,28 @@ SEO_ARTICLES = {
             "published_at": "2026-09-13",
             "modified_at": "2026-09-13",
             "intro": [
-                "Muốn tránh đi xem một tin chỉ rẻ trên tiêu đề, hãy kiểm tra theo 5 bước: tách đất nền với nhà đất, so giá/m² cùng phường, đối chiếu tổng giá, đọc dấu hiệu và kiểm tra dữ liệu vị trí–diện tích. Snapshot Facebook 30/08–12/09/2026 của Radar cho thấy giá rao trung vị nhà đất Phú Mỹ là 39,0 tr/m², trong khi đất nền là 20,9 tr/m².",
+                "Muốn tránh đi xem một tin chỉ rẻ trên tiêu đề, hãy kiểm tra theo 5 bước: tách đất nền với nhà đất, so giá/m² cùng phường, đối chiếu tổng giá, đọc dấu hiệu và kiểm tra dữ liệu vị trí–diện tích. Cửa sổ 14 ngày gần nhất (09/09–22/09/2026) cho thấy giá rao trung vị nhà đất Phú Mỹ là 38,7 tr/m², trong khi đất nền là 23,8 tr/m².",
                 "Các số liệu dưới đây là giá rao và số dòng tin Facebook đang theo dõi, không phải giá chốt giao dịch hay số lượng lô đất duy nhất."
             ],
             "summary_cards": [
                 {
-                    "label": "Snapshot 6 phường",
-                    "value": "640 dòng tin",
-                    "note": "Mọi loại hình · cửa sổ 30/08–12/09/2026"
+                    "label": "14 ngày gần nhất · 6 phường",
+                    "value": "247 dòng tin",
+                    "note": "Mọi loại hình · cửa sổ 09/09–22/09/2026"
                 },
                 {
                     "label": "Giá/m² có thể so",
-                    "value": "398/623 dòng",
+                    "value": "162/243 dòng",
                     "note": "Đất nền + nhà đất có giá/m² hợp lệ"
                 },
                 {
                     "label": "Dấu hiệu cần mở trước",
-                    "value": "185 dòng",
-                    "note": "Cờ tin hot hoặc giảm giá trong snapshot"
+                    "value": "75 dòng",
+                    "note": "Cờ tin hot hoặc giảm giá trong 14 ngày"
                 },
                 {
                     "label": "Trường dữ liệu cần hỏi",
-                    "value": "126/623 dòng",
+                    "value": "40/243 dòng",
                     "note": "Có ghi nhận độ rộng đường"
                 }
             ],
@@ -22435,40 +22435,40 @@ SEO_ARTICLES = {
                 {
                     "eyebrow": "Bảng mốc đọc nhanh",
                     "title": "Giá rao khác nhau thế nào giữa đất nền và nhà đất?",
-                    "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0; cửa sổ crawled_at 30/08–12/09/2026. Giá là giá rao trung vị theo loại hình; dòng tin có thể gồm bài đăng lại.",
+                    "note": "Nguồn: listings Facebook với source='facebook', is_active=1, is_blacklisted=0 và review_hidden=0; cửa sổ crawled_at 09/09–22/09/2026 (14 ngày gần nhất). Giá là giá rao trung vị theo loại hình; dòng tin có thể gồm bài đăng lại.",
                     "columns": [
                         {"key": "area", "label": "Phường"},
                         {"key": "tracked", "label": "Dòng tin"},
-                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "flags", "label": "Dấu hiệu"},
                         {"key": "land_m2", "label": "Đất nền tr/m²"},
                         {"key": "house_m2", "label": "Nhà đất tr/m²"},
                         {"key": "under3", "label": "Dưới 3 tỷ"},
                         {"key": "under4", "label": "Dưới 4 tỷ"}
                     ],
                     "rows": [
-                        {"area": "Phú Mỹ", "tracked": "187", "signals": "39", "land_m2": "20,9", "house_m2": "39,0", "under3": "61", "under4": "133"},
-                        {"area": "Phú Hòa", "tracked": "129", "signals": "18", "land_m2": "28,4", "house_m2": "44,0", "under3": "25", "under4": "61"},
-                        {"area": "Phú Tân", "tracked": "119", "signals": "69", "land_m2": "20,0", "house_m2": "34,4", "under3": "34", "under4": "50"},
-                        {"area": "Định Hòa", "tracked": "89", "signals": "33", "land_m2": "12,8", "house_m2": "26,5", "under3": "54", "under4": "63"},
-                        {"area": "Phú Lợi", "tracked": "72", "signals": "12", "land_m2": "26,8", "house_m2": "44,6", "under3": "14", "under4": "30"},
-                        {"area": "Chánh Mỹ", "tracked": "44", "signals": "14", "land_m2": "23,1", "house_m2": "39,1", "under3": "20", "under4": "35"}
+                        {"area": "Phú Mỹ", "tracked": "94", "flags": "21", "land_m2": "23,8", "house_m2": "38,7", "under3": "25", "under4": "63"},
+                        {"area": "Phú Tân", "tracked": "44", "flags": "23", "land_m2": "23,2", "house_m2": "36,9", "under3": "14", "under4": "20"},
+                        {"area": "Phú Hòa", "tracked": "36", "flags": "4", "land_m2": "29,4", "house_m2": "37,3", "under3": "13", "under4": "23"},
+                        {"area": "Phú Lợi", "tracked": "36", "flags": "4", "land_m2": "27,1", "house_m2": "62,2", "under3": "8", "under4": "14"},
+                        {"area": "Định Hòa", "tracked": "26", "flags": "16", "land_m2": "12,2", "house_m2": "15,7", "under3": "20", "under4": "20"},
+                        {"area": "Chánh Mỹ", "tracked": "11", "flags": "7", "land_m2": "23,1", "house_m2": "39,1", "under3": "9", "under4": "11"}
                     ]
                 },
                 {
                     "eyebrow": "Kiểm tra độ đầy đủ của tin",
                     "title": "Không phải dòng nào cũng đủ dữ liệu để so ngay",
-                    "note": "Trong 623 dòng đất nền và nhà đất ở 6 phường, các trường dưới đây được đếm theo giá trị đã lưu; thiếu trường không đồng nghĩa tin sai, nhưng là điểm cần hỏi lại.",
+                    "note": "Trong 243 dòng đất nền và nhà đất ở 6 phường (09/09–22/09/2026), các trường dưới đây được đếm theo giá trị đã lưu; thiếu trường không đồng nghĩa tin sai, nhưng là điểm cần hỏi lại.",
                     "columns": [
                         {"key": "field", "label": "Trường cần kiểm tra"},
                         {"key": "count", "label": "Số dòng có dữ liệu"},
                         {"key": "why", "label": "Vì sao cần đọc"}
                     ],
                     "rows": [
-                        {"field": "Diện tích đọc được dạng số", "count": "536/623", "why": "Tính lại tổng giá và giá/m²"},
-                        {"field": "Tổng giá", "count": "454/623", "why": "So với trần ngân sách"},
-                        {"field": "Giá/m²", "count": "398/623", "why": "So cùng loại hình và phường"},
-                        {"field": "Thổ cư", "count": "495/623", "why": "Hỏi rõ phần diện tích được công nhận"},
-                        {"field": "Độ rộng đường", "count": "126/623", "why": "Không suy đoán chỉ từ tên đường"}
+                        {"field": "Diện tích đọc được dạng số", "count": "220/243", "why": "Tính lại tổng giá và giá/m²"},
+                        {"field": "Tổng giá", "count": "183/243", "why": "So với trần ngân sách"},
+                        {"field": "Giá/m²", "count": "162/243", "why": "So cùng loại hình và phường"},
+                        {"field": "Thổ cư", "count": "197/243", "why": "Hỏi rõ phần diện tích được công nhận"},
+                        {"field": "Độ rộng đường", "count": "40/243", "why": "Không suy đoán chỉ từ tên đường"}
                     ]
                 }
             ],
