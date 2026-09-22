@@ -22541,7 +22541,7 @@ SEO_ARTICLES = {
                     "id": "doc-dau-hieu",
                     "heading": "4. Đọc dấu hiệu giảm giá hoặc tin hot như lời nhắc",
                     "paragraphs": [
-                        "Radar dùng các cờ dữ liệu như tin hot hoặc giảm giá để giúp bạn mở một số dòng trước. Trong snapshot 640 dòng của 6 phường, có 185 dòng mang ít nhất một cờ. Phú Tân có 69 dòng, Phú Mỹ 39 dòng và Định Hòa 33 dòng.",
+                        "Radar dùng các cờ dữ liệu như tin hot hoặc giảm giá để giúp bạn mở một số dòng trước. Radar dùng các cờ dữ liệu như tin hot hoặc giảm giá để giúp bạn mở một số dòng trước. Trong snapshot 247 dòng của 6 phường (cửa sổ 09/09–22/09/2026), có 75 dòng mang ít nhất một cờ. Phú Tân có 23 dòng, Phú Mỹ 21 dòng và Định Hòa 16 dòng.",
                         "Con số này không phải tỷ lệ bán được, mức chiết khấu chắc chắn hay lời khuyên nên mua. Một tin giảm giá có thể cần kiểm tra nguyên nhân; một tin hot vẫn có thể thiếu diện tích, vị trí hoặc thông tin pháp lý.",
                         "Sau khi mở tin có dấu hiệu, hãy hỏi người đăng về lý do thay đổi giá, thời điểm cập nhật, vị trí chính xác và hồ sơ trước khi sắp lịch xem."
                     ],
