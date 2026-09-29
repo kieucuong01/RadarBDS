@@ -147,6 +147,9 @@ def test_google_site_tags_are_env_driven(monkeypatch):
         assert 'const analyticsId = "G-TEST1234";' in html
         assert 'script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(analyticsId);' in html
         assert 'window.gtag("config", analyticsId);' in html
+        assert "window.setTimeout(loadRadarAnalytics, 1800);" in html
+        assert "document.querySelector('script[data-radar-analytics]')" in html
+        assert "window.RadarAnalyticsConfiguredId !== analyticsId" in html
 
 
 def test_google_site_tags_reach_report_article_and_hubs(monkeypatch):
@@ -174,6 +177,8 @@ def test_google_site_tags_reach_report_article_and_hubs(monkeypatch):
         assert "fetch('/api/track'" in html
         assert "social_utm_visit" in html
         assert "cta_clicked" in html
+        assert "window.RadarAnalyticsConfiguredId = analyticsId;" in html
+        assert "script.dataset.radarAnalytics = analyticsId;" in html
 
 
 def test_rendered_landing_and_report_include_canonical_acquisition_tracking():

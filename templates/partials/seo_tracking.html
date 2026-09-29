@@ -28,13 +28,16 @@
   }
 
   if (analyticsId) {
-    window.gtag("js", new Date());
-    window.gtag("config", analyticsId);
+    if (window.RadarAnalyticsConfiguredId !== analyticsId) {
+      window.gtag("js", new Date());
+      window.gtag("config", analyticsId);
+      window.RadarAnalyticsConfiguredId = analyticsId;
+    }
     const loadAnalytics = () => {
       if (document.querySelector('script[data-radar-analytics]')) return;
       const script = document.createElement("script");
       script.async = true;
-      script.dataset.radarAnalytics = "true";
+      script.dataset.radarAnalytics = analyticsId;
       script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(analyticsId);
       document.head.appendChild(script);
     };
