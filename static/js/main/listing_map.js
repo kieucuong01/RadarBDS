@@ -42,6 +42,7 @@
   var bound = false;
   var summarySequence = 0;
   var itemSequence = 0;
+  var recentSequence = 0;
   var state = {
     open: false,
     snapshot: null,
@@ -55,6 +56,7 @@
     activeBaseLayer: "street",
     summaryController: null,
     itemController: null,
+    recentController: null,
     previousFocus: null,
     previousTab: "signals",
     scrollElement: null,
@@ -62,6 +64,7 @@
     historyPushed: false,
     initialSharedOpen: false,
     summary: null,
+    recentPayload: null,
     selectedGroup: null,
     panelView: { kind: "directory", group: null, payload: null },
     directoryVisibleCount: DIRECTORY_BATCH_SIZE,
@@ -87,7 +90,8 @@
     adminOldMarker: null,
     adminDraftMarker: null,
     adminMapClickHandler: null,
-    adminEditToken: 0
+    adminEditToken: 0,
+    dashboardSyncNeeded: false
   };
 
   function normalizeMode(value) {
@@ -333,6 +337,85 @@
     params.set("page", String(safePage));
     params.set("limit", String(safeLimit));
     return "/api/map-listing-items?" + params.toString();
+  }
+
+  function buildRecentUrl(snapshot, page, limit) {
+    var safe = normalizedSnapshot(snapshot);
+    if (!safe) return null;
+    var safePage = Math.max(parseInt(page, 10) || 1, 1);
+    var safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 50);
+    var params = new URLSearchParams(safe.query);
+    ["mode", "location_key", "sort", "sort_by", "sort_dir"].forEach(
+      function (key) { params.delete(key); }
+    );
+    params.set("page", String(safePage));
+    params.set("limit", String(safeLimit));
+    if (safe.mode === "signals") {
+      params.set("sort", "newest");
+      params.set("include_total", "0");
+      return "/api/signals?" + params.toString();
+    }
+    params.set("sort_by", "date");
+    params.set("sort_dir", "desc");
+    return "/api/listings?" + params.toString();
+  }
+
+  function panelTabModel(viewKind) {
+    var recent = String(viewKind || "").indexOf("recent") === 0;
+    return {
+      active: recent ? "recent" : "locations",
+      title: recent ? "Deal mới nhất" : "Theo vị trí",
+      recentPressed: recent ? "true" : "false",
+      locationsPressed: recent ? "false" : "true"
+    };
+  }
+
+  function filterSummaryText(snapshot) {
+    var safe = normalizedSnapshot(snapshot);
+    if (!safe) return "Toàn khu vực";
+    var params = new URLSearchParams(safe.query);
+    var labels = {
+      "1w": "1 tuần",
+      "1m": "1 tháng",
+      "3m": "3 tháng",
+      "6m": "6 tháng",
+      "1y": "1 năm",
+      "all": "Toàn bộ"
+    };
+    var dateLabel = labels[params.get("date_range")] || "Mọi thời gian";
+    var wards = params.getAll("ward").filter(Boolean);
+    var areaLabel = wards.length
+      ? wards.length + " khu vực"
+      : "Toàn khu vực";
+    return dateLabel + " · " + areaLabel;
+  }
+
+  function recentItemModel(item) {
+    item = item || {};
+    var images = Array.isArray(item.imgs) ? item.imgs : [];
+    return {
+      id: Number(item.id) || 0,
+      title: String(item.title || "Tin rao"),
+      thumbnail: String(
+        item.thumbnail || item.primary_img || images[0] || ""
+      ),
+      price_ty: item.price_ty,
+      area_m2: item.area_m2,
+      mos_pct: Number(
+        item.mos_pct_display !== undefined
+          ? item.mos_pct_display
+          : (item.mos_pct || 0)
+      ),
+      ward: String(item.ward || ""),
+      road_name: String(
+        item.road_name || item.street_label || item.road_label || ""
+      ),
+      days_ago: item.days_ago,
+      card_date_reason: String(item.card_date_reason || "posted"),
+      prop_type: String(item.prop_type || item.property_type || ""),
+      prop_type_label: String(item.prop_type_label || ""),
+      source: String(item.source || "")
+    };
   }
 
   function buildMapShareUrl(snapshot, currentHref) {
@@ -1781,6 +1864,141 @@
     shell.appendChild(actions);
   }
 
+  function appendPanelTabs(shell, viewKind) {
+    var model = panelTabModel(viewKind);
+    var header = create("div", "listing-map-panel-heading");
+    var titleWrap = create("div", "listing-map-panel-title");
+    titleWrap.appendChild(create("h3", "", model.title));
+    if (model.active === "recent") {
+      var unmapped = safeCount(
+        state.summary && state.summary.summary
+          && state.summary.summary.unmapped_count
+      );
+      if (unmapped > 0) {
+        titleWrap.appendChild(create(
+          "span",
+          "listing-map-unmapped-note",
+          unmapped + " tin chưa đủ vị trí"
+        ));
+      }
+    }
+    header.appendChild(titleWrap);
+    var tabs = create("div", "listing-map-panel-tabs");
+    tabs.setAttribute("role", "tablist");
+    tabs.setAttribute("aria-label", "Chế độ xem danh sách trên bản đồ");
+    var recent = create("button", "", "Mới nhất");
+    recent.type = "button";
+    recent.setAttribute("role", "tab");
+    recent.setAttribute("aria-pressed", model.recentPressed);
+    recent.classList.toggle("is-active", model.active === "recent");
+    recent.addEventListener("click", showRecent);
+    var locations = create("button", "", "Theo vị trí");
+    locations.type = "button";
+    locations.setAttribute("role", "tab");
+    locations.setAttribute("aria-pressed", model.locationsPressed);
+    locations.classList.toggle("is-active", model.active === "locations");
+    locations.addEventListener("click", showLocations);
+    tabs.appendChild(recent);
+    tabs.appendChild(locations);
+    header.appendChild(tabs);
+    shell.appendChild(header);
+  }
+
+  function renderRecentInto(target, payload) {
+    if (!target) return;
+    cancelDirectoryRender();
+    clearElement(target);
+    var shell = create("div", "listing-map-recent");
+    if (isMobileSheet(target)) {
+      appendSheetHandle(shell);
+      shell.appendChild(createSheetToggle());
+    }
+    appendPanelTabs(shell, "recent");
+    var list = create("div", "listing-map-item-list listing-map-recent-list");
+    var sourceItems = state.snapshot && state.snapshot.mode === "all"
+      ? (payload.listings || [])
+      : (payload.signals || []);
+    sourceItems.map(recentItemModel).forEach(function (item) {
+      var card = create("button", "listing-map-item-card listing-map-recent-card");
+      card.type = "button";
+      if (item.thumbnail) {
+        var image = create("img", "listing-map-item-thumb");
+        image.src = item.thumbnail;
+        image.alt = "";
+        image.loading = "lazy";
+        card.appendChild(image);
+      }
+      var content = create("span", "listing-map-item-content");
+      var priceLine = create("span", "listing-map-recent-price");
+      priceLine.appendChild(create(
+        "strong",
+        "",
+        item.price_ty ? item.price_ty + " tỷ" : "Chưa rõ giá"
+      ));
+      if (item.area_m2) {
+        priceLine.appendChild(create("span", "", item.area_m2 + " m²"));
+      }
+      if (item.mos_pct) {
+        priceLine.appendChild(create(
+          "span",
+          "listing-map-item-mos",
+          "MOS " + Number(item.mos_pct).toFixed(1) + "%"
+        ));
+      }
+      content.appendChild(priceLine);
+      content.appendChild(create(
+        "span",
+        "listing-map-item-meta",
+        [item.ward, item.road_name].filter(Boolean).join(" · ")
+          || item.title
+      ));
+      content.appendChild(create("small", "", cardDateText(item)));
+      card.appendChild(content);
+      card.addEventListener("click", function () { openItem(item); });
+      list.appendChild(card);
+    });
+    if (!list.childNodes.length) {
+      list.appendChild(create(
+        "p",
+        "listing-map-empty",
+        "Chưa có deal mới phù hợp với bộ lọc hiện tại."
+      ));
+    }
+    shell.appendChild(list);
+    target.appendChild(shell);
+  }
+
+  function renderRecentLoadingInto(target) {
+    if (!target) return;
+    clearElement(target);
+    var shell = create("div", "listing-map-recent listing-map-recent-loading");
+    if (isMobileSheet(target)) {
+      appendSheetHandle(shell);
+      shell.appendChild(createSheetToggle());
+    }
+    appendPanelTabs(shell, "recent-loading");
+    for (var index = 0; index < 4; index += 1) {
+      shell.appendChild(create("div", "listing-map-recent-skeleton"));
+    }
+    target.appendChild(shell);
+  }
+
+  function renderRecentErrorInto(target) {
+    if (!target) return;
+    clearElement(target);
+    var shell = create("div", "listing-map-recent");
+    if (isMobileSheet(target)) appendSheetHandle(shell);
+    appendPanelTabs(shell, "recent-error");
+    var error = create("div", "listing-map-error");
+    error.appendChild(create("strong", "", "Không tải được deal mới nhất."));
+    var retry = create("button", "listing-map-retry", "Thử lại");
+    retry.type = "button";
+    retry.addEventListener("click", requestRecent);
+    error.appendChild(retry);
+    shell.appendChild(error);
+    target.appendChild(shell);
+  }
+
   function renderGroupDirectoryInto(target, payload) {
     if (!target) return;
     var summary = payload.summary || {};
@@ -1791,6 +2009,7 @@
       appendSheetHandle(shell);
       shell.appendChild(createSheetToggle());
     }
+    appendPanelTabs(shell, "directory");
     var stats = create("div", "listing-map-summary-grid");
     [
       ["Đã định vị", safeCount(summary.mapped)],
@@ -2213,6 +2432,7 @@
     } else {
       shell.appendChild(back);
     }
+    appendPanelTabs(shell, "items");
     shell.appendChild(create("h3", "", group.label));
     shell.appendChild(create(
       "p",
@@ -2418,6 +2638,18 @@
         state.sheetExpanded
       ));
     }
+    if (view.kind === "recent") {
+      renderRecentInto(target, view.payload || state.recentPayload || {});
+      return;
+    }
+    if (view.kind === "recent-loading") {
+      renderRecentLoadingInto(target);
+      return;
+    }
+    if (view.kind === "recent-error") {
+      renderRecentErrorInto(target);
+      return;
+    }
     if (view.kind === "items") {
       renderItemsInto(target, view.group, view.payload || { items: [] });
       return;
@@ -2454,6 +2686,21 @@
       payload: payload || null
     };
     renderActiveView();
+  }
+
+  function showRecent() {
+    state.selectedGroup = null;
+    if (state.recentPayload) {
+      setPanelView("recent", null, state.recentPayload);
+      return;
+    }
+    setPanelView("recent-loading");
+    requestRecent();
+  }
+
+  function showLocations() {
+    state.selectedGroup = null;
+    setPanelView("directory");
   }
 
   function selectGroup(group) {
@@ -2530,8 +2777,48 @@
 
   function renderSummary(payload, options) {
     state.summary = payload;
-    setPanelView("directory");
     renderMarkers(payload, options);
+    if (state.panelView && state.panelView.kind === "directory") {
+      renderActiveView();
+    } else if (
+      state.panelView
+      && String(state.panelView.kind || "").indexOf("recent") === 0
+    ) {
+      renderActiveView();
+    }
+  }
+
+  function requestRecent() {
+    if (!state.open || !state.snapshot) return Promise.resolve();
+    recentSequence += 1;
+    var sequence = recentSequence;
+    if (state.recentController) state.recentController.abort();
+    state.recentController = new AbortController();
+    var controller = state.recentController;
+    if (!state.recentPayload) setPanelView("recent-loading");
+    return fetchJson(buildRecentUrl(state.snapshot, 1, 20), controller)
+      .then(function (payload) {
+        if (!state.open || sequence !== recentSequence) return;
+        state.recentPayload = payload || {};
+        if (
+          state.panelView
+          && String(state.panelView.kind || "").indexOf("recent") === 0
+        ) {
+          setPanelView("recent", null, state.recentPayload);
+        }
+        return payload;
+      })
+      .catch(function (error) {
+        if (error && error.name === "AbortError") return;
+        if (!state.open || sequence !== recentSequence) return;
+        if (
+          state.panelView
+          && String(state.panelView.kind || "").indexOf("recent") === 0
+        ) {
+          setPanelView("recent-error");
+        }
+        return undefined;
+      });
   }
 
   function requestSummary(options) {
@@ -2576,7 +2863,7 @@
     return loadLeaflet().then(function (L) {
       if (!state.open) return;
       initMap(L);
-      return requestSummary();
+      return Promise.all([requestSummary(), requestRecent()]);
     }).catch(function () {
       if (!state.open) return;
       setStatus("Không thể tải thư viện bản đồ.", false);
@@ -2601,15 +2888,19 @@
     state.snapshot = safe;
     state.workspace = workspace;
     state.summary = null;
+    state.recentPayload = null;
     state.selectedGroup = null;
     state.adminEditMode = false;
     state.adminEdit = null;
     state.adminReturnView = null;
-    state.panelView = { kind: "directory", group: null, payload: null };
+    state.panelView = { kind: "recent-loading", group: null, payload: null };
     state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
+    state.dashboardSyncNeeded = false;
     setMobileSheetExpanded(false);
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
+    var filterSummary = element("listingMapFilterSummary");
+    if (filterSummary) filterSummary.textContent = filterSummaryText(safe);
     syncAdminEditModeToggle();
     var launcher = element("listingMapLauncher");
     if (launcher) launcher.setAttribute("aria-expanded", "true");
@@ -2639,6 +2930,30 @@
     return startMapLoad(safe);
   }
 
+  function refresh(snapshot, options) {
+    options = options || {};
+    var safe = normalizedSnapshot(snapshot);
+    if (!state.open || !safe) return Promise.resolve();
+    state.snapshot = safe;
+    state.summary = null;
+    state.recentPayload = null;
+    state.selectedGroup = null;
+    state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
+    state.dashboardSyncNeeded = state.dashboardSyncNeeded
+      || Boolean(options.markDashboardDirty);
+    var filterSummary = element("listingMapFilterSummary");
+    if (filterSummary) filterSummary.textContent = filterSummaryText(safe);
+    setPanelView("recent-loading");
+    return Promise.all([
+      requestSummary({ preserveViewport: false }),
+      requestRecent()
+    ]);
+  }
+
+  function isOpen() {
+    return Boolean(state.open);
+  }
+
   function close(options) {
     options = options || {};
     if (!state.open) return;
@@ -2646,13 +2961,18 @@
     var wasInitialSharedOpen = state.initialSharedOpen;
     var reason = options.reason || "button";
     var closingBaseLayer = state.activeBaseLayer;
+    var shouldRefreshDashboard = state.dashboardSyncNeeded
+      && reason !== "replace";
     state.open = false;
     summarySequence += 1;
     itemSequence += 1;
+    recentSequence += 1;
     if (state.summaryController) state.summaryController.abort();
     if (state.itemController) state.itemController.abort();
+    if (state.recentController) state.recentController.abort();
     state.summaryController = null;
     state.itemController = null;
+    state.recentController = null;
     cancelDirectoryRender();
     cancelMarkerRender();
     state.adminEditToken += 1;
@@ -2721,9 +3041,11 @@
     state.initialSharedOpen = false;
     state.snapshot = null;
     state.summary = null;
+    state.recentPayload = null;
     state.selectedGroup = null;
     state.adminEditMode = false;
     state.panelView = { kind: "directory", group: null, payload: null };
+    state.dashboardSyncNeeded = false;
     syncAdminEditModeToggle();
     if (shouldReplaceSharedUrl) {
       root.history.replaceState(
@@ -2733,6 +3055,9 @@
       );
     } else if (shouldConsumeHistory) {
       root.history.back();
+    }
+    if (shouldRefreshDashboard && typeof root.applyFilters === "function") {
+      root.setTimeout(function () { root.applyFilters(); }, 0);
     }
   }
 
@@ -2823,6 +3148,7 @@
     normalizeMode: normalizeMode,
     buildSummaryUrl: buildSummaryUrl,
     buildItemsUrl: buildItemsUrl,
+    buildRecentUrl: buildRecentUrl,
     buildMapShareUrl: buildMapShareUrl,
     urlWithoutMapFlag: urlWithoutMapFlag,
     sharedMapHistoryState: sharedMapHistoryState,
@@ -2839,6 +3165,9 @@
     activePanelId: activePanelId,
     directoryWindow: directoryWindow,
     panelRenderModel: panelRenderModel,
+    panelTabModel: panelTabModel,
+    filterSummaryText: filterSummaryText,
+    recentItemModel: recentItemModel,
     adminEditActionModel: adminEditActionModel,
     adminEditModeModel: adminEditModeModel,
     adminEditTargetKind: adminEditTargetKind,
@@ -2868,6 +3197,10 @@
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,
     toggleAdminEditMode: toggleAdminEditMode,
+    showRecent: showRecent,
+    showLocations: showLocations,
+    isOpen: isOpen,
+    refresh: refresh,
     open: open,
     close: close,
     bind: bind

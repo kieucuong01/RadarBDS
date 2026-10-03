@@ -26,6 +26,27 @@
       </div>
     </div>
     <div class="listing-map-head-actions">
+      <button id="listingMapFilterButton" type="button"
+        class="listing-map-filter-button" aria-label="Mở bộ lọc"
+        onclick="toggleMenu()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+          <path d="M4 5h16M7 12h10M10 19h4"></path>
+        </svg>
+        <span>Bộ lọc</span>
+      </button>
+      <button id="listingMapGridButton" type="button"
+        class="listing-map-grid-button"
+        onclick="RadarListingMap.close({ reason: 'grid' })">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+        </svg>
+        <span>Xem dạng lưới</span>
+      </button>
       {% if USER_TIER == 'admin' %}
       <button id="listingMapEditModeToggle" type="button"
         class="listing-map-edit-toggle" aria-pressed="false"
@@ -41,12 +62,14 @@
   <div id="listingMapStatus" class="listing-map-status" role="status"
     aria-live="polite" aria-busy="false"></div>
   <div class="listing-map-workspace-body">
+    <div id="listingMapFilterSummary" class="listing-map-filter-summary"
+      aria-label="Bộ lọc đang áp dụng"></div>
     <div id="listingMapCanvas" class="listing-map-canvas"
       aria-label="Bản đồ các lô đất"></div>
     <aside id="listingMapPanel" class="listing-map-panel"
-      aria-label="Danh sách lô đất tại vị trí đã chọn"></aside>
+      aria-label="Deal mới nhất và danh sách theo vị trí"></aside>
   </div>
   <div id="listingMapMobileSheet" class="listing-map-mobile-sheet"
     data-state="collapsed"
-    aria-label="Danh sách lô đất trên thiết bị di động"></div>
+    aria-label="Deal mới nhất và danh sách theo vị trí trên thiết bị di động"></div>
 </section>

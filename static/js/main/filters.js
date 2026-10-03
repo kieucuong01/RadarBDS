@@ -266,6 +266,32 @@ function applyFilters() {
   currentPageNo = 1;
   listingsHasMore = false;
   const tab = activeTabId();
+  const mapIsOpen = Boolean(
+    window.RadarListingMap
+    && typeof window.RadarListingMap.isOpen === 'function'
+    && window.RadarListingMap.isOpen()
+  );
+
+  if (mapIsOpen && (tab === 'signals' || tab === 'all')) {
+    const snapshot = getListingMapFilterSnapshot();
+    const mapRefresh = window.RadarListingMap.refresh(snapshot, {
+      markDashboardDirty: true,
+    });
+    if (tab === 'signals') {
+      Promise.resolve(mapRefresh)
+        .then(() => deferCountsRefresh(false))
+        .catch((err) => {
+          if (err && err.name !== 'AbortError') console.error(err);
+        });
+    } else {
+      Promise.resolve(mapRefresh)
+        .then(() => refreshCounts(false))
+        .catch((err) => {
+          if (err && err.name !== 'AbortError') console.error(err);
+        });
+    }
+    return;
+  }
 
   if (tab === 'signals') {
     window.RadarFilterRuntime.runSignalFirst(

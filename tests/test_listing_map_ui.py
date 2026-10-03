@@ -67,13 +67,18 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         assert f'id="{hook}"' in html
     assert 'id="listingMapMobileSheet"' in html
     assert 'data-state="collapsed"' in html
+    assert 'id="listingMapFilterButton"' in html
+    assert 'id="listingMapGridButton"' in html
+    assert "Xem dạng lưới" in html
+    assert 'id="listingMapFilterSummary"' in html
     assert 'id="listingMapEditModeToggle"' not in html
     assert 'name="date_range" value="6m"' not in html
     assert 'name="date_range" value="1y"' not in html
     assert 'name="date_range" value="all"' not in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-admin-edit-mode-20260820") == 2
+    assert html.count("listing-map-newest-rail-20261003") == 2
+    assert "listing-map-admin-edit-mode-20260820" not in html
     assert "listing-map-singleton-modal-20260814" not in html
     assert "listing-map-touch-target-20260814" not in html
     assert "listing-map-marker-hierarchy-20260814" not in html
@@ -380,7 +385,8 @@ def test_listing_map_assets_use_touch_target_cache_version():
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-admin-edit-mode-20260820") == 2
+    assert template.count("listing-map-newest-rail-20261003") == 2
+    assert "listing-map-admin-edit-mode-20260820" not in template
     assert "listing-map-singleton-modal-20260814" not in template
     assert "listing-map-touch-target-20260814" not in template
     assert "listing-map-marker-hierarchy-20260814" not in template
@@ -403,6 +409,42 @@ def test_listing_map_workspace_body_gets_stable_remaining_height():
 
     assert "grid-template-rows: auto auto minmax(0, 1fr);" in styles
     assert "grid-template-rows: auto auto auto minmax(0, 1fr);" not in styles
+
+
+def test_desktop_map_workspace_preserves_filter_sidebar_and_newest_deal_rail():
+    styles = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
+
+    assert re.search(
+        r"\.listing-map-workspace\s*\{[^}]*left:\s*280px;",
+        styles,
+        re.S,
+    )
+    assert re.search(
+        r"\.listing-map-workspace-body\s*\{[^}]*"
+        r"grid-template-columns:\s*minmax\(0,\s*1fr\)\s+370px;",
+        styles,
+        re.S,
+    )
+    assert ".listing-map-panel-tabs" in styles
+    assert ".listing-map-recent" in styles
+
+
+def test_mobile_map_workspace_uses_filter_button_and_newest_deal_bottom_sheet():
+    styles = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
+
+    mobile = styles.split("@media (max-width: 760px)", 1)[1]
+    assert re.search(r"\.listing-map-workspace\s*\{[^}]*left:\s*0;", mobile, re.S)
+    assert re.search(
+        r"\.listing-map-mobile-sheet\s*\{[^}]*"
+        r"height:\s*clamp\(236px,\s*34dvh,\s*320px\);",
+        mobile,
+        re.S,
+    )
+    assert re.search(
+        r"\.listing-map-filter-button\s*\{[^}]*display:\s*inline-flex;",
+        mobile,
+        re.S,
+    )
 
 
 def test_mobile_leaflet_canvas_keeps_full_remaining_viewport_height():

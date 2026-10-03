@@ -80,6 +80,93 @@ def test_summary_and_item_urls_preserve_frozen_filter_snapshot():
     ) is None
 
 
+def test_recent_feed_urls_keep_map_filters_and_force_newest_order():
+    snapshot = (
+        "{mode:'signals',query:'date_range=3m&ward=Ph%C3%BA+L%E1%BB%A3i'}"
+    )
+    signal_url = _run_node(f"mapApi.buildRecentUrl({snapshot},1,20)")
+
+    assert signal_url.startswith("/api/signals?")
+    assert "date_range=3m" in signal_url
+    assert "ward=Ph%C3%BA+L%E1%BB%A3i" in signal_url
+    assert "sort=newest" in signal_url
+    assert "page=1" in signal_url
+    assert "limit=20" in signal_url
+    assert "include_total=0" in signal_url
+
+    listing_url = _run_node(
+        "mapApi.buildRecentUrl({mode:'all',query:'city=thu-dau-mot'},2,500)"
+    )
+    assert listing_url.startswith("/api/listings?")
+    assert "city=thu-dau-mot" in listing_url
+    assert "sort_by=date" in listing_url
+    assert "sort_dir=desc" in listing_url
+    assert "page=2" in listing_url
+    assert "limit=50" in listing_url
+
+
+def test_map_panel_tabs_default_to_newest_and_switch_for_location_results():
+    assert _run_node("mapApi.panelTabModel('recent')") == {
+        "active": "recent",
+        "title": "Deal mới nhất",
+        "recentPressed": "true",
+        "locationsPressed": "false",
+    }
+    for view in ("directory", "items-loading", "items", "items-error"):
+        assert _run_node(
+            f"mapApi.panelTabModel({json.dumps(view)})"
+        ) == {
+            "active": "locations",
+            "title": "Theo vị trí",
+            "recentPressed": "false",
+            "locationsPressed": "true",
+        }
+
+
+def test_map_filter_summary_uses_date_and_selected_area_count():
+    assert _run_node(
+        "mapApi.filterSummaryText({mode:'signals',"
+        "query:'date_range=3m&ward=Phu+Loi&ward=An+Phu&ward=Binh+Chuan'})"
+    ) == "3 tháng · 3 khu vực"
+    assert _run_node(
+        "mapApi.filterSummaryText({mode:'signals',query:'date_range=1w'})"
+    ) == "1 tuần · Toàn khu vực"
+
+
+def test_recent_item_model_normalizes_signal_and_listing_card_shapes():
+    signal = _run_node(
+        "mapApi.recentItemModel({id:42,title:'Lô góc',primary_img:'signal.jpg',"
+        "price_ty:2.15,area_m2:90,mos_pct_display:24.5,ward:'Phú Lợi',"
+        "street_label:'Đường Huỳnh Văn Lũy',days_ago:0,"
+        "card_date_reason:'posted',prop_type:'dat_nen',"
+        "prop_type_label:'Đất nền',source:'facebook'})"
+    )
+    assert signal == {
+        "id": 42,
+        "title": "Lô góc",
+        "thumbnail": "signal.jpg",
+        "price_ty": 2.15,
+        "area_m2": 90,
+        "mos_pct": 24.5,
+        "ward": "Phú Lợi",
+        "road_name": "Đường Huỳnh Văn Lũy",
+        "days_ago": 0,
+        "card_date_reason": "posted",
+        "prop_type": "dat_nen",
+        "prop_type_label": "Đất nền",
+        "source": "facebook",
+    }
+
+    listing = _run_node(
+        "mapApi.recentItemModel({id:7,title:'Nhà phố',imgs:['listing.webp'],"
+        "price_ty:4.3,area_m2:68,mos_pct:18,ward:'An Phú',"
+        "road_name:'ĐT743',days_ago:1,property_type:'nha_dat'})"
+    )
+    assert listing["thumbnail"] == "listing.webp"
+    assert listing["prop_type"] == "nha_dat"
+    assert listing["road_name"] == "ĐT743"
+
+
 def test_share_url_preserves_tab_and_repeated_filters_without_private_state():
     url = _run_node(
         "mapApi.buildMapShareUrl({mode:'all',query:"
