@@ -60,6 +60,7 @@ body.listing-map-open .sidebar {
 }
 
 .listing-map-filter-button,
+.listing-map-focus-button,
 .listing-map-grid-button {
   min-height: 40px;
   padding: 0 12px;
@@ -83,12 +84,54 @@ body.listing-map-open .sidebar {
   display: inline-flex;
 }
 
+.listing-map-focus-button {
+  display: inline-flex;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border, #334155);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card, #1e293b) 94%, #6366f1 6%);
+  color: var(--text, #f8fafc);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  align-items: center;
+  gap: 7px;
+}
+
 .listing-map-filter-button:hover,
+.listing-map-focus-button:hover,
 .listing-map-grid-button:hover,
 .listing-map-filter-button:focus-visible,
+.listing-map-focus-button:focus-visible,
 .listing-map-grid-button:focus-visible {
   border-color: #818cf8;
   background: color-mix(in srgb, var(--card, #1e293b) 84%, #6366f1 16%);
+}
+
+.listing-map-focus-button[aria-pressed="true"] {
+  border-color: #818cf8;
+  background: color-mix(in srgb, var(--card, #1e293b) 78%, #6366f1 22%);
+}
+
+body.listing-map-focus-mode .sidebar {
+  display: none !important;
+}
+
+body.listing-map-focus-mode .listing-map-workspace {
+  left: 0;
+}
+
+.listing-map-workspace.is-focus-mode .listing-map-workspace-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.listing-map-workspace.is-focus-mode .listing-map-filter-button,
+.listing-map-workspace.is-focus-mode .listing-map-filter-summary,
+.listing-map-workspace.is-focus-mode .listing-map-panel,
+.listing-map-workspace.is-focus-mode .listing-map-mobile-sheet {
+  display: none !important;
 }
 
 .listing-map-edit-toggle {
@@ -993,6 +1036,18 @@ textarea.listing-map-admin-input {
     min-height: 40px;
     padding: 0 9px;
     font-size: 0.66rem;
+  }
+
+  .listing-map-focus-button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .listing-map-focus-button span {
+    display: none;
   }
 
   .listing-map-grid-button {

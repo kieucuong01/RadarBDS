@@ -76,6 +76,7 @@
     markerFrameId: null,
     markerRenderCount: 0,
     sheetExpanded: false,
+    focusMode: false,
     mapActionControl: null,
     locationButton: null,
     shareButton: null,
@@ -871,6 +872,44 @@
     return root && root.document
       ? root.document.getElementById(id)
       : null;
+  }
+
+  function setFocusMode(enabled) {
+    state.focusMode = Boolean(enabled);
+    if (state.workspace) {
+      state.workspace.classList.toggle("is-focus-mode", state.focusMode);
+    }
+    if (root && root.document && root.document.body) {
+      root.document.body.classList.toggle(
+        "listing-map-focus-mode",
+        state.focusMode
+      );
+    }
+    var button = element("listingMapFocusButton");
+    var label = element("listingMapFocusLabel");
+    if (button) {
+      button.setAttribute("aria-pressed", state.focusMode ? "true" : "false");
+      button.setAttribute(
+        "aria-label",
+        state.focusMode
+          ? "Hiện bộ lọc và danh sách deal"
+          : "Tập trung bản đồ"
+      );
+    }
+    if (label) {
+      label.textContent = state.focusMode ? "Hiện bảng" : "Toàn màn hình";
+    }
+    if (state.map && root && typeof root.setTimeout === "function") {
+      root.setTimeout(function () {
+        if (state.map) state.map.invalidateSize({ pan: false });
+      }, 0);
+    }
+    return state.focusMode;
+  }
+
+  function toggleFocusMode() {
+    if (!state.open) return false;
+    return setFocusMode(!state.focusMode);
   }
 
   function setStatus(text, busy) {
@@ -2897,6 +2936,7 @@
     state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
     state.dashboardSyncNeeded = false;
     setMobileSheetExpanded(false);
+    setFocusMode(false);
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
     var filterSummary = element("listingMapFilterSummary");
@@ -2993,6 +3033,7 @@
     setStatus("", false);
     if (state.workspace) state.workspace.hidden = true;
     setMobileSheetExpanded(false);
+    setFocusMode(false);
     root.document.body.classList.remove("listing-map-open");
     var launcher = element("listingMapLauncher");
     if (launcher) launcher.setAttribute("aria-expanded", "false");
@@ -3197,6 +3238,7 @@
     shouldCloseMapOnPopstate: shouldCloseMapOnPopstate,
     loadLeaflet: loadLeaflet,
     toggleAdminEditMode: toggleAdminEditMode,
+    toggleFocusMode: toggleFocusMode,
     showRecent: showRecent,
     showLocations: showLocations,
     isOpen: isOpen,
