@@ -72,38 +72,22 @@ Queue schema summary:
 
 ## Facebook Page copy standard
 
-Agency `social-media-strategist` audited the first auto-post template and scored it **6.5/10**: safe and data-driven, but too much like an RSS announcement. The queue script now uses Facebook-native deterministic variants instead of the old `Bài mới trên Radar BDS...` hook.
+Page Care uses `scripts/rb_social_editorial.py`, not the retired ward-card statistics dump. Each post must answer a concrete reader question and give a useful next action without requiring a click. No medians, raw ratios, invented anecdotes or promised returns in everyday Facebook copy.
 
-Current encoded rules in `scripts/radar_social_queue.py`:
+- `scripts/rb_social_reader_topics.py` holds eight source-reviewed evergreen adaptations: price table vs asking price; asking vs transaction price; price/m² vs total budget; house vs bare land; comparable listings; when to use valuation tools; interpreting Radar priority; reading price reductions. Each has its own topic, reader benefit and required source-section references. Exact article paths are matched, not loose keywords.
+- Valid authored copy takes precedence and keeps paragraph breaks. Structured two-ward budget comparisons retain source counts, property type, threshold and date. Listing counts may include reposts and are not unique available houses.
+- Metadata records `copy_origin`, `reader_angle_ready`, source URL/date and referenced sections. `radar_social_auto_post.editorial_candidates` excludes generic legacy fallback copy, even if its vocabulary is clean. The fallback remains available for review diagnostics, not for filling an automatic Facebook slot.
+- This is a reviewed source-topic library, not an unlimited news writer. New article intents need a grounded editorial angle. Tests verify routing/data invariants, not writing quality; inspect the actual review caption.
+- Keep links truthful and UTM-tagged. Do not claim a homepage link is already ward-filtered. No mandatory three-bullet shape or repeated warning paragraph.
+- Images follow the separate Gemini Page Care flow. Caption-only edits do not modify Gemini/Shorts, published history or cron timing.
 
-- Use 3 rotating variants by `sha1(slug) % 3`: `data_first`, `problem_first`, `signal_first`.
-- Start with local data or buyer problem, not with “Bài mới”.
-- Render prices as **“giá rao trung vị”**.
-- Prioritize these facts: listing count, đất nền median, nhà đất median, `tin có dấu hiệu đáng kiểm tra`.
-- CTA in the status itself for data-like posts: “Vào radarbds.vn → lọc phường <ward> để xem từng tin đang rao”. Use a ward-filtered `radarbds.vn` URL first, then the article/report URL if useful.
-- Append UTM: article links use `utm_source=facebook&utm_medium=organic&utm_campaign=daily_article&utm_content=<slug>`; ward-filter links use `utm_campaign=ward_filter&utm_content=<slug>-ward-filter`.
-- Use max 3 hashtags, normally `#RadarBDS #BinhDuong #<WardNoAccent>`.
-- Hard-block hype/compliance-risk phrases: `deal ngon`, `lời chắc`, `cam kết lợi nhuận`, `sinh lời`, `cơ hội vàng`, `rẻ nhất`, `dưới giá thị trường`, `hot nhất`, `sốt đất`.
+Preview without publishing:
 
-Default data-first shape:
-
-```text
-Giá rao {phường} 14 ngày qua có {số_tin} tin Radar đang theo dõi.
-
-• Đất nền: giá rao trung vị {giá_đất_nền}
-• Nhà đất: giá rao trung vị {giá_nhà_đất}
-• {số_tin} tin có dấu hiệu đáng kiểm tra
-
-Đừng gộp 2 loại hình khi so giá.
-
-Vào radarbds.vn → lọc phường {phường} để xem từng tin đang rao:
-{ward_filter_url_utm}
-
-Bài phân tích dữ liệu:
-{article_url_utm}
-
-#RadarBDS #BinhDuong #{PhuongKhongDau}
+```bash
+sudo -u radar /opt/radar-bds/.venv/bin/python scripts/radar_social_queue.py --slug bang-gia-dat-va-gia-rao-khac-nhau-the-nao --mode review --out-dir /opt/radar-bds/var/social_preview/reader-topics
 ```
+
+Do not use `--skip-verify` as source-health evidence. Review artifacts are not published records.
 
 ## Facebook Page posting
 

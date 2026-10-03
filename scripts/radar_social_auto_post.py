@@ -149,6 +149,29 @@ def article_candidates() -> list[tuple[str, str]]:
     return sorted(candidates, reverse=True)
 
 
+def gemini_page_images_enabled() -> bool:
+    """Default-on for this Page Care wrapper; opt out with RB_PAGECARE_GEMINI_IMAGES=0."""
+    value = os.environ.get("RB_PAGECARE_GEMINI_IMAGES", "1").strip().casefold()
+    return value not in {"0", "false", "no", "off"}
+
+
+def upgrade_queue_image(queue_path: Path) -> dict | None:
+    if not gemini_page_images_enabled():
+        log("Gemini image stage disabled by RB_PAGECARE_GEMINI_IMAGES")
+        return None
+    from scripts.rb_gemini_page_image import upgrade_queue_with_gemini_image
+
+    meta = upgrade_queue_with_gemini_image(
+        queue_path,
+        cdp_url=os.environ.get("RB_GEMINI_CDP_URL", "http://127.0.0.1:9225"),
+        timeout_seconds=int(os.environ.get("RB_GEMINI_IMAGE_TIMEOUT", "150")),
+        retry=int(os.environ.get("RB_GEMINI_IMAGE_RETRY", "1")),
+        force=os.environ.get("RB_GEMINI_IMAGE_FORCE", "0").strip().casefold() in {"1", "true", "yes", "on"},
+    )
+    log(f"Gemini image upgraded: {meta.get('final_image_path')} · provenance={meta.get('provenance_path')}")
+    return meta
+
+
 def create_queue(slug: str = "latest", *, style: str = "data_post", preview: bool = False) -> Path:
     output_dir = Path("/opt/radar-bds/var/social_preview") if preview else QUEUE_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -160,6 +183,7 @@ def create_queue(slug: str = "latest", *, style: str = "data_post", preview: boo
     path = Path(first)
     if not path.exists():
         raise SystemExit(f"Queue script did not return an existing file. Output:\n{proc.stdout}")
+    upgrade_queue_image(path)
     log(f"Queue created: {path} · style={style}")
     return path
 
@@ -218,6 +242,24 @@ def rank_editorial_candidates(rows: list[dict], recent: list[dict]) -> list[dict
     return eligible
 
 
+def _topic_signature(slug: str) -> str:
+    """Coarse topic family so the same shape of post is not queued repeatedly."""
+    text = slug.casefold()
+    if "hien-bao-nhieu" in text:
+        return "ward-price-figure"
+    if "nen-xem-khu-nao" in text or "-hay-" in text:
+        return "pairwise-area-choice"
+    if "khu-nao" in text and "kiem-tra" in text:
+        return "where-to-check"
+    if "duoi-" in text and "ty" in text:
+        return "budget-bracket"
+    if "la-gi" in text or "the-nao" in text:
+        return "concept-explainer"
+    if "bao-cao" in text:
+        return "monthly-report"
+    return text
+
+
 def editorial_candidates(posted: dict) -> list[dict]:
     if str(REPO) not in sys.path:
         sys.path.insert(0, str(REPO))
@@ -242,6 +284,10 @@ def editorial_candidates(posted: dict) -> list[dict]:
         draft = build_editorial(page, "https://radarbds.vn" + page["path"], slug, make_visual=False)
         if draft["status"] != "ready":
             continue
+        # A clean generic paragraph is not a useful Facebook angle. Keep it in
+        # review diagnostics, never select it merely to fill today's slot.
+        if draft["metadata"].get("reader_angle_ready") is not True:
+            continue
         rows.append({"date": article_date, "slug": slug, "pillar": draft["pillar"], "topic": draft["metadata"]["topic"]})
     # rank_editorial_candidates drops any topic already used recently. That guard
     # is meant to stop repeating the *same angle*, not to starve the queue when a
@@ -263,6 +309,31 @@ def create_unposted_queue(posted: dict, *, preview: bool = False) -> Path:
             # One dead/blocked article must not cause publishing stale content.
             log(f"Skip blocked editorial candidate {row['slug']}: {exc}")
     raise SystemExit("No source-qualified, non-repeating editorial candidate; no post made")
+
+
+def backfill_editorial_queue(posted: dict, *, limit: int = 10, per_topic: int = 1) -> list[Path]:
+    """Rebuild review queue items using the current engine, topic-diverse.
+
+    Legacy queue files carry the old robotic captions and must not be published.
+    This rewrites page review artifacts only; posted history is never touched.
+    """
+    uploaded = list(posted.values()) if isinstance(posted, dict) else []
+    used_topics: dict[str, int] = {}
+    written: list[Path] = []
+    for row in editorial_candidates(posted):
+        sig = _topic_signature(row["slug"])
+        if used_topics.get(sig, 0) >= per_topic:
+            continue
+        try:
+            path = create_queue(row["slug"], style="data_post")
+        except SystemExit as exc:
+            log(f"Skip blocked editorial candidate {row['slug']}: {exc}")
+            continue
+        used_topics[sig] = used_topics.get(sig, 0) + 1
+        written.append(path)
+        if len(written) >= limit:
+            break
+    return written
 
 
 def queue_key(queue_path: Path) -> tuple[str, str, str]:

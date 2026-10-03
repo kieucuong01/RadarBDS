@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -149,3 +150,25 @@ def test_page_care_style_rotates_on_tuesday_and_thursday():
     assert mod.page_care_style_for_date(dt.date(2026, 8, 10)) == "data_post"
     assert mod.page_care_style_for_date(dt.date(2026, 8, 11)) == "market_pulse"
     assert mod.page_care_style_for_date(dt.date(2026, 8, 13)) == "market_pulse"
+
+
+def test_create_queue_runs_gemini_upgrade_for_preview_path(tmp_path, monkeypatch):
+    queue = tmp_path / "page-review.json"
+    queue.write_text('{"target":{"platform":"facebook","surface":"page"},"content":{}}', encoding="utf-8")
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args[0], 0, stdout=str(queue) + "\n", stderr="")
+
+    upgraded = []
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    monkeypatch.setattr(mod, "upgrade_queue_image", lambda path: upgraded.append(path) or {"final_image_path": "/gemini.png"})
+
+    assert mod.create_queue("abc", preview=True) == queue
+    assert upgraded == [queue]
+
+
+def test_gemini_page_images_can_be_disabled(monkeypatch):
+    monkeypatch.setenv("RB_PAGECARE_GEMINI_IMAGES", "0")
+    assert mod.gemini_page_images_enabled() is False
+    monkeypatch.setenv("RB_PAGECARE_GEMINI_IMAGES", "1")
+    assert mod.gemini_page_images_enabled() is True

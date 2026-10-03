@@ -220,7 +220,9 @@ def test_queue_create_uses_editorial_schema_and_self_comment_without_fake_ward(t
 
     assert item["content"]["generated_by"] == "rb_social_editorial"
     assert item["content"]["editorial"]["pillar"] == "map_guide"
-    assert "utm_medium=pinned_comment" in item["content"]["self_comment"]
+    assert "utm_medium=social" in item["content"]["self_comment"]
+    assert "utm_campaign=rb_content_v2" in item["content"]["self_comment"]
+    assert item["content"]["self_comment"].count("radarbds.vn") == 1
     assert "ward=Th%E1%BB%A7" not in item["content"]["self_comment"]
     assert "13%20ph%C6%B0%E1%BB%9Dng" not in item["content"]["self_comment"]
     assert item["content"]["message"] == item["content"]["editorial"]["caption"]
