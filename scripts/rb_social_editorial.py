@@ -9,6 +9,7 @@ caption as useful Vietnamese buyer guidance that stands on its own.
 from __future__ import annotations
 
 import datetime as dt
+import html
 import re
 import textwrap
 import unicodedata
@@ -95,6 +96,8 @@ FORBIDDEN_CAPTION_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("median-jargon", re.compile(r"trung vị", re.I)),
     ("mos-jargon", re.compile(r"\bMOS\b", re.I)),
     ("signal-jargon", re.compile(r"tín hiệu", re.I)),
+    ("snapshot-jargon", re.compile(r"snapshot", re.I)),
+    ("flag-jargon", re.compile(r"dấu hiệu", re.I)),
     ("valid-sample-jargon", re.compile(r"mẫu hợp lệ", re.I)),
     ("pipeline-label", re.compile(r"property_type|Số liệu đang ghi nhận", re.I)),
     ("raw-ratio", RAW_RATIO_RE),
@@ -114,7 +117,7 @@ def absolute_url(path_or_url: str) -> str:
     return SITE + path_or_url
 
 
-def utm_url(url: str, slug: str, *, campaign: str = "rb_editorial", medium: str = "pinned_comment") -> str:
+def utm_url(url: str, slug: str, *, campaign: str = "rb_content_v2", medium: str = "social") -> str:
     parsed = urllib.parse.urlsplit(url)
     query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
     query.update(
@@ -181,7 +184,18 @@ def evidence_from_page(page: dict[str, Any]) -> list[dict[str, str]]:
 
 def caption_quality_issues(caption: str) -> list[str]:
     text = _plain(caption)
-    issues = [name for name, pattern in FORBIDDEN_CAPTION_PATTERNS if pattern.search(text)]
+    issues: list[str] = []
+    budget_text = re.sub(
+        r"\b(?:dưới|trên|tầm|khoảng|ngân sách|trần)\s+\d[\d.,]*\s+tỷ\b",
+        "",
+        text,
+        flags=re.I,
+    )
+    ratio_text = re.sub(r"\b\d{1,2}/\d{1,2}/\d{4}\b", "", text)
+    for name, pattern in FORBIDDEN_CAPTION_PATTERNS:
+        target = budget_text if name == "naked-price" else ratio_text if name == "raw-ratio" else text
+        if pattern.search(target):
+            issues.append(name)
     if re.search(r"\b0\s+tin\s+(?:có|nổi bật|đáng)", text, re.I):
         issues.append("missing-as-zero")
     return issues
@@ -295,11 +309,153 @@ def _default_topic(page: dict[str, Any], pillar: str) -> str:
     return _plain(editorial.get("topic") or PILLARS[pillar]["label"])
 
 
+def _clean_authored_caption(value: Any) -> str:
+    """Sanitize authored caption text without flattening deliberate paragraphs."""
+    text = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"(?i)<\s*br\s*/?\s*>", "\n", text)
+    text = re.sub(r"(?i)</\s*p\s*>\s*<\s*p(?:\s+[^>]*)?>", "\n\n", text)
+    text = re.sub(r"(?i)</\s*(?:p|div|li|h[1-6])\s*>", "\n\n", text)
+    text = re.sub(r"(?i)<\s*(?:p|div|li|h[1-6])(?:\s+[^>]*)?>", "", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html.unescape(text)
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n")]
+    cleaned = "\n".join(lines).strip()
+    return re.sub(r"\n{3,}", "\n\n", cleaned)
+
+
+def _parse_count(value: Any) -> int | None:
+    text = _plain(value)
+    if not text:
+        return None
+    match = re.search(r"\d[\d.,]*", text)
+    if not match:
+        return None
+    number = match.group(0).replace(".", "").replace(",", "")
+    try:
+        parsed = int(number)
+    except ValueError:
+        return None
+    return parsed if parsed >= 0 else None
+
+
+def _split_ward_type(row: dict[str, Any]) -> tuple[str, str] | None:
+    label = _plain(row.get("ward_type") or row.get("area_type") or row.get("label") or row.get("ward"))
+    parts = [part.strip() for part in re.split(r"\s*[·|/-]\s*", label) if part.strip()]
+    if len(parts) < 2:
+        return None
+    ward = parts[0]
+    property_type = parts[-1].casefold()
+    return ward, property_type
+
+
+def _display_date(iso_date: str) -> str:
+    try:
+        parsed = dt.date.fromisoformat(iso_date[:10])
+    except ValueError:
+        return iso_date
+    return parsed.strftime("%d/%m/%Y")
+
+
+def _structured_ward_budget_caption(page: dict[str, Any]) -> str:
+    snapshot_value = page.get("market_snapshot")
+    snapshot = snapshot_value if isinstance(snapshot_value, dict) else {}
+    rows_value = snapshot.get("rows")
+    rows = rows_value if isinstance(rows_value, list) else []
+    if not rows:
+        return ""
+
+    title_path = " ".join([short_title(page), _plain(page.get("path"))])
+    title_path_folded = _strip_accents(title_path).casefold()
+    if " hay " not in title_path_folded and "-hay-" not in title_path_folded:
+        return ""
+
+    parsed_rows: list[tuple[str, str, dict[str, Any]]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            return ""
+        parsed = _split_ward_type(row)
+        if not parsed:
+            return ""
+        ward, property_type = parsed
+        if not is_real_area(ward):
+            return ""
+        parsed_rows.append((ward, property_type, row))
+
+    all_wards = {ward for ward, _, _ in parsed_rows}
+    if len(all_wards) != 2:
+        return ""
+    if not all(_strip_accents(ward).casefold() in title_path_folded for ward in all_wards):
+        return ""
+
+    comparable = [(ward, row) for ward, property_type, row in parsed_rows if property_type == "nhà đất"]
+    if len(comparable) != 2 or {ward for ward, _ in comparable} != all_wards:
+        return ""
+
+    budget_key = "under3"
+    budget_label = "3"
+    counts = [(ward, _parse_count(row.get(budget_key))) for ward, row in comparable]
+    if any(count is None for _, count in counts):
+        budget_key = "under4"
+        budget_label = "4"
+        counts = [(ward, _parse_count(row.get(budget_key))) for ward, row in comparable]
+    if any(count is None for _, count in counts):
+        return ""
+    typed_counts: list[tuple[str, int]] = [(ward, count) for ward, count in counts if count is not None]
+
+    ordered = sorted(typed_counts, key=lambda item: item[1], reverse=True)
+    high_ward, high_count = ordered[0]
+    low_ward, low_count = ordered[1]
+    title_order = [area for area in sorted(all_wards, key=lambda ward: title_path_folded.find(_strip_accents(ward).casefold()))]
+    question = f"Tìm nhà đất giá rao dưới {budget_label} tỷ: {title_order[0]} hay {title_order[1]}?"
+    date = _display_date(article_date(page))
+
+    if high_count == low_count:
+        direction = (
+            f"Hai bên đang ngang nhau ở mức {high_count} tin nhà đất dưới {budget_label} tỷ. "
+            "Nếu cả hai đều hợp đường đi, hãy mở song song rồi loại dần theo vị trí, đường vào và diện tích."
+        )
+        caveat_count = high_count
+    else:
+        direction = (
+            f"Dữ liệu bài ngày {date} ghi {high_ward} có {high_count} tin nhà đất dưới {budget_label} tỷ; "
+            f"{low_ward} có {low_count} tin. Nếu cả hai khu đều hợp đường đi, nên bắt đầu ở {high_ward} "
+            "để có nhiều tin đọc trước — đây không phải khuyến nghị mua."
+        )
+        caveat_count = high_count
+
+    return (
+        f"{question}\n\n"
+        f"{direction}\n\n"
+        "Giá thấp hơn chưa đủ để đi xem ngay: còn phải so khoảng cách đi lại, đường vào, diện tích và vị trí từng tin. "
+        "Trước khi hẹn xem, hỏi người bán tin còn hàng không và giá chào hiện tại là bao nhiêu.\n\n"
+        f"Số tin có thể gồm bài đăng lại; không phải {caveat_count} căn riêng biệt. "
+        "Các mức giá trong bài là giá rao, không phải giá đã bán. Bài phân tích và bộ lọc để ở bình luận đầu tiên."
+    )
+
+
+def _reader_copy_details(page: dict[str, Any]) -> dict[str, Any]:
+    from scripts.rb_social_reader_topics import source_topic
+
+    editorial_value = page.get("social_editorial")
+    editorial = editorial_value if isinstance(editorial_value, dict) else {}
+    authored = _clean_authored_caption(editorial.get("caption"))
+    if authored and not caption_quality_issues(authored):
+        return {"caption": authored, "copy_origin": "authored", "reader_angle_ready": True}
+    reader_budget = _structured_ward_budget_caption(page)
+    if reader_budget:
+        return {"caption": reader_budget, "copy_origin": "budget_comparison", "reader_angle_ready": True}
+    topic = source_topic(page)
+    if topic:
+        return {**topic, "copy_origin": "source_topic", "reader_angle_ready": True}
+    return {"copy_origin": "legacy_fallback", "reader_angle_ready": False}
+
+
 def _caption_for_pillar(page: dict[str, Any], pillar: str) -> str:
-    editorial = page.get("social_editorial") if isinstance(page.get("social_editorial"), dict) else {}
-    authored = _plain(editorial.get("caption"))
-    if authored:
-        return authored
+    editorial_value = page.get("social_editorial")
+    editorial = editorial_value if isinstance(editorial_value, dict) else {}
+    copy_details = _reader_copy_details(page)
+    if copy_details.get("caption"):
+        return str(copy_details["caption"])
 
     area = extract_area(page)
     area_phrase = area if area != "khu vực này" else "khu đang xem"
@@ -525,23 +681,21 @@ def _strip_internal_params(url: str) -> str:
 def build_self_comment(page: dict[str, Any], url: str, slug: str) -> str:
     editorial = page.get("social_editorial") if isinstance(page.get("social_editorial"), dict) else {}
     destination = _plain(editorial.get("radar_url") or editorial.get("cta_url") or page.get("primary_href") or url)
-    # Internal filter params (mos_min, tab=signals...) must never reach a reader
-    # link. Strip them so the pinned comment opens a clean Radar page.
+    # Keep one relevant destination. A ward filter represented only by internal
+    # query params cannot be safely stripped: doing so turns it into the homepage.
+    # Fall back to the matching article rather than sending readers to an unfiltered root.
+    article_destination = _strip_internal_params(absolute_url(url))
     destination_url = _strip_internal_params(absolute_url(destination))
+    destination_parts = urllib.parse.urlsplit(destination_url)
+    if destination_parts.netloc.casefold() == urllib.parse.urlsplit(SITE).netloc.casefold() and destination_parts.path in {"", "/"}:
+        destination_url = article_destination
     area = extract_area(page)
-    article_link = utm_url(absolute_url(url), slug, campaign="rb_editorial_article", medium="pinned_comment")
-    main_link = utm_url(destination_url, slug, campaign="rb_editorial", medium="pinned_comment")
-    if is_real_area(area) and destination_url == absolute_url(url):
-        # Ward filter deep-link also stays free of internal params/tab names.
-        filter_link = utm_url(
-            _strip_internal_params(f"{SITE}/?tab=signals&ward={urllib.parse.quote_plus(area)}"),
-            f"{slug}-{slug_hashtag(area)}",
-            campaign="ward_filter",
-            medium="pinned_comment",
-        )
+    article_link = utm_url(article_destination, slug)
+    main_link = utm_url(destination_url, slug)
+    if destination_url == article_destination:
+        label = f"Bài Radar về {area}" if is_real_area(area) else "Bài Radar liên quan"
         return (
-            f"Muốn tự đối chiếu thêm, anh chị có thể mở nhóm tin {area}: {filter_link}\n\n"
-            f"Bài Radar liên quan: {article_link}\n\n"
+            f"{label}: {article_link}\n\n"
             "Radar BDS dùng dữ liệu giá rao để lọc ban đầu; trước khi quyết định mua vẫn cần kiểm tra thực tế, vị trí và giấy tờ."
         )
     return (
@@ -592,6 +746,8 @@ def build_editorial(
         "reader_benefit": _reader_benefit(page, pillar),
         "quality_issues": quality_issues,
     }
+    copy_details = _reader_copy_details(page)
+    metadata.update({key: value for key, value in copy_details.items() if key != "caption"})
     status = "blocked" if blocking_reasons else "ready"
     if status == "blocked" and mode == "publish":
         raise ValueError("editorial draft is blocked: " + "; ".join(blocking_reasons))
