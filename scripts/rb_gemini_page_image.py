@@ -24,7 +24,7 @@ from typing import Any
 
 from PIL import Image, ImageDraw, ImageFont
 
-REPO = Path("/opt/radar-bds/current")
+REPO = Path(__file__).resolve().parents[1]
 ASSET_DIR = Path("/opt/radar-bds/var/social_assets/gemini-page")
 DEFAULT_CDP_URL = "http://127.0.0.1:9225"
 MODEL_LABEL = "Gemini web image generation"

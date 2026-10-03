@@ -23,7 +23,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-REPO = Path("/opt/radar-bds/current")
+REPO = Path(__file__).resolve().parents[1]
 DEFAULT_OUT_DIR = Path("/opt/radar-bds/var/social_preview/news")
 DEFAULT_LOCK = Path("/opt/radar-bds/var/social_queue/rb_page_news_workflow.lock")
 PAGE_URL = "https://www.facebook.com/radarbdsvn/"

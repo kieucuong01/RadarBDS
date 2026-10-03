@@ -4,7 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 
-MODULE_PATH = Path("/opt/radar-bds/current/scripts/rb_gemini_page_image.py")
+MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "rb_gemini_page_image.py"
 spec = importlib.util.spec_from_file_location("rb_gemini_page_image", MODULE_PATH)
 assert spec and spec.loader
 mod = importlib.util.module_from_spec(spec)
