@@ -370,7 +370,7 @@ def add_self_comment(permalink):
                 const text = (el.innerText || el.ariaLabel || el.getAttribute('aria-label') || el.textContent || '').trim();
                 const disabled = el.getAttribute('aria-disabled') === 'true' || el.disabled;
                 const r = el.getBoundingClientRect();
-                if (labels.test(text) && !disabled && r.width > 18 && r.height > 18) {{
+                if (labels.test(text) && !disabled && r.width > 8 && r.height > 8) {{
                     return {{found: true, x: r.x + r.width / 2, y: r.y + r.height / 2, text}};
                 }}
             }}
