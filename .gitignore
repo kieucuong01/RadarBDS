@@ -68,3 +68,6 @@ graphify-out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Timestamped local backups (never commit)
+*.bak-*
