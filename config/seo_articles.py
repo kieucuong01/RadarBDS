@@ -23514,7 +23514,7 @@ SEO_ARTICLES = {
                  'note': 'Tin Facebook đang theo dõi từ 17/09 đến 30/09/2026; có thể gồm bài đăng lại của cùng một '
                          'lô.'},
  'primary_cta': 'Lọc đất nền theo phường',
- 'primary_href': '/?tab=listings&property_type=dat_nen&date_range=all',
+ 'primary_href': '/?tab=signals&prop_type=dat_nen&date_range=all',
  'secondary_cta': 'Dùng công cụ định giá',
  'secondary_href': '/dinh-gia-bds',
  'property_card': {'status': 'Kết luận nhanh',
@@ -23786,7 +23786,7 @@ SEO_ARTICLES = {
                'body': 'Mở Radar để lọc đất nền theo phường và tổng giá. Sau đó mở từng tin, đối chiếu diện tích, '
                        'đường vào, thổ cư và giấy tờ trước khi hẹn xem.',
                'button': 'Mở Radar',
-               'button_href': '/?tab=listings&property_type=dat_nen&date_range=all'},
+               'button_href': '/?tab=signals&prop_type=dat_nen&date_range=all'},
  'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
                  {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'},
                  {'name': 'Đất nền Bình Dương theo diện tích',
