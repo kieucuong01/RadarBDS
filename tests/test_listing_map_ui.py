@@ -26,6 +26,17 @@ def _chrome_executable():
     pytest.skip("Chrome/Chromium executable is unavailable")
 
 
+def _map_asset_versions(markup: str) -> dict[str, str]:
+    versions = {}
+    for asset in ("js/main/listing_map.js", "css/main/listing_map.css"):
+        lines = [line for line in markup.splitlines() if asset in line]
+        assert len(lines) == 1
+        match = re.search(r"\?v=([A-Za-z0-9-]+)", lines[0])
+        assert match is not None
+        versions[asset] = match.group(1)
+    return versions
+
+
 def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     response = _client().get("/")
 
@@ -77,7 +88,8 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'name="date_range" value="all"' not in html
     assert "static/js/main/listing_map.js" in html
     assert "static/css/main/listing_map.css" in html
-    assert html.count("listing-map-newest-rail-20261003") == 2
+    versions = _map_asset_versions(html)
+    assert versions["js/main/listing_map.js"] == versions["css/main/listing_map.css"]
     assert "listing-map-admin-edit-mode-20260820" not in html
     assert "listing-map-singleton-modal-20260814" not in html
     assert "listing-map-touch-target-20260814" not in html
@@ -379,13 +391,14 @@ def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
     )
 
 
-def test_listing_map_assets_use_touch_target_cache_version():
+def test_listing_map_assets_share_cache_version():
     from pathlib import Path
 
     root = Path(__file__).resolve().parent.parent
     template = (root / "templates/index.html").read_text(encoding="utf-8")
 
-    assert template.count("listing-map-newest-rail-20261003") == 2
+    versions = _map_asset_versions(template)
+    assert versions["js/main/listing_map.js"] == versions["css/main/listing_map.css"]
     assert "listing-map-admin-edit-mode-20260820" not in template
     assert "listing-map-singleton-modal-20260814" not in template
     assert "listing-map-touch-target-20260814" not in template

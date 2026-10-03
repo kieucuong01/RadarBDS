@@ -34,9 +34,12 @@ def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path):
     # self-comment with attribution, never as raw URL text inside the caption.
     assert item["content"]["generated_by"] == "rb_social_editorial"
     assert message.strip()
-    assert "utm_medium=pinned_comment" in self_comment
+    assert "utm_medium=social" in self_comment
     assert "utm_campaign=" in self_comment
     assert "radarbds.vn" in self_comment
+    assert "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay?" in self_comment
+    assert "tab=signals" not in self_comment
+    assert "ward=" not in self_comment
     assert "utm_campaign=page_article" in item["content"]["link"]
     assert item["content"]["link"] not in message
     assert "\n        •" not in message
