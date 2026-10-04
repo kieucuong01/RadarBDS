@@ -116,22 +116,21 @@ def send_watchlist_digest(
     """Send one compact VIP watchlist digest to a user's bound Telegram chat."""
     if not listings:
         return False
+    if os.getenv("TELEGRAM_DRY_RUN", "").strip() == "1":
+        return False  # Preview must not consume delivery/dedup state.
     base = (base_url or "").rstrip("/")
     dashboard_url = f"{base}/" if base else "/"
-    shown = listings[:max_items]
+    shown = listings[:max(1, min(max_items, 6))]
     older_count = max(len(listings) - len(shown), 0)
-    filter_text = ", ".join((watchlist_names or [])[:3])
+    filter_text = ", ".join(str(name)[:50] for name in (watchlist_names or [])[:3])
     if watchlist_names and len(watchlist_names) > 3:
         filter_text += f" +{len(watchlist_names) - 3}"
 
-    realert_count = sum(
-        1 for l in listings if l.get("_prev_notified_price_ty") is not None
-    )
-    header_title = "TIN MỚI + TIN GIẢM TIẾP" if realert_count else "TIN KHỚP WATCHLIST VIP"
+    header_title = "CẬP NHẬT BĐS ĐANG THEO DÕI"
 
     lines = [
         f"📡 <b>RADAR BDS - {header_title}</b>",
-        f"🎯 <b>{len(listings)} tin</b> đang khớp tiêu chí của bạn",
+        f"🎯 <b>{len(listings)} cập nhật</b> theo cài đặt của bạn",
     ]
     if filter_text:
         lines.append(f"🔎 Watchlist: <b>{_esc(filter_text)}</b>")
@@ -141,12 +140,11 @@ def send_watchlist_digest(
         lid = listing.get("id") or listing.get("listing_id")
         detail_url = f"{base}/listing/{lid}" if base and lid else dashboard_url
         title = _esc((listing.get("title") or "(không tên)")[:90])
-        ward = _esc(listing.get("ward") or listing.get("area") or "-")
-        ptype = _esc(listing.get("property_type") or "-")
+        ward = _esc(str(listing.get("ward") or listing.get("area") or "-")[:60])
+        ptype = _esc(str(listing.get("property_type") or "-")[:30])
         price_text = _fmt_ty(listing.get("price_ty"))
         area_text = _fmt_area(listing.get("area_m2"))
         mos_text = _fmt_pct(listing.get("mos_pct"))
-        tone = _deal_tone(listing.get("mos_pct"))
 
         prev_price = listing.get("_prev_notified_price_ty")
         realert_line = None
@@ -161,14 +159,18 @@ def send_watchlist_digest(
                 f"Giá mới: {_fmt_ty(cur_p)} (<b>-{drop:.1f}%</b>)"
             )
 
-        item_lines = ["", f"<b>{idx}. {tone}</b>"]
+        event = listing.get('_notification_event', 'new')
+        event_label = {'new': 'Tin mới', 'price_drop': 'Giảm giá',
+                       'source_removed': 'Tin đã bị gỡ khỏi nguồn — chưa xác nhận đã bán',
+                       'source_reappeared': 'Tin xuất hiện lại trên nguồn'}.get(event, 'Cập nhật')
+        item_lines = ["", f"<b>{idx}. {_esc(event_label)}</b>"]
         if realert_line:
             item_lines.append(realert_line)
         item_lines.extend([
             f"🔗 <a href=\"{_esc(detail_url)}\"><b>{title}</b></a>",
             f"💰 {price_text}  ·  📐 {area_text}  ·  📉 MOS {mos_text}",
             f"📍 {ward}  ·  {ptype}",
-            "ℹ️ Mở detail để xem lịch sử giá, comps và kiểm tra pháp lý/đường trước khi liên hệ.",
+            "ℹ️ Mở detail để kiểm tra dữ liệu và pháp lý trước khi liên hệ.",
         ])
         lines.extend(item_lines)
 

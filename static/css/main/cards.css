@@ -409,6 +409,14 @@
   display: none;
 }
 
+.saved-follow-card { display: flex; flex-direction: column; min-width: 0; }
+.saved-follow-card > .scard { flex: 1; }
+.saved-alert-control { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; background: var(--surface-solid); }
+.saved-alert-control button { align-self: flex-start; border: 1px solid var(--accent); border-radius: 7px; padding: 8px 12px; color: var(--accent); background: var(--surface-solid); cursor: pointer; }
+.saved-alert-control button[aria-pressed="true"] { background: #0f766e; color: white; }
+.saved-alert-control button:disabled { opacity: .6; cursor: wait; }
+.saved-alert-control small, .saved-alert-status { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+
 /* Signal Cards Grid */
 .cards-grid {
   display: grid;

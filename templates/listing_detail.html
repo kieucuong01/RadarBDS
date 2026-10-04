@@ -681,6 +681,20 @@ body.listing-detail-page {
     height: 38px;
   }
 }
+.listing-evidence { margin-top: 18px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.listing-evidence h2 { margin: 0 0 8px; font-size: 1rem; color: var(--text); }
+.listing-evidence h3 { margin: 0 0 7px; font-size: .82rem; color: var(--text); }
+.listing-evidence p, .listing-evidence li, .listing-evidence dd, .listing-evidence dt { font-size: .8rem; line-height: 1.65; }
+.listing-evidence p { margin: 0 0 12px; }
+.listing-evidence-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.listing-evidence ul { margin: 0; padding-left: 18px; }
+.listing-evidence dl { margin: 0; }
+.listing-evidence dt { color: var(--text-muted); }
+.listing-evidence dd { margin: 0 0 8px; color: var(--text); }
+.listing-evidence-note { color: var(--text-muted); }
+.listing-evidence-warning { color: var(--text); border-left: 3px solid #b7791f; padding-left: 10px; }
+.listing-evidence a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 600px) { .listing-evidence { padding: 16px; } .listing-evidence-grid { grid-template-columns: 1fr; gap: 14px; } }
 </style>
 </head>
 <body class="listing-detail-page">
@@ -806,6 +820,42 @@ body.listing-detail-page {
             {% if l.get('tho_cu_label') or l.get('tho_cu_m2') %}<span class="sm-tag-chip"><span class="sm-tag-icon">▣</span><span class="sm-tag-text">{{ l.get('tho_cu_label') or ('TC ' ~ l.get('tho_cu_m2') ~ ' m²') }}</span></span>{% endif %}
           </div>
         </div>
+
+        {% if evidence is defined %}
+        <section class="listing-evidence" aria-labelledby="listing-evidence-title">
+          <h2 id="listing-evidence-title">Bằng chứng định giá</h2>
+          <div class="listing-evidence-grid">
+            <div>
+              <h3>Vì sao giá thấp hơn mức tham khảo?</h3>
+              <p>{{ evidence.reason }}</p>
+              <p class="listing-evidence-note">{{ evidence.method_note }}</p>
+              {% if evidence.two_models %}<p class="listing-evidence-note">Hai mức định giá phía trên đến từ hai mô hình. Biên an toàn dùng mức tham khảo thấp hơn; đây không phải khoảng tin cậy thống kê.</p>{% endif %}
+            </div>
+            <div>
+              <h3>Mẫu so sánh</h3>
+              <p>{% if evidence.sample_count is not none %}Mô hình dùng cho biên an toàn có {{ evidence.sample_count }} mẫu trong nhóm định giá.{% else %}Chưa có số mẫu của nhóm định giá.{% endif %}</p>
+              {% if evidence.thin_sample %}<p class="listing-evidence-warning">Mẫu còn mỏng; cần đối chiếu thêm các lô cùng khu và đặc điểm sử dụng.</p>{% endif %}
+              <p class="listing-evidence-note">Các lô dưới đây để đối chiếu giá rao, không phải danh sách mẫu huấn luyện hay giao dịch đã xác nhận.</p>
+              <ul id="evidence-comparables" aria-live="polite"><li>Đang tải lô đối chiếu…</li></ul>
+              <a href="#detail-comps-body">Xem đầy đủ lô tương tự</a>
+            </div>
+            <div>
+              <h3>Thời điểm dữ liệu <span class="listing-evidence-note">(giờ Việt Nam)</span></h3>
+              <dl>
+                <dt>Định giá được tính</dt><dd>{{ evidence.valued_at or 'Chưa có dữ liệu' }}</dd>
+                <dt>Ngày đăng theo nguồn</dt><dd>{{ evidence.posted_at or 'Chưa có dữ liệu' }}</dd>
+                <dt>Thu thập dữ liệu</dt><dd>{{ evidence.crawled_at or 'Chưa có dữ liệu' }}</dd>
+                <dt>Lần thấy lại trên nguồn</dt><dd>{{ evidence.seen_at or 'Chưa có dữ liệu' }}</dd>
+              </dl>
+              <p class="listing-evidence-note">Thời điểm thu thập hoặc thấy lại không xác nhận lô vẫn còn bán.</p>
+            </div>
+            <div>
+              <h3>Thông tin cần xác minh</h3>
+              <ul>{% for item in evidence.unverified %}<li>{{ item }}</li>{% endfor %}</ul>
+            </div>
+          </div>
+        </section>
+        {% endif %}
 
         <div class="sm-mobile-tabs" role="tablist" aria-label="Nội dung chi tiết">
           <button type="button" class="sm-tab active" role="tab" aria-selected="true" data-sm-tab="desc" onclick="switchListingPanel('desc', this)">Mô tả</button>
@@ -1591,6 +1641,24 @@ function toggleModalComps(button) {
 }
 
 function renderComps(comps = []) {
+  const evidenceList = document.getElementById('evidence-comparables');
+  if (evidenceList) {
+    const rows = comps.filter(c => Number.isSafeInteger(Number(c.id)) && Number(c.id) > 0 && Number(c.id) !== {{ l['id'] }}).slice(0, 4);
+    evidenceList.replaceChildren();
+    if (!rows.length) {
+      const empty = document.createElement('li');
+      empty.textContent = 'Chưa có lô đối chiếu tải được. Không dùng việc thiếu mẫu để kết luận lô này rẻ.';
+      evidenceList.appendChild(empty);
+    }
+    rows.forEach(c => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = `/listing/${Number(c.id)}`;
+      link.textContent = `#${Number(c.id)} · ${c.ward || 'Chưa rõ khu vực'} · ${priceLabel(c.price_ty || c.price)} · ${formatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2)}`;
+      item.appendChild(link);
+      evidenceList.appendChild(item);
+    });
+  }
   const root = document.querySelector('[data-comparable-carousel]');
   if (!root || !window.RadarComparableCarousel) return;
   window.RadarComparableCarousel.mount(root, comps, { openMode: 'link' });

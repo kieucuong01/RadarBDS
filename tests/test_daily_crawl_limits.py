@@ -329,6 +329,25 @@ def test_facebook_crawl_propagates_raw_insert_failure():
     assert finish_run.call_args.kwargs["status"] == "error"
 
 
+def test_empty_facebook_run_records_each_completed_profile_without_new_raw():
+    class EmptyCrawler:
+        last_run_report = {
+            "attempted_profile_urls": ["https://www.facebook.com/empty"],
+            "completed_profile_urls": ["https://www.facebook.com/empty"],
+        }
+
+        def crawl_all(self, *args, **kwargs):
+            return []
+
+    with mock.patch('crawler.facebook_apify.FacebookApifyCrawler', return_value=EmptyCrawler()), \
+         mock.patch('db.crawl_runs.start_crawl_run', return_value=123), \
+         mock.patch('db.crawl_runs.finish_crawl_run'), \
+         mock.patch('db.crawl_runs.mark_url_done') as completed:
+        result = crawlers._facebook_crawl_to_raw(mode='incremental', profiles=[{'url': 'https://www.facebook.com/empty'}])
+    assert result['inserted'] == 0
+    completed.assert_called_once_with(123, 'https://www.facebook.com/empty', 0)
+
+
 def test_postprocess_downloads_processed_listing_images_first():
     calls = {}
     args = SimpleNamespace(no_reprocess=False)

@@ -2037,6 +2037,7 @@ class AdminControlRoomGateTest(unittest.TestCase):
                     crawled_at = (now - timedelta(days=idx // 6)).strftime("%Y-%m-%d %H:%M:%S")
                     raw_payload = {
                         "profile_url": profile_url,
+                        "date_raw": crawled_at,
                         "title": "Repost cập nhật cùng một lô đất DX124",
                         "description": "Bán đất nền Tân An đường DX124, giá rõ, diện tích rõ, có ảnh thực tế.",
                         "imgs": [f"https://example.test/image-{token}-{idx}.jpg"],

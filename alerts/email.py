@@ -16,6 +16,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 from email.utils import formataddr
+from html import escape
 from typing import Iterable
 
 logger = logging.getLogger(__name__)
@@ -99,13 +100,26 @@ def send_listing_alert(to_email: str, user_name: str | None, listings: Iterable[
     listings = list(listings)
     if not listings:
         return False
-    salutation = f"Chào {user_name}," if user_name else "Chào VIP,"
+    cfg = _smtp_config()
+    if cfg['dry_run'] or not _is_configured(cfg):
+        return False  # Only actual delivery may advance notification_log.
+    from config.settings import DASHBOARD_BASE_URL
+    base = DASHBOARD_BASE_URL.rstrip('/')
+    def event_text(listing):
+        event = listing.get('_notification_event', 'new')
+        if event == 'price_drop':
+            previous, current = listing.get('_prev_notified_price_ty'), listing.get('price_ty')
+            return f'Giảm giá: {previous} → {current} tỷ'
+        return {'new': 'Tin mới', 'source_removed': 'Tin đã bị gỡ khỏi nguồn — chưa xác nhận đã bán',
+                'source_reappeared': 'Tin xuất hiện lại trên nguồn'}.get(event, 'Cập nhật')
+    salutation = f"Chào {escape(user_name)}," if user_name else "Chào bạn,"
     rows = "\n".join(
         f'<tr><td style="padding:10px;border-bottom:1px solid #e5e7eb">'
-        f'<a href="/listing/{l.get("id","")}" style="color:#0f766e;text-decoration:none">'
-        f'<strong>{l.get("title","(không tên)")}</strong></a><br>'
-        f'<small style="color:#64748b">{l.get("ward","")} · '
-        f'{l.get("price_ty","?")} tỷ · MOS {l.get("mos_pct","?")}%</small>'
+        f'<a href="{escape(base, quote=True)}/listing/{int(l["id"])}" style="color:#0f766e;text-decoration:none">'
+        f'<strong>{escape(str(l.get("title") or "(không tên)"))}</strong></a><br>'
+        f'<strong>{escape(event_text(l))}</strong><br>'
+        f'<small style="color:#64748b">{escape(str(l.get("ward") or ""))} · '
+        f'{escape(str(l.get("price_ty") or "?"))} tỷ · MOS {escape(str(l.get("mos_pct") or "?"))}%</small>'
         f'</td></tr>'
         for l in listings[:10]
     )
@@ -113,12 +127,12 @@ def send_listing_alert(to_email: str, user_name: str | None, listings: Iterable[
              if len(listings) > 10 else '')
     html = f"""\
 <!doctype html><html><body style="font-family:Segoe UI,Roboto,Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#222">
-  <h2 style="color:#0f766e;margin:0 0 12px">🔔 {len(listings)} tin mới khớp watchlist VIP</h2>
+  <h2 style="color:#0f766e;margin:0 0 12px">🔔 {len(listings)} cập nhật BĐS đang theo dõi</h2>
   <p>{salutation}</p>
-  <p>RadarBDS vừa crawl được các tin sau khớp tiêu chí watchlist của bạn:</p>
+  <p>Cập nhật theo watchlist hoặc các BĐS đã lưu mà bạn đã bật thông báo:</p>
   <table style="width:100%;border-collapse:collapse;margin-top:8px">{rows}</table>
   {extra}
-  <p style="margin-top:16px"><a href="/" style="background:#0f766e;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Mở Dashboard</a></p>
-  <p style="color:#64748b;font-size:12px;margin-top:16px">— RadarBDS · Bạn nhận email này vì đăng ký watchlist VIP</p>
+  <p style="margin-top:16px"><a href="{escape(base, quote=True)}/bds-da-luu" style="background:#0f766e;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Mở BĐS đã lưu</a></p>
+  <p style="color:#64748b;font-size:12px;margin-top:16px">— RadarBDS · Quản lý thông báo từng BĐS tại BĐS đã lưu; quản lý watchlist và kênh nhận trong tài khoản.</p>
 </body></html>"""
-    return send_email(to_email, f"🔔 {len(listings)} tin mới khớp watchlist của bạn", html)
+    return send_email(to_email, f"🔔 {len(listings)} cập nhật BĐS đang theo dõi", html)

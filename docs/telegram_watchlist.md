@@ -7,7 +7,7 @@ This document is for agents touching VIP notifications, zrok/webhook setup, or T
 - One shared Telegram bot serves all users.
 - Each user links the bot through a unique `/start <token>`.
 - The app stores the user's private `users.telegram_chat_id`.
-- VIP/admin push sends only to that user's `telegram_chat_id`, filtered by that user's active watchlists.
+- VIP/admin push sends only to that user's linked chat/email, filtered by active watchlists or explicitly enabled saved-listing alerts. Global account channel preferences always apply.
 - `TELEGRAM_CHAT_ID` is no longer used for listing notifications. Do not add admin/global broadcasts back.
 
 ## Files
@@ -125,18 +125,18 @@ Watchlist fields:
 
 `push_new_listings_to_vip(since)`:
 
-1. Fetches new signal listings since timestamp.
+1. Fetches new/updated signals since timestamp and all previously notified or explicitly followed listings, in pages of 500. Old listings remain eligible for change detection.
 2. Fetches active, unexpired VIP users plus admin users with active watchlists.
 3. Groups unique matches per user.
-4. Sends one Telegram digest per user.
-5. Logs `notification_log` per user/listing/channel for idempotency.
+4. Sends at most 6 Telegram updates and 10 email updates per user/run, prioritizing changes. Overflow stays pending for the next run.
+5. Logs price, source state and event after actual successful delivery; commits each channel independently. Undelivered/overflow items have a `pending` record in `notification_log`, excluded from the delivery baseline and removed on success. They survive the next crawl window without scanning all historical signals. Failed channels retry without repeating successful channels. A PostgreSQL advisory lock prevents overlapping jobs.
 6. Updates `user_watchlists.last_notified_at`.
 
 ## Telegram Digest Format
 
 `alerts/telegram.py::send_watchlist_digest(...)` sends one VIP-only watchlist message:
 
-- Header: `RADAR BDS - TIN KHỚP WATCHLIST VIP`.
+- Header: `RADAR BDS - CẬP NHẬT BĐS ĐANG THEO DÕI`.
 - Summary count and matched watchlist names.
 - Up to 6 deals by default.
 - Each deal title is an HTML link to `/listing/<id>` under `DASHBOARD_BASE_URL`.
@@ -144,6 +144,18 @@ Watchlist fields:
 - Footer links to the dashboard and says how many older matches remain when applicable.
 
 Keep messages under Telegram's 4096-character limit. If increasing `max_items`, check message length.
+
+## Saved-listing alerts and meaningful changes
+
+- `/bds-da-luu` has a per-listing **Bật báo thay đổi** toggle. Saving alone does not subscribe. Free users may save; effective VIP/admin is required to enable alerts. Any signed-in owner may disable them.
+- `PATCH /api/favorites/<id>` accepts a JSON boolean `alert_enabled`. Ownership is enforced server-side. Enabling captures the current price/source status as baseline; repeated enable requests retain it. Disable/re-enable starts a new baseline.
+- `GET /api/favorites` retains `listing_ids` and adds `items` with per-listing `alert_enabled`.
+- Price alerts compare against the last successful notification on that channel (or opt-in baseline), with `SIGNAL_REALERT_THRESHOLD_PCT` (default 5%). Drops above 40%, invalid prices, unreachable sources and extraction-quality blockers are suppressed pending QC. A followed saved listing need not remain a signal to receive a valid price update.
+- Confirmed `inactive` triggers **tin bị gỡ khỏi nguồn — chưa xác nhận đã bán**; a subsequent `active` triggers **tin xuất hiện lại**. `unknown`/`unreachable` do not claim a sale or trigger source-state alerts.
+- Identical price/state does not send again. Notification timestamps use explicit UTC offsets; event ordering uses log IDs, preventing timezone skew from reviving old alerts.
+- Hidden/blacklisted listings and hidden Guland publishers are excluded; VIP notification titles undergo public redaction. Original source URLs/phones are not sent.
+- Dry-run or unconfigured delivery does not consume notification history. Provider success followed by a process crash before DB commit can still repeat on retry; these providers offer no transaction spanning delivery and PostgreSQL.
+- Schema initialization adds saved-listing opt-in/baseline fields and notification state/event fields; run with a role allowed to alter these tables before starting a release. No existing favorite is automatically opted in.
 
 ## Manual Test
 

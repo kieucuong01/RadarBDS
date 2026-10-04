@@ -33,7 +33,8 @@ latest_shadow_valuation AS MATERIALIZED (
            vsr.fair_ppm2, vsr.mos_pct, vsr.signal_score,
            vsr.trust_tier, vsr.trust_score,
            vsr.legal_status, vsr.legal_flags,
-           vsr.source_quality_flags, vsr.source_quality_recheck
+           vsr.source_quality_flags, vsr.source_quality_recheck,
+           vsr.n_segment, vsr.computed_at
     FROM valuation_shadow_results vsr
     ORDER BY vsr.listing_id, vsr.computed_at DESC, vsr.id DESC
 )
@@ -2323,6 +2324,12 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
         WITH {LATEST_VALUATION_CTE},
              {LATEST_SHADOW_VALUATION_CTE}
         SELECT l.*,
+               {actual_expr} AS valuation_actual_ppm2,
+               v.n_segment AS evidence_old_samples,
+               sv.n_segment AS evidence_new_samples,
+               v.computed_at AS evidence_old_computed_at,
+               sv.computed_at AS evidence_new_computed_at,
+               COALESCE(v.source_quality_flags, '') || ',' || COALESCE(sv.source_quality_flags, '') AS evidence_quality_flags,
                {listing_activity_at_sql('l')} AS activity_at,
                CASE WHEN COALESCE(v.is_signal,0)=1 OR COALESCE(sv.is_signal,0)=1 THEN 1 ELSE 0 END AS is_signal,
                ({display_mos_expr}) AS mos_pct,

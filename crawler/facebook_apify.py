@@ -60,12 +60,17 @@ def _coerce_crawl_every_days(raw) -> int:
     return cadence if cadence in {1, 3, 7} else 1
 
 
+def facebook_crawl_today() -> date:
+    """Use the same Vietnam calendar day in the roster and scheduled crawler."""
+    return datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=7))).date()
+
+
 def profile_due_on(profile: dict, on_date: date | None = None) -> bool:
     """Spread 3/7-day profiles across stable calendar buckets by URL."""
     cadence = _coerce_crawl_every_days(profile.get("crawl_every_days"))
     if cadence == 1:
         return True
-    day = on_date or datetime.now(timezone.utc).date()
+    day = on_date or facebook_crawl_today()
     url = (profile.get("url") or "").strip().encode("utf-8")
     bucket = int.from_bytes(hashlib.sha256(url).digest()[:4], "big") % cadence
     return day.toordinal() % cadence == bucket
@@ -205,6 +210,8 @@ class FacebookApifyCrawler:
             "completed_profiles": 0,
             "unattempted_profiles": 0,
             "actor_runs": 0,
+            "attempted_profile_urls": [],
+            "completed_profile_urls": [],
         }
 
     # ------------------------------------------------------------------
@@ -293,6 +300,9 @@ class FacebookApifyCrawler:
                 )
 
                 try:
+                    for profile in chunk:
+                        if profile["url"] not in self.last_run_report["attempted_profile_urls"]:
+                            self.last_run_report["attempted_profile_urls"].append(profile["url"])
                     items = self._run_actor(
                         run_input,
                         required_posts=expected_total,
@@ -341,10 +351,12 @@ class FacebookApifyCrawler:
                         if profile:
                             post["default_area"] = profile.get("default_area")
                             post["broker_name"] = profile.get("broker_name")
+                            post["profile_url"] = profile["url"]
                         adapted_all.append(post)
 
                 pending = pending[len(chunk):]
                 self.last_run_report["completed_profiles"] += len(chunk)
+                self.last_run_report["completed_profile_urls"].extend(profile["url"] for profile in chunk)
                 self.last_run_report["actor_runs"] += 1
 
         # Incremental filter

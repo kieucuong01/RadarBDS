@@ -126,6 +126,7 @@ from services.listing_map_overrides import (
     save_listing_override as save_listing_map_location_override,
 )
 from services.listing_comparables import load_listing_comparables
+from services.listing_evidence import build_listing_evidence
 from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed
 from services.listing_reports import (
     ListingReportError,
@@ -1188,18 +1189,46 @@ def api_update_watchlist(wid):
 
 @require_tier("free")
 def api_list_favorites():
+    from config.settings import SIGNAL_REALERT_THRESHOLD_PCT
     u = current_user()
     with db_mod.get_conn() as conn:
         rows = conn.execute(
             """
-            SELECT listing_id
+            SELECT listing_id, alert_enabled
               FROM user_favorite_listings
              WHERE user_id=?
              ORDER BY created_at DESC, id DESC
             """,
             (u["id"],),
         ).fetchall()
-    return jsonify({"ok": True, "listing_ids": [int(r["listing_id"]) for r in rows]})
+    return jsonify({"ok": True, "listing_ids": [int(r["listing_id"]) for r in rows], "alert_drop_threshold_pct": SIGNAL_REALERT_THRESHOLD_PCT,
+                    "items": [{"listing_id": int(r["listing_id"]), "alert_enabled": bool(r["alert_enabled"])} for r in rows]})
+
+
+@require_tier("free")
+def api_update_favorite_alert(listing_id):
+    u = current_user()
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or type(payload.get("alert_enabled")) is not bool:
+        return jsonify({"ok": False, "error": "invalid_alert_enabled"}), 400
+    enabled = payload["alert_enabled"]
+    if enabled and current_tier() not in ("vip", "admin"):
+        return jsonify({"ok": False, "error": "tier_required", "required_tier": "vip"}), 403
+    with db_mod.get_conn() as conn:
+        favorite = conn.execute("SELECT alert_enabled FROM user_favorite_listings WHERE user_id=? AND listing_id=? FOR UPDATE",
+                                (u["id"], listing_id)).fetchone()
+        if not favorite:
+            return jsonify({"ok": False, "error": "not_found"}), 404
+        if enabled and not favorite["alert_enabled"]:
+            listing = conn.execute("SELECT price_ty, source_status FROM listings WHERE id=? AND COALESCE(is_blacklisted,0)=0 AND COALESCE(review_hidden,0)=0",
+                                   (listing_id,)).fetchone()
+            if not listing:
+                return jsonify({"ok": False, "error": "not_found"}), 404
+            conn.execute("UPDATE user_favorite_listings SET alert_enabled=1, alert_price_ty=?, alert_source_status=?, alert_enabled_at=? WHERE user_id=? AND listing_id=?",
+                         (listing["price_ty"], listing["source_status"] or "unknown", _utc_now().replace(tzinfo=None).isoformat(timespec="microseconds"), u["id"], listing_id))
+        elif not enabled:
+            conn.execute("UPDATE user_favorite_listings SET alert_enabled=0 WHERE user_id=? AND listing_id=?", (u["id"], listing_id))
+    return jsonify({"ok": True, "listing_id": listing_id, "alert_enabled": enabled})
 
 
 def _favorite_listing_exists(conn, listing_id: int) -> bool:
@@ -5445,6 +5474,7 @@ def listing_detail(listing_id):
         desc_html=desc_html,
         memo=memo,
         map_location=data.get("map_location"),
+        evidence=build_listing_evidence(l, data.get("map_location")),
     )
 
 def api_listing_detail(listing_id):
@@ -5460,6 +5490,8 @@ def api_listing_detail(listing_id):
         "title": l["title"],
         "description": l["description"] or "",
         "price_ty": l["price_ty"],
+        "source_status": l.get("source_status") or "unknown",
+        "last_source_check_at": l.get("last_source_check_at"),
         "area_m2": l["area_m2"],
         "frontage_m": l.get("frontage_m"),
         "depth_m": l.get("depth_m"),

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import logging
 import os
 import platform
 import re
@@ -27,7 +28,8 @@ from services.signal_quality import (
     split_quality_flags,
 )
 
-FACEBOOK_PROFILE_STATS_LIMIT = max(500, int(os.getenv("RADAR_FACEBOOK_PROFILE_STATS_LIMIT", "3000")))
+logger = logging.getLogger(__name__)
+FACEBOOK_PROFILE_SAMPLE_LIMIT = max(5, min(200, int(os.getenv("RADAR_FACEBOOK_PROFILE_SAMPLE_LIMIT", "100"))))
 
 
 def clamp_int(value, default: int, min_value: int, max_value: int) -> int:
@@ -124,6 +126,11 @@ def facebook_profile_lookup(url: str, profiles: Iterable[dict]) -> dict | None:
 def empty_facebook_profile_stat() -> dict:
     return {
         "raw_count": 0,
+        "stats_status": "ok",
+        "latest_received_at": None,
+        "last_crawl": None,
+        "last_successful_crawl_at": None,
+        "crawl_history_status": "ok",
         "latest_crawled_at": None,
         "activity": {
             "posts_7d": 0,
@@ -138,9 +145,12 @@ def empty_facebook_profile_stat() -> dict:
             "cadence_label": "Chưa có dữ liệu",
             "cadence_tier": "muted",
             "confidence": "low",
+            "dated_posts": 0,
+            "undated_posts": 0,
         },
         "data_quality": {
             "score": None,
+            "status": "empty",
             "label": "Chưa đủ mẫu",
             "tier": "muted",
             "sample_size": 0,
@@ -213,14 +223,16 @@ def facebook_profile_activity(rows: list[dict]) -> dict:
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     dated: list[datetime] = []
     for item in rows:
-        dt = parse_crawl_datetime(item.get("crawled_at"))
-        if dt:
+        raw = item.get("raw") or {}
+        dt = parse_crawl_datetime(item.get("posted_at") or raw.get("date_raw"))
+        if dt and dt <= now:
             dated.append(dt)
     posts_7d = sum(1 for dt in dated if dt >= now - timedelta(days=7))
     posts_14d = sum(1 for dt in dated if dt >= now - timedelta(days=14))
     posts_30d = sum(1 for dt in dated if dt >= now - timedelta(days=30))
-    days_14 = {dt.date() for dt in dated if dt >= now - timedelta(days=14)}
-    days_30 = {dt.date() for dt in dated if dt >= now - timedelta(days=30)}
+    business_tz = timezone(timedelta(hours=7))
+    days_14 = {dt.replace(tzinfo=timezone.utc).astimezone(business_tz).date() for dt in dated if dt >= now - timedelta(days=14)}
+    days_30 = {dt.replace(tzinfo=timezone.utc).astimezone(business_tz).date() for dt in dated if dt >= now - timedelta(days=30)}
     active_days_14d = len(days_14)
     active_days_30d = len(days_30)
     avg_active_14d = round(posts_14d / active_days_14d, 1) if active_days_14d else 0.0
@@ -228,7 +240,7 @@ def facebook_profile_activity(rows: list[dict]) -> dict:
     avg_week_30d = round(posts_30d / 30 * 7, 1) if posts_30d else 0.0
     recommended_daily = max(10, min(120, int(round(max(avg_active_14d, avg_day_30d) * 1.35 + 5))))
     recommended_weekly = max(30, min(500, int(round(avg_week_30d * 1.25 + 10))))
-    if not rows:
+    if not dated:
         label, tier, confidence = "Chưa có dữ liệu", "muted", "low"
     elif posts_30d == 0:
         label, tier, confidence = "Ít hoạt động", "muted", "low"
@@ -251,6 +263,8 @@ def facebook_profile_activity(rows: list[dict]) -> dict:
         "cadence_label": label,
         "cadence_tier": tier,
         "confidence": confidence,
+        "dated_posts": len(dated),
+        "undated_posts": len(rows) - len(dated),
     }
 
 
@@ -296,6 +310,7 @@ def facebook_profile_data_quality(rows: list[dict]) -> dict:
     if sample < 5:
         return {
             "score": None,
+            "status": "insufficient" if sample else "empty",
             "label": "Chưa đủ mẫu",
             "tier": "muted",
             "sample_size": sample,
@@ -348,6 +363,7 @@ def facebook_profile_data_quality(rows: list[dict]) -> dict:
         reasons.append("đủ trường chính, dễ parse")
     return {
         "score": score,
+        "status": "ready",
         "label": label,
         "tier": tier,
         "sample_size": sample,
@@ -362,110 +378,155 @@ def facebook_profile_data_quality(rows: list[dict]) -> dict:
     }
 
 
+def _facebook_profile_key_sql(expression: str) -> str:
+    """Match canonical profile roots, including numeric profile.php identities."""
+    return rf"""LOWER(CASE
+        WHEN {expression} ~* '^https://(www[.]|m[.])?facebook[.]com/profile[.]php[?]'
+        THEN 'https://www.facebook.com/profile.php?id=' || SUBSTRING({expression} FROM '[?&]id=([0-9]+)')
+        ELSE REGEXP_REPLACE({expression},
+            '^https://(www[.]|m[.])?facebook[.]com/([^/?#]+).*$',
+            'https://www.facebook.com/\2', 'i') END)"""
+
+
 def facebook_profile_stats(profile_urls: list[str], conn_factory=get_conn) -> dict:
+    """Keep lifetime metadata separate from bounded per-broker quality samples."""
     stats = {url: empty_facebook_profile_stat() for url in profile_urls}
-    if not profile_urls:
-        return stats
-    profile_predicates = []
-    profile_params = []
+    urls_by_key = defaultdict(list)
     for url in profile_urls:
-        clean_url = normalize_facebook_profile_url(url)
-        if not clean_url:
-            continue
-        profile_predicates.append("(r.profile_url = ? OR r.profile_url LIKE ?)")
-        profile_params.extend([clean_url, f"{clean_url}/%"])
-    if not profile_predicates:
+        key = normalize_facebook_profile_url(url).lower()
+        if key:
+            urls_by_key[key].append(url)
+    if not urls_by_key:
         return stats
+    keys = list(urls_by_key)
+    profile_key_sql = _facebook_profile_key_sql("source_url")
+    grouped = {key: [] for key in keys}
+    raw_id_keys = {}
     try:
         with conn_factory() as conn:
-            rows = conn.execute("""
-                WITH recent_raw AS (
-                    SELECT id,
-                           raw_json,
-                           crawled_at,
-                           COALESCE(NULLIF(raw_json::jsonb ->> 'profile_url', ''),
-                                    NULLIF(raw_json::jsonb -> '_apify_raw' ->> 'inputUrl', '')) AS profile_url
-                    FROM raw_listings
-                    WHERE source = 'facebook'
-                    ORDER BY crawled_at DESC
-                    LIMIT ?
-                ),
-                recent_listing AS MATERIALIZED (
-                    SELECT r.raw_json,
-                           r.profile_url,
-                           r.crawled_at,
-                           l.id AS listing_id,
-                           l.title,
-                           l.description,
-                           l.price_ty,
-                           l.area_m2,
-                           l.ward,
-                           l.property_type
-                    FROM recent_raw r
-                    LEFT JOIN listings l ON l.raw_id = r.id
-                    WHERE r.profile_url IS NOT NULL
-                      AND (""" + " OR ".join(profile_predicates) + """)
-                ),
-                image_counts AS MATERIALIZED (
-                    SELECT img.listing_id, COUNT(*) AS image_count
-                    FROM listing_images img
-                    JOIN recent_listing rl ON rl.listing_id = img.listing_id
-                    GROUP BY img.listing_id
-                ),
-                latest_quality AS MATERIALIZED (
-                    SELECT DISTINCT ON (v.listing_id) v.listing_id, v.source_quality_flags
-                    FROM valuation_results v
-                    JOIN recent_listing rl ON rl.listing_id = v.listing_id
-                    ORDER BY v.listing_id, v.id DESC
+            history = conn.execute("""
+                WITH source_profiles AS MATERIALIZED (
+                    SELECT r.id, r.crawled_at, fields.date_raw AS posted_at,
+                           COALESCE(NULLIF(fields._apify_raw ->> 'inputUrl', ''),
+                                    NULLIF(fields.profile_url, '')) AS source_url
+                    FROM raw_listings r
+                    CROSS JOIN LATERAL JSON_TO_RECORD(r.raw_json::json)
+                        AS fields(profile_url TEXT, date_raw TEXT, _apify_raw JSON)
+                    WHERE r.source = 'facebook'
+                ), profile_raw AS MATERIALIZED (
+                    SELECT id, crawled_at, posted_at, """ + profile_key_sql + """ AS profile_url
+                    FROM source_profiles
                 )
-                SELECT
-                    rl.raw_json,
-                    rl.profile_url,
-                    rl.crawled_at,
-                    rl.title,
-                    rl.description,
-                    rl.price_ty,
-                    rl.area_m2,
-                    rl.ward,
-                    rl.property_type,
-                    COALESCE(img.image_count, 0) AS image_count,
-                    q.source_quality_flags
-                FROM recent_listing rl
-                LEFT JOIN image_counts img ON img.listing_id = rl.listing_id
-                LEFT JOIN latest_quality q ON q.listing_id = rl.listing_id
-                ORDER BY rl.crawled_at DESC
-            """, [FACEBOOK_PROFILE_STATS_LIMIT] + profile_params).fetchall()
-    except Exception:
+                SELECT profile_url, COUNT(*) AS raw_count,
+                       MAX(crawled_at) AS latest_received_at,
+                       (ARRAY_AGG(id ORDER BY crawled_at DESC, id DESC))[1:?] AS sample_raw_ids,
+                       ARRAY_AGG(posted_at) AS posted_dates
+                FROM profile_raw WHERE profile_url = ANY(?)
+                GROUP BY profile_url
+            """, (FACEBOOK_PROFILE_SAMPLE_LIMIT, keys)).fetchall()
+            for row in history:
+                key = row["profile_url"]
+                raw_id_keys.update({rid: key for rid in row["sample_raw_ids"]})
+                activity = facebook_profile_activity([
+                    {"posted_at": value} for value in row["posted_dates"]
+                ])
+                for url in urls_by_key[key]:
+                    stats[url].update({
+                        "raw_count": int(row["raw_count"]),
+                        "latest_received_at": row["latest_received_at"],
+                        # Compatibility for legacy admin surfaces and duplicate ranking.
+                        "latest_crawled_at": row["latest_received_at"],
+                        "activity": activity,
+                    })
+            rows = []
+            if raw_id_keys:
+                rows = conn.execute("""
+                    WITH recent_raw AS MATERIALIZED (
+                        SELECT r.id, JSONB_STRIP_NULLS(TO_JSONB(fields)) AS raw_json, r.crawled_at
+                        FROM raw_listings r
+                        CROSS JOIN LATERAL JSON_TO_RECORD(r.raw_json::json) AS fields(
+                            title TEXT, description TEXT, text TEXT, post_text TEXT,
+                            price TEXT, price_ty TEXT, price_text TEXT, area TEXT,
+                            area_m2 TEXT, area_text TEXT, ward TEXT, location TEXT,
+                            property_type TEXT, category TEXT, imgs JSON, images JSON,
+                            image_urls JSON, img_urls JSON, photos JSON)
+                        WHERE r.id = ANY(?)
+                    ), recent_listing AS MATERIALIZED (
+                        SELECT r.id AS raw_id, r.raw_json, r.crawled_at, l.id AS listing_id,
+                               l.title, l.description, l.price_ty, l.area_m2, l.ward, l.property_type
+                        FROM recent_raw r LEFT JOIN listings l ON l.raw_id = r.id
+                    ), image_counts AS MATERIALIZED (
+                        SELECT img.listing_id, COUNT(*) AS image_count
+                        FROM listing_images img JOIN recent_listing rl ON rl.listing_id = img.listing_id
+                        GROUP BY img.listing_id
+                    ), latest_quality AS MATERIALIZED (
+                        SELECT DISTINCT ON (v.listing_id) v.listing_id, v.source_quality_flags
+                        FROM valuation_results v JOIN recent_listing rl ON rl.listing_id = v.listing_id
+                        ORDER BY v.listing_id, v.id DESC
+                    )
+                    SELECT rl.*, COALESCE(img.image_count, 0) AS image_count, q.source_quality_flags
+                    FROM recent_listing rl
+                    LEFT JOIN image_counts img ON img.listing_id = rl.listing_id
+                    LEFT JOIN latest_quality q ON q.listing_id = rl.listing_id
+                """, (list(raw_id_keys),)).fetchall()
+            for row in rows:
+                item = dict(row.items())
+                raw = item.pop("raw_json") or {}
+                item["raw"] = raw if isinstance(raw, dict) else json.loads(raw)
+                grouped[raw_id_keys[item["raw_id"]]].append(item)
+    except Exception as exc:
+        logger.warning("Facebook profile statistics unavailable: %s", type(exc).__name__)
+        for stat in stats.values():
+            stat["stats_status"] = "unavailable"
+            stat["data_quality"].update({"status": "unavailable", "label": "Thống kê lỗi"})
         return stats
-    grouped = {url: [] for url in profile_urls}
-    for row in rows:
-        try:
-            raw = json.loads(row["raw_json"] or "{}")
-        except Exception:
-            continue
-        profile_url = normalize_facebook_profile_url(row["profile_url"])
-        for url in profile_urls:
-            clean_url = normalize_facebook_profile_url(url)
-            if profile_url == clean_url or profile_url.startswith(f"{clean_url}/"):
-                stats[url]["raw_count"] += 1
-                if not stats[url]["latest_crawled_at"]:
-                    stats[url]["latest_crawled_at"] = row["crawled_at"]
-                grouped[url].append({
-                    "raw": raw,
-                    "crawled_at": row["crawled_at"],
-                    "title": row["title"],
-                    "description": row["description"],
-                    "price_ty": row["price_ty"],
-                    "area_m2": row["area_m2"],
-                    "ward": row["ward"],
-                    "property_type": row["property_type"],
-                    "image_count": int(row["image_count"] or 0),
-                    "source_quality_flags": row["source_quality_flags"] or "",
-                })
-                break
-    for url, items in grouped.items():
-        stats[url]["activity"] = facebook_profile_activity(items)
-        stats[url]["data_quality"] = facebook_profile_data_quality(items)
+    for key, items in grouped.items():
+        processed = [item for item in items if item["listing_id"] is not None]
+        quality = facebook_profile_data_quality(processed)
+        quality["unprocessed_count"] = len(items) - len(processed)
+        if items and len(processed) < 5 and quality["unprocessed_count"]:
+            quality.update({"status": "pending", "label": "Chưa xử lý đủ mẫu",
+                            "reasons": ["Còn bài chưa chuẩn hóa trong mẫu đánh giá"]})
+        sample_dates = [parse_crawl_datetime(item["crawled_at"]) for item in items]
+        latest = max((value for value in sample_dates if value), default=None)
+        quality["latest_sample_at"] = latest.isoformat() + "Z" if latest else None
+        quality["is_stale"] = bool(latest and latest < datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30))
+        for url in urls_by_key[key]:
+            stats[url]["data_quality"] = quality
+    # Job-history failure must not discard otherwise valid listing statistics.
+    try:
+        with conn_factory() as conn:
+            run_key_sql = _facebook_profile_key_sql("profile_url")
+            runs = conn.execute("""
+                WITH runs AS (
+                    SELECT profile_url, status, started_at, finished_at,
+                           CASE WHEN COALESCE(stats -> 'crawl' ->> 'crawl_partial', 'false') = 'true'
+                                THEN 'partial' ELSE status END AS result
+                    FROM admin_jobs WHERE kind = 'facebook_crawl' AND started_at IS NOT NULL
+                    UNION ALL
+                    SELECT p.target_url, p.status, NULLIF(c.started_at, '')::timestamptz,
+                           NULLIF(p.completed_at, '')::timestamptz, p.status
+                    FROM crawl_run_progress p JOIN crawl_runs c ON c.id = p.run_id
+                    WHERE c.source = 'facebook' AND p.status IN ('done', 'error')
+                ), normalized AS (
+                    SELECT """ + run_key_sql + """ AS profile_key, result AS status,
+                           started_at, finished_at FROM runs
+                )
+                SELECT DISTINCT ON (profile_key) profile_key, status, started_at, finished_at,
+                       MAX(started_at) FILTER (WHERE status IN ('done', 'succeeded'))
+                           OVER (PARTITION BY profile_key) AS last_successful_crawl_at
+                FROM normalized WHERE profile_key = ANY(?)
+                ORDER BY profile_key, started_at DESC
+            """, (keys,)).fetchall()
+            for row in runs:
+                crawl = {name: row[name] for name in ("status", "started_at", "finished_at")}
+                for url in urls_by_key[row["profile_key"]]:
+                    stats[url]["last_crawl"] = crawl
+                    stats[url]["last_successful_crawl_at"] = row["last_successful_crawl_at"]
+    except Exception as exc:
+        logger.warning("Facebook profile crawl history unavailable: %s", type(exc).__name__)
+        for stat in stats.values():
+            stat["crawl_history_status"] = "unavailable"
     return stats
 
 
@@ -572,9 +633,9 @@ def facebook_profile_due_metadata(
     today: date | None = None,
 ) -> dict:
     """Expose the same stable cadence buckets used by the scheduled crawler."""
-    from crawler.facebook_apify import profile_due_on
+    from crawler.facebook_apify import facebook_crawl_today, profile_due_on
 
-    current_day = today or datetime.now(timezone.utc).date()
+    current_day = today or facebook_crawl_today()
     cadence = normalize_crawl_every_days(profile.get("crawl_every_days"))
     next_due = current_day
     for offset in range(cadence):

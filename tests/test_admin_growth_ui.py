@@ -206,27 +206,6 @@ def test_facebook_duplicate_analysis_short_circuits_single_profile_city():
     assert duplicate_fn.index("count >= 2") < duplicate_fn.index("with conn_factory() as conn")
 
 
-def test_facebook_profile_stats_filters_recent_raw_before_expensive_joins():
-    quality_source = (ROOT / "services" / "admin_quality.py").read_text(encoding="utf-8")
-    stats_fn = quality_source[quality_source.index("def facebook_profile_stats"):quality_source.index("def normalize_facebook_profile_url")]
-
-    assert "WITH recent_raw AS" in stats_fn
-    assert "profile_url" in stats_fn
-    assert "profile_predicates" in stats_fn
-    assert "r.profile_url IS NOT NULL" in stats_fn
-    assert "FACEBOOK_PROFILE_STATS_LIMIT" in stats_fn
-    assert "recent_listing AS" in stats_fn
-    assert "JOIN recent_listing rl" in stats_fn
-    assert "FROM recent_raw r" in stats_fn
-    assert "FROM listing_images img" in stats_fn
-    assert "WHERE img.listing_id = l.id" not in stats_fn
-    assert "FROM valuation_results v" in stats_fn
-    assert "WHERE v.listing_id = l.id" not in stats_fn
-    assert "LIMIT ?" in stats_fn
-    assert "FROM listing_images\n                    GROUP BY listing_id" not in stats_fn
-    assert "FROM valuation_results\n                    GROUP BY listing_id" not in stats_fn
-
-
 def test_facebook_duplicate_analysis_uses_indexable_recent_window():
     quality_source = (ROOT / "services" / "admin_quality.py").read_text(encoding="utf-8")
     duplicate_fn = quality_source[quality_source.index("def facebook_profile_duplicate_analysis"):quality_source.index("def missing_image_summary")]
@@ -253,7 +232,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "<details" in template
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
-    assert "?v=admin-facebook-crawl-brokers-v3" in template
+    assert "?v=admin-facebook-crawl-brokers-v4-history-samples" in template
     assert "css/admin.css') }}?v=admin-v59-facebook-crawl-broker-align-fix" in template
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script

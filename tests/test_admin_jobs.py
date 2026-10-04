@@ -273,6 +273,18 @@ def test_reporter_updates_shared_state_and_public_payload_is_allowlisted():
     assert "heartbeat_at" not in public
 
 
+def test_reporter_preserves_partial_crawl_warning_in_terminal_state():
+    from services.admin_jobs import AdminJobReporter
+
+    repository = InMemoryAdminJobRepository()
+    repository.create(sample_job())
+    reporter = AdminJobReporter('job-a', repository=repository)
+    job = reporter.succeed({'crawl': {'crawl_partial': True, 'errors': 1}})
+    assert job['status'] == 'succeeded'
+    assert job['stage'] == 'done_partial'
+    assert job['progress_label'] == 'Hoàn tất một phần — kiểm tra cảnh báo crawl'
+
+
 def test_reporter_failure_never_persists_secret_exception_text():
     from services.admin_jobs import AdminJobReporter, SAFE_JOB_ERROR
 

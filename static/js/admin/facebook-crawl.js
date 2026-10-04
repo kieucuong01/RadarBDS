@@ -112,8 +112,10 @@
         : 'Chưa có dữ liệu lần chạy Facebook',
       latestJob: {
         status: latestJobStatus,
-        statusLabel: OVERVIEW_JOB_STATUS_LABELS[latestJobStatus]
-          || OVERVIEW_JOB_STATUS_LABELS.unknown,
+        statusLabel: latestJob && latestJob.stage === 'done_partial'
+          ? 'Hoàn tất một phần'
+          : (OVERVIEW_JOB_STATUS_LABELS[latestJobStatus]
+            || OVERVIEW_JOB_STATUS_LABELS.unknown),
         label: fullJobLabel,
         fullLabel: fullJobLabel,
       },
@@ -185,20 +187,75 @@
       ? profile.data_quality
       : {};
     const rawScore = quality.score;
+    if (profile && profile.stats_status === 'unavailable') {
+      return {key: 'needs_attention', score: null, label: 'Thống kê lỗi'};
+    }
     const hasScore = rawScore !== null
       && rawScore !== undefined
       && rawScore !== ''
       && Number.isFinite(Number(rawScore));
     if (!hasScore) {
-      return {key: 'needs_attention', score: null, label: 'Chưa đủ mẫu'};
+      return {key: 'needs_attention', score: null,
+        label: quality.status === 'pending' ? 'Chưa xử lý đủ mẫu'
+          : (profile && profile.raw_count === 0 ? 'Chưa có bài' : 'Chưa đủ mẫu')};
     }
     const score = Math.max(0, Math.min(100, Math.round(Number(rawScore))));
-    const key = score >= BROKER_QUALITY_GOOD_THRESHOLD ? 'good' : 'needs_attention';
+    const key = score >= BROKER_QUALITY_GOOD_THRESHOLD
+      && Number(quality.serious_flag_pct || 0) < 15 && !quality.is_stale
+      ? 'good' : 'needs_attention';
     return {
       key,
       score,
-      label: String(quality.label || (key === 'good' ? 'Ổn' : 'Cần xem')),
+      label: Number(quality.serious_flag_pct || 0) >= 15
+        ? 'Cần kiểm tra lỗi parse'
+        : String(quality.label || (key === 'good' ? 'Ổn' : 'Cần xem')),
     };
+  }
+
+  function brokerQualityDetail(profile) {
+    const quality = profile.data_quality || {};
+    if (profile.stats_status === 'unavailable') return 'Không tải được dữ liệu đánh giá';
+    const sample = Number(quality.sample_size || 0);
+    const total = Number(profile.raw_count || 0);
+    const pending = Number(quality.unprocessed_count || 0);
+    return `${sample} mẫu / ${total} bài lịch sử`
+      + (pending ? ` · ${pending} bài trong mẫu chưa chuẩn hóa` : '');
+  }
+
+  function brokerCrawlDetail(profile) {
+    const run = profile.last_crawl;
+    const parts = [];
+    if (run) {
+      const labels = {done: 'Hoàn tất', succeeded: 'Hoàn tất', error: 'Lỗi',
+        failed: 'Lỗi', partial: 'Hoàn tất một phần', running: 'Đang chạy'};
+      parts.push((labels[run.status] || 'Đã chạy') + ': ' + formatBrokerDate(run.started_at));
+    } else if (profile.crawl_history_status === 'unavailable') {
+      parts.push('Không tải được lịch sử chạy');
+    } else {
+      parts.push('Chưa có log lần chạy');
+    }
+    if (profile.latest_received_at) {
+      parts.push('Bài nhận gần nhất: ' + formatBrokerDate(profile.latest_received_at));
+    } else if (profile.stats_status === 'unavailable') {
+      parts.push('Không tải được lịch sử bài');
+    } else {
+      parts.push('Chưa có bài lưu');
+    }
+    if (profile.last_successful_crawl_at && run && ['failed', 'error', 'partial'].includes(run.status)) {
+      parts.push('Lần thành công: ' + formatBrokerDate(profile.last_successful_crawl_at));
+    }
+    return parts.join('\n');
+  }
+
+  function formatBrokerDate(value) {
+    if (!value) return 'Chưa rõ thời gian';
+    let timestamp = String(value).replace(' ', 'T');
+    if (timestamp.includes('T')) timestamp = timestamp.replace(/([+-]\d{2})$/, '$1:00');
+    if (timestamp.includes('T') && !/(Z|[+-]\d{2}:?\d{2})$/i.test(timestamp)) timestamp += 'Z';
+    const date = new Date(timestamp);
+    if (!Number.isFinite(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat('vi-VN', {timeZone: 'Asia/Ho_Chi_Minh',
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}).format(date);
   }
 
   function brokerStatusState(profile) {
@@ -265,7 +322,8 @@
       return true;
     });
     const needsAttention = activeProfiles.filter((profile) => (
-      profile.due_today === true || brokerQualityState(profile).key === 'needs_attention'
+      brokerQualityState(profile).key === 'needs_attention'
+      || ['failed', 'error', 'partial'].includes((profile.last_crawl || {}).status)
     )).length;
     return {
       summary: {
@@ -831,12 +889,13 @@
 
         const planCell = brokerCell('Kế hoạch', 'crawl-broker-plan');
         const quota = document.createElement('strong');
-        quota.textContent = String(Number(profile.daily_limit || 20)) + ' bài/ngày';
+        quota.textContent = 'Tối đa ' + String(Number(profile.daily_limit || 20)) + ' bài/lần';
         const cadence = document.createElement('small');
         cadence.textContent = String(Number(profile.crawl_every_days || 1))
-          + ' ngày/lần · lấy '
+          + ' ngày/lần · chế độ range: '
           + String(Number(profile.range_days || 7))
           + ' ngày';
+        cadence.style.whiteSpace = 'normal';
         planCell.append(quota, cadence);
 
         const qualityState = brokerQualityState(profile);
@@ -851,8 +910,29 @@
           : String(qualityState.score) + '/100';
         qualityCell.appendChild(qualityScore);
 
+        const qualitySample = document.createElement('small');
+        qualitySample.textContent = brokerQualityDetail(profile);
+        qualityCell.appendChild(qualitySample);
+        const quality = profile.data_quality || {};
+        if (quality.latest_sample_at) {
+          const sampleTime = document.createElement('small');
+          sampleTime.textContent = (quality.is_stale ? 'Mẫu cũ: ' : 'Mẫu gần nhất: ')
+            + formatBrokerDate(quality.latest_sample_at);
+          qualityCell.appendChild(sampleTime);
+        }
+        if (Number(quality.serious_flag_pct || 0) >= 15) {
+          const warning = document.createElement('small');
+          warning.textContent = quality.serious_flag_pct + '% mẫu có cờ lỗi parse';
+          qualityCell.appendChild(warning);
+        }
+        qualityCell.title = (quality.reasons || []).join('; ');
+        qualityCell.querySelectorAll('small').forEach((detail) => {
+          detail.style.whiteSpace = 'normal';
+        });
+
         const latestCell = brokerCell('Crawl cuối', 'crawl-broker-latest');
-        latestCell.textContent = profile.latest_crawled_at || 'Chưa crawl';
+        latestCell.textContent = brokerCrawlDetail(profile);
+        latestCell.style.whiteSpace = 'pre-line';
 
         const actions = brokerCell('Thao tác', 'crawl-row-actions crawl-broker-actions');
         actions.append(
@@ -883,7 +963,8 @@
         row.classList.toggle(
           'needs-attention',
           profile.active !== false
-            && (profile.due_today === true || qualityState.key === 'needs_attention'),
+            && (qualityState.key === 'needs_attention'
+              || ['failed', 'error', 'partial'].includes((profile.last_crawl || {}).status)),
         );
         row.append(
           identity,
@@ -1227,6 +1308,10 @@
           state.jobs = [job, ...state.jobs.filter((item) => item.id !== job.id)].slice(0, 20);
           renderJobs(state.jobs);
           if (['queued', 'running'].includes(job.status)) schedulePoll(job.id);
+          else {
+            state.profilesLoaded = false;
+            state.overviewLoadedAt = 0;
+          }
         } catch (_error) {
           state.pollTimer = setTimeout(() => schedulePoll(jobId), 5000);
         }
@@ -1429,6 +1514,8 @@
     removeProfileFromDraft,
     requestsForView,
     brokerQualityState,
+    brokerQualityDetail,
+    brokerCrawlDetail,
     brokerStatusState,
     brokerScheduleState,
     safeFacebookProfileLink,

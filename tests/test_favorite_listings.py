@@ -138,6 +138,43 @@ class FavoriteListingsTest(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertEqual(res.get_json(), {"ok": False, "error": "not_found"})
 
+    def test_alerts_are_off_by_default_and_free_cannot_enable(self):
+        self._login_as_free()
+        self.client.post(f"/api/favorites/{self.listing_id}")
+        self.assertEqual(self.client.get('/api/favorites').get_json()['items'],
+                         [{'listing_id': self.listing_id, 'alert_enabled': False}])
+        self.assertEqual(self.client.patch(f'/api/favorites/{self.listing_id}', json={'alert_enabled': True}).status_code, 403)
+        self.assertEqual(self.client.patch(f'/api/favorites/{self.listing_id}', json={'alert_enabled': 'false'}).status_code, 400)
+
+    def test_vip_alert_baseline_is_stable_until_disabled_and_reenabled(self):
+        from db.connection import get_conn
+        self._login_as_free()
+        with get_conn() as conn:
+            conn.execute("UPDATE users SET tier='vip' WHERE identifier=?", (self.user_identifier,))
+        self.client.post(f"/api/favorites/{self.listing_id}")
+        url = f'/api/favorites/{self.listing_id}'
+        self.assertEqual(self.client.patch(url, json={'alert_enabled': True}).status_code, 200)
+        with get_conn() as conn:
+            baseline = dict(conn.execute('SELECT * FROM user_favorite_listings WHERE listing_id=?', (self.listing_id,)).fetchone())
+            conn.execute('UPDATE listings SET price_ty=1.5 WHERE id=?', (self.listing_id,))
+        self.client.patch(url, json={'alert_enabled': True})
+        with get_conn() as conn:
+            row = conn.execute('SELECT * FROM user_favorite_listings WHERE listing_id=?', (self.listing_id,)).fetchone()
+            self.assertEqual(row['alert_price_ty'], baseline['alert_price_ty'])
+            self.assertEqual(row['alert_enabled_at'], baseline['alert_enabled_at'])
+        self.client.patch(url, json={'alert_enabled': False})
+        self.client.patch(url, json={'alert_enabled': True})
+        with get_conn() as conn:
+            row = conn.execute('SELECT alert_price_ty FROM user_favorite_listings WHERE listing_id=?', (self.listing_id,)).fetchone()
+        self.assertEqual(row['alert_price_ty'], 1.5)
+
+    def test_cannot_enable_alert_for_unsaved_listing(self):
+        from db.connection import get_conn
+        self._login_as_free()
+        with get_conn() as conn:
+            conn.execute("UPDATE users SET tier='vip' WHERE identifier=?", (self.user_identifier,))
+        self.assertEqual(self.client.patch(f'/api/favorites/{self.listing_id}', json={'alert_enabled': True}).status_code, 404)
+
     def test_saved_listings_page_renders_grid_and_reuses_signal_modal(self):
         res = self.client.get("/bds-da-luu")
 

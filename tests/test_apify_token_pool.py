@@ -164,6 +164,10 @@ def test_facebook_apify_batch_uses_per_profile_results_limit(monkeypatch):
     )
 
     assert len(posts) == 1
+    assert crawler.last_run_report["attempted_profile_urls"] == [
+        "https://facebook.com/a", "https://facebook.com/b", "https://facebook.com/c",
+    ]
+    assert crawler.last_run_report["completed_profile_urls"] == crawler.last_run_report["attempted_profile_urls"]
     assert calls[0][0]["resultsLimit"] == 10
     assert len(calls[0][0]["startUrls"]) == 3
     assert calls[0][1] == 30
@@ -303,6 +307,8 @@ def test_facebook_apify_splits_profile_group_by_token_capacity(tmp_path, monkeyp
         "completed_profiles": 4,
         "unattempted_profiles": 0,
         "actor_runs": 2,
+        "attempted_profile_urls": [f"https://facebook.com/broker-{index}" for index in range(4)],
+        "completed_profile_urls": [f"https://facebook.com/broker-{index}" for index in range(4)],
     }
 
 

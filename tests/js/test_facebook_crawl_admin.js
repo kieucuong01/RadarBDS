@@ -141,7 +141,7 @@ assert.deepEqual(roster.summary, {
   total: 3,
   active: 2,
   due: 1,
-  needsAttention: 2,
+  needsAttention: 1,
 });
 assert.equal(roster.resultCount, 3);
 assert.equal(roster.activeFilterCount, 0);

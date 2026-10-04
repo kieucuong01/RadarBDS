@@ -109,6 +109,25 @@ def _refresh_existing_facebook_images(url: str, raw_data: dict):
         return int(row["id"]) if changed else None
 
 
+def _record_facebook_profile_runs(run_id, report, new_by_profile=None, *, failed=False):
+    """Record attempted profiles, including successful runs that import zero posts."""
+    from db.crawl_runs import mark_url_done, mark_url_error
+    from services.admin_quality import normalize_facebook_profile_url
+
+    completed = set(report.get("completed_profile_urls") or [])
+    for raw_url in dict.fromkeys(report.get("attempted_profile_urls") or []):
+        url = normalize_facebook_profile_url(raw_url)
+        if not url:
+            continue
+        try:
+            if not failed and raw_url in completed:
+                mark_url_done(run_id, url, (new_by_profile or {}).get(url, 0))
+            else:
+                mark_url_error(run_id, url, "Lần crawl không hoàn tất; kiểm tra trạng thái nguồn.")
+        except Exception as exc:
+            logging.getLogger(__name__).warning("Facebook profile run history unavailable: %s", type(exc).__name__)
+
+
 def _facebook_crawl_to_raw(
     mode: str,
     limit_override=None,
@@ -122,6 +141,7 @@ def _facebook_crawl_to_raw(
     from crawler.facebook_chrome import build_record, is_relevant
     from config.area_profiles import post_mentions_other_city
     from db.crawl_runs import finish_crawl_run, start_crawl_run
+    from services.admin_quality import normalize_facebook_profile_url
 
     if profiles is None:
         profiles = load_profiles(area_filter=area_filter)
@@ -151,6 +171,7 @@ def _facebook_crawl_to_raw(
     try:
         raw_posts = crawler.crawl_all(profiles, mode=mode, limit_override=limit_override or None)
     except Exception as e:
+        _record_facebook_profile_runs(run_id, getattr(crawler, "last_run_report", {}) or {}, failed=True)
         finish_crawl_run(run_id, {}, status="error", error_msg=str(e))
         raise
 
@@ -169,6 +190,7 @@ def _facebook_crawl_to_raw(
         )
 
     if not raw_posts:
+        _record_facebook_profile_runs(run_id, crawl_report)
         print("[facebook] Khong co bai nao tu Apify (kiem tra profile URL va APIFY_TOKEN).")
         stats = {"fetched": 0, "inserted": 0, "skipped": 0,
                  "irrelevant": 0, "out_of_area": 0, "range_filtered": 0,
@@ -198,6 +220,7 @@ def _facebook_crawl_to_raw(
     inserted_raw_ids = []
     refreshed_raw_ids = []
     total_posts = len(raw_posts)
+    new_by_profile = {}
 
     def _emit_progress(done: int) -> None:
         if not progress_callback:
@@ -258,11 +281,14 @@ def _facebook_crawl_to_raw(
                 crawl_run_id=run_id,
             )
         except Exception as exc:
+            _record_facebook_profile_runs(run_id, crawl_report, failed=True)
             finish_crawl_run(run_id, {}, status="error", error_msg=str(exc)[:500])
             raise
         rid = insert_result.raw_id
         if insert_result.status == "inserted":
             inserted += 1
+            profile_url = normalize_facebook_profile_url(record.get("profile_url"))
+            new_by_profile[profile_url] = new_by_profile.get(profile_url, 0) + 1
         else:
             refreshed_raw_id = _refresh_existing_facebook_images(record["url"], raw_data)
             if refreshed_raw_id:
@@ -274,6 +300,7 @@ def _facebook_crawl_to_raw(
             inserted_raw_ids.append(rid)
         _emit_progress(idx)
 
+    _record_facebook_profile_runs(run_id, crawl_report, new_by_profile)
     stats = {"fetched": len(raw_posts), "inserted": inserted,
              "skipped": skipped, "irrelevant": irrelevant,
              "inserted_raw_ids": inserted_raw_ids,

@@ -184,13 +184,15 @@ class AdminJobReporter:
 
     def succeed(self, stats: dict | None = None) -> dict:
         self.stop_heartbeat()
+        crawl = (stats or {}).get("crawl") or {}
+        partial = bool(crawl.get("crawl_partial") or crawl.get("errors"))
         return self.repository.update(
             self.job_id,
             {
                 "status": "succeeded",
-                "stage": "done",
+                "stage": "done_partial" if partial else "done",
                 "progress_pct": 100,
-                "progress_label": "Hoàn tất",
+                "progress_label": "Hoàn tất một phần — kiểm tra cảnh báo crawl" if partial else "Hoàn tất",
                 "stats": stats or {},
                 "error": None,
                 "finished_at": _utc_now(),

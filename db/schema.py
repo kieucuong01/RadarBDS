@@ -583,6 +583,10 @@ CREATE TABLE IF NOT EXISTS user_favorite_listings (
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     listing_id  INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
     created_at  TEXT DEFAULT (datetime('now')),
+    alert_enabled INTEGER NOT NULL DEFAULT 0,
+    alert_price_ty REAL,
+    alert_source_status TEXT,
+    alert_enabled_at TEXT,
     UNIQUE(user_id, listing_id)
 );
 CREATE INDEX IF NOT EXISTS idx_favorites_user_created
@@ -973,10 +977,16 @@ CREATE TABLE IF NOT EXISTS notification_log (
     listing_id         INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
     channel            TEXT NOT NULL,           -- 'telegram' | 'email'
     notified_price_ty  REAL,                    -- giá (tỷ) lúc push; NULL = row legacy
+    notified_source_status TEXT,
+    event_kind         TEXT,
     sent_at            TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_notif_user_listing
     ON notification_log(user_id, listing_id, sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_user_listing_channel_id
+    ON notification_log(user_id, listing_id, channel, id DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_listing_user
+    ON notification_log(listing_id, user_id);
 """
 
 
@@ -2214,6 +2224,9 @@ def _migrate_property_type_aliases(conn: Any) -> None:
 def _migrate_notification_log(conn: Any) -> None:
     """Add notified_price_ty and ensure the app-level dedup index exists."""
     cols = _table_columns(conn, "notification_log")
+    for name, sql_type in (("notified_source_status", "TEXT"), ("event_kind", "TEXT")):
+        if name not in cols:
+            conn.execute(f"ALTER TABLE notification_log ADD COLUMN {name} {sql_type}")
     if "notified_price_ty" not in cols:
         try:
             conn.execute("ALTER TABLE notification_log ADD COLUMN notified_price_ty REAL")
@@ -2226,6 +2239,8 @@ def _migrate_notification_log(conn: Any) -> None:
             "CREATE INDEX IF NOT EXISTS idx_notif_user_listing "
             "ON notification_log(user_id, listing_id, sent_at DESC)"
         )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_notif_user_listing_channel_id ON notification_log(user_id, listing_id, channel, id DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_notif_listing_user ON notification_log(listing_id, user_id)")
     except Exception as e:
         logger.warning(f"Index skip idx_notif_user_listing: {e}")
 
@@ -2250,6 +2265,15 @@ def _migrate_user_favorite_listings(conn: Any) -> None:
             CREATE INDEX IF NOT EXISTS idx_favorites_listing
             ON user_favorite_listings(listing_id)
         """)
+        cols = _table_columns(conn, "user_favorite_listings")
+        for name, sql_type in (
+            ("alert_enabled", "INTEGER NOT NULL DEFAULT 0"),
+            ("alert_price_ty", "REAL"),
+            ("alert_source_status", "TEXT"),
+            ("alert_enabled_at", "TEXT"),
+        ):
+            if name not in cols:
+                conn.execute(f"ALTER TABLE user_favorite_listings ADD COLUMN {name} {sql_type}")
     except Exception as e:
         logger.warning(f"Favorite listings migration skipped: {e}")
 

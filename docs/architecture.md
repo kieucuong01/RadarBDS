@@ -57,6 +57,11 @@ PostgreSQL migration status:
 - `/api/history/<id>`: price history, lot history, and comparable data for modal.
 - `/api/listings`: paginated table data for the all-listings tab. It uses the shared card projection only after both read-model flags and a positive durable `listings` version; otherwise it falls back to the legacy loader.
 - `/api/watchlists`: user saved filters for VIP Telegram push.
+- `/listing/<id>` renders a public evidence box through `services/listing_evidence.py`:
+  the reason for the price gap, the sample count and computation time of the
+  model used for displayed MOS, listing/source timestamps, and verification
+  questions. Its four comparable links reuse the existing history response;
+  they are comparison candidates, not claimed training samples or transactions.
 - `/api/auth/telegram/*`: bot linking via webhook or local sync fallback.
 - `/api/market-indicators`: VIP-only deep analysis.
 

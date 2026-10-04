@@ -67,6 +67,11 @@ def api_remove_favorite(**kwargs):
     return _impl("api_remove_favorite", **kwargs)
 
 
+@bp.route("/api/favorites/<int:listing_id>", methods=["PATCH"])
+def api_update_favorite_alert(**kwargs):
+    return _impl("api_update_favorite_alert", **kwargs)
+
+
 @bp.route("/api/auth/telegram/start", methods=["POST"])
 def api_telegram_start(**kwargs):
     return _impl("api_telegram_start", **kwargs)

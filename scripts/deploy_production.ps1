@@ -198,6 +198,13 @@ fi
 /opt/radar-bds/.venv/bin/python -X utf8 -m compileall -q services/radar_ask
 if sudo -n -u radar true 2>/dev/null; then
   sudo -n -u radar bash -lc 'set -a; source /etc/radar-bds/radar.env; set +a; /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"'
+elif [ -r /etc/radar-bds/radar.env ]; then
+  (
+    set -a
+    . /etc/radar-bds/radar.env
+    set +a
+    /opt/radar-bds/.venv/bin/python -X utf8 -c "from db.schema import init_schema; init_schema()"
+  )
 else
   echo "skipped manual schema init (sudo -u radar requires password); public content schema is lazily initialized by the app"
 fi

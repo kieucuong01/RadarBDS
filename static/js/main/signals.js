@@ -1,6 +1,8 @@
 // Signal feed, insights panels, and infinite-scroll card rendering.
 let _sigObserver = null;
 let favoriteListingIds = new Set();
+let favoriteAlertSettings = new Map();
+let favoriteAlertDropThreshold = 5;
 let favoriteListingsLoaded = false;
 let favoriteListingsPromise = null;
 let favoriteListingsUserKey = null;
@@ -44,6 +46,7 @@ async function loadFavoriteListings() {
   const userKey = window.CURRENT_USER ? String(window.CURRENT_USER.id || window.CURRENT_USER.email || window.CURRENT_USER.phone || 'user') : 'guest';
   if (favoriteListingsUserKey !== userKey) {
     favoriteListingIds = new Set();
+    favoriteAlertSettings = new Map();
     favoriteListingsLoaded = false;
     favoriteListingsPromise = null;
     favoriteListingsUserKey = userKey;
@@ -66,6 +69,8 @@ async function loadFavoriteListings() {
       })
       .then((data) => {
         favoriteListingIds = new Set((data.listing_ids || []).map(Number));
+        favoriteAlertSettings = new Map((data.items || []).map((item) => [Number(item.listing_id), Boolean(item.alert_enabled)]));
+        favoriteAlertDropThreshold = Number(data.alert_drop_threshold_pct) || 5;
         favoriteListingsLoaded = true;
       })
       .catch(() => {
@@ -87,7 +92,8 @@ function setFavoriteListingState(listingId, favorite) {
   refreshFavoriteButtons();
   if (window.RADAR_SAVED_PAGE && !favorite) {
     const savedCard = document.querySelector(`#savedListingsGrid .scard[data-id="${id}"]`);
-    if (savedCard) savedCard.remove();
+    if (savedCard) (savedCard.closest('.saved-follow-card') || savedCard).remove();
+    favoriteAlertSettings.delete(id);
     updateSavedListingsEmptyState();
   }
 }
@@ -128,6 +134,46 @@ async function toggleFavoriteListing(listingId, event) {
 }
 
 window.toggleFavoriteListing = toggleFavoriteListing;
+
+function savedAlertButtonHtml(id, sourceStatus = 'unknown') {
+  const enabled = favoriteAlertSettings.get(Number(id)) === true;
+  const vip = ['vip', 'admin'].includes(window.USER_TIER);
+  const sourceLabel = { active: 'Tin còn trên nguồn', inactive: 'Tin bị gỡ khỏi nguồn — chưa xác nhận đã bán', unreachable: 'Chưa kiểm tra được nguồn', unknown: 'Trạng thái nguồn chưa xác minh' }[sourceStatus] || 'Trạng thái nguồn chưa xác minh';
+  return `<div class="saved-alert-control"><small>${escHtml(sourceLabel)}</small><button type="button" data-alert-listing="${Number(id)}"
+    aria-pressed="${enabled}" onclick="toggleSavedListingAlert(${Number(id)}, event)">${enabled ? 'Tắt báo thay đổi' : 'Bật báo thay đổi'}</button>
+    <small>${vip ? `Báo giảm từ ${escHtml(favoriteAlertDropThreshold)}%, tin bị gỡ hoặc xuất hiện lại qua kênh bạn đã bật.` : 'VIP: nhận báo giảm giá và thay đổi trạng thái. Lưu BĐS không tự bật thông báo.'}</small>
+    <span role="status" class="saved-alert-status"></span></div>`;
+}
+
+async function toggleSavedListingAlert(id, event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const button = event.currentTarget;
+  const status = button.parentElement.querySelector('.saved-alert-status');
+  button.disabled = true;
+  status.textContent = '';
+  try {
+    const response = await fetch(`/api/favorites/${Number(id)}`, {
+      method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alert_enabled: !favoriteAlertSettings.get(Number(id)) }),
+    });
+    if (!response.ok) {
+      status.textContent = response.status === 403 ? 'Cần tài khoản VIP còn hiệu lực để bật thông báo.' : 'Chưa lưu được cài đặt. Vui lòng thử lại.';
+      return;
+    }
+    const data = await response.json();
+    favoriteAlertSettings.set(Number(id), Boolean(data.alert_enabled));
+    button.setAttribute('aria-pressed', String(Boolean(data.alert_enabled)));
+    button.textContent = data.alert_enabled ? 'Tắt báo thay đổi' : 'Bật báo thay đổi';
+    status.textContent = data.alert_enabled ? 'Đã bật. Kiểm tra Telegram/email trong cài đặt tài khoản để nhận thông báo.' : 'Đã tắt theo dõi riêng. Watchlist đang bật vẫn có thể báo tin khớp.';
+  } catch (_) {
+    status.textContent = 'Không kết nối được. Vui lòng thử lại.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+window.toggleSavedListingAlert = toggleSavedListingAlert;
 window.RadarFavorites = {
   load: loadFavoriteListings,
   refresh: refreshFavoriteButtons,
@@ -189,6 +235,7 @@ function savedListingToSignalCard(data) {
     property_type: data.property_type,
     property_type_label: data.property_type_label,
     source: data.source,
+    source_status: data.source_status || 'unknown',
     url: data.url || `/listing/${data.id}`,
     price_dropped: Boolean(data.price_dropped),
     drop_pct: data.drop_pct,
@@ -244,12 +291,12 @@ async function loadSavedListingsPage(force = false) {
     }
     const details = await Promise.all(ids.map((id) => fetchSavedListingDetail(id).catch(() => null)));
     const cards = details.filter(Boolean).map(savedListingToSignalCard);
-    grid.innerHTML = cards.map((x, index) => renderSignalDealCard(x, {
+    grid.innerHTML = cards.map((x, index) => `<div class="saved-follow-card">${renderSignalDealCard(x, {
       cardContext: 'saved',
       contactContext: 'card_saved',
       openHandler: 'openSignal',
       priorityImage: index === 0,
-    })).join('');
+    })}${savedAlertButtonHtml(x.id, x.source_status)}</div>`).join('');
     refreshFavoriteButtons();
     if (cards.length === 0) {
       setSavedListingsStatus('Các BDS đã lưu hiện không còn hiển thị.');

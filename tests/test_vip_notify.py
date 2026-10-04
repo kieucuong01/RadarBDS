@@ -291,6 +291,116 @@ class VipNotifyTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["notified_price_ty"], 2.1)
 
+    def test_old_listing_price_drop_is_found_outside_first_seen_window(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+        uid, lid = self._vip_setup()
+        self._seed_notification(uid, lid, 'telegram', 2.1)
+        with get_conn() as conn:
+            conn.execute("UPDATE listings SET first_seen_at='2000-01-01', crawled_at='2000-01-01', price_ty=1.8 WHERE id=?", (lid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            result = push_new_listings_to_vip(since=self.since)
+        self.assertEqual(result['telegram_sent'], 1)
+        self.assertEqual(send.call_args.args[1][0]['_notification_event'], 'price_drop')
+
+    def test_source_removed_is_reported_once_without_claiming_sold(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+        uid, lid = self._vip_setup()
+        self._seed_notification(uid, lid, 'telegram', 2.1)
+        with get_conn() as conn:
+            conn.execute("UPDATE listings SET source_status='inactive', probably_sold=1 WHERE id=?", (lid,))
+            conn.execute('UPDATE valuation_results SET mos_pct=0, is_signal=0 WHERE listing_id=?', (lid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            push_new_listings_to_vip(since=self.since)
+            push_new_listings_to_vip(since=self.since)
+        self.assertEqual(send.call_count, 1)
+        self.assertEqual(send.call_args.args[1][0]['_notification_event'], 'source_removed')
+        with get_conn() as conn:
+            conn.execute("UPDATE listings SET source_status='active', probably_sold=0 WHERE id=?", (lid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            push_new_listings_to_vip(since=self.since)
+            push_new_listings_to_vip(since=self.since)
+        self.assertEqual(send.call_count, 1)
+        self.assertEqual(send.call_args.args[1][0]['_notification_event'], 'source_reappeared')
+
+    def test_failed_channel_retries_independently_from_successful_channel(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+        uid, lid = self._vip_setup()
+        with get_conn() as conn:
+            conn.execute("UPDATE users SET email='notify@test.local', notify_email=1 WHERE id=?", (uid,))
+            conn.execute("UPDATE user_watchlists SET notify_email=1 WHERE user_id=?", (uid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as telegram, mock.patch('alerts.email.send_listing_alert', side_effect=[False, True]) as email:
+            push_new_listings_to_vip(since=self.since)
+            push_new_listings_to_vip(since=self.since)
+        self.assertEqual(telegram.call_count, 1)
+        self.assertEqual(email.call_count, 2)
+
+    def test_favorite_updates_require_explicit_opt_in_and_no_watchlist(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+        uid, lid = self._vip_setup()
+        with get_conn() as conn:
+            conn.execute("DELETE FROM user_watchlists WHERE user_id=?", (uid,))
+            conn.execute("INSERT INTO user_favorite_listings(user_id,listing_id) VALUES (?,?)", (uid, lid))
+            conn.execute("UPDATE listings SET price_ty=1.8 WHERE id=?", (lid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            push_new_listings_to_vip(since=self.since)
+            self.assertEqual(send.call_count, 0)
+        with get_conn() as conn:
+            from cli.notify import _utc_iso
+            conn.execute("UPDATE user_favorite_listings SET alert_enabled=1, alert_price_ty=2.1, alert_source_status='active', alert_enabled_at=? WHERE user_id=? AND listing_id=?", (_utc_iso('microseconds'), uid, lid))
+            # Saved-listing alerts do not depend on still qualifying as a signal.
+            conn.execute('UPDATE valuation_results SET is_signal=0 WHERE listing_id=?', (lid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            push_new_listings_to_vip(since=self.since)
+            push_new_listings_to_vip(since=self.since)
+        self.assertEqual(send.call_count, 1)
+
+    def test_overlapping_jobs_skip_without_sending(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import AdvisoryLockBusy
+        with mock.patch('cli.notify.advisory_lock', side_effect=AdvisoryLockBusy('busy')):
+            with mock.patch('alerts.telegram.send_watchlist_digest') as send:
+                result = push_new_listings_to_vip(since=self.since)
+        self.assertEqual(result['skipped'], 'job_running')
+        send.assert_not_called()
+
+    def test_delivery_failure_retries_after_crawl_window_moves(self):
+        from cli.notify import push_new_listings_to_vip
+        self._vip_setup()
+        with mock.patch('alerts.telegram.send_watchlist_digest', side_effect=[False, True]) as send:
+            push_new_listings_to_vip(since=self.since)
+            result = push_new_listings_to_vip(since='2100-01-01')
+        self.assertEqual(send.call_count, 2)
+        self.assertEqual(result['telegram_sent'], 1)
+
+    def test_overflow_updates_remain_pending_after_crawl_window_moves(self):
+        from cli.notify import push_new_listings_to_vip
+        self._vip_setup()
+        for _ in range(6):
+            self._insert_signal()
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            first = push_new_listings_to_vip(since=self.since)
+            second = push_new_listings_to_vip(since='2100-01-01')
+            push_new_listings_to_vip(since='2100-01-01')
+        self.assertEqual(first['telegram_sent'], 6)
+        self.assertEqual(second['telegram_sent'], 1)
+        self.assertEqual(send.call_count, 2)
+
+    def test_notifications_redact_phone_in_title_and_original_url(self):
+        from cli.notify import push_new_listings_to_vip
+        from db.connection import get_conn
+        _, lid = self._vip_setup()
+        with get_conn() as conn:
+            conn.execute("UPDATE listings SET title='Lô đất liên hệ 0901234567' WHERE id=?", (lid,))
+        with mock.patch('alerts.telegram.send_watchlist_digest', return_value=True) as send:
+            push_new_listings_to_vip(since=self.since)
+        listing = send.call_args.args[1][0]
+        self.assertNotIn('0901234567', listing['title'])
+        self.assertFalse(listing.get('url'))
+
     def test_same_price_recheck_skips(self):
         from cli.notify import push_new_listings_to_vip
 
@@ -430,7 +540,7 @@ class VipNotifyTest(unittest.TestCase):
         self.assertEqual(send.call_count, 1)
         text = send.call_args.args[1]
         self.assertIn("-10.0%", text)
-        self.assertIn("TIN", text)
+        self.assertIn("CẬP NHẬT BĐS", text)
 
     def test_threshold_boundary_inclusive(self):
         from cli.notify import push_new_listings_to_vip
