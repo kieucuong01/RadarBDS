@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date
 from unittest import mock
 
 from cleansing.reprocess import run_targeted_reprocess
@@ -160,19 +160,20 @@ def test_targeted_reprocess_links_publisher_once():
                 (source_id, url, json.dumps(raw_data)),
             ).lastrowid
 
-        # UTC is still Oct 4, while the publisher activity day is Oct 5 in Vietnam.
+        # Freeze the process-local activity day, independently of DB session timezone.
         with mock.patch(
-            "db.guland_publishers._utc_now",
-            return_value=datetime(2026, 10, 4, 22, 30, tzinfo=timezone.utc),
-        ), mock.patch(
+            "cleansing.reprocess.date", wraps=date,
+        ) as activity_clock, mock.patch(
             "cleansing.reprocess.reprocess_valuation",
             return_value={"total": 1, "signals": 0, "outliers": 0},
         ), mock.patch(
             "cleansing.reprocess._run_listing_map_backfill",
             return_value={"processed": 1},
         ):
+            activity_clock.today.return_value = date(2025, 1, 2)
             first = run_targeted_reprocess([raw_id])
             second = run_targeted_reprocess([raw_id])
+            assert activity_clock.today.call_count >= 2
 
         listing_id = first["listings"]["processed_ids"][0]
         assert second["listings"]["processed_ids"] == [listing_id]
@@ -191,7 +192,7 @@ def test_targeted_reprocess_links_publisher_once():
                 FROM publisher_activity_daily
                 WHERE publisher_id=? AND activity_date=?
                 """,
-                (publisher_id, date(2026, 10, 5)),
+                (publisher_id, date(2025, 1, 2)),
             ).fetchone()
 
         assert link["identity_status"] == "identified"
