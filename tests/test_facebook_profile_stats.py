@@ -202,4 +202,3 @@ def test_failed_daily_attempt_is_distinct_from_unattempted_quota_profiles(profil
     stats = admin_quality.facebook_profile_stats([attempted, unattempted], conn_factory=factory)
     assert stats[attempted]['last_crawl']['status'] == 'error'
     assert stats[unattempted]['last_crawl'] is None
-
