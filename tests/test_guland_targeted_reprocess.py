@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import date, datetime, timezone
 from unittest import mock
 
 from cleansing.reprocess import run_targeted_reprocess
@@ -159,7 +160,11 @@ def test_targeted_reprocess_links_publisher_once():
                 (source_id, url, json.dumps(raw_data)),
             ).lastrowid
 
+        # UTC is still Oct 4, while the publisher activity day is Oct 5 in Vietnam.
         with mock.patch(
+            "db.guland_publishers._utc_now",
+            return_value=datetime(2026, 10, 4, 22, 30, tzinfo=timezone.utc),
+        ), mock.patch(
             "cleansing.reprocess.reprocess_valuation",
             return_value={"total": 1, "signals": 0, "outliers": 0},
         ), mock.patch(
@@ -184,9 +189,9 @@ def test_targeted_reprocess_links_publisher_once():
                 """
                 SELECT new_listing_count, seen_listing_count
                 FROM publisher_activity_daily
-                WHERE publisher_id=? AND activity_date=CURRENT_DATE
+                WHERE publisher_id=? AND activity_date=?
                 """,
-                (publisher_id,),
+                (publisher_id, date(2026, 10, 5)),
             ).fetchone()
 
         assert link["identity_status"] == "identified"
