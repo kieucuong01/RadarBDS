@@ -23401,45 +23401,46 @@ SEO_ARTICLES = {
 "dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban": {'variant': 'knowledge',
  'path': '/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban',
  'title': 'Đất nền Bình Dương theo diện tích: khoảng nào có nhiều tin rao? | Radar BDS',
- 'description': 'Giá rao đất nền Bình Dương theo 4 khoảng diện tích, cập nhật 17–30/09/2026. Xem số tin, tổng giá và '
-                'giá/m² ở Thủ Dầu Một từ dữ liệu Facebook.',
+ 'description': 'Giá rao đất nền Bình Dương theo 4 khoảng diện tích, cập nhật 25/09–08/10/2026. Xem số tin, tổng giá '
+                'và giá/m² ở Thủ Dầu Một từ dữ liệu Facebook.',
  'keywords': 'đất nền Bình Dương theo diện tích, giá rao đất nền theo diện tích, giá đất nền Thủ Dầu Một, đất nền dưới '
              '3 tỷ Bình Dương',
  'breadcrumb_label': 'Đất nền Bình Dương theo diện tích',
  'hero_badge': 'Buyer guide · snapshot Facebook 14 ngày',
  'hero_title': 'Đất nền Bình Dương theo diện tích: khoảng nào có nhiều tin rao?',
- 'hero_text': 'Trong 202 tin đất nền Thủ Dầu Một có đủ diện tích, tổng giá và giá/m² trong cửa sổ 14 ngày, nhóm 80-120 '
-              'm² có 77 tin, nhỉnh hơn nhóm 120-200 m² (70 tin). Đây là số lượng tin đang rao, không phải số giao dịch '
-              'hay cam kết bán nhanh.',
- 'scope_label': 'Thủ Dầu Một · đất nền theo khoảng diện tích · giá rao Facebook 14 ngày',
+ 'hero_text': 'Trong 289 tin đất nền Thủ Dầu Một có đủ diện tích, tổng giá và giá/m² trong cửa sổ 14 ngày, nhóm '
+              '120-200 m² có 110 tin, nhỉnh hơn nhóm 80-120 m² (104 tin). Đây là số lượng tin đang rao, không phải số '
+              'giao dịch hay cam kết bán nhanh.',
+ 'scope_label': 'Thủ Dầu Một · đất nền theo khoảng diện tích · giá rao Facebook 14 ngày · 25/09–08/10/2026',
  'map_label': 'Thủ Dầu Một và các phường có nhiều đất nền',
- 'hero_checks': ['80-120 m² có 77 tin, nhiều nhất trong 202 tin đủ diện tích và giá/m²',
-                 'Giá/m² trung vị cao nhất ở nhóm dưới 80 m²: 41,2 tr/m²; nhóm trên 200 m² là 25,4 tr/m²',
-                 '305/332 tin có diện tích; 202/332 tin có giá/m² để đối chiếu'],
+ 'hero_checks': ['120-200 m² có 110 tin, nhiều nhất trong 289 tin đủ diện tích, tổng giá và giá/m²',
+                 'Giá/m² trung vị từ 37,9 tr/m² ở nhóm dưới 80 m² đến 17,1 tr/m² ở nhóm trên 200 m²',
+                 '453/488 tin có diện tích; 318/488 tin có tổng giá; 289/488 tin có đủ 3 trường để đối chiếu'],
  'hero_metric': {'label': 'Snapshot đất nền Thủ Dầu Một',
-                 'value': '332 tin rao',
-                 'delta': '114/224 tin ghi tổng giá dưới 3 tỷ',
-                 'note': 'Tin Facebook đang theo dõi từ 17/09 đến 30/09/2026; có thể gồm bài đăng lại của cùng một '
+                 'value': '488 tin rao',
+                 'delta': '190/318 tin ghi tổng giá dưới 3 tỷ',
+                 'note': 'Tin Facebook đang theo dõi từ 25/09 đến 08/10/2026; có thể gồm bài đăng lại của cùng một '
                          'lô.'},
  'primary_cta': 'Lọc đất nền theo phường',
  'primary_href': '/?tab=signals&prop_type=dat_nen&date_range=all',
  'secondary_cta': 'Dùng công cụ định giá',
  'secondary_href': '/dinh-gia-bds',
  'property_card': {'status': 'Kết luận nhanh',
-                   'title': '80-120 m² có nhiều tin nhất trong mẫu đủ dữ liệu',
-                   'price': 'Giá/m² không giảm đều theo diện tích trong cửa sổ này',
+                   'title': '120-200 m² có nhiều tin nhất trong mẫu đủ dữ liệu',
+                   'price': 'Giá/m² thấp hơn ở nhóm lớn trong cửa sổ này, nhưng tổng tiền cao hơn',
                    'metric_a': 'Khoảng nhiều tin nhất',
-                   'metric_a_value': '80-120 m² · 77 tin',
+                   'metric_a_value': '120-200 m² · 110 tin',
                    'metric_b': 'Diện tích trung vị',
-                   'metric_b_value': '137,5 m²'},
- 'value_cards': [{'title': '80-120 m² có nhiều tin nhất',
-                  'body': 'Trong 202 tin đủ diện tích, tổng giá và giá/m², nhóm 80-120 m² có 77 tin; nhóm 120-200 m² '
-                          'có 70 tin. Đây là phân bố tin đang rao, không phải dữ liệu giao dịch.'},
-                 {'title': 'Giá/m² không giảm đều',
-                  'body': 'Giá/m² trung vị là 41,2 tr/m² ở nhóm dưới 80 m², 25,6 tr/m² ở nhóm 80-120 m², 19,8 tr/m² ở '
-                          'nhóm 120-200 m² và 25,4 tr/m² ở nhóm trên 200 m².'},
+                   'metric_b_value': '150 m²'},
+ 'value_cards': [{'title': '120-200 m² có nhiều tin nhất',
+                  'body': 'Trong 289 tin đủ diện tích, tổng giá và giá/m², nhóm 120-200 m² có 110 tin; nhóm 80-120 m² '
+                          'có 104 tin. Đây là phân bố tin đang rao, không phải dữ liệu giao dịch.'},
+                 {'title': 'Giá/m² thấp hơn không có nghĩa tổng tiền thấp hơn',
+                  'body': 'Giá/m² trung vị là 37,9 tr/m² ở nhóm dưới 80 m², 23,2 tr/m² ở nhóm 80-120 m², 19,3 tr/m² ở '
+                          'nhóm 120-200 m² và 17,1 tr/m² ở nhóm trên 200 m². Tổng giá trung vị nhóm trên 200 m² là 7,8 '
+                          'tỷ.'},
                  {'title': 'Tổng tiền vẫn là bộ lọc đầu tiên',
-                  'body': 'Có 114 tin dưới 3 tỷ trong 224 tin có tổng giá. Giá/m² chỉ nên dùng để so các tin cùng '
+                  'body': 'Có 190 tin dưới 3 tỷ trong 318 tin có tổng giá. Giá/m² chỉ nên dùng để so các tin cùng '
                           'phường, cùng khoảng diện tích và cùng loại đường.'}],
  'dashboard_preview': {'eyebrow': 'Từ khoảng diện tích sang tin thật',
                        'title': 'Lọc đúng loại hình rồi mới so giá',
@@ -23449,49 +23450,51 @@ SEO_ARTICLES = {
                        'image': '/static/images/seo/dashboard-preview.png',
                        'alt': 'Dashboard Radar BDS lọc đất nền theo phường, diện tích và tổng giá',
                        'cta': 'Mở dashboard',
-                       'metrics': [{'value': '332 tin', 'label': 'đất nền đang theo dõi'},
-                                   {'value': '114 tin', 'label': 'ghi tổng giá dưới 3 tỷ'},
+                       'metrics': [{'value': '488 tin', 'label': 'đất nền đang theo dõi'},
+                                   {'value': '289 tin', 'label': 'đủ diện tích, giá tổng và giá/m²'},
                                    {'value': '14 ngày', 'label': 'cửa sổ dữ liệu'}]},
- 'market_snapshot': {'eyebrow': 'Snapshot Facebook 14 ngày · 17–30/09/2026',
+ 'market_snapshot': {'eyebrow': 'Snapshot Facebook 14 ngày · 25/09–08/10/2026',
                      'title': 'Đất nền Thủ Dầu Một theo khoảng diện tích',
                      'body': 'Bảng dưới chỉ tính đất nền tại 13 phường Thủ Dầu Một. Giá là giá đang rao, không phải '
                              'giá chốt; mỗi nhóm chỉ gồm tin có diện tích, tổng giá và giá/m² hợp lệ.',
                      'columns': ['Khoảng diện tích', 'Số tin', 'Giá tổng trung vị', 'Giá/m² trung vị', 'Khoảng giá'],
                      'rows': [{'area': 'Dưới 80 m²',
-                               'price': '11 tin',
-                               'tracked': '1,85 tỷ',
-                               'signal': '41,2 tr/m²',
-                               'area_m2': '1,2 – 3,35 tỷ',
-                               'note': '11',
-                               'note_2': '41,2'},
+                               'price': '13 tin',
+                               'tracked': '1,7 tỷ',
+                               'signal': '37,9 tr/m²',
+                               'area_m2': '0,87 – 2,9 tỷ',
+                               'note': '13',
+                               'note_2': '37,9'},
                               {'area': '80-120 m²',
-                               'price': '77 tin',
-                               'tracked': '2,45 tỷ',
-                               'signal': '25,6 tr/m²',
-                               'area_m2': '1,4 – 5,45 tỷ',
-                               'note': '77',
-                               'note_2': '25,6'},
+                               'price': '104 tin',
+                               'tracked': '2,2 tỷ',
+                               'signal': '23,2 tr/m²',
+                               'area_m2': '1,1 – 5,45 tỷ',
+                               'note': '104',
+                               'note_2': '23,2'},
                               {'area': '120-200 m²',
-                               'price': '70 tin',
-                               'tracked': '2,88 tỷ',
-                               'signal': '19,8 tr/m²',
+                               'price': '110 tin',
+                               'tracked': '2,85 tỷ',
+                               'signal': '19,3 tr/m²',
                                'area_m2': '1,25 – 14 tỷ',
-                               'note': '70',
-                               'note_2': '19,8'},
+                               'note': '110',
+                               'note_2': '19,3'},
                               {'area': 'Trên 200 m²',
-                               'price': '44 tin',
-                               'tracked': '9,9 tỷ',
-                               'signal': '25,4 tr/m²',
-                               'area_m2': '2,6 – 24 tỷ',
-                               'note': '44',
-                               'note_2': '25,4'}],
-                     'cards': [{'title': 'Tin đủ dữ liệu',
-                                'value': '202/332 tin',
+                               'price': '62 tin',
+                               'tracked': '7,8 tỷ',
+                               'signal': '17,1 tr/m²',
+                               'area_m2': '1,75 – 24 tỷ',
+                               'note': '62',
+                               'note_2': '17,1'}],
+                     'cards': [{'title': 'Tin đủ 3 trường',
+                                'value': '289/488 tin',
                                 'body': 'Có diện tích, tổng giá và giá/m²'},
-                               {'title': 'Tổng giá trung vị', 'value': '2,95 tỷ', 'body': 'Đất nền · tin ghi tổng giá'},
-                               {'title': 'Diện tích trung vị',
-                                'value': '137,5 m²',
-                                'body': 'Đất nền · 305/332 tin có diện tích'}]},
+                               {'title': 'Khoảng nhiều tin nhất',
+                                'value': '120-200 m² · 110 tin',
+                                'body': 'Nhỉnh hơn nhóm 80-120 m²'},
+                               {'title': 'Giá/m² cao nhất trong mẫu',
+                                'value': '37,9 tr/m²',
+                                'body': 'Nhóm dưới 80 m² · 13 tin'}]},
  'local_links_title': 'Mở dữ liệu và đọc thêm',
  'local_links': [{'label': 'Hub BĐS Bình Dương',
                   'href': '/binh-duong',
@@ -23507,76 +23510,77 @@ SEO_ARTICLES = {
                   'description': 'Đối chiếu khoảng giá tham khảo sau khi đã chốt diện tích và loại hình.'}],
  'process_title': 'Cách đọc giá rao trước khi đi xem',
  'process': [{'title': '1. Chốt ngân sách tổng trước',
-              'body': 'Trong cửa sổ này, 114/224 tin có tổng giá dưới 3 tỷ. Hãy dùng tổng tiền làm bộ lọc đầu tiên; '
+              'body': 'Trong cửa sổ này, 190/318 tin có tổng giá dưới 3 tỷ. Hãy dùng tổng tiền làm bộ lọc đầu tiên; '
                       'giá/m² chỉ giúp so các tin tương đồng.'},
              {'title': '2. So trong cùng khoảng diện tích',
-              'body': 'Nhóm 80-120 m² có giá/m² trung vị 25,6 tr/m²; nhóm 120-200 m² là 19,8 tr/m². Không nên lấy một '
+              'body': 'Nhóm 80-120 m² có giá/m² trung vị 23,2 tr/m²; nhóm 120-200 m² là 19,3 tr/m². Không nên lấy một '
                       'mức giá/m² để áp cho mọi diện tích.'},
              {'title': '3. Đọc loại đường và phần bị bỏ trống',
-              'body': '100 tin đủ diện tích và giá/m² nhưng chưa ghi rõ loại đường. Khi tin không nói đường nhựa, bê '
-                      'tông hay hẻm xe hơi, hãy hỏi lại trước khi so giá.'},
+              'body': 'Trong 289 tin có diện tích và giá/m², 110 tin chưa ghi loại đường; 94 tin ghi đường nhựa và 50 '
+                      'tin ghi bê tông. Khi tin không nói rõ, hãy hỏi lại trước khi so giá.'},
              {'title': '4. Tự kiểm tra phép tính giá/m²',
-              'body': 'Cách tính nhanh là tổng giá (tỷ) × 1.000 ÷ diện tích (m²). Trong mẫu này, 0 tin lệch quá 1 '
+              'body': 'Cách tính nhanh là tổng giá (tỷ) × 1.000 ÷ diện tích (m²). Trong mẫu này, 0/289 tin lệch quá 1 '
                       'tr/m² so với giá/m² đã lưu khi cả ba trường đều có dữ liệu.'},
              {'title': '5. Mở tin gốc rồi mới hẹn',
               'body': 'Sau khi lọc trên Radar, mở từng tin để kiểm tra vị trí, diện tích, loại đường, thổ cư và giấy '
                       'tờ. Giá rao chỉ là bước lọc ban đầu.'}],
  'faq': [{'q': 'Khoảng diện tích nào có nhiều tin đất nền nhất?',
-          'a': 'Trong cửa sổ 17–30/09/2026, nhóm 80-120 m² có 77 tin trong mẫu 202 tin đủ diện tích, tổng giá và '
-               'giá/m². Nhóm 120-200 m² có 70 tin. Đây là phân bố tin đang rao, không phải dữ liệu giao dịch.'},
+          'a': 'Trong cửa sổ 25/09–08/10/2026, nhóm 120-200 m² có 110 tin trong mẫu 289 tin đủ diện tích, tổng giá và '
+               'giá/m². Nhóm 80-120 m² có 104 tin. Đây là phân bố tin đang rao, không phải dữ liệu giao dịch.'},
          {'q': 'Đất lớn hơn có luôn rẻ hơn theo giá/m² không?',
-          'a': 'Không. Giá/m² trung vị lần lượt là 41,2 tr/m², 25,6 tr/m², 19,8 tr/m² và 25,4 tr/m² theo bốn khoảng. '
-               'Các nhóm không giảm đều, nên cần so thêm phường, loại đường và thổ cư.'},
+          'a': 'Không nên xem đó là quy luật. Trong mẫu hiện tại, giá/m² trung vị lần lượt là 37,9 tr/m², 23,2 tr/m², '
+               '19,3 tr/m² và 17,1 tr/m² theo bốn khoảng. Cần so thêm phường, loại đường và thổ cư.'},
          {'q': 'Có bao nhiêu tin đất nền dưới 3 tỷ?',
-          'a': 'Có 114 tin có tổng giá dưới 3 tỷ trong 224 tin có trường tổng giá ở cửa sổ này. Con số này không bao '
+          'a': 'Có 190 tin có tổng giá dưới 3 tỷ trong 318 tin có trường tổng giá ở cửa sổ này. Con số này không bao '
                'gồm tin chưa ghi giá tổng và không nói tin còn phù hợp sau khi kiểm tra thực tế.'},
          {'q': 'Tin không ghi loại đường thì nên hỏi gì?',
           'a': 'Hỏi đường vào rộng bao nhiêu, mặt đường thực tế là nhựa, bê tông hay đường đất, đoạn cuối có đi được '
                'bằng ô tô không, và thông tin đó có khớp với vị trí trong tin hay không.'},
          {'q': 'Số liệu trong bài lấy từ đâu và có phải giá chốt không?',
           'a': 'Số liệu lấy từ tin rao Facebook đang được Radar theo dõi tại 13 phường Thủ Dầu Một, cửa sổ '
-               '17–30/09/2026. Đây là giá đang rao, không phải giá chốt giao dịch; một lô có thể xuất hiện nhiều lần '
-               'do đăng lại.'}],
+               '25/09–08/10/2026. Đây là giá đang rao, không phải giá chốt giao dịch; một lô có thể xuất hiện nhiều '
+               'lần do đăng lại.'}],
  'article': {'published_at': '2026-09-18',
-             'modified_at': '2026-09-30',
-             'intro': ['Giá rao đất nền không đi theo một đường thẳng khi diện tích tăng. Trong 202 tin Thủ Dầu Một có '
-                       'đủ diện tích, tổng giá và giá/m², nhóm 80-120 m² có 77 tin; nhóm 120-200 m² có 70 tin.',
+             'modified_at': '2026-10-08',
+             'intro': ['Giá rao đất nền không đi theo một quy luật duy nhất khi diện tích tăng. Trong 289 tin Thủ Dầu '
+                       'Một có đủ diện tích, tổng giá và giá/m², nhóm 120-200 m² có 110 tin; nhóm 80-120 m² có 104 '
+                       'tin.',
                        'Con số này chỉ cho biết mẫu tin đang theo dõi trong 14 ngày, không cho biết một lô bán nhanh '
                        'hay chậm. Cách đọc an toàn hơn là tách loại hình, giữ ngân sách tổng làm mốc, rồi so giá/m² '
                        'trong cùng khoảng diện tích và cùng loại đường.'],
              'summary_cards': [{'label': 'Đất nền đang theo dõi',
-                                'value': '332 tin',
+                                'value': '488 tin',
                                 'note': 'Facebook · 13 phường Thủ Dầu Một · 14 ngày'},
                                {'label': 'Tin đủ 3 trường chính',
-                                'value': '202 tin',
+                                'value': '289 tin',
                                 'note': 'Có diện tích, tổng giá và giá/m²'},
                                {'label': 'Ghi tổng giá dưới 3 tỷ',
-                                'value': '114/224 tin',
+                                'value': '190/318 tin',
                                 'note': 'Chỉ tính tin có tổng giá đã ghi'}],
              'data_tables': [{'eyebrow': 'Bảng đọc nhanh',
                               'title': 'Đất nền Thủ Dầu Một theo khoảng diện tích',
                               'note': "Nguồn: listings Facebook, source='facebook', is_active=1, is_blacklisted=0, "
-                                      'review_hidden=0; cửa sổ 17/09–30/09/2026. Giá là giá đang rao.',
+                                      'review_hidden=0; cửa sổ 25/09–08/10/2026. Giá là giá đang rao.',
                               'columns': [{'key': 'area', 'label': 'Khoảng diện tích'},
                                           {'key': 'tracked', 'label': 'Số tin'},
                                           {'key': 'signals', 'label': 'Giá tổng trung vị'},
                                           {'key': 'land_m2', 'label': 'Giá/m² trung vị'}],
                               'rows': [{'area': 'Dưới 80 m²',
-                                        'tracked': 11,
-                                        'signals': '1,85 tỷ',
-                                        'land_m2': '41,2 tr/m²'},
+                                        'tracked': 13,
+                                        'signals': '1,7 tỷ',
+                                        'land_m2': '37,9 tr/m²'},
                                        {'area': '80-120 m²',
-                                        'tracked': 77,
-                                        'signals': '2,45 tỷ',
-                                        'land_m2': '25,6 tr/m²'},
+                                        'tracked': 104,
+                                        'signals': '2,2 tỷ',
+                                        'land_m2': '23,2 tr/m²'},
                                        {'area': '120-200 m²',
-                                        'tracked': 70,
-                                        'signals': '2,88 tỷ',
-                                        'land_m2': '19,8 tr/m²'},
+                                        'tracked': 110,
+                                        'signals': '2,85 tỷ',
+                                        'land_m2': '19,3 tr/m²'},
                                        {'area': 'Trên 200 m²',
-                                        'tracked': 44,
-                                        'signals': '9,9 tỷ',
-                                        'land_m2': '25,4 tr/m²'}]},
+                                        'tracked': 62,
+                                        'signals': '7,8 tỷ',
+                                        'land_m2': '17,1 tr/m²'}]},
                              {'eyebrow': 'Đọc phần mô tả còn thiếu',
                               'title': 'Giá/m² theo loại đường được ghi trong tin',
                               'note': 'Nhóm “Chưa ghi loại đường” không phải một loại đường; nó cho biết tin còn thiếu '
@@ -23586,99 +23590,107 @@ SEO_ARTICLES = {
                                           {'key': 'signals', 'label': 'Giá/m² trung vị'},
                                           {'key': 'land_m2', 'label': 'Diện tích trung vị'}],
                               'rows': [{'area': 'Chưa ghi loại đường',
-                                        'tracked': 100,
-                                        'signals': '26,1 tr/m²',
-                                        'land_m2': '114 m²'},
-                                       {'area': 'Đường nhựa',
-                                        'tracked': 51,
-                                        'signals': '23 tr/m²',
+                                        'tracked': 110,
+                                        'signals': '24,5 tr/m²',
                                         'land_m2': '125 m²'},
+                                       {'area': 'Đường nhựa',
+                                        'tracked': 94,
+                                        'signals': '19,8 tr/m²',
+                                        'land_m2': '150,5 m²'},
                                        {'area': 'Bê tông',
-                                        'tracked': 33,
-                                        'signals': '19,6 tr/m²',
-                                        'land_m2': '126,9 m²'},
+                                        'tracked': 50,
+                                        'signals': '15,3 tr/m²',
+                                        'land_m2': '123,5 m²'},
                                        {'area': 'Hẻm xe hơi',
-                                        'tracked': 13,
+                                        'tracked': 24,
                                         'signals': '19,3 tr/m²',
-                                        'land_m2': '132 m²'},
+                                        'land_m2': '123,8 m²'},
+                                       {'area': 'Hẻm xe máy',
+                                        'tracked': 5,
+                                        'signals': '21,1 tr/m²',
+                                        'land_m2': '568,1 m²'},
                                        {'area': 'Mặt tiền kinh doanh',
                                         'tracked': 5,
-                                        'signals': '35 tr/m²',
-                                        'land_m2': '236 m²'}]}],
+                                        'signals': '36 tr/m²',
+                                        'land_m2': '120 m²'},
+                                       {'area': 'Đường đất',
+                                        'tracked': 1,
+                                        'signals': '11,7 tr/m²',
+                                        'land_m2': '100 m²'}]}],
              'charts': [{'eyebrow': 'Mốc so giá',
-                         'title': 'Giá/m² không giảm đều theo diện tích',
-                         'note': 'Đất nền Thủ Dầu Một, 17–30/09/2026. Giá dùng để lọc ban đầu, không phải giá chốt.',
+                         'title': 'Giá/m² giảm dần trong mẫu này, nhưng không phải quy luật cho mọi lô',
+                         'note': 'Đất nền Thủ Dầu Một, 25/09–08/10/2026. Giá dùng để lọc ban đầu, không phải giá chốt.',
                          'alt': 'Biểu đồ giá rao trung vị mỗi mét vuông đất nền theo khoảng diện tích ở Thủ Dầu Một',
-                         'rows': [{'label': 'Dưới 80 m²', 'value_label': '41,2', 'width': 100, 'color': '#38bdf8'},
-                                  {'label': '80-120 m²', 'value_label': '25,6', 'width': 62, 'color': '#34d399'},
-                                  {'label': '120-200 m²', 'value_label': '19,8', 'width': 48, 'color': '#fbbf24'},
-                                  {'label': 'Trên 200 m²', 'value_label': '25,4', 'width': 62, 'color': '#f87171'}]}],
-             'sections': [{'id': 'khoang-80-120-nhieu-tin-nhat',
-                           'heading': '80-120 m² có nhiều tin nhất trong mẫu đủ dữ liệu',
-                           'paragraphs': ['Trong 202 tin có đủ diện tích, tổng giá và giá/m², nhóm 80-120 m² có 77 '
-                                          'tin. Nhóm 120-200 m² đứng gần sau với 70 tin; hai nhóm này chiếm phần lớn '
+                         'rows': [{'label': 'Dưới 80 m²', 'value_label': '37,9', 'width': 100, 'color': '#38bdf8'},
+                                  {'label': '80-120 m²', 'value_label': '23,2', 'width': 61, 'color': '#34d399'},
+                                  {'label': '120-200 m²', 'value_label': '19,3', 'width': 51, 'color': '#fbbf24'},
+                                  {'label': 'Trên 200 m²', 'value_label': '17,1', 'width': 45, 'color': '#f87171'}]}],
+             'sections': [{'id': 'khoang-120-200-nhieu-tin-nhat',
+                           'heading': '120-200 m² có nhiều tin nhất trong mẫu đủ dữ liệu',
+                           'paragraphs': ['Trong 289 tin có đủ diện tích, tổng giá và giá/m², nhóm 120-200 m² có 110 '
+                                          'tin. Nhóm 80-120 m² đứng gần sau với 104 tin; hai nhóm này chiếm phần lớn '
                                           'mẫu có thể so giá.',
                                           'Đây là phân bố của tin đang rao, không phải bảng xếp hạng nhu cầu mua. Vì '
                                           'vậy, nên dùng nó để chọn khoảng cần kiểm tra trước, không dùng để kết luận '
                                           'một diện tích sẽ bán nhanh.'],
-                           'bullets': ['80-120 m²: 77 tin · tổng giá trung vị 2,45 tỷ · 25,6 tr/m².',
-                                       '120-200 m²: 70 tin · tổng giá trung vị 2,88 tỷ · 19,8 tr/m².',
-                                       'Dưới 80 m²: 11 tin · 41,2 tr/m²; trên 200 m²: 44 tin · 25,4 tr/m².']},
-                          {'id': 'gia-m2-khong-giam-deu',
-                           'heading': 'Diện tích lớn hơn không tự động có giá/m² thấp hơn',
-                           'paragraphs': ['Trong cửa sổ 17–30/09/2026, nhóm dưới 80 m² có giá/m² trung vị 41,2 tr/m². '
-                                          'Nhóm 80-120 m² là 25,6 tr/m², nhóm 120-200 m² là 19,8 tr/m², còn nhóm trên '
-                                          '200 m² là 25,4 tr/m².',
-                                          'Các nhóm không tạo thành một đường giảm đều. Vị trí, loại đường, thổ cư và '
-                                          'chất lượng mô tả có thể làm giá/m² giữa hai khoảng diện tích chênh nhau. '
-                                          'Khi so, hãy giữ cùng phường và cùng loại đường nếu dữ liệu cho phép.',
-                                          'Tổng giá trung vị của nhóm trên 200 m² là 9,9 tỷ, cao hơn nhóm 80-120 m² '
-                                          '(2,45 tỷ). Giá/m² thấp hơn không đồng nghĩa tổng tiền thấp hơn.'],
-                           'bullets': ['Diện tích trung vị của toàn mẫu có ghi diện tích: 137,5 m².',
-                                       '202/332 tin có giá/m²; 202 tin đồng thời có đủ 3 trường để lập bảng.',
+                           'bullets': ['120-200 m²: 110 tin · tổng giá trung vị 2,85 tỷ · 19,3 tr/m².',
+                                       '80-120 m²: 104 tin · tổng giá trung vị 2,2 tỷ · 23,2 tr/m².',
+                                       'Dưới 80 m²: 13 tin · 37,9 tr/m²; trên 200 m²: 62 tin · 17,1 tr/m².']},
+                          {'id': 'gia-m2-theo-khoang-dien-tich',
+                           'heading': 'Nhóm diện tích lớn có giá/m² thấp hơn trong cửa sổ này',
+                           'paragraphs': ['Trong cửa sổ 25/09–08/10/2026, nhóm dưới 80 m² có giá/m² trung vị 37,9 '
+                                          'tr/m². Nhóm 80-120 m² là 23,2 tr/m², nhóm 120-200 m² là 19,3 tr/m², còn '
+                                          'nhóm trên 200 m² là 17,1 tr/m².',
+                                          'Các con số này mô tả mẫu tin hiện có, không phải bảng giá chung cho mọi '
+                                          'khu. Tổng giá trung vị của nhóm trên 200 m² là 7,8 tỷ, cao hơn nhóm 80-120 '
+                                          'm² (2,2 tỷ). Giá/m² thấp hơn không đồng nghĩa tổng tiền thấp hơn.'],
+                           'bullets': ['Diện tích trung vị của toàn mẫu có ghi diện tích: 150 m².',
+                                       '289/488 tin có đủ diện tích, tổng giá và giá/m² để lập bảng.',
                                        'Không nên dùng giá/m² của nhóm này để định giá cho một lô cụ thể.']},
                           {'id': 'loai-duong-va-du-lieu-thieu',
                            'heading': 'Loại đường là biến cần hỏi lại khi tin ghi chưa đủ',
-                           'paragraphs': ['Trong các tin có diện tích và giá/m², nhóm chưa ghi loại đường có 100 tin. '
-                                          'Nhóm đường nhựa có 51 tin với giá/m² trung vị 23 tr/m²; bê tông có 33 tin '
-                                          'với 19,6 tr/m².',
-                                          'Mặt tiền kinh doanh chỉ có 5 tin nên mức 35 tr/m² chỉ là mốc tham khảo của '
-                                          'mẫu nhỏ. Không gộp nhóm này với đường nhựa hoặc hẻm khi so.',
+                           'paragraphs': ['Trong các tin có diện tích và giá/m², nhóm chưa ghi loại đường có 110 tin. '
+                                          'Nhóm đường nhựa có 94 tin với giá/m² trung vị 19,8 tr/m²; bê tông có 50 tin '
+                                          'với 15,3 tr/m².',
+                                          'Hẻm xe máy, mặt tiền kinh doanh và đường đất có ít tin hơn, nên mức giá/m² '
+                                          'chỉ là mốc tham khảo của mẫu nhỏ. Không gộp các nhóm này với đường nhựa '
+                                          'hoặc hẻm xe hơi khi so.',
                                           'Nếu tin không ghi loại đường, hãy hỏi độ rộng lối vào, mặt đường thực tế và '
                                           'đoạn đường cuối có đi được bằng ô tô hay không. Đây là câu hỏi kiểm tra '
                                           'thông tin, không phải kết luận pháp lý.'],
-                           'bullets': ['Đường nhựa: 51 tin · 23 tr/m².',
-                                       'Bê tông: 33 tin · 19,6 tr/m².',
-                                       'Chưa ghi loại đường: 100 tin · cần hỏi lại trước khi so giá.']},
+                           'bullets': ['Chưa ghi loại đường: 110 tin · cần hỏi lại trước khi so giá.',
+                                       'Đường nhựa: 94 tin · 19,8 tr/m².',
+                                       'Bê tông: 50 tin · 15,3 tr/m².']},
                           {'id': 'chon-theo-phuong',
                            'heading': 'Phường nào có nhiều tin đất nền để mở xem trước',
-                           'paragraphs': ['Trong 13 phường Thủ Dầu Một, Phú Lợi có 45 tin đất nền có giá/m², Phú Tân '
-                                          'có 42 tin. Phú Mỹ có 21 tin và Phú Hòa có 18 tin.',
+                           'paragraphs': ['Trong 13 phường Thủ Dầu Một, Phú Lợi có 42 tin đất nền có giá/m², Phú Tân '
+                                          'có 38 tin. Tân An có 31 tin và Chánh Mỹ có 30 tin.',
                                           'Số tin nhiều chỉ giúp bạn có thêm mẫu để mở xem; không chứng minh giá tốt '
                                           'hay khả năng bán. Nếu ngân sách dưới 3 tỷ, hãy lọc theo tổng giá trước rồi '
                                           'đọc diện tích, đường vào và phần thổ cư của từng tin.',
                                           'Các phường có ít tin vẫn không nên bị loại chỉ vì số lượng thấp. Mẫu nhỏ '
                                           'làm giá trung vị dao động mạnh hơn, nên cần mở tin cụ thể để đối chiếu.'],
-                           'bullets': ['Phú Lợi: 45 tin · 24 tr/m².',
-                                       'Phú Tân: 42 tin · 23,7 tr/m².',
-                                       'Phú Mỹ: 21 tin · 25,6 tr/m².',
-                                       'Định Hòa: 15 tin · 12,2 tr/m².']}],
+                           'bullets': ['Phú Lợi: 42 tin · 19,8 tr/m².',
+                                       'Phú Tân: 38 tin · 25,9 tr/m².',
+                                       'Tân An: 31 tin · 11,7 tr/m².',
+                                       'Chánh Mỹ: 30 tin · 23,2 tr/m².']}],
              'checklist': ['Chốt ngân sách tổng trước, rồi mới chọn khoảng diện tích.',
-                           'Chọn khoảng diện tích theo mục đích: ở thật 80-150 m², đầu tư 120-200 m², làm vườn hoặc '
-                           'kho trên 200 m².',
                            'Chỉ so giá/m² trong cùng khoảng diện tích, cùng phường và cùng loại đường.',
-                           'Hỏi rõ đường nhựa, bê tông, hẻm xe hơi hay đường đất — chênh lệch tới hơn 11 lần.',
+                           'Nếu tin chưa ghi đường nhựa, bê tông, hẻm xe hơi hay đường đất, hỏi lại trước khi hẹn xem.',
                            'Kiểm tra bao nhiêu m² thổ cư và phần còn lại là loại đất gì.',
-                           'Đối chiếu giá/m² của lô đó với các tin cùng phường trong dashboard trước khi hẹn xem.'],
+                           'Tự tính giá/m² bằng tổng giá (tỷ) × 1.000 ÷ diện tích (m²) rồi đối chiếu với giá trong '
+                           'tin.',
+                           'Mở tin gốc và kiểm tra vị trí, diện tích, đường vào, thổ cư và giấy tờ trước khi đi xem.'],
              'faq': [{'q': 'Khoảng diện tích nào có nhiều tin đất nền nhất?',
-                      'a': 'Trong cửa sổ 17–30/09/2026, nhóm 80-120 m² có 77 tin trong mẫu 202 tin đủ diện tích, tổng '
-                           'giá và giá/m². Nhóm 120-200 m² có 70 tin. Đây là phân bố tin đang rao, không phải dữ liệu '
-                           'giao dịch.'},
+                      'a': 'Trong cửa sổ 25/09–08/10/2026, nhóm 120-200 m² có 110 tin trong mẫu 289 tin đủ diện tích, '
+                           'tổng giá và giá/m². Nhóm 80-120 m² có 104 tin. Đây là phân bố tin đang rao, không phải dữ '
+                           'liệu giao dịch.'},
                      {'q': 'Đất lớn hơn có luôn rẻ hơn theo giá/m² không?',
-                      'a': 'Không. Giá/m² trung vị lần lượt là 41,2 tr/m², 25,6 tr/m², 19,8 tr/m² và 25,4 tr/m² theo '
-                           'bốn khoảng. Các nhóm không giảm đều, nên cần so thêm phường, loại đường và thổ cư.'},
+                      'a': 'Không nên xem đó là quy luật. Trong mẫu hiện tại, giá/m² trung vị lần lượt là 37,9 tr/m², '
+                           '23,2 tr/m², 19,3 tr/m² và 17,1 tr/m² theo bốn khoảng. Cần so thêm phường, loại đường và '
+                           'thổ cư.'},
                      {'q': 'Có bao nhiêu tin đất nền dưới 3 tỷ?',
-                      'a': 'Có 114 tin có tổng giá dưới 3 tỷ trong 224 tin có trường tổng giá ở cửa sổ này. Con số này '
+                      'a': 'Có 190 tin có tổng giá dưới 3 tỷ trong 318 tin có trường tổng giá ở cửa sổ này. Con số này '
                            'không bao gồm tin chưa ghi giá tổng và không nói tin còn phù hợp sau khi kiểm tra thực '
                            'tế.'},
                      {'q': 'Tin không ghi loại đường thì nên hỏi gì?',
@@ -23686,8 +23698,8 @@ SEO_ARTICLES = {
                            'có đi được bằng ô tô không, và thông tin đó có khớp với vị trí trong tin hay không.'},
                      {'q': 'Số liệu trong bài lấy từ đâu và có phải giá chốt không?',
                       'a': 'Số liệu lấy từ tin rao Facebook đang được Radar theo dõi tại 13 phường Thủ Dầu Một, cửa sổ '
-                           '17–30/09/2026. Đây là giá đang rao, không phải giá chốt giao dịch; một lô có thể xuất hiện '
-                           'nhiều lần do đăng lại.'}]},
+                           '25/09–08/10/2026. Đây là giá đang rao, không phải giá chốt giao dịch; một lô có thể xuất '
+                           'hiện nhiều lần do đăng lại.'}]},
  'faq_note': 'Giá trong bài là giá đang rao từ tin Facebook, không phải giá chốt giao dịch. Radar BDS là bộ lọc dữ '
              'liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.',
  'final_cta': {'title': 'Lọc theo diện tích rồi mở từng tin',

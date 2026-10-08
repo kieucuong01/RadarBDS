@@ -1,3 +1,10 @@
+## 2026-10-08 — refresh
+- `/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban` — **Đất nền Bình Dương theo diện tích: khoảng nào có nhiều tin rao?**
+  - Refresh từ snapshot 17–30/09/2026 sang 25/09–08/10/2026; giữ `article.published_at=2026-09-18`, cập nhật `modified_at=2026-10-08`
+  - Data basis: listings Facebook tại 13 phường Thủ Dầu Một, `source='facebook'`, `is_active=1`, `is_blacklisted=0`, `review_hidden=0`; 488 tin đất nền, 289 tin đủ diện tích + tổng giá + giá/m², 190/318 tin có tổng giá dưới 3 tỷ
+  - Main update: nhóm 120-200 m² đứng đầu với 110 tin; 80-120 m² có 104 tin; thêm bảng loại đường và phép kiểm giá/m²
+  - Funnel: `/binh-duong`, dashboard lọc đất nền, `/dinh-gia-bds`, `/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong`, `/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu`
+
 ## 2026-09-13
 - `/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong` — **5 bước kiểm tra giá rao trước khi đi xem đất Bình Dương**
   - Pillar: Buyer guide / đọc giá rao / checklist trước khi đi xem
