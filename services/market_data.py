@@ -166,23 +166,28 @@ def listing_date_range_filter(date_range: str | None, prefix: str = ""):
 
 
 def listing_activity_at_sql(alias: str = "l") -> str:
-    """Public card activity: Guland price change/first seen, Facebook post date."""
+    """Actual price changes take precedence; recrawls alone do not refresh a card."""
     col = lambda name: f"{alias}.{name}" if alias else name
     return (
-        f"(CASE WHEN {col('source')} = 'guland' "
-        f"THEN COALESCE(CAST({col('price_updated_at')} AS TEXT), "
-        f"{col('first_seen_at')}, {col('crawled_at')}) "
+        f"COALESCE(CAST({col('price_updated_at')} AS TEXT), "
+        f"CASE WHEN {col('source')} = 'guland' "
+        f"THEN COALESCE({col('first_seen_at')}, {col('crawled_at')}) "
         f"ELSE COALESCE({col('posted_at')}, {col('crawled_at')}) END)"
     )
+
+
+def listing_activity_sort_sql(alias: str = "l") -> str:
+    """Compare actual instants, including mixed ISO/SQL formats and offsets."""
+    return f"NULLIF(({listing_activity_at_sql(alias)})::text, '')::timestamptz"
 
 
 def listing_card_activity(row):
     source = str(_row_get(row, "source", "") or "").lower()
     selected_activity = _row_get(row, "activity_at")
+    price_updated_at = _row_get(row, "price_updated_at")
+    if price_updated_at:
+        return price_updated_at, "price_updated"
     if source == "guland":
-        price_updated_at = _row_get(row, "price_updated_at")
-        if price_updated_at:
-            return selected_activity or price_updated_at, "price_updated"
         return (
             selected_activity
             or _row_get(row, "first_seen_at")
@@ -790,7 +795,7 @@ def _signal_sort_sql(sort_key: str) -> str:
         if part
     ]
     sort_map = {
-        "newest": f"{listing_activity_at_sql('l')} DESC, l.id DESC",
+        "newest": f"{listing_activity_sort_sql('l')} DESC NULLS LAST, l.id DESC",
         "price_m2_asc": "v.actual_ppm2 IS NULL, v.actual_ppm2 ASC, l.id DESC",
         "price_asc": "l.price_ty IS NULL, l.price_ty ASC, l.id DESC",
         "mos_desc": "v.mos_pct IS NULL, v.mos_pct DESC, l.id DESC",
@@ -1274,10 +1279,11 @@ def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, onl
     elif sort == "score_desc":
         score_expr = _max_sql("COALESCE(v.signal_score,0)", "COALESCE(sv.signal_score,0)")
         order_sql = f"{score_expr} DESC, ({display_mos_expr}) DESC, l.id DESC"
-    order_sql = (
-        f"{publisher_sort_rank_from_join_sql('l', 'feed_sp')} ASC, "
-        f"{order_sql}"
-    )
+    publisher_rank = publisher_sort_rank_from_join_sql('l', 'feed_sp')
+    if sort not in {'price_m2_asc', 'price_asc', 'mos_desc', 'score_desc'}:
+        order_sql = f"{listing_activity_sort_sql('l')} DESC NULLS LAST, {publisher_rank} ASC, l.id DESC"
+    else:
+        order_sql = f"{publisher_rank} ASC, {order_sql}"
     fresh_flag = "0 AS is_fresh_locked"
     total_select = "COUNT(*) OVER() AS total_count," if include_total else ""
 

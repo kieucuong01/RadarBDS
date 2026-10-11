@@ -34,6 +34,7 @@ from services.market_data import (
     effective_price_drop_select_sql,
     keyword_search_filter,
     listing_activity_at_sql,
+    listing_activity_sort_sql,
     listing_date_range_filter,
     related_price_drop_join_sql,
     resolve_image_url,
@@ -369,7 +370,8 @@ def _statement_timeout_ms() -> int:
 
 def _read_model_sort_sql(sort_key: str, alias: str) -> str:
     newest = (
-        f"{listing_activity_at_sql(alias)} DESC, "
+        f"{listing_activity_sort_sql(alias)} DESC NULLS LAST, "
+        f"{alias}.publisher_rank ASC, "
         f"{alias}.listing_id DESC"
     )
     sort_map = {
@@ -405,6 +407,8 @@ def _read_model_sort_sql(sort_key: str, alias: str) -> str:
     )
     sort_map["score_desc"] = ", ".join(score_parts)
     selected = sort_map.get(sort_key or "newest", newest)
+    if sort_key not in sort_map or sort_key == 'newest':
+        return newest
     return f"{alias}.publisher_rank ASC, {selected}"
 
 

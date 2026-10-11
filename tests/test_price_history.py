@@ -306,6 +306,22 @@ class PriceHistoryTest(unittest.TestCase):
             ).fetchone()
         self.assertIsNotNone(row["price_updated_at"])
 
+    def test_facebook_price_change_sets_activity_but_same_price_recrawl_preserves_it(self):
+        from db.connection import get_conn
+        from db.listings import upsert_listing
+        listing_id, _ = upsert_listing(self._rec(source='facebook'), crawl_run_id=1)
+        self._track(listing_id)
+        with get_conn() as conn:
+            self.assertIsNone(conn.execute('SELECT price_updated_at FROM listings WHERE id=?', (listing_id,)).fetchone()['price_updated_at'])
+        upsert_listing(self._rec(source='facebook', price_ty=1.7), crawl_run_id=2)
+        with get_conn() as conn:
+            updated = conn.execute('SELECT price_updated_at FROM listings WHERE id=?', (listing_id,)).fetchone()['price_updated_at']
+        self.assertIsNotNone(updated)
+        upsert_listing(self._rec(source='facebook', price_ty=1.7), crawl_run_id=3)
+        with get_conn() as conn:
+            unchanged = conn.execute('SELECT price_updated_at FROM listings WHERE id=?', (listing_id,)).fetchone()['price_updated_at']
+        self.assertEqual(updated, unchanged)
+
     def test_upsert_listing_missing_price_or_area_preserves_last_known_values(self):
         from db.connection import get_conn
         from db.listings import upsert_listing

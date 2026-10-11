@@ -22,6 +22,7 @@ Use this when a task touches user-facing deal quality, dedup/history, valuation,
 - Guest/Free/VIP may select Facebook or filtered Guland. Guland publishers classified `low_manual` or fail-open `unknown` are visible; `high_activity` and `automated_repost` are hidden.
 - Admin sees the same safe default and may explicitly reveal high/tool-like publishers with `hide_guland_reposts=0`, or set audited per-publisher overrides in Data Quality.
 - Publisher activity affects only feed/map visibility and ordering. It is not a listing quality flag, signal gate, valuation feature, or dedup identity.
+- On Săn Deal `newest` and Tất cả tin rao `date` sorts, chronological activity is primary; publisher rank only breaks equal-time ties. Compare timestamps as instants, not text. A genuine `price_updated_at` takes precedence for every source; otherwise Guland uses first-seen time and Facebook uses post time. A recrawl without a price change must not promote a listing.
 - Historical `guland_cluster_flood` is retired as a hard gate and is warning-only if it remains in old valuation rows.
 
 ## Dedup And Lot History

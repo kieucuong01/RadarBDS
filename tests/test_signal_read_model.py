@@ -459,7 +459,7 @@ def test_read_model_query_is_bounded_and_sets_local_timeout(monkeypatch):
     assert conn.closed is True
 
 
-def test_read_model_newest_sort_preserves_legacy_guland_text_order(monkeypatch):
+def test_read_model_newest_sort_compares_timestamps_before_publisher_rank(monkeypatch):
     from services import signal_read_model
 
     class _Cursor:
@@ -492,11 +492,11 @@ def test_read_model_newest_sort_preserves_legacy_guland_text_order(monkeypatch):
 
     query = " ".join(conn.queries[1][0].split())
     expected_order = (
+        "NULLIF((COALESCE(CAST(rm.price_updated_at AS TEXT), "
         "CASE WHEN rm.source = 'guland' THEN "
-        "COALESCE(CAST(rm.price_updated_at AS TEXT), "
-        "rm.first_seen_at, rm.crawled_at) ELSE "
-        "COALESCE(rm.posted_at, rm.crawled_at) END) DESC, "
-        "rm.listing_id DESC"
+        "COALESCE(rm.first_seen_at, rm.crawled_at) ELSE "
+        "COALESCE(rm.posted_at, rm.crawled_at) END))::text, '')::timestamptz "
+        "DESC NULLS LAST, rm.publisher_rank ASC, rm.listing_id DESC"
     )
     assert expected_order in query
     assert "rm.activity_at DESC" not in query

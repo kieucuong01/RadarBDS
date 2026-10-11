@@ -255,7 +255,10 @@ def test_listing_sort_is_whitelisted_and_stable(sort_by, sort_dir, needle):
 
     sql = listing_sort_sql(sort_by, sort_dir, "rm")
 
-    assert sql.startswith("rm.publisher_rank ASC")
+    if sort_by == 'date':
+        assert sql.index('::timestamptz DESC NULLS LAST') < sql.index('rm.publisher_rank ASC')
+    else:
+        assert sql.startswith("rm.publisher_rank ASC")
     assert needle in sql
     assert sql.endswith("rm.listing_id DESC")
 

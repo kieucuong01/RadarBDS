@@ -21,6 +21,7 @@ from services.market_data import (
     build_listing_filters,
     keyword_search_filter,
     listing_activity_at_sql,
+    listing_activity_sort_sql,
     listing_card_activity,
     listing_date_range_filter,
     redact_for_tier,
@@ -60,10 +61,12 @@ def listing_sort_sql(sort_by: str, sort_dir: str, alias: str) -> str:
         "price": f"{alias}.price_ty",
         "price_m2": f"{alias}.listing_price_per_m2",
         "fair": f"{alias}.fair_ppm2",
-        "date": listing_activity_at_sql(alias),
+        "date": listing_activity_sort_sql(alias),
         "ward": f"{alias}.ward",
         "prop_type": f"{alias}.property_type",
     }
+    if selected == 'date':
+        return f"{expressions[selected]} {direction} NULLS LAST, {alias}.publisher_rank ASC, {alias}.listing_id DESC"
     return (
         f"{alias}.publisher_rank ASC, "
         f"{expressions[selected]} {direction} NULLS LAST, "
@@ -515,7 +518,7 @@ def _load_listing_feed_legacy(
         "price": "l.price_ty",
         "price_m2": "l.price_per_m2",
         "fair": f"({display_fair_expr})",
-        "date": listing_activity_at_sql("l"),
+        "date": listing_activity_sort_sql("l"),
         "ward": "l.ward",
         "prop_type": "l.property_type",
     }
@@ -523,6 +526,8 @@ def _load_listing_feed_legacy(
         f"{publisher_sort_rank_sql('l')} ASC, "
         f"{sort_columns[selected_sort]} {direction} NULLS LAST, l.id DESC"
     )
+    if selected_sort == 'date':
+        order_sql = f"{sort_columns[selected_sort]} {direction} NULLS LAST, {publisher_sort_rank_sql('l')} ASC, l.id DESC"
 
     conn = _open_read_conn(db_path)
     try:

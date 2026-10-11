@@ -257,7 +257,7 @@ class SourcePolicyTest(unittest.TestCase):
             [unknown_id],
         )
 
-    def test_low_manual_guland_sorts_before_newer_unknown(self):
+    def test_newer_unknown_guland_sorts_before_older_manual(self):
         low_id = self._seed_signal(
             source="guland",
             title="Low manual publisher",
@@ -278,7 +278,7 @@ class SourcePolicyTest(unittest.TestCase):
         ).get_json()
         ordered = [row["id"] for row in payload["signals"]]
 
-        self.assertLess(ordered.index(low_id), ordered.index(unknown_id))
+        self.assertLess(ordered.index(unknown_id), ordered.index(low_id))
 
     def test_map_summary_and_pages_use_same_publisher_visibility(self):
         from db.connection import get_conn
@@ -505,7 +505,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(row["days_ago"], 0)
         self.assertEqual(row["card_date_reason"], "price_updated")
 
-    def test_facebook_card_keeps_posted_date_semantics(self):
+    def test_facebook_price_update_is_latest_card_activity(self):
         from db.connection import get_conn
 
         posted_at = (datetime.now() - timedelta(days=4)).strftime(
@@ -529,8 +529,59 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         row = response.get_json()["signals"][0]
-        self.assertEqual(row["days_ago"], 4)
-        self.assertEqual(row["card_date_reason"], "posted")
+        self.assertEqual(row["days_ago"], 0)
+        self.assertEqual(row["card_date_reason"], "price_updated")
+
+    def test_facebook_recrawl_without_price_change_keeps_posted_date(self):
+        from db.connection import get_conn
+        posted_at = (datetime.now() - timedelta(days=4)).strftime('%Y-%m-%d %H:%M:%S')
+        with get_conn() as conn:
+            conn.execute('UPDATE listings SET posted_at=?, crawled_at=CURRENT_TIMESTAMP, first_seen_at=CURRENT_TIMESTAMP, price_updated_at=NULL WHERE id=?',
+                         (posted_at, self.facebook_id))
+        response = self.client.get(f'/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=10')
+        self.assertEqual(response.status_code, 200)
+        row = next(item for item in response.get_json()['signals'] if item['id'] == self.facebook_id)
+        self.assertEqual(row['days_ago'], 4)
+        self.assertEqual(row['card_date_reason'], 'posted')
+
+    def test_newest_feeds_prioritize_price_updates_over_publisher_and_text_format(self):
+        import os
+        from unittest.mock import patch
+        from db.connection import get_conn
+        from services.signal_read_model import refresh_signal_card_read_model
+
+        unknown_id = self._seed_signal(source='guland', title='New unknown publisher', source_id='new-unknown')
+        manual_id = self._seed_signal(source='guland', title='Older manual publisher', source_id='old-manual')
+        self._link_guland_class(manual_id, 'low_manual')
+        self._login_as_admin()
+        query = f'city=Khac&ward={self.ward}&date_range=all&limit=20'
+
+        for flag in ('0', '1'):
+            with self.subTest(read_model=flag), patch.dict(os.environ, {
+                'RADAR_SIGNAL_READ_MODEL_ENABLED': flag, 'RADAR_LISTING_READ_MODEL_ENABLED': '1',
+            }):
+                with get_conn() as conn:
+                    conn.execute("UPDATE listings SET posted_at='2099-10-06T10:00:00+00:00', price_updated_at=NULL WHERE id=?", (self.facebook_id,))
+                    conn.execute("UPDATE listings SET first_seen_at='2099-10-01T00:00:00+00:00', price_updated_at='2099-10-06 12:00:00+00:00' WHERE id=?", (self.guland_id,))
+                    conn.execute("UPDATE listings SET first_seen_at='2099-10-06T11:00:00+00:00', price_updated_at=NULL WHERE id=?", (unknown_id,))
+                    conn.execute("UPDATE listings SET first_seen_at='2099-10-06T09:00:00+00:00', price_updated_at=NULL WHERE id=?", (manual_id,))
+                    if flag == '1':
+                        refresh_signal_card_read_model(conn, listing_ids=self.listing_ids)
+                expected = [self.guland_id, unknown_id, self.facebook_id, manual_id]
+                for endpoint, key in (('signals', 'signals'), ('listings', 'listings')):
+                    response = self.client.get(f'/api/{endpoint}?{query}&sort=newest&sort_by=date&sort_dir=desc&complete_only=0')
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual([item['id'] for item in response.get_json()[key]], expected)
+                with get_conn() as conn:
+                    conn.execute("UPDATE listings SET price_updated_at='2099-10-06 13:00:00+00:00' WHERE id=?", (self.facebook_id,))
+                    if flag == '1':
+                        refresh_signal_card_read_model(conn, listing_ids=self.listing_ids)
+                for endpoint, key in (('signals', 'signals'), ('listings', 'listings')):
+                    response = self.client.get(f'/api/{endpoint}?{query}&sort=newest&sort_by=date&sort_dir=desc&complete_only=0')
+                    self.assertEqual(response.status_code, 200)
+                    items = response.get_json()[key]
+                    self.assertEqual([item['id'] for item in items], [self.facebook_id, self.guland_id, unknown_id, manual_id])
+                    self.assertEqual(items[0]['card_date_reason'], 'price_updated')
 
     def test_confirmed_inactive_listing_is_hidden_but_unreachable_stays_visible(self):
         from db.connection import get_conn

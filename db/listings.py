@@ -499,8 +499,7 @@ def upsert_listing(rec: dict, crawl_run_id: Optional[int] = None) -> tuple:
             if not _present(new_ppm2) and _present(new_price) and _present(new_area):
                 new_ppm2 = round(float(new_price) * 1000 / float(new_area), 3)
             price_changed = bool(
-                is_guland
-                and new_price is not None
+                new_price is not None
                 and not _same_price_snapshot(existing["price_ty"], new_price)
             )
             price_dropped  = existing["price_dropped"]
