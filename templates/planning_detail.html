@@ -256,6 +256,9 @@
         </div>
         <a class="seo-button seo-button-primary" href="{{ page.dashboard_href }}" data-map-area-cta data-cta-context="detail_bottom" data-track-cta="planning_detail_dashboard">{{ page.dashboard_label }}</a>
       </section>
+
+      {% set lead_cta_context = "planning_detail_lead" %}
+      {% include "partials/seo_lead_capture.html" %}
     </article>
   </main>
 
@@ -264,6 +267,7 @@
   </div>
 
   {% include "partials/seo_footer.html" %}
+  {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
 </body>

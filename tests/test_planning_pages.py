@@ -141,6 +141,10 @@ def test_planning_detail_map_first_contract_and_schema():
     assert "Focus trên bản đồ" in html
     assert "Khu vực Bình Dương bị ảnh hưởng" in html
     assert 'data-map-area-cta' in html
+    assert 'class="seo-lead-capture-form"' in html
+    assert 'action="/api/leads"' in html
+    assert 'name="source_context" value="planning_detail_lead"' in html
+    assert "lead_capture_submit" in html
     assert '"@type": "Article"' in html
     assert '"@type": "FAQPage"' in html
     assert '"@type": "Dataset"' in html
