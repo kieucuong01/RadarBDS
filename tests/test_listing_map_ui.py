@@ -501,3 +501,64 @@ def test_mobile_leaflet_canvas_keeps_full_remaining_viewport_height():
 
     assert metrics["position"] == "absolute"
     assert metrics["height"] > 700
+
+
+def test_marker_preview_fits_mobile_map_and_yields_sheet_space():
+    playwright = pytest.importorskip("playwright.sync_api")
+    css = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
+    rows = "".join(
+        f"<dt>{label}</dt><dd>{value}</dd>"
+        for label, value in (
+            ("Giá rao", "1,8 tỷ"),
+            ("Diện tích", "100 m² · 5 × 20 m"),
+            ("Thổ cư", "80 m²"),
+            ("Vị trí", "Phú Lợi · ĐX 43"),
+            ("Loại hình", "Đất nền"),
+            ("Định giá", "2,25 tỷ"),
+            ("Biên an toàn", "20%"),
+        )
+    )
+    html = f"""
+    <style>{css}</style>
+    <style>.leaflet-container {{ position: relative; overflow: hidden; }}</style>
+    <body class="listing-map-open">
+      <section class="listing-map-workspace has-preview">
+        <header class="listing-map-workspace-head"><h2>Maps</h2></header>
+        <div class="listing-map-status">Đã tải</div>
+        <div class="listing-map-workspace-body">
+          <div class="listing-map-canvas leaflet-container">
+            <div class="listing-map-preview-popup">
+              <div class="leaflet-popup-content-wrapper">
+                <div class="leaflet-popup-content">
+                  <section class="listing-map-preview">
+                    <button class="listing-map-preview-title">Lô đất Phú Lợi</button>
+                    <dl class="listing-map-preview-facts">{rows}</dl>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="listing-map-panel"></aside>
+        </div>
+        <div class="listing-map-mobile-sheet"></div>
+      </section>
+    </body>
+    """
+
+    with playwright.sync_playwright() as driver:
+        browser = driver.chromium.launch(
+            executable_path=_chrome_executable(), headless=True,
+        )
+        page = browser.new_page(viewport={"width": 375, "height": 667})
+        page.set_content(html)
+        preview = page.locator(".listing-map-preview")
+        box = preview.bounding_box()
+        sheet_display = page.locator(".listing-map-mobile-sheet").evaluate(
+            "element => getComputedStyle(element).display"
+        )
+        browser.close()
+
+    assert box is not None
+    assert box["width"] < 375
+    assert box["height"] < 487
+    assert sheet_display == "none"

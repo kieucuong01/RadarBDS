@@ -833,56 +833,56 @@ def test_admin_editor_model_exposes_safe_group_and_listing_copy():
     }
 
 
-def test_direct_modal_group_is_limited_to_single_exact_and_road_markers():
+def test_single_listing_marker_can_open_preview_at_any_precision():
     assert _run_node(
-        "mapApi.isDirectModalGroup({precision:'exact',listing_count:1})"
+        "mapApi.isSingleListingGroup({precision:'exact',listing_count:1})"
     ) is True
     assert _run_node(
-        "mapApi.isDirectModalGroup({precision:'road',listing_count:1})"
+        "mapApi.isSingleListingGroup({precision:'road',listing_count:1})"
     ) is True
     assert _run_node(
-        "mapApi.isDirectModalGroup({precision:'landmark',listing_count:1})"
+        "mapApi.isSingleListingGroup({precision:'landmark',listing_count:1})"
+    ) is True
+    assert _run_node(
+        "mapApi.isSingleListingGroup({precision:'ward',listing_count:1})"
+    ) is True
+    assert _run_node(
+        "mapApi.isSingleListingGroup({precision:'road',listing_count:2})"
     ) is False
     assert _run_node(
-        "mapApi.isDirectModalGroup({precision:'ward',listing_count:1})"
-    ) is False
-    assert _run_node(
-        "mapApi.isDirectModalGroup({precision:'road',listing_count:2})"
-    ) is False
-    assert _run_node(
-        "mapApi.isDirectModalGroup({precision:'exact',listing_count:'1'})"
+        "mapApi.isSingleListingGroup({precision:'exact',listing_count:'1'})"
     ) is True
 
 
-def test_singleton_modal_item_requires_one_valid_item_from_an_eligible_group():
+def test_single_group_item_requires_one_valid_item():
     assert _run_node(
-        "mapApi.singletonModalItem({precision:'road',listing_count:1},"
+        "mapApi.singleGroupItem({precision:'road',listing_count:1},"
         "{items:[{id:42,title:'NE8'}]}).id"
     ) == 42
     assert _run_node(
-        "mapApi.singletonModalItem({precision:'exact',listing_count:1},"
+        "mapApi.singleGroupItem({precision:'exact',listing_count:1},"
         "{items:[{id:0,title:'Thiếu mã'}]})"
     ) is None
     assert _run_node(
-        "mapApi.singletonModalItem({precision:'road',listing_count:1},"
+        "mapApi.singleGroupItem({precision:'road',listing_count:1},"
         "{items:[]})"
     ) is None
     assert _run_node(
-        "mapApi.singletonModalItem({precision:'road',listing_count:1},"
+        "mapApi.singleGroupItem({precision:'road',listing_count:1},"
         "{items:[{id:42},{id:43}]})"
     ) is None
     assert _run_node(
-        "mapApi.singletonModalItem({precision:'ward',listing_count:1},"
+        "mapApi.singleGroupItem({precision:'ward',listing_count:1},"
         "{items:[{id:42}]})"
-    ) is None
+    )["id"] == 42
 
 
-def test_group_selection_outcome_opens_only_confirmed_exact_or_road_singletons():
+def test_group_selection_opens_preview_only_for_confirmed_single_listing_marker():
     direct = _run_node(
         "mapApi.groupSelectionOutcome({precision:'road',listing_count:1},"
         "{items:[{id:42,title:'NE8'}]})"
     )
-    assert direct["kind"] == "modal"
+    assert direct["kind"] == "preview"
     assert direct["item"]["id"] == 42
 
     assert _run_node(
@@ -896,30 +896,55 @@ def test_group_selection_outcome_opens_only_confirmed_exact_or_road_singletons()
     assert _run_node(
         "mapApi.groupSelectionOutcome({precision:'landmark',listing_count:1},"
         "{items:[{id:42}]}).kind"
-    ) == "items"
+    ) == "preview"
     assert _run_node(
         "mapApi.groupSelectionOutcome({precision:'ward',listing_count:1},"
         "{items:[{id:42}]}).kind"
-    ) == "items"
+    ) == "preview"
 
 
 def test_admin_group_selection_outcome_preserves_normal_singleton_rules_when_off():
     assert _run_node(
         "mapApi.adminGroupSelectionOutcome("
         "{precision:'exact',listing_count:1},false,{items:[{id:42}]})"
-    ) == "modal"
+    ) == "preview"
     assert _run_node(
         "mapApi.adminGroupSelectionOutcome("
         "{precision:'road',listing_count:1},false,{items:[{id:42}]})"
-    ) == "modal"
+    ) == "preview"
     assert _run_node(
         "mapApi.adminGroupSelectionOutcome("
         "{precision:'landmark',listing_count:1},false,{items:[{id:42}]})"
-    ) == "items"
+    ) == "preview"
     assert _run_node(
         "mapApi.adminGroupSelectionOutcome("
         "{precision:'ward',listing_count:1},false,{items:[{id:42}]})"
-    ) == "items"
+    ) == "preview"
+
+
+def test_marker_preview_rows_show_core_facts_and_missing_valuation_honestly():
+    rows = _run_node(
+        "mapApi.previewRows({price_ty:1.8,area_m2:100,frontage_m:5,"
+        "depth_m:20,tho_cu_m2:80,ward:'Phú Lợi',road_name:'ĐX 43',"
+        "prop_type_label:'Đất nền',fair_ppm2:22.5,mos_pct:20})"
+    )
+    assert rows == [
+        ["Giá rao", "1,8 tỷ"],
+        ["Diện tích", "100 m² · 5 × 20 m"],
+        ["Thổ cư", "80 m²"],
+        ["Vị trí", "Phú Lợi · ĐX 43"],
+        ["Loại hình", "Đất nền"],
+        ["Định giá", "2,25 tỷ"],
+        ["Biên an toàn", "20%"],
+    ]
+    missing = _run_node("mapApi.previewRows({price_ty:2,area_m2:90})")
+    assert missing[-2:] == [
+        ["Định giá", "Chưa có"],
+        ["Biên an toàn", "Chưa có"],
+    ]
+    assert _run_node(
+        "mapApi.previewRows({tho_cu_m2:'0.0'})[2]"
+    ) == ["Thổ cư", "0 m²"]
 
 
 def test_admin_group_selection_outcome_routes_singletons_to_editors_when_on():

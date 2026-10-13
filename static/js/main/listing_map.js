@@ -77,6 +77,8 @@
     markerRenderCount: 0,
     sheetExpanded: false,
     focusMode: false,
+    preview: null,
+    previewFocus: null,
     mapActionControl: null,
     locationButton: null,
     shareButton: null,
@@ -2411,22 +2413,21 @@
     return proxy;
   }
 
-  function isDirectModalGroup(group) {
-    if (!group || safeCount(group.listing_count) !== 1) return false;
-    return group.precision === "exact" || group.precision === "road";
+  function isSingleListingGroup(group) {
+    return Boolean(group) && safeCount(group.listing_count) === 1;
   }
 
-  function singletonModalItem(group, payload) {
-    if (!isDirectModalGroup(group)) return null;
+  function singleGroupItem(group, payload) {
+    if (!isSingleListingGroup(group)) return null;
     var items = payload && Array.isArray(payload.items) ? payload.items : [];
     if (items.length !== 1 || !validListingId(items[0])) return null;
     return items[0];
   }
 
   function groupSelectionOutcome(group, payload) {
-    var directItem = singletonModalItem(group, payload);
-    if (directItem) return { kind: "modal", item: directItem };
-    if (isDirectModalGroup(group) && (!payload
+    var directItem = singleGroupItem(group, payload);
+    if (directItem) return { kind: "preview", item: directItem };
+    if (isSingleListingGroup(group) && (!payload
       || !Array.isArray(payload.items) || payload.items.length === 0)) {
       return { kind: "items-error", item: null };
     }
@@ -2456,8 +2457,99 @@
     return true;
   }
 
+  function previewRows(item) {
+    function positive(value) {
+      var number = Number(value);
+      return Number.isFinite(number) && number > 0 ? number : null;
+    }
+    function format(value) {
+      return value.toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+    }
+    var area = positive(item.area_m2);
+    var frontage = positive(item.frontage_m);
+    var depth = positive(item.depth_m);
+    var thoCu = positive(item.tho_cu_m2);
+    var ratio = positive(item.tho_cu_ratio);
+    var noThoCu = [item.tho_cu_m2, item.tho_cu_ratio].some(function (value) {
+      return value !== null && value !== undefined && value !== ""
+        && Number(value) === 0;
+    });
+    var fair = positive(item.fair_ppm2);
+    var price = positive(item.price_ty);
+    var areaText = area ? format(area) + " m²" : "Chưa rõ";
+    if (frontage && depth) {
+      areaText += " · " + format(frontage) + " × " + format(depth) + " m";
+    }
+    var mos = Number(item.mos_pct);
+    return [
+      ["Giá rao", price ? format(price) + " tỷ" : "Chưa rõ"],
+      ["Diện tích", areaText],
+      ["Thổ cư", item.tho_cu_label || (thoCu ? format(thoCu) + " m²"
+        : (ratio ? format(ratio * 100) + "%" : (noThoCu ? "0 m²" : "Chưa rõ")))],
+      ["Vị trí", [item.ward, item.road_name].filter(Boolean).join(" · ") || "Chưa rõ"],
+      ["Loại hình", item.prop_type_label || "Chưa rõ"],
+      ["Định giá", fair && area ? format(fair * area / 1000) + " tỷ"
+        : (fair ? format(fair) + " triệu/m²" : "Chưa có")],
+      ["Biên an toàn", fair && Number.isFinite(mos) ? format(mos) + "%" : "Chưa có"]
+    ];
+  }
+
+  function closePreview(restoreFocus) {
+    var preview = state.preview;
+    state.preview = null;
+    if (state.workspace) state.workspace.classList.remove("has-preview");
+    if (preview && state.map) state.map.closePopup(preview);
+    if (restoreFocus && state.previewFocus && state.previewFocus.isConnected) {
+      state.previewFocus.focus();
+    }
+    state.previewFocus = null;
+  }
+
+  function openPreview(item, group) {
+    if (!validListingId(item) || !state.map) return false;
+    closePreview();
+    state.previewFocus = root.document.activeElement;
+    var preview = create("section", "listing-map-preview");
+    preview.setAttribute("aria-label", "Thông tin nhanh tin rao");
+    var dismiss = create("button", "listing-map-preview-close", "×");
+    dismiss.type = "button";
+    dismiss.setAttribute("aria-label", "Đóng thông tin nhanh");
+    dismiss.addEventListener("click", function () { closePreview(true); });
+    preview.appendChild(dismiss);
+    var title = create("button", "listing-map-preview-title", item.title || "Tin rao");
+    title.type = "button";
+    title.addEventListener("click", function () {
+      if (openListingFromMap(root, item)) closePreview();
+    });
+    preview.appendChild(title);
+    var facts = create("dl", "listing-map-preview-facts");
+    previewRows(item).forEach(function (row) {
+      facts.appendChild(create("dt", "", row[0]));
+      facts.appendChild(create("dd", "", row[1]));
+    });
+    preview.appendChild(facts);
+    preview.appendChild(create("small", "listing-map-preview-hint", "Bấm tiêu đề để xem đầy đủ"));
+    var popup = root.L.popup({
+      closeButton: false,
+      className: "listing-map-preview-popup",
+      maxWidth: 340,
+      autoPan: true
+    }).setLatLng([Number(group.lat), Number(group.lng)]).setContent(preview);
+    popup.on("remove", function () {
+      if (state.preview === popup) closePreview(true);
+    });
+    state.preview = popup;
+    state.workspace.classList.add("has-preview");
+    popup.openOn(state.map);
+    title.focus({ preventScroll: true });
+    return true;
+  }
+
   function openItem(item) {
-    openListingFromMap(root, item);
+    closePreview();
+    itemSequence += 1;
+    if (state.itemController) state.itemController.abort();
+    return openListingFromMap(root, item);
   }
 
   function renderItemsInto(target, group, payload) {
@@ -2744,6 +2836,7 @@
 
   function selectGroup(group) {
     if (!state.open || !state.snapshot) return;
+    closePreview();
     state.selectedGroup = group;
     var adminTargetKind = adminEditTargetKind(group, state.adminEditMode);
     if (adminTargetKind === "group") {
@@ -2757,8 +2850,8 @@
       });
       return;
     }
-    var directModalGroup = isDirectModalGroup(group);
-    if (!directModalGroup || adminTargetKind === "listing") {
+    var singleListingGroup = isSingleListingGroup(group);
+    if (!singleListingGroup || adminTargetKind === "listing") {
       setMobileSheetExpanded(true);
       setPanelView("items-loading", group);
     }
@@ -2784,7 +2877,7 @@
     fetchJson(url, controller).then(function (payload) {
       if (!state.open || sequence !== itemSequence) return;
       if (adminTargetKind === "listing") {
-        var listingItem = singletonModalItem(group, payload);
+        var listingItem = singleGroupItem(group, payload);
         if (listingItem) {
           beginAdminEdit({
             kind: "listing",
@@ -2799,7 +2892,7 @@
         return;
       }
       var outcome = groupSelectionOutcome(group, payload);
-      if (outcome.kind === "modal" && openListingFromMap(root, outcome.item)) {
+      if (outcome.kind === "preview" && openPreview(outcome.item, group)) {
         return;
       }
       if (outcome.kind === "items-error") {
@@ -2974,6 +3067,7 @@
     options = options || {};
     var safe = normalizedSnapshot(snapshot);
     if (!state.open || !safe) return Promise.resolve();
+    closePreview();
     state.snapshot = safe;
     state.summary = null;
     state.recentPayload = null;
@@ -3022,6 +3116,7 @@
     clearMarkerLabels();
     if (state.markerLayer) state.markerLayer.clearLayers();
     clearUserLocation();
+    closePreview();
     if (state.map) state.map.remove();
     state.map = null;
     state.markerLayer = null;
@@ -3134,6 +3229,10 @@
     if (!state.open || isSignalModalOpen()) return;
     if (event.key === "Escape") {
       event.preventDefault();
+      if (state.preview) {
+        closePreview(true);
+        return;
+      }
       if (state.adminEdit) {
         cancelAdminEdit();
         return;
@@ -3209,6 +3308,7 @@
     panelTabModel: panelTabModel,
     filterSummaryText: filterSummaryText,
     recentItemModel: recentItemModel,
+    previewRows: previewRows,
     adminEditActionModel: adminEditActionModel,
     adminEditModeModel: adminEditModeModel,
     adminEditTargetKind: adminEditTargetKind,
@@ -3230,8 +3330,8 @@
     mobileSheetModel: mobileSheetModel,
     sheetExpandedForView: sheetExpandedForView,
     selectedSheetActionModel: selectedSheetActionModel,
-    isDirectModalGroup: isDirectModalGroup,
-    singletonModalItem: singletonModalItem,
+    isSingleListingGroup: isSingleListingGroup,
+    singleGroupItem: singleGroupItem,
     groupSelectionOutcome: groupSelectionOutcome,
     adminGroupSelectionOutcome: adminGroupSelectionOutcome,
     openListingFromMap: openListingFromMap,

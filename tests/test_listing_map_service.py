@@ -128,6 +128,11 @@ class _MapConnection:
                 "title": "Lô đất Phú Lợi, gọi 0909 123 456",
                 "price_ty": 1.8,
                 "area_m2": 100,
+                "frontage_m": 5,
+                "depth_m": 20,
+                "tho_cu_m2": 80,
+                "tho_cu_ratio": 0.8,
+                "fair_ppm2": 22.5,
                 "property_type": "dat_nen",
                 "ward": "Phú Lợi",
                 "road_name": "ĐX 43",
@@ -659,6 +664,10 @@ def test_group_items_are_bounded_and_allowlisted(monkeypatch):
     assert payload["total"] == 1
     assert payload["items"][0]["id"] == 8
     assert payload["items"][0]["prop_type_label"]
+    assert payload["items"][0]["frontage_m"] == 5
+    assert payload["items"][0]["depth_m"] == 20
+    assert payload["items"][0]["tho_cu_m2"] == 80
+    assert payload["items"][0]["fair_ppm2"] == 22.5
     assert "0909 123 456" not in payload["items"][0]["title"]
     assert set(payload["items"][0]).isdisjoint(
         {"url", "phone", "contact_phone", "description", "seller_name"}
