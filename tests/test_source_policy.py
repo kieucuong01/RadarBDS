@@ -34,6 +34,7 @@ class SourcePolicyTest(unittest.TestCase):
             title="Guland source policy signal",
             source_id="guland",
         )
+        self._link_guland_class(self.guland_id, "low_manual")
 
     def tearDown(self):
         from db import connection
@@ -80,9 +81,14 @@ class SourcePolicyTest(unittest.TestCase):
                 """
                 INSERT INTO source_publishers (
                     source, publisher_key, identity_type,
-                    identity_confidence, activity_class
+                    identity_confidence, activity_class, metrics_json
                 )
-                VALUES ('guland', ?, 'member_id', 'high', ?)
+                VALUES ('guland', ?, 'member_id', 'high', ?,
+                        '{"observation_span_days": 14, "observed_days_30d": 3}')
+                ON CONFLICT (source, publisher_key) DO UPDATE SET
+                    activity_class=EXCLUDED.activity_class,
+                    metrics_json=EXCLUDED.metrics_json
+                RETURNING id
                 """,
                 (f"test-key-{listing_id}-{self.token}", activity_class),
             ).lastrowid
@@ -93,6 +99,7 @@ class SourcePolicyTest(unittest.TestCase):
                     evidence_type, identity_confidence
                 )
                 VALUES (?, ?, 'identified', 'member_id', 'high')
+                ON CONFLICT (listing_id) DO UPDATE SET publisher_id=EXCLUDED.publisher_id
                 """,
                 (listing_id, publisher_id),
             )
@@ -239,7 +246,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(payload["stats"]["total"], 2)
         self.assertEqual(payload["stats"]["signals"], 2)
 
-    def test_guest_guland_query_hides_high_activity_but_keeps_unknown(self):
+    def test_guest_guland_unknown_remains_in_listings_but_is_not_promoted(self):
         self._link_guland_class(self.guland_id, "high_activity")
         unknown_id = self._seed_signal(
             source="guland",
@@ -254,10 +261,14 @@ class SourcePolicyTest(unittest.TestCase):
 
         self.assertEqual(
             [row["id"] for row in payload["signals"]],
-            [unknown_id],
+            [],
         )
+        all_listings = self.client.get(
+            f"/api/listings?city=Khac&ward={self.ward}&source=guland&date_range=all&complete_only=0"
+        ).get_json()
+        self.assertEqual([row['id'] for row in all_listings['listings']], [unknown_id])
 
-    def test_newer_unknown_guland_sorts_before_older_manual(self):
+    def test_newer_unknown_sorts_in_all_listings_without_entering_signals(self):
         low_id = self._seed_signal(
             source="guland",
             title="Low manual publisher",
@@ -278,7 +289,14 @@ class SourcePolicyTest(unittest.TestCase):
         ).get_json()
         ordered = [row["id"] for row in payload["signals"]]
 
-        self.assertLess(ordered.index(unknown_id), ordered.index(low_id))
+        self.assertNotIn(unknown_id, ordered)
+        self.assertIn(low_id, ordered)
+        all_listings = self.client.get(
+            f"/api/listings?city=Khac&ward={self.ward}&source=guland&date_range=all"
+            "&complete_only=0&sort_by=date&sort_dir=desc"
+        ).get_json()
+        all_ordered = [row['id'] for row in all_listings['listings']]
+        self.assertLess(all_ordered.index(unknown_id), all_ordered.index(low_id))
 
     def test_map_summary_and_pages_use_same_publisher_visibility(self):
         from db.connection import get_conn
@@ -349,18 +367,25 @@ class SourcePolicyTest(unittest.TestCase):
             f"&location_key={location_key}&page=2&limit=2"
         ).get_json()
 
-        self.assertEqual(summary["summary"]["total"], 4)
-        self.assertEqual(summary["summary"]["mapped"], 3)
+        self.assertEqual(summary["summary"]["total"], 3)
+        self.assertEqual(summary["summary"]["mapped"], 2)
         ids = [
             row["id"]
             for row in first_page["items"] + second_page["items"]
         ]
-        self.assertEqual(first_page["total"], 3)
+        self.assertEqual(first_page["total"], 2)
         self.assertIn(low_id, ids)
-        self.assertIn(unknown_id, ids)
+        self.assertNotIn(unknown_id, ids)
         self.assertNotIn(high_id, ids)
         self.assertNotIn(automated_id, ids)
-        self.assertLess(ids.index(low_id), ids.index(unknown_id))
+        all_query = query.replace('mode=signals', 'mode=all')
+        all_summary = self.client.get(f'/api/map-listings?{all_query}').get_json()
+        all_items = self.client.get(
+            f'/api/map-listing-items?{all_query}&location_key={location_key}&limit=20'
+        ).get_json()
+        self.assertEqual(all_summary['summary']['total'], 4)
+        self.assertEqual(all_summary['summary']['mapped'], 3)
+        self.assertIn(unknown_id, [row['id'] for row in all_items['items']])
 
     def test_admin_can_select_guland_source(self):
         self._login_as_admin()
@@ -571,7 +596,8 @@ class SourcePolicyTest(unittest.TestCase):
                 for endpoint, key in (('signals', 'signals'), ('listings', 'listings')):
                     response = self.client.get(f'/api/{endpoint}?{query}&sort=newest&sort_by=date&sort_dir=desc&complete_only=0')
                     self.assertEqual(response.status_code, 200)
-                    self.assertEqual([item['id'] for item in response.get_json()[key]], expected)
+                    endpoint_expected = [listing_id for listing_id in expected if endpoint == 'listings' or listing_id != unknown_id]
+                    self.assertEqual([item['id'] for item in response.get_json()[key]], endpoint_expected)
                 with get_conn() as conn:
                     conn.execute("UPDATE listings SET price_updated_at='2099-10-06 13:00:00+00:00' WHERE id=?", (self.facebook_id,))
                     if flag == '1':
@@ -580,7 +606,9 @@ class SourcePolicyTest(unittest.TestCase):
                     response = self.client.get(f'/api/{endpoint}?{query}&sort=newest&sort_by=date&sort_dir=desc&complete_only=0')
                     self.assertEqual(response.status_code, 200)
                     items = response.get_json()[key]
-                    self.assertEqual([item['id'] for item in items], [self.facebook_id, self.guland_id, unknown_id, manual_id])
+                    expected_after_update = [self.facebook_id, self.guland_id, unknown_id, manual_id]
+                    endpoint_expected = [listing_id for listing_id in expected_after_update if endpoint == 'listings' or listing_id != unknown_id]
+                    self.assertEqual([item['id'] for item in items], endpoint_expected)
                     self.assertEqual(items[0]['card_date_reason'], 'price_updated')
 
     def test_confirmed_inactive_listing_is_hidden_but_unreachable_stays_visible(self):

@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,7 +30,7 @@ def test_growth_admin_ui_contract():
     assert "chart.js@4.4.4" in script
     user_select = template[template.index('id="userTierFilter"'):template.index('id="userTable"', template.index('id="userTierFilter"'))]
     assert "chart.js@4.4.4" not in user_select
-    assert "admin-v52-marketing-funnel" in template
+    assert re.search(r"filename=['\"]js/admin\.js['\"]\)\s*}}\?v=admin-v\d+-[a-z0-9-]+", template)
     assert "/admin/api/growth?period=" in script
     assert "include_guland=" in script
     assert "prefers-reduced-motion" in script

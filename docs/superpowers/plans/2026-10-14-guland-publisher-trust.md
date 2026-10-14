@@ -32,3 +32,9 @@
 - Final verification: 219 related tests passed; 21 existing `datetime.utcnow()` deprecation warnings in auth code. Python compilation, admin JavaScript syntax, and `git diff --check` passed. Fresh review found no remaining important issue after midnight Vietnam and source-last-seen regressions were fixed.
 - Read-only local impact report: 6,167 unidentified Guland listings, including 933 price/MOS candidates held back from promotion; 30 non-PII sample IDs saved in ignored `.local/guland-trust-impact-2026-10-14.json`. No production measurements or deployment were performed.
 - Graphify query ran before source exploration; the ignored structural code graph was refreshed after implementation (14,241 nodes / 35,081 edges, no LLM or clustering).
+
+## Release follow-up
+
+- User authorized commit/push/deploy. Initial full CI exposed 14 old source-policy test expectations that promoted unidentified Guland listings, and one hardcoded admin asset version. Updated the safe-source fixture with explicit observed publisher history; retained unknown listings/order/Maps assertions on all-listings while asserting exclusion from Signals. Both legacy and projection sort paths remain covered. All 58 source-policy/admin-growth contract tests passed locally.
+- Production read-only preflight found 213 publishers and real observation history; applying current classification rules predicts 19 eligible publishers and 9 qualifying Guland candidates. Projection is approximately 89 MB with over 3 GB disk headroom. Facebook configuration fingerprint was captured for after-release verification.
+- Production has four unrelated dirty social files. Preserve their exact bytes separately and restore after the guarded deploy; do not commit them into this release. Wait for the in-progress Facebook crawl before schema/publication maintenance.
