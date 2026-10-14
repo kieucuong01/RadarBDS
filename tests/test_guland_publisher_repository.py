@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
@@ -345,6 +345,7 @@ def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
         raw_data = {
             "url": f"https://guland.vn/post/seen-{token}",
             "date_raw": "1 ngày trước",
+            "price_ty": 2.5,
             **_identified_raw(token),
         }
         with connection.get_conn() as conn:
@@ -379,12 +380,12 @@ def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
             )
             first = record_seen_guland_cards(
                 conn,
-                [{"url": raw_data["url"], "date_raw": "Hôm nay"}],
+                [{"url": raw_data["url"], "date_raw": "Hôm nay", "price_ty": 2.5}],
                 datetime.fromisoformat("2026-07-31T10:00:00+07:00"),
             )
             second = record_seen_guland_cards(
                 conn,
-                [{"url": raw_data["url"], "date_raw": "Hôm nay"}],
+                [{"url": raw_data["url"], "date_raw": "Hôm nay", "price_ty": 2.5}],
                 datetime.fromisoformat("2026-07-31T11:00:00+07:00"),
             )
             daily = conn.execute(
@@ -435,6 +436,7 @@ def test_first_card_date_capture_is_baseline_not_a_bump(publisher_listing):
     try:
         raw_data = {
             "url": f"https://guland.vn/post/baseline-{token}",
+            "price_ty": 2.5,
             **_identified_raw(token),
         }
         with connection.get_conn() as conn:
@@ -460,17 +462,17 @@ def test_first_card_date_capture_is_baseline_not_a_bump(publisher_listing):
             )
             baseline = record_seen_guland_cards(
                 conn,
-                [{"url": raw_data["url"], "date_raw": "1 ngày trước"}],
+                [{"url": raw_data["url"], "date_raw": "1 ngày trước", "price_ty": 2.5}],
                 datetime.fromisoformat("2026-07-31T09:00:00+07:00"),
             )
             natural_progression = record_seen_guland_cards(
                 conn,
-                [{"url": raw_data["url"], "date_raw": "2 ngày trước"}],
+                [{"url": raw_data["url"], "date_raw": "2 ngày trước", "price_ty": 2.5}],
                 datetime.fromisoformat("2026-08-01T09:00:00+07:00"),
             )
             bumped = record_seen_guland_cards(
                 conn,
-                [{"url": raw_data["url"], "date_raw": "Hôm nay"}],
+                [{"url": raw_data["url"], "date_raw": "Hôm nay", "price_ty": 2.5}],
                 datetime.fromisoformat("2026-08-01T10:00:00+07:00"),
             )
             daily = conn.execute(
@@ -510,3 +512,153 @@ def test_first_card_date_capture_is_baseline_not_a_bump(publisher_listing):
                     (listing_id,),
                 )
                 conn.execute("DELETE FROM raw_listings WHERE id=?", (raw_id,))
+
+
+@pytest.mark.parametrize("source,klass,metrics,override,expected", [
+    ("facebook", "unknown", {}, "", True),
+    ("guland", "unknown", {}, "", False),
+    ("guland", "low_manual", {}, "", False),
+    ("guland", "low_manual", {"observation_span_days": 14, "observed_days_30d": 3}, "", True),
+    ("guland", "high_activity", {"observation_span_days": 30, "observed_days_30d": 20}, "", False),
+    ("guland", "automated_repost", {}, "", False),
+    ("guland", "unknown", {}, "allow_manual", True),
+    ("guland", "low_manual", {"observation_span_days": 14, "observed_days_30d": 3}, "hide_high_activity", False),
+])
+def test_signal_trust_policy_and_projection_agree(publisher_listing, source, klass, metrics, override, expected):
+    from db.guland_publishers import publisher_signal_eligibility_sql, publisher_signal_eligibility_from_join_sql
+    from services.signal_read_model import refresh_signal_card_read_model
+    listing_id, token = publisher_listing
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        conn.execute("UPDATE listings SET source=?, price_updated_at=NOW() WHERE id=?", (source, listing_id))
+        conn.execute("UPDATE source_publishers SET activity_class=?, metrics_json=?, manual_override=? WHERE id=?", (klass, json.dumps(metrics), override, publisher_id))
+        row = conn.execute(f"""
+            SELECT ({publisher_signal_eligibility_sql('l')}) AS legacy,
+                   ({publisher_signal_eligibility_from_join_sql('l', 'sp')}) AS joined,
+                   ({publisher_visibility_sql('l')}) AS visible
+            FROM listings l
+            LEFT JOIN listing_publishers lp ON lp.listing_id=l.id
+            LEFT JOIN source_publishers sp ON sp.id=lp.publisher_id
+            WHERE l.id=?
+        """, (listing_id,)).fetchone()
+        refresh_signal_card_read_model(conn, listing_ids=(listing_id,), market_changed=False)
+        projected = conn.execute("SELECT publisher_signal_eligible FROM signal_card_read_model WHERE listing_id=?", (listing_id,)).fetchone()
+    assert row['legacy'] is expected
+    assert row['joined'] is expected
+    assert projected['publisher_signal_eligible'] is expected
+    if klass == 'unknown' and not override:
+        assert row['visible'] is True  # retained for inspection, not promoted
+
+
+def test_backfilled_post_dates_do_not_manufacture_observation_history(publisher_listing):
+    listing_id, token = publisher_listing
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        for day in (date(2026, 7, 1), date(2026, 7, 15), date(2026, 7, 31)):
+            record_listing_observation(conn, listing_id, day, is_new=False, source_date_changed=False)
+        classification = recompute_publisher(conn, publisher_id, date.today())
+        metrics = conn.execute("SELECT metrics_json FROM source_publishers WHERE id=?", (publisher_id,)).fetchone()['metrics_json']
+    assert classification.activity_class == 'unknown'
+    assert metrics['observed_days_30d'] == 1
+    assert metrics['observation_span_days'] == 0
+
+
+def test_three_actual_observation_days_mature_publisher(publisher_listing):
+    listing_id, token = publisher_listing
+    now = datetime.now(timezone.utc)
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        for delta in (14, 7, 0):
+            observed = now - timedelta(days=delta)
+            record_listing_observation(conn, listing_id, observed.date(), is_new=False,
+                                       source_date_changed=False, observed_at=observed)
+        result = recompute_publisher(conn, publisher_id, now.date())
+    assert result.activity_class == 'low_manual'
+
+
+def test_established_publisher_keeps_maturity_after_a_quiet_month(publisher_listing):
+    listing_id, token = publisher_listing
+    now = datetime.now(timezone.utc)
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        for delta in (60, 2, 1, 0):
+            observed = now - timedelta(days=delta)
+            record_listing_observation(conn, listing_id, observed.date(), is_new=False,
+                                       source_date_changed=False, observed_at=observed)
+        result = recompute_publisher(conn, publisher_id, now.date())
+    assert result.activity_class == 'low_manual'
+
+
+def test_observation_preserves_source_seen_time_during_replay(publisher_listing):
+    listing_id, token = publisher_listing
+    observed = datetime.fromisoformat('2026-07-31T10:00:00+07:00')
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token), observed_at=observed)
+        record_listing_observation(conn, listing_id, observed.date(), is_new=True,
+                                   source_date_changed=False, observed_at=observed)
+        last_seen = conn.execute('SELECT last_seen_at FROM source_publishers WHERE id=?', (publisher_id,)).fetchone()['last_seen_at']
+    assert last_seen == observed
+
+
+@pytest.mark.parametrize('source,trusted', [('facebook', False), ('guland', False), ('guland', True)])
+def test_promotion_matches_feed_counts_maps_and_vip(publisher_listing, monkeypatch, source, trusted):
+    from services import market_data, signal_read_model
+    from services.listing_map import MapFilters, _filtered_sql, _base_cte
+    from cli.notify import _fetch_new_signals
+    listing_id, token = publisher_listing
+    ward = f'TrustWard{token}'
+    with connection.get_conn() as conn:
+        if source == 'guland':
+            publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+            metrics = {'observation_span_days': 14, 'observed_days_30d': 3} if trusted else {}
+            conn.execute("UPDATE source_publishers SET activity_class=?, metrics_json=? WHERE id=?",
+                         ('low_manual' if trusted else 'unknown', json.dumps(metrics), publisher_id))
+        conn.execute("""UPDATE listings SET source=?, ward=?, price_ty=2, price_per_m2=20,
+            area_m2=100, probably_sold=0, possibly_duplicate=0, source_status='active',
+            first_seen_at='2099-01-15', crawled_at='2099-01-15' WHERE id=?""", (source, ward, listing_id))
+        conn.execute("INSERT INTO valuation_results(listing_id, is_signal, actual_ppm2, fair_ppm2, mos_pct) VALUES (?, 1, 20, 30, 33.33)", (listing_id,))
+        signal_read_model.refresh_signal_card_read_model(conn, listing_ids=(listing_id,), market_changed=False)
+    expected_ids = [listing_id] if source == 'facebook' or trusted else []
+    kwargs = dict(sources=[source], wards=[ward], date_range='all', tier='guest')
+    legacy = market_data._load_signals_legacy(None, **kwargs)
+    projected = signal_read_model.load_signals_from_read_model(None, **kwargs)
+    assert [row['id'] for row in legacy['signals']] == expected_ids
+    assert [row['id'] for row in projected['signals']] == expected_ids
+    with connection.get_conn() as conn:
+        for enabled in ('0', '1'):
+            monkeypatch.setenv('RADAR_SIGNAL_READ_MODEL_ENABLED', enabled)
+            assert market_data.count_filtered_signals(conn, **kwargs) == len(expected_ids)
+            sql, params = _filtered_sql('signals', MapFilters(sources=(source,), wards=(ward,), date_range='all'), use_read_model=enabled == '1')
+            rows = conn.execute(_base_cte(sql, use_read_model=enabled == '1') + ' SELECT id FROM filtered', params).fetchall()
+            assert [row['id'] for row in rows] == expected_ids
+        vip_ids = [row['id'] for row in _fetch_new_signals(conn, '2099-01-01') if row['ward'] == ward]
+    assert vip_ids == expected_ids
+
+
+def test_trust_impact_report_is_private_and_read_only(publisher_listing):
+    from scripts.audit_guland_publisher_trust import build_report
+    listing_id, _token = publisher_listing
+    with connection.get_conn() as conn:
+        conn.execute('SET TRANSACTION READ ONLY')
+        report = build_report(conn, sample_limit=2)
+    assert report['policy']['min_observation_span_days'] == 14
+    assert report['policy']['min_observed_days_30d'] == 3
+    assert 'url' not in json.dumps(report)
+    assert 'publisher_key' not in json.dumps(report)
+
+
+def test_failed_reclassification_publication_rolls_back_policy(publisher_listing, monkeypatch):
+    from scripts import audit_guland_publisher_trust as audit
+    listing_id, token = publisher_listing
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        conn.execute("UPDATE source_publishers SET activity_class='low_manual' WHERE id=?", (publisher_id,))
+    def fail_refresh(*args, **kwargs):
+        raise RuntimeError('projection failed')
+    monkeypatch.setattr(audit, 'refresh_signal_card_read_model', fail_refresh)
+    with pytest.raises(RuntimeError, match='projection failed'):
+        with connection.get_conn() as conn:
+            audit.apply_reclassification(conn)
+    with connection.get_conn() as conn:
+        stored = conn.execute('SELECT activity_class FROM source_publishers WHERE id=?', (publisher_id,)).fetchone()
+    assert stored['activity_class'] == 'low_manual'

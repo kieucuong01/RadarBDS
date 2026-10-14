@@ -1414,10 +1414,10 @@ async function loadDataQualityQueue(queue) {
 }
 
 const GULAND_PUBLISHER_CLASS = {
-  low_manual: 'Ít đăng / thủ công',
+  low_manual: 'Nhóm ít đăng',
   unknown: 'Chưa đủ dữ liệu',
   high_activity: 'Đăng dày',
-  automated_repost: 'Có dấu hiệu tool repost'
+  automated_repost: 'Có dấu hiệu đẩy tin / đăng hàng loạt'
 };
 
 function gulandPublisherMetric(metrics, key, fallback = 0) {
@@ -1451,15 +1451,17 @@ function gulandPublisherCard(item) {
         <div><dt>Cao nhất/ngày</dt><dd>${gulandPublisherMetric(metrics, 'max_posts_per_day_30d', gulandPublisherMetric(metrics, 'max_new_on_day'))}</dd></div>
         <div><dt>Bump 30 ngày</dt><dd>${gulandPublisherMetric(metrics, 'source_bumps_30d', gulandPublisherMetric(metrics, 'bumps_30d'))}</dd></div>
         <div><dt>Gần trùng/ngày</dt><dd>${esc(nearDuplicate)}</dd></div>
+        <div><dt>Thời gian quan sát</dt><dd>${gulandPublisherMetric(metrics, 'observation_span_days')} ngày</dd></div>
+        <div><dt>Ngày thực sự gặp / 30 ngày</dt><dd>${gulandPublisherMetric(metrics, 'observed_days_30d')}</dd></div>
       </dl>
       <div class="publisher-qc-meta">
-        <span>Tin cậy: ${esc(item.identity_confidence || 'low')}</span>
+        <span>Độ chắc chắn nhận diện: ${esc(item.identity_confidence || 'low')}</span>
         <span>Lý do: ${esc(item.activity_reason || 'Chưa phân loại')}</span>
         <span>Gặp gần nhất: ${esc(lastSeen)}</span>
       </div>
       <div class="publisher-qc-actions">
         <button type="button" class="secondary-btn ${override === 'allow_manual' ? 'active' : ''}"
-          onclick="setGulandPublisherOverride(${Number(item.id)}, 'allow_manual')">Cho phép như người đăng ít</button>
+          onclick="setGulandPublisherOverride(${Number(item.id)}, 'allow_manual')">Admin duyệt ngoại lệ</button>
         <button type="button" class="secondary-btn ${override === 'hide_high_activity' ? 'active' : ''}"
           onclick="setGulandPublisherOverride(${Number(item.id)}, 'hide_high_activity')">Luôn ẩn khỏi người dùng</button>
         ${override ? `<button type="button" class="secondary-btn" onclick="setGulandPublisherOverride(${Number(item.id)}, '')">Bỏ ghi đè</button>` : ''}

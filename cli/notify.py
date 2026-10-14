@@ -19,7 +19,7 @@ import math
 from datetime import datetime, timedelta, timezone
 
 from db.connection import get_conn, advisory_lock, AdvisoryLockBusy
-from db.guland_publishers import publisher_visibility_sql
+from db.guland_publishers import publisher_visibility_sql, publisher_signal_eligibility_sql
 from config.settings import LEGAL_IMAGE_EVIDENCE_ENABLED, SIGNAL_REALERT_THRESHOLD_PCT
 from services.signal_quality import (
     ACTIONABLE_SUPPRESS_FLAGS,
@@ -150,6 +150,7 @@ def _fetch_new_signals(conn, since: str, offset: int = 0) -> list[dict]:
     signal_condition = actionable_signal_sql("v")
     listing_condition = actionable_listing_sql("l")
     quality_condition = ' AND '.join(f"COALESCE(v.source_quality_flags,'') NOT LIKE '%{flag}%'" for flag in sorted(ACTIONABLE_SUPPRESS_FLAGS))
+    publisher_condition = publisher_signal_eligibility_sql('l')
     order_sql = (
         """CASE COALESCE(v.trust_tier, 'candidate_signal')
                     WHEN 'has_legal_doc' THEN 0
@@ -165,8 +166,8 @@ def _fetch_new_signals(conn, since: str, offset: int = 0) -> list[dict]:
         WITH {LATEST_VALUATION_CTE}
         SELECT l.id, l.title, l.ward, l.property_type, l.price_ty, l.area_m2,
                COALESCE(l.source_status, 'unknown') AS source_status,
-               CASE WHEN {signal_condition} AND {listing_condition} THEN 1 ELSE 0 END AS alert_signal_eligible,
-               CASE WHEN {listing_condition} AND {quality_condition} THEN 1 ELSE 0 END AS alert_listing_eligible,
+               CASE WHEN {signal_condition} AND {listing_condition} AND {publisher_condition} THEN 1 ELSE 0 END AS alert_signal_eligible,
+               CASE WHEN {listing_condition} AND {quality_condition} AND {publisher_condition} THEN 1 ELSE 0 END AS alert_listing_eligible,
                COALESCE(v.mos_pct, 0) AS mos_pct,
                COALESCE(v.trust_tier, 'candidate_signal') AS trust_tier,
                COALESCE(v.trust_score, 0) AS trust_score,
@@ -177,7 +178,7 @@ def _fetch_new_signals(conn, since: str, offset: int = 0) -> list[dict]:
         WHERE COALESCE(l.is_blacklisted,0)=0 AND COALESCE(l.review_hidden,0)=0
           AND {publisher_visibility_sql('l')}
           AND (
-            ({signal_condition} AND {listing_condition}
+            ({signal_condition} AND {listing_condition} AND {publisher_condition}
              AND (datetime(COALESCE(l.first_seen_at, l.crawled_at, l.posted_at)) >= datetime(?)
                   OR datetime(l.price_updated_at) >= datetime(?)))
             OR EXISTS (SELECT 1 FROM notification_log n JOIN user_watchlists w ON w.user_id=n.user_id

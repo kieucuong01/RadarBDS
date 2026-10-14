@@ -26,6 +26,8 @@ _IDENTIFIED_CONFIDENCE = frozenset({"high", "medium"})
 _ACTIVITY_CLASSES = frozenset(
     {"low_manual", "high_activity", "automated_repost", "unknown"}
 )
+MIN_OBSERVATION_SPAN_DAYS = 14
+MIN_OBSERVED_DAYS_30D = 3
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,8 @@ class PublisherMetrics:
     bumps_30d: int = 0
     near_duplicates_max_day: int = 0
     days_ge_15_with_templates_14d: int = 0
+    observation_span_days: int = 0
+    observed_days_30d: int = 0
 
 
 @dataclass(frozen=True)
@@ -245,6 +249,27 @@ def validated_raw_publisher_fields(
     return fields
 
 
+def is_unchanged_guland_bump(
+    previous: Mapping[str, object],
+    card: Mapping[str, object],
+    *,
+    old_source_date: str,
+    new_source_date: str,
+) -> bool:
+    """A date advance is repost evidence only with a known unchanged price."""
+    from services.guland_reconciliation import canonical_price_vnd
+
+    old_price = canonical_price_vnd(previous.get("price_ty"))
+    new_price = canonical_price_vnd(card.get("price_ty"))
+    old_title = " ".join(str(previous.get("title") or "").casefold().split())
+    new_title = " ".join(str(card.get("title") or "").casefold().split())
+    return bool(
+        old_source_date and new_source_date > old_source_date
+        and old_price is not None and old_price == new_price
+        and not (old_title and new_title and old_title != new_title)
+    )
+
+
 def classify_publisher(
     metrics: PublisherMetrics,
     confidence: str,
@@ -270,6 +295,11 @@ def classify_publisher(
         return PublisherClassification("high_activity", "more_than_five_in_day")
     if metrics.new_30d > 30:
         return PublisherClassification("high_activity", "more_than_thirty_in_30d")
+    if (
+        metrics.observation_span_days < MIN_OBSERVATION_SPAN_DAYS
+        or metrics.observed_days_30d < MIN_OBSERVED_DAYS_30D
+    ):
+        return PublisherClassification("unknown", "insufficient_observation_history")
     return PublisherClassification("low_manual", "within_manual_activity_limits")
 
 

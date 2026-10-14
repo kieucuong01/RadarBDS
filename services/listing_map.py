@@ -345,6 +345,7 @@ def _filtered_sql(
         keyword=filters.keyword,
         date_range=filters.date_range,
         require_complete=filters.complete_only if mode == "all" else False,
+        require_trusted_publisher=mode == "signals",
         include_guland_high_activity=filters.include_guland_high_activity,
     )
     deal = build_deal_sql(filters.mos_min)

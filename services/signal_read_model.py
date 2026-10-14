@@ -10,6 +10,7 @@ from db.guland_publishers import (
     publisher_feed_join_sql,
     publisher_sort_rank_from_join_sql,
     publisher_visibility_from_join_sql,
+    publisher_signal_eligibility_from_join_sql,
 )
 from db.public_dataset_versions import (
     DATASET_LISTINGS,
@@ -98,6 +99,7 @@ READ_MODEL_COLUMNS = (
     "source_quality_recheck",
     "has_legal_doc_image",
     "publisher_visible_public",
+    "publisher_signal_eligible",
     "publisher_rank",
     "primary_image_id",
     "image_count",
@@ -156,6 +158,7 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
         f"AND ({actionable_signal_sql('sv')}))"
     )
     public_visibility_expr = publisher_visibility_from_join_sql("l", "feed_sp")
+    promotion_expr = publisher_signal_eligibility_from_join_sql("l", "feed_sp")
     publisher_rank_expr = publisher_sort_rank_from_join_sql("l", "feed_sp")
     primary_image_order_sql = _primary_image_order_sql("li")
     price_drop_select = effective_price_drop_select_sql(
@@ -225,6 +228,7 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
         )::boolean AS source_quality_recheck,
         ({LEGAL_DOC_IMAGE_SELECT_SQL})::boolean AS has_legal_doc_image,
         ({public_visibility_expr}) AS publisher_visible_public,
+        ({promotion_expr}) AS publisher_signal_eligible,
         ({publisher_rank_expr}) AS publisher_rank,
         primary_img.id AS primary_image_id,
         COALESCE(img_count.image_count, 0)::integer AS image_count,
@@ -434,9 +438,10 @@ def _read_model_filters(
     clauses = [
         "rm.is_actionable",
         "(? OR rm.publisher_visible_public)",
+        "(rm.source <> 'guland' OR ? OR rm.publisher_signal_eligible)",
         "COALESCE(rm.mos_pct, 0) >= ?",
     ]
-    params: list = [bool(allow_high_activity), float(mos_min or 0)]
+    params: list = [bool(allow_high_activity), bool(allow_high_activity), float(mos_min or 0)]
     clauses.append("rm.price_dropped" if only_drops else "NOT rm.possibly_duplicate")
 
     for column, values in (

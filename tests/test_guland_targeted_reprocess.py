@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 from unittest import mock
 
 from cleansing.reprocess import run_targeted_reprocess
@@ -160,20 +160,25 @@ def test_targeted_reprocess_links_publisher_once():
                 (source_id, url, json.dumps(raw_data)),
             ).lastrowid
 
-        # Freeze the process-local activity day, independently of DB session timezone.
+        # Replaying archived raw data cannot manufacture a fresh observation day.
+        from db.guland_publishers import recompute_publisher
         with mock.patch(
-            "cleansing.reprocess.date", wraps=date,
+            "cleansing.reprocess.datetime", wraps=datetime,
         ) as activity_clock, mock.patch(
+            "cleansing.reprocess.recompute_publisher", wraps=recompute_publisher,
+        ) as classify, mock.patch(
             "cleansing.reprocess.reprocess_valuation",
             return_value={"total": 1, "signals": 0, "outliers": 0},
         ), mock.patch(
             "cleansing.reprocess._run_listing_map_backfill",
             return_value={"processed": 1},
         ):
-            activity_clock.today.return_value = date(2025, 1, 2)
+            activity_clock.now.return_value = datetime.fromisoformat('2026-08-01T00:15:00+07:00')
             first = run_targeted_reprocess([raw_id])
+            listing_id = first["listings"]["processed_ids"][0]
             second = run_targeted_reprocess([raw_id])
-            assert activity_clock.today.call_count >= 2
+            assert classify.call_count == 2
+            assert all(call.args[2] == date(2026, 8, 1) for call in classify.call_args_list)
 
         listing_id = first["listings"]["processed_ids"][0]
         assert second["listings"]["processed_ids"] == [listing_id]
@@ -192,13 +197,19 @@ def test_targeted_reprocess_links_publisher_once():
                 FROM publisher_activity_daily
                 WHERE publisher_id=? AND activity_date=?
                 """,
-                (publisher_id, date(2025, 1, 2)),
+                (publisher_id, date(2026, 7, 31)),
+            ).fetchone()
+            observed = conn.execute(
+                "SELECT MIN(observed_at) AS first_seen, COUNT(*) AS n "
+                "FROM publisher_listing_observations WHERE publisher_id=?", (publisher_id,),
             ).fetchone()
 
         assert link["identity_status"] == "identified"
         assert publisher_id is not None
         assert daily["new_listing_count"] == 1
         assert daily["seen_listing_count"] == 1
+        assert observed["n"] == 1
+        assert observed["first_seen"].astimezone(timezone.utc).isoformat() == '2026-07-31T03:00:00+00:00'
     finally:
         with get_conn() as conn:
             if listing_id:

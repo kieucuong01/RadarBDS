@@ -1960,6 +1960,7 @@ def _migrate_public_read_model(conn: Any) -> None:
             source_quality_recheck BOOLEAN NOT NULL DEFAULT FALSE,
             has_legal_doc_image BOOLEAN NOT NULL DEFAULT FALSE,
             publisher_visible_public BOOLEAN NOT NULL DEFAULT TRUE,
+            publisher_signal_eligible BOOLEAN NOT NULL DEFAULT FALSE,
             publisher_rank SMALLINT NOT NULL DEFAULT 1,
             primary_image_id BIGINT
                 REFERENCES listing_images(id) ON DELETE SET NULL,
@@ -1974,6 +1975,10 @@ def _migrate_public_read_model(conn: Any) -> None:
         ADD COLUMN IF NOT EXISTS listing_price_per_m2 DOUBLE PRECISION
         """
     )
+    conn.execute("""
+        ALTER TABLE signal_card_read_model
+        ADD COLUMN IF NOT EXISTS publisher_signal_eligible BOOLEAN NOT NULL DEFAULT FALSE
+    """)
     conn.execute(
         """
         ALTER TABLE signal_card_read_model

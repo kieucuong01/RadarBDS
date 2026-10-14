@@ -16,6 +16,7 @@ import unicodedata
 from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from psycopg.types.json import Jsonb
 
@@ -39,6 +40,7 @@ from db.guland_publishers import (
     recompute_publisher,
     record_listing_observation,
     sync_listing_publisher,
+    publisher_policy_state,
 )
 from db.listings import insert_images, update_listing_outlier, upsert_listing
 from db.moderation import is_phone_blacklisted
@@ -484,25 +486,42 @@ def reprocess_listings(source: str = None, since: str = None, full: bool = False
             stats["processed_ids"].append(listing_id)
 
             if rec["source"] == "guland":
+                # Normalization is a replay, not a new observation of the source.
+                try:
+                    source_observed_at = datetime.fromisoformat(str(raw.get("crawled_at") or "").replace("Z", "+00:00"))
+                    if source_observed_at.tzinfo is None:
+                        source_observed_at = source_observed_at.replace(tzinfo=timezone.utc)
+                except (TypeError, ValueError):
+                    source_observed_at = None
                 with get_conn() as conn:
                     publisher_id = sync_listing_publisher(
                         conn,
                         listing_id,
                         raw_data,
+                        observed_at=source_observed_at,
                     )
                     if publisher_id:
-                        record_listing_observation(
-                            conn,
-                            listing_id,
-                            date.today(),
-                            is_new=is_new,
-                            source_date_changed=False,
-                        )
+                        before_policy = publisher_policy_state(conn, publisher_id)
+                        if source_observed_at is not None:
+                            record_listing_observation(
+                                conn, listing_id,
+                                source_observed_at.astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).date(),
+                                is_new=is_new, source_date_changed=False,
+                                observed_at=source_observed_at,
+                            )
                         recompute_publisher(
                             conn,
                             publisher_id,
-                            date.today(),
+                            datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date(),
                         )
+                        if publisher_policy_state(conn, publisher_id) != before_policy:
+                            linked_ids = conn.execute(
+                                "SELECT listing_id FROM listing_publishers WHERE publisher_id=?",
+                                (publisher_id,),
+                            ).fetchall()
+                            stats.setdefault("publisher_changed_ids", []).extend(
+                                int(row["listing_id"]) for row in linked_ids
+                            )
 
             if is_new:
                 stats["new"] += 1
@@ -841,7 +860,9 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     )
 
     public_read_model_stats = publish_public_data(
-        listing_ids=None if full else tuple(dict.fromkeys(processed_ids)),
+        listing_ids=None if full else tuple(dict.fromkeys([
+            *processed_ids, *listing_stats.get("publisher_changed_ids", []),
+        ])),
         market_changed=True,
         strict=False,
     )

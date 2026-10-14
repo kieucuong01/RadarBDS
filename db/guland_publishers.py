@@ -5,12 +5,16 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Mapping
+from zoneinfo import ZoneInfo
 
 from services.guland_publisher_activity import (
     PublisherClassification,
     PublisherMetrics,
+    MIN_OBSERVATION_SPAN_DAYS,
+    MIN_OBSERVED_DAYS_30D,
     classify_publisher,
     effective_publisher_class,
+    is_unchanged_guland_bump,
     validated_raw_publisher_fields,
 )
 
@@ -193,6 +197,7 @@ def record_listing_observation(
     source_date_changed: bool,
     near_duplicate_count: int = 0,
     repeated_template: bool = False,
+    observed_at: datetime | None = None,
 ) -> None:
     """Monotonically record one listing/day and rebuild its daily aggregate."""
     link = conn.execute(
@@ -206,13 +211,14 @@ def record_listing_observation(
     if not link or not link["publisher_id"]:
         return
     publisher_id = int(link["publisher_id"])
+    observed_at = observed_at or _utc_now()
     conn.execute(
         """
         INSERT INTO publisher_listing_observations (
             publisher_id, listing_id, activity_date, was_new, was_seen,
-            was_bumped, near_duplicate_count, repeated_template
+            was_bumped, near_duplicate_count, repeated_template, observed_at
         )
-        VALUES (?, ?, ?, ?, TRUE, ?, ?, ?)
+        VALUES (?, ?, ?, ?, TRUE, ?, ?, ?, ?)
         ON CONFLICT (publisher_id, listing_id, activity_date) DO UPDATE SET
             was_new=(
                 publisher_listing_observations.was_new OR EXCLUDED.was_new
@@ -229,7 +235,9 @@ def record_listing_observation(
                 publisher_listing_observations.repeated_template
                 OR EXCLUDED.repeated_template
             ),
-            observed_at=NOW()
+            observed_at=GREATEST(
+                publisher_listing_observations.observed_at, EXCLUDED.observed_at
+            )
         """,
         (
             publisher_id,
@@ -239,6 +247,7 @@ def record_listing_observation(
             bool(source_date_changed),
             max(0, int(near_duplicate_count or 0)),
             bool(repeated_template),
+            observed_at,
         ),
     )
     conn.execute(
@@ -271,10 +280,10 @@ def record_listing_observation(
     conn.execute(
         """
         UPDATE source_publishers
-        SET last_seen_at=GREATEST(last_seen_at, NOW())
+        SET last_seen_at=GREATEST(last_seen_at, ?)
         WHERE id=?
         """,
-        (publisher_id,),
+        (observed_at, publisher_id),
     )
 
 
@@ -374,7 +383,11 @@ def record_seen_guland_cards(
             int(row["listing_id"]),
             observed_on,
             is_new=False,
-            source_date_changed=source_date_changed,
+            source_date_changed=(source_date_changed and is_unchanged_guland_bump(
+                raw_data, card,
+                old_source_date=old_source_date, new_source_date=new_source_date,
+            )),
+            observed_at=observed_at,
         )
         link = conn.execute(
             """
@@ -386,21 +399,34 @@ def record_seen_guland_cards(
         if link:
             affected_publishers.add(int(link["publisher_id"]))
             stats["seen"] += 1
-            if source_date_changed:
+            if source_date_changed and is_unchanged_guland_bump(
+                raw_data, card,
+                old_source_date=old_source_date, new_source_date=new_source_date,
+            ):
                 stats["bumps"] += 1
 
     for publisher_id in affected_publishers:
+        before = publisher_policy_state(conn, publisher_id)
         recompute_publisher(conn, publisher_id, observed_on)
+        if publisher_policy_state(conn, publisher_id) != before:
+            # A publisher transition affects all its cards, not only today's URLs.
+            linked = conn.execute("""
+                SELECT l.raw_id FROM listings l
+                JOIN listing_publishers lp ON lp.listing_id=l.id
+                WHERE lp.publisher_id=? AND l.raw_id IS NOT NULL
+            """, (publisher_id,)).fetchall()
+            stats["changed_raw_ids"].extend(int(row["raw_id"]) for row in linked)
+    stats["changed_raw_ids"] = list(dict.fromkeys(stats["changed_raw_ids"]))
     return stats
 
 
-def recompute_publisher(
+def load_publisher_metrics(
     conn,
     publisher_id: int,
     as_of: date | None = None,
-) -> PublisherClassification:
-    """Recompute rolling metrics and persist the deterministic activity class."""
-    as_of = as_of or date.today()
+) -> PublisherMetrics:
+    """Read rolling activity and actual observation coverage, without writes."""
+    as_of = as_of or _utc_now().astimezone(ZoneInfo("Asia/Ho_Chi_Minh")).date()
     start = as_of - timedelta(days=29)
     rows = conn.execute(
         """
@@ -412,15 +438,14 @@ def recompute_publisher(
         """,
         (publisher_id, start, as_of),
     ).fetchall()
-    publisher = conn.execute(
-        """
-        SELECT identity_confidence
-        FROM source_publishers WHERE id=?
-        """,
-        (publisher_id,),
-    ).fetchone()
-    if not publisher:
-        raise ValueError("publisher not found")
+    coverage = conn.execute("""
+        SELECT COUNT(DISTINCT (observed_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date)
+                   FILTER (WHERE observed_at >= (?::date::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')) AS days,
+               MIN((observed_at AT TIME ZONE 'Asia/Ho_Chi_Minh')::date) AS first_day
+        FROM publisher_listing_observations
+        WHERE publisher_id=? AND was_seen
+          AND observed_at < ((?::date + 1)::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')
+    """, (start, publisher_id, as_of)).fetchone()
 
     def within(day_value: date, days: int) -> bool:
         return day_value >= as_of - timedelta(days=days - 1)
@@ -458,7 +483,20 @@ def recompute_publisher(
             and int(row["new_listing_count"]) >= 15
             and int(row["repeated_template_count"]) > 0
         ),
+        observed_days_30d=int(coverage["days"] or 0),
+        observation_span_days=(as_of - coverage["first_day"]).days if coverage["first_day"] else 0,
     )
+    return metrics
+
+
+def recompute_publisher(conn, publisher_id: int, as_of: date | None = None) -> PublisherClassification:
+    """Persist classification; callers publish affected cards in their batch."""
+    publisher = conn.execute(
+        "SELECT identity_confidence FROM source_publishers WHERE id=?", (publisher_id,)
+    ).fetchone()
+    if not publisher:
+        raise ValueError("publisher not found")
+    metrics = load_publisher_metrics(conn, publisher_id, as_of)
     classification = classify_publisher(
         metrics,
         str(publisher["identity_confidence"]),
@@ -700,6 +738,53 @@ def publisher_visibility_sql(
       )
     )
     """.strip()
+
+
+def _publisher_signal_trust_sql(alias: str) -> str:
+    coverage = " AND ".join(
+        f"CASE WHEN jsonb_typeof({alias}.metrics_json->'{key}') = 'number' "
+        f"THEN ({alias}.metrics_json->>'{key}')::numeric >= {minimum} ELSE FALSE END"
+        for key, minimum in (
+            ("observation_span_days", MIN_OBSERVATION_SPAN_DAYS),
+            ("observed_days_30d", MIN_OBSERVED_DAYS_30D),
+        )
+    )
+    return f"""COALESCE(
+        {alias}.manual_override = 'allow_manual' OR (
+            COALESCE({alias}.manual_override, '') <> 'hide_high_activity'
+            AND {alias}.identity_confidence IN ('high', 'medium')
+            AND {alias}.activity_class = 'low_manual' AND ({coverage})
+        ), FALSE)"""
+
+
+def publisher_signal_eligibility_sql(alias: str = "l", include_high_activity: bool = False) -> str:
+    """Stricter promotion policy; Facebook and all-listings are unchanged."""
+    if include_high_activity:
+        return "1=1"
+    return f"""({alias}.source <> 'guland' OR EXISTS (
+        SELECT 1 FROM listing_publishers trust_lp
+        JOIN source_publishers trust_sp ON trust_sp.id=trust_lp.publisher_id
+        WHERE trust_lp.listing_id={alias}.id
+          AND ({_publisher_signal_trust_sql('trust_sp')})
+    ))"""
+
+
+def publisher_policy_state(conn, publisher_id: int) -> tuple[str, bool]:
+    """Snapshot the two publisher properties that change public card policy."""
+    row = conn.execute(
+        f"SELECT activity_class, ({_publisher_signal_trust_sql('sp')}) AS eligible "
+        "FROM source_publishers sp WHERE id=?", (publisher_id,),
+    ).fetchone()
+    return str(row['activity_class']), bool(row['eligible'])
+
+
+def publisher_signal_eligibility_from_join_sql(
+    listing_alias: str, publisher_alias: str, *, include_high_activity: bool = False,
+) -> str:
+    """Set-based equivalent for feed/projection queries with publisher joins."""
+    if include_high_activity:
+        return "1=1"
+    return f"({listing_alias}.source <> 'guland' OR ({_publisher_signal_trust_sql(publisher_alias)}))"
 
 
 def publisher_feed_join_sql(

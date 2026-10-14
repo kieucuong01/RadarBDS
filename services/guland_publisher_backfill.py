@@ -18,11 +18,13 @@ from crawler.guland_pw import GulandCrawler, classify_detail_result
 from db.connection import AdvisoryLockBusy, advisory_lock, get_conn
 from db.guland_publishers import (
     recompute_publisher,
+    publisher_policy_state,
     record_listing_observation,
     sync_listing_publisher,
 )
 from db.raw_listings import update_raw_listing_payload
 from services.guland_coordinates import guland_identity_matches
+from services.public_data_publish import publish_public_data
 from services.guland_publisher_activity import (
     PublisherMetrics,
     classify_publisher,
@@ -390,6 +392,7 @@ def _checkpoint_payload(
         "run_id": run_id,
         "complete": bool(complete),
         "rows": rows,
+        "applied_listing_ids": sorted(applied_ids),
     }
 
 
@@ -445,6 +448,10 @@ def _load_incomplete_checkpoint(root: Path) -> tuple[Path | None, set[int]]:
             and row.get("state") == "applied"
             and str(row.get("listing_id") or "").isdigit()
         }
+        applied.update(
+            int(value) for value in payload.get("applied_listing_ids", [])
+            if str(value).isdigit()
+        )
         return path, applied
     return None, set()
 
@@ -481,13 +488,29 @@ def _merged_live_raw(
     return merged
 
 
-def _reprocess_changed_raw_ids(raw_ids: Sequence[int]) -> dict[str, object]:
+def _reprocess_changed_raw_ids(raw_ids: Sequence[int], *, listing_ids: Sequence[int] = ()) -> dict[str, object]:
     """Normalize only changed rows; publisher evidence must not rewrite valuation."""
-    if not raw_ids:
+    if not raw_ids and not listing_ids:
         return {"processed_ids": []}
     from cleansing.reprocess import reprocess_listings
 
-    return reprocess_listings(raw_ids=list(dict.fromkeys(raw_ids)))
+    result = reprocess_listings(raw_ids=list(dict.fromkeys(raw_ids))) if raw_ids else {"processed_ids": []}
+    affected_ids = list(dict.fromkeys([
+        *listing_ids, *result.get("processed_ids", []), *result.get("publisher_changed_ids", []),
+    ]))
+    if affected_ids:
+        with get_conn() as conn:
+            markers = ",".join("?" for _ in affected_ids)
+            linked = conn.execute(f"""
+                SELECT DISTINCT linked.listing_id FROM listing_publishers original
+                JOIN listing_publishers linked ON linked.publisher_id=original.publisher_id
+                WHERE original.listing_id IN ({markers})
+            """, affected_ids).fetchall()
+        affected_ids = list(dict.fromkeys([*affected_ids, *(int(row["listing_id"]) for row in linked)]))
+        result["public_read_model"] = publish_public_data(
+            listing_ids=tuple(affected_ids), market_changed=False, strict=True,
+        )
+    return result
 
 
 def _apply_plan(
@@ -544,6 +567,7 @@ def _apply_plan(
                     observed_at=checked_at_dt,
                 )
                 if publisher_id:
+                    before_policy = publisher_policy_state(conn, publisher_id)
                     record_listing_observation(
                         conn,
                         target.listing_id,
@@ -559,6 +583,13 @@ def _apply_plan(
                         publisher_id,
                         checked_at_dt.date(),
                     )
+                    if publisher_policy_state(conn, publisher_id) != before_policy:
+                        linked = conn.execute("""
+                            SELECT l.raw_id FROM listings l
+                            JOIN listing_publishers lp ON lp.listing_id=l.id
+                            WHERE lp.publisher_id=? AND l.raw_id IS NOT NULL
+                        """, (publisher_id,)).fetchall()
+                        changed_raw_ids.extend(int(row["raw_id"]) for row in linked)
             stats["publisher_links_updated"] = (
                 int(stats["publisher_links_updated"]) + 1
             )
@@ -572,7 +603,13 @@ def _apply_plan(
                 complete=False,
             ),
         )
-    _reprocess_changed_raw_ids(changed_raw_ids)
+    normalized = _reprocess_changed_raw_ids(
+        changed_raw_ids,
+        listing_ids=sorted(applied_ids | {
+            int(item["target"].listing_id) for item in plan if item["outcome"] != "removed"
+        }),
+    )
+    stats["public_read_model"] = normalized.get("public_read_model", {"status": "noop"})
     _write_checkpoint(
         checkpoint_path,
         _checkpoint_payload(

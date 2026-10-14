@@ -4,6 +4,27 @@ Use this for VPS deploy, production smoke checks, DB sync, crawl logs, and one-o
 
 ## Environments
 
+### Guland publisher trust rollout (2026-10-14)
+
+Facebook configuration and eligibility are unchanged. The stricter Guland promotion policy is documented in `product_rules.md`. Before deploying, inspect its impact on the target DB using the default read-only report (up to 30 listing samples per group, no publisher identities):
+
+```powershell
+& $py -X utf8 scripts/audit_guland_publisher_trust.py
+```
+
+After deploying/migrating the new projection column, an operator can explicitly recompute existing publisher metrics and publish their linked cards:
+
+```powershell
+& $py -X utf8 scripts/audit_guland_publisher_trust.py --apply
+& $py -X utf8 radar.py signal-read-model --refresh --compare --compare-listings --limit 200
+```
+
+Use the normal production interpreter/env for VPS commands. Run maintenance outside an active crawl and inspect disk headroom before a large projection rebuild. `--apply` commits classifications, projection rows and dataset versions together; failure rolls them back. Redis mirroring/prewarming happens after commit and is reported separately. More than 500 affected cards invokes the existing full-refresh path. No valuation or human label is rewritten.
+
+Old `low_manual` metrics without observation coverage fail closed for promotion until recomputed. Unidentified publishers remain excluded even after recomputation. Capture/backfill identity with the existing publisher workflow, then accumulate actual observations or use an audited admin exception; backfilled post dates do not establish history. The 14-day/3-day thresholds require sample validation on production and are not a promise of verified ownership or availability.
+
+### Environment inventory
+
 | Environment | Purpose | Notes |
 |---|---|---|
 | Local Windows | Development and safe reprocess/audit | Python 3.12, `.env.local` override, local PostgreSQL on `127.0.0.1:15432` |

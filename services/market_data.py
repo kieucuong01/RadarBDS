@@ -17,6 +17,8 @@ from db.guland_publishers import (
     publisher_sort_rank_sql,
     publisher_visibility_from_join_sql,
     publisher_visibility_sql,
+    publisher_signal_eligibility_sql,
+    publisher_signal_eligibility_from_join_sql,
 )
 from services.image_assets import resolve_image_url
 from services.signal_quality import (
@@ -564,6 +566,7 @@ def build_listing_filters(
     require_complete=False,
     include_guland_high_activity=False,
     publisher_alias: str | None = None,
+    require_trusted_publisher=False,
 ):
     if not sources:
         sources = list(DEFAULT_VISIBLE_SOURCES)
@@ -592,6 +595,14 @@ def build_listing_filters(
         f"COALESCE({col('source_status')},'unknown') <> 'inactive'",
         publisher_visibility,
     ]
+    if require_trusted_publisher:
+        where_parts.append(
+            publisher_signal_eligibility_from_join_sql(
+                listing_alias, publisher_alias, include_high_activity=include_guland_high_activity,
+            ) if publisher_alias else publisher_signal_eligibility_sql(
+                listing_alias, include_high_activity=include_guland_high_activity,
+            )
+        )
     if only_drops:
         where_parts.append(group_price_drop_filter_sql(prefix))
     else:
@@ -1263,6 +1274,7 @@ def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, onl
         date_range=date_range,
         include_guland_high_activity=include_guland_high_activity,
         publisher_alias="feed_sp",
+        require_trusted_publisher=True,
     )
     deal = build_deal_sql(mos_min)
     actual_expr = deal.actual_expr
@@ -1466,6 +1478,7 @@ def count_filtered_signals(
         keyword=keyword,
         date_range=date_range,
         include_guland_high_activity=include_guland_high_activity,
+        require_trusted_publisher=True,
     )
     signal_condition = build_deal_sql(mos_min).condition
     signal_row = conn.execute(

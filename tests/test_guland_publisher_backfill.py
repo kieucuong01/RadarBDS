@@ -179,6 +179,27 @@ def test_dry_run_never_calls_mutation_functions(monkeypatch):
     assert stats["identity_by_type"] == {"member_id": 1, "unknown": 1}
 
 
+def test_backfill_normalization_publishes_affected_cards_without_valuation(monkeypatch):
+    from cleansing import reprocess
+    init_schema()
+    calls = []
+    monkeypatch.setattr(reprocess, 'reprocess_listings', lambda **kwargs: {
+        'processed_ids': [900000000001], 'publisher_changed_ids': [900000000002],
+    })
+    monkeypatch.setattr(service, 'publish_public_data', lambda **kwargs: calls.append(kwargs) or {'status': 'ok'}, raising=False)
+    service._reprocess_changed_raw_ids([900000000003])
+    assert calls == [{'listing_ids': (900000000001, 900000000002), 'market_changed': False, 'strict': True}]
+
+
+def test_resume_preserves_listing_ids_pending_publication(tmp_path):
+    path = tmp_path / 'pending.json'
+    service._write_checkpoint(path, service._checkpoint_payload(
+        run_id='pending', plan=[], applied_ids={123}, complete=False,
+    ))
+    _path, applied = service._load_incomplete_checkpoint(tmp_path)
+    assert applied == {123}
+
+
 def test_dry_run_estimates_shared_publisher_from_first_seen_dates(monkeypatch):
     today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh")).date().isoformat()
     targets = []

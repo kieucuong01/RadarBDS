@@ -128,6 +128,7 @@ Marketing skills:
 - Guland and legacy BatDongSan use source-id identity only for lot history/dedup; do not use cross-URL same-lot heuristics for them.
 - Guest/Free/VIP may see Guland `low_manual` and fail-open `unknown` publishers. Hide `high_activity` and `automated_repost`; only admin may reveal or override them.
 - Guland publisher activity is a feed/map ranking and visibility policy, not a source-quality flag or valuation input. `guland_cluster_flood` is retired as a hard gate.
+- Guland Săn Deal/counts/signal Maps and new VIP/price-drop promotion also require an identified low-activity publisher with actual observations over 14 days and on 3 distinct Vietnam dates within 30 days, or an audited admin allow override. Unknown/insufficient-history publishers remain available in Tin rao/inspection. `publisher_signal_eligible` is separate from general public visibility; Facebook and valuation inputs are unchanged. Backfilled post dates do not establish observation history.
 - Daily production crawl is Facebook-first. Guland runs as a secondary timer/fallback cron. Do not put slow secondary crawl before Facebook.
 - Do not reintroduce external LLM verification into crawl/reprocess. Advisory notes and Claude review stay manual/explicit and write only to `ai_deal_review`.
 
