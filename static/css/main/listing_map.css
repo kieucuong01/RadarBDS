@@ -296,10 +296,10 @@ body.listing-map-focus-mode .listing-map-workspace {
 
 .listing-map-preview {
   position: relative;
-  width: min(320px, calc(100vw - 72px));
+  width: min(290px, calc(100vw - 72px));
   max-height: min(430px, calc(100dvh - 180px));
   overflow-y: auto;
-  padding: 16px;
+  padding: 14px;
   background: var(--card, #fff);
   color: var(--text, #0f172a);
 }
@@ -318,24 +318,32 @@ body.listing-map-focus-mode .listing-map-workspace {
   margin: 0;
 }
 
+.listing-map-preview-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .listing-map-preview-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  flex: 0 0 32px;
   width: 32px;
   height: 32px;
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: inherit;
+  color: var(--text-muted, #64748b);
   font: inherit;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   cursor: pointer;
 }
 
 .listing-map-preview-title {
-  display: block;
-  width: calc(100% - 28px);
+  flex: 1;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   padding: 0;
   border: 0;
   background: transparent;
@@ -343,7 +351,7 @@ body.listing-map-focus-mode .listing-map-workspace {
   font: inherit;
   font-size: 0.94rem;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.3;
   text-align: left;
   cursor: pointer;
 }
@@ -353,29 +361,86 @@ body.listing-map-focus-mode .listing-map-workspace {
   text-decoration: underline;
 }
 
-.listing-map-preview-facts {
+.listing-map-preview-prices {
   display: grid;
-  grid-template-columns: 80px minmax(0, 1fr);
-  gap: 6px 8px;
-  margin: 12px 0 8px;
-  font-size: 0.76rem;
-  line-height: 1.4;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 8px 0;
 }
 
-.listing-map-preview-facts dt {
-  color: var(--text-muted, #64748b);
-}
-
-.listing-map-preview-facts dd {
+.listing-map-preview-price {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  margin: 0;
-  font-weight: 700;
+  padding: 6px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 11px;
+  background: var(--surface, #f8fafc);
   overflow-wrap: anywhere;
 }
 
-.listing-map-preview-hint {
+.listing-map-preview-price-label {
   color: var(--text-muted, #64748b);
-  font-size: 0.68rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.listing-map-preview-price-value {
+  margin-top: 3px;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.listing-map-preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.listing-map-preview-chip {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.listing-map-preview-chip-ward {
+  border-color: #5eead4;
+  background: #f0fdfa;
+  color: #115e59;
+}
+
+.listing-map-preview-chip-area {
+  border-color: #fdba74;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.listing-map-preview-chip-type {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.listing-map-preview-chip-tho-cu {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+[data-theme="dark"] .listing-map-preview-chip {
+  background: #1e293b;
+  color: #e2e8f0;
 }
 
 .listing-map-map-actions {

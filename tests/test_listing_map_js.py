@@ -947,6 +947,39 @@ def test_marker_preview_rows_show_core_facts_and_missing_valuation_honestly():
     ) == ["Thổ cư", "0 m²"]
 
 
+def test_marker_preview_model_groups_prices_and_compact_detail_chips():
+    model = _run_node(
+        "mapApi.previewModel({price_ty:1.8,area_m2:100,frontage_m:5,"
+        "depth_m:20,tho_cu_m2:80,ward:'Phú Lợi',road_name:'ĐX 43',"
+        "prop_type_label:'Đất nền',fair_ppm2:22.5,mos_pct:20})"
+    )
+    assert model == {
+        "price": "1,8 tỷ",
+        "valuation": "2,25 tỷ",
+        "safety": "20%",
+        "chips": [
+            {"kind": "ward", "text": "Phú Lợi"},
+            {"kind": "area", "text": "5×20 (100 m²)"},
+            {"kind": "road", "text": "ĐX 43"},
+            {"kind": "type", "text": "Đất nền"},
+            {"kind": "tho-cu", "text": "TC 80 m²"},
+        ],
+    }
+    missing = _run_node("mapApi.previewModel({price_ty:2,area_m2:90})")
+    assert missing["valuation"] == "Chưa có"
+    assert missing["safety"] == "Chưa có"
+    assert missing["chips"] == [{"kind": "area", "text": "90 m²"}]
+
+
+def test_marker_preview_model_preserves_zero_residential_area():
+    assert _run_node(
+        "mapApi.previewModel({tho_cu_m2:'0.0'}).chips"
+    ) == [{"kind": "tho-cu", "text": "TC 0 m²"}]
+    assert _run_node(
+        "mapApi.previewModel({tho_cu_label:'TC 50 m²'}).chips"
+    ) == [{"kind": "tho-cu", "text": "TC 50 m²"}]
+
+
 def test_admin_group_selection_outcome_routes_singletons_to_editors_when_on():
     assert _run_node(
         "mapApi.adminGroupSelectionOutcome("

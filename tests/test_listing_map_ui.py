@@ -506,18 +506,6 @@ def test_mobile_leaflet_canvas_keeps_full_remaining_viewport_height():
 def test_marker_preview_fits_mobile_map_and_yields_sheet_space():
     playwright = pytest.importorskip("playwright.sync_api")
     css = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
-    rows = "".join(
-        f"<dt>{label}</dt><dd>{value}</dd>"
-        for label, value in (
-            ("Giá rao", "1,8 tỷ"),
-            ("Diện tích", "100 m² · 5 × 20 m"),
-            ("Thổ cư", "80 m²"),
-            ("Vị trí", "Phú Lợi · ĐX 43"),
-            ("Loại hình", "Đất nền"),
-            ("Định giá", "2,25 tỷ"),
-            ("Biên an toàn", "20%"),
-        )
-    )
     html = f"""
     <style>{css}</style>
     <style>.leaflet-container {{ position: relative; overflow: hidden; }}</style>
@@ -531,8 +519,28 @@ def test_marker_preview_fits_mobile_map_and_yields_sheet_space():
               <div class="leaflet-popup-content-wrapper">
                 <div class="leaflet-popup-content">
                   <section class="listing-map-preview">
-                    <button class="listing-map-preview-title">Lô đất Phú Lợi</button>
-                    <dl class="listing-map-preview-facts">{rows}</dl>
+                    <div class="listing-map-preview-header">
+                      <button class="listing-map-preview-title">Lô đất Phú Lợi</button>
+                      <button class="listing-map-preview-close">×</button>
+                    </div>
+                    <div class="listing-map-preview-prices">
+                      <div class="listing-map-preview-price listing-map-preview-price-price">
+                        <span>Giá rao</span><strong>1,8 tỷ</strong>
+                      </div>
+                      <div class="listing-map-preview-price listing-map-preview-price-valuation">
+                        <span>Định giá</span><strong>2,25 tỷ</strong>
+                      </div>
+                      <div class="listing-map-preview-price listing-map-preview-price-safety">
+                        <span>Biên an toàn</span><strong>20%</strong>
+                      </div>
+                    </div>
+                    <div class="listing-map-preview-chips">
+                      <span class="listing-map-preview-chip listing-map-preview-chip-ward">Phú Lợi</span>
+                      <span class="listing-map-preview-chip listing-map-preview-chip-area">5×20 (100 m²)</span>
+                      <span class="listing-map-preview-chip listing-map-preview-chip-road">Đường Nguyễn Đức Thuận kéo dài</span>
+                      <span class="listing-map-preview-chip listing-map-preview-chip-type">Đất nền</span>
+                      <span class="listing-map-preview-chip listing-map-preview-chip-tho-cu">TC 80 m²</span>
+                    </div>
                   </section>
                 </div>
               </div>
@@ -556,9 +564,39 @@ def test_marker_preview_fits_mobile_map_and_yields_sheet_space():
         sheet_display = page.locator(".listing-map-mobile-sheet").evaluate(
             "element => getComputedStyle(element).display"
         )
+        layout = page.locator(".listing-map-preview").evaluate(
+            """element => {
+              const rect = node => node.getBoundingClientRect();
+              const title = rect(element.querySelector('.listing-map-preview-title'));
+              const prices = rect(element.querySelector('.listing-map-preview-prices'));
+              const close = rect(element.querySelector('.listing-map-preview-close'));
+              const cards = [...element.querySelectorAll('.listing-map-preview-price')].map(rect);
+              const chips = [...element.querySelectorAll('.listing-map-preview-chip')].map(rect);
+              return {
+                titleBottom: title.bottom,
+                pricesTop: prices.top,
+                pricesBottom: prices.bottom,
+                cardTops: cards.map(card => Math.round(card.top)),
+                chipsTop: chips[0].top,
+                chipRows: [...new Set(chips.map(chip => Math.round(chip.top)))].length,
+                chipsFit: chips.every(chip => chip.right <= rect(element).right + 1),
+                noHorizontalOverflow: element.scrollWidth <= element.clientWidth,
+                closeWidth: close.width,
+                closeHeight: close.height,
+              };
+            }"""
+        )
         browser.close()
 
     assert box is not None
     assert box["width"] < 375
     assert box["height"] < 487
     assert sheet_display == "none"
+    assert layout["pricesTop"] >= layout["titleBottom"]
+    assert len(set(layout["cardTops"])) == 1
+    assert layout["chipsTop"] >= layout["pricesBottom"]
+    assert layout["chipRows"] > 1
+    assert layout["chipsFit"]
+    assert layout["noHorizontalOverflow"]
+    assert layout["closeWidth"] >= 32
+    assert layout["closeHeight"] >= 32

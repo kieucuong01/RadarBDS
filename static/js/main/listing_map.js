@@ -2494,6 +2494,39 @@
     ];
   }
 
+  function previewModel(item) {
+    var rows = previewRows(item);
+    var area = Number(item.area_m2);
+    var frontage = Number(item.frontage_m);
+    var depth = Number(item.depth_m);
+    var areaChip = Number.isFinite(area) && area > 0 ? rows[1][1] : "";
+    if (Number.isFinite(frontage) && frontage > 0
+        && Number.isFinite(depth) && depth > 0) {
+      var format = function (value) {
+        return value.toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+      };
+      areaChip = format(frontage) + "×" + format(depth)
+        + (areaChip ? " (" + format(area) + " m²)" : "");
+    }
+    var thoCu = rows[2][1];
+    var chips = [
+      ["ward", item.ward],
+      ["area", areaChip],
+      ["road", item.road_name],
+      ["type", item.prop_type_label],
+      ["tho-cu", thoCu === "Chưa rõ" ? ""
+        : (/^TC(?:\s|$)/i.test(thoCu) ? thoCu : "TC " + thoCu)]
+    ].filter(function (chip) { return chip[1]; }).map(function (chip) {
+      return { kind: chip[0], text: chip[1] };
+    });
+    return {
+      price: rows[0][1],
+      valuation: rows[5][1],
+      safety: rows[6][1],
+      chips: chips
+    };
+  }
+
   function closePreview(restoreFocus) {
     var preview = state.preview;
     state.preview = null;
@@ -2511,24 +2544,38 @@
     state.previewFocus = root.document.activeElement;
     var preview = create("section", "listing-map-preview");
     preview.setAttribute("aria-label", "Thông tin nhanh tin rao");
-    var dismiss = create("button", "listing-map-preview-close", "×");
-    dismiss.type = "button";
-    dismiss.setAttribute("aria-label", "Đóng thông tin nhanh");
-    dismiss.addEventListener("click", function () { closePreview(true); });
-    preview.appendChild(dismiss);
+    var header = create("div", "listing-map-preview-header");
     var title = create("button", "listing-map-preview-title", item.title || "Tin rao");
     title.type = "button";
     title.addEventListener("click", function () {
       if (openListingFromMap(root, item)) closePreview();
     });
-    preview.appendChild(title);
-    var facts = create("dl", "listing-map-preview-facts");
-    previewRows(item).forEach(function (row) {
-      facts.appendChild(create("dt", "", row[0]));
-      facts.appendChild(create("dd", "", row[1]));
+    header.appendChild(title);
+    var dismiss = create("button", "listing-map-preview-close", "×");
+    dismiss.type = "button";
+    dismiss.setAttribute("aria-label", "Đóng thông tin nhanh");
+    dismiss.addEventListener("click", function () { closePreview(true); });
+    header.appendChild(dismiss);
+    preview.appendChild(header);
+    var model = previewModel(item);
+    var prices = create("div", "listing-map-preview-prices");
+    [
+      ["Giá rao", model.price, "price"],
+      ["Định giá", model.valuation, "valuation"],
+      ["Biên an toàn", model.safety, "safety"]
+    ]
+      .forEach(function (entry) {
+        var card = create("div", "listing-map-preview-price listing-map-preview-price-" + entry[2]);
+        card.appendChild(create("span", "listing-map-preview-price-label", entry[0]));
+        card.appendChild(create("strong", "listing-map-preview-price-value", entry[1]));
+        prices.appendChild(card);
+      });
+    preview.appendChild(prices);
+    var chips = create("div", "listing-map-preview-chips");
+    model.chips.forEach(function (chip) {
+      chips.appendChild(create("span", "listing-map-preview-chip listing-map-preview-chip-" + chip.kind, chip.text));
     });
-    preview.appendChild(facts);
-    preview.appendChild(create("small", "listing-map-preview-hint", "Bấm tiêu đề để xem đầy đủ"));
+    preview.appendChild(chips);
     var popup = root.L.popup({
       closeButton: false,
       className: "listing-map-preview-popup",
@@ -3309,6 +3356,7 @@
     filterSummaryText: filterSummaryText,
     recentItemModel: recentItemModel,
     previewRows: previewRows,
+    previewModel: previewModel,
     adminEditActionModel: adminEditActionModel,
     adminEditModeModel: adminEditModeModel,
     adminEditTargetKind: adminEditTargetKind,
