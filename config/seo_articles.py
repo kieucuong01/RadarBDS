@@ -4527,511 +4527,310 @@ SEO_ARTICLES = {
                                                                                          'width': 21,
                                                                                          'color': '#f59e0b'}]}]}},
  'gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026': {'variant': 'knowledge',
-                                                        'path': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
-                                                        'title': 'Giá đất Định Hòa Thủ Dầu Một cập nhật tháng 7/2026 | '
-                                                                 'Radar BDS',
-                                                        'description': 'Giá đất Định Hòa tháng 7/2026: đất nền có mức '
-                                                                       'giá ở giữa 15,2 tr/m², nhà đất có mức giá ở '
-                                                                       'giữa 32,7 tr/m², 901 tin đang theo dõi và 120 '
-                                                                       'dấu hiệu đáng chú ý do Radar BDS ghi nhận.',
-                                                        'keywords': 'giá đất Định Hòa, nhà đất Định Hòa Thủ Dầu Một, '
-                                                                    'đất nền Định Hòa, Radar BDS',
-                                                        'scope_label': 'Thủ Dầu Một · Định Hòa',
-                                                        'breadcrumb_label': 'Giá đất Định Hòa tháng 7/2026',
-                                                        'hero_badge': 'Dữ liệu tin Facebook đang theo dõi',
-                                                        'hero_title': 'Giá đất Định Hòa Thủ Dầu Một cập nhật tháng '
-                                                                      '7/2026',
-                                                        'hero_text': 'Định Hòa có số tin đang theo dõi lớn, nhưng giá '
-                                                                     'cần tách rõ đất nền và nhà đất để tránh so sai.',
-                                                        'hero_checks': ['901 tin đang theo dõi',
-                                                                        '120 dấu hiệu được quan tâm hoặc có giảm giá',
-                                                                        'Tách đất nền và nhà đất'],
-                                                        'primary_cta': 'Mở dashboard lọc Định Hòa',
-                                                        'primary_href': '/?ward=Định%20Hòa&tab=signals',
-                                                        'secondary_cta': 'Xem báo cáo Định Hòa',
-                                                        'secondary_href': '/bao-cao/dinh-hoa-thang-06-2026',
-                                                        'map_label': 'Định Hòa / Thủ Dầu Một',
-                                                        'hero_metric': {'label': 'Đất nền giá trung vị',
-                                                                        'value': '15,2 tr/m²',
-                                                                        'delta': 'tin Facebook đang theo dõi',
-                                                                        'note': 'Cập nhật đến 20/07/2026'},
-                                                        'property_card': {'status': 'Định Hòa — nguồn cung lớn',
-                                                                          'title': 'Đất nền giá trung vị khoảng 2,38 '
-                                                                                   'tỷ',
-                                                                          'price': '15,2 tr/m² · đất nền',
-                                                                          'metric_a': 'Tin đang theo dõi',
-                                                                          'metric_a_value': '901',
-                                                                          'metric_b': 'Dấu hiệu đáng chú ý',
-                                                                          'metric_b_value': '120'},
-                                                        'value_cards': [],
-                                                        'dashboard_preview': {},
-                                                        'market_snapshot': {},
-                                                        'local_links_title': 'Đọc tiếp về Định Hòa và nhóm so sánh',
-                                                        'local_links': [{'label': 'Báo cáo Định Hòa tháng 06/2026',
-                                                                         'href': '/bao-cao/dinh-hoa-thang-06-2026',
-                                                                         'description': 'Xem dữ liệu tháng đã chốt '
-                                                                                        'cho Định Hòa.'},
-                                                                        {'label': 'Landing nhà đất Định Hòa',
-                                                                         'href': '/binh-duong/phuong-dinh-hoa',
-                                                                         'description': 'Mở trang phường để lọc tin và '
-                                                                                        'dấu hiệu đáng chú ý.'},
-                                                                        {'label': 'Giá đất Phú Tân',
-                                                                         'href': '/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
-                                                                         'description': 'So với phường có dấu hiệu '
-                                                                                        'đáng chú ý cao hơn.'},
-                                                                        {'label': 'Giá đất Hiệp An',
-                                                                         'href': '/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu',
-                                                                         'description': 'So với phường có nguồn cung '
-                                                                                        'lớn.'}],
-                                                        'process_title': 'Cách đọc giá Định Hòa',
-                                                        'process': [],
-                                                        'faq': [{'q': 'Giá đất nền Định Hòa hiện khoảng bao nhiêu?',
-                                                                 'a': 'Trong dữ liệu tin Facebook đang theo dõi của '
-                                                                      'Radar BDS cập nhật đến 20/07/2026, đất nền Định '
-                                                                      'Hòa có giá trung vị 15,2 tr/m² và tổng giá ở '
-                                                                      'giữa khoảng 2,38 tỷ.'},
-                                                                {'q': 'Có nên lấy một mức giá chung cho toàn Định Hòa '
-                                                                      'không?',
-                                                                 'a': 'Không nên. Đất nền, nhà đất, nhà trọ và kho '
-                                                                      'xưởng có mức giá phổ biến khác nhau; bài này '
-                                                                      'tách riêng loại hình để tránh so sai.'},
-                                                                {'q': 'Định Hòa nên so với phường nào?',
-                                                                 'a': 'Nên mở cùng Phú Tân, Phú Mỹ và Hiệp An. Định '
-                                                                      'Hòa có đất nền mềm hơn Phú Tân/Phú Mỹ, còn Hiệp '
-                                                                      'An có nguồn cung lớn và giá nhà đất thấp hơn.'},
-                                                                {'q': 'Dữ liệu này có phải giá giao dịch chính thức '
-                                                                      'không?',
-                                                                 'a': 'Không. Đây là giá người bán đang đăng, đã được '
-                                                                      'Radar lọc bớt tin rác/trùng từ tin Facebook '
-                                                                      'đang theo dõi, dùng để sàng lọc thị trường '
-                                                                      'trước khi kiểm tra pháp lý, quy hoạch và hiện '
-                                                                      'trạng.'}],
-                                                        'article': {'published_at': '2026-07-22',
-                                                                    'modified_at': '2026-07-22',
-                                                                    'intro': ['Định Hòa nên được đọc riêng theo loại '
-                                                                              'hình: dữ liệu Facebook Radar BDS cập nhật '
-                                                                              '20/07/2026 ghi nhận đất nền trung vị 15,2 '
-                                                                              'tr/m², còn nhà đất 32,7 tr/m². Đây là giá '
-                                                                              'rao đã lọc bớt tin trùng/rác, không phải '
-                                                                              'giá chốt; trước khi quyết định vẫn cần '
-                                                                              'kiểm tra pháp lý, quy hoạch và hiện trạng.',
-                                                                              'Định Hòa là phường có số tin đang theo '
-                                                                              'dõi lớn ở Thủ Dầu Một. Điểm quan trọng '
-                                                                              'là không nên dùng một mức giá phổ biến '
-                                                                              'chung cho toàn phường, vì đất nền và '
-                                                                              'nhà đất chênh nhau khá rõ.'],
-                                                                    'summary_cards': [{'label': 'Tin đang theo dõi',
-                                                                                       'value': '901',
-                                                                                       'note': 'tin Facebook đang theo '
-                                                                                               'dõi ở Định Hòa'},
-                                                                                      {'label': 'Dấu hiệu đáng chú ý',
-                                                                                       'value': '120',
-                                                                                       'note': 'được quan tâm hoặc có '
-                                                                                               'giảm giá'},
-                                                                                      {'label': 'Đất nền',
-                                                                                       'value': '15,2 tr/m²',
-                                                                                       'note': 'giá trung vị của 536 '
-                                                                                               'tin có giá/m²'},
-                                                                                      {'label': 'Nhà đất',
-                                                                                       'value': '32,7 tr/m²',
-                                                                                       'note': 'giá trung vị của 239 '
-                                                                                               'tin có giá/m²'}],
-                                                                    'illustration': {'src': '/static/images/seo/dinh-hoa-data-visual.svg',
-                                                                                     'alt': 'Sơ đồ minh họa cách đọc '
-                                                                                            'giá đất Định Hòa từ dữ '
-                                                                                            'liệu tin đang theo dõi, '
-                                                                                            'tách loại hình rồi so '
-                                                                                            'sánh với Phú Tân và Hiệp '
-                                                                                            'An',
-                                                                                     'caption': 'Minh họa luồng đọc dữ '
-                                                                                                'liệu Định Hòa: bắt '
-                                                                                                'đầu từ số tin đang '
-                                                                                                'theo dõi, tách đất '
-                                                                                                'nền/nhà đất, sau đó '
-                                                                                                'so với Phú Tân và '
-                                                                                                'Hiệp An.'},
-                                                                    'data_tables': [{'eyebrow': 'Bảng dữ liệu thật',
-                                                                                     'title': 'Giá Định Hòa theo loại '
-                                                                                              'hình bất động sản',
-                                                                                     'note': 'Giá/m² và tổng giá là '
-                                                                                             'giá trung vị của dữ '
-                                                                                             'liệu tin Facebook đang '
-                                                                                             'theo dõi đã lọc; mỗi '
-                                                                                             'loại hình cần đọc riêng.',
-                                                                                     'columns': [{'key': 'type',
-                                                                                                  'label': 'Loại hình'},
-                                                                                                 {'key': 'active',
-                                                                                                  'label': 'Tin đang '
-                                                                                                           'theo dõi'},
-                                                                                                 {'key': 'priced',
-                                                                                                  'label': 'Tin có '
-                                                                                                           'giá/m²'},
-                                                                                                 {'key': 'median_ppm2',
-                                                                                                  'label': 'Mức giá ở '
-                                                                                                           'giữa '
-                                                                                                           'giá/m²'},
-                                                                                                 {'key': 'range_ppm2',
-                                                                                                  'label': 'Vùng giữa '
-                                                                                                           '25-75%'},
-                                                                                                 {'key': 'median_total',
-                                                                                                  'label': 'Tổng giá '
-                                                                                                           'mức giá ở '
-                                                                                                           'giữa'},
-                                                                                                 {'key': 'tin đáng '
-                                                                                                         'kiểm tras',
-                                                                                                  'label': 'Dấu hiệu '
-                                                                                                           'đáng chú '
-                                                                                                           'ý'}],
-                                                                                     'rows': [{'type': 'Đất nền',
-                                                                                               'active': '604',
-                                                                                               'priced': '536',
-                                                                                               'median_ppm2': '15,2 '
-                                                                                                              'tr/m²',
-                                                                                               'range_ppm2': '12,6-22,9 '
-                                                                                                             'tr/m²',
-                                                                                               'median_total': '2,38 '
-                                                                                                               'tỷ',
-                                                                                               'tin đáng kiểm tras': '80'},
-                                                                                              {'type': 'Nhà đất',
-                                                                                               'active': '281',
-                                                                                               'priced': '239',
-                                                                                               'median_ppm2': '32,7 '
-                                                                                                              'tr/m²',
-                                                                                               'range_ppm2': '20,6-36,2 '
-                                                                                                             'tr/m²',
-                                                                                               'median_total': '2,65 '
-                                                                                                               'tỷ',
-                                                                                               'tin đáng kiểm tras': '31'},
-                                                                                              {'type': 'Nhà trọ',
-                                                                                               'active': '7',
-                                                                                               'priced': '7',
-                                                                                               'median_ppm2': '13,2 '
-                                                                                                              'tr/m²',
-                                                                                               'range_ppm2': '11,9-13,9 '
-                                                                                                             'tr/m²',
-                                                                                               'median_total': '1,58 '
-                                                                                                               'tỷ',
-                                                                                               'tin đáng kiểm tras': '5'},
-                                                                                              {'type': 'Kho xưởng',
-                                                                                               'active': '3',
-                                                                                               'priced': '3',
-                                                                                               'median_ppm2': '38,9 '
-                                                                                                              'tr/m²',
-                                                                                               'range_ppm2': '38,9-38,9 '
-                                                                                                             'tr/m²',
-                                                                                               'median_total': '2,8 tỷ',
-                                                                                               'tin đáng kiểm tras': '0'}]},
-                                                                                    {'eyebrow': 'Bảng so sánh',
-                                                                                     'title': 'Định Hòa so với Phú '
-                                                                                              'Tân, Phú Mỹ, Hiệp An và '
-                                                                                              'Phú Lợi',
-                                                                                     'note': 'So cùng loại hình: đất '
-                                                                                             'nền với đất nền, nhà đất '
-                                                                                             'với nhà đất. Đây là giá '
-                                                                                             'rao giá trung vị của '
-                                                                                             'nhóm tin đang theo dõi '
-                                                                                             'hiện hành.',
-                                                                                     'columns': [{'key': 'ward',
-                                                                                                  'label': 'Phường'},
-                                                                                                 {'key': 'active',
-                                                                                                  'label': 'Tin đang '
-                                                                                                           'theo dõi'},
-                                                                                                 {'key': 'tin đáng '
-                                                                                                         'kiểm tras',
-                                                                                                  'label': 'Dấu hiệu '
-                                                                                                           'đáng chú '
-                                                                                                           'ý'},
-                                                                                                 {'key': 'dat_nen',
-                                                                                                  'label': 'Đất nền'},
-                                                                                                 {'key': 'nha_dat',
-                                                                                                  'label': 'Nhà đất'},
-                                                                                                 {'key': 'note',
-                                                                                                  'label': 'Cách đọc '
-                                                                                                           'nhanh'}],
-                                                                                     'rows': [{'ward': 'Định Hòa',
-                                                                                               'active': '901',
-                                                                                               'tin đáng kiểm tras': '120',
-                                                                                               'dat_nen': '15,2 tr/m² '
-                                                                                                          '· 2,38 tỷ',
-                                                                                               'nha_dat': '32,7 tr/m² '
-                                                                                                          '· 2,65 tỷ',
-                                                                                               'note': 'Nguồn cung '
-                                                                                                       'lớn, đất nền '
-                                                                                                       'mềm hơn Phú '
-                                                                                                       'Tân/Phú Mỹ'},
-                                                                                              {'ward': 'Phú Tân',
-                                                                                               'active': '718',
-                                                                                               'tin đáng kiểm tras': '328',
-                                                                                               'dat_nen': '23,8 tr/m² '
-                                                                                                          '· 2,9 tỷ',
-                                                                                               'nha_dat': '34,8 tr/m² '
-                                                                                                          '· 4,0 tỷ',
-                                                                                               'note': 'Dấu hiệu đáng '
-                                                                                                       'chú ý cao hơn '
-                                                                                                       'rõ, nên theo '
-                                                                                                       'dõi song song'},
-                                                                                              {'ward': 'Phú Mỹ',
-                                                                                               'active': '877',
-                                                                                               'tin đáng kiểm tras': '126',
-                                                                                               'dat_nen': '22,3 tr/m² '
-                                                                                                          '· 2,88 tỷ',
-                                                                                               'nha_dat': '39,5 tr/m² '
-                                                                                                          '· 3,55 tỷ',
-                                                                                               'note': 'Mặt bằng nhà '
-                                                                                                       'đất cao hơn '
-                                                                                                       'Định Hòa'},
-                                                                                              {'ward': 'Hiệp An',
-                                                                                               'active': '1.373',
-                                                                                               'tin đáng kiểm tras': '100',
-                                                                                               'dat_nen': '15,9 tr/m² '
-                                                                                                          '· 2,19 tỷ',
-                                                                                               'nha_dat': '21,1 tr/m² '
-                                                                                                          '· 2,39 tỷ',
-                                                                                               'note': 'Nguồn cung lớn '
-                                                                                                       'nhất trong '
-                                                                                                       'nhóm so sánh'},
-                                                                                              {'ward': 'Phú Lợi',
-                                                                                               'active': '481',
-                                                                                               'tin đáng kiểm tras': '70',
-                                                                                               'dat_nen': '29,5 tr/m² '
-                                                                                                          '· 3,39 tỷ',
-                                                                                               'nha_dat': '39,5 tr/m² '
-                                                                                                          '· 3,8 tỷ',
-                                                                                               'note': 'Mức giá phổ '
-                                                                                                       'biến cao hơn, '
-                                                                                                       'nguồn cung '
-                                                                                                       'thấp hơn'}]}],
-                                                                    'charts': [{'eyebrow': 'Biểu đồ giá/m²',
-                                                                                'title': 'Mức giá ở giữa giá/m² theo '
-                                                                                         'loại hình tại Định Hòa',
-                                                                                'note': 'Nhà đất và kho xưởng có đơn '
-                                                                                        'giá cao hơn đất nền; không '
-                                                                                        'nên gom thành một mức giá '
-                                                                                        'chung.',
-                                                                                'alt': 'Biểu đồ thanh giá/m² mức giá ở '
-                                                                                       'giữa Định Hòa: kho xưởng 38,9, '
-                                                                                       'nhà đất 32,7, đất nền 15,2, '
-                                                                                       'nhà trọ 13,2.',
-                                                                                'rows': [{'label': 'Kho xưởng',
-                                                                                          'value_label': '38,9 tr/m²',
-                                                                                          'width': 100,
-                                                                                          'color': '#0284c7'},
-                                                                                         {'label': 'Nhà đất',
-                                                                                          'value_label': '32,7 tr/m²',
-                                                                                          'width': 84,
-                                                                                          'color': '#0f766e'},
-                                                                                         {'label': 'Đất nền',
-                                                                                          'value_label': '15,2 tr/m²',
-                                                                                          'width': 39,
-                                                                                          'color': '#14b8a6'},
-                                                                                         {'label': 'Nhà trọ',
-                                                                                          'value_label': '13,2 tr/m²',
-                                                                                          'width': 34,
-                                                                                          'color': '#f59e0b'}]},
-                                                                               {'eyebrow': 'Biểu đồ nguồn cung',
-                                                                                'title': 'Tin đang theo dõi Định Hòa '
-                                                                                         'theo loại hình',
-                                                                                'note': 'Đất nền là phân khúc chủ đạo '
-                                                                                        'trong số tin đang theo dõi '
-                                                                                        'của Định Hòa.',
-                                                                                'alt': 'Biểu đồ thanh số tin đang theo '
-                                                                                       'dõi Định Hòa: đất nền 604 tin, '
-                                                                                       'nhà đất 281 tin, nhà trọ 7 '
-                                                                                       'tin, kho xưởng 3 tin.',
-                                                                                'rows': [{'label': 'Đất nền',
-                                                                                          'value_label': '604 tin',
-                                                                                          'width': 100,
-                                                                                          'color': '#14b8a6'},
-                                                                                         {'label': 'Nhà đất',
-                                                                                          'value_label': '281 tin',
-                                                                                          'width': 47,
-                                                                                          'color': '#0f766e'},
-                                                                                         {'label': 'Nhà trọ',
-                                                                                          'value_label': '7 tin',
-                                                                                          'width': 2,
-                                                                                          'color': '#f59e0b'},
-                                                                                         {'label': 'Kho xưởng',
-                                                                                          'value_label': '3 tin',
-                                                                                          'width': 1,
-                                                                                          'color': '#0284c7'}]},
-                                                                               {'eyebrow': 'Biểu đồ dấu hiệu đáng chú '
-                                                                                           'ý',
-                                                                                'title': 'Dấu hiệu đáng chú ý theo '
-                                                                                         'phường nên so cùng Định Hòa',
-                                                                                'note': 'Định Hòa có dấu hiệu đáng chú '
-                                                                                        'ý tương đương Phú Mỹ, thấp '
-                                                                                        'hơn Phú Tân nhưng nguồn cung '
-                                                                                        'lớn hơn Phú Tân.',
-                                                                                'alt': 'Biểu đồ dấu hiệu đáng chú ý: '
-                                                                                       'Phú Tân 328, Phú Mỹ 126, Định '
-                                                                                       'Hòa 120, Hiệp An 100, Phú Lợi '
-                                                                                       '70.',
-                                                                                'rows': [{'label': 'Phú Tân',
-                                                                                          'value_label': '328',
-                                                                                          'width': 100,
-                                                                                          'color': '#0f766e'},
-                                                                                         {'label': 'Phú Mỹ',
-                                                                                          'value_label': '126',
-                                                                                          'width': 38,
-                                                                                          'color': '#14b8a6'},
-                                                                                         {'label': 'Định Hòa',
-                                                                                          'value_label': '120',
-                                                                                          'width': 37,
-                                                                                          'color': '#0284c7'},
-                                                                                         {'label': 'Hiệp An',
-                                                                                          'value_label': '100',
-                                                                                          'width': 30,
-                                                                                          'color': '#64748b'},
-                                                                                         {'label': 'Phú Lợi',
-                                                                                          'value_label': '70',
-                                                                                          'width': 21,
-                                                                                          'color': '#f59e0b'}]}],
-                                                                    'sections': [{'id': 'gia-dat-nen-dinh-hoa',
-                                                                                  'heading': 'Giá đất nền Định Hòa: '
-                                                                                             'giá trung vị 15,2 '
-                                                                                             'tr/m²',
-                                                                                  'paragraphs': ['Trong 604 tin đất '
-                                                                                                 'nền đang theo dõi, '
-                                                                                                 '536 tin có giá/m² đủ '
-                                                                                                 'điều kiện tính mức '
-                                                                                                 'giá ở giữa. Mức giá '
-                                                                                                 'ở giữa hiện là 15,2 '
-                                                                                                 'tr/m², khoảng giá '
-                                                                                                 'thường gặp nằm trong '
-                                                                                                 'khoảng 12,6-22,9 '
-                                                                                                 'tr/m².',
-                                                                                                 'Tổng giá mức giá ở '
-                                                                                                 'giữa của nhóm đất '
-                                                                                                 'nền khoảng 2,38 tỷ. '
-                                                                                                 'Khi lọc dashboard, '
-                                                                                                 'người mua nên đặt '
-                                                                                                 'thêm điều kiện diện '
-                                                                                                 'tích, pháp lý và '
-                                                                                                 'khoảng cách tới trục '
-                                                                                                 'đường chính.'],
-                                                                                  'bullets': ['Đất nền là nhóm nguồn '
-                                                                                              'cung lớn nhất tại Định '
-                                                                                              'Hòa.',
-                                                                                              'Khoảng giá rộng, nên '
-                                                                                              'không lấy một con số '
-                                                                                              'duy nhất để quyết định.',
-                                                                                              'Tin có dấu hiệu được '
-                                                                                              'quan tâm hoặc có giảm '
-                                                                                              'giá cần kiểm tra lại '
-                                                                                              'pháp lý và vị trí.']},
-                                                                                 {'id': 'nha-dat-dinh-hoa',
-                                                                                  'heading': 'Nhà đất Định Hòa: mức '
-                                                                                             'giá ở giữa 32,7 tr/m², '
-                                                                                             'khác rõ đất nền',
-                                                                                  'paragraphs': ['Nhóm nhà đất có 281 '
-                                                                                                 'tin đang theo dõi, '
-                                                                                                 'trong đó 239 tin có '
-                                                                                                 'giá/m². Mức giá ở '
-                                                                                                 'giữa giá/m² là 32,7 '
-                                                                                                 'tr/m², cao hơn nhiều '
-                                                                                                 'so với đất nền vì đã '
-                                                                                                 'bao gồm công trình, '
-                                                                                                 'vị trí và hiện trạng '
-                                                                                                 'nhà.',
-                                                                                                 'Nếu ngân sách tương '
-                                                                                                 'đương nhau, nhà đất '
-                                                                                                 'Định Hòa và đất nền '
-                                                                                                 'Định Hòa không nên '
-                                                                                                 'đặt vào cùng một '
-                                                                                                 'bảng so sánh trừ khi '
-                                                                                                 'đã chuẩn hóa diện '
-                                                                                                 'tích và hiện trạng.'],
-                                                                                  'bullets': ['Nhà đất có tổng giá ở '
-                                                                                              'giữa khoảng 2,65 tỷ.',
-                                                                                              'Giá/m² cao hơn đất nền '
-                                                                                              'nhưng có thể phù hợp '
-                                                                                              'người cần ở hoặc khai '
-                                                                                              'thác ngay.',
-                                                                                              'Cần kiểm tra chất lượng '
-                                                                                              'công trình trước khi so '
-                                                                                              'giá.']},
-                                                                                 {'id': 'so-sanh-dinh-hoa',
-                                                                                  'heading': 'Định Hòa nên so cùng Phú '
-                                                                                             'Tân, Phú Mỹ và Hiệp An',
-                                                                                  'paragraphs': ['Định Hòa có 901 tin '
-                                                                                                 'đang theo dõi, nhiều '
-                                                                                                 'hơn Phú Tân và Phú '
-                                                                                                 'Mỹ trong cùng nhóm '
-                                                                                                 'so sánh. Tuy nhiên, '
-                                                                                                 'số dấu hiệu đáng chú '
-                                                                                                 'ý là 120, thấp hơn '
-                                                                                                 'Phú Tân nhưng gần '
-                                                                                                 'Phú Mỹ.',
-                                                                                                 'Về đất nền, Định Hòa '
-                                                                                                 'mềm hơn Phú Tân và '
-                                                                                                 'Phú Mỹ, khá gần Hiệp '
-                                                                                                 'An. Về nhà đất, Định '
-                                                                                                 'Hòa cao hơn Hiệp An '
-                                                                                                 'nhưng thấp hơn Phú '
-                                                                                                 'Mỹ và Phú Lợi.'],
-                                                                                  'bullets': ['So với Phú Tân: Định '
-                                                                                              'Hòa mềm hơn về đất nền '
-                                                                                              'nhưng ít dấu hiệu đáng '
-                                                                                              'chú ý hơn.',
-                                                                                              'So với Phú Mỹ: Định Hòa '
-                                                                                              'có đất nền mềm hơn và '
-                                                                                              'nhà đất thấp hơn.',
-                                                                                              'So với Hiệp An: Định '
-                                                                                              'Hòa có nhà đất cao hơn '
-                                                                                              'nhưng đất nền gần '
-                                                                                              'nhau.']},
-                                                                                 {'id': 'cach-loc-dashboard',
-                                                                                  'heading': 'Cách lọc tin Định Hòa '
-                                                                                             'trên Radar BDS',
-                                                                                  'paragraphs': ['Bước đầu nên chọn '
-                                                                                                 'phường Định Hòa, sau '
-                                                                                                 'đó tách loại hình '
-                                                                                                 'đất nền hoặc nhà đất '
-                                                                                                 'trước khi nhìn '
-                                                                                                 'giá/m². Tiếp theo '
-                                                                                                 'mới lọc theo tổng '
-                                                                                                 'ngân sách, diện tích '
-                                                                                                 'và dấu hiệu được '
-                                                                                                 'quan tâm hoặc có '
-                                                                                                 'giảm giá.',
-                                                                                                 'Nếu gặp tin rẻ hơn '
-                                                                                                 'rõ so với khoảng giá '
-                                                                                                 'thường gặp, cần kiểm '
-                                                                                                 'tra kỹ pháp lý, quy '
-                                                                                                 'hoạch, hẻm/đường, '
-                                                                                                 'hiện trạng tài sản '
-                                                                                                 'và lịch sử repost.'],
-                                                                                  'bullets': ['Lọc phường: Định Hòa.',
-                                                                                              'Tách loại hình: đất nền '
-                                                                                              'hoặc nhà đất.',
-                                                                                              'Ưu tiên tin có đủ '
-                                                                                              'giá/m², tổng giá, diện '
-                                                                                              'tích và dấu hiệu đáng '
-                                                                                              'chú ý rõ.']}],
-                                                                    'checklist': ['Đã tách đất nền và nhà đất trước '
-                                                                                  'khi so giá.',
-                                                                                  'Đã kiểm tra khoảng giá thường gặp, '
-                                                                                  'không chỉ nhìn tin rẻ nhất.',
-                                                                                  'Đã mở báo cáo Định Hòa tháng '
-                                                                                  '07/2026 để xem bối cảnh tháng.',
-                                                                                  'Đã so với Phú Tân, Phú Mỹ hoặc Hiệp '
-                                                                                  'An nếu đang phân vân khu vực.',
-                                                                                  'Đã kiểm tra pháp lý, quy hoạch và '
-                                                                                  'hiện trạng trước khi đi xem.']},
-                                                        'final_cta': {'title': 'Mở dashboard lọc Định Hòa',
-                                                                      'body': 'Lọc theo phường, loại hình, giá/m² và '
-                                                                              'dấu hiệu đáng chú ý để tìm tin đáng '
-                                                                              'kiểm tra.',
-                                                                      'button': 'Mở dashboard'},
-                                                        'breadcrumbs': [{'name': 'Trang chủ',
-                                                                         'href': '/',
-                                                                         'url': 'https://radarbds.vn/'},
-                                                                        {'name': 'Tin tức',
-                                                                         'href': '/kien-thuc',
-                                                                         'url': 'https://radarbds.vn/kien-thuc'},
-                                                                        {'name': 'Giá đất Định Hòa',
-                                                                         'href': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
-                                                                         'url': 'https://radarbds.vn/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'}]},
+ 'path': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
+ 'title': 'Giá đất Định Hòa Thủ Dầu Một cập nhật 14 ngày đến 15/10/2026 | Radar BDS',
+ 'description': '14 ngày đến 15/10/2026, Định Hòa có 132 tin Facebook đang theo dõi; đất nền 15,8 tr/m², nhà đất 20,6 '
+                'tr/m². Đây là giá rao để sàng lọc, không phải giá giao dịch.',
+ 'keywords': 'giá đất Định Hòa, nhà đất Định Hòa Thủ Dầu Một, đất nền Định Hòa, Radar BDS',
+ 'scope_label': 'Thủ Dầu Một · Định Hòa · 14 ngày',
+ 'breadcrumb_label': 'Giá đất Định Hòa cập nhật 14 ngày',
+ 'hero_badge': 'Dữ liệu tin Facebook · 01/10/2026–15/10/2026',
+ 'hero_title': 'Giá đất Định Hòa Thủ Dầu Một cập nhật 14 ngày',
+ 'hero_text': 'Trong cửa sổ 01/10/2026–15/10/2026, Định Hòa có 132 tin Facebook đang theo dõi. Đất nền và nhà đất cần '
+              'đọc riêng vì mức giá/m² khác nhau.',
+ 'hero_checks': ['132 tin trong cửa sổ 01/10/2026–15/10/2026',
+                 '25 dấu hiệu được quan tâm hoặc có giảm giá',
+                 'Tách đất nền 15,8 tr/m² và nhà đất 20,6 tr/m²'],
+ 'primary_cta': 'Mở dashboard lọc Định Hòa',
+ 'primary_href': '/?ward=Định%20Hòa&tab=signals&date_range=all',
+ 'secondary_cta': 'Mở trang phường Định Hòa',
+ 'secondary_href': '/binh-duong/phuong-dinh-hoa',
+ 'map_label': 'Định Hòa / Thủ Dầu Một',
+ 'hero_metric': {'label': 'Đất nền giá trung vị',
+                 'value': '15,8 tr/m²',
+                 'delta': '20 tin có giá/m²',
+                 'note': "Cửa sổ 01/10/2026–15/10/2026 · Nguồn: tin Facebook đang theo dõi, lọc source='facebook', "
+                         'is_active=1, is_blacklisted=0, review_hidden=0; cửa sổ 01/10/2026–15/10/2026.'},
+ 'property_card': {'status': 'Định Hòa · 132 tin trong cửa sổ',
+                   'title': 'Đất nền và nhà đất cần tách riêng',
+                   'price': '15,8 tr/m² đất nền · 20,6 tr/m² nhà đất',
+                   'metric_a': 'Tin trong cửa sổ',
+                   'metric_a_value': '132',
+                   'metric_b': 'Dấu hiệu đáng chú ý',
+                   'metric_b_value': '25'},
+ 'value_cards': [{'title': 'Đất nền Định Hòa: 15,8 tr/m²',
+                  'body': '51 tin, trong đó 20 tin có giá/m²; vùng giữa 25–75% là 11,0–23,5 tr/m².'},
+                 {'title': 'Nhà đất Định Hòa: 20,6 tr/m²',
+                  'body': '58 tin, trong đó 33 tin có giá/m²; vùng giữa 25–75% là 16,0–29,9 tr/m².'}],
+ 'dashboard_preview': {'eyebrow': 'Từ bài viết sang bộ lọc',
+                       'title': 'Lọc đúng loại hình trước khi xem giá',
+                       'body': 'Mở dashboard, chọn Định Hòa rồi tách đất nền hoặc nhà đất. Sau đó mới xem tổng giá, '
+                               'diện tích và dấu hiệu của từng tin.',
+                       'image': '/static/images/seo/dashboard-preview.png',
+                       'alt': 'Giao diện dashboard Radar BDS để lọc tin theo phường và loại hình',
+                       'cta': 'Mở dashboard',
+                       'metrics': [{'value': '132', 'label': 'tin trong cửa sổ'},
+                                   {'value': '25', 'label': 'dấu hiệu cần kiểm tra'},
+                                   {'value': '2', 'label': 'nhóm giá nên tách'}]},
+ 'market_snapshot': {'eyebrow': 'Định Hòa và nhóm so sánh · 01/10/2026–15/10/2026',
+                     'title': 'So cùng loại hình, không gom một mức giá chung',
+                     'body': "Nguồn: tin Facebook đang theo dõi, lọc source='facebook', is_active=1, is_blacklisted=0, "
+                             'review_hidden=0; cửa sổ 01/10/2026–15/10/2026. Bảng dưới dùng giá trung vị của các tin '
+                             'có giá/m²; không đại diện cho giá giao dịch.',
+                     'columns': ['Phường', 'Tin trong cửa sổ', 'Dấu hiệu', 'Đất nền', 'Nhà đất', 'Cách đọc nhanh'],
+                     'rows': [{'area': 'Định Hòa',
+                               'price': '132',
+                               'tracked': '25',
+                               'signal': '15,8 tr/m² · 2,05 tỷ',
+                               'area_m2': '20,6 tr/m² · 2,69 tỷ',
+                               'note': 'Định Hòa làm mốc đọc'},
+                              {'area': 'Phú Tân',
+                               'price': '147',
+                               'tracked': '81',
+                               'signal': '23,0 tr/m² · 3,3 tỷ',
+                               'area_m2': '36,9 tr/m² · 3,9 tỷ',
+                               'note': 'Dấu hiệu cao hơn trong cửa sổ'},
+                              {'area': 'Phú Mỹ',
+                               'price': '175',
+                               'tracked': '30',
+                               'signal': '22,9 tr/m² · 2,5 tỷ',
+                               'area_m2': '37,3 tr/m² · 3,65 tỷ',
+                               'note': 'Dấu hiệu cao hơn trong cửa sổ'},
+                              {'area': 'Hiệp An',
+                               'price': '107',
+                               'tracked': '30',
+                               'signal': '11,2 tr/m² · 1,85 tỷ',
+                               'area_m2': '23,3 tr/m² · 2,79 tỷ',
+                               'note': 'Dấu hiệu cao hơn trong cửa sổ'},
+                              {'area': 'Phú Lợi',
+                               'price': '107',
+                               'tracked': '12',
+                               'signal': '28,0 tr/m² · 3,45 tỷ',
+                               'area_m2': '37,4 tr/m² · 3,34 tỷ',
+                               'note': 'Nhà đất cao hơn Định Hòa'}],
+                     'cards': [{'title': '132 tin Định Hòa',
+                                'value': '25 dấu hiệu',
+                                'body': '13 tin thuộc nhóm khác hoặc chưa phân loại trong cửa sổ.'},
+                               {'title': 'Đất nền 15,8 tr/m²',
+                                'value': '20 tin có giá/m²',
+                                'body': 'Vùng giữa 25–75%: 11,0–23,5 tr/m².'},
+                               {'title': 'Nhà đất 20,6 tr/m²',
+                                'value': '33 tin có giá/m²',
+                                'body': 'Vùng giữa 25–75%: 16,0–29,9 tr/m².'}]},
+ 'local_links_title': 'Đọc tiếp về Định Hòa và cách so giá',
+ 'local_links': [{'label': 'Landing nhà đất Định Hòa',
+                  'href': '/binh-duong/phuong-dinh-hoa',
+                  'description': 'Mở trang phường để lọc tin theo khu vực.'},
+                 {'label': 'Cách xem giá đất Bình Dương không bị so sai',
+                  'href': '/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
+                  'description': 'Tách phường, loại hình và giá/m² trước khi so.'},
+                 {'label': 'Giá đất Phú Tân cập nhật',
+                  'href': '/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
+                  'description': 'So cùng cửa sổ dữ liệu và cùng loại hình.'},
+                 {'label': 'Giá đất Hiệp An hiện bao nhiêu?',
+                  'href': '/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu',
+                  'description': 'Đọc thêm một phường có mức giá/m² thấp hơn ở một số nhóm.'}],
+ 'process_title': 'Cách đọc giá Định Hòa trong 3 bước',
+ 'process': [{'title': '1. Xác định cửa sổ dữ liệu',
+              'body': 'Bài dùng cửa sổ 01/10/2026–15/10/2026; đây là các tin Facebook Radar đang theo dõi trong khoảng '
+                      'thời gian đó.'},
+             {'title': '2. Tách đất nền và nhà đất',
+              'body': 'Đất nền có giá trung vị 15,8 tr/m²; nhà đất 20,6 tr/m². Không lấy hai nhóm này làm một mức giá '
+                      'chung.'},
+             {'title': '3. Mở tin gốc để kiểm tra',
+              'body': 'Dùng dashboard để xem diện tích, tổng giá, đường vào, giấy tờ và lịch sử tin trước khi hẹn '
+                      'xem.'}],
+ 'faq': [{'q': 'Giá đất nền Định Hòa hiện khoảng bao nhiêu?',
+          'a': 'Trong cửa sổ 01/10/2026–15/10/2026, nhóm đất nền có giá/m² trung vị 15,8 tr/m²; 20 tin có đủ giá/m² để '
+               'tính.'},
+         {'q': 'Nhà đất Định Hòa có thể lấy cùng mức giá với đất nền không?',
+          'a': 'Không nên. Trong cùng cửa sổ, nhà đất có giá/m² trung vị 20,6 tr/m², khác nhóm đất nền 15,8 tr/m²; còn '
+               'phải xem thêm hiện trạng công trình và diện tích.'},
+         {'q': 'Dấu hiệu đáng chú ý trong bài là gì?',
+          'a': 'Đây là số tin có cờ quan tâm hoặc giảm giá theo dữ liệu Radar, hiện là 25 tin ở Định Hòa trong cửa sổ. '
+               'Chỉ số này không chứng minh tin đã giao dịch hoặc dễ bán.'},
+         {'q': 'Dữ liệu này có phải giá giao dịch chính thức không?',
+          'a': 'Không. Đây là giá người bán đang đăng từ tin Facebook được Radar theo dõi và lọc theo điều kiện kỹ '
+               'thuật. Cần kiểm tra pháp lý, quy hoạch, hiện trạng và giá chốt thực tế riêng.'}],
+ 'article': {'published_at': '2026-07-22',
+             'modified_at': '2026-10-15',
+             'intro': ['Trong cửa sổ 01/10/2026–15/10/2026, Radar BDS ghi nhận 132 tin Facebook đang theo dõi ở Định '
+                       'Hòa. Đất nền có giá/m² trung vị 15,8 tr/m², còn nhà đất 20,6 tr/m². Đây là giá rao để sàng '
+                       'lọc, không phải giá chốt.',
+                       'Bài giữ cùng URL cũ nhưng cập nhật lại toàn bộ số liệu theo bộ lọc Nguồn: tin Facebook đang '
+                       "theo dõi, lọc source='facebook', is_active=1, is_blacklisted=0, review_hidden=0; cửa sổ "
+                       '01/10/2026–15/10/2026. Trước khi đi xem, nên mở từng tin để kiểm tra diện tích, giấy tờ, đường '
+                       'vào và hiện trạng.'],
+             'summary_cards': [{'label': 'Tin trong cửa sổ',
+                                'value': '132',
+                                'note': 'Định Hòa · 01/10/2026–15/10/2026'},
+                               {'label': 'Dấu hiệu đáng chú ý',
+                                'value': '25',
+                                'note': 'tin có cờ quan tâm hoặc giảm giá'},
+                               {'label': 'Đất nền', 'value': '15,8 tr/m²', 'note': 'giá trung vị của 20 tin có giá/m²'},
+                               {'label': 'Nhà đất',
+                                'value': '20,6 tr/m²',
+                                'note': 'giá trung vị của 33 tin có giá/m²'}],
+             'illustration': {'src': '/static/images/seo/dinh-hoa-data-visual.svg',
+                              'alt': 'Sơ đồ đọc giá đất Định Hòa theo cửa sổ dữ liệu và loại hình',
+                              'caption': 'Đọc cửa sổ dữ liệu trước, tách đất nền và nhà đất sau đó mới so giá.'},
+             'data_tables': [{'eyebrow': 'Bảng dữ liệu thật',
+                              'title': 'Định Hòa theo loại hình trong cửa sổ 14 ngày',
+                              'note': "Nguồn: tin Facebook đang theo dõi, lọc source='facebook', is_active=1, "
+                                      'is_blacklisted=0, review_hidden=0; cửa sổ 01/10/2026–15/10/2026. Giá/m², tổng '
+                                      'giá và vùng giữa chỉ tính trên những tin có trường dữ liệu tương ứng.',
+                              'columns': [{'key': 'type', 'label': 'Loại hình'},
+                                          {'key': 'active', 'label': 'Tin trong cửa sổ'},
+                                          {'key': 'priced', 'label': 'Tin có giá/m²'},
+                                          {'key': 'median_ppm2', 'label': 'Giá/m² trung vị'},
+                                          {'key': 'range_ppm2', 'label': 'Vùng giữa 25–75%'},
+                                          {'key': 'median_total', 'label': 'Tổng giá trung vị'},
+                                          {'key': 'signals', 'label': 'Dấu hiệu'}],
+                              'rows': [{'type': 'Đất nền',
+                                        'active': '51',
+                                        'priced': '20',
+                                        'median_ppm2': '15,8 tr/m²',
+                                        'range_ppm2': '11,0–23,5 tr/m²',
+                                        'median_total': '2,05 tỷ',
+                                        'signals': '6'},
+                                       {'type': 'Nhà đất',
+                                        'active': '58',
+                                        'priced': '33',
+                                        'median_ppm2': '20,6 tr/m²',
+                                        'range_ppm2': '16,0–29,9 tr/m²',
+                                        'median_total': '2,69 tỷ',
+                                        'signals': '6'},
+                                       {'type': 'Nhà trọ',
+                                        'active': '5',
+                                        'priced': '5',
+                                        'median_ppm2': '37,8 tr/m²',
+                                        'range_ppm2': '37,8–37,8 tr/m²',
+                                        'median_total': '3,4 tỷ',
+                                        'signals': '0'},
+                                       {'type': 'Kho xưởng',
+                                        'active': '5',
+                                        'priced': '0',
+                                        'median_ppm2': '—',
+                                        'range_ppm2': '—',
+                                        'median_total': '—',
+                                        'signals': '0'}]},
+                             {'eyebrow': 'Bảng so sánh',
+                              'title': 'Định Hòa so với Phú Tân, Phú Mỹ, Hiệp An và Phú Lợi',
+                              'note': 'So cùng cửa sổ 01/10/2026–15/10/2026; đất nền so với đất nền, nhà đất so với '
+                                      'nhà đất. Giá trong bảng là giá rao trung vị của tin có dữ liệu.',
+                              'columns': [{'key': 'ward', 'label': 'Phường'},
+                                          {'key': 'active', 'label': 'Tin trong cửa sổ'},
+                                          {'key': 'signals', 'label': 'Dấu hiệu'},
+                                          {'key': 'dat_nen', 'label': 'Đất nền'},
+                                          {'key': 'nha_dat', 'label': 'Nhà đất'},
+                                          {'key': 'note', 'label': 'Cách đọc nhanh'}],
+                              'rows': [{'ward': 'Định Hòa',
+                                        'active': '132',
+                                        'signals': '25',
+                                        'dat_nen': '15,8 tr/m² · 2,05 tỷ',
+                                        'nha_dat': '20,6 tr/m² · 2,69 tỷ',
+                                        'note': 'Định Hòa làm mốc đọc'},
+                                       {'ward': 'Phú Tân',
+                                        'active': '147',
+                                        'signals': '81',
+                                        'dat_nen': '23,0 tr/m² · 3,3 tỷ',
+                                        'nha_dat': '36,9 tr/m² · 3,9 tỷ',
+                                        'note': 'Dấu hiệu cao hơn trong cửa sổ'},
+                                       {'ward': 'Phú Mỹ',
+                                        'active': '175',
+                                        'signals': '30',
+                                        'dat_nen': '22,9 tr/m² · 2,5 tỷ',
+                                        'nha_dat': '37,3 tr/m² · 3,65 tỷ',
+                                        'note': 'Dấu hiệu cao hơn trong cửa sổ'},
+                                       {'ward': 'Hiệp An',
+                                        'active': '107',
+                                        'signals': '30',
+                                        'dat_nen': '11,2 tr/m² · 1,85 tỷ',
+                                        'nha_dat': '23,3 tr/m² · 2,79 tỷ',
+                                        'note': 'Dấu hiệu cao hơn trong cửa sổ'},
+                                       {'ward': 'Phú Lợi',
+                                        'active': '107',
+                                        'signals': '12',
+                                        'dat_nen': '28,0 tr/m² · 3,45 tỷ',
+                                        'nha_dat': '37,4 tr/m² · 3,34 tỷ',
+                                        'note': 'Nhà đất cao hơn Định Hòa'}]}],
+             'charts': [{'eyebrow': 'Biểu đồ giá/m²',
+                         'title': 'Giá/m² trung vị tại Định Hòa theo loại hình',
+                         'note': 'Không gom đất nền và nhà đất thành một mức giá chung.',
+                         'alt': 'Biểu đồ giá/m² trung vị Định Hòa: đất nền 15,8 tr/m², nhà đất 20,6 tr/m².',
+                         'rows': [{'label': 'Nhà đất', 'value_label': '20,6 tr/m²', 'width': 100, 'color': '#0f766e'},
+                                  {'label': 'Đất nền', 'value_label': '15,8 tr/m²', 'width': 77, 'color': '#14b8a6'}]},
+                        {'eyebrow': 'Biểu đồ nguồn cung',
+                         'title': 'Tin trong cửa sổ theo loại hình',
+                         'note': '13 tin còn lại thuộc nhóm khác hoặc chưa phân loại.',
+                         'alt': 'Biểu đồ số tin Định Hòa theo bốn loại hình.',
+                         'rows': [{'label': 'Đất nền', 'value_label': '51 tin', 'width': 88, 'color': '#14b8a6'},
+                                  {'label': 'Nhà đất', 'value_label': '58 tin', 'width': 100, 'color': '#0f766e'},
+                                  {'label': 'Nhà trọ', 'value_label': '5 tin', 'width': 9, 'color': '#f59e0b'},
+                                  {'label': 'Kho xưởng', 'value_label': '5 tin', 'width': 9, 'color': '#0284c7'}]},
+                        {'eyebrow': 'Biểu đồ dấu hiệu',
+                         'title': 'Dấu hiệu đáng chú ý ở nhóm phường so sánh',
+                         'note': 'Đây là cờ từ dữ liệu tin rao, không phải số giao dịch.',
+                         'alt': 'Biểu đồ dấu hiệu đáng chú ý của năm phường trong cùng cửa sổ.',
+                         'rows': [{'label': 'Định Hòa', 'value_label': '25', 'width': 31, 'color': '#0284c7'},
+                                  {'label': 'Phú Tân', 'value_label': '81', 'width': 100, 'color': '#0f766e'},
+                                  {'label': 'Phú Mỹ', 'value_label': '30', 'width': 37, 'color': '#14b8a6'},
+                                  {'label': 'Hiệp An', 'value_label': '30', 'width': 37, 'color': '#64748b'},
+                                  {'label': 'Phú Lợi', 'value_label': '12', 'width': 15, 'color': '#f59e0b'}]}],
+             'sections': [{'id': 'gia-dat-nen-dinh-hoa',
+                           'heading': 'Giá đất nền Định Hòa: 15,8 tr/m²',
+                           'paragraphs': ['Trong 51 tin đất nền của cửa sổ 01/10/2026–15/10/2026, có 20 tin có giá/m² '
+                                          'đủ điều kiện tính. Giá trung vị là 15,8 tr/m²; vùng giữa 25–75% là '
+                                          '11,0–23,5 tr/m².',
+                                          'Tổng giá trung vị của nhóm đất nền là 2,05 tỷ. Khi lọc dashboard, nên thêm '
+                                          'diện tích, giấy tờ, đường vào và khoảng cách tới trục chính thay vì chỉ '
+                                          'nhìn tin rẻ nhất.'],
+                           'bullets': ['Đất nền và nhà đất không dùng chung một mặt bằng giá.',
+                                       'Khoảng giá trong vùng giữa vẫn rộng, nên cần xem từng tin.',
+                                       'Cờ quan tâm hoặc giảm giá chỉ là tín hiệu sàng lọc, không thay cho kiểm tra '
+                                       'thực tế.']},
+                          {'id': 'nha-dat-dinh-hoa',
+                           'heading': 'Nhà đất Định Hòa: 20,6 tr/m²',
+                           'paragraphs': ['Nhóm nhà đất có 58 tin trong cửa sổ, trong đó 33 tin có giá/m². Giá trung '
+                                          'vị là 20,6 tr/m²; vùng giữa 25–75% là 16,0–29,9 tr/m².',
+                                          'Nhà đất có tổng giá trung vị 2,69 tỷ. Khi so với đất nền, cần tính thêm '
+                                          'chất lượng công trình, tuổi nhà, diện tích xây dựng và khả năng sử dụng '
+                                          'thực tế.'],
+                           'bullets': ['Giá/m² nhà đất đã bao gồm phần giá trị của công trình và hiện trạng.',
+                                       'Không suy ra giá chốt từ giá rao trung vị.',
+                                       'Tin có giá thấp bất thường cần kiểm tra giấy tờ, vị trí và điều kiện bán.']},
+                          {'id': 'so-sanh-dinh-hoa',
+                           'heading': 'Định Hòa nên so cùng nhóm phường nào?',
+                           'paragraphs': ['Trong cùng cửa sổ, Định Hòa có 132 tin và 25 dấu hiệu. Phú Tân có nhiều dấu '
+                                          'hiệu hơn, còn Hiệp An có giá/m² thấp hơn ở cả đất nền và nhà đất theo bảng '
+                                          'so sánh.',
+                                          'Phú Mỹ và Phú Lợi có mặt bằng giá cao hơn ở một số nhóm. Cách đọc an toàn '
+                                          'là giữ nguyên loại hình, cùng cửa sổ dữ liệu rồi mới xem từng tin.'],
+                           'bullets': ['So Định Hòa với Phú Tân nếu quan tâm số dấu hiệu.',
+                                       'So với Hiệp An nếu cần một mốc giá/m² thấp hơn.',
+                                       'So với Phú Mỹ hoặc Phú Lợi khi cần nhìn nhóm giá cao hơn.']},
+                          {'id': 'cach-loc-dashboard',
+                           'heading': 'Cách lọc tin Định Hòa trên Radar BDS',
+                           'paragraphs': ['Chọn phường Định Hòa, sau đó tách đất nền hoặc nhà đất trước khi nhìn '
+                                          'giá/m². Tiếp theo lọc theo tổng ngân sách, diện tích và dấu hiệu.',
+                                          'Nếu gặp tin thấp hơn rõ so với vùng giữa, hãy kiểm tra pháp lý, quy hoạch, '
+                                          'hẻm/đường, hiện trạng tài sản và lịch sử repost.'],
+                           'bullets': ['Lọc phường: Định Hòa.',
+                                       'Tách loại hình: đất nền hoặc nhà đất.',
+                                       'Mở từng tin để kiểm tra diện tích, giá tổng, giấy tờ và đường vào.']}],
+             'checklist': ['Đã kiểm tra cửa sổ dữ liệu 01/10/2026–15/10/2026.',
+                           'Đã tách đất nền và nhà đất trước khi so giá.',
+                           'Đã xem vùng giữa 25–75%, không chỉ nhìn tin rẻ nhất.',
+                           'Đã mở dashboard để kiểm tra từng tin và thông tin đường vào.',
+                           'Đã kiểm tra pháp lý, quy hoạch và hiện trạng trước khi đi xem.']},
+ 'final_cta': {'title': 'Mở dashboard lọc Định Hòa',
+               'body': 'Lọc theo phường, loại hình, ngân sách và dấu hiệu để tìm những tin cần kiểm tra tiếp.',
+               'button': 'Mở dashboard'},
+ 'breadcrumbs': [{'name': 'Trang chủ', 'href': '/', 'url': 'https://radarbds.vn/'},
+                 {'name': 'Tin tức', 'href': '/tin-tuc', 'url': 'https://radarbds.vn/tin-tuc'},
+                 {'name': 'Giá đất Định Hòa',
+                  'href': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
+                  'url': 'https://radarbds.vn/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026'}]},
  'cach-xem-gia-dat-binh-duong-khong-bi-so-sai': {'variant': 'knowledge',
                                                  'path': '/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai',
                                                  'title': 'Cách xem giá đất Bình Dương không bị so sai | Radar BDS',
