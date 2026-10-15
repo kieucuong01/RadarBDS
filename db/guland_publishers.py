@@ -12,6 +12,7 @@ from services.guland_publisher_activity import (
     PublisherMetrics,
     MIN_OBSERVATION_SPAN_DAYS,
     MIN_OBSERVED_DAYS_30D,
+    MAX_OTHER_LISTINGS,
     classify_publisher,
     effective_publisher_class,
     is_unchanged_guland_bump,
@@ -185,6 +186,21 @@ def sync_listing_publisher(
             observed_at,
         ),
     )
+    count = raw_data.get('publisher_other_listing_count')
+    if type(count) is int and 0 <= count <= 1_000_000:
+        try:
+            checked = datetime.fromisoformat(str(raw_data.get('publisher_portfolio_checked_at') or raw_data.get('publisher_identity_checked_at') or observed_at.isoformat()))
+            if checked.tzinfo is None:
+                checked = checked.replace(tzinfo=timezone.utc)
+        except (ValueError, TypeError):
+            checked = observed_at
+        conn.execute("""
+            UPDATE source_publishers SET metrics_json=metrics_json || ?::jsonb
+            WHERE id=? AND (
+                metrics_json->>'portfolio_observed_at' IS NULL
+                OR (metrics_json->>'portfolio_observed_at')::timestamptz <= ?
+            )
+        """, (json.dumps({'reported_other_listings': count, 'portfolio_observed_at': checked.isoformat()}), publisher_id, checked))
     return int(publisher_id)
 
 
@@ -446,6 +462,13 @@ def load_publisher_metrics(
         WHERE publisher_id=? AND was_seen
           AND observed_at < ((?::date + 1)::timestamp AT TIME ZONE 'Asia/Ho_Chi_Minh')
     """, (start, publisher_id, as_of)).fetchone()
+    stored = conn.execute('SELECT metrics_json FROM source_publishers WHERE id=?', (publisher_id,)).fetchone()
+    metadata = stored['metrics_json'] if stored else {}
+    if isinstance(metadata, str):
+        metadata = json.loads(metadata)
+    reported = (metadata or {}).get('reported_other_listings')
+    if type(reported) is not int or not 0 <= reported <= 1_000_000:
+        reported = None
 
     def within(day_value: date, days: int) -> bool:
         return day_value >= as_of - timedelta(days=days - 1)
@@ -485,6 +508,7 @@ def load_publisher_metrics(
         ),
         observed_days_30d=int(coverage["days"] or 0),
         observation_span_days=(as_of - coverage["first_day"]).days if coverage["first_day"] else 0,
+        reported_other_listings=reported,
     )
     return metrics
 
@@ -504,7 +528,7 @@ def recompute_publisher(conn, publisher_id: int, as_of: date | None = None) -> P
     conn.execute(
         """
         UPDATE source_publishers
-        SET activity_class=?, activity_reason=?, metrics_json=?,
+        SET activity_class=?, activity_reason=?, metrics_json=metrics_json || ?::jsonb,
             last_classified_at=NOW()
         WHERE id=?
         """,
@@ -749,12 +773,27 @@ def _publisher_signal_trust_sql(alias: str) -> str:
             ("observed_days_30d", MIN_OBSERVED_DAYS_30D),
         )
     )
+    portfolio = f"""CASE WHEN jsonb_typeof({alias}.metrics_json->'reported_other_listings') = 'number'
+        THEN ({alias}.metrics_json->>'reported_other_listings')::numeric BETWEEN 0 AND {MAX_OTHER_LISTINGS}
+        ELSE ({coverage}) END"""
     return f"""COALESCE(
         {alias}.manual_override = 'allow_manual' OR (
             COALESCE({alias}.manual_override, '') <> 'hide_high_activity'
             AND {alias}.identity_confidence IN ('high', 'medium')
-            AND {alias}.activity_class = 'low_manual' AND ({coverage})
+            AND {alias}.activity_class = 'low_manual' AND ({portfolio})
         ), FALSE)"""
+
+
+def _listing_repost_clear_sql(alias: str) -> str:
+    # Daily evidence cannot order same-day bumps against a price edit: ignore that day.
+    return f"""NOT EXISTS (
+        SELECT 1 FROM publisher_listing_observations repost_obs
+        WHERE repost_obs.listing_id={alias}.id AND repost_obs.was_bumped
+          AND ({alias}.price_updated_at IS NULL
+               OR repost_obs.activity_date > ({alias}.price_updated_at::timestamptz AT TIME ZONE 'Asia/Ho_Chi_Minh')::date)
+        GROUP BY repost_obs.listing_id
+        HAVING COUNT(DISTINCT repost_obs.activity_date) >= 3
+    )"""
 
 
 def publisher_signal_eligibility_sql(alias: str = "l", include_high_activity: bool = False) -> str:
@@ -766,6 +805,7 @@ def publisher_signal_eligibility_sql(alias: str = "l", include_high_activity: bo
         JOIN source_publishers trust_sp ON trust_sp.id=trust_lp.publisher_id
         WHERE trust_lp.listing_id={alias}.id
           AND ({_publisher_signal_trust_sql('trust_sp')})
+          AND (trust_sp.manual_override='allow_manual' OR ({_listing_repost_clear_sql(alias)}))
     ))"""
 
 
@@ -784,7 +824,7 @@ def publisher_signal_eligibility_from_join_sql(
     """Set-based equivalent for feed/projection queries with publisher joins."""
     if include_high_activity:
         return "1=1"
-    return f"({listing_alias}.source <> 'guland' OR ({_publisher_signal_trust_sql(publisher_alias)}))"
+    return f"({listing_alias}.source <> 'guland' OR (({_publisher_signal_trust_sql(publisher_alias)}) AND ({publisher_alias}.manual_override='allow_manual' OR ({_listing_repost_clear_sql(listing_alias)}))))"
 
 
 def publisher_feed_join_sql(

@@ -21,7 +21,7 @@ After deploying/migrating the new projection column, an operator can explicitly 
 
 Use the normal production interpreter/env for VPS commands. Run maintenance outside an active crawl and inspect disk headroom before a large projection rebuild. `--apply` commits classifications, projection rows and dataset versions together; failure rolls them back. Redis mirroring/prewarming happens after commit and is reported separately. More than 500 affected cards invokes the existing full-refresh path. No valuation or human label is rewritten.
 
-Old `low_manual` metrics without observation coverage fail closed for promotion until recomputed. Unidentified publishers remain excluded even after recomputation. Capture/backfill identity with the existing publisher workflow, then accumulate actual observations or use an audited admin exception; backfilled post dates do not establish history. The 14-day/3-day thresholds require sample validation on production and are not a promise of verified ownership or availability.
+As of 2026-10-15, capture the actual `.dtl-aut__wrp` publisher panel, `/tin-da-dang-ID/` identity, and reported other-sale-listing count before reclassification. A validated count of 0-30 establishes the small-portfolio path without the 14-day/3-day wait; a larger count does not. Owner/broker labels are informational. Counts have a separate capture timestamp so raw replay cannot replace fresher portfolio evidence. Unidentified publishers remain excluded until evidence is captured. Neither a small portfolio nor observation coverage verifies ownership or availability. Repeated unchanged repost evidence is listing-scoped and resets only after a real price edit.
 
 ### Environment inventory
 

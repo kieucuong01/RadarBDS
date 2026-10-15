@@ -28,6 +28,7 @@ _ACTIVITY_CLASSES = frozenset(
 )
 MIN_OBSERVATION_SPAN_DAYS = 14
 MIN_OBSERVED_DAYS_30D = 3
+MAX_OTHER_LISTINGS = 30
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class PublisherMetrics:
     days_ge_15_with_templates_14d: int = 0
     observation_span_days: int = 0
     observed_days_30d: int = 0
+    reported_other_listings: int | None = None
 
 
 @dataclass(frozen=True)
@@ -246,6 +248,14 @@ def validated_raw_publisher_fields(
         fields["publisher_name"] = validated_identity.name
     if validated_identity.phone:
         fields["publisher_phone"] = validated_identity.phone
+    count = detail.get('publisher_other_listing_count')
+    if type(count) is int and 0 <= count <= 1_000_000:
+        fields['publisher_other_listing_count'] = count
+    role = str(detail.get('publisher_role') or '').strip().casefold()
+    if role in {'chính chủ', 'owner'}:
+        fields['publisher_role'] = 'owner'
+    elif role in {'môi giới', 'broker'}:
+        fields['publisher_role'] = 'broker'
     return fields
 
 
@@ -279,8 +289,6 @@ def classify_publisher(
         return PublisherClassification("unknown", "insufficient_identity")
     if metrics.max_new_on_day >= 30:
         return PublisherClassification("automated_repost", "new_30_or_more_in_day")
-    if metrics.bumps_7d >= 3:
-        return PublisherClassification("automated_repost", "three_bumps_in_7d")
     if metrics.near_duplicates_max_day >= 10:
         return PublisherClassification(
             "automated_repost",
@@ -291,6 +299,11 @@ def classify_publisher(
             "automated_repost",
             "repeated_high_volume_template_days",
         )
+    # Portfolio size is evidence from Guland, not a claim made in the ad text.
+    if metrics.reported_other_listings is not None:
+        if metrics.reported_other_listings <= MAX_OTHER_LISTINGS:
+            return PublisherClassification('low_manual', 'small_reported_portfolio')
+        return PublisherClassification('unknown', 'large_portfolio_freshness_unconfirmed')
     if metrics.max_new_on_day > 5:
         return PublisherClassification("high_activity", "more_than_five_in_day")
     if metrics.new_30d > 30:

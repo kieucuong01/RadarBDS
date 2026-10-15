@@ -375,6 +375,7 @@ async (urls) => {
             };
 
             const publisherRoot = doc.querySelector([
+                '.dtl-aut__wrp',
                 '.dtl-profile',
                 '.dtl-contact',
                 '.profile-info',
@@ -382,18 +383,22 @@ async (urls) => {
                 '[class*="publisher"]',
                 '[class*="seller"]'
             ].join(','));
-            const publisherPhoneEl = publisherRoot?.querySelector('a[href^="tel:"]');
+            const publisherPhoneEl = publisherRoot?.querySelector('a[href^="tel:"],#btn-call[data-phone]');
             const publisherProfileEl = publisherRoot?.querySelector(
-                'a[href*="/user/"],a[href*="/users/"],a[href*="/profile/"]'
+                'a.dtl-aut__inf[href^="/tin-da-dang-"],a[href*="/user/"],a[href*="/users/"],a[href*="/profile/"]'
             );
             const pageGlobalPhoneEl = doc.querySelector('a[href^="tel:"]');
-            const publisherProfileUrl = publisherProfileEl?.href || '';
+            const publisherProfileUrl = publisherProfileEl
+                ? new URL(publisherProfileEl.getAttribute('href'), url).href : '';
             const publisherSourceId = publisherRoot?.getAttribute('data-user-id')
                 || publisherProfileUrl.match(/\\/(?:user|users|profile)\\/([^/?#]+)/i)?.[1]
+                || publisherProfileUrl.match(/\\/tin-da-dang-(\\d+)(?:\\/|$)/)?.[1]
                 || '';
             const publisherNameEl = publisherRoot?.querySelector(
-                '[data-publisher-name],.profile-info__tle,.profile-name,[class*="name"]'
+                '.dtl-aut__tle,[data-publisher-name],.profile-info__tle,.profile-name,[class*="name"]'
             );
+            const portfolioText = publisherRoot?.querySelector('.dtl-aut__stl')?.textContent || '';
+            const portfolioMatch = portfolioText.match(/Xem\\s+([\\d.,]+)\\s+tin mua bán khác/i);
             const imgs    = listingImages(doc, postId, html);
 
             return {
@@ -412,8 +417,11 @@ async (urls) => {
                 publisher_source_id: publisherSourceId,
                 publisher_profile_url: publisherProfileUrl,
                 publisher_name: publisherNameEl?.textContent?.trim() || '',
+                publisher_other_listing_count: portfolioMatch
+                    ? Number(portfolioMatch[1].replace(/[.,]/g, '')) : null,
+                publisher_role: publisherRoot?.querySelector('.dtl-aut__rol')?.textContent?.trim() || '',
                 publisher_phone_candidate: publisherPhoneEl
-                    ? publisherPhoneEl.href.replace('tel:', '')
+                    ? (publisherPhoneEl.getAttribute('data-phone') || publisherPhoneEl.href.replace('tel:', ''))
                     : '',
                 publisher_phone_scope: publisherPhoneEl
                     ? 'listing_contact'
@@ -894,6 +902,8 @@ class GulandCrawler(BaseCrawler):
         record["publisher_identity_checked_at"] = datetime.now(
             ZoneInfo("Asia/Ho_Chi_Minh")
         ).isoformat()
+        if 'publisher_other_listing_count' in publisher_fields:
+            record['publisher_portfolio_checked_at'] = record['publisher_identity_checked_at']
         if detail.get("page_global_phone"):
             record["page_global_phone"] = detail["page_global_phone"]
         return self._refresh_changed_record(snapshot, record)

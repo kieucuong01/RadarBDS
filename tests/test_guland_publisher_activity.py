@@ -106,7 +106,7 @@ def test_normalize_vietnam_mobile_phone(value, expected):
         (PublisherMetrics(max_new_on_day=5, new_30d=31), "high_activity"),
         (PublisherMetrics(max_new_on_day=29, new_30d=80), "high_activity"),
         (PublisherMetrics(max_new_on_day=30, new_30d=80), "automated_repost"),
-        (PublisherMetrics(bumps_7d=3), "automated_repost"),
+        (PublisherMetrics(bumps_7d=3), "unknown"),
         (PublisherMetrics(near_duplicates_max_day=10), "automated_repost"),
         (
             PublisherMetrics(days_ge_15_with_templates_14d=3),
@@ -162,6 +162,29 @@ def test_new_identified_publisher_is_not_assumed_manual():
     result = classify_publisher(PublisherMetrics(new_30d=1), "high")
     assert result.activity_class == "unknown"
     assert result.reason == "insufficient_observation_history"
+
+
+@pytest.mark.parametrize('count,expected', [(0, 'low_manual'), (1, 'low_manual'), (6, 'low_manual'), (24, 'low_manual'), (30, 'low_manual'), (31, 'unknown'), (468, 'unknown'), (577, 'unknown')])
+def test_reported_portfolio_is_positive_evidence_without_observation_wait(count, expected):
+    metrics = PublisherMetrics(reported_other_listings=count)
+    assert classify_publisher(metrics, 'high').activity_class == expected
+
+
+@pytest.mark.parametrize('count', [None, True, -1, '6', 6.5])
+def test_invalid_portfolio_count_cannot_establish_trust(count):
+    fields = validated_raw_publisher_fields({'publisher_source_id': '41677', 'publisher_other_listing_count': count}, secret='s' * 64)
+    assert 'publisher_other_listing_count' not in fields
+
+
+def test_capture_portfolio_and_role_without_treating_owner_label_as_proof():
+    fields = validated_raw_publisher_fields({'publisher_source_id': '41677', 'publisher_other_listing_count': 6, 'publisher_role': 'Chính chủ'}, secret='s' * 64)
+    assert fields['publisher_other_listing_count'] == 6
+    assert fields['publisher_role'] == 'owner'
+    assert classify_publisher(PublisherMetrics(reported_other_listings=577), 'high').activity_class == 'unknown'
+
+
+def test_bumps_across_different_listings_do_not_disqualify_whole_small_publisher():
+    assert classify_publisher(PublisherMetrics(reported_other_listings=6, bumps_7d=3), 'high').activity_class == 'low_manual'
 
 
 @pytest.mark.parametrize("span,days,expected", [(13, 3, "unknown"), (14, 2, "unknown"), (14, 3, "low_manual")])

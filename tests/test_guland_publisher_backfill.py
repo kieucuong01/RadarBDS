@@ -17,6 +17,15 @@ from services.guland_publisher_backfill import (
 )
 
 
+def test_fresh_portfolio_capture_has_its_own_time_even_when_fields_match():
+    fields = {'publisher_other_listing_count': 6}
+    old = '2026-10-01T12:00:00+07:00'
+    fresh = '2026-10-15T12:00:00+07:00'
+    target = GulandPublisherBackfillTarget(1, 1, 'https://guland.vn/post/test-123', '123', 'active', 'identified', {**fields, 'publisher_identity_checked_at': old})
+    merged = service._merged_live_raw(target, fields, fresh)
+    assert merged['publisher_portfolio_checked_at'] == fresh
+
+
 @pytest.fixture()
 def scoped_targets():
     init_schema()

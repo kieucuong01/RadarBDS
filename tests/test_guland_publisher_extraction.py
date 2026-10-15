@@ -1,10 +1,32 @@
 from unittest import mock
+import json
+import pytest
 
 from crawler.guland_pw import GulandCrawler
 from db.listings import upsert_listing
 from db.schema import init_schema
 from db.connection import get_conn
 from services.guland_publisher_activity import validated_raw_publisher_fields
+
+
+@pytest.mark.parametrize('fresh_count', [6, None])
+def test_verified_price_refresh_updates_only_fresh_portfolio_timestamp(fresh_count):
+    from services.guland_reconciliation import ExistingGulandSnapshot
+    old = '2026-10-01T00:00:00+07:00'
+    snapshot = ExistingGulandSnapshot(1, 1, 'https://guland.vn/post/test-123', '123', 2.0, old, 'active')
+    raw = {'publisher_other_listing_count': 468, 'publisher_portfolio_checked_at': old}
+    crawler = GulandCrawler()
+    fields = {} if fresh_count is None else {'publisher_other_listing_count': fresh_count}
+    with mock.patch('crawler.guland_pw.get_conn') as conn, mock.patch('crawler.guland_pw.validated_raw_publisher_fields', return_value=fields), mock.patch.object(crawler, '_refresh_changed_record', return_value=1) as publish:
+        conn.return_value.__enter__.return_value.execute.return_value.fetchone.return_value = {'raw_json': json.dumps(raw)}
+        crawler._refresh_verified_price(snapshot, {}, 1.9)
+    result = publish.call_args.args[1]
+    if fresh_count is None:
+        assert result['publisher_portfolio_checked_at'] == old
+        assert result['publisher_other_listing_count'] == 468
+    else:
+        assert result['publisher_portfolio_checked_at'] != old
+        assert result['publisher_other_listing_count'] == 6
 
 
 def _card(token: str = "12345") -> dict[str, object]:

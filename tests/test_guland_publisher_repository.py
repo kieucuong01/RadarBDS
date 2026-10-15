@@ -518,6 +518,9 @@ def test_first_card_date_capture_is_baseline_not_a_bump(publisher_listing):
     ("facebook", "unknown", {}, "", True),
     ("guland", "unknown", {}, "", False),
     ("guland", "low_manual", {}, "", False),
+    ("guland", "low_manual", {"reported_other_listings": 6}, "", True),
+    ("guland", "low_manual", {"reported_other_listings": 24}, "", True),
+    ("guland", "low_manual", {"reported_other_listings": 468, "observation_span_days": 30, "observed_days_30d": 20}, "", False),
     ("guland", "low_manual", {"observation_span_days": 14, "observed_days_30d": 3}, "", True),
     ("guland", "high_activity", {"observation_span_days": 30, "observed_days_30d": 20}, "", False),
     ("guland", "automated_repost", {}, "", False),
@@ -548,6 +551,54 @@ def test_signal_trust_policy_and_projection_agree(publisher_listing, source, kla
     assert projected['publisher_signal_eligible'] is expected
     if klass == 'unknown' and not override:
         assert row['visible'] is True  # retained for inspection, not promoted
+
+
+def test_small_portfolio_survives_recompute_and_old_replay(publisher_listing):
+    listing_id, token = publisher_listing
+    now = datetime.now(timezone.utc)
+    with connection.get_conn() as conn:
+        raw = {**_identified_raw(token), 'publisher_other_listing_count': 6, 'publisher_identity_checked_at': now.isoformat()}
+        publisher_id = sync_listing_publisher(conn, listing_id, raw, observed_at=now)
+        assert recompute_publisher(conn, publisher_id, now.date()).activity_class == 'low_manual'
+        old = {**raw, 'publisher_other_listing_count': 468, 'publisher_identity_checked_at': (now-timedelta(days=5)).isoformat()}
+        sync_listing_publisher(conn, listing_id, old, observed_at=now)
+        assert recompute_publisher(conn, publisher_id, now.date()).activity_class == 'low_manual'
+        row = conn.execute('SELECT metrics_json FROM source_publishers WHERE id=?', (publisher_id,)).fetchone()
+        assert row['metrics_json']['reported_other_listings'] == 6
+
+
+def test_repeated_unchanged_bumps_block_only_that_listing_until_real_price_edit(publisher_listing):
+    from db.guland_publishers import publisher_signal_eligibility_sql, publisher_signal_eligibility_from_join_sql
+    listing_id, token = publisher_listing
+    now = datetime.now(timezone.utc)
+    with connection.get_conn() as conn:
+        raw = {**_identified_raw(token), 'publisher_other_listing_count': 6}
+        publisher_id = sync_listing_publisher(conn, listing_id, raw, observed_at=now)
+        for delta in (3, 2, 1):
+            observed = now-timedelta(days=delta)
+            record_listing_observation(conn, listing_id, observed.date(), is_new=False, source_date_changed=True, observed_at=observed)
+        assert recompute_publisher(conn, publisher_id, now.date()).activity_class == 'low_manual'
+        sql = f"SELECT ({publisher_signal_eligibility_sql('l')}) a, ({publisher_signal_eligibility_from_join_sql('l','sp')}) b FROM listings l JOIN listing_publishers lp ON lp.listing_id=l.id JOIN source_publishers sp ON sp.id=lp.publisher_id WHERE l.id=?"
+        row = conn.execute(sql, (listing_id,)).fetchone()
+        assert row['a'] is False and row['b'] is False
+        conn.execute('UPDATE listings SET price_updated_at=? WHERE id=?', (now, listing_id))
+        row = conn.execute(sql, (listing_id,)).fetchone()
+        assert row['a'] is True and row['b'] is True
+
+
+def test_later_sighting_cannot_move_same_day_old_bump_after_price_edit(publisher_listing):
+    from db.guland_publishers import publisher_signal_eligibility_sql
+    listing_id, token = publisher_listing
+    now = datetime.now(timezone.utc)
+    edited = (now-timedelta(days=3)).replace(hour=12, minute=0, second=0, microsecond=0)
+    with connection.get_conn() as conn:
+        publisher_id = sync_listing_publisher(conn, listing_id, {**_identified_raw(token), 'publisher_other_listing_count': 6})
+        for observed in (edited-timedelta(hours=1), edited+timedelta(days=1), edited+timedelta(days=2)):
+            record_listing_observation(conn, listing_id, observed.date(), is_new=False, source_date_changed=True, observed_at=observed)
+        record_listing_observation(conn, listing_id, edited.date(), is_new=False, source_date_changed=False, observed_at=edited+timedelta(hours=2))
+        conn.execute('UPDATE listings SET price_updated_at=? WHERE id=?', (edited, listing_id))
+        recompute_publisher(conn, publisher_id, now.date())
+        assert conn.execute(f'SELECT ({publisher_signal_eligibility_sql("l")}) eligible FROM listings l WHERE id=?', (listing_id,)).fetchone()['eligible'] is True
 
 
 def test_backfilled_post_dates_do_not_manufacture_observation_history(publisher_listing):

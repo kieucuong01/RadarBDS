@@ -472,6 +472,8 @@ def _merged_live_raw(
         "publisher_profile_url",
         "publisher_name",
         "publisher_phone",
+        "publisher_other_listing_count",
+        "publisher_role",
     }
     changed = any(merged.get(key) != fields.get(key) for key in stable_keys)
     for key in stable_keys:
@@ -481,6 +483,8 @@ def _merged_live_raw(
             merged.pop(key, None)
     if changed or not merged.get("publisher_identity_checked_at"):
         merged["publisher_identity_checked_at"] = checked_at
+    if type(fields.get('publisher_other_listing_count')) is int:
+        merged['publisher_portfolio_checked_at'] = checked_at
     merged["_publisher_contact_checked"] = True
     merged["contact_phone"] = fields.get("publisher_phone", "")
     if fields.get("publisher_name"):
