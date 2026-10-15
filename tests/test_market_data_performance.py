@@ -50,7 +50,8 @@ def test_listing_map_summary_releases_version_connection_before_compact_query(
     assert len(connection.queries) == 2
     summary_sql = connection.queries[1][0]
     assert "listing_map_locations" in summary_sql
-    assert summary_sql.count("NOT EXISTS") == 1
+    assert summary_sql.count("NOT EXISTS") == 2
+    assert summary_sql.count("FROM publisher_listing_observations repost_obs") == 1
     assert summary_sql.count("FROM listing_publishers lp") == 2
     assert "listing_images" not in summary_sql
     assert "LEFT JOIN LATERAL" not in summary_sql
@@ -198,7 +199,8 @@ def test_load_signals_uses_shared_connection_scope(monkeypatch):
     assert result["signals"] == []
     assert conn.closed is False
     assert len(conn.queries) == 1
-    assert conn.queries[0][0].count("NOT EXISTS") == 0
+    assert conn.queries[0][0].count("NOT EXISTS") == 1
+    assert conn.queries[0][0].count("FROM publisher_listing_observations repost_obs") == 1
     assert conn.queries[0][0].count("LEFT JOIN listing_publishers feed_lp") == 1
     assert conn.queries[0][0].count("LEFT JOIN source_publishers feed_sp") == 1
     assert "COUNT(*) OVER()" in conn.queries[0][0]
@@ -272,7 +274,8 @@ def test_load_signals_joins_publisher_activity_once(monkeypatch):
     sql = conn.queries[0][0]
     assert sql.count("LEFT JOIN listing_publishers feed_lp") == 1
     assert sql.count("LEFT JOIN source_publishers feed_sp") == 1
-    assert "NOT EXISTS" not in sql
+    assert sql.count("FROM publisher_listing_observations repost_obs") == 1
+    assert "FROM listing_publishers trust_lp" not in sql
     assert "SELECT CASE" not in sql
 
 

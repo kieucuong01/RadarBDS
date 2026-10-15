@@ -362,6 +362,7 @@ def test_count_signals_from_read_model_reuses_public_feed_filters():
     assert "SELECT COUNT(*) AS signals" in query
     assert "FROM signal_card_read_model rm" in query
     assert "latest_valuation" not in query
+    assert "publisher_listing_observations" not in query
     assert "facebook" in params
     assert "Tan An" in params
     assert "-3 months" in params
