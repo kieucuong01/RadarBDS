@@ -901,7 +901,7 @@ class GulandCrawler(BaseCrawler):
             or record.get("seller_name", "")
         )
         record["_publisher_contact_checked"] = True
-        if 'publisher_other_listing_count' in record and not record.get('publisher_portfolio_checked_at'):
+        if 'publisher_other_listing_count' not in publisher_fields and 'publisher_other_listing_count' in record and not record.get('publisher_portfolio_checked_at'):
             if record.get('publisher_identity_checked_at'):
                 record['publisher_portfolio_checked_at'] = record['publisher_identity_checked_at']
             else:
