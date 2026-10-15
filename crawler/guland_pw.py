@@ -680,6 +680,8 @@ class GulandCrawler(BaseCrawler):
             "publisher_identity_checked_at": publisher_checked_at,
         }
         record.update(publisher_fields)
+        if 'publisher_other_listing_count' in publisher_fields:
+            record['publisher_portfolio_checked_at'] = publisher_checked_at
         if detail.get("page_global_phone"):
             record["page_global_phone"] = detail["page_global_phone"]
         city = get_city_for_ward(ward_display)
@@ -899,6 +901,12 @@ class GulandCrawler(BaseCrawler):
             or record.get("seller_name", "")
         )
         record["_publisher_contact_checked"] = True
+        if 'publisher_other_listing_count' in record and not record.get('publisher_portfolio_checked_at'):
+            if record.get('publisher_identity_checked_at'):
+                record['publisher_portfolio_checked_at'] = record['publisher_identity_checked_at']
+            else:
+                # A price-only check must not re-date an undated retained count.
+                record.pop('publisher_other_listing_count', None)
         record["publisher_identity_checked_at"] = datetime.now(
             ZoneInfo("Asia/Ho_Chi_Minh")
         ).isoformat()

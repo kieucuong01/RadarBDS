@@ -10,11 +10,14 @@ from services.guland_publisher_activity import validated_raw_publisher_fields
 
 
 @pytest.mark.parametrize('fresh_count', [6, None])
-def test_verified_price_refresh_updates_only_fresh_portfolio_timestamp(fresh_count):
+@pytest.mark.parametrize('separate_time', [True, False])
+def test_verified_price_refresh_updates_only_fresh_portfolio_timestamp(fresh_count, separate_time):
     from services.guland_reconciliation import ExistingGulandSnapshot
     old = '2026-10-01T00:00:00+07:00'
     snapshot = ExistingGulandSnapshot(1, 1, 'https://guland.vn/post/test-123', '123', 2.0, old, 'active')
-    raw = {'publisher_other_listing_count': 468, 'publisher_portfolio_checked_at': old}
+    raw = {'publisher_other_listing_count': 468, 'publisher_identity_checked_at': old}
+    if separate_time:
+        raw['publisher_portfolio_checked_at'] = old
     crawler = GulandCrawler()
     fields = {} if fresh_count is None else {'publisher_other_listing_count': fresh_count}
     with mock.patch('crawler.guland_pw.get_conn') as conn, mock.patch('crawler.guland_pw.validated_raw_publisher_fields', return_value=fields), mock.patch.object(crawler, '_refresh_changed_record', return_value=1) as publish:
