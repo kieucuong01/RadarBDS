@@ -7,6 +7,7 @@ import hmac
 import logging
 import re
 from dataclasses import dataclass
+from datetime import date, timedelta
 from typing import Mapping
 from urllib.parse import urlsplit, urlunsplit
 
@@ -273,8 +274,15 @@ def is_unchanged_guland_bump(
     new_price = canonical_price_vnd(card.get("price_ty"))
     old_title = " ".join(str(previous.get("title") or "").casefold().split())
     new_title = " ".join(str(card.get("title") or "").casefold().split())
+    label = str(card.get('date_raw') or '').split('\n')[0].casefold()
+    unit = re.search(r'\d+\s*(phút|giờ|ngày|tuần|tháng|năm)', label)
+    uncertainty_days = {'phút': 1, 'giờ': 1, 'ngày': 1, 'tuần': 6, 'tháng': 30, 'năm': 365}.get(unit.group(1), 0) if unit else 0
+    try:
+        definitely_forward = date.fromisoformat(new_source_date) - timedelta(days=uncertainty_days) > date.fromisoformat(old_source_date)
+    except (ValueError, TypeError):
+        definitely_forward = False
     return bool(
-        old_source_date and new_source_date > old_source_date
+        definitely_forward
         and old_price is not None and old_price == new_price
         and not (old_title and new_title and old_title != new_title)
     )

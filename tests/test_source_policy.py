@@ -73,7 +73,7 @@ class SourcePolicyTest(unittest.TestCase):
                 (f"test-key-%-{self.token}",),
             )
 
-    def _link_guland_class(self, listing_id, activity_class):
+    def _link_guland_class(self, listing_id, activity_class, manual_override=''):
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -103,6 +103,7 @@ class SourcePolicyTest(unittest.TestCase):
                 """,
                 (listing_id, publisher_id),
             )
+            conn.execute('UPDATE source_publishers SET manual_override=? WHERE id=?', (manual_override,publisher_id))
 
     def _seed_signal(
         self,
@@ -246,7 +247,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(payload["stats"]["total"], 2)
         self.assertEqual(payload["stats"]["signals"], 2)
 
-    def test_guest_guland_unknown_remains_in_listings_but_is_not_promoted(self):
+    def test_guest_guland_unknown_and_large_publisher_are_not_automatic_exclusions(self):
         self._link_guland_class(self.guland_id, "high_activity")
         unknown_id = self._seed_signal(
             source="guland",
@@ -259,16 +260,16 @@ class SourcePolicyTest(unittest.TestCase):
             "&source=guland&date_range=all&limit=20"
         ).get_json()
 
-        self.assertEqual(
+        self.assertCountEqual(
             [row["id"] for row in payload["signals"]],
-            [],
+            [unknown_id,self.guland_id],
         )
         all_listings = self.client.get(
             f"/api/listings?city=Khac&ward={self.ward}&source=guland&date_range=all&complete_only=0"
         ).get_json()
-        self.assertEqual([row['id'] for row in all_listings['listings']], [unknown_id])
+        self.assertCountEqual([row['id'] for row in all_listings['listings']], [unknown_id,self.guland_id])
 
-    def test_newer_unknown_sorts_in_all_listings_without_entering_signals(self):
+    def test_newer_unknown_sorts_in_all_listings_and_signals(self):
         low_id = self._seed_signal(
             source="guland",
             title="Low manual publisher",
@@ -289,7 +290,7 @@ class SourcePolicyTest(unittest.TestCase):
         ).get_json()
         ordered = [row["id"] for row in payload["signals"]]
 
-        self.assertNotIn(unknown_id, ordered)
+        self.assertIn(unknown_id, ordered)
         self.assertIn(low_id, ordered)
         all_listings = self.client.get(
             f"/api/listings?city=Khac&ward={self.ward}&source=guland&date_range=all"
@@ -367,24 +368,25 @@ class SourcePolicyTest(unittest.TestCase):
             f"&location_key={location_key}&page=2&limit=2"
         ).get_json()
 
-        self.assertEqual(summary["summary"]["total"], 3)
-        self.assertEqual(summary["summary"]["mapped"], 2)
+        self.assertEqual(summary["summary"]["total"], 6)
+        self.assertEqual(summary["summary"]["mapped"], 5)
+        third_page=self.client.get(f"/api/map-listing-items?{query}&location_key={location_key}&page=3&limit=2").get_json()
         ids = [
             row["id"]
-            for row in first_page["items"] + second_page["items"]
+            for row in first_page["items"] + second_page["items"] + third_page['items']
         ]
-        self.assertEqual(first_page["total"], 2)
+        self.assertEqual(first_page["total"], 5)
         self.assertIn(low_id, ids)
-        self.assertNotIn(unknown_id, ids)
-        self.assertNotIn(high_id, ids)
-        self.assertNotIn(automated_id, ids)
+        self.assertIn(unknown_id, ids)
+        self.assertIn(high_id, ids)
+        self.assertIn(automated_id, ids)
         all_query = query.replace('mode=signals', 'mode=all')
         all_summary = self.client.get(f'/api/map-listings?{all_query}').get_json()
         all_items = self.client.get(
             f'/api/map-listing-items?{all_query}&location_key={location_key}&limit=20'
         ).get_json()
-        self.assertEqual(all_summary['summary']['total'], 4)
-        self.assertEqual(all_summary['summary']['mapped'], 3)
+        self.assertEqual(all_summary['summary']['total'], 6)
+        self.assertEqual(all_summary['summary']['mapped'], 5)
         self.assertIn(unknown_id, [row['id'] for row in all_items['items']])
 
     def test_admin_can_select_guland_source(self):
@@ -400,8 +402,8 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
         self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
 
-    def test_only_admin_can_reveal_high_activity_guland_publishers(self):
-        self._link_guland_class(self.guland_id, "high_activity")
+    def test_only_admin_can_reveal_manually_hidden_guland_publishers(self):
+        self._link_guland_class(self.guland_id, "high_activity", manual_override='hide_high_activity')
         query = (
             f"city=Khac&ward={self.ward}&source=guland"
             "&date_range=all&limit=10"
@@ -596,7 +598,7 @@ class SourcePolicyTest(unittest.TestCase):
                 for endpoint, key in (('signals', 'signals'), ('listings', 'listings')):
                     response = self.client.get(f'/api/{endpoint}?{query}&sort=newest&sort_by=date&sort_dir=desc&complete_only=0')
                     self.assertEqual(response.status_code, 200)
-                    endpoint_expected = [listing_id for listing_id in expected if endpoint == 'listings' or listing_id != unknown_id]
+                    endpoint_expected = expected
                     self.assertEqual([item['id'] for item in response.get_json()[key]], endpoint_expected)
                 with get_conn() as conn:
                     conn.execute("UPDATE listings SET price_updated_at='2099-10-06 13:00:00+00:00' WHERE id=?", (self.facebook_id,))
@@ -607,7 +609,7 @@ class SourcePolicyTest(unittest.TestCase):
                     self.assertEqual(response.status_code, 200)
                     items = response.get_json()[key]
                     expected_after_update = [self.facebook_id, self.guland_id, unknown_id, manual_id]
-                    endpoint_expected = [listing_id for listing_id in expected_after_update if endpoint == 'listings' or listing_id != unknown_id]
+                    endpoint_expected = expected_after_update
                     self.assertEqual([item['id'] for item in items], endpoint_expected)
                     self.assertEqual(items[0]['card_date_reason'], 'price_updated')
 

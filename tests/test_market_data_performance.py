@@ -50,9 +50,9 @@ def test_listing_map_summary_releases_version_connection_before_compact_query(
     assert len(connection.queries) == 2
     summary_sql = connection.queries[1][0]
     assert "listing_map_locations" in summary_sql
-    assert summary_sql.count("NOT EXISTS") == 2
+    assert summary_sql.count("NOT EXISTS") == 3
     assert summary_sql.count("FROM publisher_listing_observations repost_obs") == 1
-    assert summary_sql.count("FROM listing_publishers lp") == 2
+    assert summary_sql.count("FROM listing_publishers lp") == 3
     assert "listing_images" not in summary_sql
     assert "LEFT JOIN LATERAL" not in summary_sql
     assert result["summary"]["total"] == 0

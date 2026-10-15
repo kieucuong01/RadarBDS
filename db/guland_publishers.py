@@ -10,9 +10,6 @@ from zoneinfo import ZoneInfo
 from services.guland_publisher_activity import (
     PublisherClassification,
     PublisherMetrics,
-    MIN_OBSERVATION_SPAN_DAYS,
-    MIN_OBSERVED_DAYS_30D,
-    MAX_OTHER_LISTINGS,
     classify_publisher,
     effective_publisher_class,
     is_unchanged_guland_bump,
@@ -754,34 +751,15 @@ def publisher_visibility_sql(
           FROM listing_publishers lp
           JOIN source_publishers sp ON sp.id = lp.publisher_id
           WHERE lp.listing_id = {alias}.id
-            AND CASE sp.manual_override
-                  WHEN 'allow_manual' THEN 'low_manual'
-                  WHEN 'hide_high_activity' THEN 'automated_repost'
-                  ELSE sp.activity_class
-                END IN ('high_activity', 'automated_repost')
+            AND sp.manual_override='hide_high_activity'
       )
     )
     """.strip()
 
 
 def _publisher_signal_trust_sql(alias: str) -> str:
-    coverage = " AND ".join(
-        f"CASE WHEN jsonb_typeof({alias}.metrics_json->'{key}') = 'number' "
-        f"THEN ({alias}.metrics_json->>'{key}')::numeric >= {minimum} ELSE FALSE END"
-        for key, minimum in (
-            ("observation_span_days", MIN_OBSERVATION_SPAN_DAYS),
-            ("observed_days_30d", MIN_OBSERVED_DAYS_30D),
-        )
-    )
-    portfolio = f"""CASE WHEN jsonb_typeof({alias}.metrics_json->'reported_other_listings') = 'number'
-        THEN ({alias}.metrics_json->>'reported_other_listings')::numeric BETWEEN 0 AND {MAX_OTHER_LISTINGS}
-        ELSE ({coverage}) END"""
-    return f"""COALESCE(
-        {alias}.manual_override = 'allow_manual' OR (
-            COALESCE({alias}.manual_override, '') <> 'hide_high_activity'
-            AND {alias}.identity_confidence IN ('high', 'medium')
-            AND {alias}.activity_class = 'low_manual' AND ({portfolio})
-        ), FALSE)"""
+    # Publisher size, role and sparse observation history are not repost evidence.
+    return f"COALESCE({alias}.manual_override, '') <> 'hide_high_activity'"
 
 
 def _listing_repost_clear_sql(alias: str) -> str:
@@ -797,16 +775,17 @@ def _listing_repost_clear_sql(alias: str) -> str:
 
 
 def publisher_signal_eligibility_sql(alias: str = "l", include_high_activity: bool = False) -> str:
-    """Stricter promotion policy; Facebook and all-listings are unchanged."""
+    """Block only per-listing repost evidence or an explicit admin hide."""
     if include_high_activity:
         return "1=1"
-    return f"""({alias}.source <> 'guland' OR EXISTS (
+    return f"""({alias}.source <> 'guland' OR (
+        ({publisher_visibility_sql(alias)})
+        AND (({_listing_repost_clear_sql(alias)}) OR EXISTS (
         SELECT 1 FROM listing_publishers trust_lp
         JOIN source_publishers trust_sp ON trust_sp.id=trust_lp.publisher_id
         WHERE trust_lp.listing_id={alias}.id
-          AND ({_publisher_signal_trust_sql('trust_sp')})
-          AND (trust_sp.manual_override='allow_manual' OR ({_listing_repost_clear_sql(alias)}))
-    ))"""
+          AND trust_sp.manual_override='allow_manual'
+    ))))"""
 
 
 def publisher_policy_state(conn, publisher_id: int) -> tuple[str, bool]:
@@ -824,7 +803,7 @@ def publisher_signal_eligibility_from_join_sql(
     """Set-based equivalent for feed/projection queries with publisher joins."""
     if include_high_activity:
         return "1=1"
-    return f"({listing_alias}.source <> 'guland' OR (({_publisher_signal_trust_sql(publisher_alias)}) AND ({publisher_alias}.manual_override='allow_manual' OR ({_listing_repost_clear_sql(listing_alias)}))))"
+    return f"({listing_alias}.source <> 'guland' OR (({_publisher_signal_trust_sql(publisher_alias)}) AND (COALESCE({publisher_alias}.manual_override, '')='allow_manual' OR ({_listing_repost_clear_sql(listing_alias)}))))"
 
 
 def publisher_feed_join_sql(
@@ -864,10 +843,9 @@ def publisher_visibility_from_join_sql(
     """Return the fail-open public predicate for an already joined publisher."""
     if include_high_activity:
         return "1=1"
-    effective = publisher_effective_class_from_join_sql(publisher_alias)
     return (
         f"({listing_alias}.source <> 'guland' OR "
-        f"({effective}) NOT IN ('high_activity', 'automated_repost'))"
+        f"({_publisher_signal_trust_sql(publisher_alias)}))"
     )
 
 

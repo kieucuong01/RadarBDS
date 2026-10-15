@@ -126,7 +126,7 @@ Marketing skills:
 - `low_segment_confidence` alone does not suppress user-facing signals; show a warning badge instead.
 - Facebook repost matching may use heuristics, but only with strong guards for type, location, area/dimensions, thổ cư, and phone.
 - Guland and legacy BatDongSan use source-id identity only for lot history/dedup; do not use cross-URL same-lot heuristics for them.
-- Guest/Free/VIP may see Guland `low_manual` and fail-open `unknown` publishers. Hide `high_activity` and `automated_repost`; only admin may reveal or override them.
+- Guland publisher count, role and activity class do not automatically hide/promote listings. Source-policy promotion excludes only confirmed per-listing repeated unchanged repost evidence or explicit admin hide; other quality/MOS/inactivity gates remain. Only admin may reveal manually hidden entries or override them.
 - Guland publisher activity is a feed/map ranking and visibility policy, not a source-quality flag or valuation input. `guland_cluster_flood` is retired as a hard gate.
 - Guland Săn Deal/counts/signal Maps and new VIP/price-drop promotion also require an identified low-activity publisher with actual observations over 14 days and on 3 distinct Vietnam dates within 30 days, or an audited admin allow override. Unknown/insufficient-history publishers remain available in Tin rao/inspection. `publisher_signal_eligible` is separate from general public visibility; Facebook and valuation inputs are unchanged. Backfilled post dates do not establish observation history.
 - Daily production crawl is Facebook-first. Guland runs as a secondary timer/fallback cron. Do not put slow secondary crawl before Facebook.

@@ -332,8 +332,8 @@ def test_joined_publisher_visibility_is_fail_open_for_unknown_identity():
 
     sql = publisher_visibility_from_join_sql("l", "feed_sp")
     assert "COALESCE" in sql
-    assert "'unknown'" in sql
-    assert "NOT IN ('high_activity', 'automated_repost')" in sql
+    assert "<> 'hide_high_activity'" in sql
+    assert 'activity_class' not in sql
 
 
 def test_seen_card_bump_is_idempotent_and_does_not_change_listing_dates(
@@ -516,14 +516,14 @@ def test_first_card_date_capture_is_baseline_not_a_bump(publisher_listing):
 
 @pytest.mark.parametrize("source,klass,metrics,override,expected", [
     ("facebook", "unknown", {}, "", True),
-    ("guland", "unknown", {}, "", False),
-    ("guland", "low_manual", {}, "", False),
+    ("guland", "unknown", {}, "", True),
+    ("guland", "low_manual", {}, "", True),
     ("guland", "low_manual", {"reported_other_listings": 6}, "", True),
     ("guland", "low_manual", {"reported_other_listings": 24}, "", True),
-    ("guland", "low_manual", {"reported_other_listings": 468, "observation_span_days": 30, "observed_days_30d": 20}, "", False),
+    ("guland", "low_manual", {"reported_other_listings": 1065, "observation_span_days": 0, "observed_days_30d": 1}, "", True),
     ("guland", "low_manual", {"observation_span_days": 14, "observed_days_30d": 3}, "", True),
-    ("guland", "high_activity", {"observation_span_days": 30, "observed_days_30d": 20}, "", False),
-    ("guland", "automated_repost", {}, "", False),
+    ("guland", "high_activity", {"observation_span_days": 30, "observed_days_30d": 20}, "", True),
+    ("guland", "automated_repost", {}, "", True),
     ("guland", "unknown", {}, "allow_manual", True),
     ("guland", "low_manual", {"observation_span_days": 14, "observed_days_30d": 3}, "hide_high_activity", False),
 ])
@@ -601,6 +601,22 @@ def test_later_sighting_cannot_move_same_day_old_bump_after_price_edit(publisher
         assert conn.execute(f'SELECT ({publisher_signal_eligibility_sql("l")}) eligible FROM listings l WHERE id=?', (listing_id,)).fetchone()['eligible'] is True
 
 
+def test_unidentified_listing_keeps_its_own_repost_evidence_without_null_projection(publisher_listing):
+    from db.guland_publishers import publisher_signal_eligibility_sql, publisher_signal_eligibility_from_join_sql
+    from services.signal_read_model import refresh_signal_card_read_model
+    listing_id, token = publisher_listing
+    now = datetime.now(timezone.utc)
+    with connection.get_conn() as conn:
+        sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        for delta in (3,2,1):
+            seen=now-timedelta(days=delta)
+            record_listing_observation(conn,listing_id,seen.date(),is_new=False,source_date_changed=True,observed_at=seen)
+        sync_listing_publisher(conn,listing_id,{'publisher_identity_status':'unknown','publisher_identity_type':'unknown','publisher_identity_confidence':'low'})
+        row=conn.execute(f"SELECT ({publisher_signal_eligibility_sql('l')}) legacy, ({publisher_signal_eligibility_from_join_sql('l','sp')}) joined FROM listings l LEFT JOIN listing_publishers lp ON lp.listing_id=l.id LEFT JOIN source_publishers sp ON sp.id=lp.publisher_id WHERE l.id=?",(listing_id,)).fetchone()
+        assert row['legacy'] is False and row['joined'] is False
+        refresh_signal_card_read_model(conn,listing_ids=(listing_id,))
+
+
 def test_backfilled_post_dates_do_not_manufacture_observation_history(publisher_listing):
     listing_id, token = publisher_listing
     with connection.get_conn() as conn:
@@ -664,6 +680,11 @@ def test_promotion_matches_feed_counts_maps_and_vip(publisher_listing, monkeypat
             metrics = {'observation_span_days': 14, 'observed_days_30d': 3} if trusted else {}
             conn.execute("UPDATE source_publishers SET activity_class=?, metrics_json=? WHERE id=?",
                          ('low_manual' if trusted else 'unknown', json.dumps(metrics), publisher_id))
+            if not trusted:
+                now=datetime.now(timezone.utc)
+                for delta in (3,2,1):
+                    seen=now-timedelta(days=delta)
+                    record_listing_observation(conn,listing_id,seen.date(),is_new=False,source_date_changed=True,observed_at=seen)
         conn.execute("""UPDATE listings SET source=?, ward=?, price_ty=2, price_per_m2=20,
             area_m2=100, probably_sold=0, possibly_duplicate=0, source_status='active',
             first_seen_at='2099-01-15', crawled_at='2099-01-15' WHERE id=?""", (source, ward, listing_id))
@@ -692,8 +713,8 @@ def test_trust_impact_report_is_private_and_read_only(publisher_listing):
     with connection.get_conn() as conn:
         conn.execute('SET TRANSACTION READ ONLY')
         report = build_report(conn, sample_limit=2)
-    assert report['policy']['min_observation_span_days'] == 14
-    assert report['policy']['min_observed_days_30d'] == 3
+    assert report['policy']['repeated_listing_bump_dates_required'] == 3
+    assert 'no publisher count/history gate' in report['policy']['basis']
     assert 'url' not in json.dumps(report)
     assert 'publisher_key' not in json.dumps(report)
 

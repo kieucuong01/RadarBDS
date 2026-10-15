@@ -575,20 +575,20 @@ class VipNotifyTest(unittest.TestCase):
             self.assertEqual(send2.call_count, 1)
 
 
-    def test_unknown_guland_is_not_promoted_but_followed_source_removal_is_delivered(self):
+    def test_unknown_guland_can_be_promoted_and_followed_source_removal_is_delivered(self):
         from cli.notify import _fetch_new_signals, _notification_event
         from db.connection import get_conn
 
         vip_id, listing_id = self._vip_setup()
         with get_conn() as conn:
             conn.execute("UPDATE listings SET source='guland', source_status='active' WHERE id=?", (listing_id,))
-            self.assertNotIn(listing_id, [row['id'] for row in _fetch_new_signals(conn, self.since)])
+            self.assertIn(listing_id, [row['id'] for row in _fetch_new_signals(conn, self.since)])
         self._seed_notification(vip_id, listing_id, 'telegram', 2.1)
         with get_conn() as conn:
             conn.execute("UPDATE listings SET source_status='inactive' WHERE id=?", (listing_id,))
             rows = {row['id']: row for row in _fetch_new_signals(conn, self.since)}
         self.assertIn(listing_id, rows)
-        self.assertFalse(rows[listing_id]['alert_signal_eligible'])
+        self.assertTrue(rows[listing_id]['alert_signal_eligible'])
         self.assertEqual(_notification_event(rows[listing_id], {'notified_source_status': 'active'}), 'source_removed')
 
 

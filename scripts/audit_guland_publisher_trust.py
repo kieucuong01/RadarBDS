@@ -18,7 +18,6 @@ from db.guland_publishers import (
     publisher_signal_eligibility_from_join_sql,
     recompute_publisher,
 )
-from services.guland_publisher_activity import MIN_OBSERVATION_SPAN_DAYS, MIN_OBSERVED_DAYS_30D
 from services.market_data import build_deal_sql, _signal_listing_data_sql, LATEST_SHADOW_VALUATION_CTE
 from services.signal_quality import LATEST_VALUATION_CTE, actionable_listing_sql
 from services.signal_read_model import refresh_signal_card_read_model
@@ -33,9 +32,7 @@ def build_report(conn, sample_limit: int = 30) -> dict:
         classified AS (
             SELECT l.id, l.ward, l.price_ty, l.area_m2,
                 CASE WHEN {trusted} THEN 'eligible'
-                     WHEN sp.activity_class IN ('high_activity', 'automated_repost') THEN sp.activity_class
-                     WHEN sp.id IS NULL THEN 'unidentified'
-                     ELSE 'insufficient_history' END AS category,
+                     ELSE 'repost_or_manual_hide' END AS category,
                 ({candidate} AND {_signal_listing_data_sql('l')}
                  AND {actionable_listing_sql('l')}
                  AND COALESCE(l.source_status, 'unknown') <> 'inactive') AS candidate_signal
@@ -58,10 +55,9 @@ def build_report(conn, sample_limit: int = 30) -> dict:
     """, (sample_limit,)).fetchall()
     return {
         'policy': {
-            'min_observation_span_days': MIN_OBSERVATION_SPAN_DAYS,
-            'min_observed_days_30d': MIN_OBSERVED_DAYS_30D,
+            'repeated_listing_bump_dates_required': 3,
             'facebook': 'unchanged',
-            'basis': 'stored publisher metrics; --apply recomputes before publication',
+            'basis': 'per-listing unchanged repost evidence and explicit admin overrides; no publisher count/history gate',
         },
         'groups': [dict(row) for row in groups],
         'samples': [dict(row) for row in samples],

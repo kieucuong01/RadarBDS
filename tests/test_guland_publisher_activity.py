@@ -187,6 +187,17 @@ def test_bumps_across_different_listings_do_not_disqualify_whole_small_publisher
     assert classify_publisher(PublisherMetrics(reported_other_listings=6, bumps_7d=3), 'high').activity_class == 'low_manual'
 
 
+@pytest.mark.parametrize('label,old_date,new_date', [('1 tuần trước','2026-10-05','2026-10-06'), ('1 tháng trước','2026-09-15','2026-09-16'), ('19 giờ trước','2026-10-01','2026-10-02')])
+def test_rounded_relative_date_drift_is_not_repost(label, old_date, new_date):
+    from services.guland_publisher_activity import is_unchanged_guland_bump
+    assert not is_unchanged_guland_bump({'price_ty':1.6,'date_raw':label}, {'price_ty':1.6,'date_raw':label}, old_source_date=old_date,new_source_date=new_date)
+
+
+def test_new_recent_date_after_old_week_label_is_repost_evidence():
+    from services.guland_publisher_activity import is_unchanged_guland_bump
+    assert is_unchanged_guland_bump({'price_ty':1.6,'date_raw':'1 tuần trước'}, {'price_ty':1.6,'date_raw':'2 giờ trước'},old_source_date='2026-10-06',new_source_date='2026-10-14')
+
+
 @pytest.mark.parametrize("span,days,expected", [(13, 3, "unknown"), (14, 2, "unknown"), (14, 3, "low_manual")])
 def test_manual_class_requires_elapsed_time_and_independent_observations(span, days, expected):
     metrics = PublisherMetrics(observation_span_days=span, observed_days_30d=days)
