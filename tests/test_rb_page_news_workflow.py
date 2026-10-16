@@ -92,6 +92,25 @@ def _draft() -> dict:
     }
 
 
+def test_matching_news_article_replaces_unrelated_radar_destination(monkeypatch):
+    from config.seo_articles import SEO_ARTICLES
+
+    source = _candidate()
+    path = "/tin-tuc/di-an-su-kien-da-bien-tap"
+    article = {
+        "path": path,
+        "article": {"published_at": "2026-09-11", "modified_at": "2026-09-11"},
+        "news": {"status": "published", "event_key": "di-an-20260911", "topic": "quy-hoach",
+                 "event_status": "Đang lấy ý kiến", "sources": [
+                     {"url": source["url"], "publisher": "CafeLand", "published_at": "2026-09-11"}]},
+    }
+    monkeypatch.setitem(SEO_ARTICLES, "di-an-su-kien-da-bien-tap", article)
+    result = mod.validate_report_and_draft(
+        _report(source), _draft(), now=dt.datetime(2026, 9, 12, 10, tzinfo=dt.timezone.utc)
+    )
+    assert result["radar_url"] == "https://radarbds.vn" + path
+
+
 def test_recommended_lane_targets_three_news_per_ten_without_consecutive_news():
     posted = {
         "radar-a": {"posted_at": "2026-09-01T18:40:00+07:00", "lane": "radar"},

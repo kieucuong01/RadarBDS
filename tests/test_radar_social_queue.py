@@ -1,6 +1,7 @@
 import argparse
 import importlib.util
 from pathlib import Path
+import pytest
 
 
 def _load_queue_module():
@@ -10,6 +11,16 @@ def _load_queue_module():
     assert spec.loader is not None
     spec.loader.exec_module(module)
     return module
+
+
+def test_latest_data_queue_skips_news_and_explicit_draft_is_rejected(monkeypatch):
+    module = _load_queue_module()
+    data = {"path": "/tin-tuc/data", "article": {"modified_at": "2026-01-01"}}
+    draft = {"path": "/tin-tuc/draft", "news": {"status": "draft"}, "article": {"modified_at": "2026-10-15"}}
+    monkeypatch.setattr(module, "_load_articles", lambda: {"data": data, "draft": draft})
+    assert module._choose_article("latest")[0] == "data"
+    with pytest.raises(SystemExit):
+        module._choose_article("draft")
 
 
 def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path):

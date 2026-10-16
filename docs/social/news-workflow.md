@@ -7,6 +7,19 @@ publish. The module itself never publishes without that review stamp.
 Owner module: `scripts/rb_page_news_workflow.py`
 Tests: `tests/test_rb_page_news_workflow.py` (run with `/opt/radar-bds/.venv/bin/python -m pytest`)
 
+### Shared web destination (2026-10-15)
+
+Sourced web explainers are registered in `config/seo_hot_topic_articles.py`
+with a stable event key, exact source URLs and verified media permalinks. See
+`docs/daily_seo_publisher.md` for the metadata contract.
+
+When the selected lead source matches a published explainer, draft validation
+uses that article as `radar_url` rather than an unrelated existing guide.
+Publish and verify the web article before preparing a new queue; changing an
+already reviewed queue still requires a new review stamp. Reconcile older
+Facebook/video publications into the article without automatically reposting.
+Draft articles never qualify as a destination.
+
 This module **reuses**, never reimplements:
 - `scripts/radar_social_auto_post.py` → `load_state()`, `save_state()`,
   `posted_today()`, `create_queue(slug, preview=True)`, `upgrade_queue_image()`,

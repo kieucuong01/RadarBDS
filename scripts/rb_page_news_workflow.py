@@ -148,11 +148,12 @@ def _radar_article_paths() -> set[str]:
         if str(REPO) not in sys.path:
             sys.path.insert(0, str(REPO))
         from config.seo_articles import SEO_ARTICLES  # pylint: disable=import-error
+        from services.news_editorial import is_public_article
     except Exception:
         return set()
     paths = set()
     for page in SEO_ARTICLES.values():
-        if isinstance(page, dict) and str(page.get("path", "")).startswith("/tin-tuc/"):
+        if isinstance(page, dict) and is_public_article(page) and str(page.get("path", "")).startswith("/tin-tuc/"):
             paths.add(str(page["path"]))
     return paths
 
@@ -294,7 +295,13 @@ def validate_report_and_draft(report: dict[str, Any], draft: dict[str, Any], *, 
     lead_published = parse_source_date(lead.get("published_at"), field="lead.published_at")
     if _local_day(now) - lead_published > dt.timedelta(days=7):
         raise ValueError("selected lead published_at is older than 7d")
-    radar_url = validate_radar_url(str(draft.get("radar_url") or ""))
+    from config.seo_articles import SEO_ARTICLES
+    from services.news_editorial import article_for_sources
+
+    matching_path = article_for_sources(SEO_ARTICLES, [lead["url"]])
+    radar_url = validate_radar_url(
+        "https://radarbds.vn" + matching_path if matching_path else str(draft.get("radar_url") or "")
+    )
     caption = _plain(draft.get("caption"))
     headline = _plain(draft.get("headline"))
     reader_benefit = _plain(draft.get("reader_benefit"))

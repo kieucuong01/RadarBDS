@@ -45,11 +45,14 @@ def _article_date(page: dict[str, Any]) -> str:
 
 
 def _choose_article(slug: str) -> tuple[str, dict[str, Any]]:
+    from services.news_editorial import is_public_article
+
     articles = _load_articles()
     candidates = {
         k: v
         for k, v in articles.items()
-        if isinstance(v, dict) and str(v.get("path", "")).startswith("/tin-tuc/")
+        if is_public_article(v) and str(v.get("path", "")).startswith("/tin-tuc/")
+        and (slug != "latest" or "news" not in v)
     }
     if not candidates:
         raise SystemExit("No /tin-tuc articles found in config/seo_articles.py")

@@ -79,6 +79,7 @@ from config.settings import (
     get_digital_product_commerce_settings,
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
 from config.planning_pages import (
@@ -1844,8 +1845,8 @@ def _page_breadcrumbs(page: dict) -> list[dict]:
         if path != "/tin-tuc/du-lieu-radarbds":
             breadcrumbs.append(
                 {
-                    "name": "Tin từ dữ liệu Radar BDS",
-                    "href": "/tin-tuc/du-lieu-radarbds",
+                    "name": "Chủ đề nóng" if page.get("news") else "Tin từ dữ liệu Radar BDS",
+                    "href": "/tin-tuc/chu-de-nong" if page.get("news") else "/tin-tuc/du-lieu-radarbds",
                 }
             )
 
@@ -3480,6 +3481,8 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     for slug, item in SEO_ARTICLES.items():
         if not str(item.get("path") or "").startswith(article_prefix):
             continue
+        if not is_public_article(item) or (is_news_archive and item.get("news")):
+            continue
         decorated = _decorate_news_article(slug, item) if is_news_archive else dict(item)
         matching.append((slug, decorated))
     matching.sort(
@@ -3606,6 +3609,7 @@ def _public_topic_label(topic: str) -> str:
         "ha-tang": "Hạ tầng",
         "quy-hoach": "Quy hoạch",
         "thi-truong": "Thị trường",
+        "du-an": "Dự án và nguồn cung",
     }
     return labels.get(normalized, normalized.replace("-", " ").capitalize())
 
@@ -3672,6 +3676,8 @@ def seo_news_hub_page():
                         item
                         for item in SEO_ARTICLES.values()
                         if str(item.get("path") or "").startswith("/tin-tuc/")
+                        and "news" not in item
+                        and is_public_article(item)
                     ),
                     key=lambda item: (
                         (item.get("article") or {}).get("modified_at", ""),
@@ -3681,22 +3687,22 @@ def seo_news_hub_page():
                 )[:3]
             ]
         else:
+            source_items = _public_content_repository.list_published(
+                item_type=section["item_type"], limit=None if section["item_type"] == "hot_topic" else 3
+            )
+            if section["item_type"] == "hot_topic":
+                source_items = merge_hot_topic_items(SEO_ARTICLES, source_items)[:3]
             section["items"] = [
                 _decorate_public_content_item(item)
-                for item in _public_content_repository.list_published(
-                    item_type=section["item_type"], limit=3
-                )
+                for item in source_items
             ]
             for item in section["items"]:
-                item["url"] = (
-                    item.get("source_url")
-                    if section["item_type"] == "hot_topic"
-                    else item.get("detail_url")
-                )
-                item["is_external"] = section["item_type"] == "hot_topic"
+                if section["item_type"] != "hot_topic":
+                    item["url"] = item.get("detail_url")
+                    item["is_external"] = False
         sections.append(section)
     page["latest_modified_at"] = max(
-        (str((item.get("article") or {}).get("modified_at") or "") for item in SEO_ARTICLES.values()),
+        (str((item.get("article") or {}).get("modified_at") or "") for item in SEO_ARTICLES.values() if is_public_article(item)),
         default="",
     )
     page = _with_public_trust(page, "hub")
@@ -3734,11 +3740,12 @@ def public_content_hub_page(kind: str):
             "url": _public_url(page["path"]),
         },
     ]
+    source_items = _public_content_repository.list_published(item_type=page["item_type"], limit=None)
+    if page["item_type"] == "hot_topic":
+        source_items = merge_hot_topic_items(SEO_ARTICLES, source_items)
     items = [
         _decorate_public_content_item(item)
-        for item in _public_content_repository.list_published(
-            item_type=page["item_type"], limit=None
-        )
+        for item in source_items
     ]
     facets = sorted(
         {
@@ -3786,7 +3793,7 @@ def public_content_hub_page(kind: str):
                 {
                     "title": item.get("title"),
                     "url": (
-                        item.get("source_url")
+                        item.get("url")
                         if page["item_type"] == "hot_topic"
                         else item.get("detail_url")
                     ),
@@ -3978,7 +3985,7 @@ def seo_tdm_ward_redirect(ward_slug: str):
 
 def seo_article_page(slug):
     page = SEO_ARTICLES.get(slug)
-    if not page:
+    if not page or not is_public_article(page):
         abort(404)
     canonical_path = str(page.get("path") or "")
     if canonical_path and request.path.rstrip("/") != canonical_path.rstrip("/"):
@@ -3988,6 +3995,8 @@ def seo_article_page(slug):
             target = f"{target}?{query}"
         return redirect(target, code=301)
     page = dict(page)
+    if page.get("news"):
+        page["news"] = news_metadata(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)
     page = _with_public_trust(page, "article")
     site_meta = _site_meta(
@@ -4040,6 +4049,7 @@ def _llms_priority_articles(limit: int = 12) -> list[dict]:
         dict(page)
         for page in SEO_ARTICLES.values()
         if str(page.get("path") or "").startswith("/tin-tuc/")
+        and is_public_article(page)
     ]
     return sorted(
         articles,
@@ -4145,6 +4155,7 @@ def sitemap_xml():
             str((page.get("article") or {}).get("modified_at") or "")
             for page in SEO_ARTICLES.values()
             if str(page.get("path") or "").startswith("/tin-tuc/")
+            and is_public_article(page)
         ),
         default="",
     )
@@ -4172,6 +4183,11 @@ def sitemap_xml():
                 hub["item_type"],
                 hub.get("updated_at", ""),
             )
+            if hub["item_type"] == "hot_topic":
+                sitemap_hub["updated_at"] = max(
+                    sitemap_hub["updated_at"],
+                    max((str(item["article"]["modified_at"]) for item in SEO_ARTICLES.values() if news_metadata(item)), default=""),
+                )
         sitemap_news_hubs.append(sitemap_hub)
     news_hub = dict(
         KNOWLEDGE_HUB,
@@ -4229,6 +4245,7 @@ def sitemap_xml():
             lastmod=(page.get("article") or {}).get("modified_at") or "",
         )
         for slug, page in SEO_ARTICLES.items()
+        if is_public_article(page)
     )
     body = f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

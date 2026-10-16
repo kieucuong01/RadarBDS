@@ -31,6 +31,7 @@ if ENV_FILE.exists():
         os.environ[key.strip()] = value.strip().strip('"').strip("'")
 
 from config.seo_articles import SEO_ARTICLES  # noqa: E402
+from services.news_editorial import is_public_article, news_metadata  # noqa: E402
 from db.connection import get_conn  # noqa: E402
 
 DOMAIN = "https://radarbds.vn"
@@ -157,6 +158,8 @@ def article_inventory(limit: int) -> dict:
     items = []
     counts = {"tin_tuc": 0, "kien_thuc": 0, "bao_cao_articles": 0, "other": 0}
     for slug, article in SEO_ARTICLES.items():
+        if not is_public_article(article):
+            continue
         path = str(article.get("path") or "")
         if path.startswith("/tin-tuc/"):
             counts["tin_tuc"] += 1
@@ -173,6 +176,9 @@ def article_inventory(limit: int) -> dict:
                 "path": path,
                 "title": article.get("hero_title") or article.get("title"),
                 "modified_at": meta.get("modified_at") or meta.get("published_at") or "",
+                "section": "chu-de-nong" if article.get("news") else "du-lieu-radarbds",
+                "event_key": (news_metadata(article) or {}).get("event_key"),
+                "source_urls": [s["url"] for s in (news_metadata(article) or {}).get("sources", [])],
             }
         )
     items.sort(key=lambda item: (item["modified_at"], item["path"]), reverse=True)

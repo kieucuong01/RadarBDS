@@ -2,6 +2,11 @@
 
 This is the canonical repo runbook for the daily `@rb Daily SEO Publish + Social Post` Hermes cron and for Codex/AI agents asked to publish Radar BDS SEO content.
 
+For the reusable VPS handoff and starter prompt, read
+[`hermes_daily_seo_handoff.md`](hermes_daily_seo_handoff.md) and
+[`hermes_daily_seo_prompt.txt`](hermes_daily_seo_prompt.txt). Verify release
+readiness first: the 2026-10-15 hot-topic integration was local-only when handed off.
+
 ## TL;DR for Codex / AI agents
 
 1. Read `../AGENTS.md`, `docs/README.md`, this file, then `docs/radar_bds_90_day_seo_roadmap.md`.
@@ -48,6 +53,46 @@ SEO/AIO query
 Do not make Telegram/VIP/watchlist the default SEO funnel. The primary CTA is to the dashboard signal feed, preferably filtered by ward/property type/MOS.
 
 ## URL taxonomy
+
+### Sourced hot-topic articles (2026-10-15)
+
+Strategy: [Hot-topic content strategy](radar_bds_hot_topics_content_strategy.md).
+Original news explainers live in `config/seo_hot_topic_articles.py`, merged into
+`SEO_ARTICLES`; their URL remains `/tin-tuc/<slug>`. They appear in
+`/tin-tuc/chu-de-nong`, not in the Radar data archive.
+
+Each entry uses the existing article fields plus:
+
+```python
+"news": {
+    "status": "published",  # draft remains private and outside sitemap
+    "event_key": "stable-specific-event-and-date",
+    "topic": "ha-tang",  # or quy-hoach, thi-truong, du-an
+    "social_topic_key": "topic-key-from-reviewed-news-queue",
+    "event_status": "Exactly what the dated source establishes",
+    "sources": [{"url": "https://...", "publisher": "...",
+                 "published_at": "YYYY-MM-DD", "title": "..."}],
+    "known_unknowns": ["What the evidence does not establish"],
+    "media": [{"kind": "facebook", "url": "https://www.facebook.com/...",
+               "verified": True}],  # kind=video for a verified short permalink
+}
+```
+
+Use one article for one event/reader intent, with all supporting source URLs.
+The discovery hub suppresses matching metadata-only press cards and retains a
+separate source link. Source publication dates remain distinct from article dates.
+Invalid/missing sources and draft news are not public. Media must have a verified
+public permalink; do not infer publication from a rendered file.
+
+For new events, edit the article first and verify URL/canonical/sitemap/source
+and media rendering before preparing a social queue. For already posted events,
+reconcile source URLs and verified media without reposting. The news workflow
+resolves a matching published article by the lead source URL, so an older generic
+Radar guide cannot displace the event's own article. The daily context JSON
+inventory includes section, event key and source URLs for duplicate checks.
+
+Keep current daily cadence. These articles occupy existing editorial slots;
+this addition creates no cron or extra Page posting quota.
 
 | Content type | Path |
 |---|---|

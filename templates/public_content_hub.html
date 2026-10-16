@@ -14,7 +14,7 @@
       <h1>{{ page.heading }}</h1>
       <p>{{ page.description }}</p>
       {% if page.item_type == "hot_topic" %}
-      <p class="public-content-note">Radar BDS chỉ lưu metadata và dẫn người đọc tới bài gốc; không sao chép toàn bài hoặc ảnh báo chí.</p>
+      <p class="public-content-note">Đọc phân tích của Radar BDS hoặc mở tin tại báo gốc. Mỗi bài ghi rõ nguồn, thời điểm và thông tin còn cần kiểm chứng.</p>
       {% else %}
       <p class="public-content-note">Chỉ văn bản có PDF từ nguồn chính thống và đủ thông tin ban hành mới được công khai.</p>
       {% endif %}
@@ -89,23 +89,31 @@
           data-content-published="{{ item.published_iso }}"
         >
           <div class="card-meta">
+            {% if item.news %}<span class="scope-chip">Radar BDS phân tích</span>{% endif %}
             <span>{{ item.source_name }}</span>
-            {% if item.published_iso %}<time datetime="{{ item.published_iso }}">{{ item.published_label }}</time>{% endif %}
+            {% if item.published_iso %}<time datetime="{{ item.published_iso }}">{{ 'Biên tập ' if item.news else '' }}{{ item.published_label }}</time>{% endif %}
           </div>
           <h3>
             <a
-              href="{{ item.source_url if page.item_type == 'hot_topic' else item.detail_url }}"
-              {% if page.item_type == "hot_topic" %}target="_blank" rel="external noopener"{% endif %}
+              href="{{ item.url if page.item_type == 'hot_topic' else item.detail_url }}"
+              {% if page.item_type == "hot_topic" and item.is_external %}target="_blank" rel="external noopener"{% endif %}
               data-public-content-action="card"
               data-content-kind="{{ page.item_type }}"
               data-content-slug="{{ item.slug }}"
             >{{ item.title }}</a>
           </h3>
           {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
+          {% if item.news %}
+          <p class="public-content-note">{{ item.news.event_status }}</p>
+          <div class="news-evidence-links">
+            <a href="{{ item.url }}">Đọc phân tích <span aria-hidden="true">→</span></a>
+            {% for source in item.sources %}<a href="{{ source.url }}" target="_blank" rel="external noopener">Nguồn: {{ source.publisher }}</a>{% endfor %}
+          </div>
+          {% endif %}
           {% if item.document_number %}<dl><dt>Số/ký hiệu</dt><dd>{{ item.document_number }}</dd></dl>{% endif %}
-          <p class="public-content-collected">
+          {% if not item.news %}<p class="public-content-collected">
             Thu thập{% if item.collected_iso %} <time datetime="{{ item.collected_iso }}">{{ item.collected_label }}</time>{% endif %}
-          </p>
+          </p>{% endif %}
         </article>
         {% endfor %}
       </div>

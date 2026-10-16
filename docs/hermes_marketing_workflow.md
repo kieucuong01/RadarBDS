@@ -35,7 +35,10 @@ Ward pages should prefer `/?tab=signals&ward=<ward name>`.
 
 Run once per day after crawl data is expected to be fresh.
 
-A daily run may skip. Do not force a new page or post just because the job ran.
+For the dedicated daily SEO publishing task, follow `daily_seo_publisher.md`
+and `hermes_daily_seo_handoff.md`: one new qualified article per day when no
+real production/data blocker exists. Hot-topic articles occupy that same slot.
+Other marketing checks may skip; they do not create an extra publishing quota.
 
 ## Required State
 
@@ -64,7 +67,9 @@ If any state source disagrees, the first run is reconciliation only.
 3. Verify expected marketing files are readable.
 4. Compare SEO article registry, publish history, run log, sitemap, and live URL
    status.
-5. Choose exactly one action:
+5. For the dedicated daily SEO run, select one qualified non-duplicate article
+   using the daily publisher and hot-topic handoff. For other marketing runs,
+   choose exactly one action:
    - repair state drift;
    - refresh one existing SEO page;
    - add/fix one internal link or CTA to a filtered dashboard URL;
@@ -92,8 +97,9 @@ Choose the highest score that can be safely verified today.
 ## SEO/AIO Rules
 
 - Prefer improving existing location/report pages over creating new articles.
-- New articles are capped at one per week unless the user explicitly changes
-  cadence.
+- Daily SEO publishing follows the user's daily cadence in
+  `daily_seo_publisher.md`; the older one-article-per-week cap no longer applies
+  to that task. Do not create a second daily news or social quota.
 - Do not create thin street pages or keyword-swapped ward variants.
 - Keep `llms.txt`, FAQ, structured data, update date, source, and methodology
   consistent.

@@ -24,7 +24,7 @@
       {% for section in sections %}
       <section class="news-portal-section" aria-labelledby="section-{{ loop.index }}">
         <header>
-          <p class="seo-eyebrow">{{ "Nguồn bên ngoài" if section.item_type == "hot_topic" else "Radar BDS" }}</p>
+          <p class="seo-eyebrow">{{ "Phân tích & điểm tin có nguồn" if section.item_type == "hot_topic" else "Radar BDS" }}</p>
           <h2 id="section-{{ loop.index }}"><a href="{{ section.path }}">{{ section.heading }}</a></h2>
           <p>{{ section.description }}</p>
         </header>

@@ -302,6 +302,7 @@ def test_news_hub_item_list_contains_each_article_once():
     urls = [item["url"] for item in item_list["itemListElement"]]
     expected_count = sum(
         str(item.get("path") or "").startswith("/tin-tuc/")
+        and not item.get("news")
         for item in SEO_ARTICLES.values()
     )
 

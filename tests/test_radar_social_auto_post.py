@@ -14,6 +14,17 @@ mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
 
+def test_default_radar_lane_never_selects_news_drafts_or_published_explainers(monkeypatch):
+    from config import seo_articles
+
+    monkeypatch.setattr(seo_articles, "SEO_ARTICLES", {
+        "data": {"path": "/tin-tuc/data", "article": {"modified_at": "2026-01-01"}},
+        "news": {"path": "/tin-tuc/news", "article": {"modified_at": "2026-10-15"}, "news": {"status": "published"}},
+        "draft": {"path": "/tin-tuc/draft", "article": {"modified_at": "2026-10-15"}, "news": {"status": "draft"}},
+    })
+    assert mod.article_candidates() == [("2026-01-01", "data")]
+
+
 def test_posted_today_requires_same_day_and_real_permalink():
     posted = {
         "false-positive": {

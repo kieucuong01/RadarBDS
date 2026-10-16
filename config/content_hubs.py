@@ -10,13 +10,13 @@ NEWS_HUBS = {
         "title": "Chủ đề nóng bất động sản Bình Dương | Radar BDS",
         "heading": "Chủ đề nóng bất động sản Bình Dương",
         "description": (
-            "Theo dõi tiêu đề, mô tả ngắn và liên kết nguồn của các tin đáng chú ý "
-            "về bất động sản Bình Dương."
+            "Tin hạ tầng, quy hoạch và thị trường Bình Dương cùng vùng kết nối, "
+            "tổng hợp có dẫn nguồn và phân tích dưới góc nhìn người mua."
         ),
         "item_type": "hot_topic",
         "filter_label": "Lọc theo nguồn",
         "nav_label": "Chủ đề nóng",
-        "nav_description": "Điểm tin có ghi rõ nguồn",
+        "nav_description": "Phân tích sự kiện và điểm tin có nguồn",
         "updated_at": "2026-07-29",
     },
     "du-lieu-radarbds": {

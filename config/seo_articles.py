@@ -1,5 +1,7 @@
 """Curated knowledge articles for public Radar BDS SEO pages."""
 
+from config.seo_hot_topic_articles import HOT_TOPIC_ARTICLES
+
 SEO_ARTICLES = {
     'dinh-hoa-hiep-an-tan-an-khu-nao-hop-ngan-sach-thap': {'variant': 'knowledge',
      'path': '/tin-tuc/dinh-hoa-hiep-an-tan-an-khu-nao-hop-ngan-sach-thap',
@@ -25172,3 +25174,5 @@ KNOWLEDGE_HUB = {'path': '/tin-tuc',
 
 
 }
+
+SEO_ARTICLES.update(HOT_TOPIC_ARTICLES)

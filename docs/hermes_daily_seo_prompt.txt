@@ -1,0 +1,15 @@
+Thực hiện SEO web Radar BDS hằng ngày trên VPS theo múi giờ Asia/Bangkok (UTC+7).
+
+Đọc /var/tmp/radar-bds-seo-handoff/2026-10-15/hermes_daily_seo_handoff.md trước. Sau khi tính năng đã release, dùng AGENTS.md, docs/README.md, docs/daily_seo_publisher.md, docs/radar_bds_hot_topics_content_strategy.md, docs/social/news-workflow.md và docs/radar_bds_90_day_seo_roadmap.md trong checkout đúng SHA làm hướng dẫn hiện hành.
+
+Trước lần chạy đầu, xác minh phần tích hợp Chủ đề nóng đã deploy: registry seo_hot_topic_articles, service news_editorial, context inventory và bài pilot live. Snapshot handoff không phải code đã deploy. Nếu còn thiếu, báo LOCAL_ONLY_RELEASE_PENDING; không dựng lại chức năng hoặc sửa checkout production để né bước release.
+
+Mỗi ngày chọn một bài SEO mới đủ chất lượng trong lịch hiện có, không tạo thêm cron hoặc quota social. Ưu tiên sự kiện Bình Dương/vùng kết nối đã có nguồn đáng tin và có thể đồng nhất với short video/Facebook. Một sự kiện/ý định đọc có một URL bài Radar; nhiều báo cùng tin được gom nguồn. Nếu trùng thì cập nhật bài cũ và tìm đề tài khác cho slot mới. Dùng đúng rubric và cổng nguồn; không viết bài yếu để đủ quota.
+
+Chạy context helper và discovery/plan có sẵn. Đọc nguồn gốc; giữ riêng ngày sự kiện, ngày nguồn và ngày biên tập. Khẳng định trọng yếu cần nguồn chính thức; số liệu giá rao cần query production với thời gian, loại tài sản, địa bàn và mẫu. Viết thêm bối cảnh, giới hạn và điều người mua cần kiểm tra; không cam kết tăng giá/lợi nhuận hoặc sao chép toàn bài báo.
+
+Lưu bài news theo contract trong config/seo_hot_topic_articles.py, dùng event key ổn định, nguồn và trạng thái rõ. Test tập trung, commit/push đúng file và deploy bằng quy trình rollback được phép; giữ các thay đổi VPS không thuộc nhiệm vụ. Chỉ báo web thành công khi URL, nội dung render, hub, canonical, sitemap, nguồn/ngày và CTA đã được kiểm chứng.
+
+Kênh YouTube: https://www.youtube.com/@radarbds-vn/shorts. Facebook Reels: https://www.facebook.com/radarbdsvn/reels/. Gắn từng permalink đã đối chiếu đúng sự kiện; không dùng link kênh thay video, không suy từ file render thành đã đăng. Web được kiểm chứng trước khi prepare social queue; review/stamp/publish theo luồng news hiện hành và chỉ trong chế độ đăng đang được phép. Không tự repost hoặc sửa post/video cũ.
+
+Ghi event key, nguồn, URL bài, SHA, trạng thái riêng web/video/Facebook, permalink và bằng chứng. Thiếu GSC/GA4 là chưa có dữ liệu, không phải 0. Báo cáo ngắn kết quả thật và blocker. Không đổi crawl, valuation, DB schema, quyền truy cập hay lịch cron trong nhiệm vụ này.
