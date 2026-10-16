@@ -17,7 +17,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | If the task is about | Read first | Usually touch |
 |---|---|---|
 | Hermes VPS daily SEO handoff, starter prompt and web/news/video/social sequence | `hermes_daily_seo_handoff.md`, `hermes_daily_seo_prompt.txt`, `daily_seo_publisher.md` | Existing SEO/news/social helpers; no new cron by default |
-| Sourced news explainers, hot topics, matching Facebook/short videos | `radar_bds_hot_topics_content_strategy.md`, `daily_seo_publisher.md`, `social/news-workflow.md` | `config/seo_hot_topic_articles.py`, `services/news_editorial.py`, article/hub templates |
+| Sourced news explainers, hot topics, matching Facebook/short videos | `radar_bds_hot_topics_content_strategy.md`, `news_editorial_quality.md`, `daily_seo_publisher.md`, `social/news-workflow.md` | `config/seo_hot_topic_articles.py`, `services/news_editorial.py`, article/hub templates |
 | Growth marketing, marketing skills, SEO strategy, CRO, Hermes daily marketing, analytics loops | `growth_marketing_workflow.md`, `seo_geo_lead_baseline.md`, `hermes_marketing_workflow.md`, relevant `.agents/skills/<skill>/SKILL.md` | `.agents/product-marketing.md`, `.agents/skills/*`, `.agents/loops/*`, `docs/daily_seo_publisher.md`, public SEO files |
 | General coding workflow | `agent_playbook.md` | any touched module |
 | Architecture or moving code out of `app.py` | `architecture.md` | `services/*`, `routes/*`, `app.py` |

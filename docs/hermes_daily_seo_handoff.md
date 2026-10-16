@@ -95,6 +95,11 @@ Hermes phép ghi; không dùng nguyên placeholder. Bước discovery/plan khôn
 
 ### 3. Kiểm chứng và viết
 
+Đọc `docs/news_editorial_quality.md`: dùng content-strategy, copywriting,
+copy-editing và seo-audit của project. Bản explainer phải có phân tích cụ thể,
+bảng/ví dụ áp dụng và hình có ích được ghi nguồn. Không chỉ kéo dài tin báo;
+ảnh AI phải có caption minh họa, không thành ảnh dự án hay hiện trường.
+
 - Đọc nguồn gốc và ghi ngày nguồn, ngày sự kiện, ngày biên tập riêng.
 - Khẳng định trọng yếu về phê duyệt/quy hoạch/pháp lý/khởi công/tài chính cần nguồn
   chính thức hỗ trợ. Thiếu thì bỏ khẳng định chưa kiểm chứng hoặc giữ nháp.

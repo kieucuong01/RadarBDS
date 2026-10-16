@@ -9,6 +9,11 @@ readiness first: the 2026-10-15 hot-topic integration was local-only when handed
 
 ## TL;DR for Codex / AI agents
 
+Editorial quality gate: read [`news_editorial_quality.md`](news_editorial_quality.md).
+Use content-strategy → copywriting → copy-editing → seo-audit; publish a substantive
+original explainer with concrete examples, comparison tables and useful attributed
+visuals. A short paraphrase of a source article does not meet the daily target.
+
 1. Read `../AGENTS.md`, `docs/README.md`, this file, then `docs/radar_bds_90_day_seo_roadmap.md`.
 2. Run the context helper first; do not load raw DB dumps into the prompt:
    ```bash
@@ -20,7 +25,7 @@ readiness first: the 2026-10-15 hot-topic integration was local-only when handed
 5. Use real production DB numbers only; no invented counts, prices, legal certainty, testimonials, or guaranteed profit.
 6. Verify production URL, rendered content, sitemap, and logs before reporting done.
 7. Create a social queue item with `scripts/radar_social_queue.py`; Page auto-post is currently enabled through `@rb Daily Social Auto Post` / `scripts/radar_social_auto_post.py`.
-8. Commit + push repo changes; do not commit runtime data such as DB dumps, images, logs, reports, or backups.
+8. Commit + push repo changes, including reviewed article artwork under `static/images/seo/`; do not commit runtime data such as DB dumps, crawler images, logs, reports, or backups.
 
 ## Current automation
 

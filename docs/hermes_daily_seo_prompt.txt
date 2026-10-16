@@ -1,5 +1,7 @@
 Thực hiện SEO web Radar BDS hằng ngày trên VPS theo múi giờ Asia/Bangkok (UTC+7).
 
+Chuẩn chất lượng bắt buộc: đọc docs/news_editorial_quality.md; dùng các skill project-local content-strategy → copywriting → copy-editing → seo-audit. Viết bài phân tích đầy đủ có bảng đối chiếu, ví dụ cụ thể và câu hỏi thực tế; không dừng ở vài đoạn diễn giải tin báo. Có hình minh họa hữu ích, quyền sử dụng/nguồn rõ, alt và caption; ảnh AI phải ghi là minh họa, không phải hiện trường. Kiểm lại phép tính, dữ kiện, hình và mobile. Không kéo dài cho đủ từ hoặc bịa dữ liệu để đủ bài.
+
 Đọc /var/tmp/radar-bds-seo-handoff/2026-10-15/hermes_daily_seo_handoff.md trước. Sau khi tính năng đã release, dùng AGENTS.md, docs/README.md, docs/daily_seo_publisher.md, docs/radar_bds_hot_topics_content_strategy.md, docs/social/news-workflow.md và docs/radar_bds_90_day_seo_roadmap.md trong checkout đúng SHA làm hướng dẫn hiện hành.
 
 Trước lần chạy đầu, xác minh phần tích hợp Chủ đề nóng đã deploy: registry seo_hot_topic_articles, service news_editorial, context inventory và bài pilot live. Snapshot handoff không phải code đã deploy. Nếu còn thiếu, báo LOCAL_ONLY_RELEASE_PENDING; không dựng lại chức năng hoặc sửa checkout production để né bước release.

@@ -4005,6 +4005,9 @@ def seo_article_page(slug):
         description=page["description"],
         keywords=page["keywords"],
     )
+    illustration = (page.get("article") or {}).get("illustration") or {}
+    if str(illustration.get("src") or "").startswith("/static/images/seo/"):
+        site_meta["og_image"] = _public_url(illustration["src"])
     return render_template("seo_article.html", page=page, site_meta=site_meta, active_nav=_active_public_nav(page["path"]))
 
 

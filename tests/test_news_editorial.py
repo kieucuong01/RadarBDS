@@ -156,6 +156,41 @@ def test_draft_news_is_not_public_or_in_sitemap(configured_news):
     assert "https://radarbds.vn" + article["path"] not in client.get("/sitemap.xml").get_data(as_text=True)
 
 
+def test_article_artwork_is_rendered_once_and_shared_in_schema(configured_news):
+    radar_app, article = configured_news
+    artwork = {
+        "src": "/static/images/seo/news/apartment-budget-20261016.webp",
+        "alt": "Máy tính và mặt bằng minh họa ngân sách căn hộ",
+        "caption": "Ảnh minh họa AI, không phải dự án thực tế.",
+        "width": 1672,
+        "height": 941,
+    }
+    article["article"]["illustration"] = artwork
+    html = radar_app.app.test_client().get(article["path"]).get_data(as_text=True)
+    assert html.count(f'src="{artwork["src"]}"') == 1
+    assert 'width="1672" height="941"' in html
+    assert artwork["caption"] in html
+    assert html.index('class="article-visual-figure"') < html.index('class="article-toc"')
+    graphs = [json.loads(s) for s in re.findall(r'<script type="application/ld\+json">\s*(.*?)\s*</script>', html, re.S)]
+    node = next(n for g in graphs for n in g.get("@graph", []) if n.get("@type") == "NewsArticle")
+    assert node["image"] == "https://radarbds.vn" + artwork["src"]
+    assert f'content="{node["image"]}"' in html
+
+
+def test_pilot_artwork_files_match_their_declared_dimensions():
+    from pathlib import Path
+    from PIL import Image
+    from config.seo_hot_topic_articles import HOT_TOPIC_ARTICLES
+
+    root = Path(__file__).resolve().parents[1]
+    for page in HOT_TOPIC_ARTICLES.values():
+        artwork = page["article"]["illustration"]
+        with Image.open(root / artwork["src"].lstrip("/")) as image:
+            assert image.size == (artwork["width"], artwork["height"])
+            assert image.format == "WEBP"
+        assert "minh họa AI" in artwork["caption"]
+
+
 def test_social_sources_resolve_to_same_published_article_without_guessing():
     from services.news_editorial import article_for_sources
 
