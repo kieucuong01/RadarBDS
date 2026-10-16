@@ -58,6 +58,16 @@ commit; ảnh crawl, file nguồn lớn, log và proof runtime vẫn nằm ngoà
 
 ## Vòng sửa và kiểm chứng
 
+### Trình bày trang chi tiết
+
+Template bài dùng bố cục editorial trong `templates/seo_article.html` và CSS
+riêng `static/css/seo_article.css`. Giữ tiêu đề, tác giả/ngày và ảnh ở đầu;
+thân bài là một cột đọc, mục lục bên phải desktop và disclosure native trên
+mobile. Nguồn có link trực tiếp từ đầu bài tới khối đầy đủ cuối bài. Không
+thêm khối trust lớn hoặc nhiều CTA trước thân bài. Bảng cuộn trong khung có
+nhãn và nhận focus bàn phím; mục lục phải nhảy đúng neo, không bị header che.
+Thử cả bài có ảnh và bài không ảnh, desktop và mobile sau khi đổi template.
+
 Đọc lại như người mua: sau bài có thể tính gì, phân biệt gì và hỏi gì cụ thể?
 Nếu chỉ nhớ “cần kiểm tra pháp lý, quy hoạch” thì bản thảo còn chung chung.
 Rà các phép tính; mở nguồn; xem bài ở desktop/mobile; kiểm tra ảnh/caption,

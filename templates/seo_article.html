@@ -1,3 +1,16 @@
+{% macro article_toc() %}
+<nav class="article-toc" aria-label="Mục lục bài viết">
+  <h2>Trong bài này</h2>
+  <ol>
+    {% for section in page.article.sections %}
+    <li><a href="#{{ section.id }}">{{ section.heading }}</a></li>
+    {% endfor %}
+    <li><a href="#checklist">Checklist trước khi đi tiếp</a></li>
+    <li><a href="#faq">Câu hỏi thường gặp</a></li>
+    {% if page.news %}<li><a href="#nguon-tham-khao">Nguồn tham khảo</a></li>{% endif %}
+  </ol>
+</nav>
+{% endmacro %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -10,42 +23,30 @@
 
     <article class="article-layout">
       <header class="article-header">
-        <span class="scope-chip">{{ page.scope_label }}</span>
+        <div class="article-kicker"><a href="{{ '/tin-tuc/chu-de-nong' if page.news else '/tin-tuc' }}">{{ 'Chủ đề nóng' if page.news else 'Góc nhìn & kiến thức' }}</a><span aria-hidden="true">/</span><span>{{ page.scope_label }}</span></div>
         <h1>{{ page.hero_title }}</h1>
         <p class="article-deck">{{ page.description }}</p>
-        <div class="card-meta">
-          <time datetime="{{ page.article.modified_at }}">Cập nhật {{ page.article.modified_at }}</time>
+        <div class="card-meta article-byline">
+          <a class="article-author" href="{{ page.trust.owner_url if page.trust else '/san-deal-bds' }}">Radar BDS</a>
+          <span>Cập nhật <time datetime="{{ page.article.modified_at }}">{{ page.article.modified_at.split('-')|reverse|join('/') }}</time></span>
           <span>{{ page.article.sections|length }} {{ 'phần phân tích' if page.news else 'phần hướng dẫn' }}</span>
+          {% if page.news %}<a href="#nguon-tham-khao">{{ page.news.sources|length }} nguồn tham khảo <span aria-hidden="true">↗</span></a>{% endif %}
         </div>
       </header>
 
-      {% include "partials/seo_trust.html" %}
-
+      <div class="article-editorial-grid">
       <div class="article-reading-column">
-        <section class="article-intro" aria-label="Mở đầu">
-          {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
-        </section>
         {% if page.article.illustration %}
         <figure class="article-visual-figure">
           <img src="{{ page.article.illustration.src }}" alt="{{ page.article.illustration.alt }}"{% if page.article.illustration.width and page.article.illustration.height %} width="{{ page.article.illustration.width }}" height="{{ page.article.illustration.height }}"{% endif %} loading="eager" fetchpriority="high" decoding="async">
           <figcaption>{{ page.article.illustration.caption }}</figcaption>
         </figure>
         {% endif %}
-        {% if page.news %}
-        <aside class="article-news-evidence" aria-label="Nguồn và trạng thái sự kiện">
-          <p class="seo-eyebrow">Tin tức · Chủ đề nóng</p>
-          <h2>Thông tin được xác nhận đến đâu?</h2>
-          <p>{{ page.news.event_status }}</p>
-          <p>Biên tập: Radar BDS · Xuất bản <time datetime="{{ page.article.published_at }}">{{ page.article.published_at }}</time></p>
-          <ul>
-            {% for source in page.news.sources %}
-            <li><a href="{{ source.url }}" target="_blank" rel="external noopener">{{ source.publisher }}{% if source.title %}: {{ source.title }}{% endif %}</a> · <time datetime="{{ source.published_at }}">{{ source.published_at[:10] }}</time></li>
-            {% endfor %}
-          </ul>
-          {% if page.news.known_unknowns %}<p><strong>Còn cần kiểm chứng</strong></p><ul>{% for note in page.news.known_unknowns %}<li>{{ note }}</li>{% endfor %}</ul>{% endif %}
-          {% if page.news.media %}<div class="news-evidence-links" aria-label="Video và bài đăng cùng sự kiện">{% for medium in page.news.media %}<a href="{{ medium.url }}" target="_blank" rel="external noopener" data-track-cta="article_news_{{ medium.kind }}">{{ medium.label }}</a>{% endfor %}</div>{% endif %}
-        </aside>
-        {% endif %}
+        <section class="article-intro" aria-label="Mở đầu">
+          {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
+        </section>
+
+
 
         {% if page.article.summary_cards %}
         <section class="article-data-overview" aria-label="Tóm tắt số liệu chính">
@@ -58,27 +59,10 @@
           {% endfor %}
         </section>
         {% endif %}
-        <section class="article-action-strip" aria-label="Hành động nhanh">
-          <div>
-            <span>{{ 'Đọc nguồn và kiểm tra khu vực' if page.news else 'Đọc nhanh rồi xem tin thực tế' }}</span>
-            <strong>{{ page.hero_metric.value if page.hero_metric else page.article.summary_cards[0].value }} · {{ page.scope_label }}</strong>
-          </div>
-          <div class="article-action-buttons">
-            <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_top_dashboard">{{ page.primary_cta or 'Mở Radar' }}</a>
-            {% if page.secondary_href %}<a class="seo-secondary-cta" href="{{ page.secondary_href }}" data-track-cta="article_top_secondary">{{ page.secondary_cta or 'Xem báo cáo' }}</a>{% endif %}
-          </div>
-        </section>
-
-        <nav class="article-toc" aria-labelledby="toc-title">
-          <h2 id="toc-title">Trong bài này</h2>
-          <ol>
-            {% for section in page.article.sections %}
-            <li><a href="#{{ section.id }}">{{ section.heading }}</a></li>
-            {% endfor %}
-            <li><a href="#checklist">Checklist trước khi đi tiếp</a></li>
-            <li><a href="#faq">Câu hỏi thường gặp</a></li>
-          </ol>
-        </nav>
+        <details class="article-mobile-toc">
+          <summary>Mục lục bài viết <span aria-hidden="true">+</span></summary>
+          {{ article_toc() }}
+        </details>
 
         {% if page.article.data_tables %}
         <section class="article-data-tables" aria-label="Bảng dữ liệu trong bài">
@@ -89,7 +73,7 @@
               <h2>{{ table.title }}</h2>
               <p>{{ table.note }}</p>
             </div>
-            <div class="article-data-table-wrap">
+            <div class="article-data-table-wrap" tabindex="0" role="region" aria-label="{{ table.title }}">
               <table class="article-data-table">
                 <thead>
                   <tr>
@@ -154,6 +138,24 @@
           </ul>
         </section>
 
+        {% if page.news %}
+        <aside id="nguon-tham-khao" class="article-news-evidence" aria-label="Nguồn và trạng thái sự kiện">
+          <p class="seo-eyebrow">Tin tức · Chủ đề nóng</p>
+          <h2>Nguồn tham khảo & phạm vi thông tin</h2>
+          <p>{{ page.news.event_status }}</p>
+          <p>Biên tập: Radar BDS · Xuất bản <time datetime="{{ page.article.published_at }}">{{ page.article.published_at }}</time></p>
+          <ul>
+            {% for source in page.news.sources %}
+            <li><a href="{{ source.url }}" target="_blank" rel="external noopener">{{ source.publisher }}{% if source.title %}: {{ source.title }}{% endif %}</a> · <time datetime="{{ source.published_at }}">{{ source.published_at[:10] }}</time></li>
+            {% endfor %}
+          </ul>
+          {% if page.news.known_unknowns %}<p><strong>Còn cần kiểm chứng</strong></p><ul>{% for note in page.news.known_unknowns %}<li>{{ note }}</li>{% endfor %}</ul>{% endif %}
+          {% if page.news.media %}<div class="news-evidence-links" aria-label="Video và bài đăng cùng sự kiện">{% for medium in page.news.media %}<a href="{{ medium.url }}" target="_blank" rel="external noopener" data-track-cta="article_news_{{ medium.kind }}">{{ medium.label }}</a>{% endfor %}</div>{% endif %}
+        </aside>
+        {% endif %}
+
+        {% if not page.news %}{% include "partials/seo_trust.html" %}{% endif %}
+
         <aside class="article-warning">
           <strong>Lưu ý thẩm định</strong>
           <p>Radar BDS hỗ trợ sàng lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý, quy hoạch, định giá chính thức hoặc kiểm tra thực địa. Hãy xác minh độc lập trước khi giao dịch.</p>
@@ -193,6 +195,13 @@
           </div>
           <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_signals">{{ page.primary_cta or 'Mở Radar' }}</a>
         </section>
+      </div>
+      <aside class="article-sidebar" aria-label="Điều hướng bài viết">
+        <div class="article-sidebar-sticky">
+          {{ article_toc() }}
+          <a class="article-back-link" href="{{ '/tin-tuc/chu-de-nong' if page.news else '/tin-tuc' }}"><span aria-hidden="true">←</span> {{ 'Xem Chủ đề nóng' if page.news else 'Xem tất cả bài viết' }}</a>
+        </div>
+      </aside>
       </div>
     </article>
   </main>
