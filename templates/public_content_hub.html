@@ -6,8 +6,9 @@
 </head>
 <body class="seo-page public-content-page">
   {% include "partials/seo_header.html" %}
-  <main id="main-content" class="seo-shell public-content-shell" data-public-content-hub data-content-kind="{{ page.item_type }}">
+  <main id="main-content" class="seo-shell public-content-shell news-editorial" data-public-content-hub data-content-kind="{{ page.item_type }}">
     {% include "partials/seo_breadcrumbs.html" %}
+    {% include "partials/news_section_nav.html" %}
 
     <section class="public-content-hero">
       <p class="seo-eyebrow">{{ "Điểm tin có dẫn nguồn" if page.item_type == "hot_topic" else "Kho tài liệu chính thống" }}</p>
@@ -20,7 +21,7 @@
       {% endif %}
     </section>
 
-    {% include "partials/seo_trust.html" %}
+
 
     <section class="public-content-discovery" aria-labelledby="content-results-title">
       <div class="public-content-controls">
@@ -71,7 +72,7 @@
       </div>
 
       <div class="public-content-results-head">
-        <h2 id="content-results-title">Mục mới nhất</h2>
+        <h2 id="content-results-title">{{ "Tin mới & phân tích" if page.item_type == "hot_topic" else "Danh mục văn bản" }}</h2>
         <p data-public-content-results aria-live="polite">{{ items|length }} kết quả</p>
       </div>
 
@@ -88,6 +89,13 @@
           data-content-year="{{ item.year }}"
           data-content-published="{{ item.published_iso }}"
         >
+          {% if item.illustration %}
+          <a class="news-hub-cover" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+            <img src="{{ item.illustration.src }}" alt="" width="{{ item.illustration.width }}" height="{{ item.illustration.height }}" loading="lazy" decoding="async">
+            <span>Ảnh minh họa AI</span>
+          </a>
+          {% endif %}
+          {% if page.item_type == 'legal_document' %}<span class="news-document-mark" aria-hidden="true">PDF</span>{% endif %}
           <div class="card-meta">
             {% if item.news %}<span class="scope-chip">Radar BDS phân tích</span>{% endif %}
             <span>{{ item.source_name }}</span>
@@ -124,6 +132,10 @@
         <button type="button" data-public-content-reset>Đặt lại bộ lọc</button>
       </div>
     </section>
+    <details class="news-editorial-method">
+      <summary>Thông tin biên tập và cách sử dụng nguồn</summary>
+      {% include "partials/seo_trust.html" %}
+    </details>
   </main>
   {% include "partials/seo_footer.html" %}
   <script src="{{ url_for('static', filename='js/public_content_hub.js') }}?v=public-content-20260729" defer></script>

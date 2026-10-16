@@ -117,6 +117,7 @@ def merge_hot_topic_items(articles: dict, external_items: list[dict]) -> list[di
             "topic": news["topic"], "published_at": article["article"]["published_at"],
             "updated_at": article["article"]["modified_at"], "url": article["path"],
             "is_external": False, "news": news,
+            "illustration": (article.get("article") or {}).get("illustration"),
         })
     seen_sources = set(covered_sources)
     for item in external_items:

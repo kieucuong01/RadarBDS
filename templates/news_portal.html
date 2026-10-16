@@ -6,19 +6,18 @@
 </head>
 <body class="seo-page public-content-page">
   {% include "partials/seo_header.html" %}
-  <main id="main-content" class="seo-shell public-content-shell">
+  <main id="main-content" class="seo-shell public-content-shell news-editorial">
     {% include "partials/seo_breadcrumbs.html" %}
+    {% include "partials/news_section_nav.html" %}
 
     <section class="public-content-hero">
       <p class="seo-eyebrow">Dữ liệu thị trường và tin tức công khai</p>
       <h1>{{ page.heading }}</h1>
       <p>{{ page.description }}</p>
-      <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_portal_dashboard">
-        Mở dashboard lọc tin theo khu vực
-      </a>
+
     </section>
 
-    {% include "partials/seo_trust.html" %}
+
 
     <div class="news-portal-grid">
       {% for section in sections %}
@@ -32,6 +31,8 @@
         <ul class="news-portal-list">
           {% for item in section["items"] %}
           <li>
+            {% if item.illustration %}<a class="news-portal-cover" href="{{ item.url }}" tabindex="-1" aria-hidden="true"><img src="{{ item.illustration.src }}" alt="" width="{{ item.illustration.width }}" height="{{ item.illustration.height }}" loading="lazy" decoding="async"><span>Ảnh minh họa AI</span></a>{% endif %}
+            <div class="news-portal-item-body">
             <a
               href="{{ item.url }}"
               {% if item.is_external %}target="_blank" rel="external noopener"{% endif %}
@@ -40,7 +41,8 @@
               data-content-slug="{{ item.slug|default('radar-article') }}"
             >{{ item.title }}</a>
             {% if item.summary %}<p>{{ item.summary }}</p>{% endif %}
-            <span>{{ item.source_name }}</span>
+            <div class="news-portal-item-meta"><span>{{ 'Radar BDS · Phân tích có nguồn' if item.news else item.source_name }}</span>{% if item.published_iso %}<time datetime="{{ item.published_iso }}">{{ item.published_label }}</time>{% endif %}</div>
+            </div>
           </li>
           {% endfor %}
         </ul>
@@ -65,6 +67,10 @@
 
     {% set lead_cta_context = "seo_news_hub_lead" %}
     {% include "partials/seo_lead_capture.html" %}
+    <details class="news-editorial-method">
+      <summary>Thông tin biên tập và cách sử dụng nguồn</summary>
+      {% include "partials/seo_trust.html" %}
+    </details>
   </main>
   {% include "partials/seo_footer.html" %}
   {% set view_event = "seo_landing_viewed" %}

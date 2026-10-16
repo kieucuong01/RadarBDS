@@ -92,7 +92,10 @@ def test_radar_data_hub_explains_scope_method_cadence_and_limits():
         "Bình Dương cũ",
     ):
         assert text in html
-    assert html.index("Phương pháp dữ liệu Radar BDS") < html.index("Bài nổi bật")
+    # Methodology remains available in native disclosure, after the reading list.
+    assert '<summary>Nguồn dữ liệu, phương pháp và giới hạn</summary>' in html
+    assert 'class="news-editorial-method news-data-method"' in html
+    assert "Phương pháp dữ liệu Radar BDS" in html
 
 
 def test_radar_data_hub_links_all_priority_wards_and_keeps_archive():
@@ -231,7 +234,7 @@ def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
     assert "Shared SEO dropdowns are click-controlled" in css
 
 
-def test_news_hub_archive_cards_render_left_thumbnails():
+def test_news_hub_archive_cards_keep_readable_titles_and_article_destinations():
     import app as radar_app
 
     html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
@@ -242,12 +245,25 @@ def test_news_hub_archive_cards_render_left_thumbnails():
 
     assert archive_cards
     for card in archive_cards:
-        assert 'class="news-card-thumb"' in card
         assert 'class="news-card-body"' in card
-        assert card.index('class="news-card-thumb"') < card.index('class="news-card-body"')
-        assert 'data-news-thumb-category="' in card
-        assert 'aria-label="Đọc ' in card
-        assert 'data-track-cta="news_hub_article_thumb"' in card
+        path = re.search(r'data-news-card-path="([^"]+)"', card).group(1)
+        assert f'href="{path}" data-track-cta="news_hub_article_title"' in card
+        assert '<time datetime="' in card
+        assert 'class="hub-card-category"' in card
+        assert 'data-news-search-text="' in card
+
+
+@pytest.mark.parametrize("path", ["/tin-tuc", "/tin-tuc/chu-de-nong", "/tin-tuc/du-lieu-radarbds", "/tin-tuc/quyet-dinh-van-ban"])
+def test_news_collections_share_navigation_with_one_current_section(path):
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(path).get_data(as_text=True)
+    nav = re.search(r'<nav class="news-section-nav".*?</nav>', html, re.S).group(0)
+    assert nav.count('aria-current="page"') == 1
+    assert f'href="{path}" aria-current="page"' in nav
+    assert 'seo_news_hubs.css' in html
+    for target in ("/tin-tuc", "/tin-tuc/chu-de-nong", "/tin-tuc/du-lieu-radarbds", "/tin-tuc/quyet-dinh-van-ban"):
+        assert f'href="{target}"' in nav
 
 
 def test_news_hub_featured_is_not_repeated_in_archive():

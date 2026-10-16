@@ -31,3 +31,9 @@
 <link rel="preload" href="{{ url_for('static', filename='fonts/noto-serif/noto-serif-700-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/seo_article.css') }}?v=editorial-20261016-2">
 {% endif %}
+
+{% if page is defined and page.get('path') in ['/tin-tuc', '/tin-tuc/chu-de-nong', '/tin-tuc/du-lieu-radarbds', '/tin-tuc/quyet-dinh-van-ban'] %}
+<link rel="preload" href="{{ url_for('static', filename='fonts/noto-serif/noto-serif-700-vietnamese.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ url_for('static', filename='fonts/noto-serif/noto-serif-700-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/seo_news_hubs.css') }}?v=news-editorial-20261016-3">
+{% endif %}

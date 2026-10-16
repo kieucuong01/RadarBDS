@@ -1,0 +1,5 @@
+<nav class="news-section-nav" aria-label="Chuyên mục tin tức">
+  {% for href, label in [('/tin-tuc', 'Tổng hợp'), ('/tin-tuc/chu-de-nong', 'Chủ đề nóng'), ('/tin-tuc/du-lieu-radarbds', 'Dữ liệu Radar BDS'), ('/tin-tuc/quyet-dinh-van-ban', 'Quyết định & văn bản')] %}
+  <a href="{{ href }}"{% if page.path == href %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>

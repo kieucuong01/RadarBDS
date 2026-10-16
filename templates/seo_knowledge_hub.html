@@ -5,8 +5,9 @@
 </head>
 <body class="seo-page knowledge-hub">
   {% include "partials/seo_header.html" %}
-  <main id="main-content" class="seo-shell hub-shell">
+  <main id="main-content" class="seo-shell hub-shell news-editorial">
     {% include "partials/seo_breadcrumbs.html" %}
+    {% include "partials/news_section_nav.html" %}
 
     <section class="hub-hero hub-hero-grid">
       <div class="hub-hero-copy">
@@ -30,48 +31,8 @@
       </aside>
     </section>
 
-    {% include "partials/seo_trust.html" %}
 
-    {% if page.methodology %}
-    <section class="radar-methodology" aria-labelledby="radar-methodology-title">
-      <div class="section-heading">
-        <p class="seo-eyebrow">Nguồn có thể kiểm tra</p>
-        <h2 id="radar-methodology-title">{{ page.methodology.heading }}</h2>
-        <p>{{ page.methodology.intro }}</p>
-      </div>
-      <div class="radar-methodology-grid">
-        <div class="radar-methodology-card">
-          <h3>Nguồn dữ liệu</h3>
-          {% for source in page.methodology.sources %}
-          <div class="radar-methodology-source">
-            <strong>{{ source.label }}</strong>
-            <p>{{ source.body }}</p>
-          </div>
-          {% endfor %}
-        </div>
-        <div class="radar-methodology-card">
-          <h3>Từ tin rao đến signal</h3>
-          <ol>{% for step in page.methodology.steps %}<li>{{ step }}</li>{% endfor %}</ol>
-        </div>
-        <div class="radar-methodology-card radar-methodology-limits">
-          <h3>Nhịp cập nhật và giới hạn</h3>
-          <p>{{ page.methodology.cadence }}</p>
-          <ul>{% for item in page.methodology.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
-        </div>
-      </div>
-      <div class="radar-methodology-links">
-        <div>
-          <strong>13 phường Thủ Dầu Một</strong>
-          <nav aria-label="Dữ liệu 13 phường Thủ Dầu Một">
-            {% for link in page.methodology.ward_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
-          </nav>
-        </div>
-        <nav class="radar-methodology-next" aria-label="Công cụ và báo cáo liên quan">
-          {% for link in page.methodology.next_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
-        </nav>
-      </div>
-    </section>
-    {% endif %}
+
 
     <section
       class="hub-featured"
@@ -154,17 +115,9 @@
           data-news-search-text="{{ article.search_text }}"
           data-modified-at="{{ article.modified_at }}"
         >
-          <a
-            class="news-card-thumb"
-            href="{{ article.path }}"
-            aria-label="Đọc {{ article.hero_title }}"
-            data-track-cta="news_hub_article_thumb"
-            data-news-thumb-category="{{ article.category_key }}"
-          >
-            <span class="news-thumb-label">{{ article.category_label }}</span>
-            <span class="news-thumb-index">{{ "%02d"|format(loop.index) }}</span>
-            <span class="news-thumb-scope">{{ article.scope_label }}</span>
-          </a>
+          {% if article.article.illustration %}
+          <a class="news-data-cover" href="{{ article.path }}" tabindex="-1" aria-hidden="true"><img src="{{ article.article.illustration.src }}" alt="" loading="lazy" decoding="async"><span>Hình minh họa trong bài</span></a>
+          {% endif %}
           <div class="news-card-body">
             <div class="hub-card-top">
               <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
@@ -214,6 +167,50 @@
     </section>
     {% endif %}
 
+    <details class="news-editorial-method news-data-method">
+      <summary>Nguồn dữ liệu, phương pháp và giới hạn</summary>
+    {% if page.methodology %}
+    <section class="radar-methodology" aria-labelledby="radar-methodology-title">
+      <div class="section-heading">
+        <p class="seo-eyebrow">Nguồn có thể kiểm tra</p>
+        <h2 id="radar-methodology-title">{{ page.methodology.heading }}</h2>
+        <p>{{ page.methodology.intro }}</p>
+      </div>
+      <div class="radar-methodology-grid">
+        <div class="radar-methodology-card">
+          <h3>Nguồn dữ liệu</h3>
+          {% for source in page.methodology.sources %}
+          <div class="radar-methodology-source">
+            <strong>{{ source.label }}</strong>
+            <p>{{ source.body }}</p>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="radar-methodology-card">
+          <h3>Từ tin rao đến signal</h3>
+          <ol>{% for step in page.methodology.steps %}<li>{{ step }}</li>{% endfor %}</ol>
+        </div>
+        <div class="radar-methodology-card radar-methodology-limits">
+          <h3>Nhịp cập nhật và giới hạn</h3>
+          <p>{{ page.methodology.cadence }}</p>
+          <ul>{% for item in page.methodology.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+      <div class="radar-methodology-links">
+        <div>
+          <strong>13 phường Thủ Dầu Một</strong>
+          <nav aria-label="Dữ liệu 13 phường Thủ Dầu Một">
+            {% for link in page.methodology.ward_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
+          </nav>
+        </div>
+        <nav class="radar-methodology-next" aria-label="Công cụ và báo cáo liên quan">
+          {% for link in page.methodology.next_links %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
+        </nav>
+      </div>
+    </section>
+    {% endif %}
+    </details>
+
     <section class="news-dashboard-bridge" aria-label="Mở dashboard Radar BDS">
       <div>
         <p class="seo-eyebrow">Bước tiếp theo</p>
@@ -225,6 +222,10 @@
 
     {% set lead_cta_context = "seo_news_hub_lead" %}
     {% include "partials/seo_lead_capture.html" %}
+    <details class="news-editorial-method">
+      <summary>Thông tin biên tập và cách sử dụng nguồn</summary>
+      {% include "partials/seo_trust.html" %}
+    </details>
   </main>
   {% include "partials/seo_footer.html" %}
 

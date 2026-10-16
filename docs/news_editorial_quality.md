@@ -68,6 +68,15 @@ thêm khối trust lớn hoặc nhiều CTA trước thân bài. Bảng cuộn t
 nhãn và nhận focus bàn phím; mục lục phải nhảy đúng neo, không bị header che.
 Thử cả bài có ảnh và bài không ảnh, desktop và mobile sau khi đổi template.
 
+Bốn trang danh mục `/tin-tuc`, `/tin-tuc/chu-de-nong`,
+`/tin-tuc/du-lieu-radarbds`, `/tin-tuc/quyet-dinh-van-ban` dùng thanh chuyển mục
+chung và stylesheet riêng `static/css/seo_news_hubs.css`. Ảnh bài đã duyệt được
+truyền vào thẻ tin; không dựng ảnh hiện trường hoặc thumbnail dữ liệu giả.
+Danh mục dữ liệu giữ tìm kiếm/chủ đề/xem thêm; văn bản giữ bộ lọc cơ quan,
+loại, năm và chỉ hiện hồ sơ vượt cổng công khai. Phương pháp và thông tin biên
+tập nằm trong disclosure có thể mở, tránh đẩy danh sách bài xuống. Kiểm tra
+filter, empty/reset, link đích, mục đang chọn và không tràn chiều ngang mobile.
+
 Đọc lại như người mua: sau bài có thể tính gì, phân biệt gì và hỏi gì cụ thể?
 Nếu chỉ nhớ “cần kiểm tra pháp lý, quy hoạch” thì bản thảo còn chung chung.
 Rà các phép tính; mở nguồn; xem bài ở desktop/mobile; kiểm tra ảnh/caption,
