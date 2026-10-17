@@ -79,3 +79,52 @@ def test_detail_route_renders_evidence_for_guest_and_escapes_source_text(monkeyp
     assert 'Thông tin cần xác minh' in html
     assert '<script>alert(1)</script>' not in html
     assert html.index('Bằng chứng định giá') < html.index('Nguyên văn tin rao')
+
+
+def test_detail_route_has_per_listing_canonical_and_safe_description(monkeypatch):
+    import app as app_module
+
+    listing = {
+        'id': 42, 'title': 'Gọi 0901234567 <b>ngay</b>',
+        'description': 'Tin đăng từ nguồn', 'ward': 'Phú Lợi',
+        'source': 'facebook', 'price_ty': 2, 'area_m2': 100,
+    }
+    monkeypatch.setattr(app_module, 'load_listing_detail', lambda *args, **kwargs: {
+        'listing': listing, 'images': [], 'history': [], 'map_location': None,
+    })
+    html = app_module.app.test_client().get('/listing/42?utm_source=facebook').get_data(as_text=True)
+    assert '<link rel="canonical" href="https://radarbds.vn/listing/42">' in html
+    from html.parser import HTMLParser
+
+    class Descriptions(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.values = []
+
+        def handle_starttag(self, tag, attrs):
+            attributes = dict(attrs)
+            if tag == 'meta' and attributes.get('name') == 'description':
+                self.values.append(attributes.get('content', ''))
+
+    parser = Descriptions()
+    parser.feed(html)
+    assert len(parser.values) == 1
+    assert '#42' in parser.values[0]
+    assert 'Phú Lợi' in parser.values[0]
+    assert 'còn bán' in parser.values[0]
+    assert '0901234567' not in parser.values[0]
+    assert '<b>' not in parser.values[0]
+
+
+def test_listing_landing_records_first_party_acquisition_without_google(monkeypatch):
+    import app as app_module
+
+    monkeypatch.setattr(app_module, 'load_listing_detail', lambda *args, **kwargs: {
+        'listing': {'id': 42, 'title': 'Tin kiểm thử', 'description': '', 'ward': 'Phú Lợi'},
+        'images': [], 'history': [], 'map_location': None,
+    })
+    html = app_module.app.test_client().get('/listing/42').get_data(as_text=True)
+    assert 'const viewEvent = "seo_landing_viewed";' in html
+    assert "fetch('/api/track'" in html
+    assert 'sendRadarEvent(viewEvent, Object.assign({}, acquisitionContext));' in html
+    assert html.count('sendRadarEvent(viewEvent, Object.assign({}, acquisitionContext));') == 1
