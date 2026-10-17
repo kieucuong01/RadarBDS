@@ -100,14 +100,16 @@
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
     window.VALUATION_TOOL_REQUIRED_TIER = {{ required_tier | tojson }};
   </script>
+  {% include "partials/research_assets.html" %}
 </head>
 
 <body class="seo-page valuation-page">
   {% set tier_display = 'Gói Free' if USER_TIER == 'free' else ('VIP' if USER_TIER == 'vip' else ('Admin' if USER_TIER == 'admin' else 'Khách')) %}
   {% include "partials/seo_header.html" %}
-  <div class="seo-shell valuation-priority-proof">{% include "partials/traffic_priority_proof.html" %}</div>
+
 
   <main id="main-content">
+    <div class="research-shell">{% include "partials/research_nav.html" %}</div>
     <section class="hero-band">
       <div class="tool-shell hero-grid">
         <div class="hero-copy">
@@ -217,7 +219,7 @@
       <section class="tool-panel result-panel" aria-live="polite" aria-atomic="true">
         <div class="result-empty" id="resultEmpty">
           <p class="panel-kicker">Kết quả</p>
-          <h2>Giá hợp lý sẽ hiện tại đây</h2>
+          <h2>Kết quả tham khảo sẽ hiện tại đây</h2>
           <div class="empty-guide" aria-label="Các chỉ số kết quả">
             <div>
               <strong>Fair value</strong>
@@ -240,12 +242,12 @@
             <strong id="resultMos">-</strong>
           </div>
           <div class="hero-number">
-            <span>Giá hợp lý</span>
+            <span>Giá tham khảo</span>
             <strong id="fairPrice">-</strong>
           </div>
           <div class="metric-row">
             <div>
-              <span>Giá/m² hợp lý</span>
+              <span>Giá/m² tham khảo</span>
               <strong id="fairPpm2">-</strong>
             </div>
             <div>
@@ -328,6 +330,7 @@
     {% set lead_cta_context = "valuation_tool_lead" %}
     {% set lead_note = "Muốn nhận 5 tin phù hợp nhất sau khi định giá lô đất Bình Dương." %}
     {% include "partials/seo_lead_capture.html" %}
+  <div class="seo-shell valuation-priority-proof">{% include "partials/traffic_priority_proof.html" %}</div>
   </main>
 
   <div id="authModal" class="modal" onclick="if(event.target===this)RadarAuth.closeAuthModal()">

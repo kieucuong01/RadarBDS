@@ -2,11 +2,13 @@
 <html lang="vi">
 <head>
   {% include "partials/seo_head.html" %}
+  {% include "partials/research_assets.html" %}
 </head>
 <body class="seo-page report-hub">
   {% include "partials/seo_header.html" %}
   <main id="main-content" class="seo-shell hub-shell">
     {% include "partials/seo_breadcrumbs.html" %}
+    {% include "partials/research_nav.html" %}
     <section class="hub-hero hub-hero-grid report-hub-hero">
       <div class="hub-hero-copy">
         <p class="seo-eyebrow">Kho dữ liệu thị trường</p>
@@ -32,7 +34,7 @@
       </aside>
     </section>
 
-    {% include "partials/seo_trust.html" %}
+
 
     {% if reports %}
     {% set latest = reports[0] %}
@@ -155,6 +157,10 @@
 
     {% set lead_cta_context = "seo_report_hub_lead" %}
     {% include "partials/seo_lead_capture.html" %}
+    <details class="research-method">
+      <summary>Thông tin biên tập và nguồn dữ liệu</summary>
+      {% include "partials/seo_trust.html" %}
+    </details>
   </main>
   {% include "partials/seo_footer.html" %}
 

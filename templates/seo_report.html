@@ -18,11 +18,13 @@
     .report-detail .seo-final-cta > div { min-width: 0; }
     @media (max-width: 768px) { .report-detail .seo-final-cta { grid-template-columns: minmax(0, 1fr); } }
   </style>
+  {% include "partials/research_assets.html" %}
 </head>
 <body class="seo-page report-detail">
   {% include "partials/seo_header.html" %}
   <main id="main-content" class="seo-shell">
     {% include "partials/seo_breadcrumbs.html" %}
+    {% include "partials/research_nav.html" %}
 
     <article class="report-layout">
       <header class="report-header">
@@ -40,7 +42,7 @@
         </div>
       </header>
 
-      {% include "partials/seo_trust.html" %}
+
 
       <aside class="report-live-cta">
         <div>
@@ -55,6 +57,13 @@
           data-report-period="{{ page.report_analytics.period }}"
           data-report-surface="report_hero">{{ page.report_dashboard_label }} →</a>
       </aside>
+
+      <nav class="report-reading-nav" aria-label="Trong báo cáo này">
+        <a href="#report-metrics">Chỉ số trong kỳ</a>
+        <a href="#report-insights">Nhận định</a>
+        <a href="#report-method">Phương pháp</a>
+        {% if page.local_links %}<a href="#report-related">Báo cáo liên quan</a>{% endif %}
+      </nav>
 
       <section class="seo-report-block" aria-labelledby="report-metrics">
         <div class="section-heading">
@@ -199,8 +208,7 @@
         </div>
       </section>
 
-      {% set lead_cta_context = "seo_report_lead" %}
-      {% include "partials/seo_lead_capture.html" %}
+
 
       <section class="report-insights" aria-labelledby="report-insights">
         <div class="section-heading"><p class="seo-eyebrow">Phân tích</p><h2 id="report-insights">Nhận định từ dữ liệu Radar</h2></div>
@@ -282,7 +290,7 @@
             <div class="report-signal-media">
               {% if item.image %}<img src="{{ item.image }}" alt="{{ item.title }}" loading="lazy" decoding="async" width="640" height="360">{% endif %}
               <span class="mos-badge">🤖 Rẻ hơn {{ item.mos|replace('+','') }}</span>
-              <span class="new-badge">★ Mới</span>
+              <span class="new-badge">Trong kỳ</span>
               <div class="sc-img-tags">
                 <span class="sc-source-tag">Facebook</span>
                 <span class="sc-time-tag">◷ {{ item.time_label or page.report.period }}</span>
@@ -293,7 +301,7 @@
               <h3>{{ item.title }}</h3>
               <div class="price-container report-price-container">
                 <div class="price-actual">
-                  <span class="price-label price-label-actual price-deal">THỰC TẾ</span>
+                  <span class="price-label price-label-actual price-deal">GIÁ RAO</span>
                   <div class="price-val price-deal">{{ item.price }}</div>
                   <div class="price-m2">{{ item.price_per_m2 }}</div>
                 </div>
@@ -333,7 +341,13 @@
         <div><p class="seo-eyebrow">Mở dữ liệu phía sau báo cáo</p><h2>{{ page.final_cta.title }}</h2><p>{{ page.final_cta.body }}</p></div>
         <a class="seo-primary-cta" href="{{ page.final_cta.button_href or page.report.featured_more_href or '/?tab=signals' }}" data-track-cta="report_signals">{{ page.final_cta.button }}</a>
       </section>
+      {% set lead_cta_context = "seo_report_lead" %}
+      {% include "partials/seo_lead_capture.html" %}
     </article>
+    <details class="research-method">
+      <summary>Thông tin biên tập và nguồn dữ liệu</summary>
+      {% include "partials/seo_trust.html" %}
+    </details>
   </main>
   {% include "partials/seo_footer.html" %}
 

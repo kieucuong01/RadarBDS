@@ -5,6 +5,11 @@ It is written for human maintainers and AI coding agents (Codex/Hermes/Claude). 
 
 ## TL;DR for Codex / AI agents
 
+Presentation uses `static/css/public_research.css` plus the report templates.
+See [Research UI audit and verification](public_research_ui.md) before changing
+layout. Keep closed-month data, chart summaries, source dates and filtered
+dashboard destinations intact; a visual refresh must not regenerate reports.
+
 1. Do **not** publish current/in-progress month as a formal `/bao-cao` report.
 2. The monthly job publishes the **previous closed month** at `08:00` on the 1st day of each month.
 3. Pipeline is script-first and deterministic; do not ask an LLM to rewrite the 14 reports manually.

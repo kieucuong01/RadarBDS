@@ -28,10 +28,12 @@
   <script>
     window.TPHCM_LAND_PRICE_AREAS = {{ areas|tojson }};
   </script>
+  {% include "partials/research_assets.html" %}
 </head>
 <body class="seo-page tphcm-land-price-page">
   {% include "partials/seo_header.html" %}
   <main id="main-content">
+    <div class="research-shell">{% include "partials/research_nav.html" %}</div>
     <section class="land-price-hero">
       <div class="land-price-shell land-price-grid">
         <div>
@@ -89,8 +91,7 @@
       </div>
       <div class="result-state result-error" id="landPriceError" role="alert" hidden></div>
 
-      {% set lead_cta_context = "seo_landing_lead" %}
-      {% include "partials/seo_lead_capture.html" %}
+
 
       <div class="table-wrap" id="landPriceTable" hidden>
         <table>

@@ -1,0 +1,5 @@
+<nav class="research-nav" aria-label="Công cụ và báo cáo">
+  <a href="/dinh-gia-bds"{% if request.path == '/dinh-gia-bds' %} aria-current="page"{% endif %}>Định giá theo tin rao</a>
+  <a href="/bang-gia-dat-tphcm"{% if request.path == '/bang-gia-dat-tphcm' %} aria-current="page"{% endif %}>Bảng giá đất TP.HCM</a>
+  <a href="/bao-cao"{% if request.path.startswith('/bao-cao') %} aria-current="page"{% endif %}>Báo cáo thị trường</a>
+</nav>
