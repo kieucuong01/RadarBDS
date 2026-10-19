@@ -14,7 +14,7 @@
     <input type="hidden" name="listing_url" value="{{ page.path }}">
     <label class="sr-only" for="seoLeadPhone-{{ lead_cta_context|default('seo') }}">Số Zalo hoặc điện thoại</label>
     <input id="seoLeadPhone-{{ lead_cta_context|default('seo') }}" name="zalo_phone" inputmode="tel" autocomplete="tel" placeholder="Số Zalo của anh/chị" required>
-    <button type="submit">Nhận tin qua Zalo</button>
+    <button type="submit" class="seo-primary-cta">Nhận tin qua Zalo</button>
   </form>
   <p class="seo-lead-capture-status" role="status" aria-live="polite"></p>
 </section>

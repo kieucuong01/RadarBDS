@@ -28,6 +28,7 @@
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
   <script src="{{ url_for('static', filename='js/planning_maps.js') }}?v=planning-map-20260728-1" defer></script>
+  {% include "partials/public_brand_assets.html" %}
 </head>
 
 <body class="seo-page planning-page planning-detail">

@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=public-navigation-20260729">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="{{ url_for('static', filename='js/planning_hub.js') }}?v=planning-hub-20260728-1" defer></script>
+  {% include "partials/public_brand_assets.html" %}
 </head>
 
 <body class="seo-page planning-page planning-hub">

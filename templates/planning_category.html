@@ -4,6 +4,7 @@
   {% include "partials/seo_head.html" %}
   {% if not items %}<meta name="robots" content="noindex, follow">{% endif %}
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
+  {% include "partials/public_brand_assets.html" %}
 </head>
 <body class="seo-page planning-page planning-category-page">
   {% include "partials/seo_header.html" %}

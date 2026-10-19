@@ -1,0 +1,161 @@
+/* Shared public identity. Load last, after each page's layout stylesheet.
+   Palette matches main/base.css and the dashboard map launcher. Data/map
+   colours intentionally stay in their own stylesheets. */
+.seo-page {
+  --brand-primary: #4f46e5;
+  --brand-blue: #2563eb;
+  --brand-hover: #4338ca;
+  --brand-soft: #eef2ff;
+  --brand-border: #c7d2fe;
+  --brand-radius: 12px;
+  --primary: var(--brand-primary);
+  --vt-green: var(--brand-primary);
+  --vt-green-2: var(--brand-blue);
+  --lp-green: var(--brand-primary);
+}
+.seo-page.seo-page :is(h1, h2, h3) {
+  color: #0f172a;
+}
+.seo-page.seo-page :is(.seo-eyebrow, .eyebrow, .panel-kicker, .section-label,
+  .news-evidence-links a, .news-article-card .text-link, .news-results-head a) {
+  color: var(--brand-primary);
+}
+
+/* Repeated class raises specificity over the older page-level overrides. */
+.seo-page.seo-page :is(.seo-header-cta, .seo-primary-cta, .seo-button-primary,
+  .submit-btn, .dashboard-cta, .land-price-submit, .calculator-submit,
+  .tdm-order-primary, [data-product-purchase]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 12px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--brand-radius);
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-blue));
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(37 99 235 / 16%);
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  cursor: pointer;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.seo-page.seo-page .seo-header-cta {
+  border-radius: 999px;
+  padding: 10px 18px;
+}
+
+.seo-page.seo-page :is(.seo-button-secondary, .seo-button-light,
+  .tdm-order-secondary,
+  .quick-searches button, .land-price-calculate-button, .calculator-close,
+  .result-pagination button, .bd-map-control-buttons button) {
+  min-height: 44px;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--brand-radius);
+  background: #fff;
+  color: var(--brand-primary);
+  box-shadow: none;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+.seo-page.seo-page :is(.seo-nav-tab, .seo-nav-menu a, .research-nav a,
+  .hub-tab, .report-reading-nav a, .discovery-toc a, .discovery-area-guide nav a,
+  .discovery-map-details > summary, .report-live-cta a, .hub-secondary-cta) {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+.seo-page.seo-page :is(.seo-nav-group.is-active > .seo-nav-tab,
+  .seo-nav-menu a[aria-current="page"], .research-nav a[aria-current="page"],
+  .news-section-nav a[aria-current="page"],
+  .hub-tab[aria-current="page"], .report-reading-nav a,
+  .discovery-toc a, .discovery-area-guide nav a,
+  .discovery-map-details > summary, .report-live-cta a, .hub-secondary-cta) {
+  color: var(--brand-primary);
+}
+.seo-page.seo-page :is(.research-nav, .news-section-nav) a[aria-current="page"] {
+  border-bottom-color: var(--brand-primary);
+}
+.seo-page [hidden] {
+  display: none !important;
+}
+.seo-page.seo-page .bd-map-control-buttons button[aria-pressed="true"] {
+  background: var(--brand-soft);
+  border-color: var(--brand-primary);
+  color: var(--brand-hover);
+}
+.seo-page.seo-page :is(.seo-nav-tab[aria-expanded="true"],
+  .seo-nav-group.is-active > .seo-nav-tab, .news-category-chip.is-active,
+  .seo-nav-menu a[aria-current="page"]) {
+  background: var(--brand-soft);
+  border-radius: 10px;
+  color: var(--brand-primary);
+}
+
+.seo-page.seo-page :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select, textarea) {
+  border-radius: 10px;
+}
+.seo-page.seo-page :is(input, select, textarea):focus {
+  border-color: var(--brand-primary);
+}
+.seo-page.seo-page :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--brand-blue);
+  outline-offset: 3px;
+}
+.seo-page.seo-page :is(.seo-lead-capture, .seo-final-cta, .tool-panel,
+  .land-price-calculator, .bd-map-explorer, .bd-map-selection,
+  .tdm-product-current-card, .tdm-product-paid-card, .method-example) {
+  border-radius: 16px;
+}
+.seo-page.seo-page :is(.tdm-product-hero, .bd-map-hero,
+  .seo-lead-capture, .seo-final-cta, .land-price-calculator) {
+  background: #f8fafc;
+}
+
+@media (hover: hover) {
+  .seo-page.seo-page :is(.seo-header-cta, .seo-primary-cta, .seo-button-primary,
+    .submit-btn, .dashboard-cta, .land-price-submit, .calculator-submit,
+    .tdm-order-primary, [data-product-purchase]):hover:not(:disabled):not([aria-disabled="true"]) {
+    background: linear-gradient(135deg, var(--brand-hover), #1d4ed8);
+    color: #fff;
+    box-shadow: 0 8px 20px rgb(37 99 235 / 24%);
+    transform: translateY(-2px);
+  }
+  .seo-page.seo-page :is(.seo-button-secondary, .seo-button-light,
+    .tdm-order-secondary,
+    .quick-searches button, .land-price-calculate-button, .calculator-close,
+    .result-pagination button, .bd-map-control-buttons button):hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--brand-soft);
+    border-color: var(--brand-primary);
+    transform: translateY(-1px);
+  }
+  .seo-page.seo-page :is(.seo-nav-tab, .seo-nav-menu a, .research-nav a,
+    .report-reading-nav a, .discovery-toc a, .hub-secondary-cta):hover {
+    color: var(--brand-hover);
+    background: var(--brand-soft);
+  }
+}
+.seo-page.seo-page :is(.seo-header-cta, .seo-primary-cta, .seo-button,
+  .submit-btn, .dashboard-cta, .land-price-submit, .calculator-submit,
+  .tdm-order-primary, [data-product-purchase]):active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+.seo-page.seo-page :is(button, .seo-button, .seo-primary-cta)[aria-disabled="true"],
+.seo-page.seo-page button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seo-page.seo-page.seo-page :is(a, button) {
+    transition: none;
+    transform: none;
+  }
+  .seo-page.seo-page.seo-page :is(a, button):hover:not(:disabled):not([aria-disabled="true"]) {
+    transform: none;
+  }
+}

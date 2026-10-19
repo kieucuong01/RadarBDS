@@ -132,6 +132,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
   {% include "partials/research_assets.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/public_discovery.css') }}?v=p2-20261019-2">
+  {% include "partials/public_brand_assets.html" %}
 </head>
 
 <body class="seo-page seo-page-discovery seo-page-{{ page.get('variant', 'market') }}{% if not page.live_snapshot %} discovery-guide-page{% endif %}">
