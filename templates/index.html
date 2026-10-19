@@ -123,6 +123,7 @@
       }
     };
   </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/dashboard_mobile_discovery.css') }}?v=p2-20261019-3">
 </head>
 
 <body class="{% if saved_page %}saved-route{% endif %}" data-active-dashboard-tab="signals">
@@ -437,6 +438,7 @@
       </nav>
 
       <div class="header-right">
+        {% if not saved_page %}{% include "partials/listing_map_launcher.html" %}{% endif %}
         <div class="live-scan">
           <span class="live-dot"></span>
           LIVE
@@ -559,6 +561,8 @@
 
     <div class="content">
       {% if not saved_page %}
+      <details class="dashboard-context">
+        <summary>Phạm vi và cách đọc dữ liệu Radar BDS</summary>
       <section class="dashboard-promise" aria-labelledby="dashboardPromiseTitle">
         <div>
           <p class="dashboard-promise-kicker">Radar BDS Bình Dương</p>
@@ -567,6 +571,7 @@
         <p>So giá theo phường, xem MOS và cảnh báo nguồn để chọn tin đáng kiểm tra trước.</p>
       </section>
       {% include "partials/traffic_priority_proof.html" %}
+      </details>
       {% endif %}
       <section class="saved-listings-page" id="savedListingsPage" aria-labelledby="savedListingsTitle">
         <div class="saved-page-head">

@@ -102,3 +102,30 @@ pháp → tối ưu dashboard mobile với kiểm tra chức năng riêng.
 - 86 kiểm tra liên quan đạt: 60 SEO/content/navigation/P1, 26 live ward/trust.
   Có kiểm tra thêm nội dung để xác nhận cơ chế tự mở index; không đổi dữ liệu
   định giá, ranh giới bản đồ, tín hiệu hay phân quyền.
+
+## Khắc phục P2 — 19/10/2026
+
+- Bản đồ thành phố dùng cùng template: đưa canvas lên trước bảng khu vực đang
+  chọn và form lead; chuyển chứng cứ/phạm vi, phương pháp, nguồn/giấy phép vào
+  phần mở thêm. Giữ ghi chú giới hạn ngắn, chọn trước/sau và nút neo tới bản đồ.
+  Giữ nguyên GeoJSON, lớp nền, IDs/hooks, điều kiện mua và API checkout.
+- Thư viện bản đồ Bình Dương: thu gọn hero, đưa panel thông tin nhanh và hướng
+  dẫn/nguồn xuống phần mở thêm; bỏ CTA nổi che nội dung trên mobile.
+- Landing: kiểu chữ đồng bộ phần tin tức, nội dung theo khu vực và liên kết tra
+  cứu lên sớm; nguồn/phương pháp và lead xuống cuối. `lead_scope_label` tách khỏi
+  tiêu đề. CTA khu vực mang city/ward; Mỹ Phước có q tương ứng, bán đất có
+  prop_type=dat_nen. Nhánh live ward giữ snapshot/Dataset/cảnh báo hiện hành.
+  Không tạo thêm truy vấn DB để bù bằng số liệu của khu khác.
+- Trang phương pháp có mục lục, luồng 5 bước và ví dụ giả định 2 / 2,5 tỷ → MOS
+  20%, ghi rõ đây không phải lợi nhuận dự kiến; kèm checklist kiểm tra thực tế.
+- Dashboard: nguồn/giới thiệu trong details; nút Maps duy nhất chuyển vào header,
+  mobile hiển thị trong luồng header, desktop giữ vị trí nổi cũ. Tắt backdrop
+  filter của header desktop để không tạo containing block giữ nút fixed trong
+  header. Thanh khu vực gọn hơn. Không đổi JS lọc/request, API hay phân quyền.
+- Kiểm tra: 137 pytest đạt; 2 bài browser trong pytest không chạy vì browser
+  được kiểm trực tiếp bằng CUA. 6 kiểm tra filter runtime đạt; range/area-scope
+  Node scripts đạt. Lỗi tmp_path ban đầu được xử lý bằng basetemp trong `.local/`.
+- Local 390px: canvas Thủ Dầu Một từ khoảng y=2828 xuống y=1194; Bến Cát/Thuận
+  An/Dĩ An khoảng y=1158. Đổi lớp Thủ Dầu Một hiển thị 5 ranh hiện tại. 9 trang
+  mobile không tràn ngang; header dashboard kiểm cả 320px và desktop. Bản local
+  chưa có kết nối DB khỏe, nên kết quả feed/bộ lọc cần xác nhận trên production.

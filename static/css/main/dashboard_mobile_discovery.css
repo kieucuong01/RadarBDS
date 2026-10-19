@@ -1,0 +1,32 @@
+/* Presentation only: filter state, requests, tiers and map lifecycle stay in JS. */
+.dashboard-context { margin-bottom: 12px; color: var(--text-muted); }
+.dashboard-context>summary { min-height: 44px; padding: 12px; cursor: pointer; font-size: .8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+.dashboard-context[open]>summary { margin-bottom: 12px; }
+.map-launcher-label-short { display: none; }
+@media (min-width: 1025px) {
+  /* A filtered ancestor would trap the desktop launcher's fixed position. */
+  .header { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  body[data-active-dashboard-tab="signals"] .dashboard-context,
+  body[data-active-dashboard-tab="all"] .dashboard-context { display: none; }
+}
+@media (max-width: 1024px) {
+  .header-right { gap: 8px; }
+  .header .listing-map-launcher { position: static; transform: none; min-height: 44px; padding: 0 10px; gap: 5px; font-size: .78rem; border-radius: 8px; box-shadow: none; flex: 0 0 auto; }
+  .header .listing-map-launcher:hover { transform: none; }
+  .map-launcher-label-full { display: none; }
+  .map-launcher-label-short { display: inline; }
+  body.listing-map-launcher-visible #tab-signals,
+  body.listing-map-launcher-visible .listings-grid-shell,
+  body.listing-map-launcher-visible .table-scroll { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 720px) {
+  .area-scope-bar { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; }
+  .area-scope-current { flex-direction: row; align-items: center; gap: 6px; min-width: 120px; flex: 1 1 auto; }
+  .area-scope-current>span { display: none; }
+  .area-scope-bar-actions { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .area-scope-bar-actions button { min-height: 44px; padding: 6px 10px; font-size: .8rem; }
+}
+@media (max-width: 360px) {
+  .header .listing-map-launcher { width: 44px; padding: 0; }
+  .map-launcher-label-short { display: none; }
+}

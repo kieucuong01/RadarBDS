@@ -59,6 +59,8 @@ SEO_PAGES = {
     "binh-duong": {
         "variant": "market",
         "path": "/binh-duong",
+        "lead_scope_label": "Bình Dương",
+        "focus_areas": ["Thủ Dầu Một", "Bến Cát", "Mỹ Phước"],
         "title": "Nhà đất Bình Dương: radar săn deal giá tốt theo dữ liệu thị trường",
         "description": (
             "Radar BDS theo dõi nhà đất Bình Dương, bất động sản Bình Dương và mua bán nhà đất Bình Dương "
@@ -171,6 +173,9 @@ SEO_PAGES = {
     "ban-dat-binh-duong": {
         "variant": "land",
         "path": "/ban-dat-binh-duong",
+        "lead_scope_label": "Bình Dương",
+        "focus_areas": ["Đất nền", "Thông tin thổ cư", "Giá/m² theo phường"],
+        "dashboard_href": "/?tab=signals&prop_type=dat_nen",
         "title": "Bán đất Bình Dương: lọc đất nền, đất thổ cư có biên an toàn",
         "description": (
             "Trang bán đất Bình Dương của Radar BDS tập trung đất nền, đất thổ cư, giá/m² theo phường, "
@@ -323,6 +328,7 @@ SEO_PAGES = {
     "san-deal-bds": {
         "variant": "method",
         "path": "/san-deal-bds",
+        "lead_scope_label": "Bình Dương",
         "title": "Săn deal BĐS bằng dữ liệu - Cách Radar BDS lọc tin rẻ thật",
         "description": (
             "Radar BDS giải thích cách lọc deal bất động sản: chuẩn hóa tin rao, định giá, tính MOS, "

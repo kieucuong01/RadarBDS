@@ -1,6 +1,7 @@
 import json
 import importlib
 from pathlib import Path
+import re
 
 from PIL import Image
 
@@ -125,7 +126,7 @@ def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
 
     assert binh_duong.status_code == 200
     assert '<link rel="canonical" href="https://radarbds.vn/binh-duong">' in binh_duong_html
-    assert 'class="seo-page seo-page-market"' in binh_duong_html
+    assert re.search(r'<body class="[^"]*\bseo-page-market\b', binh_duong_html)
     assert "Nhà đất Bình Dương: radar săn deal giá tốt theo dữ liệu thị trường" in binh_duong_html
     assert 'href="/dashboard"' not in binh_duong_html
     assert '<a href="/">Dashboard</a>' in binh_duong_html

@@ -1,0 +1,17 @@
+{% if page.focus_areas and not page.live_ward %}
+<section class="seo-shell discovery-area-guide" aria-labelledby="area-reading-title">
+  <div>
+    <p class="seo-eyebrow">Chọn đúng phạm vi trước khi so giá</p>
+    <h2 id="area-reading-title">Bắt đầu tra cứu tại {{ page.lead_scope_label }}</h2>
+    <ul>{% for focus in page.focus_areas %}<li>{{ focus }}</li>{% endfor %}</ul>
+  </div>
+  <div>
+    <p>Trang này hướng dẫn cách tìm và đối chiếu tin trong khu vực. Giá, số mẫu và tín hiệu hiện có cần xem trong bộ lọc tương ứng; chưa có bảng tổng hợp giá riêng cho phạm vi này trên trang.</p>
+    <nav aria-label="Tra cứu dữ liệu {{ page.lead_scope_label }}">
+      <a href="{{ dashboard_signal_href }}">Mở tin đúng bộ lọc →</a>
+      <a href="/dinh-gia-bds">Định giá một lô đất →</a>
+      {% if page.path in ['/binh-duong', '/binh-duong/thu-dau-mot', '/ban-dat-binh-duong'] %}<a href="/bao-cao">Đọc báo cáo có ghi rõ phạm vi →</a>{% endif %}
+    </nav>
+  </div>
+</section>
+{% endif %}

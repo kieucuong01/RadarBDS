@@ -6,6 +6,7 @@ enough local intent and internal links to avoid thin doorway pages.
 from __future__ import annotations
 
 from types import MappingProxyType
+from urllib.parse import urlencode
 
 
 TDM_LIVE_WARDS = MappingProxyType({
@@ -395,6 +396,12 @@ def _page(item: dict) -> dict:
     kind = item["kind"]
     watch_text = ", ".join(item["watch"][:3])
     intent_label = _sentence_case(item["intent"])
+    city = "THỦ DẦU MỘT" if item.get("live_ward") or item["slug"] == "thu-dau-mot" else "BẾN CÁT"
+    dashboard_params = {"tab": "signals", "city": city}
+    if item["slug"].startswith("my-phuoc"):
+        dashboard_params["q"] = name
+    elif item["slug"].startswith("phuong-"):
+        dashboard_params["ward"] = name
     if item.get("live_ward"):
         title = f"Giá nhà đất {name}, Thủ Dầu Một | Radar BDS"
         description = (
@@ -419,6 +426,10 @@ def _page(item: dict) -> dict:
         )
     return {
         "variant": "location",
+        "scope_label": name,
+        "lead_scope_label": name,
+        "focus_areas": list(item["watch"]),
+        "dashboard_href": "/?" + urlencode(dashboard_params),
         "live_ward": item.get("live_ward"),
         "ward_slug": item.get("ward_slug"),
         "path": f"/binh-duong/{item['slug']}",
