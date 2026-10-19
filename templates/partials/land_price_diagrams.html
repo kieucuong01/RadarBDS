@@ -1,0 +1,38 @@
+<details class="research-visual-help">
+  <summary>Xem sơ đồ vị trí và dải chiều sâu</summary>
+  {% include "partials/parcel_geometry.html" %}
+  <figure class="research-figure position-diagram">
+    <svg viewBox="0 0 440 220" role="img" aria-label="Vị trí 1 mặt tiền; trong hẻm: vị trí 2 rộng từ 5 mét, vị trí 3 từ 3 đến dưới 5 mét, vị trí 4 dưới 3 mét">
+      <rect x="22" y="16" width="396" height="32" rx="3" fill="#e4ece8"/>
+      <text x="220" y="37" text-anchor="middle">Đường có tên trong bảng giá</text>
+      <rect x="34" y="58" width="140" height="44" fill="#0b604b"/>
+      <text x="104" y="86" text-anchor="middle" fill="white">VT1 · mặt tiền</text>
+      <path d="M208 48V204" stroke="#b9ccc1" stroke-width="20"/>
+      <rect x="230" y="64" width="178" height="36" fill="#d7ece0"/>
+      <rect x="230" y="112" width="178" height="36" fill="#e9f2e5"/>
+      <rect x="230" y="160" width="178" height="36" fill="#f3efe0"/>
+      <text x="319" y="88" text-anchor="middle">VT2 · hẻm ≥ 5 m</text>
+      <text x="319" y="136" text-anchor="middle">VT3 · 3 m ≤ hẻm &lt; 5 m</text>
+      <text x="319" y="184" text-anchor="middle">VT4 · hẻm &lt; 3 m</text>
+      <text x="104" y="150" text-anchor="middle">Độ rộng hẻm:</text>
+      <text x="104" y="173" text-anchor="middle">đo chỗ nhỏ nhất</text>
+    </svg>
+    <div class="diagram-key"><strong>Đường có tên trong bảng giá</strong><span>VT1 · Mặt tiền đường</span><span>VT2 · Hẻm rộng từ 5 m</span><span>VT3 · Hẻm từ 3 đến dưới 5 m</span><span>VT4 · Hẻm dưới 3 m</span><small>Độ rộng hẻm đo tại chỗ nhỏ nhất.</small></div>
+    <figcaption>Sơ đồ cho chế độ vị trí thông thường. Bộ tính còn xét mặt hẻm, khoảng cách tới đường có tên và trường hợp đặc biệt; vị trí đất nông nghiệp được chọn riêng.</figcaption>
+  </figure>
+  <figure class="research-figure depth-diagram">
+    <svg viewBox="0 0 440 236" role="img" aria-label="Dải chiều sâu đất ở: đến 5 lần ngang hệ số 1; từ trên 5 đến 8 lần ngang hệ số 0,8; phần sau hệ số 0,7">
+      <text x="220" y="24" text-anchor="middle" class="diagram-emphasis">Dải chiều sâu · Đất ở</text>
+      <rect x="42" y="42" width="356" height="28" fill="#e4ece8"/>
+      <text x="220" y="62" text-anchor="middle">Mặt giáp đường / hẻm</text>
+      <rect x="72" y="78" width="296" height="44" fill="#d7ece0"/>
+      <rect x="72" y="122" width="296" height="44" fill="#e9f2e5"/>
+      <rect x="72" y="166" width="296" height="44" fill="#f3efe0"/>
+      <text x="220" y="106" text-anchor="middle">Đến 5 × ngang · hệ số 1</text>
+      <text x="220" y="150" text-anchor="middle">Trên 5 đến 8 × ngang · 0,8</text>
+      <text x="220" y="194" text-anchor="middle">Sau 8 × ngang · 0,7</text>
+    </svg>
+    <div class="diagram-key"><strong>Dải chiều sâu · Đất ở</strong><span>Đến 5 × ngang · hệ số 1</span><span>Trên 5 đến 8 × ngang · 0,8</span><span>Sau 8 × ngang · 0,7</span></div>
+    <figcaption>Minh họa, không theo tỷ lệ. Đất thương mại/dịch vụ và SXKD dùng mốc 2×, 4× ngang với hệ số 1 / 0,6 / 0,4. Dải thực tế chỉ tính trong chiều dài thửa; xem bảng kết quả để biết diện tích từng phần.</figcaption>
+  </figure>
+</details>

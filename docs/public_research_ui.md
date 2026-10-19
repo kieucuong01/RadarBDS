@@ -33,3 +33,18 @@ trên production trước khi tuyên bố đã thử thành công end-to-end.
 
 Deploy: giữ main mới và sao lưu chính xác các file VPS đang sửa trước release;
 khôi phục byte/mode, kiểm HEAD/service/public URLs và ghi proof ngoài Git.
+
+## Hình minh họa — 19/10/2026
+
+- SVG đo ngang/dài nằm trong phần chi tiết của công cụ định giá.
+- Bộ tính bảng giá có phần mở/đóng gồm sơ đồ kích thước, vị trí 1–4 và dải chiều
+  sâu. Có nhãn minh họa và phân biệt quy tắc đất ở với thương mại/SXKD; vị trí
+  nông nghiệp chọn riêng. Không đổi công thức hay hệ số hiện hành.
+- Thumbnail kho báo cáo dùng macro `partials/report_visual.html`, lấy cột từ
+  chart dạng bar đầu tiên của snapshot, tỷ lệ tuyến tính từ mốc 0. Thiếu chart thì
+  hiện chỉ số có sẵn; không sinh số liệu giả hay tải ảnh tin rao làm ảnh đại diện.
+- Biểu đồ chi tiết có chú thích nguồn/kỳ. SVG inline không thêm request ảnh, JS
+  hay thư viện; có mô tả cho trình đọc màn hình. Bản đồ phân bố cần ranh giới
+  phường đúng kỳ và dữ liệu đối chiếu trước khi triển khai riêng.
+- Kiểm chứng: 91 tests liên quan, gồm tỷ lệ thumbnail và fallback không chart;
+  browser local desktop/390px, bộ lọc phường và mở/đóng sơ đồ.

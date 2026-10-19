@@ -413,7 +413,8 @@ def test_report_hub_latest_is_not_repeated_and_archive_cards_have_one_link():
     assert archive_cards
     assert len(archive_cards) == len(archive_paths)
     assert all(card.count("href=") == 1 for card in archive_cards)
-    assert '<div class="report-featured-thumb" aria-hidden="true">' in html
+    assert '<div class="report-featured-thumb report-data-visual">' in html
+    assert 'class="report-mini-chart"' in html
     assert '<a class="report-featured-thumb"' not in html
 
 

@@ -1,3 +1,4 @@
+{% from "partials/report_visual.html" import report_visual %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -39,13 +40,7 @@
     {% if reports %}
     {% set latest = reports[0] %}
     <section class="hub-featured report-hub-featured" aria-labelledby="latest-report" data-featured-report="{{ latest.path }}">
-      <div class="report-featured-thumb" aria-hidden="true">
-        {% if latest.hub_meta.thumbnail %}<img src="{{ latest.hub_meta.thumbnail }}" alt="Thumbnail {{ latest.scope_label }}" loading="eager">{% endif %}
-        <span class="report-thumb-overlay"></span>
-        <span class="report-thumb-kicker">{{ latest.hub_meta.city_label }}</span>
-        <strong>{{ latest.scope_label }}</strong>
-        <small>{{ latest.report.period }}</small>
-      </div>
+      <div class="report-featured-thumb report-data-visual">{{ report_visual(latest) }}</div>
       <div class="hub-featured-body">
         <p class="seo-eyebrow">Báo cáo mới nhất</p>
         <h2 id="latest-report">{{ latest.hero_title }}</h2>
@@ -124,13 +119,7 @@
           data-report-ward="{{ report.hub_meta.ward_key }}"
           data-report-period="{{ report.hub_meta.period_key }}"
           data-report-surface="archive">
-          <span class="report-card-thumb" aria-hidden="true">
-            {% if report.hub_meta.thumbnail %}<img src="{{ report.hub_meta.thumbnail }}" alt="Thumbnail {{ report.scope_label }}" loading="lazy">{% endif %}
-            <span class="report-thumb-overlay"></span>
-            <span class="report-thumb-kicker">{{ report.hub_meta.city_label }}</span>
-            <strong>{{ report.scope_label }}</strong>
-            <small>{{ report.report.period }}</small>
-          </span>
+          <span class="report-card-thumb report-data-visual">{{ report_visual(report) }}</span>
           <div class="hub-card-top report-card-top">
             <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
             <span class="scope-chip">{{ report.hub_meta.city_label }}</span>

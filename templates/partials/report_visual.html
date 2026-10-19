@@ -1,0 +1,31 @@
+{% macro report_visual(report) -%}
+  {% set chosen = namespace(chart=none) %}
+  {% for chart in report.charts or [] %}
+    {% if chosen.chart is none and chart.type == 'bar' and chart.datasets and chart.datasets[0].data %}
+      {% set chosen.chart = chart %}
+    {% endif %}
+  {% endfor %}
+  <span class="report-visual-meta">{{ report.scope_label }} · {{ report.report.period }}</span>
+  {% if chosen.chart %}
+    {% set chart = chosen.chart %}
+    {% set values = chart.datasets[0].data|select('number')|list %}
+    {% set ceiling = values|max if values else 0 %}
+    {% if ceiling > 0 %}
+    <svg class="report-mini-chart" viewBox="0 0 400 112" role="img" aria-label="{{ chart.title }}. {{ report.report.period }}. Các cột cùng tỷ lệ; xem giá trị trong báo cáo.">
+      <line x1="8" y1="104" x2="392" y2="104" stroke="#aac2b5"/>
+      {% set step = 384 / chart.datasets[0].data|length %}
+      {% for value in chart.datasets[0].data %}
+        {% if value is number and value >= 0 and loop.index0 < chart.labels|length %}
+        {% set height = value / ceiling * 92 %}
+        <rect x="{{ 8 + loop.index0 * step }}" y="{{ 104 - height }}" width="{{ step * 0.72 }}" height="{{ height }}" rx="2" fill="#167356" data-report-value="{{ value }}"><title>{{ chart.labels[loop.index0] }}: {{ value }} — {{ chart.datasets[0].label }}</title></rect>
+        {% endif %}
+      {% endfor %}
+    </svg>
+    <span class="report-visual-caption">{{ chart.title }}</span>
+    {% endif %}
+  {% else %}
+    <span class="report-visual-value">{{ report.hub_meta.primary_metric['value'] }}</span>
+    <span class="report-visual-caption">{{ report.hub_meta.primary_metric['label'] }}</span>
+  {% endif %}
+  <span class="report-visual-source">Nguồn: Radar BDS · dữ liệu trong kỳ</span>
+{%- endmacro %}
