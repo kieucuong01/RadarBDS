@@ -1,2 +1,4 @@
 {# Load after page-specific CSS so public controls share the dashboard identity. #}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/public_brand.css') }}?v=brand-20261019-2">
+<link rel="preload" href="{{ url_for('static', filename='fonts/plus-jakarta-sans/plus-jakarta-sans-vietnamese.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{{ url_for('static', filename='fonts/plus-jakarta-sans/plus-jakarta-sans-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/public_brand.css') }}?v=identity-20261019-1">

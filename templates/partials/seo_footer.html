@@ -1,14 +1,9 @@
+{% set page = page|default({}) %}
 <footer class="seo-footer">
   <div class="seo-shell footer-grid">
     <div class="footer-brand">
       <a class="seo-brand" href="/" aria-label="Radar BDS">
-        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-          <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="4" />
-          <circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="4" />
-          <circle cx="24" cy="24" r="3.6" fill="currentColor" />
-          <path d="M24 4v7M24 37v7M4 24h7M37 24h7" stroke="currentColor" stroke-linecap="round" stroke-width="4" />
-        </svg>
-        <span>Radar BDS</span>
+        {% include "partials/public_brand_logo.html" %}
       </a>
       <p>Radar BDS giúp lọc tin nhà đất Bình Dương bằng fair value, MOS, lịch sử giá và cảnh báo nguồn.</p>
       <small>Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.</small>
@@ -24,7 +19,7 @@
       {% endfor %}
       <a href="/quy-hoach-binh-duong">Bản đồ quy hoạch Bình Dương</a>
       <a href="/ban-dat-binh-duong">Bán đất Bình Dương</a>
-      <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo thị trường</a>
+      <a href="/bao-cao">Báo cáo thị trường</a>
       <a href="/san-deal-bds">Săn deal BĐS</a>
     </nav>
 
@@ -46,7 +41,7 @@
       {% else %}
       <a href="/san-deal-bds">Cách Radar BDS lọc tin rẻ thật</a>
       <a href="/binh-duong">Hub nhà đất Bình Dương</a>
-      <a href="/bao-cao/bds-binh-duong-thang-06-2026">Báo cáo thị trường</a>
+      <a href="/bao-cao">Báo cáo thị trường</a>
       {% endif %}
     </nav>
 

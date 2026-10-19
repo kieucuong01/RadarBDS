@@ -34,3 +34,7 @@ def test_public_response_loads_brand_after_all_layout_styles(path):
     stylesheets = re.findall(r'<link[^>]+href="([^"]+\.css[^" ]*)"', head)
     assert sum('public_brand.css' in href for href in stylesheets) == 1
     assert 'public_brand.css' in stylesheets[-1]
+    html = response.get_data(as_text=True)
+    assert html.count('class="public-brand-mark"') == 2
+    assert html.count('class="public-brand-wordmark"') == 2
+    assert 'fonts/noto-serif' not in head
