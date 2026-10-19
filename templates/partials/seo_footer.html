@@ -1,54 +1,45 @@
-{% set page = page|default({}) %}
-<footer class="seo-footer">
-  <div class="seo-shell footer-grid">
-    <div class="footer-brand">
-      <a class="seo-brand" href="/" aria-label="Radar BDS">
-        {% include "partials/public_brand_logo.html" %}
-      </a>
-      <p>Radar BDS giúp lọc tin nhà đất Bình Dương bằng fair value, MOS, lịch sử giá và cảnh báo nguồn.</p>
-      <small>Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.</small>
-    </div>
-
-    <nav aria-label="Sản phẩm">
-      <strong>Sản phẩm</strong>
-      <a href="/">Dashboard</a>
-      <a href="/binh-duong">Nhà đất Bình Dương</a>
-      <a href="/ban-do-binh-duong">Bản đồ Bình Dương</a>
-      {% for map_page in city_map_products %}
-      <a href="{{ map_page.path }}">Bộ bản đồ {{ map_page.city_name }}</a>
-      {% endfor %}
-      <a href="/quy-hoach-binh-duong">Bản đồ quy hoạch Bình Dương</a>
-      <a href="/ban-dat-binh-duong">Bán đất Bình Dương</a>
-      <a href="/bao-cao">Báo cáo thị trường</a>
-      <a href="/san-deal-bds">Săn deal BĐS</a>
-    </nav>
-
-    <nav aria-label="Khu vực trọng điểm">
-      <strong>Khu vực trọng điểm</strong>
-      <a href="/binh-duong/thu-dau-mot">Thủ Dầu Một</a>
-      <a href="/binh-duong/ben-cat">Bến Cát</a>
-      <a href="/binh-duong/my-phuoc">Mỹ Phước</a>
-      <a href="/binh-duong/phuong-phu-my">Phú Mỹ</a>
-      <a href="/binh-duong/phuong-hiep-an">Hiệp An</a>
-    </nav>
-
-    <nav aria-label="Đọc tiếp">
-      <strong>Đọc tiếp</strong>
-      {% if page.local_links %}
-      {% for link in page.local_links[:5] %}
-      <a href="{{ link.href }}">{{ link.label }}</a>
-      {% endfor %}
-      {% else %}
-      <a href="/san-deal-bds">Cách Radar BDS lọc tin rẻ thật</a>
-      <a href="/binh-duong">Hub nhà đất Bình Dương</a>
-      <a href="/bao-cao">Báo cáo thị trường</a>
-      {% endif %}
-    </nav>
-
-    <section class="footer-cta-card" aria-label="Đi tiếp từ bài này">
-      <strong>Đi tiếp từ bài này</strong>
-      <p>Mở dashboard để lọc theo phường, xem signal đang phù hợp và bấm liên hệ khi có tin đáng kiểm tra.</p>
-      <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href|default('/?tab=signals') }}">Mở dashboard</a>
+<footer class="seo-footer public-site-footer" aria-label="Thông tin Radar BDS">
+  <div class="public-footer-grid">
+    <section class="public-footer-brand" aria-label="Về Radar BDS">
+      <a class="seo-brand" href="/" aria-label="Radar BDS - Trang chủ">{% include "partials/public_brand_logo.html" %}</a>
+      <p>Dữ liệu nhà đất Bình Dương giúp người mua so sánh giá rao, theo dõi thị trường và chọn tin đáng kiểm tra.</p>
+      <div class="public-footer-social" aria-label="Kênh chính thức của Radar BDS">
+        <a href="{{ public_contact.facebook }}" target="_blank" rel="noopener noreferrer" aria-label="Radar BDS trên Facebook (mở tab mới)">Facebook ↗</a>
+        <a href="{{ public_contact.youtube }}" target="_blank" rel="noopener noreferrer" aria-label="Radar BDS trên YouTube (mở tab mới)">YouTube ↗</a>
+      </div>
     </section>
+    <section class="public-footer-contact" aria-labelledby="footerContactTitle">
+      <h2 id="footerContactTitle">Liên hệ & hỗ trợ</h2>
+      <address>
+        <div><span>Điện thoại hỗ trợ</span><a href="tel:{{ public_contact.telephone }}">{{ public_contact.phone }}</a></div>
+        <div><span>Email</span><a href="mailto:{{ public_contact.email }}">{{ public_contact.email }}</a></div>
+        <div><span>Địa chỉ</span><p>{{ public_contact.address }}</p></div>
+      </address>
+    </section>
+    <nav aria-label="Công cụ và dữ liệu">
+      <h2>Công cụ & dữ liệu</h2>
+      <a href="/">Dashboard</a>
+      <a href="/dinh-gia-bds">Định giá bất động sản</a>
+      <a href="/bang-gia-dat-tphcm">Bảng giá đất TP.HCM</a>
+      <a href="/bao-cao">Báo cáo thị trường</a>
+      <a href="/ban-do-binh-duong">Bản đồ Bình Dương</a>
+      <a href="/quy-hoach-binh-duong">Thư viện quy hoạch</a>
+    </nav>
+    <nav aria-label="Thị trường và kiến thức">
+      <h2>Thị trường & kiến thức</h2>
+      <a href="/binh-duong">Nhà đất Bình Dương</a>
+      <a href="/binh-duong/thu-dau-mot">Thủ Dầu Một</a>
+      <a href="/binh-duong/ben-cat">Nhà đất Bến Cát</a>
+      <a href="/binh-duong/my-phuoc">Nhà đất Mỹ Phước</a>
+      <a href="/binh-duong/phuong-phu-my">Nhà đất Phú Mỹ</a>
+      <a href="/binh-duong/phuong-hiep-an">Nhà đất Hiệp An</a>
+      <a href="/tin-tuc">Tin tức bất động sản</a>
+      <a href="/tin-tuc/chu-de-nong">Chủ đề nóng</a>
+      <a href="/san-deal-bds">Phương pháp lọc deal</a>
+    </nav>
+  </div>
+  <div class="public-footer-bottom">
+    <p>Dữ liệu giá rao và định giá tham khảo dùng để sàng lọc ban đầu; không thay thế kiểm tra thực địa, quy hoạch, pháp lý hoặc giá giao dịch thực tế. Radar BDS không cam kết lợi nhuận.</p>
+    <div><small>© {{ copyright_year }} Radar BDS.</small><a href="/sitemap.xml">Sơ đồ website</a><a href="mailto:{{ public_contact.email }}">Góp ý nội dung & quyền riêng tư</a></div>
   </div>
 </footer>

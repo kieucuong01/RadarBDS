@@ -698,6 +698,7 @@ body.listing-detail-page {
 .listing-evidence a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 600px) { .listing-evidence { padding: 16px; } .listing-evidence-grid { grid-template-columns: 1fr; gap: 14px; } }
 </style>
+{% include "partials/public_footer_assets.html" %}
 </head>
 <body class="listing-detail-page">
 {% set tier_display = 'Gói Free' if USER_TIER == 'free' else ('VIP' if USER_TIER == 'vip' else ('Admin' if USER_TIER == 'admin' else 'Khách')) %}
@@ -981,6 +982,7 @@ body.listing-detail-page {
       </section>
     </div>
   </main>
+  {% include "partials/seo_footer.html" %}
 </div>
 
 <div id="listingGallery" class="listing-gallery" hidden onclick="closeGallery()">

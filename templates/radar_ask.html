@@ -18,6 +18,7 @@
       document.documentElement.setAttribute('data-theme', 'dark');
     }
   </script>
+  {% include "partials/public_footer_assets.html" %}
 </head>
 <body class="radar-ask-page">
   <div class="radar-ask-app" data-radar-ask-app data-tier="{{ USER_TIER }}" data-cost-state="normal">
@@ -138,6 +139,7 @@
             <span>Nội dung do AI tổng hợp từ dữ liệu Radar BDS</span>
           </div>
         </form>
+        {% include "partials/public_footer_compact.html" %}
       </main>
 
       <aside class="radar-ask-evidence" data-evidence-sheet role="complementary" aria-label="Nguồn & cách tính">

@@ -98,7 +98,7 @@ from config.city_map_products import (
     get_city_map_page,
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
-from services.public_marketing import build_public_entities, build_trust_context
+from services.public_marketing import PUBLIC_CONTACT, build_public_entities, build_trust_context
 from services.traffic_priority import build_traffic_priority_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
@@ -254,7 +254,11 @@ def inject_google_site_tags():
 
 @app.context_processor
 def inject_public_schema_entities():
-    return {"public_entities": build_public_entities(PUBLIC_BASE_URL)}
+    return {
+        "public_entities": build_public_entities(PUBLIC_BASE_URL),
+        "public_contact": PUBLIC_CONTACT,
+        "copyright_year": datetime.now(timezone.utc).year,
+    }
 
 
 @app.context_processor

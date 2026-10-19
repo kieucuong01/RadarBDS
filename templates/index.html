@@ -34,20 +34,14 @@
   {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "Organization",
-        "@id": {{ (site_meta.canonical_url ~ '#organization') | tojson }},
-        "name": {{ site_meta.name | tojson }},
-        "url": {{ site_meta.canonical_url | tojson }},
-        "logo": {{ site_meta.og_image | tojson }}
-      },
+      {{ public_entities.organization | tojson }},
       {
         "@type": "WebSite",
         "@id": {{ (site_meta.canonical_url ~ '#website') | tojson }},
         "name": {{ site_meta.name | tojson }},
         "url": {{ site_meta.canonical_url | tojson }},
         "description": {{ site_meta.description | tojson }},
-        "publisher": {"@id": {{ (site_meta.canonical_url ~ '#organization') | tojson }}}
+        "publisher": {{ public_entities.organization_ref | tojson }}
       },
       {
         "@type": "WebApplication",
@@ -57,7 +51,7 @@
         "applicationCategory": "RealEstateApplication",
         "operatingSystem": "Web",
         "description": {{ site_meta.description | tojson }},
-        "publisher": {"@id": {{ (site_meta.canonical_url ~ '#organization') | tojson }}}
+        "publisher": {{ public_entities.organization_ref | tojson }}
       }
     ]
   }
@@ -124,6 +118,7 @@
     };
   </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/dashboard_mobile_discovery.css') }}?v=p2-20261019-3">
+  {% include "partials/public_footer_assets.html" %}
 </head>
 
 <body class="{% if saved_page %}saved-route{% endif %}" data-active-dashboard-tab="signals">
@@ -1034,6 +1029,7 @@
         </div>
       </div>
     </div>
+    {% include "partials/public_footer_compact.html" %}
   </main>
 
   {% if not saved_page %}

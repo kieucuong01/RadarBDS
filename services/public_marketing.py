@@ -11,6 +11,16 @@ DEFAULT_CAVEAT = (
     "quy hoạch, pháp lý hoặc định giá chính thức."
 )
 PUBLIC_LANGUAGE = "vi-VN"
+PUBLIC_CONTACT = {
+    "phone": "0343216024",
+    "telephone": "+84343216024",
+    "email": "radarbds@gmail.com",
+    "address": "57/19 ĐX126, Phường Phú An, TP HCM",
+    "street": "57/19 ĐX126, Phường Phú An",
+    "city": "TP HCM",
+    "youtube": "https://www.youtube.com/@radarbds-vn",
+    "facebook": "https://www.facebook.com/radarbdsvn/",
+}
 
 
 def _mapping(value: object) -> Mapping[str, object]:
@@ -63,6 +73,22 @@ def build_public_entities(base_url: str) -> dict[str, dict[str, object]]:
             "name": "Radar BDS",
             "url": root,
             "logo": {"@type": "ImageObject", "url": f"{root}static/images/app-icon-512.png"},
+            "telephone": PUBLIC_CONTACT["telephone"],
+            "email": PUBLIC_CONTACT["email"],
+            "sameAs": [PUBLIC_CONTACT["youtube"], PUBLIC_CONTACT["facebook"]],
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": PUBLIC_CONTACT["street"],
+                "addressLocality": PUBLIC_CONTACT["city"],
+                "addressCountry": "VN",
+            },
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer support",
+                "telephone": PUBLIC_CONTACT["telephone"],
+                "email": PUBLIC_CONTACT["email"],
+                "availableLanguage": "Vietnamese",
+            },
         },
         "website": {
             "@type": "WebSite",

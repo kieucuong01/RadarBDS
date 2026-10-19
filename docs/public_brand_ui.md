@@ -41,3 +41,18 @@ Verification: `tests/test_public_brand.py` checks every shared-header template
 and representative rendered routes for exactly one final brand stylesheet.
 Browser QA checks computed CTA styles, hover/focus, disabled controls and
 mobile overflow in news, tools, reports and map pages.
+
+## Shared footer and contact identity
+
+The canonical public contact details live in `PUBLIC_CONTACT` in
+`services/public_marketing.py`. The template context and Organization schema
+read the same values, including the support telephone, email, address and
+official Facebook/YouTube URLs. Update that source when business details change.
+
+`partials/seo_footer.html` renders the complete semantic footer with contact
+`address`, descriptive internal links, social links, data limitations, copyright
+and sitemap. `public_footer.css` is scoped so it also works in the dashboard
+and listing page without importing public-page layout styles. Dashboard and
+Radar Ask use `public_footer_compact.html`, a native expandable disclosure that
+keeps the data workspace usable while retaining the full footer in server HTML.
+Do not add unverified office hours, registration details or policy URLs.
