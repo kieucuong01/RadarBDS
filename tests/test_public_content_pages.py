@@ -260,10 +260,7 @@ def test_new_hubs_and_categories_are_in_sitemap_and_llms_once():
         "/tin-tuc/chu-de-nong",
         "/tin-tuc/du-lieu-radarbds",
         "/tin-tuc/quyet-dinh-van-ban",
-        "/quy-hoach-binh-duong/quy-hoach-su-dung-dat",
         "/quy-hoach-binh-duong/tuyen-duong",
-        "/quy-hoach-binh-duong/quy-hoach-chi-tiet",
-        "/quy-hoach-binh-duong/quy-hoach-phan-khu",
     )
 
     for path in paths:
@@ -283,10 +280,7 @@ def test_new_hub_and_category_sitemap_entries_have_lastmod():
         "/tin-tuc/chu-de-nong",
         "/tin-tuc/du-lieu-radarbds",
         "/tin-tuc/quyet-dinh-van-ban",
-        "/quy-hoach-binh-duong/quy-hoach-su-dung-dat",
         "/quy-hoach-binh-duong/tuyen-duong",
-        "/quy-hoach-binh-duong/quy-hoach-chi-tiet",
-        "/quy-hoach-binh-duong/quy-hoach-phan-khu",
     )
 
     for path in paths:

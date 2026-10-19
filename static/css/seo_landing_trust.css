@@ -1,0 +1,23 @@
+.hero-map-stage.hero-method-stage { display: grid; align-items: center; padding: 28px 4% 28px 19%; background: #f1f7f3; }
+.hero-method-stage::before { background: linear-gradient(90deg,#fff,transparent 28%); }
+.hero-method-card { position: relative; z-index: 3; max-width: 460px; padding: 28px; border: 1px solid #d7e5dc; border-radius: 8px; background: #fff; color: #203e31; }
+.hero-method-card .hero-method-kicker { margin: 0 0 10px; font-size: .75rem; font-weight: 700; color: #0b604b; }
+.hero-method-card h2 { margin: 0 0 20px; font-size: 1.6rem; line-height: 1.35; }
+.hero-method-card ol { display: grid; gap: 16px; padding-left: 22px; margin: 0; }
+.hero-method-card li { padding-left: 4px; line-height: 1.65; }
+.hero-method-card li::marker { color: #0b604b; font-weight: 700; }
+.hero-method-card strong,.hero-method-card li span { display: block; }
+.hero-method-card li span { font-size: .88rem; color: #52675d; }
+.hero-method-card .hero-method-note { margin: 20px 0 0; padding-top: 14px; border-top: 1px solid #d7e5dc; font-size: .8rem; line-height: 1.7; color: #52675d; }
+.dashboard-preview-caption { display: block; padding: 12px 16px; background: #fff; color: #52675d; font-size: .8rem; line-height: 1.7; }
+.dashboard-preview-metrics strong { font-size: 1rem; line-height: 1.6; overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .hero-map-stage.hero-method-stage { padding: 20px; min-height: 0; }
+  .hero-method-stage::before { display: none; }
+  .hero-method-card { max-width: 100%; width: 100%; margin: 0 auto; }
+}
+@media (max-width: 600px) {
+  .hero-map-stage.hero-method-stage { padding: 16px; }
+  .hero-method-card { padding: 20px; }
+  .hero-method-card h2 { font-size: 1.3rem; }
+}

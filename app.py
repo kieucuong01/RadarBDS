@@ -2766,16 +2766,21 @@ def thu_dau_mot_map_product_page():
     return city_map_product_page("thu-dau-mot")
 
 
+def _planning_category_items(page: dict) -> list[dict]:
+    """Use the same content readiness for rendering and search discovery."""
+    return [
+        deepcopy(item)
+        for item in PLANNING_PAGE_LIST
+        if item.get("category") in page["categories"]
+    ]
+
+
 def planning_detail_page(slug: str):
     category_page = PLANNING_CATEGORY_PAGES.get((slug or "").strip("/"))
     if category_page:
         page = dict(category_page)
         page["breadcrumbs"] = _page_breadcrumbs(page)
-        items = [
-            deepcopy(item)
-            for item in PLANNING_PAGE_LIST
-            if item.get("category") in page["categories"]
-        ]
+        items = _planning_category_items(page)
         item_list = [
             {
                 "@type": "ListItem",
@@ -2798,7 +2803,7 @@ def planning_detail_page(slug: str):
                 _breadcrumb_schema(page["breadcrumbs"]),
             ],
         }
-        return render_template(
+        response = make_response(render_template(
             "planning_category.html",
             page=page,
             items=items,
@@ -2810,7 +2815,10 @@ def planning_detail_page(slug: str):
             ),
             schema_graph=_public_schema_graph(schema_graph),
             active_nav="quy-hoach",
-        )
+        ))
+        if not items:
+            response.headers["X-Robots-Tag"] = "noindex, follow"
+        return response
 
     page = PLANNING_PAGES.get((slug or "").strip("/"))
     if not page:
@@ -4219,7 +4227,7 @@ def sitemap_xml():
         *CITY_MAP_PRODUCTS.values(),
         BINH_DUONG_MAP_PAGE,
         PLANNING_HUB,
-        *PLANNING_CATEGORY_PAGES.values(),
+        *(page for page in PLANNING_CATEGORY_PAGES.values() if _planning_category_items(page)),
         *SEO_PAGES.values(),
         *PLANNING_PAGE_LIST,
         *public_document_pages,

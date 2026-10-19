@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
   {% include "partials/seo_head.html" %}
+  {% if not items %}<meta name="robots" content="noindex, follow">{% endif %}
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
 </head>
 <body class="seo-page planning-page planning-category-page">

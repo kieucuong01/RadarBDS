@@ -116,8 +116,8 @@ SEO_PAGES = {
             "alt": "Preview dashboard Radar BDS hiển thị các card deal nhà đất Bình Dương",
             "cta": "Xem dashboard thật",
             "metrics": [
-                {"value": "876+", "label": "Tin rao được chuẩn hóa"},
-                {"value": "100+", "label": "Tín hiệu đang theo dõi"},
+                {"value": "Giá · diện tích · vị trí", "label": "Tin rao được chuẩn hóa"},
+                {"value": "MOS · nguồn · lịch sử", "label": "Tín hiệu đang theo dõi"},
                 {"value": "Hàng ngày", "label": "Cập nhật dữ liệu định kỳ"},
             ],
         },

@@ -35,6 +35,8 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=public-navigation-20260729">
 
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo_landing_trust.css') }}?v=p1-20261019-2">
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -201,48 +203,7 @@
         {% endif %}
       </aside>
       {% else %}
-      <aside class="hero-map-stage" aria-label="Mô phỏng Radar BDS phân tích thị trường">
-        <div class="map-label">{{ page.map_label }}</div>
-        <div class="price-tag tag-one">2.3 tỷ</div>
-        <div class="price-tag tag-two">2.1 tỷ</div>
-        <div class="price-tag tag-three">2.2 tỷ</div>
-        <div class="price-tag tag-four">2.3 tỷ</div>
-        <div class="price-tag tag-five">2.6 tỷ</div>
-        <div class="signal-counter">
-          <span>{{ page.hero_metric.label }}</span>
-          <strong>{{ page.hero_metric.value }} <small>{{ page.hero_metric.delta }}</small></strong>
-          <em>{{ page.hero_metric.note }}</em>
-          <svg viewBox="0 0 160 54" aria-hidden="true">
-            <polyline points="0,42 18,34 35,39 52,25 70,31 88,18 107,24 126,11 148,4" />
-          </svg>
-        </div>
-        <div class="property-card">
-          <div class="property-image">
-            <span class="property-status">{{ page.property_card.status }}</span>
-          </div>
-          <div class="property-copy">
-            <strong>{{ page.property_card.title }}</strong>
-            <p>{{ page.property_card.price }}</p>
-            <div class="property-metrics">
-              <span>{{ page.property_card.metric_a }} <b>{{ page.property_card.metric_a_value }}</b></span>
-              <span>{{ page.property_card.metric_b }} <b>{{ page.property_card.metric_b_value }}</b></span>
-            </div>
-            <a href="/" aria-label="Xem chi tiết tin tốt">Xem chi tiết
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" /></svg>
-            </a>
-          </div>
-        </div>
-<div class="chart-card">
-          <span>Mức giá theo khu vực (tr/m²)</span>
-          <svg viewBox="0 0 220 92" aria-hidden="true">
-            <line x1="0" y1="78" x2="220" y2="78" />
-            <line x1="0" y1="52" x2="220" y2="52" />
-            <line x1="0" y1="26" x2="220" y2="26" />
-            <polyline points="2,74 42,58 82,44 122,50 164,30 218,18" />
-          </svg>
-          <div class="chart-labels"><span>TDM</span><span>Thuận An</span><span>Dĩ An</span><span>Bến Cát</span></div>
-        </div>
-      </aside>
+      {% include "partials/landing_method_hero.html" %}
       {% endif %}
 
       <div class="seo-shell hero-shell">
@@ -421,7 +382,7 @@
           <span>{{ page.dashboard_preview.eyebrow }}</span>
           <h2>{{ page.dashboard_preview.title }}</h2>
           <p>{{ page.dashboard_preview.body }}</p>
-          <div class="dashboard-preview-metrics" aria-label="Số liệu nổi bật">
+          <div class="dashboard-preview-metrics" aria-label="Thông tin về dữ liệu">
             {% for metric in page.dashboard_preview.metrics %}
             <div>
               <strong>{{ metric.value }}</strong>
@@ -435,6 +396,7 @@
         </div>
         <a class="dashboard-preview-frame" href="{{ dashboard_signal_href }}" aria-label="{{ page.dashboard_preview.cta }}">
           <img src="{{ page.dashboard_preview.image }}" alt="{{ page.dashboard_preview.alt }}" loading="lazy" decoding="async" width="1365" height="900">
+          <span class="dashboard-preview-caption">Ảnh minh họa giao diện; số liệu trong ảnh không phản ánh dữ liệu hiện tại.</span>
         </a>
       </div>
     </section>
