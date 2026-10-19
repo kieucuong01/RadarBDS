@@ -27,6 +27,8 @@ def test_contact_footer_is_present_once_and_schema_stays_valid(path):
     for value in ['tel:+84343216024', 'mailto:radarbds@gmail.com', PUBLIC_CONTACT['address'],
                   PUBLIC_CONTACT['facebook'], PUBLIC_CONTACT['youtube'], 'public_footer.css']:
         assert value in html
+    assert html.count('class="public-footer-social-icon"') == 2
+    assert 'aria-hidden="true" focusable="false"' in html
     nodes = []
     for raw in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
         payload = json.loads(raw)

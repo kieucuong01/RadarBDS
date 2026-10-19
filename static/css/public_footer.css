@@ -35,6 +35,8 @@
 .public-site-footer address p { margin: 3px 0 0; color: var(--footer-ink); }
 .public-footer-social { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .public-footer-social a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid var(--footer-line); border-radius: 10px; font-weight: 600; }
+.public-footer-social-icon { width: 18px; height: 18px; flex: 0 0 18px; }
+.public-footer-social a span:last-child { color: var(--footer-muted); font-size: 12px; }
 .public-footer-bottom { border-top: 1px solid var(--footer-line); padding-top: 20px; padding-bottom: 24px; }
 .public-footer-bottom > p { margin: 0; max-width: 100ch; font-size: 12px; }
 .public-footer-bottom > div { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; margin-top: 18px; font-size: 12px; }
