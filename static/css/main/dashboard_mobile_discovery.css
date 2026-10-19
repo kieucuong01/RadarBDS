@@ -10,6 +10,7 @@
   body[data-active-dashboard-tab="all"] .dashboard-context { display: none; }
 }
 @media (max-width: 1024px) {
+  .dashboard-context { display: none; }
   .header-right { gap: 8px; }
   .header .listing-map-launcher { position: static; transform: none; min-height: 44px; padding: 0 10px; gap: 5px; font-size: .78rem; border-radius: 8px; box-shadow: none; flex: 0 0 auto; }
   .header .listing-map-launcher:hover { transform: none; }
