@@ -133,6 +133,18 @@
         <button type="button" data-public-content-reset>Đặt lại bộ lọc</button>
       </div>
     </section>
+    {% if page.item_type == "hot_topic" %}
+    <section class="news-dashboard-bridge" aria-label="Mở dashboard Radar BDS">
+      <div>
+        <p class="seo-eyebrow">Từ tin tức đến dữ liệu</p>
+        <h2>Muốn kiểm tra tin rao theo khu vực?</h2>
+        <p>Chọn phường trên dashboard để xem các tin phù hợp, giá rao và cảnh báo cần kiểm tra thêm.</p>
+      </div>
+      <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="hot_topics_bottom_dashboard">Mở dashboard lọc tin</a>
+    </section>
+    {% set lead_cta_context = "seo_hot_topics_lead" %}
+    {% include "partials/seo_lead_capture.html" %}
+    {% endif %}
     <details class="news-editorial-method">
       <summary>Thông tin biên tập và cách sử dụng nguồn</summary>
       {% include "partials/seo_trust.html" %}
@@ -142,5 +154,6 @@
   <script src="{{ url_for('static', filename='js/public_content_hub.js') }}?v=public-content-20260729" defer></script>
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}
+  {% if page.item_type == "hot_topic" %}{% include "partials/seo_lead_capture_script.html" %}{% endif %}
 </body>
 </html>

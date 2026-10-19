@@ -151,6 +151,21 @@ def test_hot_topic_cards_are_external_and_never_render_full_body(monkeypatch):
     assert "Nội dung toàn bài" not in html
 
 
+def test_hot_topic_hub_has_dashboard_and_lead_ctas():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get(
+        "/tin-tuc/chu-de-nong"
+    ).get_data(as_text=True)
+
+    assert 'class="news-dashboard-bridge"' in html
+    assert 'data-track-cta="hot_topics_bottom_dashboard"' in html
+    assert 'href="/?tab=signals"' in html
+    assert 'action="/api/leads"' in html
+    assert 'data-source-context="seo_hot_topics_lead"' in html
+    assert "lead_capture_submit" in html
+
+
 def test_legal_detail_renders_legislation_schema_and_stable_pdf_route(
     monkeypatch,
 ):
