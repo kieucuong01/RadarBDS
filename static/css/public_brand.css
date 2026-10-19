@@ -61,7 +61,7 @@
   box-shadow: none;
   transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
-.seo-page.seo-page :is(.seo-nav-tab, .seo-nav-menu a, .research-nav a,
+.seo-page.seo-page :is(.seo-nav-tab, .seo-nav-link, .seo-nav-menu a, .research-nav a,
   .hub-tab, .report-reading-nav a, .discovery-toc a, .discovery-area-guide nav a,
   .discovery-map-details > summary, .report-live-cta a, .hub-secondary-cta) {
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
@@ -86,6 +86,7 @@
   color: var(--brand-hover);
 }
 .seo-page.seo-page :is(.seo-nav-tab[aria-expanded="true"],
+  .seo-nav-link.is-active,
   .seo-nav-group.is-active > .seo-nav-tab, .news-category-chip.is-active,
   .seo-nav-menu a[aria-current="page"]) {
   background: var(--brand-soft);
@@ -131,7 +132,7 @@
     border-color: var(--brand-primary);
     transform: translateY(-1px);
   }
-  .seo-page.seo-page :is(.seo-nav-tab, .seo-nav-menu a, .research-nav a,
+  .seo-page.seo-page :is(.seo-nav-tab, .seo-nav-link, .seo-nav-menu a, .research-nav a,
     .report-reading-nav a, .discovery-toc a, .hub-secondary-cta):hover {
     color: var(--brand-hover);
     background: var(--brand-soft);
