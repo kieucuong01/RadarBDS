@@ -30,6 +30,7 @@
       <a href="/bao-cao">Báo cáo thị trường</a>
       <a href="/ban-do-binh-duong">Bản đồ Bình Dương</a>
       <a href="/quy-hoach-binh-duong">Thư viện quy hoạch</a>
+      <button type="button" class="radar-install-footer" data-radar-install aria-haspopup="dialog">Cài Radar BDS</button>
     </nav>
     <nav aria-label="Thị trường và kiến thức">
       <h2>Thị trường & kiến thức</h2>
@@ -49,3 +50,4 @@
     <div><small>© {{ copyright_year }} Radar BDS.</small><a href="/sitemap.xml">Sơ đồ website</a><a href="mailto:{{ public_contact.email }}">Góp ý nội dung & quyền riêng tư</a></div>
   </div>
 </footer>
+{% include "partials/install_dialog.html" %}

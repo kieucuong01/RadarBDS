@@ -56,3 +56,8 @@ and listing page without importing public-page layout styles. Dashboard and
 Radar Ask use `public_footer_compact.html`, a native expandable disclosure that
 keeps the data workspace usable while retaining the full footer in server HTML.
 Do not add unverified office hours, registration details or policy URLs.
+
+The shared footer and public/dashboard Tools menus expose “Cài Radar BDS”.
+`public_install.js` retains `beforeinstallprompt` for an explicit install action;
+the native dialog shows platform-specific manual steps when no prompt is available.
+It never opens automatically and never installs without browser confirmation.

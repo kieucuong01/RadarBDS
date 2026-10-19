@@ -1,0 +1,9 @@
+<dialog class="radar-install-dialog" id="radarInstallDialog" aria-labelledby="radarInstallTitle" aria-describedby="radarInstallDescription">
+  <form method="dialog"><button class="radar-install-close" aria-label="Đóng hướng dẫn cài đặt">×</button></form>
+  <img src="{{ url_for('static', filename='images/app-icon-192.png') }}" width="56" height="56" alt="">
+  <h2 id="radarInstallTitle">Cài Radar BDS</h2>
+  <p id="radarInstallDescription">Thêm Radar BDS vào màn hình chính để mở nhanh mỗi ngày.</p>
+  <ol id="radarInstallSteps"></ol>
+  <p class="radar-install-status" id="radarInstallStatus" role="status"></p>
+  <button type="button" class="radar-install-confirm" id="radarInstallConfirm" hidden>Cài ứng dụng</button>
+</dialog>
