@@ -175,7 +175,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=multi-city-ward-filter-20260814" in html
+    assert "js/main/boot.js') }}?v=area-scope-dismiss-20261020" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
@@ -191,6 +191,8 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert 'class="area-scope-modal-panel"' in html
     assert 'class="area-scope-close"' in html
     assert "closeAreaScopeChooser()" in html
+    assert "event.target === this" in html
+    assert "event.key === 'Escape'" in html
     assert 'id="areaScopeCityChoices"' in html
     assert 'class="area-scope-city-picker"' in html
     assert "selectAreaScopeCity(this.dataset.city)" in html
@@ -207,6 +209,8 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert 'data-area-scope-filter="price_range"' in html
     assert 'data-area-scope-filter="area_range"' in html
     assert 'data-area-scope-filter="prop_type"' in html
+    for field in ("areaScopePriceMin", "areaScopePriceMax", "areaScopeAreaMin", "areaScopeAreaMax"):
+        assert f'id="{field}"' in html
     assert "toggleAreaScopeOptionalChip(this)" in html
     assert "clearAreaScopeOptionalFilters()" in html
     assert "syncAreaScopeOptionalFilters" in area_scope_js
@@ -233,8 +237,9 @@ def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
     assert "openAreaScopeFilterSheet" in area_scope_js
     assert "closeAreaScopeChooser" in area_scope_js
     assert "root.closeAreaScopeChooser = function closeAreaScopeChooser()" in area_scope_js
-    assert "defaultDismissedScope" in area_scope_js
-    assert "RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE" in area_scope_js
+    assert "defaultDismissedScope" not in area_scope_js
+    assert "window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE = true" in boot_js
+    assert "root.closeAreaScopeChooser = function closeAreaScopeChooser()" in area_scope_js
     assert "RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE" in filters_js
 
 
@@ -836,7 +841,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
         'data-range-name="price_range"',
         'data-range-name="area_range"',
         "js/main/filters.js') }}?v=multi-city-ward-filter-20260814",
-        "js/main/area_scope.js') }}?v=multi-city-ward-filter-20260814",
+        "js/main/area_scope.js') }}?v=area-scope-manual-ranges-20261020",
         "toggleRangePreset",
         "selectedRangeTokens",
         "applyRangeParamsFromUrl",

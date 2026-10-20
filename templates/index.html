@@ -69,7 +69,7 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=listing-workspace-20260811' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=multi-city-ward-filter-20260814' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-manual-ranges-20261020' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=listing-mobile-prices-20261020-3' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=market-analysis-p0-p2-20260807b' %}
@@ -601,7 +601,8 @@
 
       <!-- TAB: SIGNALS -->
       <div id="tab-signals" class="tab-content active" aria-hidden="false">
-        <div class="area-scope-modal" id="areaScopeChooser" hidden role="dialog" aria-modal="true" aria-labelledby="areaScopeChooserTitle">
+        <div class="area-scope-modal" id="areaScopeChooser" hidden role="dialog" aria-modal="true" aria-labelledby="areaScopeChooserTitle"
+          onclick="if (event.target === this) closeAreaScopeChooser()" onkeydown="if (event.key === 'Escape') closeAreaScopeChooser()">
           <section class="area-scope-modal-panel">
             <button type="button" class="area-scope-close" aria-label="Đóng chọn khu vực" onclick="closeAreaScopeChooser()">&times;</button>
             <div class="area-scope-copy">
@@ -639,6 +640,16 @@
               </div>
               <section class="area-scope-filter-block" data-area-scope-filter="price_range">
                 <div class="area-scope-filter-label">Giá</div>
+                <div class="area-scope-manual-range">
+                  <label for="areaScopePriceMin">Từ (tỷ)
+                    <input type="number" id="areaScopePriceMin" min="0" step="0.01" inputmode="decimal" placeholder="Giá thấp nhất"
+                      oninput="onAreaScopeManualRangeInput('price')">
+                  </label>
+                  <label for="areaScopePriceMax">Đến (tỷ)
+                    <input type="number" id="areaScopePriceMax" min="0" step="0.01" inputmode="decimal" placeholder="Giá cao nhất"
+                      oninput="onAreaScopeManualRangeInput('price')">
+                  </label>
+                </div>
                 <div class="area-scope-option-grid">
                   <button type="button" class="area-scope-option-chip" data-filter-kind="price" data-filter-name="price_range"
                     data-min="" data-max="1" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">&lt; 1 Tỷ</button>
@@ -650,6 +661,16 @@
               </section>
               <section class="area-scope-filter-block" data-area-scope-filter="area_range">
                 <div class="area-scope-filter-label">Diện tích</div>
+                <div class="area-scope-manual-range">
+                  <label for="areaScopeAreaMin">Từ (m²)
+                    <input type="number" id="areaScopeAreaMin" min="0" step="1" inputmode="numeric" placeholder="Diện tích nhỏ nhất"
+                      oninput="onAreaScopeManualRangeInput('area')">
+                  </label>
+                  <label for="areaScopeAreaMax">Đến (m²)
+                    <input type="number" id="areaScopeAreaMax" min="0" step="1" inputmode="numeric" placeholder="Diện tích lớn nhất"
+                      oninput="onAreaScopeManualRangeInput('area')">
+                  </label>
+                </div>
                 <div class="area-scope-option-grid">
                   <button type="button" class="area-scope-option-chip" data-filter-kind="area" data-filter-name="area_range"
                     data-min="" data-max="150" aria-pressed="false" onclick="toggleAreaScopeOptionalChip(this)">&lt; 150 m2</button>
@@ -1570,8 +1591,8 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-alerts-20261005"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=multi-city-ward-filter-20260814"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=multi-city-ward-filter-20260814"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-manual-ranges-20261020"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-dismiss-20261020"></script>
 </body>
 
 </html>

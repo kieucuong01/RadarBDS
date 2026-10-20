@@ -127,6 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.RadarAreaScope && window.INITIAL_WARDS_BY_CITY) {
     const urlScope = window.RadarAreaScope.scopeFromSearchParams(searchParams, globalWardsByCity);
     const hasAnyUrlFilter = searchParams.toString().length > 0;
+    if (hasAnyUrlFilter) {
+      window.RadarAreaScope.syncStoredFiltersControls(
+        window.RadarAreaScope.filtersFromSearchParams(searchParams), document
+      );
+    }
     if (urlScope) {
       window.RadarAreaScope.setCurrentScope(urlScope, globalWardsByCity);
       window.RadarAreaScope.syncScopeControls(urlScope, globalWardsByCity, document, updateWardFilters);
@@ -147,6 +152,21 @@ document.addEventListener('DOMContentLoaded', () => {
         window.RadarAreaScope.replaceUrlWithScope(storedScope);
         applyFilters();
       } else {
+        const defaultCity = globalWardsByCity['THỦ DẦU MỘT']
+          ? 'THỦ DẦU MỘT'
+          : Object.keys(globalWardsByCity)[0];
+        const defaultScope = defaultCity && window.RadarAreaScope.validateScope({
+          version: 2,
+          activeCity: defaultCity,
+          selections: { [defaultCity]: Array.from(globalWardsByCity[defaultCity]) },
+          mode: 'city_all',
+        }, globalWardsByCity);
+        if (defaultScope) {
+          window.RadarAreaScope.setCurrentScope(defaultScope, globalWardsByCity);
+          window.RadarAreaScope.syncScopeControls(defaultScope, globalWardsByCity, document, updateWardFilters);
+          window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE = true;
+          applyFilters();
+        }
         window.RadarAreaScope.showChooser(document);
         hideLoader();
       }

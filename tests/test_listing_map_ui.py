@@ -404,7 +404,9 @@ def test_listing_map_assets_share_cache_version():
     assert "listing-map-touch-target-20260814" not in template
     assert "listing-map-marker-hierarchy-20260814" not in template
     assert template.count("listing-map-launch-share-20260814") == 1
-    assert template.count("multi-city-ward-filter-20260814") >= 3
+    assert "js/main/filters.js') }}?v=multi-city-ward-filter-20260814" in template
+    assert "js/main/area_scope.js') }}?v=area-scope-manual-ranges-20261020" in template
+    assert "js/main/boot.js') }}?v=area-scope-dismiss-20261020" in template
     assert "listing-map-price-zoom-20260813" not in template
     assert "listing-map-compact-labels-20260813" not in template
     assert "js/main/core.js') }}?v=listing-workspace-20260811" not in template

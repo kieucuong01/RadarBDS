@@ -256,6 +256,14 @@ assert.equal(
 api.applyOptionalFiltersToParams(optionalParams, { area_range: [], prop_type: [] });
 assert.equal(optionalParams.toString(), 'tab=signals');
 
+const manualParams = new URLSearchParams('tab=signals&price_range=2%3A&area_range=%3A150');
+api.applyOptionalFiltersToParams(manualParams, {
+  price_min: '1.25', price_max: '2.75', area_min: '80', area_max: '160',
+});
+assert.equal(manualParams.toString(), 'tab=signals&price_min=1.25&price_max=2.75&area_min=80&area_max=160');
+api.applyOptionalFiltersToParams(manualParams, { price_range: ['2:'] });
+assert.equal(manualParams.toString(), 'tab=signals&area_min=80&area_max=160&price_range=2%3A');
+
 assert.equal(
   api.scopeStatusLabel({
     version: 1,
@@ -396,6 +404,7 @@ assert.equal(bodyClasses.has('area-scope-modal-open'), true);
 
 let savedByClose = false;
 let appliedByClose = 0;
+let replacedByClose = 0;
 window.INITIAL_WARDS_BY_CITY = {
   'THỦ DẦU MỘT': ['Tân An', 'Phú Tân'],
 };
@@ -410,6 +419,8 @@ window.localStorage = {
 window.applyFilters = function applyFilters() {
   appliedByClose += 1;
 };
+window.location = { pathname: '/', search: '?tab=signals', hash: '' };
+window.history = { replaceState() { replacedByClose += 1; } };
 window.document = doc;
 api.setCurrentScope({
   version: 2,
@@ -417,13 +428,17 @@ api.setCurrentScope({
   selections: { 'THỦ DẦU MỘT': ['Tân An', 'Phú Tân'] },
   mode: 'city_all',
 }, window.INITIAL_WARDS_BY_CITY);
+api.showChooser(doc);
+window.toggleAreaScopeWard({ dataset: { city: 'THỦ DẦU MỘT', ward: 'Tân An' } });
 window.closeAreaScopeChooser();
 assert.equal(chooser.hidden, true);
 assert.equal(bar.hidden, false);
 assert.equal(label.textContent, 'Toàn Thủ Dầu Một');
 assert.equal(bodyClasses.has('area-scope-modal-open'), false);
 assert.equal(savedByClose, false);
-assert.equal(appliedByClose, 1);
+assert.equal(appliedByClose, 0);
+assert.equal(replacedByClose, 0);
+assert.equal(api.getCurrentScope().mode, 'city_all');
 
 api.showChooser(doc);
 api.hideChooser(doc);
@@ -605,6 +620,51 @@ assert.deepEqual(plain(api.readStoredScope(popupApplyStorage, window.INITIAL_WAR
   area_range: ['500:'],
   prop_type: ['dat_nen'],
 });
+
+const manualPopupInputs = {
+  areaScopePriceMin: { value: '' }, areaScopePriceMax: { value: '' },
+  areaScopeAreaMin: { value: '' }, areaScopeAreaMax: { value: '' },
+  priceMin: { value: '' }, priceMax: { value: '' },
+  areaMin: { value: '' }, areaMax: { value: '' },
+};
+const manualPopupDoc = {
+  body: doc.body,
+  getElementById(id) {
+    return manualPopupInputs[id] || {
+      areaScopeChooser: chooser,
+      areaScopeBar: bar,
+      areaScopeLabel: label,
+      cityInput,
+    }[id] || null;
+  },
+  querySelectorAll(selector) {
+    if (selector === '#wardFilters input[name="ward"]') {
+      return [{ checked: true, value: 'Tân An' }, { checked: false, value: 'Phú Tân' }];
+    }
+    return [];
+  },
+};
+window.document = manualPopupDoc;
+window.location = { pathname: '/', search: '?tab=signals&price_range=2%3A&area_range=%3A150', hash: '' };
+let manualPopupUrl = '';
+window.history = { replaceState(_state, _title, url) { manualPopupUrl = url; } };
+api.showChooser(manualPopupDoc);
+manualPopupInputs.areaScopePriceMin.value = '1.25';
+manualPopupInputs.areaScopePriceMax.value = '2.75';
+manualPopupInputs.areaScopeAreaMin.value = '80';
+manualPopupInputs.areaScopeAreaMax.value = '160';
+window.onAreaScopeManualRangeInput('price');
+window.onAreaScopeManualRangeInput('area');
+assert.equal(popupApplyCalls, 1, 'editing popup fields must not reload feeds');
+window.applyAreaScopeWardSelection();
+assert.equal(popupApplyCalls, 2);
+assert.deepEqual(plain(api.readStoredScope(popupApplyStorage, window.INITIAL_WARDS_BY_CITY).filters), {
+  price_min: '1.25', price_max: '2.75', area_min: '80', area_max: '160',
+});
+assert.equal(manualPopupInputs.priceMin.value, '1.25');
+assert.equal(manualPopupInputs.areaMax.value, '160');
+assert.match(manualPopupUrl, /price_min=1.25&price_max=2.75&area_min=80&area_max=160/);
+assert.doesNotMatch(manualPopupUrl, /price_range|area_range/);
 
 const sidebarFilterInputs = {
   priceMin: { value: '' },
