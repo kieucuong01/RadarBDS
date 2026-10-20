@@ -997,7 +997,7 @@ body.listing-detail-page {
 </div>
 
 <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
-<script src="{{ url_for('static', filename='js/main/signal_card.js') }}?v=agent-readonly-20260810"></script>
+{% include "partials/signal_card_script.html" %}
 <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>
 <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
 <script>

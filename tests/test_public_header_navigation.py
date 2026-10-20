@@ -182,6 +182,10 @@ def test_agent_readable_dashboard_assets_bust_immutable_browser_caches():
     detail_markup = Path("templates/listing_detail.html").read_text(
         encoding="utf-8"
     )
+    shared_include = '{% include "partials/signal_card_script.html" %}'
+    shared_script = Path("templates/partials/signal_card_script.html").read_text(encoding="utf-8")
+    markup = markup.replace(shared_include, shared_script)
+    detail_markup = detail_markup.replace(shared_include, shared_script)
     dashboard_assets = (
         "css/main/cards.css",
         "js/main/core.js",

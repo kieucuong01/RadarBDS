@@ -55,7 +55,11 @@ def test_signal_detail_assets_share_current_release_identity():
     ):
         assert version_for(modal, asset) == version_for(detail, asset)
 
-    assert version_for(modal, "signal_card.js") == version_for(detail, "signal_card.js")
+    shared_card_script = _read("templates/partials/signal_card_script.html")
+    assert version_for(shared_card_script, "signal_card.js")
+    for html in (modal, detail):
+        assert html.count('{% include "partials/signal_card_script.html" %}') == 1
+        assert "filename='js/main/signal_card.js'" not in html
 
     assert version_for(modal, "modal.js")
 
@@ -79,8 +83,9 @@ def test_dashboard_feed_delegates_to_shared_signal_card_renderer():
     detail = _read("templates/listing_detail.html")
 
     assert "RadarSignalCard.render" in signals
-    assert "signal_card.js" in index
-    assert "signal_card.js" in detail
+    assert 'partials/signal_card_script.html' in index
+    assert 'signal_card.js' in _read('templates/partials/signal_card_script.html')
+    assert 'partials/signal_card_script.html' in detail
 
 
 def test_shared_signal_cards_have_resilient_media_and_no_link_underline():

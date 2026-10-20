@@ -74,3 +74,7 @@ scoped to `#tab-all .signal-shared-card`. Asking price and valuation stack in th
 right column; the title, property chips and actions span the full width below.
 The existing DOM/data/click handlers are retained via `display: contents` on the
 card body. Signal cards, saved cards and desktop keep their normal layout.
+
+`partials/signal_card_script.html` owns the shared card renderer URL/version for
+both the dashboard and listing detail. Bump its version there when changing the
+renderer; do not add separate script URLs to those templates.

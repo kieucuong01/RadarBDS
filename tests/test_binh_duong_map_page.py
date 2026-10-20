@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 from config.binh_duong_map import (
@@ -198,23 +199,41 @@ def test_binh_duong_map_route_renders_progressive_content_and_accessible_control
         assert internal_term not in html
 
 
-def test_binh_duong_map_places_selection_above_full_width_map_and_removes_overview():
+def test_binh_duong_map_places_full_width_map_before_selection_and_removes_overview():
     import app as radar_app
 
     html = radar_app.app.test_client().get("/ban-do-binh-duong").get_data(as_text=True)
 
     assert 'id="tong-quan-binh-duong"' not in html
     assert ">Tổng quan<" not in html
-    assert html.index("data-binh-duong-map-selection") < html.index(
-        "data-binh-duong-map-canvas"
-    )
-    workspace = re.search(
-        r'<div class="bd-map-workspace">(.*?)</div>\s*</div>\s*</section>',
-        html,
-        re.S,
-    )
-    assert workspace
-    assert "data-binh-duong-map-selection" not in workspace.group(1)
+    class LayoutParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.containers = []
+            self.markers = []
+            self.selection_in_workspace = False
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if 'data-binh-duong-map-canvas' in attrs:
+                self.markers.append('canvas')
+            if 'data-binh-duong-map-selection' in attrs:
+                self.markers.append('selection')
+                self.selection_in_workspace = any(
+                    'bd-map-workspace' in parent.get('class', '').split()
+                    for parent in self.containers
+                )
+            if tag in {'div', 'aside'}:
+                self.containers.append(attrs)
+
+        def handle_endtag(self, tag):
+            if tag in {'div', 'aside'}:
+                self.containers.pop()
+
+    layout = LayoutParser()
+    layout.feed(html)
+    assert layout.markers == ['canvas', 'selection']
+    assert not layout.selection_in_workspace
 
 
 def test_binh_duong_map_schema_has_two_datasets_and_unique_legacy_item_list():

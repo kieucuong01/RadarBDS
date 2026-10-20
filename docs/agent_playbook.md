@@ -60,6 +60,11 @@ This playbook is the day-to-day workflow guide for AI agents. Keep it compact; p
 
 ## Verification Matrix
 
+For public UI changes, include the affected route's render/DOM tests and shared
+asset tests, not just the edited module's tests. After pushing, inspect the exact
+commit's completed Quality gates run before reporting CI success or deploying.
+A targeted local pass does not establish that the full GitHub workflow passed.
+
 - Python syntax: `py_compile` touched files.
 - JS syntax: `node --check static/js/auth.js` plus touched `static/js/main/*.js` feature files.
 - Auth UI syntax: `node --check static/js/auth.js`.

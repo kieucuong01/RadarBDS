@@ -793,10 +793,10 @@ def test_product_discovery_surfaces_include_one_canonical_url_and_contextual_lin
 
     assert sitemap.count(f"<loc>{PRODUCT_URL}</loc>") == 1
     assert llms.count(PRODUCT_URL) == 1
-    assert map_html.count(f'href="{PRODUCT_PATH}"') >= 1
-    assert planning_html.count(f'href="{PRODUCT_PATH}"') >= 1
-    assert product_html.count(f'href="{PRODUCT_PATH}"') >= 1
-    assert "Bộ bản đồ Thủ Dầu Một" in product_html
+    for html in (map_html, planning_html, product_html):
+        links = re.findall(rf'<a\b[^>]*href="{re.escape(PRODUCT_PATH)}"[^>]*>(.*?)</a>', html, re.S)
+        assert links
+        assert any("Thủ Dầu Một" in re.sub(r'<[^>]+>', '', link) for link in links)
 
 
 def test_product_tracking_events_are_allowlisted_and_use_safe_context(monkeypatch):
