@@ -68,3 +68,9 @@ load auth/modal resources. On mobile it moves the dropdown outside the header's
 filter context and uses the same dark overlay and 4px blur as Tools. Outside
 click, close, Escape, keyboard focus and breakpoint changes share that state.
 `auth.js` delegates menu state to this shell after it loads for account actions.
+
+Tin rao cards at widths up to 720px use a 2:1 image/price grid in `cards.css`,
+scoped to `#tab-all .signal-shared-card`. Asking price and valuation stack in the
+right column; the title, property chips and actions span the full width below.
+The existing DOM/data/click handlers are retained via `display: contents` on the
+card body. Signal cards, saved cards and desktop keep their normal layout.

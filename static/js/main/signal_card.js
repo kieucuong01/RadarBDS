@@ -291,7 +291,7 @@
       + '</div>'
       + '</div>'
       + '<div class="sc-body">' + titleHtml
-      + '<div class="price-container"><div class="price-actual"><span class="price-label price-label-actual ' + actualClass + '">THỰC TẾ</span>'
+      + '<div class="price-container"><div class="price-actual"><span class="price-label price-label-actual ' + actualClass + '">' + (options.context === 'all' ? 'GIÁ RAO' : 'THỰC TẾ') + '</span>'
       + '<div class="price-val ' + actualClass + '">' + (price ? esc(format(price, 2)) + ' tỷ' : '-') + '</div>'
       + '<div class="price-m2">' + (actual ? esc(format(actual)) + ' tr/m²' : '-') + '</div></div>'
       + '<div class="price-fair"><span class="price-label price-label-fair">ĐỊNH GIÁ</span>'

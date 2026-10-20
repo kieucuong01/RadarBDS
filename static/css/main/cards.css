@@ -1489,3 +1489,41 @@
     font-size: 0.76rem;
   }
 }
+
+@media (max-width: 720px) {
+  #tab-all .signal-shared-card {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-rows: clamp(180px, 48vw, 208px) auto auto auto;
+    row-gap: 8px;
+    padding-bottom: 10px;
+  }
+  #tab-all .signal-shared-card .sc-body { display: contents; }
+  #tab-all .signal-shared-card .sc-img-wrap { grid-column: 1; grid-row: 1; height: 100%; min-width: 0; }
+  #tab-all .signal-shared-card .price-container {
+    grid-column: 2; grid-row: 1;
+    display: flex; flex-direction: column;
+    min-width: 0; border: 0; border-left: 1px solid var(--border); border-radius: 0;
+  }
+  #tab-all .signal-shared-card .price-actual,
+  #tab-all .signal-shared-card .price-fair { flex: 1; min-width: 0; padding: 8px 4px; row-gap: 3px; }
+  #tab-all .signal-shared-card .price-actual { border-right: 0; border-bottom: 1px solid var(--border); }
+  #tab-all .signal-shared-card .price-label { font-size: .62rem; letter-spacing: .03em; }
+  #tab-all .signal-shared-card .price-val { font-size: 1rem; }
+  #tab-all .signal-shared-card .price-val-fair { font-size: .85rem; line-height: 1.2; }
+  #tab-all .signal-shared-card .valuation-total-row,
+  #tab-all .signal-shared-card .valuation-ppm2-row { flex-direction: column; gap: 0; }
+  #tab-all .signal-shared-card .valuation-sep { font-size: .7rem; line-height: .8; }
+  #tab-all .signal-shared-card .valuation-ppm2-gap { display: none; }
+  #tab-all .signal-shared-card .valuation-ppm2,
+  #tab-all .signal-shared-card .price-m2 { font-size: .62rem; }
+  #tab-all .signal-shared-card .sc-title { grid-column: 1 / -1; grid-row: 2; margin: 0 10px; min-width: 0; }
+  #tab-all .signal-shared-card .sc-meta-chips { grid-column: 1 / -1; grid-row: 3; margin: 0 10px; }
+  #tab-all .signal-shared-card .sc-actions { grid-column: 1 / -1; grid-row: 4; margin: 0 10px; }
+  #tab-all .signal-shared-card .mos-badge { top: 6px; left: 6px; max-width: calc(100% - 86px); min-height: 24px; padding: 4px 6px; font-size: .65rem; }
+  #tab-all .signal-shared-card .new-badge { top: 6px; right: 6px; padding: 4px 6px; font-size: .6rem; }
+  #tab-all .signal-shared-card .price-update-badge { font-size: .53rem; }
+  #tab-all .signal-shared-card .sc-img-tags { left: 6px; right: 6px; bottom: 6px; gap: 4px; }
+  #tab-all .signal-shared-card .sc-time-tag,
+  #tab-all .signal-shared-card .sc-drop-tag { padding: 3px 5px; font-size: .62rem; }
+}
