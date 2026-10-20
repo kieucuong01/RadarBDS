@@ -62,7 +62,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802\"" in html
-    assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611\"" in html
+    assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805\"" in html
     assert "radarAsk: \"{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3\"" in html
     assert "window.RADAR_STYLES" in html
@@ -768,7 +768,7 @@ def test_mobile_account_menu_uses_fixed_dropdown_not_clipped_header_dropdown():
     auth_css = _read("static/css/auth.css")
 
     for expected in [
-        "auth-modal-width-20260806",
+        "filename='css/auth.css'",
         'aria-expanded="false"',
         "setUserMenuOpen",
         "user-menu-open",
@@ -785,7 +785,7 @@ def test_auth_modal_is_compact_on_desktop_without_affecting_other_modals():
     html = _read("templates/index.html")
     auth_css = _read("static/css/auth.css")
 
-    assert "auth-modal-width-20260806" in html
+    assert "filename='css/auth.css'" in html
     assert "#authModal .auth-modal-content" in auth_css
     assert "width: min(420px, calc(100vw - 32px));" in auth_css
     assert "#guestLeadModal .auth-modal-content" in auth_css

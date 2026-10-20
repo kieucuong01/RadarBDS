@@ -74,7 +74,7 @@
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=market-analysis-p0-p2-20260807b' %}
   {% set css_leads = url_for('static', filename='css/main/leads_chat.css') ~ '?v=radar-ask-launcher-20260805' %}
-  {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=auth-modal-width-20260806' %}
+  {% set css_auth = url_for('static', filename='css/auth.css') ~ '?v=account-menu-20261020' %}
   <link rel="stylesheet" href="{{ css_base }}">
   <link rel="stylesheet" href="{{ css_layout }}">
   <link rel="preload" href="{{ css_filters }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -94,7 +94,7 @@
       modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b",
       listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802",
-      auth: "{{ url_for('static', filename='js/auth.js') }}?v=mobile-perf-82-20260611",
+      auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
       listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-map-chips-20261014a"
@@ -464,7 +464,8 @@
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
-          <div class="user-menu-dropdown" id="userMenuDropdown" role="menu">
+          <div class="user-menu-dropdown" id="userMenuDropdown" role="menu" aria-label="Tài khoản">
+            <button type="button" class="user-menu-close" aria-label="Đóng menu tài khoản" onclick="RadarAccountMenu.close()">×</button>
             <div class="user-menu-header">
               <div class="user-menu-header-top">
                 <span class="user-avatar user-avatar-lg" aria-hidden="true">
@@ -1556,6 +1557,10 @@
     </div>
   </div>
 
+  {% if USER %}
+  <div class="user-menu-backdrop" id="userMenuBackdrop" hidden aria-hidden="true" onclick="RadarAccountMenu.close()"></div>
+  <script src="{{ url_for('static', filename='js/main/account_menu.js') }}?v=account-menu-20261020"></script>
+  {% endif %}
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=listing-map-launch-share-20260814"></script>
   <script src="{{ url_for('static', filename='js/main/filter_runtime.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=multi-city-ward-filter-20260814"></script>

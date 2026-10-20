@@ -186,6 +186,10 @@
 
   // ── User menu toggle ────────────────────────────────────────────
   function setUserMenuOpen(open) {
+    if (window.RadarAccountMenu) {
+      window.RadarAccountMenu.setOpen(open);
+      return;
+    }
     const dd = document.getElementById('userMenuDropdown');
     const trigger = document.querySelector('.user-menu-trigger');
     const shouldOpen = Boolean(open);
@@ -616,7 +620,7 @@
   }
 
   function initAuthDomBindings() {
-    document.addEventListener('click', closeUserMenuOnOutside);
+    if (!window.RadarAccountMenu) document.addEventListener('click', closeUserMenuOnOutside);
     document.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') closeUserMenu();
     });

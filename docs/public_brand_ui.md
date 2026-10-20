@@ -61,3 +61,10 @@ The shared footer and public/dashboard Tools menus expose “Cài Radar BDS”.
 `public_install.js` retains `beforeinstallprompt` for an explicit install action;
 the native dialog shows platform-specific manual steps when no prompt is available.
 It never opens automatically and never installs without browser confirmation.
+
+The authenticated dashboard's `main/account_menu.js` loads with the shell before
+`core.js`. Opening the already-rendered account menu is synchronous and does not
+load auth/modal resources. On mobile it moves the dropdown outside the header's
+filter context and uses the same dark overlay and 4px blur as Tools. Outside
+click, close, Escape, keyboard focus and breakpoint changes share that state.
+`auth.js` delegates menu state to this shell after it loads for account actions.

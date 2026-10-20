@@ -877,10 +877,31 @@
   }
 }
 
+.user-menu-backdrop, .user-menu-close { display: none; }
 @media (max-width: 1024px) {
-  body.user-menu-open .header {
-    z-index: 1002;
-    overflow: visible;
+  .user-menu-backdrop:not([hidden]) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(15, 23, 42, 0.46);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    touch-action: none;
+  }
+  body.user-menu-open, body.user-menu-open .content { overflow: hidden; }
+  body.user-menu-open .listing-map-launcher { display: none !important; }
+  .user-menu-close {
+    display: block;
+    margin-left: auto;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 11px;
+    background: transparent;
+    color: var(--text, #334155);
+    font-size: 24px;
+    cursor: pointer;
   }
 
   .user-menu-dropdown {
@@ -896,7 +917,8 @@
     border-radius: 16px;
     padding: 8px;
     box-shadow: 0 16px 38px rgba(15, 23, 42, .16);
-    z-index: 1200;
+    z-index: 1201;
+    overscroll-behavior: contain;
   }
 
   .user-menu-header {
