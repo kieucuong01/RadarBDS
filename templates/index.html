@@ -93,7 +93,7 @@
     window.RADAR_ASSETS = {
       modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b",
-      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802",
+      listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
@@ -1582,9 +1582,9 @@
   <div class="user-menu-backdrop" id="userMenuBackdrop" hidden aria-hidden="true" onclick="RadarAccountMenu.close()"></div>
   <script src="{{ url_for('static', filename='js/main/account_menu.js') }}?v=account-menu-20261020"></script>
   {% endif %}
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=listing-map-launch-share-20260814"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=listings-perf-20261021"></script>
   <script src="{{ url_for('static', filename='js/main/filter_runtime.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=multi-city-ward-filter-20260814"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=listings-perf-20261021"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
   {% include "partials/signal_card_script.html" %}
   <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>

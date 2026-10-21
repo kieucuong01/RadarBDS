@@ -23,6 +23,11 @@
 
   function useFallbackImage(image) {
     if (!image) return;
+    if (image.dataset.originalImage) {
+      image.src = image.dataset.originalImage;
+      delete image.dataset.originalImage;
+      return;
+    }
     image.onerror = null;
     image.src = DEFAULT_IMAGE;
     image.dataset.defaultImage = 'true';
@@ -187,7 +192,7 @@
     var attrs = {
       id: item.id,
       title: item.title || '',
-      primary: item.primary_img || (item.imgs && item.imgs[0]) || '',
+      primary: (item.imgs && item.imgs[0]) || item.primary_img || '',
       price: item.price_ty || item.price || '',
       ppm2: item.actual_ppm2 || item.price_per_m2 || '',
       fair: computedFair !== '-' ? computedFair : '',
@@ -277,6 +282,7 @@
       + '" loading="lazy" decoding="async" width="520" height="338" alt="'
       + (isDefaultImage ? 'Ảnh mặc định Radar BĐS' : 'Ảnh tin đăng')
       + '" data-default-image="' + (isDefaultImage ? 'true' : 'false')
+      + '" data-original-image="' + esc(item.imgs && item.imgs[0] !== imageSource ? item.imgs[0] || '' : '')
       + '" onerror="RadarSignalCard.useFallbackImage(this)">'
       + '<div class="sc-empty-media"><div class="sc-empty-media-copy"><strong>Chưa có ảnh</strong><span>Xem giá và vị trí</span></div></div>'
       + (mos ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')

@@ -568,6 +568,9 @@ function syncDashboardTabState(tabId) {
 }
 
 async function switchTab(tabId, btn) {
+  if (activeTabId() === 'all' && tabId !== 'all' && typeof rememberListingsScroll === 'function') {
+    rememberListingsScroll();
+  }
   const sheet = document.getElementById('toolsSheet');
   if (sheet) sheet.hidden = true;
   document.body.classList.remove('tools-sheet-open');
@@ -598,7 +601,7 @@ async function switchTab(tabId, btn) {
   if (tabId === 'all') {
     await warmListingsAssets();
     initializeListingsUi();
-    loadListings(1);
+    loadListings(1, { reuse: true });
   }
   if (tabId === 'signals' && typeof ensureSignalScrollRoot === 'function') {
     requestAnimationFrame(() => ensureSignalScrollRoot({ refreshObserver: true }));

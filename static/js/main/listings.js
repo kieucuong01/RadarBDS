@@ -2,8 +2,57 @@
 let tableSort = { col: 'date', dir: 'desc' };
 let completeListingsOnly = false;
 let listingsToggleHandlersBound = false;
+let loadedListingsQueryKey = '';
+let listingsScrollPosition = null;
+let listingsRunSeq = 0;
+let listingsInFlightKey = '';
+let listingsLoadPromise = null;
+let renderedListingIds = new Set();
+let listingsCacheIdentity = '';
+// Keep one page size for the session so resizing cannot skip or repeat offsets.
+const LISTINGS_PAGE_SIZE = window.matchMedia('(max-width: 760px)').matches ? 12 : 50;
 window.RadarListingsState = window.RadarListingsState || {};
 window.RadarListingsState.isCompleteOnly = () => completeListingsOnly;
+
+function listingQueryParams() {
+  const params = new URLSearchParams(currentFilters);
+  [['tfAreaMin', 'area_min'], ['tfAreaMax', 'area_max'],
+    ['tfPriceMin', 'price_min'], ['tfPriceMax', 'price_max']].forEach(([id, key]) => {
+    const value = document.getElementById(id)?.value;
+    if (value) params.set(key, value);
+  });
+  if (completeListingsOnly) params.set('complete', '1');
+  else params.delete('complete');
+  params.set('sort_by', tableSort.col);
+  params.set('sort_dir', tableSort.dir);
+  params.set('limit', LISTINGS_PAGE_SIZE);
+  params.delete('page');
+  return params;
+}
+
+function listingQueryKey(params) {
+  return `${window.USER_TIER || 'guest'}|${window.CURRENT_USER?.id || ''}|${window.RadarFilterRuntime.canonicalize(params)}`;
+}
+
+function rememberListingsScroll() {
+  listingsScrollPosition = {
+    page: window.scrollY,
+    panel: document.getElementById('tab-all')?.scrollTop || 0,
+    table: document.querySelector('#tab-all .table-scroll')?.scrollTop || 0,
+  };
+}
+
+function restoreListingsScroll() {
+  if (!listingsScrollPosition) return;
+  requestAnimationFrame(() => {
+    if (activeTabId() !== 'all') return;
+    window.scrollTo({ top: listingsScrollPosition.page, behavior: 'instant' });
+    const panel = document.getElementById('tab-all');
+    const table = document.querySelector('#tab-all .table-scroll');
+    if (panel) panel.scrollTop = listingsScrollPosition.panel;
+    if (table) table.scrollTop = listingsScrollPosition.table;
+  });
+}
 
 function sortTable(th) {
   const col = th.dataset.col;
@@ -70,7 +119,7 @@ function listingFairPrice(x) {
 }
 
 function listingImage(x) {
-  return x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG;
+  return x.primary_img || (x.imgs && x.imgs.length ? x.imgs[0] : PLACEHOLDER_IMG);
 }
 
 function listingDataAttrs(x, fair, imgSrc) {
@@ -107,13 +156,13 @@ function listingDataAttrs(x, fair, imgSrc) {
 function listingTableRow(x) {
   const fair = listingFairPrice(x);
   const imgSrc = listingImage(x);
-  const dataAttr = listingDataAttrs(x, fair, imgSrc);
+  const dataAttr = listingDataAttrs(x, fair, x.imgs?.[0] || imgSrc);
   const priceLabel = x.price_label || (x.price_ty ? `${x.price_ty} tỷ` : '-');
   return `
     <tr class="clickable-row" onclick="openListingModal(this)" ${dataAttr}>
       <td><span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">${escHtml(x.prop_type || '-')}</span></td>
       <td><span style="padding:4px 8px; border-radius:6px; font-weight:600; font-size:0.8rem;">${escHtml(x.ward || '-')}</span></td>
-      <td><img src="${escHtml(imgSrc)}" class="td-img" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER_IMG"></td>
+      <td><img src="${escHtml(imgSrc)}" data-original-image="${escHtml(x.imgs?.[0] !== imgSrc ? x.imgs?.[0] || '' : '')}" class="td-img" loading="lazy" decoding="async" onerror="RadarSignalCard.useFallbackImage(this)"></td>
       <td style="font-weight:700;">${x.area_m2 ? `${escHtml(x.area_m2)} m²` : '-'}</td>
       <td>
         <div style="color:var(--accent); font-weight:800; font-size:1rem;">${escHtml(priceLabel)}</div>
@@ -222,12 +271,34 @@ function setupListingsViewToggle() {
   });
 }
 
-async function loadListings(page) {
-  if (listingsLoading) return;
+function loadListings(page, options = {}) {
+  const params = listingQueryParams();
+  const queryKey = listingQueryKey(params);
+  const identity = `${window.USER_TIER || 'guest'}|${window.CURRENT_USER?.id || ''}`;
+  if (listingsCacheIdentity && identity !== listingsCacheIdentity) {
+    for (const key of responseCache.keys()) {
+      if (key.startsWith('listings|')) responseCache.delete(key);
+    }
+  }
+  listingsCacheIdentity = identity;
+  if (options.reuse && !listingsLoading && loadedListingsQueryKey === queryKey) {
+    restoreListingsScroll();
+    return Promise.resolve(true);
+  }
+  const requestKey = `${queryKey}|page=${page}`;
+  if (listingsLoading && listingsInFlightKey === requestKey) return listingsLoadPromise;
+  if (page > 1 && listingsLoading) return Promise.resolve(false);
+  if (page > 1 && loadedListingsQueryKey !== queryKey) return loadListings(1);
+  if (requestControllers.listings) requestControllers.listings.abort();
+  const runId = ++listingsRunSeq;
+  listingsInFlightKey = requestKey;
   listingsLoading = true;
   const tbody = document.getElementById('listingsTableBody');
   const grid = document.getElementById('listingsGrid');
   if (page === 1) {
+    listingsScrollPosition = null;
+    loadedListingsQueryKey = '';
+    renderedListingIds = new Set();
     listingsHasMore = false;
     loadedListings = [];
     if (listingsView === 'grid') {
@@ -239,40 +310,47 @@ async function loadListings(page) {
   if (tbody) tbody.classList.add('loading');
   if (grid) grid.classList.add('is-refreshing');
   setListingsSentinelText('Đang tải...');
-  try {
-    const areaMin = document.getElementById('tfAreaMin')?.value || '';
-    const areaMax = document.getElementById('tfAreaMax')?.value || '';
-    const priceMin = document.getElementById('tfPriceMin')?.value || '';
-    const priceMax = document.getElementById('tfPriceMax')?.value || '';
-    let tableParams = '';
-    if (areaMin) tableParams += `&area_min=${areaMin}`;
-    if (areaMax) tableParams += `&area_max=${areaMax}`;
-    if (priceMin) tableParams += `&price_min=${priceMin}`;
-    if (priceMax) tableParams += `&price_max=${priceMax}`;
-    if (completeListingsOnly) tableParams += '&complete=1';
-    currentPageNo = page;
-    const data = await fetchJSONCached('listings', `/api/listings?${currentFilters}${tableParams}&sort_by=${tableSort.col}&sort_dir=${tableSort.dir}&page=${page}&limit=50`);
-    listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= 50);
-    setListingsSentinelText(listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`);
-    const items = data.listings || [];
-    loadedListings = page === 1 ? items.slice() : loadedListings.concat(items);
-    if (listingsView === 'grid') {
-      renderListingCards(items, { append: page !== 1 });
-    } else {
-      renderListingRows(items, { append: page !== 1 });
+  const isCurrent = () => runId === listingsRunSeq && listingQueryKey(listingQueryParams()) === queryKey;
+  listingsLoadPromise = (async () => {
+    try {
+      params.set('page', page);
+      const data = await fetchJSONCached('listings', `/api/listings?${window.RadarFilterRuntime.canonicalize(params)}`);
+      if (!isCurrent()) return false;
+      currentPageNo = page;
+      listingsHasMore = (typeof data.has_more === 'boolean') ? data.has_more : ((data.listings || []).length >= LISTINGS_PAGE_SIZE);
+      setListingsSentinelText(listingsHasMore ? '' : `Đã hiển thị tất cả ${data.total} tin`);
+      const items = (data.listings || []).filter((item) => {
+        if (renderedListingIds.has(item.id)) return false;
+        renderedListingIds.add(item.id);
+        return true;
+      });
+      loadedListings = page === 1 ? items.slice() : loadedListings.concat(items);
+      loadedListingsQueryKey = queryKey;
+      if (listingsView === 'grid') {
+        renderListingCards(items, { append: page !== 1 });
+      } else {
+        renderListingRows(items, { append: page !== 1 });
+      }
+      return true;
+    } catch (e) {
+      if (!isCurrent() || e.name === 'AbortError') return false;
+      console.error(e);
+      if (page === 1) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="indicator-empty-row">Không tải được dữ liệu. Vui lòng thử lại.</td></tr>';
+        if (grid) grid.innerHTML = '<div class="listing-grid-empty">Không tải được dữ liệu. Vui lòng thử lại.</div>';
+      }
+      setListingsSentinelText('');
+      return false;
+    } finally {
+      if (runId === listingsRunSeq) {
+        if (tbody) tbody.classList.remove('loading');
+        if (grid) grid.classList.remove('is-refreshing');
+        listingsLoading = false;
+        listingsInFlightKey = '';
+      }
     }
-  } catch (e) {
-    if (e.name !== 'AbortError') console.error(e);
-    if (page === 1) {
-      if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="indicator-empty-row">Không tải được dữ liệu. Vui lòng thử lại.</td></tr>';
-      if (grid) grid.innerHTML = '<div class="listing-grid-empty">Không tải được dữ liệu. Vui lòng thử lại.</div>';
-    }
-    setListingsSentinelText('');
-  } finally {
-    if (tbody) tbody.classList.remove('loading');
-    if (grid) grid.classList.remove('is-refreshing');
-    listingsLoading = false;
-  }
+  })();
+  return listingsLoadPromise;
 }
 
 function setupListingsObserver() {
@@ -280,7 +358,7 @@ function setupListingsObserver() {
   const scrollEl = document.querySelector('.table-scroll');
   if (tableSentinel && scrollEl) {
     new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && listingsView === 'table' && listingsHasMore && !listingsLoading) {
+      if (entries[0].isIntersecting && activeTabId() === 'all' && listingsView === 'table' && listingsHasMore && !listingsLoading) {
         loadListings(currentPageNo + 1);
       }
     }, { root: scrollEl, rootMargin: '100px' }).observe(tableSentinel);
@@ -292,7 +370,7 @@ function setupListingsObserver() {
     : document.getElementById('tab-all');
   if (!gridSentinel) return;
   new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && listingsView === 'grid' && listingsHasMore && !listingsLoading) {
+    if (entries[0].isIntersecting && activeTabId() === 'all' && listingsView === 'grid' && listingsHasMore && !listingsLoading) {
       loadListings(currentPageNo + 1);
     }
   }, { root: gridRoot, rootMargin: '400px' }).observe(gridSentinel);

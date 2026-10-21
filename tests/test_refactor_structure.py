@@ -61,7 +61,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
     assert "window.RADAR_ASSETS" in html
     assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b\"" in html
-    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=mobile-scroll-lock-20260802\"" in html
+    assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805\"" in html
     assert "radarAsk: \"{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3\"" in html
@@ -160,7 +160,9 @@ def test_lazy_listings_module_does_not_break_dashboard_boot():
     assert "\n  setupListingsObserver();" not in boot_js
     assert "function initializeListingsUi()" in core_js
     assert "initializeListingsUi();" in core_js
-    assert ".then(() => { initializeListingsUi(); loadListings(1); })" in filters_js
+    assert "initializeListingsUi();" in filters_js
+    assert "return loadListings(1);" in filters_js
+    assert "if (!loaded || !isCurrent()) return;" in filters_js
 
 
 def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers():
@@ -495,7 +497,7 @@ def test_mobile_sidebar_filters_are_compact_for_ward_selection():
     filters_css = _read("static/css/main/filters.css")
 
     for expected in [
-        "multi-city-ward-filter-20260814",
+        "listings-perf-20261021",
         "ward-option-name",
         ".sidebar #wardFilters",
         "grid-template-columns: repeat(2, minmax(0, 1fr))",
@@ -656,7 +658,7 @@ def test_mobile_filters_are_presented_as_bottom_sheet_with_clear_actions():
         'class="filter-sheet-actions"',
         'class="filter-sheet-apply"',
         "hideSidebarMobile();",
-        "multi-city-ward-filter-20260814",
+        "listings-perf-20261021",
     ]:
         assert expected in html or expected in core_js or expected in filters_css or expected in leads_css
 
@@ -672,7 +674,7 @@ def test_mobile_filter_sheet_headers_do_not_show_scroll_gaps():
     leads_css = _read("static/css/main/leads_chat.css")
 
     for expected in [
-        "multi-city-ward-filter-20260814",
+        "listings-perf-20261021",
         ".sidebar .filter-sheet-head",
         "position: sticky",
         "margin: -14px -14px 8px",
@@ -840,7 +842,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
-        "js/main/filters.js') }}?v=multi-city-ward-filter-20260814",
+        "js/main/filters.js') }}?v=listings-perf-20261021",
         "js/main/area_scope.js') }}?v=area-scope-manual-ranges-20261020",
         "toggleRangePreset",
         "selectedRangeTokens",

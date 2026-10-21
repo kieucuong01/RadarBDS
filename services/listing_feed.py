@@ -237,7 +237,7 @@ def _rounded(row, key, *, default=None):
     return round(value, 1) if value else default
 
 
-def _format_listing_row(row, imgs: list[str], *, tier: str) -> dict:
+def _format_listing_row(row, imgs: list[str], *, tier: str, primary_img: str = "") -> dict:
     badge_meta = signal_badge_metadata(row)
     activity_at, card_date_reason = listing_card_activity(row)
     price_ty = _row_get(row, "price_ty")
@@ -293,6 +293,7 @@ def _format_listing_row(row, imgs: list[str], *, tier: str) -> dict:
             "duplicate_of_id": _row_get(row, "duplicate_of_id"),
             "source": _row_get(row, "source"),
             "imgs": imgs,
+            "primary_img": primary_img or (imgs[0] if imgs else ""),
             "is_fresh_locked": bool(
                 _row_get(row, "is_fresh_locked", False)
             ),
@@ -301,9 +302,9 @@ def _format_listing_row(row, imgs: list[str], *, tier: str) -> dict:
     )
 
 
-def _image_map(conn, listing_ids: list[int]) -> dict[int, list[str]]:
+def _image_map(conn, listing_ids: list[int]) -> tuple[dict[int, list[str]], dict[int, str]]:
     if not listing_ids:
-        return {}
+        return {}, {}
     markers = ",".join("?" for _ in listing_ids)
     rows = conn.execute(
         f"""
@@ -315,6 +316,7 @@ def _image_map(conn, listing_ids: list[int]) -> dict[int, list[str]]:
         listing_ids,
     ).fetchall()
     result: dict[int, list[str]] = defaultdict(list)
+    primary: dict[int, str] = {}
     for row in rows:
         listing_id = int(_row_get(row, "listing_id"))
         local_path = _row_get(row, "local_path")
@@ -322,7 +324,9 @@ def _image_map(conn, listing_ids: list[int]) -> dict[int, list[str]]:
         url = resolve_image_url(local_path, img_url)
         if url:
             result[listing_id].append(url)
-    return dict(result)
+            if listing_id not in primary:
+                primary[listing_id] = resolve_image_url(local_path, img_url, prefer_thumb=True) or url
+    return dict(result), primary
 
 
 def load_listings_from_read_model(
@@ -428,7 +432,7 @@ def load_listings_from_read_model(
         )
         candidates = [row for row in rows if _row_get(row, "id") is not None]
         listing_ids = [int(_row_get(row, "id")) for row in candidates]
-        images = _image_map(conn, listing_ids)
+        images, primary_images = _image_map(conn, listing_ids)
     finally:
         conn.close()
 
@@ -437,6 +441,7 @@ def load_listings_from_read_model(
             row,
             images.get(int(_row_get(row, "id")), []),
             tier=tier,
+            primary_img=primary_images.get(int(_row_get(row, "id")), ""),
         )
         for row in candidates
     ]
@@ -568,7 +573,7 @@ def _load_listing_feed_legacy(
         ).fetchone()
         total = int(_row_get(total_row, "total", 0) or 0)
         listing_ids = [int(_row_get(row, "id")) for row in rows]
-        images = _image_map(conn, listing_ids)
+        images, primary_images = _image_map(conn, listing_ids)
 
         related_drop_map = {}
         if listing_ids:
@@ -621,6 +626,7 @@ def _load_listing_feed_legacy(
                 record,
                 images.get(listing_id, []),
                 tier=tier,
+                primary_img=primary_images.get(listing_id, ""),
             )
         )
     return {

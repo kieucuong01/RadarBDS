@@ -164,7 +164,9 @@ def test_read_model_enriches_only_selected_ids_in_legal_image_order(
     monkeypatch.setattr(
         listing_feed,
         "resolve_image_url",
-        lambda local, remote, prefer_thumb=False: local or remote,
+        lambda local, remote, prefer_thumb=False: (
+            f"thumb:{local}" if prefer_thumb else local or remote
+        ),
     )
 
     payload = listing_feed.load_listings_from_read_model(
@@ -180,6 +182,7 @@ def test_read_model_enriches_only_selected_ids_in_legal_image_order(
         "data/images/land.jpg",
     ]
     assert payload["listings"][0]["is_signal"] is True
+    assert payload["listings"][0]["primary_img"] == "thumb:data/images/so.jpg"
     assert payload["listings"][0]["price_per_m2"] == 20.0
 
 

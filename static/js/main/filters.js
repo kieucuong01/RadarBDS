@@ -1,4 +1,5 @@
 // Sidebar filters, city/ward controls, sorting, and dashboard metadata refresh.
+let filterApplyRunSeq = 0;
 function selectCity(btn) {
   document.querySelectorAll('.city-pill').forEach(p => {
     const active = p === btn;
@@ -241,8 +242,11 @@ function updateTrendPeriod(p, btn) {
   ensureDashboardScript('market').then(() => loadTrendData(false)).catch((err) => console.error(err));
 }
 
-function deferCountsRefresh(useCache = false) {
-  const run = () => refreshCounts(useCache);
+function deferCountsRefresh(useCache = false, shouldRun = () => true) {
+  const snapshot = currentFilters;
+  const run = () => {
+    if (currentFilters === snapshot && shouldRun()) refreshCounts(useCache);
+  };
   if (typeof window.requestIdleCallback === 'function') {
     window.requestIdleCallback(run, { timeout: 1200 });
   } else {
@@ -251,6 +255,7 @@ function deferCountsRefresh(useCache = false) {
 }
 
 function applyFilters() {
+  const applyRunId = ++filterApplyRunSeq;
   currentFilters = getFilterQuery();
   if (window.RadarAreaScope && window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE) {
     window.RADAR_AREA_SCOPE_SKIP_PERSIST_ONCE = false;
@@ -263,8 +268,6 @@ function applyFilters() {
     window.RadarAreaScope.refreshCurrentScopeUi();
   }
   const filterSnapshot = currentFilters;
-  currentPageNo = 1;
-  listingsHasMore = false;
   const tab = activeTabId();
   const mapIsOpen = Boolean(
     window.RadarListingMap
@@ -301,7 +304,7 @@ function applyFilters() {
     ).catch((err) => {
       if (err && err.name !== 'AbortError') console.error(err);
     });
-  } else {
+  } else if (tab !== 'all') {
     refreshCounts(false);
     refreshDashboardMeta(false);
   }
@@ -319,8 +322,18 @@ function applyFilters() {
     loadInsights(false);
   }
   if (tab === 'all') {
+    const isCurrent = () => applyRunId === filterApplyRunSeq && currentFilters === filterSnapshot && activeTabId() === 'all';
     ensureDashboardScript('listings')
-      .then(() => { initializeListingsUi(); loadListings(1); })
+      .then(() => {
+        if (!isCurrent()) return false;
+        initializeListingsUi();
+        return loadListings(1);
+      })
+      .then((loaded) => {
+        if (!loaded || !isCurrent()) return;
+        deferCountsRefresh(false, isCurrent);
+        refreshDashboardMeta(false);
+      })
       .catch((err) => console.error(err));
   }
 }
@@ -360,10 +373,11 @@ function applyStatsCounts(stats = {}) {
 }
 
 async function refreshCounts(useCache = false) {
+  const snapshot = currentFilters;
   const runId = ++countsRunSeq;
   try {
     const data = await fetchJSONCached('counts', `/api/counts?${currentFilters}`, useCache);
-    if (runId !== countsRunSeq) return;
+    if (runId !== countsRunSeq || currentFilters !== snapshot) return;
     applyStatsCounts(data.stats || {});
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -378,7 +392,7 @@ async function refreshDashboardMeta(useCache = false) {
   const runId = ++dashboardRunSeq;
   try {
     const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`, useCache);
-    if (runId !== dashboardRunSeq) return;
+    if (runId !== dashboardRunSeq || currentFilters !== dashboardKey) return;
 
     // Update Stats
     document.getElementById('statTotal').innerText = data.stats.total;

@@ -73,6 +73,20 @@ assert.equal(fakeImage.onerror, null);
 assert.equal(fakeImage.src, api.defaultImage());
 assert.equal(fakeImage.dataset.defaultImage, 'true');
 
+const thumbnailImage = { ...fakeImage, src: '/missing-thumb.webp',
+  onerror: () => {}, dataset: { originalImage: '/full.webp' } };
+api.useFallbackImage(thumbnailImage);
+assert.equal(thumbnailImage.src, '/full.webp');
+assert.equal(thumbnailImage.dataset.originalImage, undefined);
+assert.notEqual(thumbnailImage.onerror, null);
+api.useFallbackImage(thumbnailImage);
+assert.equal(thumbnailImage.src, api.defaultImage());
+
+const thumbnailCard = api.render({ ...item, imgs: ['/full.webp', '/second.webp'] });
+assert.match(thumbnailCard, /src="\/data\/images\/thumbs\/42.webp"/);
+assert.match(thumbnailCard, /data-primary="\/full.webp"/);
+assert.match(thumbnailCard, /data-original-image="\/full.webp"/);
+
 const feed = api.render(item, {
   context: 'signal',
   openMode: 'modal',
