@@ -19,6 +19,7 @@ def client(monkeypatch):
     monkeypatch.setattr(radar_app, "current_tier", lambda: "guest")
     monkeypatch.setattr(radar_app, "current_user", lambda: None)
     monkeypatch.setattr(auth_core, "current_tier", lambda: "guest")
+    monkeypatch.setattr(auth_core, "current_user", lambda: None)
     monkeypatch.setattr(
         radar_app,
         "get_current_dataset_versions",
@@ -287,3 +288,61 @@ def test_radar_ask_routes_are_always_private_and_never_public_cache_candidates(c
 
     assert response.headers["Cache-Control"] == "private, no-store"
     assert "X-Radar-Public-Cache" not in response.headers
+
+
+@pytest.mark.parametrize("path", sorted(radar_app.PUBLIC_TOOL_HTML_PATHS))
+def test_anonymous_tool_html_is_cacheable_but_session_and_auth_are_private(client, path):
+    anonymous = client.get(path)
+    assert anonymous.status_code == 200
+    assert anonymous.headers["Cache-Control"] == PUBLIC_CACHE_CONTROL
+    assert anonymous.headers["X-Radar-Public-Cache"] == "1"
+    assert "Cookie" in anonymous.vary
+    assert "Set-Cookie" not in anonymous.headers
+    assert client.head(path).headers["Cache-Control"] == PUBLIC_CACHE_CONTROL
+
+    for value in ("", "invalid-session"):
+        client.set_cookie(SESSION_COOKIE_NAME, value)
+        private = client.get(path)
+        assert private.headers["Cache-Control"] == "private, no-store"
+        assert "X-Radar-Public-Cache" not in private.headers
+    client.delete_cookie(SESSION_COOKIE_NAME)
+    for value in ("", "Bearer probe"):
+        private = client.get(path, headers={"Authorization": value})
+        assert private.headers["Cache-Control"] == "private, no-store"
+        assert "X-Radar-Public-Cache" not in private.headers
+
+
+@pytest.mark.parametrize("tier", ["free", "vip", "admin"])
+def test_tool_html_never_shares_personalized_tiers(client, monkeypatch, tier):
+    monkeypatch.setattr(radar_app, "current_tier", lambda: tier)
+    response = client.get("/bao-cao")
+    assert response.headers["Cache-Control"] == "private, no-store"
+    assert "X-Radar-Public-Cache" not in response.headers
+
+
+@pytest.mark.parametrize("kind", ["cookie", "private", "no-store", "error", "redirect", "json", "post", "user"])
+def test_tool_html_does_not_promote_private_or_unsuccessful_responses(kind, monkeypatch):
+    with radar_app.app.test_request_context("/bao-cao", method="POST" if kind == "post" else "GET"):
+        monkeypatch.setattr(radar_app, "current_tier", lambda: "guest")
+        monkeypatch.setattr(radar_app, "current_user", lambda: {} if kind == "user" else None)
+        response = radar_app.make_response("<p>probe</p>")
+        if kind == "cookie":
+            response.set_cookie("probe", "private")
+        elif kind in {"private", "no-store"}:
+            response.headers["Cache-Control"] = kind
+        elif kind == "error":
+            response.status_code = 503
+        elif kind == "redirect":
+            response.status_code = 302
+        elif kind == "json":
+            response.mimetype = "application/json"
+        response = radar_app.add_response_headers(response)
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert "X-Radar-Public-Cache" not in response.headers
+
+
+@pytest.mark.parametrize("path", ["/bao-cao/detail", "/tin-tuc/detail", "/admin", "/account"])
+def test_tool_html_cache_allowlist_does_not_match_prefixes(path):
+    with radar_app.app.test_request_context(path):
+        response = radar_app.add_response_headers(radar_app.make_response("<p>probe</p>"))
+        assert "X-Radar-Public-Cache" not in response.headers

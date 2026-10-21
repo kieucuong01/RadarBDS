@@ -3,6 +3,9 @@
 <html lang="vi">
 <head>
   {% include "partials/seo_head.html" %}
+  {% if archive.filtered %}<meta name="robots" content="noindex, follow">{% endif %}
+  {% if archive.previous %}<link rel="prev" href="{{ site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ archive.previous }}">{% endif %}
+  {% if archive.next %}<link rel="next" href="{{ site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ archive.next }}">{% endif %}
   {% include "partials/research_assets.html" %}
   {% include "partials/public_brand_assets.html" %}
 </head>
@@ -38,8 +41,8 @@
 
 
 
-    {% if reports %}
-    {% set latest = reports[0] %}
+    {% if archive.featured %}
+    {% set latest = archive.featured %}
     <section class="hub-featured report-hub-featured" aria-labelledby="latest-report" data-featured-report="{{ latest.path }}">
       <div class="report-featured-thumb report-data-visual">{{ report_visual(latest) }}</div>
       <div class="hub-featured-body">
@@ -69,42 +72,52 @@
         <p>Chỉ hiển thị báo cáo tháng đã chốt dữ liệu. Tìm nhanh theo phường, tháng, TP hoặc lọc trực tiếp TDM/Bến Cát.</p>
       </div>
 
-      <div class="report-hub-controls" aria-label="Bộ lọc báo cáo">
+      <form class="report-hub-controls" id="reportFilterForm" action="/bao-cao#report-archive" method="get" aria-label="Bộ lọc báo cáo">
+        <input type="hidden" name="city" value="{{ archive.filters.city }}">
         <label class="report-search-box">
           <span>Tìm báo cáo</span>
-          <input id="reportSearchInput" type="search" placeholder="Tìm phường, tháng, giá đất..." autocomplete="off">
+          <input id="reportSearchInput" type="search" name="q" value="{{ archive.filters.q }}" maxlength="100" placeholder="Tìm phường, tháng, giá đất..." autocomplete="off">
         </label>
         <div class="report-filter-group" aria-label="Lọc theo thành phố">
-          <button type="button" class="report-filter-pill active" data-filter-city="all" aria-pressed="true">Tất cả <span>{{ reports|length }}</span></button>
-          <button type="button" class="report-filter-pill" data-filter-city="tdm" aria-pressed="false">TDM <span>{{ hub_filters.city_counts.get('tdm', 0) if hub_filters else 0 }}</span></button>
-          {% set ben_cat_count = hub_filters.city_counts.get('ben-cat', 0) if hub_filters else 0 %}
-          <button type="button" class="report-filter-pill" data-filter-city="ben-cat" aria-pressed="false"{% if ben_cat_count == 0 %} aria-disabled="true" disabled{% endif %}>Bến Cát{% if ben_cat_count == 0 %} · Sắp có{% endif %} <span>{{ ben_cat_count }}</span></button>
+          {% for city, label in [('all', 'Tất cả'), ('tdm', 'TDM'), ('ben-cat', 'Bến Cát')] %}
+          {% set count = hub_filters.total if city == 'all' else hub_filters.city_counts.get(city, 0) %}
+          {% if city == 'ben-cat' and count == 0 %}
+          <span class="report-filter-pill" data-filter-city="ben-cat" aria-disabled="true">Bến Cát · Sắp có <span>0</span></span>
+          {% else %}
+          <a class="report-filter-pill{% if archive.filters.city == city %} active{% endif %}" href="{{ archive.city_links[city] }}#report-archive" data-filter-city="{{ city }}"{% if archive.filters.city == city %} aria-current="true"{% endif %}>{{ label }} <span>{{ count }}</span></a>
+          {% endif %}
+          {% endfor %}
         </div>
         <label class="report-ward-select-wrap">
           <span>Phường</span>
-          <select id="reportWardSelect">
+          <select id="reportWardSelect" name="ward">
             <option value="all" data-city="all">Tất cả phường</option>
             {% for ward in hub_filters.wards %}
-            <option value="{{ ward.label }}" data-city="{{ ward.city_key }}" data-ward-key="{{ ward.key }}">{{ ward.label }} · {{ ward.city_label }}</option>
+            {% if archive.filters.city == 'all' or ward.city_key == archive.filters.city %}
+            <option value="{{ ward.label }}" data-city="{{ ward.city_key }}" data-ward-key="{{ ward.key }}"{% if archive.filters.ward == ward.label %} selected{% endif %}>{{ ward.label }} · {{ ward.city_label }}</option>
+            {% endif %}
             {% endfor %}
           </select>
         </label>
         <label class="report-period-select-wrap">
           <span>Kỳ báo cáo</span>
-          <select id="reportPeriodSelect">
+          <select id="reportPeriodSelect" name="period">
             <option value="all">Tất cả kỳ</option>
             {% for period in hub_filters.periods %}
-            <option value="{{ period.key }}">{{ period.label }}</option>
+            <option value="{{ period.key }}"{% if archive.filters.period == period.key %} selected{% endif %}>{{ period.label }}</option>
             {% endfor %}
           </select>
         </label>
-      </div>
+        <div class="report-filter-actions">
+          <button class="seo-primary-cta" type="submit">Tìm báo cáo</button>
+          {% if archive.filtered %}<a href="/bao-cao#report-archive">Xóa bộ lọc</a>{% endif %}
+        </div>
+      </form>
 
-      {% set archive_reports = reports[1:] %}
-      <p class="report-filter-status" id="reportFilterStatus" aria-live="polite">Đang hiển thị {{ archive_reports|length }} báo cáo cũ hơn.</p>
+      <p class="report-filter-status" id="reportFilterStatus" aria-live="polite">Hiển thị {{ archive.start }}–{{ archive.end }} / {{ archive.total }} báo cáo{% if not archive.filtered %} cũ hơn{% endif %} · Trang {{ archive.number }}/{{ archive.pages }}.</p>
 
       <div class="hub-card-grid report-card-grid" id="reportCardGrid">
-        {% for report in archive_reports %}
+        {% for report in archive["items"] %}
         <a class="hub-card report-archive-card"
           href="{{ report.path }}"
           aria-label="Đọc {{ report.hero_title }}"
@@ -122,7 +135,7 @@
           data-report-surface="archive">
           <span class="report-card-thumb report-data-visual">{{ report_visual(report) }}</span>
           <div class="hub-card-top report-card-top">
-            <span class="hub-card-number">{{ "%02d"|format(loop.index) }}</span>
+            <span class="hub-card-number">{{ "%02d"|format(archive.start + loop.index0) }}</span>
             <span class="scope-chip">{{ report.hub_meta.city_label }}</span>
           </div>
           <h3>{{ report.hero_title }}</h3>
@@ -139,10 +152,20 @@
         </a>
         {% endfor %}
       </div>
-      <div class="report-empty-state" id="reportEmptyState" hidden>
+      <div class="report-empty-state" id="reportEmptyState"{% if archive.total %} hidden{% endif %}>
         <strong>Không tìm thấy báo cáo phù hợp</strong>
         <p>Thử bỏ lọc TP/phường hoặc nhập lại tên phường, tháng, chỉ số cần tìm.</p>
       </div>
+      {% if archive.pages > 1 %}
+      <nav class="report-pagination" aria-label="Phân trang báo cáo">
+        {% if archive.previous %}<a href="{{ archive.previous }}#report-archive" rel="prev">← Trước</a>{% endif %}
+        {% for link in archive.links %}
+        {% if not loop.first and link.number > archive.links[loop.index0 - 1].number + 1 %}<span aria-hidden="true">…</span>{% endif %}
+        <a href="{{ link.url }}#report-archive" aria-label="Trang {{ link.number }}"{% if link.number == archive.number %} aria-current="page"{% endif %}>{{ link.number }}</a>
+        {% endfor %}
+        {% if archive.next %}<a href="{{ archive.next }}#report-archive" rel="next">Sau →</a>{% endif %}
+      </nav>
+      {% endif %}
     </section>
 
     {% set lead_cta_context = "seo_report_hub_lead" %}
@@ -160,7 +183,8 @@
     "@graph": [
       {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}, "inLanguage": "vi-VN", "isPartOf": {{ public_entities.website_ref|tojson }}},
       {"@type": "ItemList", "itemListElement": [
-        {% for report in reports %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ report.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ report.path)|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
+        {% if archive.featured %}{"@type": "ListItem", "position": 1, "name": {{ archive.featured.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ archive.featured.path)|tojson }}}{% if archive["items"] %},{% endif %}{% endif %}
+        {% for report in archive["items"] %}{"@type": "ListItem", "position": {{ archive.start + loop.index0 + (0 if archive.filtered else 1) }}, "name": {{ report.hero_title|tojson }}, "url": {{ (site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ report.path)|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
       ]},
       {"@type": "BreadcrumbList", "itemListElement": [
         {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
@@ -170,7 +194,7 @@
     ]
   }
   </script>
-  <script src="/static/js/seo_report_hub.js" defer></script>
+  <script src="/static/js/seo_report_hub.js?v=pagination-20261021-1" defer></script>
   {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "report_viewed" %}
   {% include "partials/seo_tracking.html" %}

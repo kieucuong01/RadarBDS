@@ -164,6 +164,15 @@
 .report-data-visual .report-visual-caption { font-size: .85rem; color: #234c39; line-height: 1.5; }
 .report-data-visual .report-visual-source { font-size: .75rem; color: #64748b; line-height: 1.5; }
 .report-data-visual .report-visual-value { font: 700 2rem 'Noto Serif', serif; }
+.report-hub .report-filter-pill { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.report-hub .report-filter-pill[aria-disabled="true"] { opacity: .62; cursor: default; }
+.report-filter-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 18px; }
+.report-filter-actions button { cursor: pointer; font: inherit; }
+.report-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin: 28px 0; }
+.report-pagination a { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; color: #4f46e5; text-decoration: none; }
+.report-pagination a:hover,.report-pagination a:focus-visible { background: #eef2ff; border-color: #4f46e5; }
+.report-pagination a[aria-current="page"] { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+.report-hub #report-archive { scroll-margin-top: 90px; }
 .report-detail .report-chart-provenance { margin: 10px 0 0; color: #64748b; font-size: .8rem; line-height: 1.6; }
 @media (max-width: 900px) {
   .valuation-page .valuation-workspace,.tphcm-land-price-page .land-price-grid { grid-template-columns: minmax(0,1fr); }

@@ -373,9 +373,9 @@ def test_report_hub_scope_and_empty_city_state_match_published_coverage():
     html = radar_app.app.test_client().get("/bao-cao").get_data(as_text=True)
 
     assert "<h1>Báo cáo thị trường BĐS Thủ Dầu Một</h1>" in html
-    assert 'data-filter-city="tdm" aria-pressed="false"' in html
+    assert 'data-filter-city="tdm"' in html
     assert re.search(
-        r'data-filter-city="ben-cat"[^>]+aria-disabled="true"[^>]+disabled',
+        r'data-filter-city="ben-cat"[^>]+aria-disabled="true"',
         html,
     )
     assert "Bến Cát · Sắp có" in html
@@ -388,10 +388,10 @@ def test_report_hub_filter_state_is_shareable_and_restorable():
     js = Path("static/js/seo_report_hub.js").read_text(encoding="utf-8")
 
     assert 'id="reportPeriodSelect"' in html
-    assert 'src="/static/js/seo_report_hub.js"' in html
-    assert "new URLSearchParams(window.location.search)" in js
-    assert "window.history.replaceState" in js
-    assert "popstate" in js
+    assert 'src="/static/js/seo_report_hub.js?v=' in html
+    assert 'action="/bao-cao#report-archive" method="get"' in html
+    assert 'name="ward"' in html and 'name="period"' in html
+    assert "form.requestSubmit()" in js
     assert "report_filter_used" in js
     assert "search_query" not in js
     assert "query: query" not in js

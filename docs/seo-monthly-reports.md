@@ -252,6 +252,24 @@ The monthly report workflow itself is now source-controlled in the repo. Hermes 
 | Cron produces no output | Script stdout empty or job script path wrong | Check Hermes job `5f5c7eac733d` and script path |
 | Commit fails due dirty runtime data | Runtime files such as images, dumps, logs, reports, or backups are dirty | Do not stage them; stage only intended config/code/docs |
 
+## Report archive pagination — 21/10/2026
+
+`/bao-cao` renders at most 12 archive cards plus the latest featured report on
+the first unfiltered page. Page 2 onward has a distinct self-canonical URL and
+title, real previous/next/page links, and JSON-LD containing only rendered
+reports. Invalid or out-of-range page numbers return 404.
+
+GET filters `city`, `ward`, `period`, `q` run on the entire published archive
+before pagination. Filtered views include the latest report if it matches,
+restore controls server-side, and use noindex/follow to avoid indexing search
+combinations. Search supports Vietnamese accents or unaccented input. Filter
+changes reset pagination. The form and city/page links also work without JS;
+JS only auto-submits selects and emits filter context without raw search text.
+Snapshot contents, publishing jobs and report detail pages are unchanged.
+
+Tests: `tests/test_report_hub_pagination.py`, `tests/test_public_content_hubs.py`,
+`tests/test_public_seo.py`, `tests/test_public_research_ui.py`.
+
 ## Related docs
 
 - `AGENTS.md` — fast entry point for AI agents.

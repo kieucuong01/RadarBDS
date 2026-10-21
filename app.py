@@ -80,6 +80,7 @@ from config.settings import (
 )
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
+from services.report_hub import report_archive
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
 from config.planning_pages import (
@@ -234,6 +235,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 _public_content_repository = PostgresPublicContentRepository()
 
+# Exact public HTML destinations only; account/order/detail routes stay private.
+PUBLIC_TOOL_HTML_PATHS = frozenset({
+    "/dinh-gia-bds", "/bang-gia-dat-tphcm", "/quy-hoach-binh-duong",
+    "/tin-tuc", "/bao-cao",
+})
+
 
 @app.context_processor
 def inject_google_site_tags():
@@ -288,7 +295,28 @@ def inject_city_map_products():
 
 @app.after_request
 def add_response_headers(response):
-    if request.path.startswith("/api/"):
+    if request.path in PUBLIC_TOOL_HTML_PATHS:
+        anonymous_html = (
+            request.method in {"GET", "HEAD"}
+            and response.status_code == 200
+            and response.mimetype == "text/html"
+            and SESSION_COOKIE_NAME not in request.cookies
+            and "Authorization" not in request.headers
+            and current_tier() == "guest"
+            and current_user() is None
+            and "Set-Cookie" not in response.headers
+            and not response.cache_control.private
+            and not response.cache_control.no_store
+        )
+        if anonymous_html:
+            response.headers["X-Radar-Public-Cache"] = "1"
+            response.headers["Cache-Control"] = _PUBLIC_CACHE_CONTROL
+            response.vary.add("Cookie")
+            response.vary.add("Authorization")
+        else:
+            response.headers.pop("X-Radar-Public-Cache", None)
+            response.headers["Cache-Control"] = "private, no-store"
+    elif request.path.startswith("/api/"):
         public_cache_classified = (
             request.path
             in {"/api/signals", "/api/counts", "/api/dashboard", "/api/listings"}
@@ -3297,6 +3325,10 @@ def seo_report_hub_page():
     page["breadcrumbs"] = _page_breadcrumbs(page)
     reports = sorted(_published_report_pages(), key=_report_sort_key, reverse=True)
     reports, hub_filters = _decorate_report_hub_pages(reports)
+    try:
+        archive = report_archive(reports, hub_filters, request.args)
+    except ValueError:
+        abort(404)
     if hub_filters["city_counts"].get("ben-cat", 0) == 0:
         page.update({
             "title": "Báo cáo thị trường BĐS Thủ Dầu Một | Radar BDS",
@@ -3316,7 +3348,13 @@ def seo_report_hub_page():
     )
     page = _with_public_trust(page, "report")
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
-    return render_template("seo_report_hub.html", page=page, reports=reports, hub_filters=hub_filters, site_meta=site_meta, active_nav="bao-cao")
+    site_meta["canonical_url"] = _public_url(archive["url"])
+    site_meta["og_url"] = site_meta["canonical_url"]
+    if archive["number"] > 1:
+        site_meta["title"] = f'{page["title"]} — Trang {archive["number"]}'
+    return render_template("seo_report_hub.html", page=page, reports=reports,
+                           archive=archive, hub_filters=hub_filters,
+                           site_meta=site_meta, active_nav="bao-cao")
 
 
 NEWS_CATEGORY_DEFS = [
