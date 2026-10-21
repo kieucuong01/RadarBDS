@@ -956,6 +956,20 @@ The paired observer covered the whole workflow, remained active after the final 
 
 Production browser smoke after `4ad6e79` covered desktop `1280x720` and mobile `390x844`. Both rendered 30 signal cards. Removing Tân An changed the first card set and produced one new `/api/signals` plus one `/api/counts` request, with no `/api/dashboard` request; the mobile snapshot recorded `13/14` wards and a one-column layout without horizontal overflow. Application/filter/card runtime logs were clean. Playwright did report the existing GA collector requests to `analytics.google.com`, `www.google.com`, and `stats.g.doubleclick.net` being blocked by the current CSP; treat those third-party telemetry messages separately from application regressions.
 
+### Tool HTML cache extension — verified 21/10/2026
+
+Cloudflare's existing public-read rule now includes the exact HTML routes
+`/dinh-gia-bds`, `/bang-gia-dat-tphcm`, `/quy-hoach-binh-duong`, `/tin-tuc`,
+and `/bao-cao` on application release `5e8a005`. All five returned guest MISS
+then HIT; invalid-session-cookie/Authorization probes stayed private/no-store
+and DYNAMIC. Report page 2 and Phú Tân filter URLs returned separate correct
+HIT bodies; invalid page 999 returned private 404/BYPASS. The existing
+`verify_public_cache.ps1 -RequireCdn` also passed for the homepage/four APIs
+with redaction and private bypass. No origin microcache locations, worker/pool
+bounds, rule order, or TTL behavior changed. Exact rule IDs, reproduction and
+rollback: [tools_html_cache.md](tools_html_cache.md). This bounded smoke check
+does not extend the historical capacity gate below to the new HTML routes.
+
 ### Honest capacity boundary and next architecture
 
 The current single 2-vCPU/4-GB origin plus Cloudflare edge has proven cache collapse, privacy isolation, Redis failure recovery, bounded DB sessions, the 50-key mixed-filter contract through 1,000 concurrent VUs, and the common-key homepage contract through 5,000 concurrent VUs. It has **not** proven 5,000 unique cold filters, sustained 5,000 RPS, authenticated/private-path capacity at those levels, origin-only 5,000 concurrency, or high availability. Preserve that distinction in product and infrastructure claims.

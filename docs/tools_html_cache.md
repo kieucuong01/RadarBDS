@@ -37,11 +37,48 @@ an Authorization probe. Check different `/bao-cao?page=2` and ward result HTML,
 and a 404 page number. Verify no session-specific content appears in guest HTML.
 No load/capacity claim follows from these single-request checks.
 
-At implementation time the Chrome Cloudflare session required login. Until the
-rule is changed and HIT is verified, report CDN activation as pending, even if
-the application headers are deployed. Roll back the new rule paths first, then
-revert the application eligibility change if necessary. Existing homepage/API
-cache behavior is unaffected.
+## Production activation verified — 21/10/2026
+
+After the account owner signed in, the existing `Radar public read cache` rule
+(`1f30c8afdd144b49bd32fcc8c76b0650`) was expanded with the five exact paths.
+`Radar private bypass` (`0e0a0f0f8c674a8d9fea1bc7a1da43ed`) remains first and
+unchanged. Both rules are Active. Edge TTL still uses origin Cache-Control and
+bypasses when absent; Browser TTL still respects origin. Only the public rule's
+expression was edited; cache-key and other settings were preserved.
+
+All five guest routes returned MISS then HIT, with Age 0 and no Set-Cookie.
+For every route, invalid-session-cookie and Authorization probes returned
+`private, no-store`, `CF-Cache-Status: DYNAMIC`, and no Age. Separately warmed
+`/bao-cao?page=2` and `/bao-cao?ward=Ph%C3%BA+T%C3%A2n` both returned HIT with
+Age 1 while retaining 12 page-2 cards versus four Phú Tân cards and distinct
+canonical URLs. `/bao-cao?page=999` returned 404, private/no-store and BYPASS.
+
+The existing production verifier also passed after this change:
+
+```powershell
+.\scripts\verify_public_cache.ps1 -BaseUrl "https://radarbds.vn" -RequireCdn
+```
+
+It observed guest Cloudflare HIT for the homepage and all four existing public
+APIs, private cookie/Authorization bypass, and valid JSON redaction. This is a
+bounded functional verification, not a new load/capacity result. Application
+release remains `5e8a0050f67d81d0acec85b19b2344126dd10d5f`; this activation
+required no service restart, origin config change, or cache-wide purge.
+
+For future tool-route smoke checks, request each public URL twice and inspect
+Cache-Control, CF-Cache-Status and Age. Repeat with harmless probe credentials
+(never copy real session values into logs). For example:
+
+```powershell
+curl.exe -sS -D - -o NUL https://radarbds.vn/bao-cao
+curl.exe -sS -D - -o NUL https://radarbds.vn/bao-cao
+curl.exe -sS -D - -o NUL -H "Cookie: radar_session=invalid-probe" https://radarbds.vn/bao-cao
+curl.exe -sS -D - -o NUL -H "Authorization: Bearer cache-bypass-probe" https://radarbds.vn/bao-cao
+```
+
+Rollback: remove only the five new HTML paths from the public rule's expression,
+retaining the original homepage/four-API allowlist and private bypass rule. Then
+revert application eligibility if needed. Do not disable the whole cache rule.
 
 Tests: `tests/test_public_cache_headers.py`. Production edge evidence belongs in
 `docs/operations.md` after live verification, not inferred from test results.
