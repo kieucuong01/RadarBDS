@@ -727,6 +727,13 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
         unicodedata.normalize("NFKC", text or "").lower().replace('\n', ' ')
     )
     t_fold = _ascii_fold(t)
+    # Labeled broker shorthand: "ngang 8m8 dài 13,6m" means 8.8m.
+    # Require the depth label; never decimalize an m2/m² area marker.
+    t_fold = re.sub(
+        r'(\bngang\s+)(\d{1,2})m((?!2\b)\d{1,2})(?=\s+(?:dai|sau)\b)',
+        r'\1\2.\3',
+        t_fold,
+    )
     result = {'frontage_m': None, 'depth_m': None}
 
     # "ngang 7m x dài 21m" / "ngang 7m x sâu 21m"
@@ -1613,6 +1620,12 @@ def _strip_nearby_chung_cu_context(text: str) -> str:
     """Remove apartment keywords when they describe a nearby landmark, not the asset."""
     folded = _ascii_fold(text).replace("Ä‘", "d").replace("Ä", "d")
     folded = _strip_potential_use_building_context(text)
+    # Comparison targets ("thấp hơn cả chung cư") are not the offered asset.
+    # Strip only that target phrase; retain other actual apartment/unit evidence.
+    folded = re.sub(
+        r'\b(?:re|thap)\s+hon\s+(?:ca\s+)?(?:gia\s+)?(?:chung\s*cu|can\s*ho)\b',
+        ' ', folded, flags=re.IGNORECASE,
+    )
     folded = re.sub(
         r'\b(?:gan|sat|canh|ke|doi\s*dien|cach|duong\s*vao)\b.{0,120}'
         r'\b(?:khu\s*do\s*thi|toa\s*nha|block|chung\s*cu|can\s*ho)\b.{0,80}'
@@ -1953,6 +1966,11 @@ def classify_property_type(
         r'\b(?:dan\s*cu(?:\s*va)?\s*)?nha\s*o\s*xung\s*quanh\b.{0,30}\b(?:dong|hien\s*huu)\b',
         ' ', text_for_nha_ascii, flags=re.IGNORECASE,
     )
+    title_ascii = _ascii_fold(title or '')
+    if re.search(r'\b(?:dat|lo)\b', title_ascii) and not re.search(r'\bnha\b', title_ascii):
+        # A generic viewing CTA cannot turn an explicit land/lot offer into a
+        # house. Physical layout/house keywords below still retain precedence.
+        text_for_nha_ascii = re.sub(r'\bxem\s*nha\b', ' ', text_for_nha_ascii)
     text_ascii = text_for_nha_ascii
     has_house_kw = any(_contains_folded_keyword(text_for_nha_ascii, kw) for kw in _NHA_KW) or bool(re.search(
         r'(^|\n)\s*[^\w\s]*\s*nha\b|'
@@ -2000,7 +2018,6 @@ def classify_property_type(
     ))
 
     # --- Bước 1: Strong house → nha_dat (trước vuon) ---
-    title_ascii = _ascii_fold(title or '')
     has_title_land_intent = bool(re.match(
         r'^\s*(?:giap\s*chu\s+|chinh\s*chu\s+|can\s+ban\s+)?(?:ban\s+)?(?:lo\s+)?dat\b',
         title_ascii,

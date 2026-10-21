@@ -18,6 +18,7 @@ from cleansing.extraction_integrity import (
     reconcile_measurements,
 )
 from cleansing.feature_extractor import (
+    _NAMED_ROADS,
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
     extract_url_hint, has_ambiguous_masked_price,
@@ -44,6 +45,7 @@ _ROAD_PREFIX_PAT = re.compile(
     r"\b(?:dx|dj|dh|dl|db|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
     re.IGNORECASE,
 )
+_PROVINCIAL_ROAD_PAT = re.compile(r"\bdt\s*0*(\d{1,4})([a-d]?)\b", re.IGNORECASE)
 _NUMBERED_ROAD_PAT = re.compile(
     r"\b(?:duong|mat\s*tien|mt|goc|hem|hẻm|duong\s+so|đường|đường\s+số)\s*"
     r"0*(\d{1,4}\s*[a-d])\b",
@@ -54,15 +56,15 @@ _ROAD_NUMBER_ONLY_PAT = re.compile(
     re.IGNORECASE,
 )
 _HEM_NAMED_ROAD_PAT = re.compile(
-    r"\b(?:1/\s*)?hem\s*0*(\d{1,4})\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
+    r"\b(?:1/\s*)?hem\s*0*(\d{1,4})\s+([a-z][a-z \t]{3,60})(?=$|[,;()\.\n\r\-–—])",
     re.IGNORECASE,
 )
 _HEM_BARE_NAMED_ROAD_PAT = re.compile(
-    r"\b(?:1/\s*)?hem\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
+    r"\b(?:1/\s*)?hem\s+([a-z][a-z \t]{3,60})(?=$|[,;()\.\n\r\-–—])",
     re.IGNORECASE,
 )
 _NAMED_ROAD_PAT = re.compile(
-    r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+([a-z][a-z\s]{3,60})(?=$|[,\.\n\r\-–—])",
+    r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+(?:duong\s+)?([a-z][a-z \t]{3,60})(?=$|[,;()\.\n\r\-–—])",
     re.IGNORECASE,
 )
 
@@ -70,6 +72,16 @@ _NAMED_ROAD_PAT = re.compile(
 def extract_road_name(text: str) -> str | None:
     """Return a compact road code/name for dedup/debug, e.g. D12, DX89, 110B."""
     folded = _ascii_fold(text or "")
+    # Explicit frontage beats a highway mentioned only as surrounding access.
+    for anchor in re.finditer(r"\b(?:mat\s*tien|mt)\s+(?:duong\s+)?", folded):
+        if _has_road_proximity_prefix(folded, anchor.start()):
+            continue
+        code = (_PROVINCIAL_ROAD_PAT.match(folded, anchor.end())
+                or _ROAD_PREFIX_PAT.match(folded, anchor.end()))
+        if code:
+            prefix = re.match(r"[a-z]+", code.group(0), re.IGNORECASE).group(0).upper()
+            suffix = code.group(2).upper() if code.re is _PROVINCIAL_ROAD_PAT else ""
+            return f"{prefix}{int(code.group(1))}{suffix}"
     for road_folded, label in (("lo lu", "Lo Lu"),):
         m = re.search(rf"(?<![a-z0-9]){re.escape(road_folded)}(?![a-z0-9])", folded)
         if m and not _has_road_proximity_prefix(folded, m.start()):
@@ -88,6 +100,13 @@ def extract_road_name(text: str) -> str | None:
         if _has_road_proximity_prefix(folded, m.start()):
             continue
         return f"Duong So {int(m.group(1))}"
+    for m in _PROVINCIAL_ROAD_PAT.finditer(folded):
+        # DT is also diện tích: require an explicit road/access label.
+        before = folded[max(0, m.start() - 32):m.start()]
+        if not re.search(r"\b(?:mat\s*tien|mt|duong|nhanh)\s*$", before):
+            continue
+        if not _has_road_proximity_prefix(folded, m.start()):
+            return f"DT{int(m.group(1))}{m.group(2).upper()}"
     for m in _ROAD_PREFIX_PAT.finditer(folded):
         if _has_road_proximity_prefix(folded, m.start()):
             continue
@@ -113,6 +132,11 @@ def extract_road_name(text: str) -> str | None:
             continue
         name = _clean_named_road(m.group(1))
         if name:
+            before = folded[max(0, m.start() - 12):m.start()]
+            label = folded[m.start():m.start(1)]
+            if (re.search(r"\b(?:2|hai)\s*$", before) and "duong" not in label.split()
+                    and any(_ascii_fold(ward) == _ascii_fold(name) for ward in _WARD_KEYWORDS)):
+                continue  # "2 mặt tiền <ward>" does not name either street.
             return name
     return None
 
@@ -120,14 +144,14 @@ def extract_road_name(text: str) -> str | None:
 def _has_road_proximity_prefix(folded: str, start: int) -> bool:
     context = folded[max(0, start - 34):start]
     if re.search(
-r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra)\s+(?:duong\s+)?$",
+r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|thong\s*tu|xuong|ra)\s+(?:duong\s+)?$",
         context,
         re.IGNORECASE,
     ):
         return True
     clause = re.split(r"[\.,;\n\r]", folded[max(0, start - 80):start])[-1]
     return bool(re.search(
-        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra)\b",
+        r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|thong\s*tu|xuong|ra)\b",
         clause,
         re.IGNORECASE,
     ))
@@ -135,6 +159,15 @@ r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|ra)\s+(?:duong\s+)?$"
 
 def _clean_named_road(value: str) -> str | None:
     name = re.sub(r"\s+", " ", value or "").strip()
+    # Only split a known street followed by a known locality. Do not truncate
+    # unknown street names or extensions just because they contain place words.
+    for road in sorted(_NAMED_ROADS, key=len, reverse=True):
+        prefix = _ascii_fold(road)
+        if name.startswith(prefix + " "):
+            suffix = name[len(prefix):].strip()
+            if any(re.match(re.escape(_ascii_fold(ward)) + r"\b", suffix) for ward in _WARD_KEYWORDS):
+                name = prefix
+                break
     for stop in (
         " gia ", " dt ", " dien tich ", " tho cu ", " tp ",
         " ben cat", " thu dau mot", " duong ", " hem ", " gan ", " cach ",

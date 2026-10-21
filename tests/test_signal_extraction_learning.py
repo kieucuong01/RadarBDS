@@ -1,0 +1,304 @@
+"""Source-backed parser learning; no raw queue, contacts, or DB access."""
+
+import pytest
+
+from cleansing.feature_extractor import classify_property_type, extract_dimensions, parse_facebook_post
+from config.location_aliases import resolve_post_merger_location
+from cleansing.normalizer import extract_road_name, normalize_record
+
+
+# Exact redacted excerpt: 20261020-150022:83150:frontage_m.
+FRONTAGE_EXCERPT = "Diện tích 109m2 thổ cư 100m ngang 8m8 dài 13,6m"
+
+
+def test_reviewed_83150_compact_frontage_before_labeled_depth():
+    assert extract_dimensions(FRONTAGE_EXCERPT) == {
+        "frontage_m": 8.8,
+        "depth_m": 13.6,
+    }
+
+
+def test_facebook_parser_preserves_reviewed_compact_frontage():
+    parsed = parse_facebook_post(FRONTAGE_EXCERPT)
+    assert parsed["frontage_m"] == 8.8
+    assert parsed["depth_m"] == 13.6
+    assert parsed["area_m2"] == 109.0
+
+
+def test_normalizer_preserves_reviewed_compact_frontage():
+    record = normalize_record({
+        "source": "facebook",
+        "url": "https://example.invalid/synthetic-extraction-83150",
+        "title": FRONTAGE_EXCERPT,
+        "description": "",
+    })
+    assert record is not None
+    assert record["frontage_m"] == 8.8
+    assert record["depth_m"] == 13.6
+    assert record["area_m2"] == 109.0
+
+
+@pytest.mark.parametrize("text, frontage, depth", [
+    ("ngang 5m40 dài 18m", 5.4, 18.0),
+    ("NGANG 8M8 SÂU 13,6M", 8.8, 13.6),
+    ("ngang 8m08 dai 13.6m", 8.08, 13.6),
+])
+def test_labeled_compact_frontage_variants(text, frontage, depth):
+    assert extract_dimensions(text) == {
+        "frontage_m": frontage,
+        "depth_m": depth,
+    }
+
+
+@pytest.mark.parametrize("text", [
+    "ngang 8m2 dài 13,6m",
+    "ngang 8m² dài 13,6m",
+])
+def test_square_meter_marker_is_not_a_compact_decimal_frontage(text):
+    # These unit-bearing near misses do not establish an 8.2m frontage.
+    assert extract_dimensions(text)["frontage_m"] != 8.2
+
+
+@pytest.mark.parametrize("text, frontage, depth", [
+    ("Diện tích 109m2 thổ cư 100m", None, None),
+    ("đường nhựa rộng 8m8", None, None),
+    ("ngang 8m, dài 13,6m", 8.0, 13.6),
+    ("ngang 8,8m dài 13,6m", 8.8, 13.6),
+    ("DT 9m2 x 12,6m", 9.0, 12.6),
+    ("ngang 8m²", None, None),
+    ("ngang 8m8abc", None, None),
+])
+def test_compact_frontage_does_not_reinterpret_near_misses(text, frontage, depth):
+    assert extract_dimensions(text) == {
+        "frontage_m": frontage,
+        "depth_m": depth,
+    }
+
+
+# Four reviewed road-name cases; 83111/83103 are identical excerpts, not
+# independent source patterns. Synthetic controls below are not extra listings.
+ROAD_CASES = [
+    (83111, "Đất mặt tiền DT7A (Hùng Vương) gần vòng xoay An Điền", "DT7A"),
+    (83103, "Đất mặt tiền DT7A (Hùng Vương) gần vòng xoay An Điền", "DT7A"),
+    (83142, "MẶT TIỀN LÊ HỒNG PHONG PHÚ LỢI", "Le Hong Phong"),
+    (83114, "trục chính đường Hồng Hà; Đường nhựa 6m thông từ DT744 xuống DH609", "Hong Ha"),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,expected", ROAD_CASES)
+def test_reviewed_road_name_cases(listing_id, text, expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("listing_id,text,expected", ROAD_CASES)
+def test_reviewed_road_cases_through_normalization(listing_id, text, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/unit-road-case",
+        "title": text, "description": "",
+    })
+    assert record is not None and record["road_name"] == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Mặt tiền ĐT744, đường nhựa 12m", "DT744"),
+    ("Mặt tiền đường ĐT7A", "DT7A"),
+    ("Nhánh DT7A, đường bê tông", "DT7A"),
+    ("Mặt tiền dt 007a", "DT7A"),
+    ("DT 160 m2 thổ cư", None),
+    ("Diện tích DT 160 giá 2 tỷ", None),
+    ("Đất gần đường ĐT7A", None),
+    ("Đất cách DT744 100m", None),
+    ("Mặt tiền DT7ABC", None),
+    ("Mặt tiền DH609, cách đường DT744 50m", "DH609"),
+    ("Nhà mặt tiền DX072, gần DT7A", "DX72"),
+])
+def test_provincial_road_codes_do_not_become_areas_or_nearby_roads(text,expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Mặt tiền Lê Hồng Phong Phú Lợi chủ đang kẹt tiền cần bán gấp", "Le Hong Phong"),
+    ("Mặt tiền Nguyễn Chí Thanh Hiệp An", "Nguyen Chi Thanh"),
+    ("Nhà đường Bùi Ngọc Thu Tân An", "Bui Ngoc Thu"),
+    ("Đường Nguyễn Tri Phương Chánh Nghĩa", "Nguyen Tri Phuong"),
+    ("Đường Phú Lợi", "Phu Loi"),
+    ("Đường Phú Lợi Phú Hòa", "Phu Loi Phu Hoa"),
+    ("Đường Lê Hồng Phong nối dài", "Le Hong Phong Noi Dai"),
+    ("Hẻm 232 Nguyễn Đức Thuận Hiệp Thành", "Hem 232 Nguyen Duc Thuan"),
+    ("Gần đường Lê Hồng Phong Phú Lợi", None),
+])
+def test_known_street_locality_boundary_preserves_unknown_street_names(text,expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Trục chính đường Hồng Hà; thông từ ĐT744 xuống ĐH609", "Hong Ha"),
+    ("Mặt tiền đường Hồng Hà; thông từ ĐT744 xuống ĐH609", "Hong Ha"),
+    ("Đường nhựa 6m thông từ DT744 xuống DH609", None),
+    ("Gần đường Hồng Hà; đường thông từ DT744 xuống DH609", None),
+    ("Mặt tiền DH609; đường thông từ DT744 xuống DH609", "DH609"),
+    ("Mặt tiền ĐT744; thông xuống DH609", "DT744"),
+    ("Đường Bùi Quốc Khánh; gần QL13", "Bui Quoc Khanh"),
+    ("Cách QL13 50m; mặt tiền đường Hồng Hà", "Hong Ha"),
+])
+def test_connection_endpoints_are_not_fronting_streets(text,expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("text", [
+    "thanh lý đất thành phố mới Thủ Dầu Một; Diện tích: 160m² thổ cư",
+    "Duy nhất 1 lô ... 5x23 ... Có 80m thổ cư",
+])
+def test_reviewed_property_excerpts_already_parse_as_land(text):
+    # Excerpt-only controls, NOT proof that the full original raw record is fixed.
+    record=normalize_record({"source":"facebook", "url":"https://example.invalid/control", "title":text,"description":""})
+    assert record is not None and record["property_type"]=="dat_nen"
+
+
+# Supplemented from the existing offline review queue, exact selected IDs only.
+# Reduced, PII-free fixtures preserve the actual triggering language omitted
+# from the initial excerpt; synthetic variants below are not extra real cases.
+REMAINING_PROPERTY_CASES = [
+    (83249, "guland", "Thanh lý đất tp. thủ dầu một cho vay 80% giá trị",
+     "Thấp hơn cả chung cư - ngân hàng thanh lý đất thành phố mới Thủ Dầu Một. Diện tích: 160m² thổ cư"),
+    (83155, "facebook", "Duy nhất 1 lô rẻ nhát Tân An 1/ Mạc Đĩnh Chi cách 100m giá 1.33tỷ - 5x23 đường oto",
+     "Có 80m thổ cư. Xem nhà ngay"),
+]
+
+
+@pytest.mark.parametrize("listing_id,source,title,description", REMAINING_PROPERTY_CASES)
+def test_remaining_reviewed_property_cases_classify_as_land(listing_id,source,title,description):
+    assert classify_property_type(title,description,160 if listing_id==83249 else 115,80)=="dat_nen"
+
+
+@pytest.mark.parametrize("listing_id,source,title,description", REMAINING_PROPERTY_CASES)
+def test_remaining_reviewed_property_cases_normalize_as_land(listing_id,source,title,description):
+    record=normalize_record({"source":source,"url":"https://example.invalid/case","title":title,"description":description})
+    assert record is not None and record["property_type"]=="dat_nen"
+
+
+@pytest.mark.parametrize("title,description,expected", [
+    ("Thanh lý đất thổ cư", "Giá thấp hơn cả chung cư, DT 160m2", "dat_nen"),
+    ("Thanh lý đất thổ cư", "Giá rẻ hơn căn hộ, DT 160m2", "dat_nen"),
+    ("Thanh ly dat", "Gia thap hon chung cu. DT 160m2", "dat_nen"),
+    ("Căn hộ chung cư 2PN", "Giá thấp hơn cả chung cư bên cạnh", "chung_cu"),
+    ("Bán căn hộ 2PN", "Giá rẻ hơn đất nền", "chung_cu"),
+    ("Bán chung cư", "Giá rẻ hơn căn hộ bên cạnh, có thang máy", "chung_cu"),
+    ("Thanh lý đất", "Giá thấp hơn cả chung cư; có căn hộ 2PN đang cho thuê", "chung_cu"),
+    ("Bán nhà cấp 4", "Giá rẻ hơn cả chung cư, 2 phòng ngủ, bếp", "nha_dat"),
+])
+def test_comparison_targets_do_not_replace_actual_asset_type(title,description,expected):
+    assert classify_property_type(title,description,160,None)==expected
+
+
+@pytest.mark.parametrize("title,description,expected", [
+    ("Duy nhất 1 lô 5x23 Tân An", "Có 80m thổ cư. Xem nhà ngay", "dat_nen"),
+    ("Bán đất nền 5x20", "Liên hệ xem nhà ngay", "dat_nen"),
+    ("Ban lo 5x20", "Lien he xem nha ngay", "dat_nen"),
+    ("Giảm bán nhanh mặt tiền đường nhựa nhà Phú Mỹ", "LH xem nhà", "nha_dat"),
+    ("Chính chủ bán nhà", "Liên hệ xem nhà ngay", "nha_dat"),
+    ("Bán đất có nhà cấp 4", "Liên hệ xem nhà ngay", "nha_dat"),
+    ("Duy nhất 1 lô 5x23", "Nhà mới, 3PN 2WC. Xem nhà ngay", "nha_dat"),
+    ("Bán căn hộ chung cư", "Xem nhà ngay", "chung_cu"),
+])
+def test_land_viewing_cta_does_not_remove_real_house_evidence(title,description,expected):
+    assert classify_property_type(title,description,115,80)==expected
+
+
+AN_DIEN_REVIEWED_ADDRESS = "An Điền - Bình Dương cũ ( Phường Long Nguyên - TP.HCM )"
+
+
+def test_reviewed_an_dien_old_address_is_strong_not_new_ward_guess():
+    result=resolve_post_merger_location("NHÀ AN ĐIỀN MỚI ĐẸP",AN_DIEN_REVIEWED_ADDRESS,intended_city="Bến Cát")
+    assert result.ward=="An Điền" and result.new_ward=="Long Nguyên"
+    assert result.has_strong_old_ward
+
+
+def test_reviewed_an_dien_survives_broad_new_ward_outside_keyword():
+    record=normalize_record({"source":"facebook","url":"https://example.invalid/case","default_area":"Bến Cát",
+                            "title":"NHÀ AN ĐIỀN MỚI ĐẸP","description":AN_DIEN_REVIEWED_ADDRESS})
+    assert record is not None and record["ward"]=="An Điền" and record["area"]=="An Điền"
+
+
+@pytest.mark.parametrize("text", [
+    "An Điền cũ nay là phường Long Nguyên TP.HCM",
+    "An Dien Binh Duong cu, phuong Long Nguyen TP HCM",
+    "An Điền - Bình Dương cũ nay thuộc phường Long Nguyên",
+])
+def test_explicit_old_an_dien_mapping_variants(text):
+    assert resolve_post_merger_location(text).has_strong_old_ward
+    record=normalize_record({"source":"facebook","url":"https://example.invalid/case","title":"Nhà","description":text})
+    assert record is not None and record["ward"]=="An Điền"
+
+
+@pytest.mark.parametrize("text", [
+    "Phường Long Nguyên TP.HCM",
+    "Long Nguyên, đất 20x37 có thổ cư",
+    "Phường Long Nguyên, gần An Điền cũ",
+    "Phường Long Nguyên, cách 2km đến An Điền cũ",
+    "Gần An Điền - Bình Dương cũ (Phường Long Nguyên TP.HCM)",
+])
+def test_broad_new_ward_or_nearby_an_dien_does_not_manufacture_old_ward(text):
+    result=resolve_post_merger_location(text)
+    assert not result.has_strong_old_ward
+    record=normalize_record({"source":"facebook","url":"https://example.invalid/case","default_area":"Bến Cát",
+                            "title":"Bán đất","description":text})
+    assert record is not None and record["ward"] is None and record["area"]=="Other"
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("CHÁNH HIỆP\nNHÀ MẶT TIỀN DX072\nVị trí: DX072 thông MPTV, Quốc lộ 13", "DX72"),
+    ("Nhà mặt tiền DX072, vị trí thông MPTV, Quốc lộ 13", "DX72"),
+    ("Quốc lộ 13, nhà mặt tiền DX072", "DX72"),
+    ("Mặt tiền QL13, gần DX072", "QL13"),
+    ("Gần nhà mặt tiền DX072, cách QL13 50m", None),
+    ("Giá cho lô mặt tiền đẹp\nMẶT TIỀN Bùi Ngọc Thu", "Bui Ngoc Thu"),
+    ("Mặt Tiền Nguyễn Chí Thanh Tân An Thủ Dầu Một (P Phú An Tp HCM)", "Nguyen Chi Thanh"),
+    ("Hẻm 232 Nguyễn Đức Thuận (Hiệp Thành)", "Hem 232 Nguyen Duc Thuan"),
+    ("Đất 2 mặt tiền tân phước khánh\nDt 15x25 thổ cư 150m", None),
+    ("Đất hai mặt tiền Phú Lợi", None),
+    ("Đất 2 mặt tiền đường Phú Lợi", "Phu Loi"),
+    ("Mặt tiền đường Tân Phước Khánh", "Tan Phuoc Khanh"),
+])
+def test_review19_fronting_road_and_locality_cases(text,expected):
+    assert extract_road_name(text)==expected
+
+
+@pytest.mark.parametrize("listing_id,title", [
+    (82948,"Nhà tại Phú An"),
+    (82949,"Lô đất hẻm Thanh Bình Phú An"),
+])
+def test_review19_old_phu_an_has_ben_cat_profile_evidence(listing_id,title):
+    description="Phú An - Bình Dương cũ (Phường Phú An - TP.HCM)"
+    result=resolve_post_merger_location(title,description,intended_city="Bến Cát")
+    assert result.ward=="Phú An" and result.has_strong_old_ward
+    record=normalize_record({"source":"facebook","url":"https://example.invalid/case","default_area":"Bến Cát",
+                            "title":title,"description":description})
+    assert record is not None and record["ward"]=="Phú An"
+
+
+@pytest.mark.parametrize("description,profile", [
+    ("Phường Phú An TP.HCM","Bến Cát"),
+    ("Gần Phú An - Bình Dương cũ (Phường Phú An TP.HCM)","Bến Cát"),
+    ("Phú An - Bình Dương cũ (Phường Phú An TP.HCM)",None),
+])
+def test_old_phu_an_needs_real_location_and_city_evidence(description,profile):
+    assert not resolve_post_merger_location("Bán đất",description,intended_city=profile).has_strong_old_ward
+
+
+def test_review19_dx072_uses_old_canonical_ward_not_broad_review_label():
+    # Signal's historical Chánh Hiệp override is NOT canonical ground truth.
+    record=normalize_record({"source":"facebook","url":"https://example.invalid/case","default_area":"Thủ Dầu Một",
+                            "title":"🧨 CHÁNH HIỆP 🧨\nNHÀ MẶT TIỀN DX072","description":"DX072 thông MPTV, Quốc lộ 13"})
+    assert record is not None and record["ward"]=="Định Hòa" and record["road_name"]=="DX72"
+
+
+@pytest.mark.parametrize("title,description", [
+    ("CHÁNH HIỆP","Nhà mặt tiền Lê Văn Tách"),
+    ("Nhà vườn Mặt tiền Lê Văn Tách. P Chánh Hiệp - TP Hồ Chí Minh",""),
+    ("Gần Chánh Hiệp","Đất mặt tiền DX072"),
+])
+def test_unknown_old_ward_is_not_replaced_with_new_admin_ward(title,description):
+    record=normalize_record({"source":"facebook","url":"https://example.invalid/case","default_area":"Thủ Dầu Một",
+                            "title":title,"description":description})
+    assert record is not None and record["ward"] is None

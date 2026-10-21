@@ -102,6 +102,9 @@ _KHU_PHO_RULES: tuple[tuple[str, str, str], ...] = (
 
 
 _OLD_WARD_PHRASE_RULES: tuple[tuple[str, str, str], ...] = (
+    ("Phú An", r"\bphu\s+an\s+binh\s+duong\s+cu\s+(?:phuong|p)\s+phu\s+an\b(?=.*\bben\s+cat\b)", "old_ward_phu_an_ben_cat"),
+    ("An Điền", r"\ban\s+dien\s+(?:cu|truoc\s+sap\s+nhap)\b", "old_ward_an_dien"),
+    ("An Điền", r"\ban\s+dien\s+binh\s+duong\s+cu\s+(?:nay\s+(?:la\s+|thuoc\s+)?)?(?:phuong|p)\s+long\s+nguyen\b", "old_ward_an_dien_long_nguyen"),
     ("Phú Mỹ", r"\bphu\s+my\s+(?:cu|truoc\s+sap\s+nhap)\b", "old_ward_phu_my"),
     ("Hòa Phú", r"\bhoa\s+phu\s+(?:cu|truoc\s+sap\s+nhap)\b", "old_ward_hoa_phu"),
     ("Phú Tân", r"\bphu\s+tan\s+(?:cu|truoc\s+sap\s+nhap)\b", "old_ward_phu_tan"),
@@ -139,7 +142,12 @@ def _match_strong_old_ward(normalized: str) -> tuple[str, str, str] | None:
         if re.search(pattern, normalized):
             return ward, "khu_pho", evidence
     for ward, pattern, evidence in _OLD_WARD_PHRASE_RULES:
-        if re.search(pattern, normalized):
+        for match in re.finditer(pattern, normalized):
+            if (evidence.startswith("old_ward_an_dien") or evidence == "old_ward_phu_an_ben_cat") and re.search(
+                r"\b(?:gan|sat|cach|ke|doi\s+dien)\b.{0,24}$",
+                normalized[max(0, match.start() - 40):match.start()],
+            ):
+                continue  # Nearby old ward is not the offered property's ward.
             return ward, "old_ward_phrase", evidence
     return None
 
@@ -161,6 +169,12 @@ def resolve_post_merger_location(
     if intended_city:
         normalized = f"{normalized} {_norm(intended_city)}".strip()
     new_ward = detect_new_ward(*texts)
+    # An address header may omit "phường". Use it as new-ward CONTEXT only,
+    # scoped to TDM; the existing DX071/072 rule still supplies the old ward.
+    heading = _ascii_fold(next((t for t in texts if t), "").split("\n", 1)[0])
+    if (not new_ward and _norm(intended_city or "") == "thu dau mot"
+            and re.fullmatch(r"\W*chanh\s+hiep\W*", heading)):
+        new_ward = "Chánh Hiệp"
 
     strong = _match_strong_old_ward(normalized)
     if strong:
