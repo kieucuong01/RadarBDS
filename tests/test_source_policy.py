@@ -226,7 +226,7 @@ class SourcePolicyTest(unittest.TestCase):
         except TypeError:
             self.client.set_cookie("localhost", SESSION_COOKIE_NAME, self.admin_token)
 
-    def test_guest_can_select_safe_guland_source(self):
+    def test_guest_cannot_select_guland_source(self):
         response = self.client.get(
             f"/api/signals?city=Khac&ward={self.ward}&source=guland&limit=10"
         )
@@ -234,20 +234,21 @@ class SourcePolicyTest(unittest.TestCase):
 
         payload = response.get_json()
         self.assertEqual(payload["total"], 1)
-        self.assertEqual([s["source"] for s in payload["signals"]], ["guland"])
-        self.assertEqual(payload["signals"][0]["title"], "Guland source policy signal")
+        self.assertEqual([s["source"] for s in payload["signals"]], ["facebook"])
+        self.assertEqual(payload["signals"][0]["id"], self.facebook_id)
 
-    def test_guest_dashboard_defaults_to_facebook_plus_safe_guland(self):
+    def test_guest_dashboard_defaults_to_facebook_only(self):
         response = self.client.get(f"/api/dashboard?city=Khac&ward={self.ward}")
         self.assertEqual(response.status_code, 200)
 
         payload = response.get_json()
-        self.assertEqual(payload["active_sources"], ["facebook", "guland"])
-        self.assertEqual(payload["all_sources"], ["facebook", "guland"])
-        self.assertEqual(payload["stats"]["total"], 2)
-        self.assertEqual(payload["stats"]["signals"], 2)
+        self.assertEqual(payload["active_sources"], ["facebook"])
+        self.assertEqual(payload["all_sources"], ["facebook"])
+        self.assertEqual(payload["stats"]["total"], 1)
+        self.assertEqual(payload["stats"]["signals"], 1)
 
-    def test_guest_guland_unknown_and_large_publisher_are_not_automatic_exclusions(self):
+    def test_admin_guland_unknown_and_large_publisher_are_not_automatic_exclusions(self):
+        self._login_as_admin()
         self._link_guland_class(self.guland_id, "high_activity")
         unknown_id = self._seed_signal(
             source="guland",
@@ -270,6 +271,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertCountEqual([row['id'] for row in all_listings['listings']], [unknown_id,self.guland_id])
 
     def test_newer_unknown_sorts_in_all_listings_and_signals(self):
+        self._login_as_admin()
         low_id = self._seed_signal(
             source="guland",
             title="Low manual publisher",
@@ -358,6 +360,14 @@ class SourcePolicyTest(unittest.TestCase):
             f"mode=signals&city=Khac&ward={self.ward}"
             "&date_range=all"
         )
+        guest_summary = self.client.get(f"/api/map-listings?{query}").get_json()
+        guest_items = self.client.get(
+            f"/api/map-listing-items?{query}&location_key={location_key}&limit=20"
+        ).get_json()
+        self.assertEqual(guest_summary["summary"]["total"], 1)
+        self.assertEqual([row["id"] for row in guest_items["items"]], [self.facebook_id])
+
+        self._login_as_admin()
         summary = self.client.get(f"/api/map-listings?{query}").get_json()
         first_page = self.client.get(
             f"/api/map-listing-items?{query}"
@@ -412,7 +422,8 @@ class SourcePolicyTest(unittest.TestCase):
         guest = self.client.get(
             f"/api/signals?{query}&hide_guland_reposts=0"
         ).get_json()
-        self.assertEqual(guest["total"], 0)
+        self.assertEqual(guest["total"], 1)
+        self.assertEqual([row["id"] for row in guest["signals"]], [self.facebook_id])
 
         self._login_as_admin()
         admin_default = self.client.get(f"/api/signals?{query}").get_json()
@@ -629,8 +640,8 @@ class SourcePolicyTest(unittest.TestCase):
         guest = self.client.get(
             f"/api/signals?city=Khac&ward={self.ward}&date_range=all&limit=10"
         ).get_json()
-        self.assertEqual(guest["total"], 1)
-        self.assertEqual(guest["signals"][0]["id"], self.guland_id)
+        self.assertEqual(guest["total"], 0)
+        self.assertEqual(guest["signals"], [])
 
         self._login_as_admin()
         admin = self.client.get(
@@ -640,7 +651,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(admin["total"], 1)
         self.assertEqual(admin["signals"][0]["id"], self.guland_id)
 
-    def test_admin_default_sources_match_public_safe_sources(self):
+    def test_admin_default_sources_include_facebook_and_guland(self):
         self._login_as_admin()
 
         response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=10")
@@ -653,8 +664,8 @@ class SourcePolicyTest(unittest.TestCase):
             {"facebook", "guland"},
         )
 
-    def test_signal_feed_defaults_to_three_month_listing_window(self):
-        old_date = (datetime.now() - timedelta(days=130)).strftime("%Y-%m-%d %H:%M:%S")
+    def test_signal_feed_defaults_to_one_month_listing_window(self):
+        old_date = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d %H:%M:%S")
         self._seed_signal(
             source="facebook",
             title="Old default hidden signal",
@@ -666,14 +677,18 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         payload = response.get_json()
-        self.assertEqual(payload["total"], 2)
+        self.assertEqual(payload["total"], 1)
         self.assertEqual(
             {s["title"] for s in payload["signals"]},
             {
                 "Facebook source policy signal",
-                "Guland source policy signal",
             },
         )
+        three_months = self.client.get(
+            f"/api/signals?city=Khac&ward={self.ward}&date_range=3m&limit=20"
+        ).get_json()
+        self.assertEqual(three_months["total"], 2)
+        self.assertIn("Old default hidden signal", [row["title"] for row in three_months["signals"]])
 
     def test_admin_signal_feed_supports_all_time_listing_window(self):
         old_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d %H:%M:%S")
@@ -696,7 +711,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertIn("Old all time visible signal", titles)
 
     def test_all_listings_uses_same_date_range_filter(self):
-        old_date = (datetime.now() - timedelta(days=130)).strftime("%Y-%m-%d %H:%M:%S")
+        old_date = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d %H:%M:%S")
         self._seed_signal(
             source="facebook",
             title="Old listings hidden by default",
@@ -707,14 +722,18 @@ class SourcePolicyTest(unittest.TestCase):
         default_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&limit=20")
         self.assertEqual(default_response.status_code, 200)
         default_payload = default_response.get_json()
-        self.assertEqual(default_payload["total"], 2)
+        self.assertEqual(default_payload["total"], 1)
         self.assertEqual(
             {x["title"] for x in default_payload["listings"]},
             {
                 "Facebook source policy signal",
-                "Guland source policy signal",
             },
         )
+        three_months = self.client.get(
+            f"/api/listings?city=Khac&ward={self.ward}&date_range=3m&limit=20"
+        ).get_json()
+        self.assertEqual(three_months["total"], 2)
+        self.assertIn("Old listings hidden by default", [row["title"] for row in three_months["listings"]])
 
         self._login_as_admin()
         all_response = self.client.get(f"/api/listings?city=Khac&ward={self.ward}&date_range=all&limit=20")
