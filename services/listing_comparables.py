@@ -74,6 +74,8 @@ def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) 
         "COALESCE(l.possibly_duplicate,0)=0",
     ]
     params: list[object] = [listing_id, current["ward"], area_min, area_max]
+    if tier != "admin":
+        where.append("l.source <> 'guland'")
     if current["property_type"]:
         where.append("l.property_type = ?")
         params.append(current["property_type"])

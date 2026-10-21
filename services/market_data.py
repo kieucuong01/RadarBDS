@@ -71,7 +71,7 @@ related_price_drops AS MATERIALIZED (
 # ─────────────────────────────────────────────────────────────────────────────
 TIER_ORDER = {"guest": 0, "free": 1, "vip": 2, "admin": 3}
 DEFAULT_VISIBLE_SOURCES = ("facebook", "guland")
-PUBLIC_SOURCE_OPTIONS = frozenset(DEFAULT_VISIBLE_SOURCES)
+PUBLIC_SOURCE_OPTIONS = frozenset({"facebook"})
 ADMIN_SOURCE_OPTIONS = DEFAULT_VISIBLE_SOURCES
 DATE_RANGE_OPTIONS = {
     "1w": "-7 days",
@@ -130,10 +130,10 @@ def normalize_sources_for_tier(sources=None, tier: str = "guest"):
         value = (source or "").strip().lower()
         if value and value in allowed and value not in normalized:
             normalized.append(value)
-    return normalized or list(DEFAULT_VISIBLE_SOURCES)
+    return normalized or sorted(allowed)
 
 
-def normalize_date_range(value: str | None, default: str | None = "3m") -> str | None:
+def normalize_date_range(value: str | None, default: str | None = "1m") -> str | None:
     raw = str(value or default or "").strip().lower()
     if not raw:
         return None
@@ -144,7 +144,7 @@ def normalize_date_range(value: str | None, default: str | None = "3m") -> str |
 def normalize_date_range_for_tier(
     value: str | None,
     tier: str = "guest",
-    default: str = "3m",
+    default: str = "1m",
 ) -> str:
     normalized = normalize_date_range(value, default=default) or default
     if normalized not in date_range_options_for_tier(tier):
@@ -1845,7 +1845,7 @@ def load_market_opportunities(
         mos_min,
         was_explicit=mos_min is not None,
     )
-    normalized_date_range = normalize_date_range(date_range, default="3m") or "3m"
+    normalized_date_range = normalize_date_range(date_range, default="1m") or "1m"
     normalized_keyword = normalize_search_keyword(keyword)
     where_sql, params = build_listing_filters(
         sources=sources,
@@ -2435,6 +2435,9 @@ def load_listing_detail(db_path, listing_id, tier: str = "guest"):
           AND COALESCE(l.review_hidden,0)=0
     """, (listing_id,)).fetchone()
     if not listing:
+        return None
+    if listing["source"] == "guland" and tier != "admin":
+        conn.close()
         return None
 
     images = [

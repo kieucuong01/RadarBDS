@@ -183,6 +183,30 @@ class GuestVisibilityTest(unittest.TestCase):
             )
             return listing_id
 
+    def _seed_guland_listing(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO listings (
+                    source, source_id, url, title, description, ward,
+                    area_m2, property_type, price_ty, price_per_m2,
+                    probably_sold, possibly_duplicate, posted_at, crawled_at
+                ) VALUES (
+                    'guland', ?, ?, 'Guland private listing', 'Guland detail', ?,
+                    100, 'dat_nen', 2.0, 20.0, 0, 0, datetime('now'), datetime('now')
+                )
+                """,
+                (
+                    f"guland-private-{self.token}",
+                    f"{self.url_prefix}/guland-private",
+                    self.ward,
+                ),
+            )
+            self.listing_ids.append(cur.lastrowid)
+            return cur.lastrowid
+
     def test_guest_sees_fresh_signal_card_content_without_source_url(self):
         response = self.client.get(f"/api/signals?city=Khac&ward={self.ward}&limit=5")
         self.assertEqual(response.status_code, 200)
@@ -576,6 +600,17 @@ class GuestVisibilityTest(unittest.TestCase):
         self.assertEqual(data["description"], "Fresh listing description")
         self.assertEqual(data["price_ty"], 2.0)
         self.assertEqual(data["url"], None)
+
+    def test_guland_listing_details_and_history_are_admin_only(self):
+        import app as app_module
+
+        listing_id = self._seed_guland_listing()
+        self.assertEqual(self.client.get(f"/api/listing/{listing_id}").status_code, 404)
+        self.assertEqual(self.client.get(f"/api/history/{listing_id}").status_code, 404)
+
+        with mock.patch.object(app_module, "current_tier", return_value="admin"):
+            self.assertEqual(self.client.get(f"/api/listing/{listing_id}").status_code, 200)
+            self.assertEqual(self.client.get(f"/api/history/{listing_id}").status_code, 200)
 
     def test_guest_listing_detail_redacts_phone_numbers_embedded_in_description(self):
         from db.connection import get_conn

@@ -79,7 +79,7 @@ def test_map_endpoint_passes_normalized_filters_and_guest_source_policy():
     assert captured["tier"] == "guest"
     assert filters.city == "THỦ DẦU MỘT"
     assert filters.wards == ("Phú Lợi",)
-    assert filters.sources == ("guland",)
+    assert filters.sources == ("facebook",)
     assert filters.include_guland_high_activity is False
     assert filters.prop_types == ("dat_nen",)
     assert filters.only_drops is False

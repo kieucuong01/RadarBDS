@@ -174,7 +174,7 @@ function renderMarketScopeSummary(data) {
   const totalDeals = Number(summary.total_deals || 0);
   const totalListings = Number(summary.total_listings || 0);
   const mosMin = Number(filters.mos_min || 0);
-  const dateRange = filters.date_range || '3m';
+  const dateRange = filters.date_range || '1m';
   root.innerHTML = `
     <span><strong>${eligibleWards}/${totalWards}</strong> khu có deal</span>
     <span><strong>${totalDeals}</strong> deal / ${totalListings} tin hợp lệ</span>

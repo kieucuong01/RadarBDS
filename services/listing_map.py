@@ -67,7 +67,7 @@ class MapFilters:
     area_ranges: tuple[tuple[float, float], ...] = ()
     price_ranges: tuple[tuple[float, float], ...] = ()
     keyword: str = ""
-    date_range: str = "3m"
+    date_range: str = "1m"
     complete_only: bool = False
     include_guland_high_activity: bool = False
 

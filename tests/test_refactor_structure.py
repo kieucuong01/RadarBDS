@@ -60,7 +60,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
 
     assert "window.RADAR_ASSETS" in html
     assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
-    assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b\"" in html
+    assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-date-default-20261021a\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=" in html
     assert "authCta: \"{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805\"" in html
@@ -863,7 +863,8 @@ def test_listing_date_range_filter_is_available_below_source_filter():
     filters_css = _read("static/css/main/filters.css")
 
     assert html.find('id="sourceFilters"') < html.find('id="dateRangeFilters"')
-    assert 'name="date_range" value="3m" checked' in html
+    assert 'name="date_range" value="1m" checked' in html
+    assert 'name="date_range" value="3m" checked' not in html
     for expected in [
         'value="1w"',
         'value="1m"',

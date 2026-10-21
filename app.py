@@ -4615,7 +4615,7 @@ def _request_date_range(req) -> str:
     return normalize_date_range_for_tier(
         req.args.get("date_range") or req.args.get("time_range"),
         tier=current_tier(),
-        default="3m",
+        default="1m",
     )
 
 
@@ -5721,6 +5721,12 @@ def _admin_valuation_workflow_markdown(listing_id):
 def get_price_history(listing_id):
     tier = current_tier()
     with db_mod.get_conn() as conn:
+        source_row = conn.execute(
+            "SELECT source FROM listings WHERE id = ?",
+            (listing_id,),
+        ).fetchone()
+        if source_row and source_row["source"] == "guland" and tier != "admin":
+            return jsonify({"error": "not found"}), 404
         cluster_ids = _listing_cluster_ids(conn, listing_id)
         placeholders = ",".join("?" for _ in cluster_ids)
         rows = conn.execute(f"""
@@ -5755,6 +5761,7 @@ def get_price_history(listing_id):
                 WHERE ph.listing_id IN ({placeholders})
                   AND ph.price_ty IS NOT NULL
                   AND ph.price_ty > 0
+                  AND (? OR COALESCE(l.source, '') <> 'guland')
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%ambiguous_price_text%'
                   AND COALESCE(l.extraction_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
                   AND COALESCE(latest_valuation.source_quality_flags, '') NOT ILIKE '%multi_lot_listing%'
@@ -5764,7 +5771,7 @@ def get_price_history(listing_id):
             FROM ranked_snapshots
             WHERE same_day_rank = 1
             ORDER BY history_date ASC, recorded_at ASC, id ASC
-        """, list(cluster_ids)).fetchall()
+        """, [*list(cluster_ids), tier == "admin"]).fetchall()
         history = []
         last_price = None
         has_last = False
@@ -5843,6 +5850,8 @@ def _get_lot_history(conn, listing_id, tier: str = "guest"):
     for r in rows:
         candidate = dict(r)
         source = (r["source"] or "").lower()
+        if source == "guland" and tier != "admin":
+            continue
         is_anchor = r["id"] == listing_id or r["id"] == canonical_id
         is_price_drop = bool(r["price_dropped"])
         anchor_text = _combined_text(anchor)

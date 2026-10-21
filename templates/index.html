@@ -92,7 +92,7 @@
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
     window.RADAR_ASSETS = {
       modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729",
-      market: "{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-p0-p2-20260807b",
+      market: "{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-date-default-20261021a",
       listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
@@ -199,8 +199,8 @@
         <div class="filter-body">
           <div id="dateRangeFilters" class="date-range-grid" role="radiogroup" aria-label="Lọc theo thời gian đăng">
             <label class="filter-option"><input type="radio" name="date_range" value="1w"> 1 tuần</label>
-            <label class="filter-option"><input type="radio" name="date_range" value="1m"> 1 tháng</label>
-            <label class="filter-option"><input type="radio" name="date_range" value="3m" checked> 3 tháng</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="1m" checked> 1 tháng</label>
+            <label class="filter-option"><input type="radio" name="date_range" value="3m"> 3 tháng</label>
             {% if USER_TIER == 'admin' %}
             <label class="filter-option"><input type="radio" name="date_range" value="6m"> 6 tháng</label>
             <label class="filter-option"><input type="radio" name="date_range" value="1y"> 1 năm</label>

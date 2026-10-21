@@ -144,8 +144,18 @@ class LotHistoryApiTest(unittest.TestCase):
 
         self.assertIn(self.canonical_id, ids)
         self.assertIn(self.facebook_same_price_id, ids)
-        self.assertIn(self.guland_drop_id, ids)
+        self.assertNotIn(self.guland_drop_id, ids)
         self.assertNotIn(self.guland_same_price_id, ids)
+
+        import app as app_module
+        from unittest import mock
+
+        with mock.patch.object(app_module, "current_tier", return_value="admin"):
+            admin_response = self.client.get(f"/api/history/{self.canonical_id}")
+        self.assertIn(
+            self.guland_drop_id,
+            [row["id"] for row in admin_response.get_json()["lot_history"]],
+        )
 
     def test_price_history_uses_post_date_for_merged_duplicate_snapshot(self):
         from db.connection import get_conn

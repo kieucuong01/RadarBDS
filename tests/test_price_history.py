@@ -973,19 +973,19 @@ class PriceHistoryTest(unittest.TestCase):
             ])
 
         response = app.test_client().get(f"/api/history/{listing_id}")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["history"], [{
-            "date": "2026-05-06",
-            "price_ty": 1.74,
-            "recorded_at": "2026-05-06 22:58:26",
-        }])
+        self.assertEqual(response.status_code, 404)
 
         admin_client = app.test_client()
         self._login_as_admin(admin_client)
         admin_response = admin_client.get(f"/api/history/{listing_id}")
         self.assertEqual(admin_response.status_code, 200)
         admin_history = admin_response.get_json()["history"]
-        self.assertEqual(admin_history[0]["url"], f"{self.url_prefix}/dx84")
+        self.assertEqual(admin_history, [{
+            "date": "2026-05-06",
+            "price_ty": 1.74,
+            "recorded_at": "2026-05-06 22:58:26",
+            "url": f"{self.url_prefix}/dx84",
+        }])
 
     def test_history_api_excludes_ambiguous_price_snapshots(self):
         from app import app
@@ -1157,7 +1157,7 @@ class PriceHistoryTest(unittest.TestCase):
         self.assertEqual(history, [])
 
     def test_guland_history_keeps_distinct_same_day_price_changes(self):
-        from app import app
+        import app as app_module
         from db.connection import get_conn
 
         with get_conn() as conn:
@@ -1191,9 +1191,12 @@ class PriceHistoryTest(unittest.TestCase):
                 ],
             )
 
-        history = app.test_client().get(
-            f"/api/history/{listing_id}"
-        ).get_json()["history"]
+        client = app_module.app.test_client()
+        self.assertEqual(client.get(f"/api/history/{listing_id}").status_code, 404)
+        from unittest import mock
+
+        with mock.patch.object(app_module, "current_tier", return_value="admin"):
+            history = client.get(f"/api/history/{listing_id}").get_json()["history"]
 
         self.assertEqual(
             [row["price_ty"] for row in history],
@@ -1357,7 +1360,9 @@ class PriceHistoryTest(unittest.TestCase):
                 (listing_id,),
             )
 
-        history = app.test_client().get(
+        admin_client = app.test_client()
+        self._login_as_admin(admin_client)
+        history = admin_client.get(
             f"/api/history/{listing_id}"
         ).get_json()["history"]
 
