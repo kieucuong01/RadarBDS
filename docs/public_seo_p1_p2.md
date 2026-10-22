@@ -2,7 +2,7 @@
 
 ## Public data and valuation
 
-- Live ward landing pages use the same Facebook / one-month scope as their dashboard handoff. Sources and dates are included in both cache keys and loaders.
+- Live ward landing pages use the same Facebook / one-month scope as their dashboard handoff. Sources and dates are included in both cache keys and loaders. When the listing projection is enabled, totals come from the same shared counter as the public feed, and the durable listings version participates in the snapshot cache key.
 - Valuation comparison cards follow source permissions before the candidate limit. Guland remains in the valuation training dataset and remains inspectable by admin.
 - Training reads the latest quality row using the existing `(listing_id, computed_at, id)` index and a lateral `LIMIT 1`. Keep the same computed-at/id ordering: rows without a valuation must remain available. This is a read-query optimization, not a valuation-model migration; no reprocess is required.
 - The valuation results CTA opens signals in the same ward/type, with area ±25%, Facebook, one month and an optional maximum equal to the entered asking price. The UI explains these bounds; an asking price is not silently presented as a confirmed transaction or valuation.

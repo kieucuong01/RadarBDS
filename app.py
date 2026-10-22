@@ -130,7 +130,7 @@ from services.listing_map_overrides import (
 )
 from services.listing_comparables import load_listing_comparables
 from services.listing_evidence import build_listing_evidence
-from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed
+from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed, listing_read_model_enabled
 from services.listing_reports import (
     ListingReportError,
     list_listing_reports,
@@ -3138,18 +3138,29 @@ def _build_live_location_snapshot(page: dict) -> dict:
         ],
     }
     try:
+        summary_versions = _public_dataset_versions(_DASHBOARD_DATASETS)
+        summary_versions.update(_listing_dataset_versions())
+
+        def load_location_summary():
+            payload = load_dashboard_summary(
+                _db_handle(), wards=[ward], tier="guest", include_trend=False,
+                **public_filters,
+            )
+            listings_version = summary_versions.get(DATASET_LISTINGS, 0)
+            if listing_read_model_enabled(listings_version):
+                # Counts must describe the cards users can open, not raw rows.
+                payload = {**payload, "stats": load_counts(
+                    _db_handle(), wards=[ward], tier="guest",
+                    listings_version=listings_version, **public_filters,
+                )}
+            return payload
+
         summary = get_or_load_public_payload(
             endpoint="dashboard",
             tier="guest",
-            versions=_public_dataset_versions(_DASHBOARD_DATASETS),
+            versions=summary_versions,
             query={"wards": [ward], "include_trend": False, **public_filters},
-            loader=lambda: load_dashboard_summary(
-                _db_handle(),
-                wards=[ward],
-                tier="guest",
-                include_trend=False,
-                **public_filters,
-            ),
+            loader=load_location_summary,
         ).payload
         signal_payload = get_or_load_public_payload(
             endpoint="signals",

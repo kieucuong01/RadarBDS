@@ -274,3 +274,26 @@ def test_ai_referral_event_is_accepted_by_tracking_endpoint(monkeypatch):
     assert response.get_json() == {"ok": True}
     assert captured["action"] == "ai_referral_visit"
     assert captured["context"]["referrer_host"] == "chatgpt.com"
+
+
+def test_live_snapshot_uses_same_projection_count_as_public_feed(monkeypatch):
+    import app as radar_app
+    calls = _patch_live_snapshot(monkeypatch, radar_app)
+    monkeypatch.setenv("RADAR_SIGNAL_READ_MODEL_ENABLED", "1")
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "1")
+    monkeypatch.setattr(radar_app, "_listing_dataset_versions", lambda: {radar_app.DATASET_LISTINGS: 7})
+    def projected_counts(*args, **kwargs):
+        calls["counts"] = kwargs
+        return {"total": 206, "signals": 37}
+    monkeypatch.setattr(radar_app, "load_counts", projected_counts)
+    html = radar_app.app.test_client().get("/binh-duong/phuong-hiep-thanh").get_data(as_text=True)
+    assert "206 tin" in html and "37 tín hiệu" in html
+    assert "204 tin" not in html
+    assert calls["counts"]["listings_version"] == 7
+    assert calls["counts"]["sources"] == ["facebook"]
+    assert calls["counts"]["date_range"] == "1m"
+    monkeypatch.setenv("RADAR_LISTING_READ_MODEL_ENABLED", "0")
+    calls.pop("counts")
+    html = radar_app.app.test_client().get("/binh-duong/phuong-hiep-thanh").get_data(as_text=True)
+    assert "204 tin" in html
+    assert "counts" not in calls
