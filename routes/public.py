@@ -10,6 +10,11 @@ from services.radar_ask.service import feature_enabled, tier_allowed
 bp = Blueprint("public", __name__)
 
 
+@bp.route("/chinh-sach-bao-mat")
+def privacy_page():
+    return _impl("privacy_page")
+
+
 def _impl(name: str, **kwargs):
     import app as app_module
 

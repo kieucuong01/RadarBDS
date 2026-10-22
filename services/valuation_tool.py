@@ -11,7 +11,7 @@ from analytics.valuation import Listing, ValuationEngine
 from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_type
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
-from services.market_data import CITY_MAP, format_signal_card_record
+from services.market_data import CITY_MAP, format_signal_card_record, normalize_sources_for_tier
 from services.signal_quality import split_quality_flags
 
 
@@ -199,20 +199,16 @@ def _load_training_listings(limit: int = 30000) -> list[Listing]:
                    AND COALESCE(l.review_hidden,0) = 0
                  ORDER BY l.id DESC
                  LIMIT ?
-            ),
-            latest_quality AS (
-                SELECT v.listing_id, v.source_quality_flags, v.source_quality_recheck,
-                       ROW_NUMBER() OVER (
-                           PARTITION BY v.listing_id
-                           ORDER BY v.computed_at DESC, v.id DESC
-                       ) AS quality_rank
-                  FROM valuation_results v
-                  JOIN candidate_listings c ON c.id = v.listing_id
             )
             SELECT c.*, q.source_quality_flags, q.source_quality_recheck
               FROM candidate_listings c
-              LEFT JOIN latest_quality q
-                ON q.listing_id = c.id AND q.quality_rank = 1
+              LEFT JOIN LATERAL (
+                  SELECT v.source_quality_flags, v.source_quality_recheck
+                    FROM valuation_results v
+                   WHERE v.listing_id = c.id
+                   ORDER BY v.computed_at DESC, v.id DESC
+                   LIMIT 1
+              ) q ON TRUE
              ORDER BY c.id DESC
             """,
             (limit,),
@@ -302,9 +298,11 @@ def _load_comparables(
     *,
     tier: str = "guest",
 ) -> list[dict[str, Any]]:
+    sources = normalize_sources_for_tier(None, tier)
+    source_placeholders = ",".join("?" for _ in sources)
     with get_conn() as conn:
         rows = conn.execute(
-            """
+            f"""
             WITH candidate_listings AS MATERIALIZED (
                 SELECT l.id, l.title, l.description, l.url, l.contact_phone, l.seller_name,
                        l.source, l.ward, l.property_type,
@@ -317,6 +315,7 @@ def _load_comparables(
                   FROM listings l
                  WHERE l.ward = ?
                    AND l.property_type = ?
+                   AND l.source IN ({source_placeholders})
                    AND l.duplicate_of_id IS NULL
                    AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
                    AND l.area_m2 IS NOT NULL AND l.area_m2 > 0
@@ -376,6 +375,7 @@ def _load_comparables(
             (
                 target.ward,
                 target.property_type,
+                *sources,
                 target.road_tier,
                 target.area_m2,
                 max(limit * 5, limit),
@@ -408,8 +408,11 @@ def _dashboard_url(target: Listing) -> str:
             "city": target.city,
             "ward": target.ward,
             "prop_type": target.property_type,
-            "date_range": "all",
-            "mos_min": 0,
+            "date_range": "1m",
+            "source": "facebook",
+            "area_min": round(target.area_m2 * 0.75, 1),
+            "area_max": round(target.area_m2 * 1.25, 1),
+            **({"price_max": round(target.price_total, 2)} if target.price_total else {}),
         },
         quote_via=quote,
     )

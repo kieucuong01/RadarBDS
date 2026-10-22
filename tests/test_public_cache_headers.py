@@ -12,6 +12,13 @@ PUBLIC_CACHE_CONTROL = (
 )
 
 
+def test_public_html_timing_does_not_expand_public_cache_allowlist():
+    response = radar_app.app.test_client().get("/chinh-sach-bao-mat")
+    assert response.status_code == 200
+    assert response.headers["Server-Timing"].startswith("app;dur=")
+    assert "X-Radar-Public-Cache" not in response.headers
+
+
 @pytest.fixture
 def client(monkeypatch):
     auth_core.clear_rate_limit_cache()

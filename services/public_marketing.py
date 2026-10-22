@@ -2,6 +2,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import re
+
+
+def readable_report_copy(value):
+    """Translate display copy without changing report data or machine contracts."""
+    text = str(value or "")
+    for term, label in (("canonical", "đã lọc trùng"), ("actionable", "đáng kiểm tra"),
+                        ("fair value", "giá tham khảo")):
+        text = re.sub(r"\b" + re.escape(term) + r"\b", label, text, flags=re.IGNORECASE)
+    return text
 
 
 EDITORIAL_OWNER_NAME = "Nhóm dữ liệu Radar BDS"

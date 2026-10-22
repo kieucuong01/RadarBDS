@@ -115,6 +115,7 @@ def test_marketing_context_rejects_unknown_actions_and_malformed_input():
             "ai_referral_visit",
             "cta_clicked",
             "lead_capture_submit",
+            "tool_used",
         }
     )
 
@@ -266,3 +267,13 @@ def test_tracking_endpoint_accepts_malformed_context_and_rejects_unknown_action(
     assert captured["context"] == {}
     assert unknown.status_code == 400
     assert unknown.get_json() == {"ok": False, "error": "invalid_action"}
+
+
+def test_tool_events_only_keep_enum_fields_and_safe_page_path():
+    from services.marketing_tracking import sanitize_marketing_context
+    safe = sanitize_marketing_context("tool_used", {
+        "tool": "valuation", "step": "success", "page_path": "/dinh-gia-bds",
+        "phone": "0909123456", "note": "private nhu cầu", "price_ty": 2,
+    })
+    assert safe == {"tool": "valuation", "step": "success", "page_path": "/dinh-gia-bds"}
+    assert sanitize_marketing_context("tool_used", {"tool": "private text", "step": "success"}) == {}

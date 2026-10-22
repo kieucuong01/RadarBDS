@@ -15,6 +15,7 @@ MARKETING_TRACK_ACTIONS = frozenset(
         "ai_referral_visit",
         "cta_clicked",
         "lead_capture_submit",
+        "tool_used",
     }
 )
 CHANNELS = frozenset({"organic", "social", "ai", "direct_unknown"})
@@ -261,5 +262,10 @@ def sanitize_marketing_context(
         source_context = _bounded_token(context.get("source_context"))
         if source_context is not None:
             safe["source_context"] = source_context
+
+    if action == "tool_used":
+        if context.get("tool") in {"valuation", "land_price"} and context.get("step") in {"start", "success", "empty", "error"}:
+            safe["tool"] = context["tool"]
+            safe["step"] = context["step"]
 
     return safe

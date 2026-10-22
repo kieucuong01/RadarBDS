@@ -25,6 +25,13 @@
 
   function track(eventName, params) {
     const safeParams = Object.assign({ event_category: 'valuation_tool' }, params || {});
+    const step = { valuation_start: 'start', valuation_success: 'success', valuation_error: 'error' }[eventName];
+    if (step && typeof window.CustomEvent === 'function') {
+      window.dispatchEvent(new window.CustomEvent('radar:track', { detail: { action: 'tool_used', context: { tool: 'valuation', step } } }));
+    }
+    if (eventName === 'valuation_dashboard_click' && typeof window.CustomEvent === 'function') {
+      window.dispatchEvent(new window.CustomEvent('radar:track', { detail: { action: 'cta_clicked', context: { cta_name: 'valuation_results', destination: $('dashboardCta').getAttribute('href') } } }));
+    }
     if (typeof window.gtag === 'function') {
       window.gtag('event', eventName, safeParams);
       return;
@@ -176,6 +183,13 @@
     const dashboard = $('dashboardCta');
     if (dashboard) dashboard.href = payload.dashboard_url || '/';
     if ($('dashboardWard')) $('dashboardWard').textContent = estimate.ward;
+    const leadForm = document.querySelector('.seo-lead-capture-form[data-source-context="valuation_tool_lead"]');
+    if (leadForm) {
+      const note = `Quan tâm ${estimate.property_type_label} tại ${estimate.ward}; diện tích ${estimate.area_m2} m²; giá đang chào ${estimate.input_price_ty || 'chưa nhập'} tỷ; từ ${window.location.pathname}`;
+      leadForm.dataset.note = note;
+      const noteInput = leadForm.querySelector('input[name="note"]');
+      if (noteInput) noteInput.value = note;
+    }
 
     const result = $('resultContent');
     if (result) {

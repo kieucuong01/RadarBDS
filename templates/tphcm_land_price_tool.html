@@ -371,8 +371,10 @@
     </section>
   </main>
   {% include "partials/seo_footer.html" %}
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
   <script src="{{ url_for('static', filename='js/tphcm_land_price_calculator.js') }}?v=tphcm-land-mixed-20260728-2"></script>
-  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=tphcm-land-mixed-20260728-2"></script>
+  <script src="{{ url_for('static', filename='js/tphcm_land_price_tool.js') }}?v=public-p1-p2-20261022-r2"></script>
   {% include "partials/seo_lead_capture_script.html" %}
 </body>
 </html>

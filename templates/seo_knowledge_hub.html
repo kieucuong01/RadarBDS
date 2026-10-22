@@ -2,6 +2,11 @@
 <html lang="vi">
 <head>
   {% include "partials/seo_head.html" %}
+  {% if archive %}
+  {% if archive.filtered %}<meta name="robots" content="noindex,follow">{% endif %}
+  {% if archive.previous %}<link rel="prev" href="{{ site_meta.base_url ~ archive.previous }}">{% endif %}
+  {% if archive.next %}<link rel="next" href="{{ site_meta.base_url ~ archive.next }}">{% endif %}
+  {% endif %}
   {% include "partials/public_brand_assets.html" %}
 </head>
 <body class="seo-page knowledge-hub">
@@ -16,10 +21,10 @@
         <h1>{{ page.hero_title }}</h1>
         <p>{{ page.hero_text }}</p>
         <div class="hub-hero-actions">
-          <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_hub_dashboard">Mở dashboard lọc signal</a>
-          <a class="text-link hub-secondary-cta" href="{{ featured.path }}" data-track-cta="news_hub_featured_secondary">
+          <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_hub_dashboard">Xem tin đáng kiểm tra</a>
+          {% if featured %}<a class="text-link hub-secondary-cta" href="{{ featured.path }}" data-track-cta="news_hub_featured_secondary">
             Đọc bài nổi bật <span aria-hidden="true">→</span>
-          </a>
+          </a>{% endif %}
         </div>
       </div>
       <aside class="hub-insight-panel" aria-label="Tóm tắt mục tin tức">
@@ -35,7 +40,7 @@
 
 
 
-    <section
+    {% if featured %}<section
       class="hub-featured"
       aria-labelledby="featured-article"
       data-news-featured="{{ featured.path }}"
@@ -54,43 +59,49 @@
       <a class="seo-primary-cta" href="{{ featured.path }}" data-track-cta="news_hub_featured">Đọc bài nổi bật</a>
     </section>
 
+    {% endif %}
     {% if article_categories %}
-    <section class="news-discovery" aria-labelledby="news-discovery-title" data-news-hub>
+    <section class="news-discovery" id="news-archive" aria-labelledby="news-discovery-title" data-news-hub{% if archive %} data-news-server-archive{% endif %}>
       <div class="section-heading">
         <p class="seo-eyebrow">Tìm theo nhu cầu</p>
         <h2 id="news-discovery-title">Tìm nhanh bài phân tích phù hợp</h2>
         <p>Tìm theo phường, chủ đề hoặc nội dung cần kiểm tra; các bài mới cập nhật được xếp trước.</p>
       </div>
 
-      <div class="news-search-row">
+      <form class="news-search-row" method="get" action="{{ page.path }}">
         <label for="newsHubSearch">Tìm trong tin tức</label>
         <div class="news-search-control">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
           <input
             id="newsHubSearch"
             type="search"
+            name="q"
+            value="{{ archive.query if archive else '' }}"
             autocomplete="off"
             placeholder="Ví dụ: Phú Tân, giá/m², tin rẻ..."
             data-news-search
           >
         </div>
-      </div>
+        {% if archive and archive.category != 'all' %}<input type="hidden" name="category" value="{{ archive.category }}">{% endif %}
+        <button type="submit" class="seo-primary-cta">Tìm bài</button>
+      </form>
 
       <nav class="news-category-filter" aria-label="Lọc bài theo chủ đề">
         <a
-          class="news-category-chip is-active"
-          href="#cat-all"
+          class="news-category-chip{% if not archive or archive.category == 'all' %} is-active{% endif %}"
+          href="{{ archive.category_links['all'] if archive else '#cat-all' }}"
           data-news-category="all"
-          aria-current="true"
+          {% if not archive or archive.category == 'all' %}aria-current="true"{% endif %}
           data-track-cta="news_hub_category_all"
         >
           <strong>Tất cả</strong>
-          <span>{{ articles|length }} bài</span>
+          <span>{{ page.article_count }} bài</span>
         </a>
         {% for category in article_categories %}
         <a
-          class="news-category-chip"
-          href="#cat-{{ category.key }}"
+          class="news-category-chip{% if archive and archive.category == category.key %} is-active{% endif %}"
+          href="{{ archive.category_links[category.key] if archive else '#cat-' ~ category.key }}"
+          {% if archive and archive.category == category.key %}aria-current="true"{% endif %}
           data-news-category="{{ category.key }}"
           data-track-cta="news_hub_category_{{ category.key }}"
           aria-label="{{ category.label }}: {{ category.count }} bài. {{ category.description }}"
@@ -102,8 +113,8 @@
       </nav>
 
       <div class="news-results-head">
-        <p data-news-results-status aria-live="polite">{{ articles|length }} bài phân tích</p>
-        <a href="/?tab=signals" data-track-cta="news_hub_results_dashboard">Mở signal feed <span aria-hidden="true">→</span></a>
+        <p data-news-results-status aria-live="polite">{% if archive %}Đang xem {{ archive.start }}–{{ archive.end }} trong {{ archive.total }} bài · Trang {{ archive.number }}/{{ archive.pages }}{% else %}{{ articles|length }} bài phân tích{% endif %}</p>
+        <a href="/?tab=signals" data-track-cta="news_hub_results_dashboard">Xem tin theo khu vực <span aria-hidden="true">→</span></a>
       </div>
 
       <div class="hub-card-grid news-card-grid" data-news-grid>
@@ -138,17 +149,26 @@
         {% endfor %}
       </div>
 
-      <div class="news-empty-state" data-news-empty-state hidden>
+      <div class="news-empty-state" data-news-empty-state{% if not archive or archive.total %} hidden{% endif %}>
         <strong>Chưa tìm thấy bài phù hợp</strong>
         <p>Thử từ khóa ngắn hơn hoặc quay lại xem tất cả chủ đề.</p>
-        <button type="button" data-news-reset>Đặt lại bộ lọc</button>
+        <a href="{{ page.path }}" data-news-reset>Đặt lại bộ lọc</a>
       </div>
 
-      <div class="news-load-more-row" data-news-load-more-row hidden>
+      {% if archive and archive.pages > 1 %}
+      <nav class="report-pagination news-pagination" aria-label="Phân trang bài phân tích">
+        {% if archive.previous %}<a rel="prev" href="{{ archive.previous }}">← Trước</a>{% endif %}
+        {% for link in archive.links %}
+        <a href="{{ link.url }}" aria-label="Trang {{ link.number }}"{% if link.number == archive.number %} aria-current="page"{% endif %}>{{ link.number }}</a>
+        {% endfor %}
+        {% if archive.next %}<a rel="next" href="{{ archive.next }}">Sau →</a>{% endif %}
+      </nav>
+      {% endif %}
+      {% if not archive %}<div class="news-load-more-row" data-news-load-more-row hidden>
         <button type="button" class="seo-primary-cta news-load-more" data-news-load-more>
           Xem thêm 8 bài
         </button>
-      </div>
+      </div>{% endif %}
     </section>
     {% else %}
     <section class="hub-archive" aria-labelledby="knowledge-archive">
@@ -188,7 +208,7 @@
           {% endfor %}
         </div>
         <div class="radar-methodology-card">
-          <h3>Từ tin rao đến signal</h3>
+          <h3>Từ tin rao đến tin đáng kiểm tra</h3>
           <ol>{% for step in page.methodology.steps %}<li>{{ step }}</li>{% endfor %}</ol>
         </div>
         <div class="radar-methodology-card radar-methodology-limits">
@@ -215,10 +235,10 @@
     <section class="news-dashboard-bridge" aria-label="Mở dashboard Radar BDS">
       <div>
         <p class="seo-eyebrow">Bước tiếp theo</p>
-        <h2>Đọc xong, mở signal feed để kiểm tra tin phù hợp</h2>
-        <p>Chọn đúng phường, xem MOS và cảnh báo nguồn trước khi quyết định liên hệ.</p>
+        <h2>Đọc xong, xem tin phù hợp theo khu vực</h2>
+        <p>Chọn đúng phường, so giá rao với giá tham khảo và đọc cảnh báo nguồn trước khi liên hệ.</p>
       </div>
-      <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_hub_bottom_dashboard">Mở dashboard lọc signal</a>
+      <a class="seo-primary-cta" href="/?tab=signals" data-track-cta="news_hub_bottom_dashboard">Xem tin đáng kiểm tra</a>
     </section>
 
     {% set lead_cta_context = "seo_news_hub_lead" %}
@@ -238,8 +258,8 @@
       {"@type": "CollectionPage", "name": {{ page.hero_title|tojson }}, "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.description|tojson }}, "inLanguage": "vi-VN", "isPartOf": {{ public_entities.website_ref|tojson }}},
       {% if page.methodology %}{"@type": "Dataset", "name": "Phương pháp và dữ liệu Radar BDS", "url": {{ site_meta.canonical_url|tojson }}, "description": {{ page.methodology.intro|tojson }}, "inLanguage": "vi-VN", "creator": {{ public_entities.organization_ref|tojson }}, "spatialCoverage": "13 phường Thủ Dầu Một, Bình Dương cũ", "variableMeasured": ["Giá rao", "Giá/m²", "Fair value tham khảo", "MOS", "Cảnh báo nguồn"]},{% endif %}
       {"@type": "ItemList", "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": {{ featured.hero_title|tojson }}, "url": {{ (site_origin ~ featured.path)|tojson }}}
-        {% for article in articles %},{"@type": "ListItem", "position": {{ loop.index + 1 }}, "name": {{ article.hero_title|tojson }}, "url": {{ (site_origin ~ article.path)|tojson }}}{% endfor %}
+        {% if featured %}{"@type": "ListItem", "position": 1, "name": {{ featured.hero_title|tojson }}, "url": {{ (site_origin ~ featured.path)|tojson }}}{% if articles %},{% endif %}{% endif %}
+        {% for article in articles %}{"@type": "ListItem", "position": {{ archive.start + loop.index0 + (0 if archive.filtered else 1) if archive else loop.index + 1 }}, "name": {{ article.hero_title|tojson }}, "url": {{ (site_origin ~ article.path)|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
       ]},
       {"@type": "BreadcrumbList", "itemListElement": [
         {% for crumb in page.breadcrumbs %}{"@type": "ListItem", "position": {{ loop.index }}, "name": {{ crumb.name|tojson }}, "item": {{ crumb.url|tojson }}}{% if not loop.last %},{% endif %}{% endfor %}
@@ -249,7 +269,7 @@
     ]
   }
   </script>
-  <script src="{{ url_for('static', filename='js/seo_news_hub.js') }}?v=content-hub-20260728" defer></script>
+  {% if not archive %}<script src="{{ url_for('static', filename='js/seo_news_hub.js') }}?v=content-hub-20260728" defer></script>{% endif %}
   {% include "partials/seo_lead_capture_script.html" %}
   {% set view_event = "seo_landing_viewed" %}
   {% include "partials/seo_tracking.html" %}

@@ -202,6 +202,45 @@ class ValuationToolTest(unittest.TestCase):
         self.assertFalse(payload["comparables_locked"])
         self.assertTrue(any(item.get("url", "").startswith(self.url_prefix) for item in payload["comparables"]))
 
+    def test_comparable_visibility_does_not_remove_guland_training_data(self):
+        from db.connection import get_conn
+        from services.valuation_tool import (
+            _load_comparables, _load_training_listings, _target_listing,
+        )
+
+        private_ids = set(self.listing_ids[1:])
+        with get_conn() as conn:
+            conn.execute(
+                "UPDATE listings SET source='guland' WHERE url LIKE ? AND id <> ?",
+                (f"{self.url_prefix}%", self.listing_ids[0]),
+            )
+        target = _target_listing({
+            "city": self.city, "ward": self.ward,
+            "property_type": "dat_nen", "area_m2": 100, "road_tier": 2,
+        })
+        for tier in ("guest", "free", "vip"):
+            cards = _load_comparables(target, tier=tier)
+            self.assertFalse(private_ids.intersection(card["id"] for card in cards))
+            self.assertTrue(cards)
+        admin_cards = _load_comparables(target, tier="admin")
+        self.assertTrue(private_ids.intersection(card["id"] for card in admin_cards))
+        training_ids = {row.id for row in _load_training_listings()}
+        self.assertTrue(private_ids.issubset(training_ids))
+
+    def test_training_uses_latest_quality_with_stable_tie_break_and_missing_rows(self):
+        from db.connection import get_conn
+        from services.valuation_tool import _load_training_listings
+        clean, excluded, missing = self.listing_ids[-3:]
+        with get_conn() as conn:
+            for listing_id, flags in ((clean, "missing_area_evidence"), (clean, ""), (excluded, "missing_area_evidence")):
+                conn.execute(
+                    "INSERT INTO valuation_results (listing_id, source_quality_flags, computed_at) VALUES (?, ?, '2026-10-22T00:00:00')",
+                    (listing_id, flags),
+                )
+        rows = _load_training_listings(limit=3)
+        self.assertEqual([row.id for row in rows], [missing, excluded, clean])
+        self.assertEqual([row.exclude_from_baseline for row in rows], [False, True, False])
+
     def test_invalid_input_returns_validation_error(self):
         response = self.client.post(
             "/api/valuation-tool/estimate",
@@ -225,3 +264,15 @@ class ValuationToolTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_valuation_dashboard_handoff_preserves_visible_scope_area_and_asking_price():
+    from urllib.parse import parse_qs, urlsplit
+    from services.valuation_tool import _dashboard_url, _target_listing
+    target = _target_listing({"ward": "Tân An", "area_m2": 100, "price_ty": 2})
+    query = parse_qs(urlsplit(_dashboard_url(target)).query)
+    assert query["source"] == ["facebook"] and query["date_range"] == ["1m"]
+    assert query["area_min"] == ["75.0"] and query["area_max"] == ["125.0"]
+    assert query["price_max"] == ["2.0"]
+    target.price_total = 0
+    assert "price_max" not in parse_qs(urlsplit(_dashboard_url(target)).query)

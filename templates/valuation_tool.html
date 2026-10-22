@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=public-navigation-20260729">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=valuation-comparable-cards-20260728">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=valuation-comparable-cards-20260728">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=public-p1-p2-20261022-r2">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -224,7 +224,7 @@
           <h2>Kết quả tham khảo sẽ hiện tại đây</h2>
           <div class="empty-guide" aria-label="Các chỉ số kết quả">
             <div>
-              <strong>Fair value</strong>
+              <strong>Giá tham khảo</strong>
               <span>Ước tính tổng giá trị và giá/m² hợp lý.</span>
             </div>
             <div>
@@ -263,9 +263,10 @@
           </div>
           <p class="model-note" id="modelNote"></p>
           <a class="dashboard-cta" id="dashboardCta" href="/">
-            Xem deal tại <span id="dashboardWard">khu vực này</span>
+            Xem tin tương tự tại <span id="dashboardWard">khu vực này</span>
             <span aria-hidden="true">→</span>
           </a>
+          <p class="model-note">Lọc tin trong một tháng, diện tích gần lô đang định giá (±25%) và giá không vượt mức đang chào nếu đã nhập. Có thể đổi bộ lọc khi mở danh sách.</p>
         </div>
       </section>
 
@@ -294,7 +295,7 @@
         </article>
         <article>
           <h3>Đọc cùng mẫu so sánh</h3>
-          <p>Fair value nên được xem cùng các tin gần phân khúc, loại đường, diện tích và pháp lý của lô đất.</p>
+          <p>Giá tham khảo nên được xem cùng các tin gần phân khúc, loại đường, diện tích và pháp lý của lô đất.</p>
         </article>
         <article>
           <h3>Không thay thế thẩm định</h3>
@@ -330,7 +331,7 @@
     </section>
 
     {% set lead_cta_context = "valuation_tool_lead" %}
-    {% set lead_note = "Muốn nhận 5 tin phù hợp nhất sau khi định giá lô đất Bình Dương." %}
+    {% set lead_note = "Quan tâm tin phù hợp sau khi định giá lô đất Bình Dương." %}
     {% include "partials/seo_lead_capture.html" %}
   <div class="seo-shell valuation-priority-proof">{% include "partials/traffic_priority_proof.html" %}</div>
   </main>
@@ -361,10 +362,12 @@
     </div>
   </div>
 
+  {% set view_event = "seo_landing_viewed" %}
+  {% include "partials/seo_tracking.html" %}
   {% include "partials/seo_lead_capture_script.html" %}
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=valuation-tool-auth-20260722"></script>
   <script src="{{ url_for('static', filename='js/valuation_comparable_card.js') }}?v=valuation-comparable-cards-20260728"></script>
-  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=valuation-comparable-cards-20260728"></script>
+  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=public-p1-p2-20261022-r2"></script>
 </body>
 
 </html>

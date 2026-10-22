@@ -78,7 +78,7 @@ def test_priority_ward_page_renders_live_search_and_aio_snapshot(monkeypatch):
     assert "không thay thế" in html
     assert '<div class="price-tag tag-one">2.3 tỷ</div>' not in html
     assert "<span>TDM</span><span>Thuận An</span>" not in html
-    assert 'href="/?tab=signals&amp;ward=Hi%E1%BB%87p+Th%C3%A0nh"' in html
+    assert 'href="/?tab=signals&amp;ward=Hi%E1%BB%87p+Th%C3%A0nh&amp;source=facebook&amp;date_range=1m"' in html
     assert "intent=watchlist" not in html
     latest_report = radar_app._latest_ward_report("hiep-thanh")
     assert latest_report is not None
@@ -87,10 +87,14 @@ def test_priority_ward_page_renders_live_search_and_aio_snapshot(monkeypatch):
 
     assert calls["summary"]["wards"] == ["Hiệp Thành"]
     assert calls["summary"]["tier"] == "guest"
+    assert calls["summary"]["sources"] == ["facebook"]
+    assert calls["summary"]["date_range"] == "1m"
     assert calls["signals"]["wards"] == ["Hiệp Thành"]
     assert calls["signals"]["limit"] == 5
     assert calls["signals"]["include_total"] is False
     assert calls["signals"]["tier"] == "guest"
+    assert calls["signals"]["sources"] == ["facebook"]
+    assert calls["signals"]["date_range"] == "1m"
 
     graph = _json_ld_graph(html)
     web_page = next(item for item in graph if item.get("@type") == "WebPage")
@@ -137,7 +141,7 @@ def test_new_live_ward_uses_canonical_ward_and_degrades_without_database(monkeyp
     assert response.status_code == 200
     assert calls["summary"]["wards"] == ["Phú Tân"]
     assert calls["signals"]["wards"] == ["Phú Tân"]
-    assert 'href="/?tab=signals&amp;ward=Ph%C3%BA+T%C3%A2n"' in html
+    assert 'href="/?tab=signals&amp;ward=Ph%C3%BA+T%C3%A2n&amp;source=facebook&amp;date_range=1m"' in html
 
     def unavailable(*args, **kwargs):
         raise RuntimeError("offline")

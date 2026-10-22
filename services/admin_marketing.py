@@ -34,6 +34,7 @@ _MARKETING_SOURCE_PREFIXES = (
     "report_",
     "seo_",
     "social_",
+    "land_price_",
 )
 _LEAD_STATUSES = frozenset(
     {"new", "called", "viewing", "deposit", "deposited", "cancelled"}
@@ -224,6 +225,9 @@ def build_marketing_source_view(
         "filtered_cta_clicks_current": 0,
         "filtered_cta_clicks_previous": 0,
     }
+    tool_usage = {tool: {period: {step: 0 for step in ("start", "success", "empty", "error")}
+                         for period in ("current", "previous")}
+                  for tool in ("valuation", "land_price")}
     direct = {
         "lead_events_current": 0,
         "lead_events_previous": 0,
@@ -276,6 +280,12 @@ def build_marketing_source_view(
             campaign = _campaign_key(context)
             if campaign is not None:
                 _increment_period(campaign_stats[campaign], "views", period)
+            continue
+
+        if action == "tool_used":
+            tool, step = context.get("tool"), context.get("step")
+            if tool in tool_usage and step in tool_usage[tool][period]:
+                tool_usage[tool][period][step] += 1
             continue
 
         if action == "cta_clicked":
@@ -414,6 +424,7 @@ def build_marketing_source_view(
         "campaigns": campaigns,
         "cta_targets": cta_targets,
         "dashboard_handoffs": dashboard_handoffs,
+        "tool_usage": tool_usage,
         "directly_attributed": direct,
         "unattributed": unattributed,
     }

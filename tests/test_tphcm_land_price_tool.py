@@ -509,3 +509,12 @@ def test_land_price_browser_calculator_has_row_actions_and_safe_analytics():
         "rowKey",
     ):
         assert all(sensitive_name not in payload for payload in event_payloads)
+
+
+def test_land_price_lead_form_keeps_page_context():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/bang-gia-dat-tphcm").get_data(as_text=True)
+    assert 'name="return_path" value="/bang-gia-dat-tphcm"' in html
+    assert 'data-note="Quan tâm bảng giá đất' in html
+    assert 'data-note="Quan tâm  từ "' not in html

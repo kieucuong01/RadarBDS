@@ -17,9 +17,10 @@
   const resultTitle = document.getElementById('landPriceResultTitle');
   const searchError = document.getElementById('landPriceSearchError');
   const submitButton = form && form.querySelector('.land-price-submit');
+  const leadForm = document.querySelector('.seo-lead-capture-form[data-source-context="land_price_tool_lead"]');
   if (!form || !query || !area || !rowsEl || !cardsEl || !statusEl) return;
 
-  const pageSize = 24;
+  const pageSize = window.matchMedia('(max-width: 860px)').matches ? 12 : 24;
   let suggestTimer = 0;
   let suggestRequest = 0;
   let activeSuggestionIndex = -1;
@@ -28,8 +29,25 @@
   let currentPage = 1;
   let totalPages = 1;
 
+  function updateLeadContext(q, selectedArea) {
+    if (!leadForm) return;
+    const note = `Quan tâm bảng giá đất: đường/từ khóa ${q || 'chưa chọn'}; phường/xã ${selectedArea || 'tất cả'}; từ ${window.location.pathname}`;
+    leadForm.dataset.note = note;
+    const noteInput = leadForm.querySelector('input[name="note"]');
+    if (noteInput) noteInput.value = note;
+    const listingUrl = leadForm.querySelector('input[name="listing_url"]');
+    if (listingUrl) listingUrl.value = window.location.href;
+  }
+
   function track(eventName, params) {
     const safeParams = Object.assign({ tool: 'tphcm_land_price' }, params || {});
+    const step = { land_price_search: 'start', land_price_success: 'success', land_price_no_result: 'empty', land_price_error: 'error' }[eventName];
+    if (step && typeof window.CustomEvent === 'function') {
+      window.dispatchEvent(new window.CustomEvent('radar:track', { detail: { action: 'tool_used', context: { tool: 'land_price', step } } }));
+    }
+    if (eventName === 'land_price_valuation_click' && typeof window.CustomEvent === 'function') {
+      window.dispatchEvent(new window.CustomEvent('radar:track', { detail: { action: 'cta_clicked', context: { cta_name: 'land_price_valuation', destination: '/dinh-gia-bds' } } }));
+    }
     if (typeof window.gtag === 'function') {
       window.gtag('event', eventName, safeParams);
       return;
@@ -241,6 +259,7 @@
     if (page > 1) params.set('page', String(page));
     const url = `${window.location.pathname}?${params.toString()}`;
     window.history[mode === 'replace' ? 'replaceState' : 'pushState']({}, '', url);
+    updateLeadContext(query.value.trim(), area.value.trim());
   }
 
   function updatePagination(data) {
@@ -258,6 +277,7 @@
     const settings = Object.assign({ page: 1, historyMode: 'push', focusResult: true }, options);
     const q = query.value.trim();
     const selectedArea = area.value.trim();
+    updateLeadContext(q, selectedArea);
     if (!q && !selectedArea) {
       query.setAttribute('aria-invalid', 'true');
       area.setAttribute('aria-invalid', 'true');

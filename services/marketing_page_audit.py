@@ -194,15 +194,15 @@ def collect_marketing_page_candidates() -> tuple[tuple[str, str, Mapping[str, ob
     return tuple(sorted(candidates, key=lambda item: (item[1], item[0])))
 
 
-def _iter_strings(value: object) -> Iterable[str]:
+def _iter_text_fields(value: object, path=()):
     if isinstance(value, str):
-        yield value
+        yield path, value
     elif isinstance(value, Mapping):
-        for child in value.values():
-            yield from _iter_strings(child)
+        for key, child in value.items():
+            yield from _iter_text_fields(child, (*path, key))
     elif isinstance(value, (list, tuple)):
-        for child in value:
-            yield from _iter_strings(child)
+        for index, child in enumerate(value):
+            yield from _iter_text_fields(child, (*path, index))
 
 
 def _is_valid_iso_date(value: object) -> bool:
@@ -400,8 +400,9 @@ def _audit_candidate_records(
             hard_failures.append(AuditFinding("error", "invalid_path", path, "Page path must be an absolute, control-character-free path."))
             continue
 
-        for value in _iter_strings(payload):
-            if any(ord(char) < 32 for char in value):
+        for field_path, value in _iter_text_fields(payload):
+            multiline = field_path == ("social_editorial", "caption")
+            if any(ord(char) < 32 and not (multiline and char in "\r\n") for char in value):
                 hard_failures.append(AuditFinding("error", "control_character", path, "Configured text contains a control character."))
             legacy_phrase = next(
                 (phrase for phrase in LEGACY_DEFAULT_FUNNEL_PHRASES if phrase.casefold() in value.casefold()),

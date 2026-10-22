@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  {% include "partials/seo_head.html" %}
+  {% include "partials/public_brand_assets.html" %}
+</head>
+<body class="seo-page">
+  {% include "partials/seo_header.html" %}
+  <main id="main-content" class="seo-shell" style="max-width:850px;padding-block:32px">
+    {% include "partials/seo_breadcrumbs.html" %}
+    <p class="seo-eyebrow">Thông tin và hỗ trợ · cập nhật 22/10/2026</p>
+    <h1>Chính sách bảo mật và tiếp nhận nhu cầu</h1>
+    <p>Trang này giải thích thông tin Radar BDS tiếp nhận khi anh/chị sử dụng website hoặc để lại nhu cầu tìm nhà đất.</p>
+    <h2>Thông tin được tiếp nhận</h2>
+    <p>Khi gửi form nhận tin, Radar BDS lưu số Zalo/điện thoại đã nhập, trang gửi yêu cầu và nhu cầu tra cứu liên quan. Khi sử dụng tài khoản, hệ thống xử lý thông tin đăng nhập và các lựa chọn cần thiết để cung cấp tính năng.</p>
+    <h2>Mục đích sử dụng</h2>
+    <p>Thông tin trong form được dùng để tiếp nhận, trao đổi về nhu cầu và gợi ý tin phù hợp khi có dữ liệu. Gửi form không bảo đảm sẽ có đủ tin, có người bán phản hồi hoặc giao dịch thành công. Dữ liệu giá rao chỉ hỗ trợ sàng lọc ban đầu.</p>
+    <h2>Dữ liệu truy cập, cookie và dịch vụ liên quan</h2>
+    <p>Website sử dụng cookie phiên đăng nhập và lưu một số lựa chọn trên trình duyệt để duy trì trải nghiệm. Các sự kiện truy cập, sử dụng công cụ và bấm liên kết có thể được ghi nhận để kiểm tra lỗi, tốc độ và hiệu quả nội dung; số điện thoại trong form không được đưa vào các sự kiện marketing chuẩn hóa.</p>
+    <p>Website sử dụng hạ tầng lưu trữ và phân phối nội dung; Google Analytics có thể được dùng khi được cấu hình. Các dịch vụ này có thể xử lý thông tin kỹ thuật như địa chỉ IP hoặc thông tin trình duyệt. Anh/chị có thể quản lý cookie và bộ nhớ website trong cài đặt trình duyệt; một số chức năng đăng nhập có thể bị ảnh hưởng.</p>
+    <h2>Quyền truy cập và lưu trữ</h2>
+    <p>Yêu cầu tư vấn được xử lý trong hệ thống quản trị theo quyền tài khoản. Radar BDS sử dụng thông tin để vận hành và theo dõi yêu cầu đã gửi; website hiện chưa cung cấp công cụ tự động đặt thời hạn xóa hoặc tự xóa yêu cầu.</p>
+    <h2>Yêu cầu hỗ trợ hoặc ngừng nhận tin</h2>
+    <p>Để yêu cầu ngừng liên hệ, kiểm tra, sửa hoặc đề nghị xóa thông tin đã gửi, vui lòng liên hệ <a href="mailto:{{ public_contact.email }}">{{ public_contact.email }}</a> hoặc <a href="tel:{{ public_contact.telephone }}">{{ public_contact.phone }}</a>, kèm mô tả yêu cầu. Nhóm hỗ trợ có thể cần xác minh yêu cầu trước khi xử lý; không gửi mật khẩu hoặc giấy tờ nhạy cảm qua form góp ý.</p>
+    <h2>Liên kết ngoài và thông tin liên hệ</h2>
+    <p>Khi mở Facebook, YouTube, Zalo hoặc nguồn tin khác, anh/chị sử dụng dịch vụ của bên đó theo chính sách riêng của họ.</p>
+    <p>Radar BDS · {{ public_contact.address }} · Email: <a href="mailto:{{ public_contact.email }}">{{ public_contact.email }}</a> · Hỗ trợ: <a href="tel:{{ public_contact.telephone }}">{{ public_contact.phone }}</a>.</p>
+    <a class="seo-primary-cta" href="/tin-tuc">Đọc tin tức và dữ liệu</a>
+  </main>
+  {% include "partials/seo_footer.html" %}
+</body>
+</html>

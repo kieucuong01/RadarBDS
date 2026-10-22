@@ -21,7 +21,7 @@ NEWS_HUBS = {
     },
     "du-lieu-radarbds": {
         "path": "/tin-tuc/du-lieu-radarbds",
-        "title": "Tin từ dữ liệu Radar BDS | Radar BDS",
+        "title": "Phân tích giá rao Bình Dương | Dữ liệu Radar BDS",
         "heading": "Tin từ dữ liệu Radar BDS",
         "description": (
             "Các bài phân tích giá rao, khu vực và cách kiểm tra tin từ dữ liệu "

@@ -384,3 +384,16 @@ def test_marketing_coverage_marks_fetch_caps_as_truncated():
     assert view["coverage"]["audit_rows_scanned"] == 20_000
     assert view["coverage"]["lead_rows_scanned"] == 5_000
     assert view["coverage"]["truncated"] is True
+
+
+def test_tool_usage_counts_events_and_keeps_private_form_data_out():
+    conn = _FixtureConnection(audit_rows=[
+        _audit("tool_used", {"page_path": "/dinh-gia-bds", "tool": "valuation", "step": "start", "phone": "0909123456"}, START),
+        _audit("tool_used", {"tool": "valuation", "step": "success"}, START),
+        _audit("tool_used", {"tool": "land_price", "step": "empty"}, PREVIOUS),
+    ])
+    result = build_marketing_source_view(conn, start=START, end=END, previous=PREVIOUS)
+    assert result["tool_usage"]["valuation"]["current"]["start"] == 1
+    assert result["tool_usage"]["valuation"]["current"]["success"] == 1
+    assert result["tool_usage"]["land_price"]["previous"]["empty"] == 1
+    assert "0909123456" not in json.dumps(result)

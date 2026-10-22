@@ -2709,6 +2709,14 @@ function renderGrowthMarketing(marketing) {
   const unattributedEvents = Number(unattributed.lead_events_current || 0);
   const unattributedRows = Number(unattributed.lead_rows_current || 0);
   const filteredDashboardCtas = Number(dashboardHandoffs.filtered_cta_clicks_current || 0);
+  const toolRoot = document.getElementById('growthToolsTableBody');
+  if (toolRoot) {
+    const usage = safeMarketing.tool_usage || {};
+    toolRoot.innerHTML = [['valuation', 'Định giá'], ['land_price', 'Bảng giá đất']].map(([key, label]) => {
+      const row = (usage[key] || {}).current || {};
+      return '<tr><th scope="row">' + label + '</th>' + ['start', 'success', 'empty', 'error'].map(step => '<td>' + growthFmt(row[step] || 0) + '</td>').join('') + '</tr>';
+    }).join('');
+  }
   const coverageParts = [
     'Số liệu là lượt sự kiện, không phải số người duy nhất.',
     'Page-view có kênh: ' + growthFmt(coverage.with_stable_channel) + '/' + growthFmt(coverage.event_count) + '.',

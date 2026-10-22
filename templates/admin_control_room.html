@@ -1013,6 +1013,11 @@
         </div>
         <div id="growthMarketingEmpty" class="growth-state" hidden>Chưa có page-view marketing hoặc lead gán trực tiếp trong kỳ này.</div>
         <div id="growthMarketingChannels" class="growth-marketing-channels" aria-label="Page-view theo kênh"></div>
+        <section class="growth-marketing-panel" aria-labelledby="growthToolsTitle">
+          <h3 id="growthToolsTitle">Sử dụng công cụ</h3>
+          <p>Lượt thao tác trong kỳ, không phải số người duy nhất. Chỉ có dữ liệu sau khi tính năng đo được triển khai.</p>
+          <div class="table-wrap"><table><thead><tr><th>Công cụ</th><th>Bắt đầu</th><th>Có kết quả</th><th>Không có mẫu</th><th>Lỗi</th></tr></thead><tbody id="growthToolsTableBody"></tbody></table></div>
+        </section>
         <div class="growth-marketing-grid">
           <section class="growth-marketing-panel" aria-labelledby="growthLandingTitle">
             <h3 id="growthLandingTitle">Landing page</h3>
@@ -1114,7 +1119,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-brokers-v4-history-samples"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v53-guland-observation-trust"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=public-p1-p2-20261022-r2"></script>
   {% endif %}
 </body>
 </html>

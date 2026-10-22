@@ -168,3 +168,14 @@ def test_lead_first_intro_priorities_are_answer_first():
     for slug in LEAD_FIRST_INTRO_SLUGS:
         first_intro = SEO_ARTICLES[slug]["article"]["intro"][0]
         assert 40 <= len(first_intro.split()) <= 60
+
+
+def test_social_caption_line_breaks_are_valid_but_other_controls_stay_blocked():
+    base = {"path": "/tin-tuc/fixture", "title": "Fixture title", "description": "Fixture description"}
+    def codes(payload):
+        result = _audit_candidate_records((("fixture", base["path"], payload),), strict=False)
+        return {finding.code for finding in result.hard_failures}
+    assert "control_character" not in codes({**base, "social_editorial": {"caption": "Dòng 1\nDòng 2\r\nNguồn"}})
+    assert "control_character" in codes({**base, "title": "Title\nInjected"})
+    assert "control_character" in codes({**base, "social_editorial": {"caption": "Bad\x00caption"}})
+    assert "control_character" in codes({**base, "social_editorial": {"caption": "Bad\x1fcaption"}})

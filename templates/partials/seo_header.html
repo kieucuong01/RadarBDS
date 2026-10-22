@@ -37,7 +37,7 @@
           <section aria-labelledby="seoNavPlanningTitle">
             <h2 id="seoNavPlanningTitle">Bản đồ quy hoạch</h2>
             {% for category_page in planning_category_pages %}
-            <a href="{{ category_page.path }}"><span><strong>{{ category_page.nav_label }}</strong><small>{{ category_page.nav_description }}</small></span></a>
+            <a href="{{ category_page.path }}"><span><strong>{{ category_page.nav_label }}</strong><small>{{ category_page.nav_description if category_page.has_content else 'Đang cập nhật · xem các chuyên đề đã có trong thư viện' }}</small></span></a>
             {% endfor %}
             <a class="seo-nav-overview" href="/quy-hoach-binh-duong" data-nav="quy-hoach"{% if active_nav == 'quy-hoach' %} aria-current="page"{% endif %}><span><strong>Xem thư viện quy hoạch</strong><small>Tất cả chuyên đề hiện có</small></span></a>
           </section>

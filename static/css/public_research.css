@@ -36,7 +36,7 @@
 .valuation-page .result-empty>p,.valuation-page .guest-note { color: #64748b; font-size: .9rem; line-height: 1.75; }
 .valuation-page .empty-guide { gap: 0; border-top: 1px solid #e2e8f0; }
 .valuation-page .empty-guide>div { padding: 16px 0; border: 0; border-bottom: 1px solid #e2e8f0; border-radius: 0; background: none; box-shadow: none; }
-.valuation-page .hero-number strong { color: #4f46e5; font-size: clamp(2rem,4vw,3rem); line-height: 1.2; }
+.valuation-page .hero-number strong { color: #fff; font-size: clamp(2rem,4vw,3rem); line-height: 1.2; }
 .valuation-page .metric-row { flex-wrap: wrap; }
 .valuation-page .metric-row>div { min-width: 0; border-radius: 4px; }
 .valuation-page .valuation-comparables-section { padding: 24px; }
@@ -210,3 +210,5 @@
   .report-detail .seo-final-cta { display: block; }
   .report-detail .seo-final-cta .seo-primary-cta { margin-top: 16px; }
 }
+
+.valuation-page .hero-number span { color: #fff; }

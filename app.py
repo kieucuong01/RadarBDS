@@ -81,6 +81,7 @@ from config.settings import (
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from services.report_hub import report_archive
+from services.news_archive import news_archive
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
 from config.planning_pages import (
@@ -99,13 +100,13 @@ from config.city_map_products import (
     get_city_map_page,
 )
 from config.content_hubs import NEWS_HUBS, PLANNING_CATEGORY_PAGES
-from services.public_marketing import PUBLIC_CONTACT, build_public_entities, build_trust_context
+from services.public_marketing import PUBLIC_CONTACT, build_public_entities, build_trust_context, readable_report_copy
 from services.traffic_priority import build_traffic_priority_context
 mimetypes.add_type("image/webp", ".webp")
 mimetypes.add_type("application/geo+json; charset=utf-8", ".geojson")
 
 # Import the extracted services
-from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, load_market_opportunities, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, normalize_date_range_for_tier, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
+from services.market_data import load_counts, load_dashboard_summary, load_signals, load_trend_data, load_listing_detail, load_market_indicators, load_market_opportunities, get_base_filters, get_city_for_ward, CITY_MAP, _days_ago, resolve_image_url, _range_filters, redact_for_tier, normalize_search_keyword, keyword_search_filter, group_price_drop_filter_sql, signal_badge_metadata, normalize_date_range, normalize_date_range_for_tier, normalize_sources_for_tier, listing_date_range_filter, build_listing_filters, listing_activity_at_sql, listing_card_activity
 from db.guland_publishers import (
     list_publishers,
     publisher_sort_rank_sql,
@@ -217,6 +218,8 @@ app = Flask(__name__)
 
 def _request_security_guard():
     """Keep the global CSRF rule while preserving Radar Ask's private error contract."""
+    if request.method in {"GET", "HEAD"}:
+        request.environ["radar.request_started"] = time.perf_counter()
     rejected = reject_cross_site_session_request()
     if rejected is None or not request.path.startswith("/api/radar-ask/"):
         return rejected
@@ -286,8 +289,10 @@ def inject_city_map_products():
                 key=lambda item: city_nav_order.get(item["path"], 99),
             )
         ),
+        "readable_report_copy": readable_report_copy,
         "planning_category_pages": tuple(
-            dict(page) for page in PLANNING_CATEGORY_PAGES.values()
+            {**page, "has_content": any(item.get("category") in page["categories"] for item in PLANNING_PAGE_LIST)}
+            for page in PLANNING_CATEGORY_PAGES.values()
         ),
         "news_hub_pages": tuple(dict(page) for page in NEWS_HUBS.values()),
     }
@@ -295,6 +300,9 @@ def inject_city_map_products():
 
 @app.after_request
 def add_response_headers(response):
+    started = request.environ.get("radar.request_started")
+    if started is not None and response.status_code == 200 and response.mimetype == "text/html" and (request.endpoint or "").startswith("public."):
+        response.headers.add("Server-Timing", f"app;dur={(time.perf_counter() - started) * 1000:.1f}")
     if request.path in PUBLIC_TOOL_HTML_PATHS:
         anonymous_html = (
             request.method in {"GET", "HEAD"}
@@ -1528,6 +1536,7 @@ _CITY_MAP_TRACK_IDENTITIES = tuple(
 
 
 ALLOWED_TRACK_ACTIONS = {
+    "tool_used",
     "seo_landing_viewed",
     "report_viewed",
     "report_filter_used",
@@ -1942,6 +1951,7 @@ def saved_listings_page():
 def valuation_tool_page():
     return render_template(
         "valuation_tool.html",
+        page={"path": "/dinh-gia-bds", "lead_scope_label": "Thủ Dầu Một và Bến Cát"},
         wards_by_city=VALUATION_TOOL_CITY_MAP,
         required_tier=VALUATION_TOOL_MIN_TIER,
         active_nav="dinh-gia",
@@ -1960,6 +1970,7 @@ def tphcm_land_price_tool_page():
     areas = sorted({r.get("area", "") for r in data.get("rows", []) if r.get("area")})
     return render_template(
         "tphcm_land_price_tool.html",
+        page={"path": "/bang-gia-dat-tphcm", "lead_scope_label": "khu vực đang tra cứu"},
         active_nav="bang-gia-dat",
         areas=areas,
         row_count=len(data.get("rows", [])),
@@ -2160,6 +2171,17 @@ def dashboard():
 def seo_binh_duong_landing():
     page = dict(SEO_PAGES["binh-duong"])
     return _render_public_page(page)
+
+
+def privacy_page():
+    page = {
+        "path": "/chinh-sach-bao-mat",
+        "title": "Chính sách bảo mật và tiếp nhận nhu cầu | Radar BDS",
+        "description": "Cách Radar BDS tiếp nhận số điện thoại, nhu cầu tìm nhà đất, dữ liệu truy cập và yêu cầu hỗ trợ về quyền riêng tư.",
+    }
+    page["breadcrumbs"] = _page_breadcrumbs(page)
+    return render_template("privacy.html", page=page, active_nav="",
+                           site_meta=_site_meta(page["path"], title=page["title"], description=page["description"]))
 
 
 def _breadcrumb_schema(breadcrumbs: list[dict]) -> dict:
@@ -2961,6 +2983,8 @@ def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
     periods: dict[str, str] = {}
     for index, report in enumerate(reports, start=1):
         item = dict(report)
+        item["description"] = readable_report_copy(item.get("description"))
+        item["hero_text"] = readable_report_copy(item.get("hero_text"))
         report_body = dict(item.get("report") or {})
         scope = str(item.get("scope_label") or "Thủ Dầu Một")
         city_key, city_label = _report_hub_city(scope, item.get("path", ""))
@@ -3092,6 +3116,10 @@ def _latest_ward_report(ward_slug: str) -> dict | None:
 
 def _build_live_location_snapshot(page: dict) -> dict:
     ward = page["live_ward"]
+    public_filters = {
+        "sources": normalize_sources_for_tier(None, "guest"),
+        "date_range": normalize_date_range_for_tier(None, "guest"),
+    }
     now = datetime.now(_BANGKOK_TZ)
     snapshot = {
         "available": False,
@@ -3104,7 +3132,7 @@ def _build_live_location_snapshot(page: dict) -> dict:
         "market_rows": [],
         "signals": [],
         "methodology": [
-            "Nguồn dữ liệu: tin rao công khai mà Radar BDS đang theo dõi.",
+            "Nguồn dữ liệu: tin Facebook công khai trong một tháng gần đây, cùng phạm vi bộ lọc mặc định khi mở danh sách.",
             "Giá tham khảo trung bình được tính theo loại tài sản từ các mẫu không bị đánh dấu ngoại lệ.",
             "Tín hiệu chỉ là bộ lọc ưu tiên; không thay thế kiểm tra thực địa, quy hoạch và pháp lý.",
         ],
@@ -3114,12 +3142,13 @@ def _build_live_location_snapshot(page: dict) -> dict:
             endpoint="dashboard",
             tier="guest",
             versions=_public_dataset_versions(_DASHBOARD_DATASETS),
-            query={"wards": [ward], "include_trend": False},
+            query={"wards": [ward], "include_trend": False, **public_filters},
             loader=lambda: load_dashboard_summary(
                 _db_handle(),
                 wards=[ward],
                 tier="guest",
                 include_trend=False,
+                **public_filters,
             ),
         ).payload
         signal_payload = get_or_load_public_payload(
@@ -3132,6 +3161,7 @@ def _build_live_location_snapshot(page: dict) -> dict:
                 "limit": 5,
                 "sort": "newest",
                 "include_total": False,
+                **public_filters,
             },
             loader=lambda: _tier_safe_signal_payload(
                 load_signals(
@@ -3142,6 +3172,7 @@ def _build_live_location_snapshot(page: dict) -> dict:
                     limit=5,
                     sort="newest",
                     include_total=False,
+                    **public_filters,
                 ),
                 "guest",
             ),
@@ -3214,7 +3245,7 @@ def _hydrate_live_location_page(page: dict) -> dict:
     page["hero_badge"] = f"Thủ Dầu Một – Bình Dương cũ · truy vấn {snapshot['updated_label']}"
     page["map_label"] = f"Thủ Dầu Một – Bình Dương cũ / {ward}"
     page["dashboard_href"] = "/?" + urllib.parse.urlencode(
-        {"tab": "signals", "ward": ward}
+        {"tab": "signals", "ward": ward, "source": "facebook", "date_range": "1m"}
     )
     if snapshot["available"]:
         page["hero_text"] = (
@@ -3272,6 +3303,8 @@ def _render_public_page(page: dict):
         else:
             page["scope_label"] = "Thủ Dầu Một"
     if page.get("variant") == "report":
+        page["description"] = readable_report_copy(page.get("description"))
+        page["hero_text"] = readable_report_copy(page.get("hero_text"))
         scope = str(page.get("scope_label") or "Thủ Dầu Một")
         city_key, _city_label = _report_hub_city(scope, page.get("path", ""))
         dashboard_params = {
@@ -3467,7 +3500,8 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
         page["title"] = title
     if is_news_archive:
         page["hero_badge"] = "Tin tức BĐS Bình Dương"
-        page["hero_title"] = "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS"
+        page["hero_title"] = "Phân tích giá rao Bình Dương từ dữ liệu Radar BDS"
+        page["description"] = "Phân tích giá rao, so sánh phường và hướng dẫn kiểm tra tin nhà đất Bình Dương từ dữ liệu Radar BDS, kèm nguồn và kỳ dữ liệu."
         page["hero_text"] = "Phân tích giá rao, so sánh phường và cách kiểm tra tin từ dữ liệu Radar BDS để người mua biết nên mở khu vực nào tiếp theo."
         page["lead_scope_label"] = "Bình Dương"
         page["methodology"] = {
@@ -3484,14 +3518,14 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
                 },
                 {
                     "label": "Guland — nguồn phụ",
-                    "body": "Dùng bổ sung khi có dữ liệu phù hợp; chính sách publisher và cảnh báo nguồn vẫn được giữ riêng.",
+                    "body": "Bổ sung dữ liệu tính giá tham khảo; danh sách tin công khai hiện chỉ hiển thị nguồn Facebook.",
                 },
             ],
             "steps": [
                 "Chuẩn hóa địa danh, giá, diện tích, loại tài sản và các đặc điểm có thể đối chiếu.",
-                "Gom danh tính tin canonical để hạn chế repost làm dày giả nguồn cung và lịch sử giá.",
-                "So trong phân khúc địa phương tương đồng để ước tính fair value tham khảo.",
-                "Tính MOS, áp dụng cảnh báo chất lượng và actionable gate trước khi đưa vào signal feed.",
+                "Lọc tin trùng và tin đăng lại để hạn chế làm dày giả nguồn cung và lịch sử giá.",
+                "So trong phân khúc địa phương tương đồng để ước tính giá tham khảo.",
+                "So mức giá rao với giá tham khảo, kiểm tra chất lượng và chỉ hiển thị tin phù hợp với quyền truy cập.",
             ],
             "cadence": (
                 "Dữ liệu được làm mới theo lịch crawl và kỳ báo cáo của Radar BDS. "
@@ -3499,7 +3533,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
             ),
             "limitations": [
                 "Giá rao không phải giá chốt giao dịch và có thể thay đổi sau khi liên hệ.",
-                "Fair value và MOS là chỉ báo sàng lọc, không thay thế thẩm định giá chính thức.",
+                "Giá tham khảo và biên dưới giá tham khảo (MOS) là chỉ báo sàng lọc, không thay thế thẩm định giá chính thức.",
                 "Trang không thay thế kiểm tra thực địa, quy hoạch, pháp lý, giấy tờ hoặc tư vấn chuyên môn.",
             ],
             "ward_links": [
@@ -3512,7 +3546,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
             "next_links": [
                 {"label": "Báo cáo thị trường", "href": "/bao-cao"},
                 {"label": "Công cụ định giá", "href": "/dinh-gia-bds"},
-                {"label": "Mở signal feed", "href": "/?tab=signals"},
+                {"label": "Xem tin đáng kiểm tra", "href": "/?tab=signals"},
             ],
         }
         page["breadcrumbs"] = [
@@ -3577,8 +3611,23 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
     )
     page["latest_modified_at"] = latest_modified_at
     page["latest_modified_label"] = _format_news_date(latest_modified_at)
+    archive = None
+    if is_news_archive:
+        # Prefer the most recently updated article over an old pinned data snapshot.
+        all_articles = [item for _, item in matching]
+        article_categories, _ = _article_category_groups(all_articles)
+        try:
+            archive = news_archive(all_articles, article_categories, request.args, path=hub_path)
+        except ValueError:
+            abort(404)
+        featured = archive["featured"]
+        articles = archive["items"]
     page = _with_public_trust(page, "hub")
     site_meta = _site_meta(page["path"], title=page["title"], description=page["description"], keywords=page["keywords"])
+    if archive:
+        site_meta.update(canonical_url=_public_url(archive["url"]), og_url=_public_url(archive["url"]))
+        if archive["number"] > 1:
+            site_meta["title"] += f' — Trang {archive["number"]}'
     return render_template(
         "seo_knowledge_hub.html",
         page=page,
@@ -3586,6 +3635,7 @@ def _article_hub_page(*, hub_path: str, article_prefix: str, active_nav: str, ti
         articles=articles,
         article_categories=article_categories,
         category_groups=category_groups,
+        archive=archive,
         site_meta=site_meta,
         active_nav=active_nav,
     )
@@ -3600,7 +3650,7 @@ def seo_news_radar_archive_page():
         hub_path="/tin-tuc/du-lieu-radarbds",
         article_prefix="/tin-tuc/",
         active_nav="tin-tuc",
-        title="Tin tức BĐS Bình Dương | Radar BDS",
+        title="Phân tích giá rao Bình Dương | Dữ liệu Radar BDS",
     )
 
 
@@ -4262,6 +4312,7 @@ def sitemap_xml():
         if item.get("item_type") == "legal_document" and item.get("slug")
     ]
     for page in [
+        {"path": "/chinh-sach-bao-mat", "updated_at": "2026-10-22"},
         REPORT_HUB,
         news_hub,
         {"path": "/llms.txt", "updated_at": max(news_lastmod, content_lastmod.get("radar_article", ""))},
