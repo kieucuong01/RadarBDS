@@ -62,7 +62,7 @@ def test_content_hubs_include_reports_news_and_legacy_knowledge():
     assert "'/api/leads'" in radar_news_html
 
     assert "Đang phủ 13 phường Thủ Dầu Một" in report_html
-    assert "Tin tức BĐS Bình Dương từ dữ liệu Radar BDS" in radar_news_html
+    assert "Phân tích giá rao Bình Dương từ dữ liệu Radar BDS" in radar_news_html
 
 
 def test_report_hub_trailing_slash_redirects_to_canonical_path():
@@ -85,7 +85,7 @@ def test_radar_data_hub_explains_scope_method_cadence_and_limits():
         "Facebook",
         "Guland",
         "13 phường Thủ Dầu Một",
-        "fair value",
+        "giá tham khảo",
         "MOS",
         "giá rao",
         "không thay thế",
@@ -224,10 +224,11 @@ def test_news_hub_is_dashboard_first_and_has_progressive_discovery():
     assert 'id="newsHubSearch"' in html
     assert 'data-news-category="all"' in html
     assert 'data-news-results-status' in html
-    assert 'data-news-load-more' in html
-    assert 'data-news-load-more-row hidden' in html
+    assert 'data-news-server-archive' in html
+    assert 'method="get"' in html
+    assert 'rel="next"' in html
     assert 'data-news-empty-state' in html
-    assert 'js/seo_news_hub.js' in html
+    assert 'js/seo_news_hub.js' not in html
     assert "SEO/AIO" not in html
     assert "Số bài phân tích" in html
     css = Path("static/css/seo.css").read_text(encoding="utf-8")
@@ -270,7 +271,7 @@ def test_news_hub_featured_is_not_repeated_in_archive():
     import app as radar_app
 
     html = radar_app.app.test_client().get("/tin-tuc/du-lieu-radarbds").get_data(as_text=True)
-    featured_path = SEO_ARTICLES[KNOWLEDGE_HUB["featured_slug"]]["path"]
+    featured_path = re.search(r'data-news-featured="([^"]+)"', html).group(1)
 
     assert html.count(f'data-news-featured="{featured_path}"') == 1
     assert f'data-news-card-path="{featured_path}"' not in html
@@ -316,13 +317,9 @@ def test_news_hub_item_list_contains_each_article_once():
     payload = json.loads(blocks[-1])
     item_list = next(item for item in payload["@graph"] if item["@type"] == "ItemList")
     urls = [item["url"] for item in item_list["itemListElement"]]
-    expected_count = sum(
-        str(item.get("path") or "").startswith("/tin-tuc/")
-        and not item.get("news")
-        for item in SEO_ARTICLES.values()
-    )
-
-    assert len(urls) == expected_count
+    visible_paths = re.findall(r'data-news-(?:featured|card-path)="([^"]+)"', html)
+    assert set(urls) == {"https://radarbds.vn" + path for path in visible_paths}
+    assert len(urls) == len(visible_paths) <= 13
     assert len(urls) == len(set(urls))
 
 

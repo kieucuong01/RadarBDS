@@ -182,7 +182,7 @@ def test_binh_duong_map_route_renders_progressive_content_and_accessible_control
     assert 'data-source-context="seo_landing_lead"' in html
     assert 'class="seo-lead-capture-form"' in html
     assert 'action="/api/leads"' in html
-    assert "Muốn nhận 5 tin đáng kiểm tra mới nhất ở Bản đồ Bình Dương?" in html
+    assert "Muốn nhận tin đáng kiểm tra ở Bản đồ Bình Dương?" in html
     assert "Số Zalo của anh/chị" in html
     assert "Nhận tin qua Zalo" in html
     assert "geoBoundaries" in html
