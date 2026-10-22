@@ -29,6 +29,21 @@ This module **reuses**, never reimplements:
 
 ---
 
+## Shared proprietary asking-price facts (read-side contract)
+
+For new group/video drafts quoting `/gia-dat/` statistics, bind the immutable
+packet through `price_fact_binding` with exact `snapshot_id`, `snapshot_sha256`
+and complete fact objects. Load that frozen file (not a fresh DB query), assert
+its ID, then call `services.data_price_seo.validate_claims(snapshot, hash, facts)`.
+Use the stored display, units, sample counts and period. Live listing-card prices
+are separate data, not the frozen monthly statistic. Full contract and examples:
+[`../data_price_seo.md`](../data_price_seo.md#cross-channel-fact-handoff-read-side-contract).
+
+This is a read-side prerequisite, not automatic queue-adapter enforcement yet.
+Source/rights/approval/deduplication/visual and platform verification gates above
+remain mandatory. No post or video is authorized by creating a price snapshot.
+Do not change already-published assets to make them match a newer snapshot.
+
 ## Lane recommendation (no forced quota)
 
 `recommended_lane(posted)` inspects real posted history:

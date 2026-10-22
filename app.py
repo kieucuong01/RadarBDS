@@ -4251,6 +4251,8 @@ def llms_txt():
 
 
 def sitemap_xml():
+    from services.data_price_seo import sitemap_entries as data_price_sitemap_entries
+
     def render_sitemap_entry(page, *, changefreq, priority, lastmod=""):
         lastmod_markup = f"    <lastmod>{lastmod}</lastmod>\n" if lastmod else ""
         return (
@@ -4333,6 +4335,7 @@ def sitemap_xml():
         PLANNING_HUB,
         *(page for page in PLANNING_CATEGORY_PAGES.values() if _planning_category_items(page)),
         *SEO_PAGES.values(),
+        *data_price_sitemap_entries(),
         *PLANNING_PAGE_LIST,
         *public_document_pages,
     ]:
