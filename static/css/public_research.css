@@ -212,3 +212,5 @@
 }
 
 .valuation-page .hero-number span { color: #fff; }
+.valuation-page .result-topline strong { color: #174ea6; background: #eff6ff; border-color: #bfdbfe; }
+.valuation-page #dashboardWard { white-space: nowrap; }
