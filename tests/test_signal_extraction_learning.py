@@ -302,3 +302,63 @@ def test_unknown_old_ward_is_not_replaced_with_new_admin_ward(title,description)
     record=normalize_record({"source":"facebook","url":"https://example.invalid/case","default_area":"Thủ Dầu Một",
                             "title":title,"description":description})
     assert record is not None and record["ward"] is None
+
+
+# 20261022-150007:83537:{frontage_m,depth_m}; 83563:frontage_m.
+# Two independent source phrases, not two copies of the same listing.
+REVIEW22_DIMENSION_CASES = [
+    (83537, "Diện tích: 185m²; Ngang 8,53 × dài 22m", 8.53, 22.0, 185.0),
+    (83563, "Dt : 339m thổ cư 184m ( ngang 11)", 11.0, None, 339.0),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,frontage,depth,area", REVIEW22_DIMENSION_CASES)
+def test_review22_explicit_dimension_phrases(listing_id, text, frontage, depth, area):
+    assert extract_dimensions(text) == {"frontage_m": frontage, "depth_m": depth}
+
+
+@pytest.mark.parametrize("listing_id,text,frontage,depth,area", REVIEW22_DIMENSION_CASES)
+def test_review22_dimensions_preserve_declared_area_through_normalization(listing_id, text, frontage, depth, area):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/dimension-control",
+        "title": text, "description": "",
+    })
+    assert record is not None
+    assert record["frontage_m"] == frontage
+    assert record["measurement_provenance"]["frontage_m"] == "source_text"
+    assert record["area_m2"] == area
+    assert record["measurement_provenance"]["area_m2"] == "declared_text"
+    if depth is not None:
+        assert record["depth_m"] == depth
+        assert record["measurement_provenance"]["depth_m"] == "source_text"
+    else:
+        # Existing display-only inference remains separate from extracted text.
+        # The source does NOT declare a depth; do not mark a quotient source_text.
+        assert record["depth_m"] == round(area / frontage, 1)
+        assert record["measurement_provenance"]["depth_m"] == "derived_area_frontage"
+        assert record["tho_cu_m2"] == 184.0
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("ngang 8,53 × dài 22m", {"frontage_m": 8.53, "depth_m": 22.0}),
+    ("NGANG 8.53M × SÂU 22M", {"frontage_m": 8.53, "depth_m": 22.0}),
+    ("ngang 8,53 x dài 22m", {"frontage_m": 8.53, "depth_m": 22.0}),
+    ("ngang 8,53 dài 22m", {"frontage_m": 8.53, "depth_m": 22.0}),
+    ("DT 185m2 (ngang 8,53)", {"frontage_m": 8.53, "depth_m": None}),
+    ("DT 339m2 ( NGANG 11 )", {"frontage_m": 11.0, "depth_m": None}),
+    ("(ngang 11m)", {"frontage_m": 11.0, "depth_m": None}),
+    ("ngang 11m", {"frontage_m": 11.0, "depth_m": None}),
+])
+def test_review22_labeled_dimension_separator_and_parenthesis_controls(text, expected):
+    assert extract_dimensions(text) == expected
+
+
+@pytest.mark.parametrize("text", [
+    "(ngang 11%)", "(ngang 11m2)", "(ngang 11m²)",
+    "(ngang 11abc)", "(ngang 11,5abc)", "(ngang 11 phòng)",
+    "(ngang 110)", "(ngang 1)", "đường ngang 11 lô đất",
+    "(đường ngang 11)", "diện tích 185m², đường rộng 11m",
+    "ngang 8,53 × đường dài 22m",
+])
+def test_review22_unitless_frontage_requires_unambiguous_dimension_context(text):
+    assert extract_dimensions(text) == {"frontage_m": None, "depth_m": None}

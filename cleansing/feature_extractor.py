@@ -736,8 +736,8 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
     )
     result = {'frontage_m': None, 'depth_m': None}
 
-    # "ngang 7m x dài 21m" / "ngang 7m x sâu 21m"
-    m = re.search(r'ngang\s*([\d]+[,.]?[\d]*)\s*(?:m\s*)?(?:x\s*)?(?:dai|sau)\s*([\d]+[,.]?[\d]*)', t_fold)
+    # "ngang 7m x dài 21m" / "ngang 8,53 × dài 22m"
+    m = re.search(r'ngang\s*([\d]+[,.]?[\d]*)\s*(?:m\s*)?(?:[x×]\s*)?(?:dai|sau)\s*([\d]+[,.]?[\d]*)', t_fold)
     if m:
         result['frontage_m'] = float(m.group(1).replace(',', '.'))
         result['depth_m'] = float(m.group(2).replace(',', '.'))
@@ -781,6 +781,16 @@ def extract_dimensions(text: str) -> Dict[str, Optional[float]]:
         result['frontage_m'] = w
         result['depth_m'] = d
         return result
+
+    # A self-contained "(ngang 11)" labels frontage even without the m unit.
+    # Require the closing parenthesis and a plausible width: never consume an
+    # area unit, percentage, road label, or an arbitrary trailing word.
+    m = re.search(r'\(\s*ngang\s+(\d+(?:[,.]\d+)?)\s*\)', t_fold)
+    if m:
+        width = float(m.group(1).replace(',', '.'))
+        if 2 <= width <= 50:
+            result['frontage_m'] = width
+            return result
 
     # "ngang Xm" / "mặt tiền Xm" / "mt Xm"
     m = re.search(r'(?:ngang|mặt tiền|mt)\s*([\d]+[,.]?[\d]*)\s*m\b', t)
