@@ -25112,6 +25112,397 @@ SEO_ARTICLES = {
             }
         ]
     },
+    "phu-my-hay-tan-an-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-my-hay-tan-an-nen-xem-khu-nao-truoc",
+        "category": {
+            "key": "so-sanh-khu-vuc",
+            "label": "So sánh phường"
+        },
+        "title": "Phú Mỹ hay Tân An: nên xem khu nào trước? | Radar BDS",
+        "description": "So sánh Phú Mỹ và Tân An bằng dữ liệu Facebook 14 ngày: số tin, dấu hiệu đáng kiểm tra, giá rao trung vị đất nền và nhà đất.",
+        "keywords": "Phú Mỹ hay Tân An, giá đất Phú Mỹ, giá đất Tân An, nhà đất Thủ Dầu Một, đất nền Bình Dương, Radar BDS",
+        "breadcrumb_label": "Phú Mỹ hay Tân An",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Phú Mỹ hay Tân An: nên xem khu nào trước?",
+        "hero_text": "Nếu cần nhiều tin để lọc, nên mở Phú Mỹ trước: 181 tin đang theo dõi so với 102 tin ở Tân An. Nếu ưu tiên giá rao trung vị thấp hơn theo m², Tân An đang thấp hơn ở cả đất nền và nhà đất. Hai phường vẫn cần được đọc riêng theo loại hình.",
+        "scope_label": "Thủ Dầu Một · Phú Mỹ / Tân An",
+        "hero_checks": [
+            "Phú Mỹ có 181 tin đang theo dõi; Tân An có 102 tin",
+            "Dấu hiệu đáng kiểm tra: Phú Mỹ 30 tin; Tân An 24 tin",
+            "Đất nền: Phú Mỹ 21,0 tr/m²; Tân An 15,6 tr/m²",
+            "Nhà đất: Phú Mỹ 37,3 tr/m²; Tân An 19,8 tr/m²"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Mỹ",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_tan_an",
+        "secondary_cta": "Xem trang phường Tân An",
+        "secondary_href": "/binh-duong/phuong-tan-an",
+        "map_label": "Tin tức / So sánh Phú Mỹ và Tân An",
+        "hero_metric": {
+            "label": "Tin đang theo dõi",
+            "value": "283 tin",
+            "delta": "Phú Mỹ 181 · Tân An 102",
+            "note": "Tin Facebook trong cửa sổ 14 ngày · snapshot 23/10/2026"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Mở Phú Mỹ để có nhiều mẫu hơn; xem Tân An nếu ưu tiên giá rao thấp hơn",
+            "price": "Đất nền: Tân An 15,6 tr/m² · Phú Mỹ 21,0 tr/m²",
+            "metric_a": "Tin đang theo dõi",
+            "metric_a_value": "Phú Mỹ 181 · Tân An 102",
+            "metric_b": "Nhà đất",
+            "metric_b_value": "Tân An 19,8 · Phú Mỹ 37,3 tr/m²"
+        },
+        "value_cards": [
+            {
+                "title": "Phú Mỹ có nhiều nguồn tin hơn",
+                "body": "Phú Mỹ có 181 tin đang theo dõi, cao hơn 102 tin ở Tân An. Đây là lợi thế khi muốn mở rộng danh sách để lọc theo diện tích, đường vào và tổng giá."
+            },
+            {
+                "title": "Tân An thấp hơn ở giá rao trung vị/m²",
+                "body": "Giá rao trung vị đất nền tại Tân An là 15,6 tr/m², còn Phú Mỹ là 21,0 tr/m². Với nhà đất, Tân An là 19,8 tr/m² và Phú Mỹ là 37,3 tr/m²."
+            },
+            {
+                "title": "Dấu hiệu không phải nhãn nên mua",
+                "body": "Phú Mỹ có 30 tin và Tân An có 24 tin thuộc nhóm dấu hiệu đáng kiểm tra. Nhóm này chỉ giúp sắp thứ tự đọc tin; người mua vẫn phải hỏi lại giấy tờ, vị trí, diện tích và hiện trạng."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bài viết sang từng tin",
+            "title": "Lọc riêng Phú Mỹ và Tân An",
+            "body": "Chọn phường, tách đất nền với nhà đất, rồi xem từng tin theo giá/m² và dấu hiệu đáng kiểm tra.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin Phú Mỹ và Tân An theo loại hình",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {
+                    "value": "2 phường",
+                    "label": "Phú Mỹ và Tân An"
+                },
+                {
+                    "value": "2 loại hình",
+                    "label": "đất nền và nhà đất"
+                },
+                {
+                    "value": "14 ngày",
+                    "label": "cửa sổ dữ liệu"
+                }
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày",
+            "title": "So hai phường theo đúng loại hình",
+            "body": "Các mức giá dưới đây là giá rao trung vị theo nhóm có dữ liệu giá/m² hợp lệ, không phải giá giao dịch.",
+            "columns": [
+                "Phường",
+                "Tin đang theo dõi",
+                "Dấu hiệu",
+                "Đất nền",
+                "Nhà đất"
+            ],
+            "rows": [
+                {
+                    "area": "Phú Mỹ",
+                    "price": "181 tin",
+                    "tracked": "30",
+                    "signal": "21,0 tr/m²",
+                    "area_m2": "37,3 tr/m²",
+                    "note": ""
+                },
+                {
+                    "area": "Tân An",
+                    "price": "102 tin",
+                    "tracked": "24",
+                    "signal": "15,6 tr/m²",
+                    "area_m2": "19,8 tr/m²",
+                    "note": ""
+                }
+            ],
+            "cards": [
+                {
+                    "title": "Tổng mẫu",
+                    "value": "283 tin",
+                    "body": "Phú Mỹ 181 · Tân An 102 trong cửa sổ 14 ngày."
+                },
+                {
+                    "title": "Đất nền",
+                    "value": "15,6 vs 21,0 tr/m²",
+                    "body": "Tân An thấp hơn Phú Mỹ theo giá rao trung vị."
+                },
+                {
+                    "title": "Nhà đất",
+                    "value": "19,8 vs 37,3 tr/m²",
+                    "body": "Tân An thấp hơn Phú Mỹ; vẫn phải so hiện trạng nhà."
+                }
+            ]
+        },
+        "local_links_title": "Đọc tiếp và mở bộ lọc",
+        "local_links": [
+            {
+                "label": "Trang phường Phú Mỹ",
+                "href": "/binh-duong/phuong-phu-my",
+                "description": "Xem dữ liệu địa phương và mở danh sách tin Phú Mỹ."
+            },
+            {
+                "label": "Trang phường Tân An",
+                "href": "/binh-duong/phuong-tan-an",
+                "description": "Xem dữ liệu địa phương và mở danh sách tin Tân An."
+            },
+            {
+                "label": "Giá đất Phú Mỹ hiện bao nhiêu?",
+                "href": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
+                "description": "Đọc riêng giá rao đất nền và nhà đất Phú Mỹ."
+            },
+            {
+                "label": "Giá đất Tân An hiện nay",
+                "href": "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay",
+                "description": "Đọc riêng giá rao đất nền và nhà đất Tân An."
+            },
+            {
+                "label": "Công cụ định giá BĐS",
+                "href": "/dinh-gia-bds",
+                "description": "Ước lượng ban đầu trước khi hỏi sâu từng tin."
+            }
+        ],
+        "process_title": "Cách chọn phường để mở trước",
+        "process": [
+            {
+                "title": "1. Chọn mục tiêu",
+                "body": "Cần nhiều tin để lọc thì mở Phú Mỹ trước; muốn xem mặt bằng giá rao thấp hơn theo m² thì mở Tân An."
+            },
+            {
+                "title": "2. Tách loại hình",
+                "body": "So đất nền với đất nền, nhà đất với nhà đất. Không dùng giá nhà đất để kết luận đất nền đắt hay rẻ."
+            },
+            {
+                "title": "3. Kiểm tra từng tin",
+                "body": "Xem diện tích, đường vào, giấy tờ, quy hoạch và hiện trạng trước khi liên hệ hoặc đi xem."
+            }
+        ],
+        "faq": [
+            {
+                "q": "Nếu cần nhiều tin để lọc thì nên mở phường nào trước?",
+                "a": "Phú Mỹ có 181 tin đang theo dõi, nhiều hơn Tân An với 102 tin trong cùng cửa sổ 14 ngày. Nhiều tin hơn chỉ giúp có thêm mẫu để lọc, không có nghĩa là mọi tin đều phù hợp."
+            },
+            {
+                "q": "Đất nền Phú Mỹ hay Tân An đang có giá rao trung vị thấp hơn?",
+                "a": "Trong snapshot ngày 23/10/2026, đất nền Tân An có giá rao trung vị 15,6 tr/m², thấp hơn mức 21,0 tr/m² tại Phú Mỹ. Đây là giá rao tham khảo, không phải giá giao dịch đã chốt."
+            },
+            {
+                "q": "Nhà đất ở hai phường chênh nhau thế nào?",
+                "a": "Giá rao trung vị nhà đất Tân An là 19,8 tr/m², còn Phú Mỹ là 37,3 tr/m². Cần đọc thêm diện tích đất, chất lượng công trình, đường/hẻm và giấy tờ của từng tin."
+            },
+            {
+                "q": "30 và 24 dấu hiệu đáng kiểm tra có nghĩa là gì?",
+                "a": "Phú Mỹ có 30 tin và Tân An có 24 tin thuộc nhóm dấu hiệu đáng kiểm tra trong snapshot. Đây là bộ lọc để ưu tiên mở tin, không phải kết luận nên mua hoặc xác nhận giá rẻ."
+            },
+            {
+                "q": "Dữ liệu trong bài lấy từ đâu?",
+                "a": "Bài dùng tin Facebook Radar BDS đang theo dõi trong cửa sổ 14 ngày, snapshot ngày 23/10/2026. Tin được đọc theo phường và loại hình; các mức giá là giá rao trung vị, không phải giá giao dịch."
+            }
+        ],
+        "article": {
+            "published_at": "2026-10-23",
+            "modified_at": "2026-10-23",
+            "intro": [
+                "Nếu cần nhiều tin để lọc, nên mở Phú Mỹ trước: 181 tin đang theo dõi so với 102 tin ở Tân An. Nếu ưu tiên giá rao trung vị thấp hơn theo m², Tân An đang thấp hơn ở cả đất nền và nhà đất.",
+                "Số liệu là snapshot Radar BDS ngày 23/10/2026, dùng tin Facebook trong cửa sổ 14 ngày. Giá trong bài là giá rao trung vị, không phải giá giao dịch đã chốt; dấu hiệu chỉ là nhóm cần đọc kỹ hơn."
+            ],
+            "summary_cards": [
+                {
+                    "label": "Tin đang theo dõi",
+                    "value": "283 tin",
+                    "note": "Phú Mỹ 181 · Tân An 102"
+                },
+                {
+                    "label": "Dấu hiệu đáng kiểm tra",
+                    "value": "54 tin",
+                    "note": "Phú Mỹ 30 · Tân An 24"
+                },
+                {
+                    "label": "Đất nền giá rao trung vị",
+                    "value": "15,6 vs 21,0 tr/m²",
+                    "note": "Tân An vs Phú Mỹ"
+                },
+                {
+                    "label": "Nhà đất giá rao trung vị",
+                    "value": "19,8 vs 37,3 tr/m²",
+                    "note": "Tân An vs Phú Mỹ"
+                }
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Mỹ và Tân An khác nhau thế nào?",
+                    "note": "Nguồn: tin Facebook Radar BDS trong cửa sổ 14 ngày, snapshot 23/10/2026. Giá là giá rao trung vị theo loại hình.",
+                    "columns": [
+                        {
+                            "key": "ward",
+                            "label": "Phường"
+                        },
+                        {
+                            "key": "tracked",
+                            "label": "Tin đang theo dõi"
+                        },
+                        {
+                            "key": "signals",
+                            "label": "Dấu hiệu"
+                        },
+                        {
+                            "key": "land",
+                            "label": "Đất nền"
+                        },
+                        {
+                            "key": "house",
+                            "label": "Nhà đất"
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "ward": "Phú Mỹ",
+                            "tracked": "181",
+                            "signals": "30",
+                            "land": "21,0 tr/m²",
+                            "house": "37,3 tr/m²"
+                        },
+                        {
+                            "ward": "Tân An",
+                            "tracked": "102",
+                            "signals": "24",
+                            "land": "15,6 tr/m²",
+                            "house": "19,8 tr/m²"
+                        }
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Nguồn tin",
+                    "title": "Phú Mỹ có nhiều tin đang theo dõi hơn",
+                    "note": "Số tin trong cửa sổ dữ liệu 14 ngày.",
+                    "alt": "So số tin đang theo dõi ở Phú Mỹ và Tân An",
+                    "rows": [
+                        {
+                            "label": "Phú Mỹ",
+                            "value_label": "181 tin",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Tân An",
+                            "value_label": "102 tin",
+                            "width": 56,
+                            "color": "#16a34a"
+                        }
+                    ]
+                },
+                {
+                    "eyebrow": "Giá rao trung vị/m²",
+                    "title": "Tân An thấp hơn ở cả hai loại hình",
+                    "note": "Đọc riêng đất nền và nhà đất; không gộp thành một mức giá chung.",
+                    "alt": "So giá rao trung vị đất nền và nhà đất ở Phú Mỹ và Tân An",
+                    "rows": [
+                        {
+                            "label": "Đất nền · Phú Mỹ",
+                            "value_label": "21,0 tr/m²",
+                            "width": 100,
+                            "color": "#2563eb"
+                        },
+                        {
+                            "label": "Đất nền · Tân An",
+                            "value_label": "15,6 tr/m²",
+                            "width": 74,
+                            "color": "#16a34a"
+                        },
+                        {
+                            "label": "Nhà đất · Phú Mỹ",
+                            "value_label": "37,3 tr/m²",
+                            "width": 100,
+                            "color": "#f97316"
+                        },
+                        {
+                            "label": "Nhà đất · Tân An",
+                            "value_label": "19,8 tr/m²",
+                            "width": 53,
+                            "color": "#8b5cf6"
+                        }
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "ket-luan-nhanh",
+                    "heading": "Kết luận nhanh: chọn theo mục tiêu, không chọn theo tên phường",
+                    "paragraphs": [
+                        "Phú Mỹ phù hợp để mở trước nếu anh cần nhiều tin để lọc. Tân An đáng xem nếu anh ưu tiên giá rao trung vị thấp hơn theo m² trong cả hai nhóm đất nền và nhà đất.",
+                        "Chênh lệch này chỉ là mốc đọc nhanh. Diện tích, mặt tiền, đường vào, hiện trạng nhà và giấy tờ có thể làm hai tin cùng một phường khác nhau rất xa."
+                    ],
+                    "bullets": [
+                        "Phú Mỹ: 181 tin đang theo dõi, 30 dấu hiệu đáng kiểm tra",
+                        "Tân An: 102 tin đang theo dõi, 24 dấu hiệu đáng kiểm tra",
+                        "Tân An thấp hơn theo giá rao trung vị/m² ở cả hai loại hình"
+                    ]
+                },
+                {
+                    "id": "doc-dung-loai-hinh",
+                    "heading": "Đất nền và nhà đất phải được so riêng",
+                    "paragraphs": [
+                        "Đất nền Tân An có giá rao trung vị 15,6 tr/m², thấp hơn Phú Mỹ 21,0 tr/m². Với nhà đất, Tân An là 19,8 tr/m² còn Phú Mỹ là 37,3 tr/m².",
+                        "Nhà đất đã gồm công trình và hiện trạng sử dụng, nên không thể lấy giá nhà đất để kết luận đất nền của một phường đang đắt hay rẻ."
+                    ],
+                    "bullets": [
+                        "Đất nền: hỏi diện tích công nhận, thổ cư, ngang dài và đường vào",
+                        "Nhà đất: hỏi hiện trạng, năm xây, chi phí sửa chữa và giấy tờ",
+                        "So giá/m² cùng loại hình trước khi so tổng giá"
+                    ]
+                },
+                {
+                    "id": "loc-tin",
+                    "heading": "Cách lọc hai phường trên Radar BDS",
+                    "paragraphs": [
+                        "Mở dashboard, chọn Phú Mỹ hoặc Tân An, sau đó chọn đất nền hoặc nhà đất. Khi đã tách loại hình, xem các tin có giá/m², diện tích và vị trí rõ ràng trước.",
+                        "Nhóm dấu hiệu đáng kiểm tra giúp rút ngắn danh sách, không thay cho việc kiểm tra thực địa. Hãy hỏi lại nguồn đăng, lịch sử giá, quy hoạch và giấy tờ trước khi đặt cọc."
+                    ],
+                    "bullets": [
+                        "Chọn phường rồi chọn loại hình",
+                        "Đọc giá/m² cùng diện tích và tổng giá",
+                        "Kiểm tra đường, pháp lý, quy hoạch và hiện trạng",
+                        "Không xem dấu hiệu là xác nhận nên mua"
+                    ]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ đất nền hay nhà đất trước khi so giá.",
+                "Đã xem cả số tin và giá rao trung vị/m².",
+                "Đã mở từng tin để kiểm tra diện tích, đường vào và giấy tờ.",
+                "Đã hiểu dấu hiệu chỉ là thứ tự ưu tiên kiểm tra.",
+                "Chưa đặt cọc khi chưa xác minh độc lập."
+            ]
+        },
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc Phú Mỹ và Tân An",
+            "body": "Chọn phường, tách đất nền với nhà đất, rồi mở từng tin có thông tin rõ trước khi liên hệ.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9&utm_source=seo&utm_medium=article&utm_campaign=phu_my_vs_tan_an"
+        },
+        "breadcrumbs": [
+            {
+                "name": "Trang chủ",
+                "href": "/",
+                "url": "https://radarbds.vn/"
+            },
+            {
+                "name": "Tin tức",
+                "href": "/tin-tuc",
+                "url": "https://radarbds.vn/tin-tuc"
+            },
+            {
+                "name": "Phú Mỹ hay Tân An",
+                "href": "/tin-tuc/phu-my-hay-tan-an-nen-xem-khu-nao-truoc",
+                "url": "https://radarbds.vn/tin-tuc/phu-my-hay-tan-an-nen-xem-khu-nao-truoc"
+            }
+        ]
+    },
 }
 
 
