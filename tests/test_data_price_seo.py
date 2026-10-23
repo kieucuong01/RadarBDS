@@ -162,6 +162,19 @@ def test_card_adapter_uses_guest_current_model_and_allowlist_not_raw_source(monk
                             dict(row(2,source='guland'), title='INTERNAL', img='secret.jpg')]}
     import services.market_data as market
     monkeypatch.setattr(market, 'load_signals', load)
+    from contextlib import contextmanager
+    from db import connection
+    class SalesConnection:
+        def execute(self, sql, params):
+            assert "tx_type='ban'" in sql
+            assert params == ([2],)
+            return self
+        def fetchall(self):
+            return [{'id':2}]
+    @contextmanager
+    def sales_connection():
+        yield SalesConnection()
+    monkeypatch.setattr(connection, 'get_conn', sales_connection)
     cards = mod.load_public_cards('phu-loi')
     assert seen['tier'] == 'guest' and seen['sources'] == ['facebook']
     assert seen['wards'] == ['Phú Lợi'] and seen['limit'] == 5 and seen['include_total'] is False

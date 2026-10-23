@@ -81,6 +81,10 @@ Facebook-only source, registered wards, land type, 1-month window, MOS sort,
 limit=5 and include_total=False. A second allowlist discards non-Facebook
 records and projects ONLY public listing ID, ward, area and asking price.
 No internal Guland ID, title, image, description, phone or raw URL is output.
+The compact shared feed does not expose transaction type and may mix rentals.
+A bounded primary-key lookup of at most five candidates requires current
+`tx_type='ban'`, land type and Facebook source before rendering. Missing or
+rental types are discarded; the page may honestly show fewer than five cards.
 A cards error is labeled unavailable, not an empty-market assertion.
 
 ## Cross-channel fact handoff (read-side contract)

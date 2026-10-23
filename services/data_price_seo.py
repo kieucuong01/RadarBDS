@@ -255,11 +255,23 @@ def sitemap_entries(root=None):
 
 def load_public_cards(slug):
     from services.market_data import load_signals
+    from db.connection import get_conn
     payload = load_signals(None, sources=['facebook'],wards=list(SCOPES[slug]['wards']),
                            prop_types=['dat_nen'],tier='guest',limit=5,include_total=False,sort='mos_desc',date_range='1m')
+    candidates = [r for r in payload['signals'] if r.get('source') == 'facebook'
+                  and r.get('ward') in SCOPES[slug]['wards'] and type(r.get('id')) is int][:5]
+    if not candidates:
+        return []
+    # The shared compact feed has no transaction type and can contain rentals.
+    # Recheck only these bounded primary keys; do not change the shared model.
+    with get_conn() as conn:
+        rows = conn.execute("SELECT id FROM listings WHERE id=ANY(?) AND tx_type='ban' "
+                            "AND property_type='dat_nen' AND source='facebook'",
+                            ([r['id'] for r in candidates],)).fetchall()
+    sale_ids = {r['id'] for r in rows}
     # No raw title, description, contact, source URL or internal source metadata.
     return [{key:r.get(key) for key in ('id','ward','area_m2','price_ty')}
-            for r in payload['signals'] if r.get('source') == 'facebook' and r.get('ward') in SCOPES[slug]['wards']][:5]
+            for r in candidates if r['id'] in sale_ids]
 
 
 def read_current_rows(database_url, as_of):
