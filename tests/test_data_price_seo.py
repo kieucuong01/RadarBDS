@@ -207,7 +207,7 @@ def test_ssr_has_mean_median_sample_period_histogram_history_canonical_and_no_pr
     assert response.headers['Cache-Control'] == 'private, no-store'
     assert 'X-Radar-Public-Cache' not in response.headers
     assert app.test_client().get('/gia-dat/Other').status_code == 404
-    assert app.test_client().get('/gia-dat/hiep-thanh').status_code == 404
+    assert app.test_client().get('/gia-dat/phu-hoa').status_code == 404
 
 
 def test_small_local_sample_uses_named_parent_without_local_prices_or_sitemap(monkeypatch,tmp_path):

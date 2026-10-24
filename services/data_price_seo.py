@@ -1,7 +1,7 @@
 """Read-only asking-price cohorts and immutable shared facts; never changes visibility.
 
-First release deliberately exposes one ward and its named parent. Runtime JSON
-is NOT tracked. Price history events are not an observation panel.
+Registered wards share a named parent. Runtime JSON is NOT tracked. Frozen
+registry versions stay readable; price history events are not an observation panel.
 """
 from __future__ import annotations
 
@@ -25,8 +25,14 @@ CONTRACT = 'asking-price-observed-mtd-v1'
 SOURCES = ('facebook', 'guland')
 SCOPES = {
     'phu-loi': {'name':'Phú Lợi', 'wards':('Phú Lợi',), 'parent':'thu-dau-mot'},
+    'hiep-thanh': {'name':'Hiệp Thành', 'wards':('Hiệp Thành',), 'parent':'thu-dau-mot'},
+    'phu-my': {'name':'Phú Mỹ', 'wards':('Phú Mỹ',), 'parent':'thu-dau-mot'},
+    'tan-an': {'name':'Tân An', 'wards':('Tân An',), 'parent':'thu-dau-mot'},
     'thu-dau-mot': {'name':'Thủ Dầu Một', 'wards':tuple(TDM_LIVE_WARDS.values()), 'parent':None},
 }
+SCOPE_REGISTRY_VERSION = 2
+# V1 has no version member. Never infer its coverage from the current registry.
+SCOPE_REGISTRIES = {1: frozenset(('phu-loi', 'thu-dau-mot')), 2: frozenset(SCOPES)}
 POLICY = {
     'sources':list(SOURCES), 'property_type':'dat_nen', 'tx_type':'ban',
     'sample_identity':'listing_id_after_current_known_duplicate_exclusions',
@@ -122,7 +128,8 @@ def build_snapshot(rows, *, as_of, generated_at, source_commit, previous=()):
         validate_snapshot(old)
         if old['contract_version'] != CONTRACT or old['data_as_of'] >= as_of.isoformat():
             raise ValueError('historical packet must precede current date and match contract')
-    snapshot = dict(schema_version=1, contract_version=CONTRACT, generated_at=generated_at,
+    snapshot = dict(schema_version=1, scope_registry_version=SCOPE_REGISTRY_VERSION,
+                    contract_version=CONTRACT, generated_at=generated_at,
                     data_as_of=as_of.isoformat(), timezone=str(TZ), source_commit=source_commit,
                     period_start=as_of.replace(day=1).isoformat(), period_end=as_of.isoformat(),
                     period_kind='MTD', policy=POLICY, scopes={},
@@ -186,7 +193,9 @@ def validate_snapshot(snapshot):
     body = {k:v for k,v in snapshot.items() if k != 'sha256'}
     if digest(body) != snapshot.get('sha256'):
         raise ValueError('snapshot hash mismatch')
-    if snapshot.get('policy') != POLICY or set(snapshot.get('scopes',{})) != set(SCOPES):
+    version = snapshot.get('scope_registry_version', 1)
+    registered = SCOPE_REGISTRIES.get(version) if type(version) is int else None
+    if snapshot.get('policy') != POLICY or registered is None or set(snapshot.get('scopes',{})) != registered:
         raise ValueError('source or scope policy mismatch')
     return snapshot
 

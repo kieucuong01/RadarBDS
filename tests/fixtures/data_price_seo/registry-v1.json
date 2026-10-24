@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "contract_version": "asking-price-observed-mtd-v1",
+  "generated_at": "2026-10-21T12:00:00+07:00",
+  "data_as_of": "2026-10-21",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "source_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "period_start": "2026-10-01",
+  "period_end": "2026-10-21",
+  "period_kind": "MTD",
+  "policy": {
+    "sources": [
+      "facebook",
+      "guland"
+    ],
+    "property_type": "dat_nen",
+    "tx_type": "ban",
+    "sample_identity": "listing_id_after_current_known_duplicate_exclusions",
+    "time_basis": "latest_known_price_of_records_last_seen_in_current_month",
+    "active_basis": "is_active=1_within_qualified_monthly_cohort",
+    "history_basis": "frozen_observed_mtd_snapshots_only_not_price_history_events",
+    "min_samples": 15,
+    "price_consistency_relative_tolerance": 0.01,
+    "excluded_flags": [
+      "ambiguous_price_text",
+      "area_dimension_conflict",
+      "extreme_guland_ppm2",
+      "missing_area_evidence",
+      "multi_lot_listing",
+      "price_area_inconsistent",
+      "review_bad_extraction",
+      "review_bad_valuation",
+      "source_category_conflict",
+      "suspicious_bait",
+      "too_low_absolute_price",
+      "unreprocessable_source_payload"
+    ],
+    "excluded_states": [
+      "blacklisted",
+      "review_hidden",
+      "known_duplicate",
+      "possibly_duplicate",
+      "outlier",
+      "bait",
+      "probably_sold",
+      "inactive_source",
+      "invalid_measurements"
+    ]
+  },
+  "scopes": {
+    "phu-loi": {
+      "name": "Phú Lợi",
+      "wards": [
+        "Phú Lợi"
+      ],
+      "parent": "thu-dau-mot",
+      "eligible": true,
+      "sample_count": 15,
+      "active_count": 15,
+      "source_counts": {
+        "facebook": 15,
+        "guland": 0
+      },
+      "facts": {
+        "mean": {
+          "fact_id": "phu-loi.dat_nen.mean",
+          "scope": "phu-loi",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        },
+        "median": {
+          "fact_id": "phu-loi.dat_nen.median",
+          "scope": "phu-loi",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        },
+        "min": {
+          "fact_id": "phu-loi.dat_nen.min",
+          "scope": "phu-loi",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        },
+        "max": {
+          "fact_id": "phu-loi.dat_nen.max",
+          "scope": "phu-loi",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        }
+      },
+      "histogram": [
+        {
+          "lower": 0,
+          "upper": 10,
+          "count": 0,
+          "label": "0–<10"
+        },
+        {
+          "lower": 10,
+          "upper": 20,
+          "count": 0,
+          "label": "10–<20"
+        },
+        {
+          "lower": 20,
+          "upper": 30,
+          "count": 15,
+          "label": "20–<30"
+        },
+        {
+          "lower": 30,
+          "upper": 50,
+          "count": 0,
+          "label": "30–<50"
+        },
+        {
+          "lower": 50,
+          "upper": 100,
+          "count": 0,
+          "label": "50–<100"
+        },
+        {
+          "lower": 100,
+          "upper": null,
+          "count": 0,
+          "label": "≥100"
+        }
+      ],
+      "history": [
+        {
+          "month": "2026-05",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-06",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-07",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-08",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-09",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-10",
+          "median": 20.0,
+          "sample_count": 15,
+          "period_end": "2026-10-21",
+          "snapshot_sha256": null
+        }
+      ],
+      "change_mtd_pct": null,
+      "change_reason": "no_comparable_snapshot"
+    },
+    "thu-dau-mot": {
+      "name": "Thủ Dầu Một",
+      "wards": [
+        "Tân An",
+        "Hiệp An",
+        "Tương Bình Hiệp",
+        "Định Hòa",
+        "Chánh Mỹ",
+        "Phú Mỹ",
+        "Phú Cường",
+        "Phú Hòa",
+        "Phú Lợi",
+        "Hiệp Thành",
+        "Chánh Nghĩa",
+        "Phú Tân",
+        "Hòa Phú"
+      ],
+      "parent": null,
+      "eligible": true,
+      "sample_count": 15,
+      "active_count": 15,
+      "source_counts": {
+        "facebook": 15,
+        "guland": 0
+      },
+      "facts": {
+        "mean": {
+          "fact_id": "thu-dau-mot.dat_nen.mean",
+          "scope": "thu-dau-mot",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        },
+        "median": {
+          "fact_id": "thu-dau-mot.dat_nen.median",
+          "scope": "thu-dau-mot",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        },
+        "min": {
+          "fact_id": "thu-dau-mot.dat_nen.min",
+          "scope": "thu-dau-mot",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        },
+        "max": {
+          "fact_id": "thu-dau-mot.dat_nen.max",
+          "scope": "thu-dau-mot",
+          "property_type": "dat_nen",
+          "period_start": "2026-10-01",
+          "period_end": "2026-10-21",
+          "source_basis": [
+            "facebook",
+            "guland"
+          ],
+          "contract_version": "asking-price-observed-mtd-v1",
+          "sample_count": 15,
+          "unit": "trieu_vnd_per_m2",
+          "value": 20.0,
+          "display": "20,00"
+        }
+      },
+      "histogram": [
+        {
+          "lower": 0,
+          "upper": 10,
+          "count": 0,
+          "label": "0–<10"
+        },
+        {
+          "lower": 10,
+          "upper": 20,
+          "count": 0,
+          "label": "10–<20"
+        },
+        {
+          "lower": 20,
+          "upper": 30,
+          "count": 15,
+          "label": "20–<30"
+        },
+        {
+          "lower": 30,
+          "upper": 50,
+          "count": 0,
+          "label": "30–<50"
+        },
+        {
+          "lower": 50,
+          "upper": 100,
+          "count": 0,
+          "label": "50–<100"
+        },
+        {
+          "lower": 100,
+          "upper": null,
+          "count": 0,
+          "label": "≥100"
+        }
+      ],
+      "history": [
+        {
+          "month": "2026-05",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-06",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-07",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-08",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-09",
+          "median": null,
+          "sample_count": null,
+          "period_end": null,
+          "snapshot_sha256": null
+        },
+        {
+          "month": "2026-10",
+          "median": 20.0,
+          "sample_count": 15,
+          "period_end": "2026-10-21",
+          "snapshot_sha256": null
+        }
+      ],
+      "change_mtd_pct": null,
+      "change_reason": "no_comparable_snapshot"
+    }
+  },
+  "history_warning": "No reconstructed historical observations; absent snapshots stay null.",
+  "publication_references": [
+    "https://radarbds.vn/gia-dat/phu-loi",
+    "https://radarbds.vn/gia-dat/thu-dau-mot"
+  ],
+  "snapshot_id": "2026-10-21-6f3565e61d6e959b",
+  "sha256": "b3550f3073b88ffe54afe8723a76c9b5b373d74a6025829dcad6d8819464d9b6"
+}

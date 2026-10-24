@@ -1,10 +1,12 @@
-# Proprietary asking-price SEO — first vertical slice
+# Proprietary asking-price SEO — registered ward slices
 
 ## Authority and boundary
 
 Owner authority: active portfolio profile `projects/rb-data-seo/CONTRACT.md`.
-This release adds `/gia-dat/phu-loi` plus its named parent
-`/gia-dat/thu-dau-mot`, not 20 ward pages or 12 buyer intents. The existing
+The foundation added `/gia-dat/phu-loi` plus its named parent
+`/gia-dat/thu-dau-mot`; registry v2 adds `/gia-dat/hiep-thanh`,
+`/gia-dat/phu-my` and `/gia-dat/tan-an`. These are not 20 ward pages or 12
+buyer intents. Each still requires >=15 valid monthly samples. The existing
 indexed directory/article owners are unchanged. Parent pages do not count as
 an additional candidate ward. Listing SEO and the closed-month warehouse
 report remain separate unimplemented batches.
@@ -35,6 +37,13 @@ Runtime root: `reports/data-seo/` (ignored by Git, not a web route).
   Unneeded seller/contact/title fields are excluded even from this provenance.
 
 Snapshot `source_commit` is the exact checkout SHA used to generate it.
+New packets explicitly declare `scope_registry_version=2`. Frozen v1 packets
+(without that member) retain exactly their original two-scope registry, bytes,
+hashes and fact bindings. Unknown versions and missing/extra scopes fail closed.
+The daily engine can read v1 history while generating v2; a new route returns
+503/noindex until a packet containing that registered scope exists. No old
+packet is rewritten or expanded with invented history. The parent and ward
+pages link only to eligible scopes present in the validated packet.
 The SHA256 is over canonical UTF-8 JSON excluding the `sha256` member, not a
 hash of pretty-printed JSON. The snapshot ID is a separate content-derived
 identifier. Receipts must retain both exact values.
