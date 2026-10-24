@@ -8,6 +8,7 @@
   {% if archive.next %}<link rel="next" href="{{ site_meta.canonical_url.rsplit('/bao-cao', 1)[0] ~ archive.next }}">{% endif %}
   {% include "partials/research_assets.html" %}
   {% include "partials/public_brand_assets.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/report_print.css') }}?v=report-pdf-20261024-1">
 </head>
 <body class="seo-page report-hub">
   {% include "partials/seo_header.html" %}
@@ -56,12 +57,14 @@
           <span>{{ latest.hub_meta.primary_metric['label'] }}: {{ latest.hub_meta.primary_metric['value'] }}</span>
         </div>
       </div>
-      <a class="seo-primary-cta" href="{{ latest.path }}"
+      <div class="report-featured-actions"><a class="seo-primary-cta" href="{{ latest.path }}"
         data-report-action="open"
         data-report-city="{{ latest.hub_meta.city_key }}"
         data-report-ward="{{ latest.hub_meta.ward_key }}"
         data-report-period="{{ latest.hub_meta.period_key }}"
         data-report-surface="featured">Đọc báo cáo</a>
+        {% if latest.report_pdf_href %}<a class="seo-primary-cta" href="{{ latest.report_pdf_href }}" download data-track-cta="report_pdf_download">Tải PDF ↓</a>{% endif %}
+      </div>
     </section>
     {% endif %}
 

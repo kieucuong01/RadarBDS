@@ -20,6 +20,8 @@
   </style>
   {% include "partials/research_assets.html" %}
   {% include "partials/public_brand_assets.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/report_print.css') }}?v=report-pdf-20261024-1">
+  <meta name="radar-report-pdf-version" content="{{ page.report_pdf_version }}">
 </head>
 <body class="seo-page report-detail">
   {% include "partials/seo_header.html" %}
@@ -29,10 +31,24 @@
 
     <article class="report-layout">
       <header class="report-header">
+        <div class="report-print-brand">
+          <img src="{{ url_for('static', filename='images/favicon-32.png') }}" alt="" width="42" height="42">
+          <div><strong>RADAR BDS</strong><span>Báo cáo dữ liệu thị trường · radarbds.vn</span></div>
+        </div>
         <span class="scope-chip">{{ page.scope_label }}</span>
         <p class="seo-eyebrow">{{ page.hero_badge }}</p>
         <h1>{{ page.hero_title }}</h1>
         <p>{{ page.hero_text }}</p>
+        <p class="report-print-source">Bản trên web: <a href="{{ page.report_pdf_public_url }}">{{ page.report_pdf_public_url }}</a></p>
+        {% if page.report_pdf_href and not page.report_pdf_export %}
+        <div class="report-pdf-actions">
+          <a class="seo-primary-cta" href="{{ page.report_pdf_href }}" download data-track-cta="report_pdf_download">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4"/></svg>
+            Tải báo cáo PDF
+          </a>
+          <small>Khổ A4 · Có biểu đồ và bảng số liệu · Miễn phí</small>
+        </div>
+        {% endif %}
         <div class="report-context">
           <div><span>Phạm vi dữ liệu</span><strong>{{ page.scope_label }}</strong></div>
           <div><span>Kỳ dữ liệu</span><strong>{{ page.report.period }}</strong></div>
@@ -120,7 +136,7 @@
         <div class="report-table-wrap" role="region" aria-label="Bảng xu hướng giá 6 tháng" tabindex="0">
           <table>
             <thead>
-              <tr><th>Tháng</th><th>Mẫu hợp lệ</th><th>Đất nền</th><th>Giá trung vị đất nền</th><th>Nhà đất</th><th>Giá trung vị nhà đất</th><th>Tin nóng</th><th>Giảm giá</th><th>Actionable</th></tr>
+              <tr><th>Tháng</th><th>Mẫu hợp lệ</th><th>Đất nền</th><th>Giá trung vị đất nền</th><th>Nhà đất</th><th>Giá trung vị nhà đất</th><th>Tin nóng</th><th>Giảm giá</th><th>Tin đáng kiểm tra</th></tr>
             </thead>
             <tbody>
               {% for row in page.report.trend_rows %}
@@ -201,11 +217,11 @@
         <div class="report-table-wrap" role="region" aria-label="Bảng chỉ số theo phường" tabindex="0">
           <table>
             <thead>
-              <tr><th>Phường/loại hình</th><th>Mẫu hợp lệ</th><th>Giá/m² trung vị</th><th>Giảm giá</th><th>Actionable</th></tr>
+              <tr><th>Phường/loại hình</th><th>Mẫu hợp lệ</th><th>Giá/m² trung vị</th><th>Giảm giá</th><th>Tin đáng kiểm tra</th></tr>
             </thead>
             <tbody>
               {% for row in page.report.area_rows %}
-              <tr><th scope="row">{{ row.area }}</th><td>{{ row.new_listings }}</td><td>{{ row.median_price }}</td><td>{{ row.drop_signal }}</td><td>{{ row.radar_signal }}</td></tr>
+              <tr><th scope="row">{{ row.area }}</th><td>{{ row.new_listings }}</td><td>{{ row.median_price }}</td><td>{{ row.drop_signal }}</td><td>{{ readable_report_copy(row.radar_signal) }}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -408,7 +424,9 @@
   }
   </script>
   {% set view_event = "report_viewed" %}
+  {% if not page.report_pdf_export %}
   {% include "partials/seo_tracking.html" %}
   {% include "partials/seo_lead_capture_script.html" %}
+  {% endif %}
 </body>
 </html>

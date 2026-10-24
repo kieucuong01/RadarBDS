@@ -354,7 +354,7 @@ def test_binh_duong_market_report_page_is_indexed_and_citable():
     assert "Mẫu hợp lệ" in html
     assert "Giá/m² trung vị" in html
     assert "Giảm giá" in html
-    assert "Actionable" in html
+    assert "Tin đáng kiểm tra" in html
     assert "Nhận định từ dữ liệu Radar" in html
     assert '"@type": "Report"' in html
     assert "datePublished" in html

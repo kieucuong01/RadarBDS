@@ -136,6 +136,11 @@ def seo_bao_cao_null_redirect():
     return redirect("/bao-cao", code=301)
 
 
+@bp.route("/bao-cao/<report_slug>/pdf")
+def seo_report_pdf(report_slug, **kwargs):
+    return _impl("seo_report_pdf_download", report_slug=report_slug, **kwargs)
+
+
 @bp.route("/bao-cao/<path:report_slug>")
 def seo_market_report(report_slug, **kwargs):
     return _impl("seo_report_or_article_page", report_slug=report_slug, **kwargs)

@@ -54,7 +54,7 @@ def _load_local_env_file() -> None:
 
 _load_local_env_file()
 
-from flask import Flask, render_template, request, jsonify, send_from_directory, Response, make_response, abort, redirect
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory, Response, make_response, abort, redirect
 from config import database_sqlite as db_mod
 from config.property_types import normalize_property_types
 from db import facebook_profiles as db_facebook_profiles
@@ -81,6 +81,7 @@ from config.settings import (
 from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from services.report_hub import report_archive
+from services.report_pdf import PDF_PUBLIC_ORIGIN, pdf_download_href, pdf_path, pdf_version
 from services.news_archive import news_archive
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
@@ -2983,6 +2984,7 @@ def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
     periods: dict[str, str] = {}
     for index, report in enumerate(reports, start=1):
         item = dict(report)
+        item["report_pdf_href"] = pdf_download_href(report)
         item["description"] = readable_report_copy(item.get("description"))
         item["hero_text"] = readable_report_copy(item.get("hero_text"))
         report_body = dict(item.get("report") or {})
@@ -3303,6 +3305,11 @@ def _with_public_trust(page: dict, page_type: str) -> dict:
 
 def _render_public_page(page: dict):
     page = dict(page)
+    if page.get("variant") == "report":
+        page.update({"report_pdf_href": pdf_download_href(page),
+                     "report_pdf_version": pdf_version(page),
+                     "report_pdf_public_url": PDF_PUBLIC_ORIGIN + page["path"],
+                     "report_pdf_export": request.args.get("pdf_export") == "1"})
     page = _hydrate_live_location_page(page)
     if page.get("variant") == "report" and not page.get("scope_label"):
         # Older generated market reports predate `scope_label`, but
@@ -4021,6 +4028,20 @@ def seo_knowledge_legacy_redirect(article_slug: str | None = None):
     if query:
         target = f"{target}?{query}"
     return redirect(target, code=301)
+
+
+def seo_report_pdf_download(report_slug: str):
+    page = SEO_PAGES.get(f"bao-cao/{report_slug}")
+    if not page or page.get("variant") != "report" or not _is_publishable_monthly_report(page):
+        abort(404)
+    version = pdf_version(page)
+    if request.args.get("v", version) != version or not pdf_download_href(page):
+        abort(404)
+    response = send_file(pdf_path(page), mimetype="application/pdf", as_attachment=True,
+                         download_name=f"radar-bds-{report_slug}.pdf", conditional=True)
+    response.headers["X-Robots-Tag"] = "noindex, follow"
+    response.headers["Link"] = f'<{_public_url(page["path"])}>; rel="canonical"'
+    return response
 
 
 def seo_report_or_article_page(report_slug: str):

@@ -111,6 +111,7 @@ def verify_live(month: int, year: int) -> int:
         filtered = "/?tab=signals" in html and "city=TH" in html
         inline_links = html.count("report-inline-links")
         seo_links = html.count("report-seo-links")
+        has_pdf = f'{path}/pdf?v=' in html
         has_mos_links = "mos_min=10" in html and "mos_min=15" in html
         has_type_links = "prop_type=dat_nen" in html and "prop_type=nha_dat" in html
 
@@ -122,6 +123,7 @@ def verify_live(month: int, year: int) -> int:
             has_child_section = "Tổng hợp 13 báo cáo phường Thủ Dầu Một" in html
             ok = (
                 status == "200"
+                and has_pdf
                 and canvases == 2
                 and cards == 0
                 and filtered
@@ -140,6 +142,7 @@ def verify_live(month: int, year: int) -> int:
             card_footer_ok = cards == 0 or "Xem thêm trên Radar BDS" in html
             ok = (
                 status == "200"
+                and has_pdf
                 and canvases == 4
                 and card_count_ok
                 and card_footer_ok
@@ -249,6 +252,14 @@ def main() -> int:
         print("\nSkipping service restart by --skip-restart")
     elif not changed and not before_changed:
         print("\nKhông có thay đổi mới trong `config/seo_pages.py` — có thể tháng này đã publish trước đó.")
+
+    print("\n### Prebuild downloadable report PDFs")
+    pdf_cmd = f"cd {PROJECT} && {PYTHON} scripts/build_report_pdfs.py --month {mm} --year {year}"
+    pdf = sh(f"sudo -u radar bash -lc {pdf_cmd!r}", timeout=1200)
+    print((pdf.stdout or "").strip()[-4000:] or "(no stdout)")
+    if pdf.returncode != 0:
+        print((pdf.stderr or "").strip()[-2000:])
+        return pdf.returncode
 
     verify_code = verify_live(month, year)
     if verify_code != 0:

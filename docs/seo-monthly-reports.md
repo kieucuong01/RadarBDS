@@ -270,6 +270,45 @@ Snapshot contents, publishing jobs and report detail pages are unchanged.
 Tests: `tests/test_report_hub_pagination.py`, `tests/test_public_content_hubs.py`,
 `tests/test_public_seo.py`, `tests/test_public_research_ui.py`.
 
+## Downloadable PDF reports
+
+Each closed-month report can have a prebuilt A4 PDF with its original charts,
+tables, insights and methodology. The detail page and featured hub card show
+**Tải báo cáo PDF** only after the current artifact exists. No signup is required.
+The download route `/bao-cao/<slug>/pdf?v=<snapshot-version>` sends an attachment,
+with noindex and a canonical link back to the HTML report. It never starts a
+browser or queries live market data. Old versions are not served as current.
+
+`scripts/build_report_pdfs.py` uses the existing Playwright dependency, local web
+fonts and the same Chart.js version as the report page. It waits for every chart
+and font, checks the web snapshot matches the job, prints with
+`static/css/report_print.css`, and atomically publishes the PDF. Internal links
+in the PDF point at the public domain, including when built against localhost.
+It skips analytics and lead capture submission. Failed renders fail the job and
+leave existing artifacts intact; a missing artifact leaves the HTML readable.
+
+Runtime files live in ignored `reports/monthly-pdf/`. The fingerprint includes
+the report config and print/template code. Deploying a layout change requires a
+backfill after restarting the web service. Do not commit generated PDFs.
+
+```bash
+# Once per environment, as the same user/env as the monthly job:
+PLAYWRIGHT_SKIP_BROWSER_GC=1 /opt/radar-bds/.venv/bin/python -m playwright install chromium --only-shell
+
+# Backfill all existing published reports (does not regenerate market data):
+/opt/radar-bds/.venv/bin/python scripts/build_report_pdfs.py --all
+
+# Only one closed month, or one report for visual QA:
+/opt/radar-bds/.venv/bin/python scripts/build_report_pdfs.py --month 09 --year 2026
+/opt/radar-bds/.venv/bin/python scripts/build_report_pdfs.py --slug tan-an-thang-09-2026
+```
+
+The normal monthly publisher prebuilds that month's PDFs after the web restart
+and before live verification. Dry-run never creates files. PDF checks:
+`tests/test_report_pdf.py`; visually inspect a master and ward PDF after any
+layout change, including all pages, Vietnamese text, chart labels, tables and
+page numbers. Build against local origin, not the CDN, to avoid stale snapshots.
+
 ## Related docs
 
 - `AGENTS.md` — fast entry point for AI agents.
