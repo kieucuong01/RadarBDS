@@ -362,3 +362,58 @@ def test_review22_labeled_dimension_separator_and_parenthesis_controls(text, exp
 ])
 def test_review22_unitless_frontage_requires_unambiguous_dimension_context(text):
     assert extract_dimensions(text) == {"frontage_m": None, "depth_m": None}
+
+
+# Seven independent exact-ID source patterns from the 22/24 October snapshots.
+# Short supplemental clauses retain the parser trigger; no raw descriptions/PII.
+REVIEW24_ROAD_CASES = [
+    (83455, "guland", "BÁN GẤP NHÀ CẤP 4 MẶT TIỀN PHAN ĐĂNG LƯU – HIỆP AN",
+     "Chợ Bưng Cầu, QL13: 400m", "", "Phan Dang Luu"),
+    (83648, "guland", "Bán nhà", "Kết nối thuận tiện với Quốc lộ 13",
+     "Đường Hồ Văn Cống, Phường Tương Bình Hiệp", "Ho Van Cong"),
+    (83458, "guland", "Bán nhà Chánh Nghĩa Bình Dương", "Chủ cần bán căn nhà p. Chánh Nghĩa",
+     "", None),
+    (83320, "facebook", "bán nhà gác lửng và 6 phòng trọ mặt tiền Nguyễn hữu Cảnh _gần chợ Búng",
+     "", "", "Nguyen Huu Canh"),
+    (84029, "facebook", "2ty3 giảm chỉ còn 1ty5x thôi  nhanh mới kịp",
+     "2ty3 giảm chỉ còn 1ty5x thôi  nhanh mới kịp\nĐất Phú Mỹ ngang 7 dài 15", "", None),
+    (84003, "facebook", "TÂN PHƯỚC KHÁNH 07– NHÀ ĐẸP",
+     "Khách thiện chí, nhanh gọn bớt lộc may; Đường 6m thông thoáng", "", None),
+    (83998, "facebook", "BÁN NHÀ LÁI THIÊU ĐƯỜNG XE OTO",
+     "BÁN NHÀ LÁI THIÊU ĐƯỜNG XE OTO\nDt 120m2 Nhà lầu trệt 4 phòng ngủ", "", None),
+]
+
+
+@pytest.mark.parametrize("listing_id,source,title,description,address,expected", REVIEW24_ROAD_CASES)
+def test_review24_road_name_source_fragments(listing_id, source, title, description, address, expected):
+    assert extract_road_name(" ".join((title, description, address))) == expected
+
+
+@pytest.mark.parametrize("listing_id,source,title,description,address,expected", REVIEW24_ROAD_CASES)
+def test_review24_road_name_full_normalization(listing_id, source, title, description, address, expected):
+    record = normalize_record({"source": source, "url": "https://example.invalid/road-control",
+                               "title": title, "description": description, "address": address})
+    assert record is not None and record["road_name"] == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Đường Phan Đăng Lưu Phường Hiệp An Thành phố Thủ Dầu Một Bình Dương", "Phan Dang Luu"),
+    ("QL13: 400m; Mặt tiền Phan Đăng Lưu", "Phan Dang Luu"),
+    ("Quốc lộ 13: 400m; Đường Hồ Văn Cống", "Ho Van Cong"),
+    ("Kết nối thuận tiện với QL13; Đường Hồ Văn Cống", "Ho Van Cong"),
+    ("Kết nối với Quốc lộ 13", None),
+    ("Đất cách QL13: 400m", None),
+    ("Mặt tiền QL13; diện tích 400m2", "QL13"),
+    ("Mặt tiền Quốc lộ 13, đường rộng 20m", "QL13"),
+    ("Nhánh Nguyễn Đức Thuận, đường ô tô 4m", "Nguyen Duc Thuan"),
+    ("Nhanh Nguyen Duc Thuan, duong o to 4m", "Nguyen Duc Thuan"),
+    ("Đường xe ô tô", None),
+    ("Đường xe oto vào tận nhà", None),
+    ("Nhanh gọn bớt lộc; đường Nguyễn Tri Phương", "Nguyen Tri Phuong"),
+    ("Chủ cần bán nhà mặt tiền đường Nguyễn Hữu Cảnh_gần chợ", "Nguyen Huu Canh"),
+    ("Gần đường Nguyễn Hữu Cảnh_gần chợ", None),
+    ("Mặt tiền đường Lê Hồng Phong nối dài_gần chợ", "Le Hong Phong Noi Dai"),
+    ("Đường Phú Lợi Phú Hòa", "Phu Loi Phu Hoa"),
+])
+def test_review24_road_prose_proximity_and_real_street_controls(text, expected):
+    assert extract_road_name(text) == expected

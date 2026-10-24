@@ -64,7 +64,7 @@ _HEM_BARE_NAMED_ROAD_PAT = re.compile(
     re.IGNORECASE,
 )
 _NAMED_ROAD_PAT = re.compile(
-    r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+(?:duong\s+)?([a-z][a-z \t]{3,60})(?=$|[,;()\.\n\r\-–—])",
+    r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+(?:duong\s+)?([a-z][a-z \t]{3,60})(?=$|[_,;()\.\n\r\-–—])",
     re.IGNORECASE,
 )
 
@@ -143,6 +143,14 @@ def extract_road_name(text: str) -> str | None:
 
 def _has_road_proximity_prefix(folded: str, start: int) -> bool:
     context = folded[max(0, start - 34):start]
+    # Broker distance lists can put the distance AFTER the road: QL13: 400m.
+    if re.match(
+        r"(?:quoc\s*lo\s*\d+|[a-z]+\s*\d+)\s*:\s*\d+(?:[.,]\d+)?\s*(?:km|m)\b",
+        folded[start:],
+    ):
+        return True
+    if re.search(r"\bket\s+noi\b[^,.;\n]{0,30}\bvoi\s+(?:duong\s+)?$", context):
+        return True
     if re.search(
 r"\b(?:cach|gan|sat|ke|canh|doi\s*dien|thong\s*ra|noi\s*ra|thong\s*tu|xuong|ra)\s+(?:duong\s+)?$",
         context,
@@ -165,6 +173,7 @@ def _clean_named_road(value: str) -> str | None:
         prefix = _ascii_fold(road)
         if name.startswith(prefix + " "):
             suffix = name[len(prefix):].strip()
+            suffix = re.sub(r"^(?:phuong|p)\s+", "", suffix)
             if any(re.match(re.escape(_ascii_fold(ward)) + r"\b", suffix) for ward in _WARD_KEYWORDS):
                 name = prefix
                 break
@@ -182,7 +191,7 @@ def _clean_named_road(value: str) -> str | None:
     folded = _ascii_fold(name)
     if re.search(
         r'\b(?:sieu\s+pham|cuc\s+(?:re|dep)|gia\s+re|tuyet\s+dep|mat\s+me|'
-        r'thong\s+thoang|rong\s+rai)\b',
+        r'thong\s+thoang|rong\s+rai|can\s+ban|moi\s+kip|bot\s+loc)\b',
         folded,
     ):
         return None
@@ -190,7 +199,7 @@ def _clean_named_road(value: str) -> str | None:
         return None
     if re.match(r"^dx\s+(?:nhua|be\s*tong|thong|rong|duong)\b", folded):
         return None
-    if re.match(r"^(?:nhua|be tong|o to|oto|xe hoi|thong|rong|lon|nho|so)\b", name):
+    if re.match(r"^(?:nhua|be tong|o to|oto|xe hoi|xe\s+(?:oto|o\s+to)|thong|rong|lon|nho|so)\b", name):
         return None
     if len(name.split()) < 2 and not re.search(r"\d", name):
         return None
