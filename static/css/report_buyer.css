@@ -1,0 +1,76 @@
+.buyer-section { margin:32px 0; padding:28px 0; border-bottom:1px solid #e2e8f0; }
+.buyer-section h2 { font-size:1.55rem; line-height:1.4; margin:8px 0 16px; color:#0f172a; scroll-margin-top:120px; }
+.buyer-section > p, .buyer-section li { font-size:.96rem; line-height:1.8; color:#475569; }
+.buyer-summary { padding:24px; background:#eff6ff; border:1px solid #dbeafe; border-radius:14px; }
+.buyer-summary-list { padding-left:22px; margin:12px 0 20px; }
+.buyer-summary-list li+li { margin-top:8px; }
+.buyer-reading-order, .buyer-source-links { display:flex; flex-wrap:wrap; gap:8px; }
+.buyer-reading-order a, .buyer-source-links a { display:inline-flex; min-height:44px; align-items:center; padding:8px 12px; border:1px solid #bfdbfe; border-radius:9px; color:#1d4ed8; text-decoration:none; font-size:.88rem; background:white; }
+.buyer-data-note { padding:16px 18px; margin:18px 0 0; background:#fff; border-left:3px solid #2563eb; border-radius:5px; color:#475569; font-size:.9rem; line-height:1.75; }
+.buyer-data-note ul { margin:10px 0 0; padding-left:18px; }
+.buyer-data-note li { font-size:.88rem; }
+.buyer-budget-grid, .buyer-comparison-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:20px; }
+.buyer-budget-card, .buyer-price-card, .buyer-comparison-card, .buyer-example { min-width:0; border:1px solid #e2e8f0; border-radius:12px; padding:20px; background:#fff; }
+.buyer-section h3 { margin:0 0 10px; font-size:1.03rem; line-height:1.55; color:#0f172a; }
+.buyer-budget-card > strong, .buyer-n { display:inline-block; color:#174ea6; font-size:.83rem; font-weight:600; margin:0 0 10px; }
+.buyer-budget-card p, .buyer-example p { font-size:.88rem; line-height:1.75; color:#64748b; }
+.buyer-budget-links { display:grid; gap:5px; }
+.buyer-budget-links a, .buyer-current-link { display:inline-flex; align-items:center; min-height:44px; color:#1d4ed8; font-weight:600; font-size:.87rem; text-decoration:none; }
+.buyer-segment-grid, .buyer-history-grid, .buyer-examples { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:18px 0; }
+.buyer-section dl { margin:0; }
+.buyer-section dl > div { padding:10px 0; border-bottom:1px solid #f1f5f9; }
+.buyer-section dt { color:#64748b; font-size:.8rem; line-height:1.5; }
+.buyer-section dd { margin:4px 0 0; font-size:1rem; font-weight:650; line-height:1.5; color:#17253c; }
+.buyer-section .buyer-footnote { font-size:.8rem; color:#64748b; line-height:1.75; }
+.buyer-history-grid article { padding:20px; background:#f8fafc; border-radius:12px; }
+.buyer-history-grid strong { display:block; font-size:1.6rem; margin:10px 0; }
+.buyer-history-grid span { font-size:.86rem; color:#475569; }
+.buyer-history-grid p { font-size:.85rem; line-height:1.7; color:#64748b; }
+.buyer-example > span { color:#174ea6; font-size:.8rem; }
+.buyer-example-link { display:block; color:#174ea6; text-decoration:none; }
+.buyer-example-link > span { font-size:.8rem; }
+.buyer-example-image { display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; border-radius:8px; margin-bottom:14px; }
+.buyer-example dl { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.buyer-example h3 a, .buyer-comparison-card h3 a { color:#174ea6; text-decoration:none; }
+.buyer-coverage-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; margin:16px 0; }
+.buyer-coverage-list > div { display:flex; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid #e2e8f0; font-size:.88rem; }
+.buyer-coverage-list strong { color:#174ea6; white-space:nowrap; }
+.buyer-checklist ol { padding-left:22px; }
+.buyer-checklist li { padding-left:5px; margin:0 0 14px; }
+.buyer-cost-sheet { background:#f8fafc; border:1px dashed #94a3b8; border-radius:12px; padding:20px; margin:20px 0; }
+.buyer-cost-sheet p { font-size:.88rem; line-height:1.8; }
+.buyer-section a:hover { text-decoration:underline; }
+.buyer-section a:focus-visible { outline:3px solid #93c5fd; outline-offset:3px; }
+@media (max-width:768px) {
+ .buyer-budget-grid, .buyer-comparison-grid, .buyer-segment-grid, .buyer-history-grid, .buyer-examples, .buyer-coverage-list { grid-template-columns:1fr; }
+ .buyer-section { padding:18px 0; margin:24px 0; }
+ .buyer-summary { padding:18px; }
+ .buyer-section h2 { font-size:1.35rem; }
+ .buyer-budget-card, .buyer-price-card, .buyer-comparison-card, .buyer-example { padding:18px; }
+}
+@media print {
+ body.report-detail .buyer-section { margin:0 0 18px; padding:16px 0; border:0; }
+ body.report-detail .buyer-section h2 { font-size:16pt; break-after:avoid; margin:6px 0 12px; }
+ body.report-detail .buyer-section h3 { font-size:10pt; }
+ body.report-detail .buyer-section p, body.report-detail .buyer-section li { font-size:9pt; line-height:1.65; }
+ body.report-detail .buyer-summary { padding:16px; border:1px solid #dbeafe; background:#eff6ff; break-inside:avoid; }
+ body.report-detail .buyer-reading-order, body.report-detail .buyer-current-link { display:none !important; }
+ body.report-detail .buyer-data-note { padding:10px 12px; font-size:8pt; break-inside:avoid; }
+ body.report-detail .buyer-data-note li, body.report-detail .buyer-section .buyer-footnote { font-size:8pt; }
+ body.report-detail .buyer-budget-grid, body.report-detail .buyer-comparison-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+ body.report-detail .buyer-segment-grid, body.report-detail .buyer-history-grid, body.report-detail .buyer-examples { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+ body.report-detail .buyer-budget-card, body.report-detail .buyer-price-card, body.report-detail .buyer-comparison-card, body.report-detail .buyer-example { padding:12px; break-inside:avoid; }
+ body.report-detail .buyer-budget-links a { min-height:0; font-size:8pt; }
+ body.report-detail .buyer-section dl > div { padding:6px 0; }
+ body.report-detail .buyer-section dt, body.report-detail .buyer-n { font-size:8pt; }
+ body.report-detail .buyer-section dd { font-size:10pt; }
+ body.report-detail .buyer-coverage-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ body.report-detail .buyer-coverage-list > div { break-inside:avoid; font-size:8pt; }
+ body.report-detail .buyer-cost-sheet, body.report-detail .buyer-checklist li { break-inside:avoid; }
+ body.report-detail .buyer-section > .seo-eyebrow { break-after:avoid; }
+ body.report-detail .buyer-checklist { break-inside:avoid; }
+ body.report-detail .buyer-examples { display:block; }
+ body.report-detail .buyer-example { margin:0 0 10px; }
+ body.report-detail .buyer-example-image { display:none !important; }
+ body.report-detail .buyer-source-links a { font-size:8pt; min-height:0; }
+}

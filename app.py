@@ -82,6 +82,7 @@ from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from services.report_hub import report_archive
 from services.report_pdf import PDF_PUBLIC_ORIGIN, pdf_download_href, pdf_path, pdf_version
+from services.report_buyer import prepare_buyer_report
 from services.news_archive import news_archive
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
@@ -2983,7 +2984,7 @@ def _decorate_report_hub_pages(reports: list[dict]) -> tuple[list[dict], dict]:
     latest_by_city: dict[str, str] = {}
     periods: dict[str, str] = {}
     for index, report in enumerate(reports, start=1):
-        item = dict(report)
+        item = prepare_buyer_report(report, pages=SEO_PAGES)
         item["report_pdf_href"] = pdf_download_href(report)
         item["description"] = readable_report_copy(item.get("description"))
         item["hero_text"] = readable_report_copy(item.get("hero_text"))
@@ -3351,6 +3352,8 @@ def _render_public_page(page: dict):
             "ward_slug": _report_safe_slug(scope),
             "period": f"{year:04d}-{month:02d}" if year and month else str(report_body.get("period") or ""),
         }
+    if page.get("variant") == "report":
+        page = prepare_buyer_report(page, pages=SEO_PAGES)
     page = _with_public_trust(
         page,
         "report" if page.get("variant") == "report" else "location" if page.get("live_ward") else "landing",

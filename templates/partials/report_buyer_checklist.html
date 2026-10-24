@@ -1,0 +1,32 @@
+{% if page.buyer %}
+<section class="buyer-section" aria-labelledby="report-coverage">
+  <p class="seo-eyebrow">Phạm vi quan sát</p><h2 id="report-coverage">Độ phủ dữ liệu theo khu vực</h2>
+  <p>{{ page.scope_label }} là phạm vi theo tên khu vực mà dữ liệu Radar sử dụng trong kỳ.{% if page.scope_label == 'Thủ Dầu Một' %} Báo cáo chỉ tập trung các phường Thủ Dầu Một theo phạm vi dữ liệu đã lưu.{% endif %} Số mẫu thu thập không phải kiểm kê toàn thị trường; chưa có pin vị trí được xác minh cho mọi tài sản.</p>
+  <div class="buyer-coverage-list">{% for row in page.buyer.comparisons %}<div><span>{{ row.scope }}</span><strong>{{ row.basis_count }} mẫu sau lọc</strong></div>{% endfor %}</div>
+  <a class="buyer-current-link" href="/ban-do-binh-duong">Mở công cụ bản đồ để kiểm tra vị trí →</a>
+</section>
+<section class="buyer-section" aria-labelledby="report-context-sources">
+  <p class="seo-eyebrow">Bối cảnh cần xác minh</p><h2 id="report-context-sources">Hạ tầng, quy hoạch và hồ sơ</h2>
+  <p>Báo cáo này chưa có danh sách sự kiện hạ tầng đã xác minh theo vị trí tài sản. Không suy tác động tăng giá từ tin đồn hoặc từ việc một dự án ở cùng phường.</p>
+  <div class="buyer-source-links"><a href="/quy-hoach-binh-duong">Tra cứu thư viện quy hoạch</a><a href="/tin-tuc/quyet-dinh-van-ban">Đối chiếu quyết định, văn bản</a><a href="/tin-tuc/chu-de-nong">Đọc bối cảnh có nguồn dẫn</a></div>
+  <p class="buyer-footnote">Khi tìm được văn bản liên quan, cần kiểm tra ngày ban hành, cơ quan, phạm vi, tình trạng thực hiện và vị trí cụ thể. Liên kết mở tài liệu hiện có; không tự xác nhận nội dung đúng tại kỳ báo cáo.</p>
+</section>
+<section class="buyer-section buyer-checklist" aria-labelledby="report-checklist">
+  <p class="seo-eyebrow">Mang theo khi đi xem</p><h2 id="report-checklist">Những điều cần hỏi trước khi đặt cọc</h2>
+  <ol>
+    <li><strong>Đúng vị trí và đúng tài sản:</strong> đối chiếu địa chỉ, thửa/tờ, ảnh, diện tích và ranh thực tế; tránh so hai tin khác loại hoặc khác khu.</li>
+    <li><strong>Đường vào và lối đi:</strong> hỏi chiều rộng, khả năng tiếp cận, hiện trạng sử dụng và giấy tờ liên quan; đi xem trực tiếp.</li>
+    <li><strong>Giấy tờ và người giao dịch:</strong> yêu cầu hồ sơ để đối chiếu chủ thể, quyền giao dịch và thông tin cần xác minh. Nhãn trong tin đăng không thay việc kiểm tra hồ sơ.</li>
+    <li><strong>Đất ở và quy hoạch:</strong> đối chiếu mục đích sử dụng, diện tích từng loại đất và thông tin quy hoạch theo đúng vị trí tại nguồn phù hợp.</li>
+    <li><strong>Hiện trạng và chi phí phát sinh:</strong> kiểm tra công trình, nền đất, thoát nước và các điều kiện sử dụng ảnh hưởng đến tổng ngân sách.</li>
+    <li><strong>Giá còn hiệu lực:</strong> hỏi lại tổng giá, phần tài sản đi kèm, các điều kiện và thời điểm có thể giao dịch. Giá rao là bước bắt đầu đối chiếu.</li>
+    <li><strong>Ngân sách đầy đủ:</strong> ghi riêng giá dự kiến, khoản chi phí cần xác nhận, sửa chữa và dự phòng. Nếu vay, tự kiểm tra điều kiện/lãi/phí theo phương án được cung cấp.</li>
+    <li><strong>Điều kiện đặt cọc và thanh toán:</strong> làm rõ tài sản, hồ sơ cần có, thời hạn, nghĩa vụ và cách xử lý tình huống phát sinh; nhờ người có chuyên môn xem khi cần.</li>
+  </ol>
+  <div class="buyer-cost-sheet" aria-label="Phiếu tự dự trù ngân sách"><strong>Phiếu tự ghi trước khi đi xem</strong>
+    <p>Giá dự kiến: __________ · Chi phí cần xác nhận: __________</p><p>Sửa chữa/dự phòng: __________ · Vốn tự có: __________ · Phương án vay nếu có: __________</p>
+    <p class="buyer-footnote">Không mặc định thuế/phí, lãi vay hoặc khả năng sinh lời cho mọi giao dịch.</p>
+  </div>
+  <a class="seo-primary-cta buyer-current-link" href="{{ page.buyer.current_href }}" data-track-cta="report_buyer_current">Xem tin phù hợp tại {{ page.scope_label }} →</a>
+</section>
+{% endif %}

@@ -87,3 +87,14 @@ def test_monthly_job_prebuilds_pdf_before_live_verification():
     build = script.index('scripts/build_report_pdfs.py')
     assert build < script.index('verify_code = verify_live(month, year)', build)
     assert 'has_pdf' in script
+
+
+def test_parent_pdf_version_tracks_related_frozen_price_facts(monkeypatch):
+    from services.report_pdf import pdf_version
+    from config import seo_pages
+    pages = deepcopy(seo_pages.SEO_PAGES)
+    monkeypatch.setattr(seo_pages, 'SEO_PAGES', pages)
+    master = pages['bao-cao/bds-binh-duong-thang-09-2026']
+    before = pdf_version(master)
+    pages['bao-cao/tan-an-thang-09-2026']['report']['metrics'][2]['note'] = '18 mẫu đủ giá'
+    assert pdf_version(master) != before

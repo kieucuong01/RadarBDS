@@ -28,7 +28,7 @@ WARD_ALIASES = {
 }
 
 PROPERTY_TYPES = ("dat_nen", "nha_dat", "nha_tro", "kho_xuong", "chung_cu")
-DATA_CONTRACT_VERSION = "canonical-quality-actionable-v1"
+DATA_CONTRACT_VERSION = "canonical-quality-actionable-sale-v2"
 
 
 def raw_listing_sql(alias: str = "l") -> str:
@@ -39,6 +39,7 @@ def raw_listing_sql(alias: str = "l") -> str:
     return " AND ".join(
         (
             f"{alias}.source = 'facebook'",
+            f"{alias}.tx_type = 'ban'",
             f"COALESCE({alias}.is_blacklisted,0)=0",
             f"COALESCE({alias}.review_hidden,0)=0",
         )

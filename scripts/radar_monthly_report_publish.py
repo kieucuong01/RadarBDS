@@ -106,12 +106,14 @@ def verify_live(month: int, year: int) -> int:
     print("\n### Verify live URLs + report structure")
     for path in paths:
         status, html = http_html(path)
-        cards = html.count("report-signal-card")
+        cards = html.count('class="buyer-example"') if 'data-buyer-report="v1"' in html else html.count("report-signal-card")
         canvases = html.count("<canvas")
         filtered = "/?tab=signals" in html and "city=TH" in html
         inline_links = html.count("report-inline-links")
         seo_links = html.count("report-seo-links")
         has_pdf = f'{path}/pdf?v=' in html
+        chart_count = re.search(r'name="radar-report-chart-count" content="(\d+)"', html)
+        charts_match = bool(chart_count and canvases == int(chart_count.group(1)))
         has_mos_links = "mos_min=10" in html and "mos_min=15" in html
         has_type_links = "prop_type=dat_nen" in html and "prop_type=nha_dat" in html
 
@@ -124,7 +126,7 @@ def verify_live(month: int, year: int) -> int:
             ok = (
                 status == "200"
                 and has_pdf
-                and canvases == 2
+                and charts_match
                 and cards == 0
                 and filtered
                 and seo_links >= 1
@@ -139,11 +141,11 @@ def verify_live(month: int, year: int) -> int:
                 bad.append((path, status, canvases, cards, filtered, seo_links, len(child_links)))
         else:
             card_count_ok = 0 <= cards <= 6
-            card_footer_ok = cards == 0 or "Xem thêm trên Radar BDS" in html
+            card_footer_ok = cards == 0 or "Xem thêm trên Radar BDS" in html or 'data-track-cta="report_buyer_current"' in html
             ok = (
                 status == "200"
                 and has_pdf
-                and canvases == 4
+                and charts_match
                 and card_count_ok
                 and card_footer_ok
                 and filtered

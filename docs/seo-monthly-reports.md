@@ -61,7 +61,7 @@ scripts/radar_monthly_report_publish.py
 | Report type | Count | URL pattern | Expected structure |
 |---|---:|---|---|
 | Master TDM report | 1 | `/bao-cao/bds-binh-duong-thang-MM-YYYY` | 2 charts, 0 signal cards, 13 child ward report links, SEO/internal link block |
-| Ward reports | 13 | `/bao-cao/{ward_slug}-thang-MM-YYYY` | 4 charts, tối đa 6 signal-style cards hợp lệ, MOS links, property-type links, filtered dashboard CTA |
+| Ward reports | 13 | `/bao-cao/{ward_slug}-thang-MM-YYYY` | Up to 4 charts (empty price charts omitted), up to 6 saved examples, MOS/type links, filtered dashboard CTA |
 
 ## Manual commands
 
@@ -308,6 +308,52 @@ and before live verification. Dry-run never creates files. PDF checks:
 `tests/test_report_pdf.py`; visually inspect a master and ward PDF after any
 layout change, including all pages, Vietnamese text, chart labels, tables and
 page numbers. Build against local origin, not the CDN, to avoid stale snapshots.
+
+## Buyer report contract (25 October 2026)
+
+One shared buyer flow serves web and PDF: summary/limits, budget bands, price
+ranges by property type, ward comparisons, observed history, saved examples,
+coverage/source context, and a viewing/total-cost checklist. No audience split.
+`services/report_buyer.py` is a pure adapter over frozen config facts; report
+requests and downloads never query current listing prices for historical tables.
+`static/css/report_buyer.css` supplements the shared blue public brand.
+
+Published legacy reports retain their saved facts. Prices/trends with fewer than
+15 samples in the actual property segment are suppressed; selected-MOS percentages
+and the weighted average of ward medians are removed from presentation. Raw
+collection volume can include reposts and is not market inventory. Missing budget
+quartiles/history/model dates remain explicitly unavailable. Current discovery
+links are Facebook-only, one month, with ward/type/budget filters; they are clearly
+labelled current and are not historical stock counts.
+
+Newly generated closed-month reports capture `report.buyer_snapshot`, schema 1,
+contract `buyer-cohort-v1`, through `services/report_buyer_snapshot.py`. This packet
+contains counts and P25/median/P75 for total asking price, area and price/m² by
+type, half-open budget band and canonical ward. Sale-only Facebook cohorts use
+canonical visibility plus extraction/valuation quality gates and consistent
+price/area measurements. There is a separate qualified/excluded count. Every
+price group requires at least 15 samples; zero samples and missing values differ.
+
+Prices are **current known asking prices of records collected in that period at
+generation**, not proof of prices observed precisely at month-end. The packet
+stores period boundaries and the actual generation timestamp. Observed price drops
+require successive stored old/new prices with an event inside the period. Radar
+observation duration is not time-to-sale. No original seller URL or phone is stored
+in the public packet. Source-policy and valuation inputs are unchanged.
+
+The enhancer preserves existing published packets and all legacy reports. Trend
+prices/counts use the same qualified packet as the buyer section; previous periods
+are read only from compatible frozen packets, never recalculated from today's
+prices. Missing historical counts display “Chưa lưu”, not synthetic zero. Context
+links route to planning/legal/source hubs; no infrastructure event is asserted
+without a verified saved source. The PDF version also tracks related ward facts.
+After a layout release restart the app and rebuild all PDFs against the origin;
+this does not regenerate historical market data. Keep artifact directories group
+writable for the monthly job (`umask 0002`).
+
+Validation: `tests/test_report_buyer.py`, `tests/test_report_buyer_snapshot.py`
+(including isolated PostgreSQL SQL/history/alias checks), existing report/PDF/
+public UI suites, plus all-page visual inspection of master/large/small ward PDFs.
 
 ## Related docs
 

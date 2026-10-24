@@ -4,7 +4,7 @@
   {% if chart.labels %}Nhãn: {{ chart.labels|join(', ') }}.{% endif %}
   {% for dataset in chart.datasets or [] %}
     {{ dataset.label or ('Chuỗi dữ liệu ' ~ loop.index) }}:
-    {% for value in dataset.data or [] %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}.
+    {% for value in dataset.data or [] %}{{ value if value is not none else 'Chưa đủ mẫu' }}{% if not loop.last %}, {% endif %}{% endfor %}.
   {% endfor %}
 </span>
 {%- endmacro %}
@@ -21,6 +21,8 @@
   {% include "partials/research_assets.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/report_print.css') }}?v=report-pdf-20261024-1">
   <meta name="radar-report-pdf-version" content="{{ page.report_pdf_version }}">
+  <meta name="radar-report-chart-count" content="{{ page.charts|length }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/report_buyer.css') }}?v=buyer-report-20261025-1">
   {% include "partials/public_brand_assets.html" %}
 </head>
 <body class="seo-page report-detail">
@@ -54,10 +56,12 @@
           <div><span>Kỳ dữ liệu</span><strong>{{ page.report.period }}</strong></div>
           <div><span>Nguồn và trạng thái</span><strong>Dữ liệu Radar BDS đã sàng lọc</strong></div>
           {% if page.report_data_as_of %}
-          <div class="report-data-as-of"><span>Snapshot cập nhật</span><strong><time datetime="{{ page.report_data_as_of }}">{{ page.report_data_as_of }}</time></strong></div>
+          <div class="report-data-as-of"><span>Kỳ dữ liệu kết thúc</span><strong><time datetime="{{ page.report_data_as_of }}">{{ page.report_data_as_of }}</time></strong></div>
           {% endif %}
         </div>
       </header>
+
+      {% include "partials/report_buyer_overview.html" %}
 
 
 
@@ -65,7 +69,7 @@
         <div>
           <span>Dữ liệu hiện tại</span>
           <strong>{{ page.report_dashboard_label }}</strong>
-          <p>Báo cáo này là snapshot của {{ page.report.period }}; dashboard mở các deal vẫn đang hoạt động để kiểm tra tiếp.</p>
+          <p>Bản số liệu đã lưu của {{ page.report.period }}. Danh sách mở tiếp dùng dữ liệu hiện tại, có thể khác các tin trong kỳ báo cáo.</p>
         </div>
         <a href="{{ page.report_dashboard_href }}"
           data-report-action="dashboard"
@@ -77,6 +81,9 @@
 
       <nav class="report-reading-nav" aria-label="Trong báo cáo này">
         <a href="#report-metrics">Chỉ số trong kỳ</a>
+        <a href="#report-budget">Theo ngân sách</a>
+        <a href="#report-price-ranges">Khoảng giá</a>
+        <a href="#report-checklist">Trước khi đi xem</a>
         <a href="#report-insights">Nhận định</a>
         <a href="#report-method">Phương pháp</a>
         {% if page.local_links %}<a href="#report-related">Báo cáo liên quan</a>{% endif %}
@@ -97,7 +104,7 @@
         {% if page.report.indicators %}
         <div class="section-heading report-table-heading">
           <p class="seo-eyebrow">Chỉ báo đọc nhanh</p>
-          <h2>Xu hướng giá, cắt máu và nguồn cung</h2>
+          <h2>Giá rao và phạm vi mẫu quan sát</h2>
         </div>
         <div class="report-indicator-grid">
           {% for indicator in page.report.indicators %}
@@ -114,7 +121,7 @@
         {% if page.report.trend_intro or page.report.trend_rows %}
         <div class="section-heading report-table-heading">
           <p class="seo-eyebrow">Xu hướng giá</p>
-          <h2>Xu hướng giá {{ page.scope_label }} 6 tháng gần nhất</h2>
+          <h2>Giá rao {{ page.scope_label }} qua các kỳ đã lưu</h2>
           {% for chart in page.charts %}
           {% if chart.id == 'price-trend-6m-chart' %}
           <div class="report-section-chart">
@@ -291,7 +298,7 @@
       </section>
       {% endif %}
 
-      {% if page.report.featured_listings %}
+      {% if page.report.featured_listings and not page.buyer %}
       <section class="report-featured-listings" aria-labelledby="report-featured-listings">
         <div class="section-heading">
           <p class="seo-eyebrow">Tin đáng kiểm tra</p>
@@ -356,6 +363,8 @@
         <strong>Dữ liệu tổng hợp từ tin rao công khai</strong>
         <span>Có phạm vi, ngày cập nhật và phương pháp để kiểm tra trước khi thẩm định thực tế.</span>
       </section>
+
+      {% include "partials/report_buyer_checklist.html" %}
 
       <section class="seo-final-cta" style="grid-template-columns:minmax(0,1fr) auto;">
         <div><p class="seo-eyebrow">Mở dữ liệu phía sau báo cáo</p><h2>{{ page.final_cta.title }}</h2><p>{{ page.final_cta.body }}</p></div>

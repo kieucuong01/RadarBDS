@@ -466,7 +466,7 @@ def test_report_featured_images_are_lazy_sized_and_listing_tracked():
         "/bao-cao/phu-tan-thang-06-2026"
     ).get_data(as_text=True)
     cards = re.findall(
-        r'<a class="featured-listing-card report-signal-card[^"]*"[\s\S]*?</a>',
+        r'<article class="buyer-example"[\s\S]*?</article>',
         html,
     )
 

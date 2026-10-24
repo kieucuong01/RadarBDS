@@ -69,10 +69,10 @@ def build_pdf(browser, report: dict, base_url: str) -> Path:
                 }
             });
         }""", PDF_PUBLIC_ORIGIN)
-        charts = report.get('charts') or []
-        if charts:
+        chart_ids = page.locator('canvas[id]').evaluate_all('(els) => els.map(el => el.id)')
+        if chart_ids:
             page.wait_for_function("ids => typeof Chart !== 'undefined' && ids.every(id => Chart.getChart(id))",
-                                   arg=[c['id'] for c in charts], timeout=30000)
+                                   arg=chart_ids, timeout=30000)
             page.evaluate("""() => {
                 Object.values(Chart.instances).forEach(chart => {
                     chart.options.animation = false;

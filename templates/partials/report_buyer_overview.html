@@ -1,0 +1,91 @@
+{% if page.buyer %}
+{% set buyer = page.buyer %}
+<section class="buyer-section buyer-summary" aria-labelledby="report-buyer-summary" data-buyer-report="v1">
+  <p class="seo-eyebrow">Đọc trước khi chọn tin</p>
+  <h2 id="report-buyer-summary">Người mua cần biết gì từ báo cáo này?</h2>
+  <ul class="buyer-summary-list">{% for sentence in buyer.summary %}<li>{{ sentence }}</li>{% endfor %}</ul>
+  <div class="buyer-reading-order" aria-label="Thứ tự đọc báo cáo">
+    <a href="#report-budget">1. Ngân sách</a><a href="#report-price-ranges">2. Khoảng giá</a>
+    <a href="#report-area-comparison">3. Khu vực</a><a href="#report-checklist">4. Kiểm tra thực tế</a>
+  </div>
+  {% if buyer.warnings %}<aside class="buyer-data-note" aria-label="Giới hạn dữ liệu">
+    <strong>Đọc cùng giới hạn dữ liệu</strong>
+    <ul>{% for warning in buyer.warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+  </aside>{% endif %}
+</section>
+
+<section class="buyer-section" aria-labelledby="report-budget">
+  <p class="seo-eyebrow">Bắt đầu từ tầm tiền</p>
+  <h2 id="report-budget">Với ngân sách của mình, nên xem nhóm tin nào?</h2>
+  {% if buyer.budget_snapshot_available %}
+  <p>Bảng dùng {{ buyer.qualified_count }} mẫu đất nền/nhà đất đủ trường trong snapshot riêng. Giá là giá rao biết tại lần biên soạn {{ buyer.generated_at }}; cửa sổ thu thập theo kỳ báo cáo.</p>
+  {% else %}
+  <p>Bản lịch sử chưa lưu phân bố ngân sách nên chưa thể nói mỗi tầm tiền có bao nhiêu tài sản hoặc diện tích điển hình. Các đường dẫn dưới đây giúp tìm tin <strong>hiện tại</strong>; không đại diện cho tồn kho của kỳ báo cáo.</p>
+  {% endif %}
+  <div class="buyer-budget-grid">
+    {% for band in buyer.budgets %}<article class="buyer-budget-card">
+      <h3>{{ band.label }}</h3>
+      {% if band.n is not none %}<strong>{{ band.n }} mẫu đủ trường</strong>
+      {% for fact in band.facts %}<p>{{ 'Đất nền' if fact.property_type == 'dat_nen' else 'Nhà đất' }} · n={{ fact.n }}<br>Diện tích giữa: {{ fact.area_display }}<br>Giá/m²: {{ fact.range_display }}</p>{% endfor %}
+      {% if not band.facts %}<p>Không có mẫu đủ điều kiện trong nhóm giá này.</p>{% endif %}
+      {% endif %}
+      <div class="buyer-budget-links"><a href="{{ band.land_href }}" data-track-cta="report_budget_land">Xem đất nền hiện tại →</a><a href="{{ band.house_href }}" data-track-cta="report_budget_house">Xem nhà đất hiện tại →</a></div>
+    </article>{% endfor %}
+  </div>
+  <p class="buyer-footnote">Khoảng giá dùng để tổ chức tìm kiếm. Không lấy ngân sách chia giá/m² trung vị để hứa diện tích có thể mua; nhà đất còn phụ thuộc công trình và hiện trạng. Danh sách hiện tại giới hạn Facebook, một tháng và đúng khu vực.</p>
+</section>
+
+<section class="buyer-section" aria-labelledby="report-price-ranges">
+  <p class="seo-eyebrow">Giá rao và cỡ mẫu</p>
+  <h2 id="report-price-ranges">Khoảng giá phổ biến của tài sản cùng loại</h2>
+  <p>P25–P75 là khoảng chứa 50% mẫu quan sát ở giữa. Đây không phải giá chốt, khoảng tin cậy hay mức giá mua an toàn.</p>
+  {% if buyer.segments %}<div class="buyer-segment-grid">
+    {% for segment in buyer.segments %}<article class="buyer-price-card">
+      <h3>{{ segment.label }}</h3><span class="buyer-n">{{ segment.n }} mẫu đủ giá/m²</span>
+      <dl><div><dt>Giá rao/m² trung vị</dt><dd>{{ segment.median_display }}</dd></div>
+      <div><dt>Khoảng giá/m² P25–P75</dt><dd>{{ segment.range_display }}</dd></div>
+      <div><dt>Tổng giá rao trung vị</dt><dd>{{ segment.total_display }}</dd></div>
+      <div><dt>Diện tích P25–P75</dt><dd>{{ segment.area_display }}</dd></div></dl>
+    </article>{% endfor %}
+  </div>{% elif buyer.budget_snapshot_available %}<p class="buyer-data-note">Kỳ này không có mẫu đất nền/nhà đất đủ các điều kiện giá và diện tích trong snapshot riêng. Điều này không chứng minh cả khu vực không có tài sản đang bán.</p>
+  {% else %}<p class="buyer-data-note">Bản tổng quan cũ chưa lưu phân phối mẫu gộp. So sánh từng phường trong bảng dưới; không dùng trung bình trung vị các phường làm trung vị toàn khu.</p>{% endif %}
+  <p class="buyer-footnote">Ngưỡng trình bày: từ 15 mẫu cho đúng phân khúc. Dưới ngưỡng này vẫn có thể xem từng tin, nhưng chưa dùng để kết luận mặt bằng giá.</p>
+</section>
+
+<section class="buyer-section" aria-labelledby="report-area-comparison">
+  <p class="seo-eyebrow">Mở rộng phạm vi so sánh</p>
+  <h2 id="report-area-comparison">Đối chiếu khu vực theo đúng loại tài sản</h2>
+  <p>Bảng giá/m² dùng n riêng của đất nền và nhà đất. Các phường tham khảo ưu tiên độ phủ mẫu giá trong cùng kỳ, không xếp hạng cơ hội đầu tư. Giá thấp hơn chưa chứng minh tài sản tương đương về đường vào, diện tích, đất ở hoặc hiện trạng.</p>
+  <div class="buyer-comparison-grid">
+    {% for row in buyer.comparisons %}<article class="buyer-comparison-card">
+      <h3><a href="{{ row.href }}">{{ row.scope }}</a></h3>
+      <dl><div><dt>Đất nền · n={{ row.land_n }}</dt><dd>{{ row.land_price }}</dd></div><div><dt>Nhà đất · n={{ row.house_n }}</dt><dd>{{ row.house_price }}</dd></div></dl>
+      <a class="buyer-current-link" href="{{ row.current_href }}" data-track-cta="report_area_current">Mở tin hiện tại →</a>
+    </article>{% endfor %}
+  </div>
+</section>
+
+<section class="buyer-section" aria-labelledby="report-observation-history">
+  <p class="seo-eyebrow">Dấu vết quan sát</p>
+  <h2 id="report-observation-history">Giảm giá và thời gian Radar ghi nhận</h2>
+  {% if buyer.history %}
+  <div class="buyer-history-grid"><article><span>Mẫu có lần giảm giá được ghi nhận trong kỳ</span><strong>{{ buyer.history.observed_drop_count }}</strong><p>{{ buyer.history.observed_drop_events }} sự kiện có giá trước, giá sau và thời điểm.</p></article>
+  <article><span>Thời gian được Radar quan sát</span><strong>{{ buyer.history.days_observed.median if buyer.history.days_observed.median is not none else 'Chưa đủ mẫu' }}{% if buyer.history.days_observed.median is not none %} ngày{% endif %}</strong><p>n={{ buyer.history.days_observed_n }} mẫu có ngày ghi nhận đầu/cuối hợp lệ. Không phải thời gian bán được tài sản.</p></article></div>
+  {% else %}<p>Bản này chưa lưu bảng sự kiện giá trước/sau và ngày quan sát để tính lại theo kỳ. Cờ “giảm giá” trong bảng cũ chỉ là dữ kiện đã lưu, chưa xác nhận mức thương lượng hoặc khả năng bán thành công.</p>{% endif %}
+</section>
+
+{% if buyer.examples %}<section class="buyer-section" aria-labelledby="report-buyer-examples">
+  <p class="seo-eyebrow">Kiểm chứng bằng mẫu tin</p><h2 id="report-buyer-examples">Các mẫu đã lưu để mở kiểm tra tiếp</h2>
+  <p>Ví dụ của kỳ báo cáo, chưa xác nhận còn bán vào ngày tải PDF. Giá rẻ hoặc MOS cao không xác nhận giấy tờ, đường đi hay quy hoạch.</p>
+  <div class="buyer-examples">{% for example in buyer.examples %}<article class="buyer-example">
+    <a class="buyer-example-link" href="{{ example.href }}" data-report-action="listing"
+      data-report-city="{{ page.report_analytics.city }}" data-report-ward="{{ page.report_analytics.ward_slug }}"
+      data-report-period="{{ page.report_analytics.period }}" data-report-surface="report_buyer_example" data-listing-id="{{ example.id }}">
+      {% if example.image %}<img class="buyer-example-image" src="{{ example.image }}" alt="{{ example.title }}" loading="lazy" decoding="async" width="640" height="360">{% endif %}
+      <span>{{ example.type }}</span><h3>{{ example.title }}</h3>
+    </a>
+    <dl><div><dt>Giá rao</dt><dd>{{ example.price }}</dd></div><div><dt>Diện tích</dt><dd>{{ example.area }}</dd></div><div><dt>Giá/m²</dt><dd>{{ example.ppm2 }}</dd></div></dl>
+    <p>{{ example.reason }}</p><p class="buyer-footnote">Cần hỏi lại: vị trí chính xác, lối đi, diện tích đất ở, giấy tờ, hiện trạng và giá còn hiệu lực.</p>
+  </article>{% endfor %}</div>
+</section>{% endif %}
+{% endif %}

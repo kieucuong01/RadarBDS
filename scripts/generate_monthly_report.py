@@ -15,10 +15,12 @@ Usage:
 """
 
 import sys, os, re, argparse, ast, pprint
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
-sys.path.insert(0, "/opt/radar-bds/current")
-os.chdir("/opt/radar-bds/current")
+PROJECT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT))
 
 # Load environment variables
 env_file = "/etc/radar-bds/radar.env"
@@ -270,6 +272,7 @@ def generate_ward_report(ward, month, year):
         "report": {
             "period": m_label,
             "published_at": date.today().isoformat(),
+            "generated_at": datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).isoformat(),
             "data_as_of": month_end_date(month, year).isoformat(),
             "raw_listing_count": stats["raw_total"],
             "basis_count": stats["basis_count"],
@@ -419,6 +422,7 @@ def generate_master_report(month, year):
         "report": {
             "period": m_label,
             "published_at": date.today().isoformat(),
+            "generated_at": datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).isoformat(),
             "data_as_of": month_end_date(month, year).isoformat(),
             "raw_listing_count": total_raw_listings,
             "basis_count": total_listings,

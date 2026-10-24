@@ -9,17 +9,15 @@ filtered dashboard CTAs. No LLM drafting is required for the monthly batch.
 from __future__ import annotations
 
 import argparse
-import os
 import pprint
 import re
 import sys
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from pathlib import Path
 from urllib.parse import urlencode
 
-PROJECT = Path("/opt/radar-bds/current")
+PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
-os.chdir(PROJECT)
 
 # Importing the base generator also loads /etc/radar-bds/radar.env and shared ward constants.
 from scripts.generate_monthly_report import (  # noqa: E402
@@ -32,6 +30,12 @@ from scripts.generate_monthly_report import (  # noqa: E402
 from db.connection import get_conn  # noqa: E402
 from services.image_assets import resolve_image_url  # noqa: E402
 from services.monthly_report_data import query_featured_records  # noqa: E402
+from services.report_buyer_snapshot import query_buyer_snapshot, TZ  # noqa: E402
+
+
+def preserve_published_snapshot(page):
+    report = page.get('report') or {}
+    return bool(report.get('buyer_snapshot')) or not report.get('generated_at')
 
 NO_DIACRITICS = {
     "Tân An": "Tan An",
@@ -176,14 +180,38 @@ def fair_ranges(area_m2: object, fair_ppm2: object) -> tuple[str, str]:
     return f"{fmt_ty(low * area / 1000)} ~ {fmt_ty(high * area / 1000)}", f"{fmt_ppm2(low)} ~ {fmt_ppm2(high)}"
 
 
-def query_trends(ward: str, month: int, year: int) -> list[dict]:
+def query_trends(ward: str, month: int, year: int, current_snapshot: dict) -> list[dict]:
+    from services.report_buyer_snapshot import valid_snapshot
     rows = []
+    saved = load_seo_pages(PROJECT / 'config/seo_pages.py')
     for m, y in last_six_months(month, year):
         start, end = month_bounds(m, y)
-        stats = query_ward_stats(ward, start, end)
+        if (m, y) == (month, year):
+            stats = query_ward_stats(ward, start, end)
+            facts = current_snapshot
+        else:
+            old = saved.get(f'bao-cao/{WARDS_SLUG[ward]}-thang-{m:02d}-{y}', {}).get('report', {})
+            facts = old.get('buyer_snapshot') or {}
+            stats = dict(hot=None, dropped=old.get('price_drop_count'),
+                         signals=old.get('actionable_signal_count'), by_type={})
+        compatible = (valid_snapshot(facts) and facts['period_start'] == start
+                      and facts['period_end'] == end
+                      and all(r['scope'] == ward for r in facts['comparisons']))
+        stats.update(total=facts['qualified_count'] if compatible else 0,
+                     by_type={}, missing=not compatible)
+        if compatible:
+            for segment in facts['segments']:
+                stats['by_type'][segment['property_type']] = dict(
+                    count=segment['n'], median_m2=segment['ppm2']['median'])
         dn = stats["by_type"].get("dat_nen", {})
         nd = stats["by_type"].get("nha_dat", {})
         rows.append({"month": f"{m:02d}/{y}", "stats": stats, "row": {"month": f"{m:02d}/{y}", "total": str(stats["total"]), "dat_nen_count": str(dn.get("count", 0)), "dat_nen_price": fmt_ppm2(dn.get("median_m2")), "nha_dat_count": str(nd.get("count", 0)), "nha_dat_price": fmt_ppm2(nd.get("median_m2")), "hot": str(stats["hot"]), "dropped": str(stats["dropped"]), "signals": str(stats["signals"])}})
+        if stats.get('missing'):
+            rows[-1]['row'] = {k: v if k == 'month' else 'Chưa lưu' for k, v in rows[-1]['row'].items()}
+        else:
+            for key in ('hot', 'dropped', 'signals'):
+                if stats.get(key) is None:
+                    rows[-1]['row'][key] = 'Chưa lưu'
     return rows
 
 
@@ -286,8 +314,13 @@ def price_trend_indicator_note(value: str, ward: str) -> str:
 
 
 def update_ward_page(page: dict, ward: str, month: int, year: int) -> dict:
+    if preserve_published_snapshot(page):
+        return page
     period_label = month_label(month, year); mm = f"{month:02d}"
-    trends = query_trends(ward, month, year); cur = trends[-1]["stats"]; prev = trends[-2]["stats"] if len(trends) >= 2 else {"total": 0, "by_type": {}}
+    generated_at = datetime.now(TZ).isoformat()
+    with get_conn() as conn:
+        buyer_snapshot = query_buyer_snapshot(conn, [ward], *month_bounds(month, year), generated_at=generated_at)
+    trends = query_trends(ward, month, year, buyer_snapshot); cur = trends[-1]["stats"]; prev = trends[-2]["stats"] if len(trends) >= 2 else {"total": 0, "by_type": {}}
     records = query_valuation_records(ward, month, year)
     dn, nd = cur["by_type"].get("dat_nen", {}), cur["by_type"].get("nha_dat", {})
     pdn = prev.get("by_type", {}).get("dat_nen", {})
@@ -308,7 +341,7 @@ def update_ward_page(page: dict, ward: str, month: int, year: int) -> dict:
         },
     })
     value_pct = fmt_pct(dn_pct)
-    report.update({"period": period_label, "source_note": f"Nguồn: tin rao Facebook tại {ward} trong tháng {mm}/{year}; thống kê dùng mẫu canonical đạt quality gate.", "metrics": [{"label": "Tin thu thập", "value": fmt_num(cur["raw_total"]), "note": "gồm cả repost trong kỳ"}, {"label": "Mẫu hợp lệ", "value": fmt_num(cur["basis_count"]), "note": "canonical lot sau quality gate"}, {"label": "Giá trung vị đất nền", "value": fmt_ppm2(dn.get("median_m2")), "note": f"{dn.get('count', 0)} mẫu đất nền đủ giá/m²"}, {"label": "Giá trung vị nhà đất", "value": fmt_ppm2(nd.get("median_m2")), "note": f"{nd.get('count', 0)} mẫu nhà đất đủ giá/m²"}, {"label": "Tín hiệu actionable", "value": str(cur["actionable_signal_count"]), "note": "latest valuation và quality flags hợp lệ"}], "indicators": [{"label": "Xu hướng giá đất nền", "value": value_pct, "status": "Tăng" if dn_pct and dn_pct > 3 else "Giảm" if dn_pct and dn_pct < -3 else "Ổn định", "note": price_trend_indicator_note(value_pct, ward)}, {"label": "Tỷ lệ tin giảm giá", "value": f"{cut:.1f}%", "status": "Rất thấp" if cut < 1 else "Cần chú ý" if cut < 5 else "Cao", "note": f"{cur['dropped']}/{cur['basis_count']} mẫu hợp lệ có dấu hiệu giảm giá; đây không phải xác nhận bán tháo."}, {"label": "Bất thường nguồn cung", "value": fmt_pct(supply_pct), "status": "Rất cao" if supply_pct and supply_pct > 80 else "Tăng" if supply_pct and supply_pct > 20 else "Giảm" if supply_pct and supply_pct < -20 else "Ổn định", "note": f"Mẫu hợp lệ tháng trước → tháng này: {prev.get('basis_count', prev.get('total', 0))} → {cur['basis_count']}."}], "trend_intro": trend_intro, "trend_rows": [t["row"] for t in trends], "area_rows": [{"area": TYPE_LABELS.get(pt, pt), "new_listings": f"{data['count']} mẫu", "median_price": fmt_ppm2(data.get("median_m2")), "drop_signal": f"{data.get('dropped', 0)} tin giảm giá", "radar_signal": f"{data.get('signals', 0)} actionable"} for pt, data in cur["by_type"].items()], "under_value": {"title": "Có bao nhiêu tín hiệu thấp hơn giá cơ sở?", "metrics": [{"label": "Tín hiệu đủ định giá", "value": str(len(records)), "note": f"mẫu actionable tại {ward} có đủ giá, diện tích và MOS"}, {"label": "MOS ≥ 10%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 10) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 10)}/{len(records)} tín hiệu thấp hơn giá cơ sở từ 10% trở lên"}, {"label": "MOS ≥ 15%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 15) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 15)}/{len(records)} tín hiệu cần kiểm tra sâu hơn"}], "body": under_body}, "type_analysis": type_analysis, "featured_listings": featured_listings(ward, records, period_label), "featured_more_href": dashboard_href(ward), "insights": [{"title": f"{ward}: {cur['basis_count']} mẫu hợp lệ trong tháng {mm}", "body": trend_intro[2]}, {"title": f"Nhóm đáng soi nghiêng về {'nhà đất' if nd.get('signals', 0) >= dn.get('signals', 0) else 'đất nền'}", "body": type_analysis[0]}, {"title": "MOS chỉ là bước sàng lọc ban đầu", "body": under_body[0]}]})
+    report.update({"period": period_label, "source_note": f"Nguồn: tin rao Facebook tại {ward} trong tháng {mm}/{year}; thống kê dùng mẫu canonical đạt quality gate.", "metrics": [{"label": "Tin thu thập", "value": fmt_num(cur["raw_total"]), "note": "gồm cả repost trong kỳ"}, {"label": "Mẫu hợp lệ", "value": fmt_num(cur["basis_count"]), "note": "canonical lot sau quality gate"}, {"label": "Giá trung vị đất nền", "value": fmt_ppm2(dn.get("median_m2")), "note": f"{dn.get('count', 0)} mẫu đất nền đủ giá/m²"}, {"label": "Giá trung vị nhà đất", "value": fmt_ppm2(nd.get("median_m2")), "note": f"{nd.get('count', 0)} mẫu nhà đất đủ giá/m²"}, {"label": "Tín hiệu actionable", "value": str(cur["actionable_signal_count"]), "note": "latest valuation và quality flags hợp lệ"}], "indicators": [{"label": "Xu hướng giá đất nền", "value": value_pct, "status": "Tăng" if dn_pct and dn_pct > 3 else "Giảm" if dn_pct and dn_pct < -3 else "Ổn định", "note": price_trend_indicator_note(value_pct, ward)}, {"label": "Tỷ lệ tin giảm giá", "value": f"{cut:.1f}%", "status": "Rất thấp" if cut < 1 else "Cần chú ý" if cut < 5 else "Cao", "note": f"{cur['dropped']}/{cur['basis_count']} mẫu hợp lệ có dấu hiệu giảm giá; đây không phải xác nhận bán tháo."}, {"label": "Bất thường nguồn cung", "value": fmt_pct(supply_pct), "status": "Rất cao" if supply_pct and supply_pct > 80 else "Tăng" if supply_pct and supply_pct > 20 else "Giảm" if supply_pct and supply_pct < -20 else "Ổn định", "note": f"Mẫu hợp lệ tháng trước → tháng này: {prev.get('basis_count', prev.get('total', 0))} → {cur['basis_count']}."}], "trend_intro": trend_intro, "trend_rows": [t["row"] for t in trends], "area_rows": [{"area": TYPE_LABELS.get(pt, pt), "new_listings": f"{data['count']} mẫu", "median_price": fmt_ppm2(data.get("median_m2")), "drop_signal": "Chưa lưu cho bộ mẫu này", "radar_signal": "Chưa lưu cho bộ mẫu này"} for pt, data in cur["by_type"].items()], "under_value": {"title": "Có bao nhiêu tín hiệu thấp hơn giá cơ sở?", "metrics": [{"label": "Tín hiệu đủ định giá", "value": str(len(records)), "note": f"mẫu actionable tại {ward} có đủ giá, diện tích và MOS"}, {"label": "MOS ≥ 10%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 10) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 10)}/{len(records)} tín hiệu thấp hơn giá cơ sở từ 10% trở lên"}, {"label": "MOS ≥ 15%", "value": f"{sum(1 for r in records if r['mos_pct'] >= 15) * 100 / len(records):.1f}%" if records else "0%", "note": f"{sum(1 for r in records if r['mos_pct'] >= 15)}/{len(records)} tín hiệu cần kiểm tra sâu hơn"}], "body": under_body}, "type_analysis": type_analysis, "featured_listings": featured_listings(ward, records, period_label), "featured_more_href": dashboard_href(ward), "insights": [{"title": f"{ward}: {cur['basis_count']} mẫu hợp lệ trong tháng {mm}", "body": trend_intro[2]}, {"title": f"Nhóm đáng soi nghiêng về {'nhà đất' if nd.get('signals', 0) >= dn.get('signals', 0) else 'đất nền'}", "body": type_analysis[0]}, {"title": "MOS chỉ là bước sàng lọc ban đầu", "body": under_body[0]}]})
     data_end = date.fromisoformat(month_bounds(month, year)[1]) - timedelta(days=1)
     report.update({
         "data_as_of": data_end.isoformat(),
@@ -343,12 +376,16 @@ def update_ward_page(page: dict, ward: str, month: int, year: int) -> dict:
         {"label": f"Lọc nhà đất {ward}", "href": dashboard_href(ward, prop_type="nha_dat"), "description": "Xem riêng nhà đất vì giá/m² phụ thuộc chất lượng căn nhà."},
     ]
     report["internal_links"] = report_internal_links(ward, month, year)
+    report['buyer_snapshot'] = buyer_snapshot
+    report['generated_at'] = generated_at
     page["report"] = report
     page["charts"] = [trend_chart(trends), scatter_chart(records)] + type_charts(cur)
     return page
 
 
 def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year: int) -> dict:
+    if preserve_published_snapshot(page):
+        return page
     rows = []
     for ward, wpage in ward_pages.items():
         report = wpage["report"]
@@ -375,7 +412,9 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
     total_raw = sum(int(r["raw_listings"]) for r in rows)
     total = sum(int(r["new_listings"]) for r in rows)
     total_signals = sum(int(r["radar_signal"]) for r in rows)
-    priced = [r for r in rows if r["median_price"] != "—"]; cheapest = min(priced, key=lambda r: float(r["median_price"])); expensive = max(priced, key=lambda r: float(r["median_price"])); most_signals = max(rows, key=lambda r: int(r["radar_signal"])); most_dropped = max(rows, key=lambda r: int(r["drop_signal"])); weighted = sum(float(r["median_price"]) * int(r["new_listings"]) for r in priced) / sum(int(r["new_listings"]) for r in priced); tdm_ref = round(weighted, 1); mm = f"{month:02d}"
+    most_signals = max(rows, key=lambda r: int(r["radar_signal"]))
+    most_dropped = max(rows, key=lambda r: int(r["drop_signal"]))
+    mm = f"{month:02d}"
     report = dict(page.get("report") or {})
     report.update({
         "data_as_of": (date.fromisoformat(month_bounds(month, year)[1]) - timedelta(days=1)).isoformat(),
@@ -387,7 +426,7 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
         "metrics": [
             {"label": "Tin thu thập", "value": fmt_num(total_raw), "note": "gồm cả repost trong kỳ"},
             {"label": "Mẫu hợp lệ", "value": fmt_num(total), "note": "canonical lot sau quality gate"},
-            {"label": "Giá/m² tham chiếu", "value": f"{tdm_ref} tr/m²", "note": "đất nền từ 13 phường"},
+            {"label": "Giá/m² tham chiếu", "value": "Xem riêng từng phường", "note": "Không gộp trung vị phường thành trung vị toàn khu"},
             {"label": "Tổng tín hiệu", "value": str(total_signals), "note": "mẫu actionable tại 13 phường"},
         ],
         "area_rows": rows,
@@ -395,11 +434,11 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
         "type_section_title": "Mẫu hợp lệ và giá trung vị theo 13 phường Thủ Dầu Một",
         "type_analysis": [
             f"{rows[0]['area']} và {rows[1]['area']} có nhiều mẫu hợp lệ nhất trong tháng {mm}. Mẫu dày giúp dễ so sánh hơn nhưng không tự động đồng nghĩa giá rẻ.",
-            f"Biên giá giữa {cheapest['area']} ({cheapest['median_price']} tr/m²) và {expensive['area']} ({expensive['median_price']} tr/m²) cho thấy cần chọn phường theo ngân sách trước khi lọc MOS.",
+            "So sánh cùng loại hình và cỡ mẫu của từng phường; nhóm thiếu mẫu không dùng để xếp hạng giá.",
             f"{total_signals} tín hiệu actionable là danh sách ưu tiên kiểm tra; mỗi tài sản vẫn cần thẩm định pháp lý, quy hoạch, hình ảnh và vị trí thực địa.",
         ],
         "insights": [
-            {"title": f"Phường rẻ nhất: {cheapest['area']} ({cheapest['median_price']} tr/m²)", "body": f"Mức này được tính trên mẫu canonical hợp lệ tháng {mm}, không phải giá giao dịch hay kết luận cho mọi tài sản."},
+            {"title": "Đối chiếu giá cùng loại hình", "body": "Xem cỡ mẫu và giá rao từng phường; không suy ra giá giao dịch hay xếp hạng nơi rẻ nhất."},
             {"title": f"Nhiều tín hiệu nhất: {most_signals['area']}", "body": f"{most_signals['area']} có {most_signals['radar_signal']} tín hiệu actionable để ưu tiên kiểm tra trên dashboard."},
             {"title": f"Nhiều tin giảm giá: {most_dropped['area']}", "body": f"{most_dropped['area']} có {most_dropped['drop_signal']} mẫu giảm giá công khai; đây không phải xác nhận bán tháo."},
         ],
@@ -429,6 +468,10 @@ def update_master_page(page: dict, ward_pages: dict[str, dict], month: int, year
     page["local_links_title"] = f"Tổng hợp 13 báo cáo phường Thủ Dầu Một tháng {mm}/{year}"
     page["local_links"] = child_report_links
     page["report"] = report; page["description"] = f"Báo cáo BĐS Thủ Dầu Một tháng {mm}/{year}: {fmt_num(total_raw)} tin thu thập, {fmt_num(total)} mẫu canonical hợp lệ và {total_signals} tín hiệu actionable."; page["hero_text"] = f"Báo cáo tháng {mm}/{year} tập trung 13 phường Thủ Dầu Một: {fmt_num(total_raw)} tin Facebook thu thập và {fmt_num(total)} mẫu canonical đạt quality gate. Dùng snapshot để chọn phường, rồi mở dashboard kiểm tra dữ liệu hiện tại."; page["final_cta"] = {"title": "So sánh tất cả phường TDM bằng dashboard Radar BDS", "body": "Dùng báo cáo tổng quan làm bản đồ chọn phường, sau đó mở dashboard để lọc tin theo từng phường, loại hình, giá/m² và tín hiệu dưới giá cơ sở.", "button": "Mở dashboard", "button_href": dashboard_href(None)}; page["charts"] = [{"id": "ward-supply-chart", "type": "bar", "title": "Mẫu hợp lệ theo phường", "labels": [r["area"] for r in rows], "datasets": [{"label": "Mẫu hợp lệ", "data": [int(r["new_listings"]) for r in rows], "backgroundColor": "#3b82f6", "borderRadius": 3}], "legend": False}, {"id": "ward-price-chart", "type": "bar", "title": "Giá/m² trung vị theo phường (tr/m²)", "labels": [r["area"] for r in rows], "datasets": [{"label": "Giá/m² (tr/m²)", "data": [float(r["median_price"]) if r["median_price"] != "—" else 0 for r in rows], "backgroundColor": "#10b981", "borderRadius": 3}], "legend": False}]
+    generated_at = datetime.now(TZ).isoformat()
+    with get_conn() as conn:
+        report['buyer_snapshot'] = query_buyer_snapshot(conn, TDM_WARDS, *month_bounds(month, year), generated_at=generated_at)
+    report['generated_at'] = generated_at
     return page
 
 
@@ -491,9 +534,13 @@ def main() -> int:
     if args.dry_run:
         print("DRY RUN — no files modified")
         return 0
-    text = replace_entry_text(config_path.read_text(), master_key, master_page)
+    text = config_path.read_text()
+    if master_page != pages[master_key]:
+        text = replace_entry_text(text, master_key, master_page)
     for ward in TDM_WARDS:
-        text = replace_entry_text(text, f"bao-cao/{WARDS_SLUG[ward]}-thang-{mm}-{args.year}", ward_pages[ward])
+        key = f"bao-cao/{WARDS_SLUG[ward]}-thang-{mm}-{args.year}"
+        if ward_pages[ward] != pages[key]:
+            text = replace_entry_text(text, key, ward_pages[ward])
     compile(text, str(config_path), "exec"); config_path.write_text(text); print("Updated config/seo_pages.py with rich monthly report pattern")
     return 0
 
