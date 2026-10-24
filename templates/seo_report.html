@@ -19,9 +19,9 @@
     @media (max-width: 768px) { .report-detail .seo-final-cta { grid-template-columns: minmax(0, 1fr); } }
   </style>
   {% include "partials/research_assets.html" %}
-  {% include "partials/public_brand_assets.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/report_print.css') }}?v=report-pdf-20261024-1">
   <meta name="radar-report-pdf-version" content="{{ page.report_pdf_version }}">
+  {% include "partials/public_brand_assets.html" %}
 </head>
 <body class="seo-page report-detail">
   {% include "partials/seo_header.html" %}
