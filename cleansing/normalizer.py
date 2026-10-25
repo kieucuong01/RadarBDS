@@ -263,6 +263,26 @@ def _float_or_none(value) -> Optional[float]:
         return None
 
 
+def _declared_area_from_dimension_suffix(text: str) -> Optional[float]:
+    """Read a square-meter land total immediately following labeled dimensions."""
+    folded = _ascii_fold(text)
+    for match in re.finditer(
+        r"\b(?:dt|dien\s+tich)\s*[:=\-]?\s*"
+        r"(\d+(?:[,.]\d+)?)\s*m?\s*[x×*]\s*"
+        r"(\d+(?:[,.]\d+)?)\s*m?\s*[,:\-–—]\s*"
+        r"(\d+(?:[,.]\d+)?)\s*(?:m[²2]|mv|met\s+vuong)\b"
+        r"(?!\s*(?:[x×*]\s*\d|tho\b|tc\b|odt\b|san\b|su\s*dung\b|xay\s*dung\b))",
+        folded,
+    ):
+        frontage = float(match.group(1).replace(',', '.'))
+        depth = float(match.group(2).replace(',', '.'))
+        if 2 <= frontage <= 50 and 5 <= depth <= 500:
+            area = declared_total_area(f"DT {match.group(3)}m2")
+            if area is not None and area > 5:
+                return area
+    return None
+
+
 def _infer_depth_from_area_frontage(area_m2, frontage_m) -> Optional[float]:
     area = _float_or_none(area_m2)
     frontage = _float_or_none(frontage_m)
@@ -757,7 +777,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         _parse_text = "\n".join(part for part in [title, description] if part)
         _fb_parsed = parse_facebook_post(_parse_text) or {}
         _declared_area_candidates = [
-            declared_total_area(part)
+            declared_total_area(part) or _declared_area_from_dimension_suffix(part)
             for part in (title, description)
             if part
         ]

@@ -417,3 +417,79 @@ def test_review24_road_name_full_normalization(listing_id, source, title, descri
 ])
 def test_review24_road_prose_proximity_and_real_street_controls(text, expected):
     assert extract_road_name(text) == expected
+
+
+# Five reviewed records, three independent measurement phrases (two repost pairs).
+REVIEW25_DECLARED_AREA_CASES = [
+    (84125, "DT 5,8x20,8m – 130m²; NỞ HẬU 7M", 130.0, 5.8, 20.8),
+    (83877, "DT 5,8x20,8m – 130m²", 130.0, 5.8, 20.8),
+    (84056, "DT: 6x146m, 866 m2 có 100 m2 thổ cư, 2 mặt tiền đường", 866.0, 6.0, 146.0),
+    (83842, "DT: 6x146m, 866 m2 có 100 m2 thổ cư", 866.0, 6.0, 146.0),
+    (83865, "DT: 5x30,9 : 153m2 : TC: 75m2", 153.0, 5.0, 30.9),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,area,frontage,depth", REVIEW25_DECLARED_AREA_CASES)
+@pytest.mark.parametrize("text_field", ["title", "description"])
+def test_review25_declared_area_after_dimensions(listing_id, text, area, frontage, depth, text_field):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/area-control",
+                               "title": "Bán đất", text_field: text, "price_ty": 3.0})
+    assert record is not None
+    assert record["area_m2"] == area
+    assert record["frontage_m"] == frontage
+    assert record["depth_m"] == depth
+    assert record["measurement_provenance"]["area_m2"] == "declared_text"
+    assert record["price_per_m2"] == round(3000 / area, 3)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Diện tích: 5,8 × 20,8m — 130 m²", 130.0),
+    ("DT: 5.8m*20.8m, 130mv", 130.0),
+    ("DT: 5x20 : 96 mét vuông", 96.0),
+    ("DT: 5x20m - 96 m2", 96.0),
+    ("DT: 5x20m = 96 m2", 96.0),
+    ("DT: 5x20m; Tổng 96 m2", 96.0),
+    ("DT: 5x20m (96 m2)", 96.0),
+    ("DT: 5x20m", 100.0),
+    ("DT: 5x20m, 60m2 thổ cư", 100.0),
+    ("DT: 5x20m, 60m2 TC", 100.0),
+    ("DT: 5x20m, 60m2 ODT", 100.0),
+    ("DT: 5x20m, 160m2 sàn", 100.0),
+    ("DT: 5x20m, 160m2 sử dụng", 100.0),
+    ("DT: 5x20m, 160m2 xây dựng", 100.0),
+    ("DT: 5x20m, thổ cư 60m2", 100.0),
+    ("DT: 5x20m, đường rộng 6m", 100.0),
+    ("DT: 5x20m, cách chợ 96m", 100.0),
+    ("DT: 5x20m, 96m", 100.0),
+    ("DT: 5x20m, 96m2 x 2 lô", 100.0),
+    ("DT: 5x20m, 96m2abc", 100.0),
+    ("DT: 5x20m, 100000m2", 100.0),
+    # Unselected differential controls: these change provenance only, not area.
+    ("Diện tích: 5×24m – 120m², full thổ cư", 120.0),
+    ("DT: 5 x 22, 110m2, TC: 80m2", 110.0),
+    ("DT: 5x46m, 100 m2 thổ c", 230.0),
+])
+def test_review25_post_dimension_total_requires_land_area_context(text, expected):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/area-control",
+                               "title": "Bán đất", "description": text})
+    assert record is not None and record["area_m2"] == expected
+    if text in ("Diện tích: 5×24m – 120m², full thổ cư", "DT: 5 x 22, 110m2, TC: 80m2"):
+        assert record["measurement_provenance"]["area_m2"] == "declared_text"
+
+
+def test_review25_truncated_title_residential_unit_does_not_override_land_dimensions():
+    # Exact cause-bearing clauses from historical #83103, not a new reviewed fix.
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/area-control",
+                               "title": "DT: 5x46m, 100 m2 thổ c",
+                               "description": "DT: 5x46m, 100 m2 thổ cư."})
+    assert record is not None and record["area_m2"] == 230.0
+    assert record["tho_cu_m2"] == 100.0
+    assert record["measurement_provenance"]["area_m2"] == "derived_dimensions"
+
+
+def test_review25_explicit_total_replaces_structured_rectangular_estimate():
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/area-control",
+                               "title": "Bán đất", "description": "DT 5,8x20,8m – 130m²",
+                               "area_m2": 120.6})
+    assert record is not None and record["area_m2"] == 130.0
+    assert record["measurement_provenance"]["area_m2"] == "declared_text"
