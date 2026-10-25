@@ -39,3 +39,10 @@ empty price charts and near-blank pages were removed. Graphify was refreshed.
 Independent review found five issues; all were repaired and reviewed again with
 no remaining release blocker. Existing historical market facts were not regenerated.
 Production release evidence will be recorded separately after exact-revision CI.
+
+CI uncovered four pre-existing UTC/Vietnam midnight failures outside report code.
+Listing age now compares both instants on the Vietnam calendar (naive DB values
+are Vietnam-local). Publisher-policy tests use frozen actual observation instants
+and the matching Vietnam as-of date; production publisher policy is unchanged.
+Three new deterministic listing-age regressions failed before the repair; the
+74 related timezone/source-policy/publisher tests passed after it.

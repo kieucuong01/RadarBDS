@@ -3,6 +3,7 @@ import unittest
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -126,7 +127,7 @@ class SourcePolicyTest(unittest.TestCase):
         from db.connection import get_conn
         price_per_m2 = round(price_ty * 1000 / area_m2, 2) if price_ty and area_m2 else None
         fair_ppm2 = round(price_per_m2 / (1 - 0.333), 2) if price_per_m2 else None
-        posted_at = posted_at or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        posted_at = posted_at or datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).strftime("%Y-%m-%d %H:%M:%S")
 
         with get_conn() as conn:
             cur = conn.execute(
@@ -491,7 +492,7 @@ class SourcePolicyTest(unittest.TestCase):
     def test_guland_card_uses_first_seen_until_price_changes(self):
         from db.connection import get_conn
 
-        first_seen = (datetime.now() - timedelta(days=12)).strftime(
+        first_seen = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=12)).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
         with get_conn() as conn:
@@ -518,10 +519,10 @@ class SourcePolicyTest(unittest.TestCase):
     def test_guland_card_uses_price_update_as_latest_activity(self):
         from db.connection import get_conn
 
-        first_seen = (datetime.now() - timedelta(days=12)).strftime(
+        first_seen = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=12)).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-        price_updated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        price_updated = datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).strftime("%Y-%m-%d %H:%M:%S")
         with get_conn() as conn:
             conn.execute(
                 """
@@ -546,7 +547,7 @@ class SourcePolicyTest(unittest.TestCase):
     def test_facebook_price_update_is_latest_card_activity(self):
         from db.connection import get_conn
 
-        posted_at = (datetime.now() - timedelta(days=4)).strftime(
+        posted_at = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=4)).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
         with get_conn() as conn:
@@ -572,7 +573,7 @@ class SourcePolicyTest(unittest.TestCase):
 
     def test_facebook_recrawl_without_price_change_keeps_posted_date(self):
         from db.connection import get_conn
-        posted_at = (datetime.now() - timedelta(days=4)).strftime('%Y-%m-%d %H:%M:%S')
+        posted_at = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=4)).strftime('%Y-%m-%d %H:%M:%S')
         with get_conn() as conn:
             conn.execute('UPDATE listings SET posted_at=?, crawled_at=CURRENT_TIMESTAMP, first_seen_at=CURRENT_TIMESTAMP, price_updated_at=NULL WHERE id=?',
                          (posted_at, self.facebook_id))
@@ -665,7 +666,7 @@ class SourcePolicyTest(unittest.TestCase):
         )
 
     def test_signal_feed_defaults_to_one_month_listing_window(self):
-        old_date = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d %H:%M:%S")
+        old_date = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=45)).strftime("%Y-%m-%d %H:%M:%S")
         self._seed_signal(
             source="facebook",
             title="Old default hidden signal",
@@ -691,7 +692,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertIn("Old default hidden signal", [row["title"] for row in three_months["signals"]])
 
     def test_admin_signal_feed_supports_all_time_listing_window(self):
-        old_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d %H:%M:%S")
+        old_date = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=400)).strftime("%Y-%m-%d %H:%M:%S")
         self._seed_signal(
             source="facebook",
             title="Old all time visible signal",
@@ -711,7 +712,7 @@ class SourcePolicyTest(unittest.TestCase):
         self.assertIn("Old all time visible signal", titles)
 
     def test_all_listings_uses_same_date_range_filter(self):
-        old_date = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%d %H:%M:%S")
+        old_date = (datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')) - timedelta(days=45)).strftime("%Y-%m-%d %H:%M:%S")
         self._seed_signal(
             source="facebook",
             title="Old listings hidden by default",

@@ -3,6 +3,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+from zoneinfo import ZoneInfo
 import os
 import re
 import unicodedata
@@ -281,14 +282,17 @@ def _days_ago(crawled_at) -> int | None:
     try:
         if not crawled_at:
             return None
+        local_tz = ZoneInfo('Asia/Ho_Chi_Minh')
         if isinstance(crawled_at, datetime):
-            d = crawled_at.date()
+            observed = crawled_at
         elif isinstance(crawled_at, date):
-            d = crawled_at
+            return (datetime.now(local_tz).date() - crawled_at).days
         else:
-            d = date.fromisoformat(str(crawled_at)[:10])
-        return (date.today() - d).days
-    except Exception:
+            observed = datetime.fromisoformat(str(crawled_at).replace('Z', '+00:00'))
+        # Naive listing timestamps are stored in the database's Vietnam timezone.
+        observed = observed.replace(tzinfo=local_tz) if observed.tzinfo is None else observed.astimezone(local_tz)
+        return (datetime.now(local_tz).date() - observed.date()).days
+    except (TypeError, ValueError):
         return None
 
 

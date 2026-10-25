@@ -1,6 +1,7 @@
 import json
 import uuid
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -619,40 +620,43 @@ def test_unidentified_listing_keeps_its_own_repost_evidence_without_null_project
 
 def test_backfilled_post_dates_do_not_manufacture_observation_history(publisher_listing):
     listing_id, token = publisher_listing
+    observed = datetime(2026, 8, 1, 23, 30, tzinfo=timezone.utc)
     with connection.get_conn() as conn:
-        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token), observed_at=observed)
         for day in (date(2026, 7, 1), date(2026, 7, 15), date(2026, 7, 31)):
-            record_listing_observation(conn, listing_id, day, is_new=False, source_date_changed=False)
-        classification = recompute_publisher(conn, publisher_id, date.today())
+            record_listing_observation(conn, listing_id, day, is_new=False, source_date_changed=False, observed_at=observed)
+        classification = recompute_publisher(conn, publisher_id, observed.astimezone(ZoneInfo('Asia/Ho_Chi_Minh')).date())
         metrics = conn.execute("SELECT metrics_json FROM source_publishers WHERE id=?", (publisher_id,)).fetchone()['metrics_json']
     assert classification.activity_class == 'unknown'
     assert metrics['observed_days_30d'] == 1
     assert metrics['observation_span_days'] == 0
 
 
-def test_three_actual_observation_days_mature_publisher(publisher_listing):
+@pytest.mark.parametrize('utc_hour', [10, 23])
+def test_three_actual_observation_days_mature_publisher(publisher_listing, utc_hour):
     listing_id, token = publisher_listing
-    now = datetime.now(timezone.utc)
+    now = datetime(2026, 8, 31, utc_hour, 30, tzinfo=timezone.utc)
     with connection.get_conn() as conn:
-        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token), observed_at=now)
         for delta in (14, 7, 0):
             observed = now - timedelta(days=delta)
             record_listing_observation(conn, listing_id, observed.date(), is_new=False,
                                        source_date_changed=False, observed_at=observed)
-        result = recompute_publisher(conn, publisher_id, now.date())
+        result = recompute_publisher(conn, publisher_id, now.astimezone(ZoneInfo('Asia/Ho_Chi_Minh')).date())
     assert result.activity_class == 'low_manual'
 
 
-def test_established_publisher_keeps_maturity_after_a_quiet_month(publisher_listing):
+@pytest.mark.parametrize('utc_hour', [10, 23])
+def test_established_publisher_keeps_maturity_after_a_quiet_month(publisher_listing, utc_hour):
     listing_id, token = publisher_listing
-    now = datetime.now(timezone.utc)
+    now = datetime(2026, 8, 31, utc_hour, 30, tzinfo=timezone.utc)
     with connection.get_conn() as conn:
-        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token))
+        publisher_id = sync_listing_publisher(conn, listing_id, _identified_raw(token), observed_at=now)
         for delta in (60, 2, 1, 0):
             observed = now - timedelta(days=delta)
             record_listing_observation(conn, listing_id, observed.date(), is_new=False,
                                        source_date_changed=False, observed_at=observed)
-        result = recompute_publisher(conn, publisher_id, now.date())
+        result = recompute_publisher(conn, publisher_id, now.astimezone(ZoneInfo('Asia/Ho_Chi_Minh')).date())
     assert result.activity_class == 'low_manual'
 
 
