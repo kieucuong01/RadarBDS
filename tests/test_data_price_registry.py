@@ -16,7 +16,7 @@ def test_registered_new_ward_has_its_own_cohort_and_real_parent(slug, name):
     mod = engine()
     rows = [row(i, ward=name) for i in range(15)] + [row(100)]
     snapshot = packet(mod, rows)
-    assert snapshot['scope_registry_version'] == 2
+    assert snapshot['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
     scope = snapshot['scopes'][slug]
     assert scope['wards'] == [name]
     assert scope['parent'] == 'thu-dau-mot'

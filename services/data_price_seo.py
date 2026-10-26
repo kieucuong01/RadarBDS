@@ -28,11 +28,18 @@ SCOPES = {
     'hiep-thanh': {'name':'Hiệp Thành', 'wards':('Hiệp Thành',), 'parent':'thu-dau-mot'},
     'phu-my': {'name':'Phú Mỹ', 'wards':('Phú Mỹ',), 'parent':'thu-dau-mot'},
     'tan-an': {'name':'Tân An', 'wards':('Tân An',), 'parent':'thu-dau-mot'},
+    'phu-hoa': {'name':'Phú Hòa', 'wards':('Phú Hòa',), 'parent':'thu-dau-mot'},
+    'dinh-hoa': {'name':'Định Hòa', 'wards':('Định Hòa',), 'parent':'thu-dau-mot'},
+    'phu-tan': {'name':'Phú Tân', 'wards':('Phú Tân',), 'parent':'thu-dau-mot'},
     'thu-dau-mot': {'name':'Thủ Dầu Một', 'wards':tuple(TDM_LIVE_WARDS.values()), 'parent':None},
 }
-SCOPE_REGISTRY_VERSION = 2
+SCOPE_REGISTRY_VERSION = 3
 # V1 has no version member. Never infer its coverage from the current registry.
-SCOPE_REGISTRIES = {1: frozenset(('phu-loi', 'thu-dau-mot')), 2: frozenset(SCOPES)}
+SCOPE_REGISTRIES = {
+    1: frozenset(('phu-loi', 'thu-dau-mot')),
+    2: frozenset(('phu-loi', 'hiep-thanh', 'phu-my', 'tan-an', 'thu-dau-mot')),
+    3: frozenset(SCOPES),
+}
 POLICY = {
     'sources':list(SOURCES), 'property_type':'dat_nen', 'tx_type':'ban',
     'sample_identity':'listing_id_after_current_known_duplicate_exclusions',
