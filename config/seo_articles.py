@@ -25503,6 +25503,179 @@ SEO_ARTICLES = {
             }
         ]
     },
+    "phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc",
+        "category": {"key": "so-sanh-khu-vuc", "label": "So sánh phường"},
+        "title": "Phú Hòa hay Hòa Phú: nên xem khu nào trước? | Radar BDS",
+        "description": "So sánh Phú Hòa và Hòa Phú bằng dữ liệu Facebook 14 ngày đến 26/10/2026: số tin, dấu hiệu, giá rao trung vị đất nền và độ đầy đủ dữ liệu nhà đất.",
+        "keywords": "Phú Hòa hay Hòa Phú, giá đất Phú Hòa, giá đất Hòa Phú, đất nền Thủ Dầu Một, nhà đất Bình Dương, Radar BDS",
+        "breadcrumb_label": "Phú Hòa hay Hòa Phú",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Phú Hòa hay Hòa Phú: nên xem khu nào trước?",
+        "hero_text": "Nếu cần nhiều tin và muốn so được cả đất nền lẫn nhà đất, nên mở Phú Hòa trước. Hòa Phú có ít tin hơn nhưng 19 dấu hiệu trong 27 tin; dữ liệu nhà đất hiện chưa đủ giá/m² hợp lệ để so trực tiếp.",
+        "scope_label": "Thủ Dầu Một · Phú Hòa / Hòa Phú",
+        "hero_checks": [
+            "Phú Hòa có 159 tin đang theo dõi; Hòa Phú có 27 tin",
+            "Dấu hiệu đáng kiểm tra: Phú Hòa 21 tin; Hòa Phú 19 tin",
+            "Đất nền: Phú Hòa 19,6 tr/m²; Hòa Phú 22,0 tr/m²",
+            "Nhà đất: Phú Hòa 40,4 tr/m²; Hòa Phú chưa đủ giá/m² hợp lệ"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Hòa",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_vs_hoa_phu",
+        "secondary_cta": "Xem trang phường Hòa Phú",
+        "secondary_href": "/binh-duong/phuong-hoa-phu",
+        "map_label": "Tin tức / Phú Hòa và Hòa Phú",
+        "hero_metric": {
+            "label": "Tổng số tin",
+            "value": "186",
+            "delta": "40 dấu hiệu",
+            "note": "Phú Hòa 159 · Hòa Phú 27 · cửa sổ 14 ngày"
+        },
+        "property_card": {
+            "status": "Phú Hòa / Hòa Phú · dữ liệu 12–26/10/2026",
+            "title": "Phú Hòa có mẫu rộng hơn để lọc",
+            "price": "Đất nền 19,6 vs 22,0 tr/m² · nhà đất Hòa Phú chưa đủ giá/m² hợp lệ",
+            "metric_a": "Tin đang theo dõi",
+            "metric_a_value": "159 vs 27",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "21 vs 19"
+        },
+        "local_links_title": "Đọc thêm và mở bộ lọc",
+        "local_links": [
+            {"label": "Trang phường Phú Hòa", "href": "/binh-duong/phuong-phu-hoa", "description": "Xem dữ liệu địa phương và mở danh sách tin Phú Hòa."},
+            {"label": "Trang phường Hòa Phú", "href": "/binh-duong/phuong-hoa-phu", "description": "Xem dữ liệu địa phương và mở danh sách tin Hòa Phú."},
+            {"label": "Báo cáo Phú Hòa tháng 09/2026", "href": "/bao-cao/phu-hoa-thang-09-2026", "description": "Đọc báo cáo khu vực Phú Hòa theo kỳ tháng đã đóng."},
+            {"label": "Báo cáo Hòa Phú tháng 09/2026", "href": "/bao-cao/hoa-phu-thang-09-2026", "description": "Đọc báo cáo khu vực Hòa Phú theo kỳ tháng đã đóng."},
+            {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Ước lượng ban đầu cho từng tin trước khi hỏi sâu."}
+        ],
+        "faq": [
+            {"q": "Nên xem Phú Hòa hay Hòa Phú trước nếu cần nhiều tin?", "a": "Nên mở Phú Hòa trước vì có 159 tin đang theo dõi, so với 27 tin ở Hòa Phú trong cùng cửa sổ 14 ngày. Nhiều tin hơn chỉ giúp có thêm mẫu để lọc, không có nghĩa mọi tin đều phù hợp."},
+            {"q": "Đất nền Phú Hòa hay Hòa Phú đang có giá rao trung vị thấp hơn?", "a": "Trong snapshot ngày 26/10/2026, đất nền Phú Hòa có giá rao trung vị 19,6 tr/m², thấp hơn mức 22,0 tr/m² tại Hòa Phú. Đây là giá rao tham khảo, không phải giá giao dịch đã chốt."},
+            {"q": "Có thể so nhà đất Phú Hòa với nhà đất Hòa Phú không?", "a": "Chưa nên so trực tiếp. Phú Hòa có giá rao trung vị nhà đất 40,4 tr/m² từ 61 tin có giá/m²; Hòa Phú chỉ có 3 tin nhà đất trong mẫu và chưa có giá/m² hợp lệ để tính trung vị. Dữ liệu thiếu không được xem là giá bằng 0."},
+            {"q": "40 dấu hiệu đáng kiểm tra có nghĩa là gì?", "a": "Đó là 21 tin ở Phú Hòa và 19 tin ở Hòa Phú được Radar BDS đưa vào nhóm cần đọc kỹ hơn. Đây là thứ tự ưu tiên mở tin, không phải khuyến nghị mua hoặc xác nhận tin đang rẻ."},
+            {"q": "Dữ liệu trong bài lấy từ đâu?", "a": "Bài dùng tin Facebook Radar BDS đang theo dõi trong cửa sổ 14 ngày từ 12 đến 26/10/2026. Các mức giá là giá rao trung vị theo loại hình; số tin có thể gồm bài đăng lại và không đại diện cho số bất động sản duy nhất."}
+        ],
+        "article": {
+            "published_at": "2026-10-26",
+            "modified_at": "2026-10-26",
+            "intro": [
+                "Nếu cần nhiều tin để lọc, nên mở Phú Hòa trước: 159 tin đang theo dõi so với 27 tin ở Hòa Phú. Nếu ưu tiên đất nền, Phú Hòa đang có giá rao trung vị 19,6 tr/m², thấp hơn mức 22,0 tr/m² tại Hòa Phú.",
+                "Số liệu là snapshot Radar BDS ngày 26/10/2026, dùng tin Facebook trong cửa sổ 14 ngày. Giá trong bài là giá rao trung vị, không phải giá giao dịch đã chốt. Phần nhà đất Hòa Phú chưa đủ giá/m² hợp lệ nên không đưa ra một con số thay thế."
+            ],
+            "summary_cards": [
+                {"label": "Tin đang theo dõi", "value": "186 tin", "note": "Phú Hòa 159 · Hòa Phú 27"},
+                {"label": "Dấu hiệu đáng kiểm tra", "value": "40 tin", "note": "Phú Hòa 21 · Hòa Phú 19"},
+                {"label": "Đất nền giá rao trung vị", "value": "19,6 vs 22,0 tr/m²", "note": "Phú Hòa vs Hòa Phú"},
+                {"label": "Nhà đất", "value": "40,4 tr/m² vs —", "note": "Hòa Phú chưa đủ giá/m² hợp lệ"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Hòa và Hòa Phú khác nhau thế nào?",
+                    "note": "Nguồn: tin Facebook Radar BDS trong cửa sổ 14 ngày, snapshot 26/10/2026. Giá là giá rao trung vị theo loại hình.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"}, {"key": "tracked", "label": "Tin đang theo dõi"}, {"key": "signals", "label": "Dấu hiệu"}, {"key": "land", "label": "Đất nền"}, {"key": "house", "label": "Nhà đất"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Hòa", "tracked": "159", "signals": "21", "land": "19,6 tr/m²", "house": "40,4 tr/m²"},
+                        {"ward": "Hòa Phú", "tracked": "27", "signals": "19", "land": "22,0 tr/m²", "house": "Chưa đủ dữ liệu"}
+                    ]
+                },
+                {
+                    "eyebrow": "Tách riêng đất nền",
+                    "title": "Có thể so giá đất nền, nhưng không gộp sang nhà đất",
+                    "note": "Mẫu có giá/m²: Phú Hòa 28/50 tin đất nền; Hòa Phú 9/18 tin đất nền.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"}, {"key": "tracked", "label": "Tin đất nền"}, {"key": "priced", "label": "Tin có giá/m²"}, {"key": "median_m2", "label": "Giá rao trung vị/m²"}, {"key": "median_total", "label": "Tổng giá rao trung vị"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Hòa", "tracked": "50", "priced": "28", "median_m2": "19,6 tr/m²", "median_total": "4,68 tỷ"},
+                        {"ward": "Hòa Phú", "tracked": "18", "priced": "9", "median_m2": "22,0 tr/m²", "median_total": "2,20 tỷ"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Nguồn tin",
+                    "title": "Phú Hòa có nhiều tin đang theo dõi hơn",
+                    "note": "Số tin trong cửa sổ dữ liệu 14 ngày, không phải số bất động sản duy nhất.",
+                    "alt": "So số tin đang theo dõi ở Phú Hòa và Hòa Phú",
+                    "rows": [
+                        {"label": "Phú Hòa", "value_label": "159 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "Hòa Phú", "value_label": "27 tin", "width": 17, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Giá rao trung vị/m²",
+                    "title": "Đất nền Phú Hòa thấp hơn Hòa Phú trong snapshot",
+                    "note": "Chỉ so đất nền có giá/m² hợp lệ; nhà đất Hòa Phú chưa có mẫu đủ để tính trung vị.",
+                    "alt": "So giá rao trung vị đất nền ở Phú Hòa và Hòa Phú",
+                    "rows": [
+                        {"label": "Đất nền · Phú Hòa", "value_label": "19,6 tr/m²", "width": 89, "color": "#2563eb"},
+                        {"label": "Đất nền · Hòa Phú", "value_label": "22,0 tr/m²", "width": 100, "color": "#16a34a"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "ket-luan-nhanh",
+                    "heading": "Kết luận nhanh: mở Phú Hòa trước nếu cần nhiều tin để lọc",
+                    "paragraphs": [
+                        "Phú Hòa có 159 tin đang theo dõi, nhiều hơn đáng kể so với 27 tin ở Hòa Phú. Phú Hòa cũng có dữ liệu giá/m² cho cả đất nền và nhà đất, nên phù hợp hơn để mở trước khi cần so nhiều tin.",
+                        "Hòa Phú vẫn đáng xem riêng nếu anh muốn kiểm tra một mẫu nhỏ hơn. 19 dấu hiệu trong 27 tin không biến thành kết luận rằng khu này rẻ hoặc nên mua; cần mở từng tin để kiểm tra vị trí và giấy tờ."
+                    ],
+                    "bullets": ["Phú Hòa: 159 tin, 21 dấu hiệu đáng kiểm tra", "Hòa Phú: 27 tin, 19 dấu hiệu đáng kiểm tra", "Phú Hòa phù hợp hơn để bắt đầu khi cần nhiều mẫu"]
+                },
+                {
+                    "id": "so-gia-dat-nen",
+                    "heading": "Đất nền Phú Hòa đang thấp hơn Hòa Phú theo giá rao trung vị",
+                    "paragraphs": [
+                        "Giá rao trung vị đất nền Phú Hòa là 19,6 tr/m² từ 28 tin có giá/m²; Hòa Phú là 22,0 tr/m² từ 9 tin có giá/m². Đây là mốc đọc nhanh trong cùng cửa sổ dữ liệu, không phải giá chốt.",
+                        "Tổng giá rao trung vị của nhóm đất nền lần lượt là 4,68 tỷ và 2,20 tỷ. Hai mốc này không nên đọc tách khỏi diện tích, thổ cư, mặt tiền và đường vào của từng tin."
+                    ],
+                    "bullets": ["Đất nền Phú Hòa: 50 tin, 28 tin có giá/m²", "Đất nền Hòa Phú: 18 tin, 9 tin có giá/m²", "So cả giá/m² và tổng giá, không chỉ nhìn một con số"]
+                },
+                {
+                    "id": "nha-dat-chua-du-mau",
+                    "heading": "Nhà đất Hòa Phú chưa đủ dữ liệu để so trực tiếp",
+                    "paragraphs": [
+                        "Phú Hòa có giá rao trung vị nhà đất 40,4 tr/m² từ 61 tin có giá/m². Hòa Phú có 3 tin nhà đất trong mẫu nhưng chưa có giá/m² hợp lệ, nên bài không gán cho Hòa Phú một mức giá thay thế.",
+                        "Khi dữ liệu còn mỏng, cách đọc an toàn là mở từng tin, xem tổng giá và kiểm tra hiện trạng nhà. Không dùng giá đất nền Hòa Phú để suy ra giá nhà đất."
+                    ],
+                    "bullets": ["Nhà đất Phú Hòa: 100 tin, 61 tin có giá/m²", "Nhà đất Hòa Phú: 3 tin, chưa có giá/m² hợp lệ", "Dữ liệu thiếu không được đọc thành 0"]
+                },
+                {
+                    "id": "loc-hai-phuong",
+                    "heading": "Cách lọc Phú Hòa và Hòa Phú trên Radar BDS",
+                    "paragraphs": [
+                        "Mở dashboard, chọn Phú Hòa hoặc Hòa Phú, sau đó chọn đúng loại hình: đất nền hoặc nhà đất. Nếu cần nhiều mẫu để sàng lọc, bắt đầu từ Phú Hòa; nếu muốn kiểm tra Hòa Phú, đọc từng tin thay vì dựa vào số dấu hiệu tổng.",
+                        "Sau bước lọc, kiểm tra diện tích, đường vào, thổ cư, quy hoạch, giấy tờ và giá hiện tại trước khi liên hệ hoặc đi xem. Radar BDS chỉ là bộ lọc ban đầu, không thay thẩm định pháp lý hay định giá chính thức."
+                    ],
+                    "bullets": ["Chọn phường rồi chọn loại hình", "So giá/m² cùng loại hình và nhìn cả tổng giá", "Kiểm tra từng tin có diện tích, vị trí và nguồn rõ", "Xác minh pháp lý, quy hoạch và thực địa trước khi đặt cọc"]
+                }
+            ],
+            "checklist": [
+                "Đã chọn rõ đất nền hay nhà đất trước khi so giá.",
+                "Đã xem số tin có giá/m², không chỉ tổng số tin.",
+                "Đã hiểu dữ liệu nhà đất Hòa Phú hiện chưa đủ để tính trung vị.",
+                "Đã mở từng tin để kiểm tra diện tích, đường vào và giấy tờ.",
+                "Chưa đặt cọc khi chưa xác minh độc lập."
+            ]
+        },
+        "faq_note": "Giá trong bài là giá rao từ tin Facebook, không phải giá chốt giao dịch. Số tin có thể gồm bài đăng lại của cùng một bất động sản. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc Phú Hòa và Hòa Phú",
+            "body": "Chọn phường, tách đất nền với nhà đất, rồi mở từng tin có thông tin rõ trước khi liên hệ.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20H%C3%B2a&utm_source=seo&utm_medium=article&utm_campaign=phu_hoa_vs_hoa_phu"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Hòa hay Hòa Phú", "href": "/tin-tuc/phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc"}
+        ]
+    },
 }
 
 
