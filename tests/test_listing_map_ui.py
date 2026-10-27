@@ -475,7 +475,7 @@ def test_mobile_leaflet_canvas_keeps_full_remaining_viewport_height():
         <header class="listing-map-workspace-head"><h2>Maps</h2></header>
         <div class="listing-map-status">Đang tải</div>
         <div class="listing-map-workspace-body">
-          <div class="listing-map-canvas leaflet-container"></div>
+          <div class="listing-map-canvas leaflet-container" style="position: relative;"></div>
           <aside class="listing-map-panel"></aside>
         </div>
         <div class="listing-map-mobile-sheet"></div>

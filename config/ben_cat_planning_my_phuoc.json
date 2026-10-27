@@ -1,0 +1,21 @@
+{
+  "id": "my-phuoc-2913",
+  "title": "Mỹ Phước · Quy hoạch phân khu 1/2.000",
+  "slug": "my-phuoc",
+  "decision": "2913/QĐ-UBND · 28/12/2022",
+  "source_kind": "official_gis",
+  "map_scale": 2000,
+  "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+  "source_filename": "official-gis-export.png",
+  "outline_filename": "gis-plan-current.png",
+  "export_metadata_filename": "gis-export-v2.json",
+  "outline_url_filename": "gis-plan-current-url.txt",
+  "reference_area_ha": 2150.21,
+  "captured_on": "2026-10-26",
+  "source_sha256": "9243d87a02ba9061ebcadd6a7e47e4d98bbc07ce085667d5bab02e78434bd877",
+  "outline_sha256": "296529930b250b64903f6a9272d09d48c9be4d67c211d1144a86ebf4ad30dfa0",
+  "gis_plan_id": "8DB69C44-A496-4C48-97D6-54F5607CB8DB",
+  "notice": "Ảnh trích từ cổng GIS Sở Quy hoạch – Kiến trúc TP.HCM ngày 26/10/2026, cắt theo ranh đồ án do GIS cung cấp. Chưa đối chiếu toàn bộ cập nhật và hiệu lực hồ sơ từng thửa. Chú giải xem tại cổng nguồn.",
+  "attribution": "Sở Quy hoạch – Kiến trúc TP.HCM · GIS công khai · Mỹ Phước · chụp dữ liệu 26/10/2026"
+}

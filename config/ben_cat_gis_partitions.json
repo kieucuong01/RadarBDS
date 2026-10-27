@@ -1,0 +1,316 @@
+{
+  "version": 1,
+  "captured_on": "2026-10-27",
+  "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "land_use_service": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHPK_HCM_V2/MapServer/export",
+  "outline_service": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/ThongTinDoAn/MapServer/export",
+  "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+  "layers": [
+    {
+      "name": "Thới Hòa",
+      "slug": "thoi-hoa",
+      "decision": "2909/QĐ-UBND · 28/12/2022",
+      "id": "thoi-hoa-gis-qhpk",
+      "title": "Thới Hòa · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.071875400212996,
+          106.58214725677098
+        ],
+        [
+          11.135257064610386,
+          106.66000592824587
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "2909",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-12-28",
+        "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '2909%' AND NgayKy_DC >= DATE '2022-12-28' AND NgayKy_DC < DATE '2022-12-29'",
+      "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040"
+    },
+    {
+      "name": "Tân Định",
+      "slug": "tan-dinh",
+      "decision": "2910/QĐ-UBND · 28/12/2022",
+      "id": "tan-dinh-gis-qhpk",
+      "title": "Tân Định · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.033323702943159,
+          106.60549885416013
+        ],
+        [
+          11.09036367000401,
+          106.65593501719145
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "2910",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-12-28",
+        "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '2910%' AND NgayKy_DC >= DATE '2022-12-28' AND NgayKy_DC < DATE '2022-12-29'",
+      "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040"
+    },
+    {
+      "name": "Hòa Lợi",
+      "slug": "hoa-loi",
+      "decision": "2911/QĐ-UBND · 28/12/2022",
+      "id": "hoa-loi-gis-qhpk",
+      "title": "Hòa Lợi · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.056776133862522,
+          106.6445600333816
+        ],
+        [
+          11.131835116208897,
+          106.69416366961246
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "2911",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-12-28",
+        "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '2911%' AND NgayKy_DC >= DATE '2022-12-28' AND NgayKy_DC < DATE '2022-12-29'",
+      "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040"
+    },
+    {
+      "name": "Chánh Phú Hòa",
+      "slug": "chanh-phu-hoa",
+      "decision": "2912/QĐ-UBND · 28/12/2022",
+      "id": "chanh-phu-hoa-gis-qhpk",
+      "title": "Chánh Phú Hòa · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.117476815899247,
+          106.62203171942771
+        ],
+        [
+          11.22908336633901,
+          106.68797747771218
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "2912",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-12-28",
+        "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '2912%' AND NgayKy_DC >= DATE '2022-12-28' AND NgayKy_DC < DATE '2022-12-29'",
+      "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040"
+    },
+    {
+      "name": "Mỹ Phước",
+      "slug": "my-phuoc",
+      "decision": "2913/QĐ-UBND · 28/12/2022",
+      "id": "my-phuoc-gis-qhpk",
+      "title": "Mỹ Phước · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.122032282920657,
+          106.57365904391659
+        ],
+        [
+          11.172905913405494,
+          106.6373491168347
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "2913",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "gis_plan_id": "8DB69C44-A496-4C48-97D6-54F5607CB8DB",
+        "evidence": "Existing hash-pinned official My Phuoc capture and config/ben_cat_planning_my_phuoc.json",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-12-28",
+        "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '2913%' AND NgayKy_DC >= DATE '2022-12-28' AND NgayKy_DC < DATE '2022-12-29'",
+      "publication_url": "https://bencat.binhduong.gov.vn/cong-khai-thong-tin/quy-hoach-phan-khu-ty-le-12000-cac-phuong-tren-dia-ban-thi-xa-ben-cat-den-nam-2040"
+    },
+    {
+      "name": "An Điền",
+      "slug": "an-dien",
+      "decision": "1450/QĐ-UBND · 15/07/2022",
+      "id": "an-dien-gis-qhpk",
+      "title": "An Điền · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.072542118302458,
+          106.54138238342765
+        ],
+        [
+          11.17348703290083,
+          106.59751480096838
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "1450",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-07-15",
+        "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '1450%' AND NgayKy_DC >= DATE '2022-07-15' AND NgayKy_DC < DATE '2022-07-16'",
+      "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812"
+    },
+    {
+      "name": "An Tây",
+      "slug": "an-tay",
+      "decision": "1451/QĐ-UBND · 15/07/2022",
+      "id": "an-tay-gis-qhpk",
+      "title": "An Tây · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.041629937712207,
+          106.50679321447376
+        ],
+        [
+          11.153237551022475,
+          106.57769972371065
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "1451",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-07-15",
+        "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '1451%' AND NgayKy_DC >= DATE '2022-07-15' AND NgayKy_DC < DATE '2022-07-16'",
+      "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812"
+    },
+    {
+      "name": "Phú An",
+      "slug": "phu-an",
+      "decision": "1452/QĐ-UBND · 15/07/2022",
+      "id": "phu-an-gis-qhpk",
+      "title": "Phú An · GIS quy hoạch phân khu 1/2.000",
+      "window_hint_bounds": [
+        [
+          11.035851852161999,
+          106.55435164463555
+        ],
+        [
+          11.085347250594811,
+          106.61679730288087
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "decision_prefix": "1452",
+      "size": [
+        2400,
+        2400
+      ],
+      "map_scale": 2000,
+      "plan_identity": {
+        "status": "verified",
+        "method": "Official publication maps ward to decision number/date; public GIS outline is server-filtered by that decision and exact signing date inside Ben Cat window.",
+        "decision_date": "2022-07-15",
+        "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812",
+        "decision_fields": [
+          "SoQD_DC",
+          "NgayKy_DC"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "limits": "GIS attribute query is not public; identity cross-check uses public rendered outline filtering plus official decision publication. Native outline is validated, no PDF boundary is substituted."
+      },
+      "outline_filter": "SoQD_DC LIKE '1452%' AND NgayKy_DC >= DATE '2022-07-15' AND NgayKy_DC < DATE '2022-07-16'",
+      "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812"
+    }
+  ]
+}

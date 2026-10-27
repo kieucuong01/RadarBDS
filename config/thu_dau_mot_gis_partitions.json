@@ -1,0 +1,478 @@
+{
+  "version": 1,
+  "captured_on": "2026-10-27",
+  "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "land_use_service": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHPK_HCM_V2/MapServer/export",
+  "outline_service": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/ThongTinDoAn/MapServer/export",
+  "publication_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "layers": [
+    {
+      "name": "Chánh Mỹ",
+      "slug": "chanh-my",
+      "id": "tdm-chanh-my-gis-qhpk",
+      "title": "Chánh Mỹ · GIS quy hoạch phân khu 1/2.000",
+      "decision": "1270/QĐ-UBND · 2012-11-01",
+      "decision_prefix": "1270",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.977437,
+          106.615585
+        ],
+        [
+          11.005077,
+          106.650719
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '1270%' AND NgayKy >= DATE '2012-11-01' AND NgayKy < DATE '2012-11-02'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-11-01",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Chánh Nghĩa",
+      "slug": "chanh-nghia",
+      "id": "tdm-chanh-nghia-gis-qhpk",
+      "title": "Chánh Nghĩa · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2970/QĐ-UBND · 2014-07-24",
+      "decision_prefix": "2970",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.951313,
+          106.648499
+        ],
+        [
+          10.981834,
+          106.672165
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2970%' AND NgayKy >= DATE '2014-07-24' AND NgayKy < DATE '2014-07-25'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2014-07-24",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Định Hòa",
+      "slug": "dinh-hoa",
+      "id": "tdm-dinh-hoa-gis-qhpk",
+      "title": "Định Hòa · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2309/QĐ-UBND · 2012-12-28",
+      "decision_prefix": "2309",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.998232,
+          106.636673
+        ],
+        [
+          11.059425,
+          106.677643
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2309%' AND NgayKy >= DATE '2012-12-28' AND NgayKy < DATE '2012-12-29'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-12-28",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Hiệp An",
+      "slug": "hiep-an",
+      "id": "tdm-hiep-an-gis-qhpk",
+      "title": "Hiệp An · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2308/QĐ-UBND · 2012-12-28",
+      "decision_prefix": "2308",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          11.01388,
+          106.611069
+        ],
+        [
+          11.05415,
+          106.647987
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2308%' AND NgayKy >= DATE '2012-12-28' AND NgayKy < DATE '2012-12-29'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-12-28",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "official_judiciary_corroborated",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Hiệp Thành",
+      "slug": "hiep-thanh",
+      "id": "tdm-hiep-thanh-gis-qhpk",
+      "title": "Hiệp Thành · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2969/QĐ-UBND · 2014-07-24",
+      "decision_prefix": "2969",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.981705,
+          106.645622
+        ],
+        [
+          11.011856,
+          106.673157
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2969%' AND NgayKy >= DATE '2014-07-24' AND NgayKy < DATE '2014-07-25'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2014-07-24",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Phú Cường",
+      "slug": "phu-cuong",
+      "id": "tdm-phu-cuong-gis-qhpk",
+      "title": "Phú Cường · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2404/QĐ-UBND · 2012-04-20",
+      "decision_prefix": "2404",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.972581,
+          106.641075
+        ],
+        [
+          10.991715,
+          106.66777
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2404%' AND NgayKy >= DATE '2012-04-20' AND NgayKy < DATE '2012-04-21'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-04-20",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "official_gazette_corroborated",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Phú Hòa",
+      "slug": "phu-hoa",
+      "id": "tdm-phu-hoa-gis-qhpk",
+      "title": "Phú Hòa · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2968/QĐ-UBND · 2014-07-24",
+      "decision_prefix": "2968",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.963752,
+          106.665001
+        ],
+        [
+          10.989517,
+          106.701897
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2968%' AND NgayKy >= DATE '2014-07-24' AND NgayKy < DATE '2014-07-25'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2014-07-24",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "government_document_mirror_corroborated",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Phú Lợi",
+      "slug": "phu-loi",
+      "id": "tdm-phu-loi-gis-qhpk",
+      "title": "Phú Lợi · GIS quy hoạch phân khu 1/2.000",
+      "decision": "1669/QĐ-UBND · 2014-05-21",
+      "decision_prefix": "1669",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.981834,
+          106.664948
+        ],
+        [
+          11.006373,
+          106.706657
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '1669%' AND NgayKy >= DATE '2014-05-21' AND NgayKy < DATE '2014-05-22'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2014-05-21",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "government_response_backend_corroborated",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Phú Mỹ",
+      "slug": "phu-my",
+      "id": "tdm-phu-my-gis-qhpk",
+      "title": "Phú Mỹ · GIS quy hoạch phân khu 1/2.000",
+      "decision": "2307/QĐ-UBND · 2012-12-28",
+      "decision_prefix": "2307",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.994821,
+          106.658394
+        ],
+        [
+          11.057372,
+          106.693703
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '2307%' AND NgayKy >= DATE '2012-12-28' AND NgayKy < DATE '2012-12-29'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-12-28",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Phú Thọ",
+      "slug": "phu-tho",
+      "id": "tdm-phu-tho-gis-qhpk",
+      "title": "Phú Thọ · GIS quy hoạch phân khu 1/2.000",
+      "decision": "1670/QĐ-UBND · 2014-05-21",
+      "decision_prefix": "1670",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.939311,
+          106.651329
+        ],
+        [
+          10.972545,
+          106.689178
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '1670%' AND NgayKy >= DATE '2014-05-21' AND NgayKy < DATE '2014-05-22'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2014-05-21",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Tân An",
+      "slug": "tan-an",
+      "id": "tdm-tan-an-gis-qhpk",
+      "title": "Tân An · GIS quy hoạch phân khu 1/2.000",
+      "decision": "1271/QĐ-UBND · 2012-11-01",
+      "decision_prefix": "1271",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          11.011595,
+          106.594658
+        ],
+        [
+          11.048871,
+          106.635704
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '1271%' AND NgayKy >= DATE '2012-11-01' AND NgayKy < DATE '2012-11-02'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-11-01",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    },
+    {
+      "name": "Tương Bình Hiệp",
+      "slug": "tuong-binh-hiep",
+      "id": "tdm-tuong-binh-hiep-gis-qhpk",
+      "title": "Tương Bình Hiệp · GIS quy hoạch phân khu 1/2.000",
+      "decision": "1272/QĐ-UBND · 2012-11-01",
+      "decision_prefix": "1272",
+      "map_scale": 2000,
+      "size": [
+        2400,
+        2400
+      ],
+      "window_hint_bounds": [
+        [
+          10.996527,
+          106.615921
+        ],
+        [
+          11.025384,
+          106.648361
+        ]
+      ],
+      "window_padding_fraction": 0.2,
+      "outline_filter": "SoQD LIKE '1272%' AND NgayKy >= DATE '2012-11-01' AND NgayKy < DATE '2012-11-02'",
+      "plan_identity": {
+        "status": "verified",
+        "decision_date": "2012-11-01",
+        "decision_fields": [
+          "SoQD",
+          "NgayKy"
+        ],
+        "negative_control": "../negative-date-control.json",
+        "method": "Public official GIS outline matches exact original decision number and signing date within the historic ward export window; closed geometry/area gates and wrong-date negative control. Official city task publication confirms the 12 named wards have QHPK 1/2000.",
+        "legal_document_identity_status": "candidate_catalogue_mirror_only",
+        "original_approval_pdf_found": false,
+        "limits": "Native GIS identity is verified separately from legal-document discovery. Original approval PDFs have not been independently found for every ward; baseline outline does not prove latest amendments are consolidated."
+      },
+      "publication_url": "https://thudaumot.binhduong.gov.vn/van-ban-du-thao/chi-tiet/moduleId/1840/controller/VBPhapQuy/action/DowloadFile?urlFile=VanBanPhapQuy%2F2022%2F06%2Fb3ac6e96-e39d-4412-94a8-b3d54c5a2ef820220603.pdf"
+    }
+  ]
+}

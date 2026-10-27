@@ -216,6 +216,17 @@ from auth.core import (
 )
 
 app = Flask(__name__)
+from services.planning_assets import load_release as load_planning_release
+app.config['PLANNING_OVERLAY_CONFIG'] = (
+    load_planning_release(Path(__file__).resolve().parent)
+    if os.getenv('RADAR_PLANNING_MAP_ENABLED', '1').lower() not in {'0','false','off','no'} else None
+)
+
+
+@app.context_processor
+def inject_planning_overlay():
+    return {'planning_overlay_config': app.config.get('PLANNING_OVERLAY_CONFIG')}
+
 
 
 def _request_security_guard():

@@ -1,0 +1,296 @@
+{
+  "id": "an-tay-1451-qh01",
+  "title": "An Tây · Quy hoạch phân khu 1/2.000",
+  "sheet": "QH01 · Quy hoạch tổng mặt bằng sử dụng đất",
+  "decision": "1451/QĐ-UBND · 15/07/2022",
+  "source_type": "image",
+  "source_kind": "primary_consultant",
+  "source_url": "https://aapbinhduong.com/attachs/a792efea19b2a23dd19e6a42eb8015b6.png",
+  "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812",
+  "official_publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812",
+  "decision_source_url": "https://aapbinhduong.com/uploads/project/qhpk-2000/ben-cat/an-tay/qd-do-an-an-tay-1451.pdf",
+  "source_sha256": "1126f4de0135e13485fabf6f66b8583da3ef1e8c2bcb97ca8a50cba239f7d366",
+  "source_filename": "a792efea19b2a23dd19e6a42eb8015b6.png",
+  "page": 1,
+  "map_scale": 2000,
+  "reference_pixel_size": [
+    2185,
+    3089
+  ],
+  "reference": "Public OSM map API bbox106.48,11.03,106.62,11.20 (2026-10-26). Initial north-up scale-bar estimate only proposed locations; controls/checks manually inspected on original QH01 road crossings. OSM is not survey control. Southern/western river fringe has no independent check.",
+  "controls": [
+    {
+      "label": "ĐT744 / đường nhánh phía bắc ranh An Tây",
+      "pixel": [
+        281,
+        635
+      ],
+      "lat": 11.1428337,
+      "lng": 106.5128961,
+      "node_ids": [
+        7717182592
+      ]
+    },
+    {
+      "label": "ĐT744 / Hùng Vương",
+      "pixel": [
+        530,
+        956
+      ],
+      "lat": 11.1289291,
+      "lng": 106.5240205,
+      "node_ids": [
+        8485377985
+      ]
+    },
+    {
+      "label": "Hùng Vương / trục dọc KCN Việt Hương 2",
+      "pixel": [
+        861,
+        859
+      ],
+      "lat": 11.133044,
+      "lng": 106.5384986,
+      "node_ids": [
+        6673913102
+      ]
+    },
+    {
+      "label": "Pasteur Avenue / đường dọc phía đông KCN Rạch Bắp",
+      "pixel": [
+        1207,
+        1445
+      ],
+      "lat": 11.1075115,
+      "lng": 106.5535481,
+      "node_ids": [
+        4173026458
+      ]
+    },
+    {
+      "label": "ĐT744 / ĐH609 phía bắc KCN Rạch Bắp",
+      "pixel": [
+        762,
+        1401
+      ],
+      "lat": 11.1095244,
+      "lng": 106.5339912,
+      "node_ids": [
+        9326358888
+      ]
+    },
+    {
+      "label": "ĐT744 / Tam Giác Sắt",
+      "pixel": [
+        1519,
+        2168
+      ],
+      "lat": 11.0760574,
+      "lng": 106.5671463,
+      "node_ids": [
+        1410616388
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "label": "ĐT744 / Pasteur Avenue",
+      "pixel": [
+        775,
+        1438
+      ],
+      "lat": 11.1078417,
+      "lng": 106.534609,
+      "node_ids": [
+        4173026451
+      ]
+    },
+    {
+      "label": "Pasteur Avenue / trục giữa KCN Rạch Bắp",
+      "pixel": [
+        1012,
+        1445
+      ],
+      "lat": 11.1075451,
+      "lng": 106.5449842,
+      "node_ids": [
+        4173028576
+      ]
+    },
+    {
+      "label": "ĐH609 / nhánh đông nam giáp Phú An",
+      "pixel": [
+        1537,
+        2238
+      ],
+      "lat": 11.0730403,
+      "lng": 106.5679689,
+      "node_ids": [
+        1410616373
+      ]
+    }
+  ],
+  "mask": [
+    [
+      140,
+      630
+    ],
+    [
+      1010,
+      393
+    ],
+    [
+      1115,
+      748
+    ],
+    [
+      1175,
+      748
+    ],
+    [
+      1175,
+      1018
+    ],
+    [
+      1398,
+      1018
+    ],
+    [
+      1398,
+      1443
+    ],
+    [
+      1755,
+      1443
+    ],
+    [
+      1755,
+      2420
+    ],
+    [
+      1630,
+      2590
+    ],
+    [
+      1700,
+      2770
+    ],
+    [
+      1660,
+      2960
+    ],
+    [
+      1240,
+      2910
+    ],
+    [
+      1100,
+      2840
+    ],
+    [
+      999,
+      2767
+    ],
+    [
+      704,
+      2644
+    ],
+    [
+      573,
+      2374
+    ],
+    [
+      491,
+      2243
+    ],
+    [
+      507,
+      2047
+    ],
+    [
+      737,
+      1850
+    ],
+    [
+      753,
+      1784
+    ],
+    [
+      688,
+      1740
+    ],
+    [
+      573,
+      1760
+    ],
+    [
+      491,
+      1817
+    ],
+    [
+      426,
+      1801
+    ],
+    [
+      360,
+      1702
+    ],
+    [
+      360,
+      1637
+    ],
+    [
+      393,
+      1580
+    ],
+    [
+      557,
+      1556
+    ],
+    [
+      606,
+      1473
+    ],
+    [
+      622,
+      1244
+    ],
+    [
+      606,
+      1146
+    ],
+    [
+      532,
+      1130
+    ],
+    [
+      458,
+      1130
+    ],
+    [
+      344,
+      1064
+    ],
+    [
+      294,
+      949
+    ],
+    [
+      254,
+      802
+    ],
+    [
+      172,
+      647
+    ]
+  ],
+  "legend_crop": [
+    1750,
+    870,
+    2145,
+    1685
+  ],
+  "notice": "Nguồn bản vẽ: đơn vị tư vấn A.A.P (2022); chưa đối chiếu bản đồ đóng dấu, chưa xác minh hiệu lực hiện tại. Chỉ thử nghiệm theo khu vực, không xác định từng thửa.",
+  "attribution": "Bản vẽ A.A.P · QĐ1451/2022 · căn chỉnh OSM thử nghiệm",
+  "consultant_publication_url": "https://aapbinhduong.com/en/project/quy-hoach-phan-khu-ty-le-12000-xa-an-tay-den-nam-2040.html"
+}

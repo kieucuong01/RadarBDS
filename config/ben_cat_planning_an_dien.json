@@ -1,0 +1,312 @@
+{
+  "id": "an-dien-1450-qh01",
+  "title": "An Điền · Quy hoạch phân khu 1/2.000",
+  "sheet": "QH01 · Quy hoạch tổng mặt bằng sử dụng đất",
+  "decision": "1450/QĐ-UBND · 15/07/2022",
+  "source_type": "image",
+  "source_kind": "primary_consultant_approval_unverified",
+  "source_url": "https://aapbinhduong.com/attachs/71f007f57f9d670ebae9c917ecbba64f.png",
+  "publication_url": "https://bencat-hochiminhcity.gov.vn/tin-tuc/thong-bao-ve-viec-cong-bo-cong-khai-do-an-quy-hoach-phan-khu-ty-le-12000-cac-xa-an-dien-an-tay-va-phu-an-den-nam-2040-20812",
+  "consultant_publication_url": "https://aapbinhduong.com/vi/du-an/quy-hoach-phan-khu-ty-le-12000-xa-an-dien-den-nam-2040.html",
+  "decision_source_url": "https://drive.google.com/file/d/1p_ikQRB5GibO2YTaINpdHT--QDfX94Af/view",
+  "source_sha256": "ea30c39bc34a8db600d2470711685d32008f7c95321adf5dc62e2ec34e974fc7",
+  "source_filename": "71f007f57f9d670ebae9c917ecbba64f.png",
+  "page": 1,
+  "map_scale": 2000,
+  "reference_pixel_size": [
+    2185,
+    3089
+  ],
+  "reference": "OSM public reference in osm-reference.json and osm-south.json, 2026-10-26. Manually read actual curved DT748 corridor, Hung Vuong, and named southern road junctions. Straight blue planned trunk through center is excluded. One control is a clearly identifiable existing road bend apex; bridge holdout uses midpoint of OSM bridge140795283. Existing versus widened centerline uncertainty remains, largest control residual about100m; not survey accuracy. East industrial context and river fringe not independently proven.",
+  "controls": [
+    {
+      "label": "ĐT748 / nhánh phía nam tại góc ngoặt phía bắc",
+      "pixel": [
+        540,
+        590
+      ],
+      "lat": 11.1645134,
+      "lng": 106.5533582,
+      "node_ids": [
+        7714929833
+      ]
+    },
+    {
+      "label": "Hùng Vương / đường bắc khu công nghiệp",
+      "pixel": [
+        724,
+        1190
+      ],
+      "lat": 11.1399219,
+      "lng": 106.5620612,
+      "node_ids": [
+        4461988086
+      ]
+    },
+    {
+      "label": "ĐT748 / Hùng Vương",
+      "pixel": [
+        1245,
+        1000
+      ],
+      "lat": 11.1469552,
+      "lng": 106.5825016,
+      "node_ids": [
+        6866641278
+      ]
+    },
+    {
+      "label": "ĐT748 · điểm cực tây của góc ngoặt phía An Mỹ",
+      "pixel": [
+        1108,
+        1572
+      ],
+      "lat": 11.1245206,
+      "lng": 106.5770232,
+      "node_ids": [
+        1505637039
+      ]
+    },
+    {
+      "label": "ĐT748 / Tam Giác Sắt",
+      "pixel": [
+        1320,
+        2593
+      ],
+      "lat": 11.0854879,
+      "lng": 106.5852591,
+      "node_ids": [
+        1410616434
+      ]
+    },
+    {
+      "label": "ĐT748 / đường Phú An 014",
+      "pixel": [
+        1376,
+        2782
+      ],
+      "lat": 11.0778057,
+      "lng": 106.5872791,
+      "node_ids": [
+        1505636896
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "label": "Cầu Đò · trung điểm đoạn cầu OSM trên Hùng Vương",
+      "pixel": [
+        1386,
+        900
+      ],
+      "lat": 11.1511078,
+      "lng": 106.5878416,
+      "node_ids": [
+        1410597212,
+        1410597249
+      ],
+      "way_ids": [
+        140795283
+      ],
+      "reference_method": "Midpoint of published OSM bridge endpoint coordinates; original drawing bridge center read independently."
+    },
+    {
+      "label": "ĐT748 / Bạch Đằng",
+      "pixel": [
+        1258,
+        1066
+      ],
+      "lat": 11.1444098,
+      "lng": 106.5828841,
+      "node_ids": [
+        7671735689
+      ]
+    },
+    {
+      "label": "ĐT744 / Tam Giác Sắt · context phía nam",
+      "pixel": [
+        865,
+        2844
+      ],
+      "lat": 11.0760574,
+      "lng": 106.5671463,
+      "node_ids": [
+        1410616388
+      ]
+    }
+  ],
+  "mask": [
+    [
+      265,
+      550
+    ],
+    [
+      295,
+      510
+    ],
+    [
+      340,
+      425
+    ],
+    [
+      410,
+      350
+    ],
+    [
+      475,
+      390
+    ],
+    [
+      570,
+      450
+    ],
+    [
+      650,
+      570
+    ],
+    [
+      680,
+      670
+    ],
+    [
+      675,
+      750
+    ],
+    [
+      700,
+      780
+    ],
+    [
+      900,
+      840
+    ],
+    [
+      1050,
+      850
+    ],
+    [
+      1220,
+      850
+    ],
+    [
+      1380,
+      880
+    ],
+    [
+      1500,
+      1040
+    ],
+    [
+      1510,
+      1150
+    ],
+    [
+      1460,
+      1450
+    ],
+    [
+      1370,
+      1570
+    ],
+    [
+      1220,
+      1680
+    ],
+    [
+      1240,
+      1820
+    ],
+    [
+      1470,
+      1940
+    ],
+    [
+      1600,
+      2150
+    ],
+    [
+      1620,
+      2220
+    ],
+    [
+      1590,
+      2500
+    ],
+    [
+      1490,
+      2640
+    ],
+    [
+      1460,
+      2720
+    ],
+    [
+      1522,
+      2848
+    ],
+    [
+      1457,
+      2913
+    ],
+    [
+      1390,
+      2783
+    ],
+    [
+      1030,
+      2750
+    ],
+    [
+      884,
+      2505
+    ],
+    [
+      884,
+      2210
+    ],
+    [
+      730,
+      2210
+    ],
+    [
+      730,
+      1545
+    ],
+    [
+      410,
+      1545
+    ],
+    [
+      410,
+      1365
+    ],
+    [
+      390,
+      1250
+    ],
+    [
+      340,
+      1100
+    ],
+    [
+      270,
+      870
+    ],
+    [
+      230,
+      700
+    ],
+    [
+      300,
+      680
+    ]
+  ],
+  "legend_crop": [
+    1750,
+    850,
+    2145,
+    1580
+  ],
+  "notice": "Bản vẽ tư vấn A.A.P (2022), ô phê duyệt để trống; chưa đối chiếu bản đóng dấu hay xác minh hiệu lực. Căn chỉnh thử theo khu vực, sai số mốc tới khoảng100 m, không xác định từng thửa.",
+  "attribution": "Bản vẽ tư vấn A.A.P · hồ sơ An Điền2022 · căn chỉnh OSM thử nghiệm"
+}

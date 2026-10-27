@@ -234,6 +234,39 @@ def test_map_base_layers_have_complete_attribution():
     assert "Maxar" in layers["satellite"]["attribution"]
 
 
+def test_street_tile_failure_switches_provider_once_and_ignores_stale_errors():
+    result = _run_node("""(() => {
+      const definitions = mapApi.mapBaseLayers();
+      const handlers = {}, messages = [], urls = [], credits = [];
+      let active = true;
+      const map = {hasLayer: () => active, once(name, fn) {this.unload = fn;},
+        attributionControl: {removeAttribution(value) {credits.push(['remove',value]);},
+          addAttribution(value) {credits.push(['add',value]);}}};
+      const street = {options: {attribution: definitions.street.attribution},
+        on(name, fn) {handlers[name] = fn;}, off(name) {delete handlers[name];},
+        setUrl(url) {urls.push(url);}};
+      mapApi.bindStreetTileFallback(map, street, definitions.street, message => messages.push(message));
+      const original = {tile:{src:'https://tile.openstreetmap.org/11/1630/960.png'}};
+      active = false; handlers.tileerror(original);
+      const inactiveSwitches = urls.length;
+      active = true; handlers.tileerror(original);
+      handlers.tileerror(original);
+      const backup = {tile:{src:definitions.street.fallback.url.replace('{z}','11').replace('{y}','960').replace('{x}','1630')}};
+      handlers.tileerror(backup); handlers.tileerror(backup);
+      const late = handlers.tileerror;
+      map.unload(); late(backup);
+      return {urls, inactiveSwitches, messages:messages.length, credits,
+        finalCredit:street.options.attribution, detached:!handlers.tileerror};
+    })()""")
+    assert len(result['urls']) == 1
+    assert result['inactiveSwitches'] == 0
+    assert 'World_Street_Map' in result['urls'][0]
+    assert result['messages'] == 2
+    assert result['credits'][0][0] == 'remove'
+    assert 'Esri' in result['finalCredit']
+    assert result['detached'] is True
+
+
 def test_map_prefers_canvas_for_large_marker_sets():
     assert _run_node("mapApi.mapOptions()") == {
         "zoomControl": True,

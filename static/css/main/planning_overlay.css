@@ -1,0 +1,37 @@
+.planning-overlay-control {
+  box-sizing: border-box;
+  width: 264px;
+  max-width: calc(100vw - 110px);
+  background: #fff;
+  color: #16332d;
+  border: 1px solid #d6e0dc;
+  border-radius: 12px;
+  box-shadow: 0 3px 14px #15382c20;
+  font: 12px/1.45 Arial, sans-serif;
+}
+.planning-overlay-control > summary { padding: 12px; font-weight: 700; cursor: pointer; }
+.planning-overlay-body { padding: 0 12px 12px; max-height: max(100px, min(55vh, calc(100dvh - 380px))); overflow-y: auto; }
+.planning-overlay-badge { font-size: 10px; font-weight: 700; color: #925400; }
+.planning-overlay-theme { min-width: 0; margin: 10px 0; padding: 8px; border: 1px solid #d6e0dc; border-radius: 7px; background: #f7faf8; }
+.planning-overlay-theme .planning-overlay-toggle { margin-top: 0; }
+.planning-overlay-theme .planning-overlay-metadata { margin-bottom: 0; }
+.planning-overlay-toggle { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; font-weight: 700; }
+.planning-overlay-toggle input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: #11755b; }
+.planning-overlay-body select { display: block; box-sizing: border-box; width: 100%; min-height: 36px; margin: 5px 0 8px; color: #16332d; background: white; border: 1px solid #c8d8d1; border-radius: 6px; }
+.planning-overlay-body input[type=range] { display: block; width: 100%; height: 30px; accent-color: #11755b; }
+.planning-overlay-body output { float: right; font-variant-numeric: tabular-nums; }
+.planning-overlay-body button { min-height: 38px; width: 100%; border: 1px solid #c8d8d1; border-radius: 7px; color: #17654f; background: #edf6f1; cursor: pointer; }
+.planning-overlay-body button:disabled { opacity: .5; cursor: default; }
+.planning-overlay-status { color: #17654f; }
+.planning-overlay-metadata, .planning-overlay-notice { font-size: 11px; color: #5b6863; }
+.planning-overlay-notice { border-top: 1px solid #e4e9e6; padding-top: 8px; margin-bottom: 0; }
+.planning-overlay-body details summary { cursor: pointer; padding: 5px 0; }
+.planning-overlay-body a { display: block; color: #0c7054; margin: 6px 0; }
+.planning-overlay-body img { width: 100%; height: auto; }
+.planning-overlay-body img:not([src]) { display: none; }
+.planning-overlay-body [hidden] { display: none !important; }
+@media (max-width: 760px) {
+  .planning-overlay-control { width: 232px; }
+  /* Leave room for the existing Maps bottom sheet; contents remain scrollable. */
+  .planning-overlay-body { max-height: max(100px, calc(100dvh - clamp(236px, 34dvh, 320px) - 310px)); }
+}

@@ -1,0 +1,304 @@
+{
+  "id": "tdm-north-east-gis-qhpk",
+  "title": "GIS phân khu bổ sung · Phú Mỹ, Định Hòa, Hòa Phú, Phú Tân",
+  "decision": "Dịch vụ GIS quy hoạch phân khu · phiên bản pháp lý chưa đối chiếu từng đồ án",
+  "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "captured_on": "2026-10-27",
+  "notice": "Bổ sung đúng điểm ảnh còn thiếu từ dịch vụ GIS quy hoạch phân khu cho Phú Mỹ, Định Hòa, Hòa Phú và Phú Tân. Giữ màu và tọa độ gốc; không dùng lớp quy hoạch chung thay thế. Ranh phường cũ chỉ giới hạn vùng hiển thị tham khảo, không phải ranh phê duyệt đồ án. Chưa xác minh tỷ lệ và hiệu lực từng đồ án trong vùng bổ sung.",
+  "extent": {
+    "xmin": 11868032,
+    "ymin": 1230483,
+    "xmax": 11883044,
+    "ymax": 1245495,
+    "spatialReference": {
+      "wkid": 3857
+    }
+  },
+  "tile_size": 1280,
+  "wards": [
+    "Phú Mỹ",
+    "Định Hòa",
+    "Hòa Phú",
+    "Phú Tân"
+  ],
+  "geometry": {
+    "path": "static/maps/thu-dau-mot/legacy-14-wards.geojson",
+    "sha256": "f38450151de7e5621d612ae3968dee260353b02fd62e249e2220c46688bbaf29"
+  },
+  "tiles": [
+    {
+      "row": 0,
+      "col": 0,
+      "metadata": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/0-0/export.json",
+        "sha256": "36b5504b1dd665b8f5e4593f1cb0c09516ad567cb9a4e56811135d580755a07e"
+      },
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/0-0/source.png",
+        "sha256": "e29a68c31fe39c857bf7a5847ea955ba02b2596a11de4358eb42c5743a2d806e"
+      },
+      "request": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHPK_HCM_V2/MapServer/export?bbox=11868032%2C1237989%2C11875538%2C1245495&bboxSR=3857&imageSR=3857&size=1280%2C1280&format=png32&transparent=true&f=image"
+    },
+    {
+      "row": 0,
+      "col": 1,
+      "metadata": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/0-1/export.json",
+        "sha256": "6ca6a582cf3137112462d22f44bdfe8a50c17f066bdd28a97beb9a554ff6db35"
+      },
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/0-1/source.png",
+        "sha256": "878a3f64a743d253c259172ab10e7a2f0989d750ab8bad4f9f22c5ac43647b71"
+      },
+      "request": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHPK_HCM_V2/MapServer/export?bbox=11875537.999999996%2C1237989%2C11883043.999999996%2C1245495&bboxSR=3857&imageSR=3857&size=1280%2C1280&format=png32&transparent=true&f=image"
+    },
+    {
+      "row": 1,
+      "col": 0,
+      "metadata": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/1-0/export.json",
+        "sha256": "6f7b9270d15570f57c4e308784bc85082029b5dea9a080aacd228545f3c01632"
+      },
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/1-0/source.png",
+        "sha256": "d657e59afc717e2f3a67aecc0c969824b550abda33f84565c3139f3956b2dcd8"
+      },
+      "request": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHPK_HCM_V2/MapServer/export?bbox=11868032%2C1230483%2C11875538%2C1237989&bboxSR=3857&imageSR=3857&size=1280%2C1280&format=png32&transparent=true&f=image"
+    },
+    {
+      "row": 1,
+      "col": 1,
+      "metadata": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/1-1/export.json",
+        "sha256": "b4488c6680e1d66243f6a6a97d7be968fdad89bfead771d89d065d0dcbba8fbc"
+      },
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/gap-investigation/tiles/1-1/source.png",
+        "sha256": "3ff23d37d4f80fd91b730cdaf9b84919192cd8a4aaa3f9e0f4feff4730c8a561"
+      },
+      "request": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHPK_HCM_V2/MapServer/export?bbox=11875537.999999996%2C1230483%2C11883043.999999996%2C1237989&bboxSR=3857&imageSR=3857&size=1280%2C1280&format=png32&transparent=true&f=image"
+    }
+  ],
+  "exclusions": [
+    {
+      "id": "thoi-hoa-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/thoi-hoa/overlay.webp",
+        "sha256": "57843f40b721136f8e62e20d78bd1c975ebf260cf850dece5605e87aa0647a4d"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/thoi-hoa/alignment-audit.json",
+        "sha256": "004ab88db756ac6b9eac884a7429bfd814b1c7b3efd437dd1fdebe9196710a21"
+      }
+    },
+    {
+      "id": "tan-dinh-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/tan-dinh/overlay.webp",
+        "sha256": "aca9ba6d78296ae657e47227a61bb905c530cb657fc58bcc67c01aa9f3561a14"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/tan-dinh/alignment-audit.json",
+        "sha256": "490f0b90d9d4bb34b559c5cf8f8ef93c0cb61cf7891e028c5eb88cadca131c40"
+      }
+    },
+    {
+      "id": "hoa-loi-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/hoa-loi/overlay.webp",
+        "sha256": "e14f4d1fbe4677f7a95fa67d48900b1d1c291ad2512925118911abcae28d91fa"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/hoa-loi/alignment-audit.json",
+        "sha256": "4d20f920755c4556041547f255f86fcf5eefb71bb313995df7a7b1e59443b90d"
+      }
+    },
+    {
+      "id": "chanh-phu-hoa-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/chanh-phu-hoa/overlay.webp",
+        "sha256": "824597a99e5dffe1cbe83602cd895b2bb11d32e9edf582f8f0488ddffa26c8fe"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/chanh-phu-hoa/alignment-audit.json",
+        "sha256": "8853fb816d6816c559967330a583af1c3c4e1bb4282d10ff7a3e36f6a1b9647e"
+      }
+    },
+    {
+      "id": "my-phuoc-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/my-phuoc/overlay.webp",
+        "sha256": "8216981115d1cc29197332e960557ab0ae9e027edfee62c8db1f720f50b14afc"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/my-phuoc/alignment-audit.json",
+        "sha256": "9d2192b8a77115cdb5b05d7915863b7aaf93f33b66f71f59b82a25f847ba3c1d"
+      }
+    },
+    {
+      "id": "an-dien-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/an-dien/overlay.webp",
+        "sha256": "e049b987470bda483de5af8a7f867d354b094af25b82f8dd004f2ee5534dc9a8"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/an-dien/alignment-audit.json",
+        "sha256": "8968c87fef503b95e12696cc1bc4965cdc5a80e92c2eefd7ffc3011f7d9242d3"
+      }
+    },
+    {
+      "id": "an-tay-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/an-tay/overlay.webp",
+        "sha256": "854b905e384726b9b58e45ba1998d2d78480d94752722ab34e5c8f61255f4f9a"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/an-tay/alignment-audit.json",
+        "sha256": "f303d10c570b8f0bd925bc25268d53fb1b78749b66acb7e4753929d9a249115f"
+      }
+    },
+    {
+      "id": "phu-an-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/gis-partitions/phu-an/overlay.webp",
+        "sha256": "9b0cda334b9f12ad2c5b5ce033872acb2da12f75aab881de080bdbd6ddbfbaed"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/gis-partitions/phu-an/alignment-audit.json",
+        "sha256": "223c697176bcd99ad35e782d85c54ca17361a683983b1dfa30411334a6e60936"
+      }
+    },
+    {
+      "id": "tdm-chanh-my-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/chanh-my/overlay.webp",
+        "sha256": "77957fd06ba74111dacf43afbc31cce0fd24c253df49b9e33227be056bceda22"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/chanh-my/alignment-audit.json",
+        "sha256": "b11d20a148344b7b0ec1576b670233d7a6202ccce11c191972376883c5726214"
+      }
+    },
+    {
+      "id": "tdm-chanh-nghia-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/chanh-nghia/overlay.webp",
+        "sha256": "faf4dee0ecfdecbad0fb7e3f83efe0c1f792909b9f8a864d757da0dc5fbac136"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/chanh-nghia/alignment-audit.json",
+        "sha256": "70c067bc0b313946e09f81de7fc36bacc4596de5ee8f1e68964c23f965604566"
+      }
+    },
+    {
+      "id": "tdm-dinh-hoa-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/dinh-hoa/overlay.webp",
+        "sha256": "b4cc6394a67f30c6d0d9985854fb6fb7c149998c69ec5035ae246a44a5e4f09e"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/dinh-hoa/alignment-audit.json",
+        "sha256": "14c5feae483d62117cff36cbc8ce23a7c83e65256243876a1a6fff016da3101b"
+      }
+    },
+    {
+      "id": "tdm-hiep-an-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/hiep-an/overlay.webp",
+        "sha256": "fcab7efdfb6640ca4d1f1463d1c2e00d84a0eea042980e0c57571c1593740e42"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/hiep-an/alignment-audit.json",
+        "sha256": "e365ff6aaa7bfccddd31787ea123fff80379efe858d6a4353854c707d8276f01"
+      }
+    },
+    {
+      "id": "tdm-hiep-thanh-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/hiep-thanh/overlay.webp",
+        "sha256": "bdfd06bd91252fc63b5ba733d194e28cf81b95c7bbecf6d4fa21af9682b5a467"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/hiep-thanh/alignment-audit.json",
+        "sha256": "40f3c1a9685be2e1508f632a71bb4962b9a782540d6d78aea0ed699112f6c2bd"
+      }
+    },
+    {
+      "id": "tdm-phu-cuong-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-cuong/overlay.webp",
+        "sha256": "671a370c669df06eed735ffc2695a2c25382551ac125eadc4e54a585e80b7a0e"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-cuong/alignment-audit.json",
+        "sha256": "8e7dae7a79b915a9c6ce352da6bfd1424a65f6cd8c5ef037e4b93e8ffec44373"
+      }
+    },
+    {
+      "id": "tdm-phu-hoa-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-hoa/overlay.webp",
+        "sha256": "9d0c858d9e4cc9430865ccfbe60292142d04a9b2cdf6cd0470bb152d64834182"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-hoa/alignment-audit.json",
+        "sha256": "e8fb02cf3aeb447fc7b59960657d38cfc29bd47a42af3edf13384844beeab084"
+      }
+    },
+    {
+      "id": "tdm-phu-loi-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-loi/overlay.webp",
+        "sha256": "8f86c5043f71c9f4ddc9f5b31b238f2fb2ccee8e890d8908000d83eacdcd23e1"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-loi/alignment-audit.json",
+        "sha256": "fd0832208facdbff20a8b415111deeeac180a75c24e81138af1e45c4e8b19bac"
+      }
+    },
+    {
+      "id": "tdm-phu-my-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-my/overlay.webp",
+        "sha256": "2e673178493849377c6bea1d01bf244f1820905eed10ada8f8b1a3fb34dfae04"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-my/alignment-audit.json",
+        "sha256": "5620bad1491a2a37287007a9939fdef43fb94e9649e6113f9fdd0db121825712"
+      }
+    },
+    {
+      "id": "tdm-phu-tho-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-tho/overlay.webp",
+        "sha256": "1d3c586e2dbd88f08bc6c299d982d6594bd13a963b1b628f299425fb7cf88bb1"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/phu-tho/alignment-audit.json",
+        "sha256": "829392a0d56cde251e0afbe244f7b0b13e382190abb2673d8846c86fc82e02f8"
+      }
+    },
+    {
+      "id": "tdm-tan-an-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/tan-an/overlay.webp",
+        "sha256": "c8e959fa2b528c31f9e1d0583bdbcab7b75201a9088a82a0ef1923b9d9033cc0"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/tan-an/alignment-audit.json",
+        "sha256": "9a0468c6597dd21b25404d6e224f5da23819b1f4338770931949f35411e6fa2d"
+      }
+    },
+    {
+      "id": "tdm-tuong-binh-hiep-gis-qhpk",
+      "image": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/tuong-binh-hiep/overlay.webp",
+        "sha256": "ed38cf3c9f3dc16f0d12f26c1ccaaccfaa5a5aea80154459fe59c404f7257768"
+      },
+      "audit": {
+        "path": ".local/planning-ben-cat/thu-dau-mot/partitions/tuong-binh-hiep/alignment-audit.json",
+        "sha256": "d94be5efed898f83637ceb715445a6f2077b6e3f996375a1dea54063902980ac"
+      }
+    }
+  ]
+}

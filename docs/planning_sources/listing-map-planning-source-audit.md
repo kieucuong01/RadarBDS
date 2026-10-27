@@ -61,8 +61,15 @@ phép Radar BDS tạo và phục vụ raster dẫn xuất có ghi nguồn. Sau �
 gốc vào vùng `.local`, tính SHA-256, tạo điểm khống chế và chạy cổng sai số/căn
 chỉnh trước khi thêm công tắc quy hoạch vào giao diện.
 
-Kế hoạch triển khai lớp overlay tự lưu trữ dừng tại tài liệu kiểm duyệt và
+Kế hoạch triển khai lớp overlay tự lưu trữ trên production dừng tại tài liệu kiểm duyệt và
 validator. Không tạo manifest công khai, WebP, control point hay điều khiển lớp
 quy hoạch cho đến khi đủ cả bốn hiện vật. Core Maps được phép phát hành với CTA
 link-only đã duyệt; CTA phải ghi rõ đây là cổng ngoài và thông tin không thay
 thế xác nhận pháp lý cho từng thửa đất.
+
+## Ngoại lệ thử nghiệm local 25–26/10/2026
+
+Theo yêu cầu thử Bến Cát của người dùng, đã tạo một pilot loopback riêng cho
+Thới Hòa 1/2.000. Xem [hướng dẫn và giới hạn](ben-cat-local-pilot.md).
+Pilot không thay trạng thái phê duyệt của manifest production, không xác nhận
+hiệu lực hồ sơ hoặc quyền tái phân phối, và không đưa raster vào thư mục public.

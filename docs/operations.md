@@ -1209,6 +1209,36 @@ contains a paid grant.
 
 ## Production Smoke Checklist
 
+### Versioned planning overlay snapshot
+
+The public Maps overlay is enabled only when `config/planning_release.json`
+and every file in its immutable snapshot pass hash verification at web-worker
+startup. `RADAR_PLANNING_MAP_ENABLED=0` plus service restart disables the feature.
+Normal runtime never fetches GIS or loads raster-building dependencies.
+
+Build from verified local captures with
+`python scripts/build_planning_release.py`. It writes a content-addressed folder
+under ignored `static/maps/planning/overlays/<release>/` and a tracked release
+descriptor. Rebuilding identical captures must produce the same release ID.
+Only sanitized catalog data, display overlays and available legends are packaged;
+raw PDFs, capture/audit files and local source paths remain outside the public bundle.
+
+Before deploying the matching Git commit, transfer the snapshot separately,
+verify the archive and every file hash, and install the immutable folder without
+overwriting an existing release. Keep `/static/maps/planning/overlays/` ignored
+in the VPS Git checkout, including `.git/info/exclude` when staging before the
+new `.gitignore` has been pulled. Older snapshots remain available for rollback.
+Preserve unrelated VPS dirty files by exact path/hash/mode before deploying and
+restore them afterward; never include those files in a planning release commit.
+
+After the exact commit's Ubuntu Quality gates pass, use the normal deployment
+script. Verify deployed SHA/service, origin HTML `RADAR_PLANNING_CONFIG`, public
+versioned catalog and image hashes, and rendered Maps on desktop/mobile. The
+loopback-only `/local-planning/` runner is not installed as a public route. A
+healthy base map does not prove the planning snapshot loaded. Current source
+coverage and legal-edition limits are documented in
+`planning_sources/thu-dau-mot-local-pilot.md` and shown in the source inspector.
+
 ```bash
 python3 --version
 sudo systemctl status radar-bds.service --no-pager

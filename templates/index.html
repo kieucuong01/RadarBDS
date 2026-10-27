@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-map-chips-20261014a"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-map-street-fallback-20261027"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=listing-map-chips-20261014a"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=listing-map-street-fallback-20261027"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -119,6 +119,11 @@
   </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/dashboard_mobile_discovery.css') }}?v=p2-20261019-4">
   {% include "partials/public_footer_assets.html" %}
+  {% if (planning_pilot_enabled | default(false)) or (planning_overlay_config | default(none)) %}
+  <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }};</script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=planning-tdm-coverage-20261027">
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-tdm-coverage-20261027"></script>
+  {% endif %}
 </head>
 
 <body class="{% if saved_page %}saved-route{% endif %}" data-active-dashboard-tab="signals">

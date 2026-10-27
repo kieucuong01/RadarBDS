@@ -1,0 +1,138 @@
+{
+  "id": "ben-cat-general-gis",
+  "title": "Bến Cát · GIS quy hoạch chung đô thị 1/10.000",
+  "decision": "Hồ sơ đối chiếu: 1573/QĐ-UBND · 01/07/2022 · đến năm 2040",
+  "map_scale": 10000,
+  "captured_on": "2026-10-27",
+  "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "publication_url": "https://congbao-aloha.s3.hcm-1.cloud.cmctelecom.vn/form-attachments/QD%201573.pdf",
+  "source_request": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHC_HCM/MapServer/export?bbox=11852274.67768144%2C1232554.5703844207%2C11881147.279293714%2C1261427.1719966945&bboxSR=3857&imageSR=3857&size=2400%2C2400&format=png32&transparent=true&f=image",
+  "hashes": {
+    "export.json": "6baf3deefa02586305be05d44ce05aa438b036adee50532007d7126b7a52dfd1",
+    "source.png": "b51bcb64d4d9eba1f3370816ad8be125cbfb8c438a3408340f5794bc9f6638f5"
+  },
+  "display_masks": [
+    {
+      "path": "gis-partitions/thoi-hoa/official-footprint-mask.png",
+      "sha256": "7881de4d3e9e0c3adf2e37ba0f7b253501f53bd9a58602811a77f132fad481b8",
+      "native_extent": {
+        "xmin": 11862936.922744961,
+        "ymin": 1237786.7597470363,
+        "xmax": 11875070.985472357,
+        "ymax": 1249920.8224744317,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "2909/QĐ-UBND · 28/12/2022"
+    },
+    {
+      "path": "gis-partitions/tan-dinh/official-footprint-mask.png",
+      "sha256": "87c5e29ec5684b08d31d8c8ab1b7acada9bf67cc1ad49b9c3ce2d9a1b28255f1",
+      "native_extent": {
+        "xmin": 11865548.205837237,
+        "ymin": 1234592.0511697838,
+        "xmax": 11874606.018564992,
+        "ymax": 1243649.8638975392,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "2910/QĐ-UBND · 28/12/2022"
+    },
+    {
+      "path": "gis-partitions/hoa-loi/official-footprint-mask.png",
+      "sha256": "454570d9920b4cedb44d836990c0fe432af44ab6fc3c6ea2e7487c15776699bb",
+      "native_extent": {
+        "xmin": 11868418.788211782,
+        "ymin": 1236843.0779956738,
+        "xmax": 11880339.300892401,
+        "ymax": 1248763.5906762946,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "2911/QĐ-UBND · 28/12/2022"
+    },
+    {
+      "path": "gis-partitions/chanh-phu-hoa/official-footprint-mask.png",
+      "sha256": "7de787af1e14780b45070005b9d24250cf1372bce3f1eca4f55062b38322c862",
+      "native_extent": {
+        "xmin": 11863915.984897206,
+        "ymin": 1242898.8878447588,
+        "xmax": 11881645.620036915,
+        "ymax": 1260628.522984468,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "2912/QĐ-UBND · 28/12/2022"
+    },
+    {
+      "path": "gis-partitions/my-phuoc/official-footprint-mask.png",
+      "sha256": "4d287ef0c82a3981a29287c4fdd1c477954dc9c00bf5d5d69ae2448d37980d62",
+      "native_extent": {
+        "xmin": 11862307.467447583,
+        "ymin": 1243871.610479903,
+        "xmax": 11872233.392527746,
+        "ymax": 1253797.5355600663,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "2913/QĐ-UBND · 28/12/2022"
+    },
+    {
+      "path": "gis-partitions/an-dien/official-footprint-mask.png",
+      "sha256": "44f2223886a66ef20fe380da7ceb2d202442f2ba4956774c2e6969a473d7f2c2",
+      "native_extent": {
+        "xmin": 11855240.165216897,
+        "ymin": 1238043.8589191455,
+        "xmax": 11871273.33758996,
+        "ymax": 1254077.0312922087,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "1450/QĐ-UBND · 15/07/2022"
+    },
+    {
+      "path": "gis-partitions/an-tay/official-footprint-mask.png",
+      "sha256": "e164f31538c500abd78ac6802226d62cc934d0d2f22f2059249778e1c47770d0",
+      "native_extent": {
+        "xmin": 11851366.032470973,
+        "ymin": 1234295.9272670913,
+        "xmax": 11869091.217350617,
+        "ymax": 1252021.1121467357,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "1451/QĐ-UBND · 15/07/2022"
+    },
+    {
+      "path": "gis-partitions/phu-an/official-footprint-mask.png",
+      "sha256": "80e542ed60b3325493f49cd66cdaf2b1cb34c69747ac7e988596d6d70b0107e9",
+      "native_extent": {
+        "xmin": 11860185.88311262,
+        "ymin": 1234113.8073476136,
+        "xmax": 11869917.869541986,
+        "ymax": 1243845.793776979,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      },
+      "decision": "1452/QĐ-UBND · 15/07/2022"
+    }
+  ],
+  "reference_area_ha": 23435.4,
+  "notice": "GIS quy hoạch chung đô thị, giữ nguyên màu và tọa độ gốc. Vùng hiển thị theo hợp các đường bao phân khu GIS Bến Cát; không phải xác nhận ranh đồ án quy hoạch chung. Hồ sơ 1573/2022 xác nhận tỷ lệ 1/10.000; chưa xác minh phiên bản GIS và các điều chỉnh cục bộ năm 2025."
+}

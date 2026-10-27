@@ -1,0 +1,57 @@
+{
+  "id": "tdm-general-gis",
+  "title": "Thủ Dầu Một · GIS quy hoạch chung đô thị",
+  "decision": "Hồ sơ đối chiếu: 1702/QĐ-UBND · 26/06/2012 · đến năm 2020",
+  "map_scale": null,
+  "captured_on": "2026-10-27",
+  "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+  "publication_url": "https://congbao.binhduong.gov.vn/noi-dung-van-ban/1320/download",
+  "source_request": "https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHC_HCM/MapServer/export?bbox=11862170.705379546%2C1222688.1863947671%2C11884158.384087244%2C1244675.8651024662&bboxSR=3857&imageSR=3857&size=1200%2C1200&format=png32&transparent=true&f=image",
+  "hashes": {
+    "export.json": "23eac0ed5e61ba13fd51eab32c4d4b67be2fb8bb938ff0097b5002cf6471f387",
+    "source.png": "23e618e34e2c48e0cbe1a3b78a90485647d1424b993c6330f574aa1f1f8eb4c5"
+  },
+  "display_masks": [
+    {
+      "path": "thu-dau-mot/general-plan/historic-city-display-mask.png",
+      "sha256": "d86c5c2ebf2a62e5398b5dedd9c7bfff16d397adf78fee1a014eabff89fc72ee",
+      "native_extent": {
+        "xmin": 11862170.705379546,
+        "ymin": 1222688.1863947671,
+        "xmax": 11884158.384087244,
+        "ymax": 1244675.8651024662,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      }
+    },
+    {
+      "path": "thu-dau-mot/general-plan/historic-ward-union-display-mask.png",
+      "sha256": "8ff3747f387741a2ba98095bef4d1c6754df5d3327469ec82c84282ef00bc101",
+      "native_extent": {
+        "xmin": 11862170.705379546,
+        "ymin": 1222688.1863947671,
+        "xmax": 11884158.384087244,
+        "ymax": 1244675.8651024662,
+        "spatialReference": {
+          "wkid": 102100,
+          "latestWkid": 3857
+        }
+      }
+    }
+  ],
+  "display_mask_method": "Union of historic city and 14 ward reference snapshots; display clipping only, not an official QHC boundary",
+  "reference_area_ha": 12074.679,
+  "display_geometry": {
+    "path": "static\\maps\\binh-duong\\legacy-districts.geojson",
+    "sha256": "4f87eb31382783540692ce503e3385861f05e9e05259c07d45861a131e1c82cf",
+    "feature_slug": "thu-dau-mot",
+    "source": "geoBoundaries",
+    "ward_union": {
+      "path": "static/maps/thu-dau-mot/legacy-14-wards.geojson",
+      "sha256": "f38450151de7e5621d612ae3968dee260353b02fd62e249e2220c46688bbaf29"
+    }
+  },
+  "notice": "GIS quy hoạch chung đô thị, giữ nguyên màu và tọa độ gốc. Đã mở rộng vùng hiển thị tham khảo để không cắt thiếu Phú Mỹ, Định Hòa, Hòa Phú và Phú Tân; vùng hiển thị không phải ranh đồ án được xác nhận. Chưa xác minh tỷ lệ và phiên bản pháp lý của lớp GIS. Hòa Phú và Phú Tân thuộc hồ sơ Khu liên hợp 1/5.000 (1066/QĐ-UBND ngày 26/04/2017)."
+}

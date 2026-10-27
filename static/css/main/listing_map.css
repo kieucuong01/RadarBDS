@@ -1136,6 +1136,10 @@ textarea.listing-map-admin-input {
   100% { background-position: -100% 0; }
 }
 
+body.listing-map-open .mobile-bottom-nav {
+  display: none !important;
+}
+
 @media (max-width: 1024px) {
   .listing-map-workspace {
     left: 0;
@@ -1154,7 +1158,6 @@ textarea.listing-map-admin-input {
 }
 
 @media (max-width: 760px) {
-  body.listing-map-open .mobile-bottom-nav,
   body.listing-map-open .floating-actions {
     display: none !important;
   }
@@ -1266,7 +1269,8 @@ textarea.listing-map-admin-input {
   }
 
   .listing-map-workspace-body > .listing-map-canvas {
-    position: absolute;
+    /* Leaflet can retain inline position:relative after a desktop mount. */
+    position: absolute !important;
     inset: 0;
   }
 

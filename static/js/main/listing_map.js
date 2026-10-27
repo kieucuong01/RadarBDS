@@ -48,6 +48,7 @@
     snapshot: null,
     workspace: null,
     map: null,
+    disposePlanningOverlay: null,
     markerLayer: null,
     markerLabelLayer: null,
     markerLabelGroups: [],
@@ -128,7 +129,11 @@
         attribution: (
           '&copy; <a href="https://www.openstreetmap.org/copyright">'
           + "OpenStreetMap</a> contributors"
-        )
+        ),
+        fallback: {
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+          attribution: "Tiles &copy; Esri, HERE, Garmin, USGS, Intermap, INCREMENT P, NRCan, Esri Japan, METI, Esri China (Hong Kong), Esri Korea, Esri (Thailand), NGCC, &copy; OpenStreetMap contributors, and the GIS User Community"
+        }
       },
       satellite: {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -147,6 +152,39 @@
       scrollWheelZoom: true,
       preferCanvas: true
     };
+  }
+
+  function bindStreetTileFallback(map, street, definition, notify) {
+    var switched = false;
+    var backupFailed = false;
+    var disposed = false;
+    var fallback = definition.fallback;
+    function onError(event) {
+      if (disposed || !map.hasLayer(street)) return;
+      var url = event.tile && (event.tile.currentSrc || event.tile.src || "");
+      var expected = switched ? fallback.url : definition.url;
+      if (!url || url.indexOf(expected.split("{")[0]) !== 0) return;
+      if (switched) {
+        if (!backupFailed) {
+          backupFailed = true;
+          notify("Bản đồ đường phố chưa tải được. Bạn có thể chọn Ảnh vệ tinh.");
+        }
+        return;
+      }
+      switched = true;
+      if (map.attributionControl) {
+        map.attributionControl.removeAttribution(street.options.attribution);
+        map.attributionControl.addAttribution(fallback.attribution);
+      }
+      street.options.attribution = fallback.attribution;
+      street.setUrl(fallback.url);
+      notify("Bản đồ đường phố đang dùng nguồn dự phòng Esri.");
+    }
+    street.on("tileerror", onError);
+    map.once("unload", function () {
+      disposed = true;
+      street.off("tileerror", onError);
+    });
   }
 
   function precisionCopy(value) {
@@ -1380,6 +1418,8 @@
   function initMap(L) {
     var canvas = element("listingMapCanvas");
     if (!canvas) throw new Error("Missing listing map canvas");
+    if (state.disposePlanningOverlay) state.disposePlanningOverlay();
+    state.disposePlanningOverlay = null;
     if (state.map) {
       clearUserLocation();
       state.map.remove();
@@ -1393,6 +1433,10 @@
         definitions.satellite
       )
     };
+    var currentMap = state.map;
+    bindStreetTileFallback(currentMap, state.baseLayers.street, definitions.street, function (message) {
+      if (state.map === currentMap && state.activeBaseLayer === "street") setStatus(message, false);
+    });
     state.activeBaseLayer = "street";
     state.baseLayers.street.addTo(state.map);
     L.control.layers({
@@ -1428,6 +1472,9 @@
     });
     state.map.on("moveend", scheduleMarkerLabelRefresh);
     state.map.setView([11.02, 106.63], 11);
+    if ((root.RADAR_PLANNING_PILOT || root.RADAR_PLANNING_CONFIG) && root.RadarPlanningOverlay) {
+      state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root);
+    }
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize();
     }, 0);
@@ -3164,6 +3211,8 @@
     if (state.markerLayer) state.markerLayer.clearLayers();
     clearUserLocation();
     closePreview();
+    if (state.disposePlanningOverlay) state.disposePlanningOverlay();
+    state.disposePlanningOverlay = null;
     if (state.map) state.map.remove();
     state.map = null;
     state.markerLayer = null;
@@ -3342,6 +3391,7 @@
     normalizeBaseLayer: normalizeBaseLayer,
     cardDateText: cardDateText,
     mapBaseLayers: mapBaseLayers,
+    bindStreetTileFallback: bindStreetTileFallback,
     mapOptions: mapOptions,
     safeTrackingContext: safeTrackingContext,
     precisionCopy: precisionCopy,
