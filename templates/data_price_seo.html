@@ -19,7 +19,13 @@
 <main id="main-content" class="price-wrap" data-snapshot-id="{{ snapshot.snapshot_id }}" data-snapshot-sha256="{{ snapshot.sha256 }}">
   <nav aria-label="Đường dẫn"><a href="/">Radar BDS</a> / <a href="/binh-duong">Nhà đất Bình Dương</a> / Giá rao đất {{ scope.name }}</nav>
   <h1>Giá rao đất nền {{ scope.name }}</h1>
-  <p>Giá rao đất nền {{ scope.name }} dưới đây được tính từ tin bán có lần ghi nhận gần nhất trong khoảng {{ snapshot.period_start }} đến {{ snapshot.period_end }}. Chỉ dùng mẫu đã qua kiểm tra giá, diện tích và trùng tin đã biết. Đây là dữ liệu tháng đang chạy (MTD), không phải giá giao dịch hay bảng giá đất Nhà nước.</p>
+  {% if retained %}
+  <aside class="price-metric" aria-label="Kỳ dữ liệu đang hiển thị" data-current-snapshot-sha256="{{ current_snapshot.sha256 }}">
+    <h2>Tháng mới chưa đủ 15 mẫu</h2>
+    <p>Kỳ {{ current_snapshot.period_start }} – {{ current_snapshot.period_end }} tại {{ scope.name }} mới có n = {{ current_snapshot.scopes[slug].sample_count }} bản ghi hợp lệ; chưa hiển thị giá hoặc tỷ lệ thay đổi cho kỳ này. Trang giữ số liệu của tháng đã kết thúc, ghi nhận thực tế đến {{ snapshot.period_end }}. Không dùng số tháng trước làm giá tháng mới.</p>
+  </aside>
+  {% endif %}
+  <p>Giá rao đất nền {{ scope.name }} dưới đây được tính từ tin bán có lần ghi nhận gần nhất trong khoảng {{ snapshot.period_start }} đến {{ snapshot.period_end }}. Chỉ dùng mẫu đã qua kiểm tra giá, diện tích và trùng tin đã biết. {% if retained %}Đây là bản dữ liệu đã lưu vào ngày cuối của tháng đã kết thúc{% else %}Đây là dữ liệu tháng đang chạy (MTD){% endif %}, không phải giá giao dịch hay bảng giá đất Nhà nước.</p>
   <p class="price-muted">Cập nhật dữ liệu: {{ snapshot.generated_at }} · Múi giờ: {{ snapshot.timezone }}. Phạm vi địa danh theo phân khu dữ liệu Radar, không phải xác nhận địa giới hành chính hiện hành.</p>
   <h2>Mẫu giá và tin còn hoạt động</h2>
   <p><strong>{{ scope.sample_count }} bản ghi đủ điều kiện trong tháng</strong> sau loại trùng đã biết; không cam kết mỗi bản ghi là một bất động sản khác nhau giữa các nguồn.</p>

@@ -145,11 +145,32 @@ public-card source/privacy. Rollback only this release's explicit source paths
 from the scoped backup/verified previous commit; never reset the dirty tree.
 Leave immutable packets intact, restore only a prior latest pointer if needed.
 
+## New-month retention (read-side only)
+
+When the latest monthly cohort has fewer than 15 samples, `page_snapshots()`
+may retain that same scope's eligible packet actually captured on the previous
+calendar month's final day. It checks the real generation date, first/last
+period dates and existing contract/hash. It never promotes a partial month,
+an older month, a small prior cohort, or a parent's price into a ward price.
+If there are multiple endpoint captures, the latest eligible capture wins
+deterministically per scope. Missing endpoint evidence keeps the existing
+small-sample/parent/noindex behavior. Corrupt selected inputs fail closed.
+
+SSR explicitly separates the latest new-month n/period from retained facts;
+title, metric n, active count, histogram, history, source counts and primary
+snapshot/hash remain bound to the unchanged retained packet. Sitemap `lastmod`
+stays that packet's real date, not the new month's date. The response also
+exposes `X-Radar-Price-Current-Snapshot` for the latest cohort. Public cards
+still use the fresh guest feed. As soon as the latest scope reaches n>=15,
+current facts take precedence without rewriting either frozen packet.
+
+The existing owner must run the daily refresh on the month's actual last day
+to accumulate that endpoint. This is not a reconstruction of missed months,
+a new scheduler, or the separate covered-warehouse monthly report publisher.
+No future endpoint exists before it is actually captured.
+
 Before extending to further scopes: extend tests and registry deliberately;
 retain the 20 manifest candidates and 12 intent copy/filter specs. Historical
 packets are frozen. Future registry/contract migrations must not silently
-invalidate or rewrite old snapshots. Retaining eligible closed-month facts
-when a mature ward has insufficient new-month samples is a required follow-up
-before the first month rollover; it is not yet implemented in this first MTD
-slice. Google Inspection receipts belong in the owner manifest; HTTP/sitemap
-success is not index proof.
+invalidate or rewrite old snapshots. Google Inspection receipts belong in
+the owner manifest; HTTP/sitemap success is not index proof.

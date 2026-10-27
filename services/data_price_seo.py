@@ -260,13 +260,44 @@ def load_latest(root=None):
     return snapshot
 
 
+def page_snapshots(root=None):
+    """Select per-scope facts without rewriting packets or relabeling partial MTD.
+
+    Only an actually captured previous calendar month-end can bridge a small
+    new-month cohort. An absent endpoint cannot be reconstructed from today's
+    prices or a partial prior-month snapshot. Current eligible facts win.
+    """
+    root = Path(root) if root is not None else snapshot_root()
+    current = load_latest(root)
+    selected = {slug:current for slug in current['scopes']}
+    pending = {slug for slug,scope in current['scopes'].items() if not scope['eligible']}
+    if not pending:
+        return current, selected
+    endpoint = date.fromisoformat(current['period_start']) - timedelta(days=1)
+    previous = []
+    for path in root.glob(endpoint.isoformat()+'-*.json'):
+        old = validate_snapshot(json.loads(path.read_text()))
+        if (old['data_as_of'] == endpoint.isoformat() == old['period_end'] and
+                old['period_start'] == endpoint.replace(day=1).isoformat() and
+                observed_date(old['generated_at']) == endpoint):
+            previous.append(old)
+    # Deterministic latest capture on the real endpoint; only own eligible
+    # cohorts qualify. Never borrow a neighbor/parent's sample count or price.
+    for old in sorted(previous,key=lambda p:(p['generated_at'],p['snapshot_id']),reverse=True):
+        for slug in list(pending):
+            if old['scopes'].get(slug,{}).get('eligible'):
+                selected[slug] = old
+                pending.remove(slug)
+    return current, selected
+
+
 def sitemap_entries(root=None):
     try:
-        snapshot = load_latest(root)
+        _, selected = page_snapshots(root)
     except (OSError,ValueError,KeyError,TypeError):
         return []
     return [dict(path=f'/gia-dat/{slug}',updated_at=snapshot['data_as_of'])
-            for slug,scope in snapshot['scopes'].items() if scope['eligible']]
+            for slug,snapshot in selected.items() if snapshot['scopes'][slug]['eligible']]
 
 
 def load_public_cards(slug):
