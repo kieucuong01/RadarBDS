@@ -1,0 +1,27 @@
+{
+  "release": "a58ff8deda83ba61",
+  "files": {
+    "parcels.sqlite": {
+      "sha256": "d76562765d8395ad73552bdc5a74539a2d17fc8d09f9f8ce1555c3e942d37d90",
+      "bytes": 965521408
+    },
+    "metadata/partition.json": {
+      "sha256": "cda227f133578539a80f6c38fba94396d65e23ff69f687549cdc562b9c54bd8d",
+      "bytes": 5866
+    },
+    "metadata/urban_general.json": {
+      "sha256": "163b1cff0e081e5320811315e84ca04a09e6ef804c56c2e78db86aaffab362fa",
+      "bytes": 5574
+    },
+    "metadata/partition_supplement.json": {
+      "sha256": "a734fd9657a45c6b92e0386945e585ae170d9348a03c64459a860ec90774061a",
+      "bytes": 4815
+    },
+    "metadata/urban_general_supplement.json": {
+      "sha256": "be27ffa0a713653c37ff6cdfa5447791a812f26d48877869cc8be6a515cf124c",
+      "bytes": 5319
+    }
+  },
+  "areas": 91,
+  "count": 1142040
+}

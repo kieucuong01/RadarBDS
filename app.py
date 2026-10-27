@@ -221,6 +221,9 @@ app.config['PLANNING_OVERLAY_CONFIG'] = (
     load_planning_release(Path(__file__).resolve().parent)
     if os.getenv('RADAR_PLANNING_MAP_ENABLED', '1').lower() not in {'0','false','off','no'} else None
 )
+if os.getenv('RADAR_PLANNING_MAP_ENABLED','1').lower() not in {'0','false','off','no'}:
+    from services.planning_live import install_live as install_live_planning
+    install_live_planning(app,Path(__file__).resolve().parent)
 
 
 @app.context_processor
@@ -4741,6 +4744,10 @@ _LISTING_MAP_SENSITIVE_KEYS = frozenset({
 
 
 def _listing_map_filters(req, mode: str) -> MapFilters:
+    if 'bbox' in req.args:
+        from services.listing_map_viewport import parse_bbox
+        return MapFilters(bbox=parse_bbox(req.args['bbox']), date_range='3m',
+                          sources=tuple(normalize_sources_for_tier([], current_tier())))
     (
         active_city,
         wards,
@@ -5580,11 +5587,18 @@ def api_map_listings():
     if mode not in {"signals", "all"}:
         return jsonify({"error": "invalid_mode"}), 400
     tier = current_tier()
+    try:
+        filters = _listing_map_filters(request, mode)
+    except ValueError:
+        return jsonify(error='invalid_bbox'), 400
     payload = load_listing_map_summary(
         mode=mode,
         tier=tier,
-        filters=_listing_map_filters(request, mode),
+        filters=filters,
     )
+    if filters.bbox is not None and request.args.get('include_recent') == '1':
+        payload['recent'] = load_listing_map_items(mode=mode, tier=tier, filters=filters,
+                                                  location_key='', page=1, limit=20)
     return jsonify(_safe_listing_map_payload(payload, tier))
 
 
@@ -5598,9 +5612,9 @@ def api_map_listing_items():
         return jsonify({"error": "invalid_mode"}), 400
     location_key = (request.args.get("location_key") or "").strip()
     if (
-        not location_key
+        (not location_key and 'bbox' not in request.args)
         or len(location_key) > 240
-        or not _LISTING_MAP_LOCATION_KEY_RE.fullmatch(location_key)
+        or (location_key and not _LISTING_MAP_LOCATION_KEY_RE.fullmatch(location_key))
     ):
         return jsonify({"error": "invalid_location_key"}), 400
     try:
@@ -5611,15 +5625,26 @@ def api_map_listing_items():
     if page < 1 or limit < 1:
         return jsonify({"error": "invalid_pagination"}), 400
     tier = current_tier()
+    try:
+        filters = _listing_map_filters(request, mode)
+    except ValueError:
+        return jsonify(error='invalid_bbox'), 400
     payload = load_listing_map_items(
         mode=mode,
         tier=tier,
-        filters=_listing_map_filters(request, mode),
+        filters=filters,
         location_key=location_key,
         page=page,
         limit=min(limit, 50),
     )
     return jsonify(_safe_listing_map_payload(payload, tier))
+
+
+def api_map_initial_bounds():
+    from services.listing_map_viewport import initial_bounds
+    cities = request.args.getlist('city')[:10]
+    wards = request.args.getlist('ward')[:100]
+    return jsonify(bounds=initial_bounds(cities, wards))
 
 def listing_detail(listing_id):
     db_path = _db_handle()

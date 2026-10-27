@@ -310,7 +310,7 @@ def test_listing_map_refreshes_existing_marker_radii_after_zoom():
     assert "state.map.getZoom()" in refresh_source
     assert "layer.setRadius(markerRadius(layer._radarPrecision, zoom))" in refresh_source
 
-    init_source = script.split("function initMap(L)", 1)[1].split(
+    init_source = script.split("function initMap(L, openingBounds)", 1)[1].split(
         "function clearAdminEditLayers", 1
     )[0]
     assert 'state.map.on("zoomend", function ()' in init_source
@@ -426,11 +426,11 @@ def test_listing_map_workspace_body_gets_stable_remaining_height():
     assert "grid-template-rows: auto auto auto minmax(0, 1fr);" not in styles
 
 
-def test_desktop_map_workspace_preserves_filter_sidebar_and_newest_deal_rail():
+def test_desktop_map_exploration_hides_dashboard_filters_and_keeps_listing_rail():
     styles = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
 
     assert re.search(
-        r"\.listing-map-workspace\s*\{[^}]*left:\s*280px;",
+        r"\.listing-map-workspace\s*\{[^}]*left:\s*0;",
         styles,
         re.S,
     )
@@ -442,6 +442,7 @@ def test_desktop_map_workspace_preserves_filter_sidebar_and_newest_deal_rail():
     )
     assert ".listing-map-panel-tabs" in styles
     assert ".listing-map-recent" in styles
+    assert re.search(r'body\.listing-map-open \.sidebar\s*\{[^}]*display:\s*none;',styles,re.S)
 
 
 def test_mobile_map_workspace_uses_filter_button_and_newest_deal_bottom_sheet():

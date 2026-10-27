@@ -42,10 +42,17 @@
   var bound = false;
   var summarySequence = 0;
   var itemSequence = 0;
-  var recentSequence = 0;
+  var mapLoadSequence = 0;
   var state = {
     open: false,
     snapshot: null,
+    entrySnapshot: null,
+    viewSnapshot: null,
+    initialBounds: null,
+    initialController: null,
+    viewportTimer: null,
+    loadedViewportKey: null,
+    pendingViewportKey: null,
     workspace: null,
     map: null,
     disposePlanningOverlay: null,
@@ -57,7 +64,6 @@
     activeBaseLayer: "street",
     summaryController: null,
     itemController: null,
-    recentController: null,
     previousFocus: null,
     previousTab: "signals",
     scrollElement: null,
@@ -122,10 +128,12 @@
   }
 
   function mapBaseLayers() {
+    // GIS can zoom past the source limit; retain level-19 base tiles underneath it.
     return {
       street: {
         url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        maxZoom: 19,
+        maxNativeZoom: 19,
+        maxZoom: 23,
         attribution: (
           '&copy; <a href="https://www.openstreetmap.org/copyright">'
           + "OpenStreetMap</a> contributors"
@@ -137,7 +145,8 @@
       },
       satellite: {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        maxZoom: 19,
+        maxNativeZoom: 19,
+        maxZoom: 23,
         attribution: (
           "Tiles &copy; Esri &mdash; Source: Esri, Maxar, "
           + "Earthstar Geographics, and the GIS User Community"
@@ -358,6 +367,64 @@
     params.delete("limit");
     params.delete("location_key");
     return "/api/map-listings?" + params.toString();
+  }
+
+  function initialBoundsUrl(snapshot) {
+    var safe = normalizedSnapshot(snapshot), params = new URLSearchParams();
+    if (!safe) return null;
+    var source = new URLSearchParams(safe.query);
+    ['city','ward'].forEach(function (key) {
+      source.getAll(key).forEach(function (value) { params.append(key,value); });
+    });
+    return '/api/map-initial-bounds?' + params.toString();
+  }
+
+  function viewportSnapshot(snapshot, bounds) {
+    var safe = normalizedSnapshot(snapshot);
+    if (!safe || !Array.isArray(bounds) || bounds.length !== 4 || !bounds.every(Number.isFinite)) return null;
+    var b = [Math.max(-180, Math.floor(bounds[0]*10000)/10000), Math.max(-90, Math.floor(bounds[1]*10000)/10000),
+      Math.min(180, Math.ceil(bounds[2]*10000)/10000), Math.min(90, Math.ceil(bounds[3]*10000)/10000)];
+    if (b[0] >= b[2] || b[1] >= b[3]) return null;
+    return {mode: safe.mode, query: new URLSearchParams({bbox: b.join(',')}).toString()};
+  }
+
+  function currentViewSnapshot() {
+    if (!state.map) return null;
+    var b = state.map.getBounds();
+    return viewportSnapshot(state.snapshot, [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
+  }
+
+  function renderMapScopeControls() {
+    var container = element('listingMapFilterSummary');
+    if (!container) return;
+    clearElement(container);
+    var select = create('select'); select.setAttribute('aria-label','Loại tin trên bản đồ');
+    [['all','Tin rao'],['signals','Săn Deal']].forEach(function (item) {
+      var option = create('option','',item[1]); option.value = item[0]; select.appendChild(option);
+    });
+    select.value = state.snapshot.mode;
+    select.addEventListener('change', function () {
+      state.snapshot = {mode: select.value, query: ''};
+      state.loadedViewportKey = null; state.recentPayload = null;
+      setPanelView('recent-loading'); requestSummary();
+    });
+    container.appendChild(select);
+    container.appendChild(create('span','','Trong vùng nhìn · 3 tháng gần đây'));
+    var back = create('button','','Về vùng đã lọc'); back.type = 'button';
+    back.addEventListener('click', function () {
+      frameOpeningArea(root.L);
+    });
+    container.appendChild(back);
+  }
+
+  function frameOpeningArea(L) {
+    if (!state.map || !state.initialBounds || !L) return;
+    var bounds = L.latLngBounds(state.initialBounds);
+    var zoom = Math.min(16, state.map.getBoundsZoom(bounds, false, [50,50]));
+    // A portrait phone should open near a selected ward, rather than shrinking it to show a whole city.
+    var wards = new URLSearchParams(state.entrySnapshot && state.entrySnapshot.query || '').getAll('ward').filter(Boolean);
+    if (wards.length === 1) zoom = Math.max(14,zoom);
+    state.map.setView(bounds.getCenter(),zoom,{animate:false});
   }
 
   function buildItemsUrl(snapshot, locationKey, page, limit) {
@@ -1415,7 +1482,7 @@
     state.mapActionControl.addTo(state.map);
   }
 
-  function initMap(L) {
+  function initMap(L, openingBounds) {
     var canvas = element("listingMapCanvas");
     if (!canvas) throw new Error("Missing listing map canvas");
     if (state.disposePlanningOverlay) state.disposePlanningOverlay();
@@ -1471,7 +1538,21 @@
       scheduleMarkerLabelRefresh();
     });
     state.map.on("moveend", scheduleMarkerLabelRefresh);
-    state.map.setView([11.02, 106.63], 11);
+    if (openingBounds) frameOpeningArea(L);
+    else state.map.setView([11.02, 106.63], 11);
+    state.map.on('movestart', function () {
+      if (state.summaryController) state.summaryController.abort();
+      ++summarySequence; state.pendingViewportKey = null;
+    });
+    state.map.on('moveend', function () {
+      root.clearTimeout(state.viewportTimer);
+      state.viewportTimer = root.setTimeout(function () {
+        if (!state.open || state.adminEdit) return;
+        var view = currentViewSnapshot();
+        var key = view && buildSummaryUrl(view);
+        if (key && key !== state.loadedViewportKey && key !== state.pendingViewportKey) requestSummary();
+      },350);
+    });
     if ((root.RADAR_PLANNING_PILOT || root.RADAR_PLANNING_CONFIG) && root.RadarPlanningOverlay) {
       state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root);
     }
@@ -1956,7 +2037,7 @@
     var model = panelTabModel(viewKind);
     var header = create("div", "listing-map-panel-heading");
     var titleWrap = create("div", "listing-map-panel-title");
-    titleWrap.appendChild(create("h3", "", model.title));
+    titleWrap.appendChild(create("h3", "", state.viewSnapshot && model.active === 'recent' ? 'Tin mới trong vùng nhìn' : model.title));
     if (model.active === "recent") {
       var unmapped = safeCount(
         state.summary && state.summary.summary
@@ -2014,6 +2095,7 @@
         image.src = item.thumbnail;
         image.alt = "";
         image.loading = "lazy";
+        image.addEventListener('error', function () { image.remove(); });
         card.appendChild(image);
       }
       var content = create("span", "listing-map-item-content");
@@ -2049,7 +2131,7 @@
       list.appendChild(create(
         "p",
         "listing-map-empty",
-        "Chưa có deal mới phù hợp với bộ lọc hiện tại."
+        state.viewSnapshot ? 'Chưa có tin đủ vị trí trong vùng nhìn. Thử kéo hoặc thu nhỏ bản đồ.' : 'Chưa có deal mới phù hợp với bộ lọc hiện tại.'
       ));
     }
     shell.appendChild(list);
@@ -2356,6 +2438,11 @@
 
   function setSummaryStatus(payload) {
     var summary = (payload && payload.summary) || {};
+    if (payload && payload.viewport) {
+      setStatus(safeCount(summary.mapped) + ' tin trong vùng nhìn (3 tháng) · ' + (payload.locations || []).length + ' vị trí'
+        + (payload.truncated ? '. Đang giới hạn 1.000 vị trí; phóng to để xem chi tiết.' : '.'), false);
+      return;
+    }
     setStatus(
       "Đã định vị " + safeCount(summary.mapped) + "/"
         + safeCount(summary.total) + " tin; "
@@ -2955,7 +3042,7 @@
     state.itemController = new AbortController();
     var controller = state.itemController;
     var url = buildItemsUrl(
-      state.snapshot,
+      state.viewSnapshot || state.snapshot,
       group.location_key,
       1,
       20
@@ -3015,56 +3102,43 @@
   }
 
   function requestRecent() {
-    if (!state.open || !state.snapshot) return Promise.resolve();
-    recentSequence += 1;
-    var sequence = recentSequence;
-    if (state.recentController) state.recentController.abort();
-    state.recentController = new AbortController();
-    var controller = state.recentController;
-    if (!state.recentPayload) setPanelView("recent-loading");
-    return fetchJson(buildRecentUrl(state.snapshot, 1, 20), controller)
-      .then(function (payload) {
-        if (!state.open || sequence !== recentSequence) return;
-        state.recentPayload = payload || {};
-        if (
-          state.panelView
-          && String(state.panelView.kind || "").indexOf("recent") === 0
-        ) {
-          setPanelView("recent", null, state.recentPayload);
-        }
-        return payload;
-      })
-      .catch(function (error) {
-        if (error && error.name === "AbortError") return;
-        if (!state.open || sequence !== recentSequence) return;
-        if (
-          state.panelView
-          && String(state.panelView.kind || "").indexOf("recent") === 0
-        ) {
-          setPanelView("recent-error");
-        }
-        return undefined;
-      });
+    return state.open && state.map ? requestSummary() : Promise.resolve();
   }
 
   function requestSummary(options) {
     options = options || {};
     if (!state.open || !state.snapshot) return Promise.resolve();
+    var view = currentViewSnapshot();
+    if (!view) return Promise.resolve();
+    var viewKey = buildSummaryUrl(view);
+    state.viewSnapshot = view;
     summarySequence += 1;
     var sequence = summarySequence;
     if (state.summaryController) state.summaryController.abort();
     state.summaryController = new AbortController();
     var controller = state.summaryController;
-    setStatus("Đang tải các vị trí phù hợp...", true);
-    return fetchJson(buildSummaryUrl(state.snapshot), controller)
+    state.pendingViewportKey = viewKey;
+    setStatus('Đang cập nhật tin trong vùng nhìn…', true);
+    return fetchJson(viewKey + '&include_recent=1', controller)
       .then(function (payload) {
         if (!state.open || sequence !== summarySequence) return;
-        renderSummary(payload, options);
+        state.loadedViewportKey = viewKey; state.pendingViewportKey = null;
+        if (payload.recent) {
+          state.recentPayload = {};
+          state.recentPayload[state.snapshot.mode === 'all' ? 'listings' : 'signals'] = payload.recent.items || [];
+          if (!state.adminEdit) {
+            ++itemSequence; if (state.itemController) state.itemController.abort();
+            state.selectedGroup = null;
+            state.panelView = {kind:'recent',group:null,payload:state.recentPayload};
+          }
+        }
+        renderSummary(payload, {preserveViewport:true});
         return payload;
       })
       .catch(function (error) {
         if (error && error.name === "AbortError") return;
         if (!state.open || sequence !== summarySequence) return;
+        state.pendingViewportKey = null;
         setStatus("Không tải được dữ liệu vị trí.", false);
         setPanelView("summary-error");
       });
@@ -3086,12 +3160,16 @@
   }
 
   function startMapLoad(safe) {
-    return loadLeaflet().then(function (L) {
-      if (!state.open) return;
-      initMap(L);
-      return Promise.all([requestSummary(), requestRecent()]);
+    var loadSequence = ++mapLoadSequence;
+    state.initialController = new AbortController();
+    return Promise.all([loadLeaflet(), fetchJson(initialBoundsUrl(safe), state.initialController).catch(function () {return {};})]).then(function (result) {
+      if (!state.open || loadSequence !== mapLoadSequence) return;
+      state.initialBounds = result[1].bounds || null;
+      initMap(result[0], state.initialBounds);
+      renderMapScopeControls();
+      return requestSummary();
     }).catch(function () {
-      if (!state.open) return;
+      if (!state.open || loadSequence !== mapLoadSequence) return;
       setStatus("Không thể tải thư viện bản đồ.", false);
       setPanelView("library-error");
       return undefined;
@@ -3111,7 +3189,9 @@
     captureDashboardState();
     state.open = true;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
-    state.snapshot = safe;
+    state.entrySnapshot = safe;
+    state.snapshot = {mode:'all',query:''};
+    state.viewSnapshot = null; state.loadedViewportKey = null; state.pendingViewportKey = null;
     state.workspace = workspace;
     state.summary = null;
     state.recentPayload = null;
@@ -3162,20 +3242,13 @@
     var safe = normalizedSnapshot(snapshot);
     if (!state.open || !safe) return Promise.resolve();
     closePreview();
-    state.snapshot = safe;
-    state.summary = null;
-    state.recentPayload = null;
-    state.selectedGroup = null;
-    state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
+    state.entrySnapshot = safe;
     state.dashboardSyncNeeded = state.dashboardSyncNeeded
       || Boolean(options.markDashboardDirty);
-    var filterSummary = element("listingMapFilterSummary");
-    if (filterSummary) filterSummary.textContent = filterSummaryText(safe);
-    setPanelView("recent-loading");
-    return Promise.all([
-      requestSummary({ preserveViewport: false }),
-      requestRecent()
-    ]);
+    var controller = new AbortController();
+    return fetchJson(initialBoundsUrl(safe), controller).then(function (payload) {
+      if (state.open && state.entrySnapshot === safe) state.initialBounds = payload.bounds;
+    }).catch(function () {});
   }
 
   function isOpen() {
@@ -3192,15 +3265,15 @@
     var shouldRefreshDashboard = state.dashboardSyncNeeded
       && reason !== "replace";
     state.open = false;
+    ++mapLoadSequence;
     summarySequence += 1;
     itemSequence += 1;
-    recentSequence += 1;
     if (state.summaryController) state.summaryController.abort();
+    if (state.initialController) state.initialController.abort();
+    root.clearTimeout(state.viewportTimer);
     if (state.itemController) state.itemController.abort();
-    if (state.recentController) state.recentController.abort();
     state.summaryController = null;
     state.itemController = null;
-    state.recentController = null;
     cancelDirectoryRender();
     cancelMarkerRender();
     state.adminEditToken += 1;
@@ -3272,6 +3345,8 @@
     state.historyPushed = false;
     state.initialSharedOpen = false;
     state.snapshot = null;
+    state.entrySnapshot = null; state.viewSnapshot = null;
+    state.loadedViewportKey = null; state.pendingViewportKey = null;
     state.summary = null;
     state.recentPayload = null;
     state.selectedGroup = null;
@@ -3383,6 +3458,8 @@
   return {
     normalizeMode: normalizeMode,
     buildSummaryUrl: buildSummaryUrl,
+    viewportSnapshot: viewportSnapshot,
+    initialBoundsUrl: initialBoundsUrl,
     buildItemsUrl: buildItemsUrl,
     buildRecentUrl: buildRecentUrl,
     buildMapShareUrl: buildMapShareUrl,

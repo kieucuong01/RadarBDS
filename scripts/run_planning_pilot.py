@@ -48,6 +48,7 @@ def install_pilot(app, directory=None):
     @app.get('/local-planning/catalog.json')
     def planning_catalog():
         result = []
+        native = app.extensions.get('planning_native_layers', [])
         for layer in catalog:
             item = {k: layer[k] for k in ('id', 'name', 'status', 'decision', 'source_url')}
             item['city'] = layer.get('city', 'Bến Cát')
@@ -61,6 +62,9 @@ def install_pilot(app, directory=None):
             elif layer['status'] == 'document_only':
                 item['preview_url'] = '/local-planning/' + layer['id'] + '/preview.webp'
             result.append(item)
+            if native and item.get('source') == 'gis':
+                item['inspection_only'] = True
+        result.extend(native)
         return jsonify(layers=result)
 
     @app.get('/local-planning/<layer_id>/<name>')
@@ -124,4 +128,14 @@ if __name__ == '__main__':
     import app as app_module
 
     install_pilot(app_module.app)
+    from services.planning_tiles import install_tiles
+    install_tiles(app_module.app, ROOT / '.local/planning-gis-tiles')
+    parcel_directory = ROOT / '.local/planning-parcels-tan-an'
+    parcel_catalog = ROOT / '.local/planning-parcels/parcels.sqlite'
+    if parcel_catalog.is_file():
+        from services.planning_parcel_catalog import install_catalog
+        install_catalog(app_module.app, parcel_catalog)
+    elif (parcel_directory / 'parcels.geojson').is_file():
+        from services.planning_parcels import install_parcel_pilot
+        install_parcel_pilot(app_module.app, parcel_directory)
     app_module.app.run(host='127.0.0.1', port=5055, debug=False, use_reloader=False)

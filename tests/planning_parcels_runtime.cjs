@@ -1,0 +1,83 @@
+const assert = require('node:assert/strict');
+const api = require('../static/js/main/planning_parcels.js');
+const nodes = [], pending = [], layers = new Set(), events = {};
+const doc = {querySelector:()=>null, createElement(tag) {
+  const el = {tag,style:{},attributes:{},children:[],events:{},textContent:'',
+    appendChild(child){this.children.push(child);return child;},
+    replaceChildren(){this.children=[];},remove(){},
+    setAttribute(k,v){this.attributes[k]=v;},addEventListener(k,fn){this.events[k]=fn;}};
+  nodes.push(el);return el;
+}};
+let west=106.61;
+const map = {createPane:()=>({style:{}}),on(k,f){events[k]=f;},off(k){delete events[k];},
+  getContainer:()=>({appendChild(){}}),
+  getZoom:()=>18,getCenter:()=>({lat:11.02,lng:106.65}),
+  getBounds:()=>({getWest:()=>west,getEast:()=>west+.004,getSouth:()=>11.02,getNorth:()=>11.024,intersects:()=>true}),
+  removeLayer(l){layers.delete(l);},fitBounds(){},setView(){}};
+const L = {DomEvent:{disableClickPropagation(){},disableScrollPropagation(){},stopPropagation(){}},
+  control:()=>({addTo(){},remove(){}}),geoJSON(data,options){
+    const layer={data,options,addTo(){layers.add(this);return this;},getBounds:()=>[[11.02,106.65],[11.021,106.651]]};
+    if(options && options.onEachFeature) for(const f of data.features||[]) {
+      const polygon={bindTooltip(){},on(k,fn){this[k]=fn;}};
+      options.onEachFeature(f,polygon);layer.polygon=polygon;
+    }
+    return layer;
+  }};
+const env={document:doc,AbortController,matchMedia:()=>({matches:false}),setTimeout:(f)=>{env.tick=f;return 1;},clearTimeout(){},
+  fetch(url,options){return new Promise(resolve=>pending.push({url,options,resolve}));}};
+const flush=()=>new Promise(r=>setImmediate(r));
+const deliver=(i,data)=>pending[i].resolve({ok:true,json:async()=>data});
+const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
+  properties:{id:900,area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',sheet:'1',parcel:'2',area:100}};
+(async()=>{
+  const dispose=api.mount(map,L,env);
+  deliver(0,{min_zoom:17,count:2,excluded_count:0,areas:[
+    {area_id:'25765',ward:'Tân An',city:'Thủ Dầu Một',bounds:[[11.02,106.61],[11.03,106.62]],sample_id:33013},
+    {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900}]});
+  await flush();
+  assert(pending[1].url.includes('viewport.json?bbox='),'All-ward config must load the visible area');
+  deliver(1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
+  const old=[...layers][0];
+  west=106.65;events.moveend();env.tick();
+  assert(layers.has(old),'Keep current geometry while the next view loads');
+  deliver(2,{type:'FeatureCollection',features:[feature],matched:1});await flush();
+  assert(!layers.has(old));
+  [...layers][0].polygon.click({});
+  assert(pending[3].url.includes('/900/planning.json?area=25813'));
+  assert(nodes.some(n=>n.textContent==='Mỹ Phước · Bến Cát (đơn vị cũ)'));
+  deliver(3,{parcel:feature.properties,plans:[],queried_at:'2026-10-27'});await flush();
+  const field=name=>nodes.find(n=>n.attributes['aria-label']===name);
+  const close=field('Đóng thông tin thửa');
+  assert(close,'Parcel information needs an explicit close control');
+  close.events.click();
+  assert.equal(layers.size,1,'Closing parcel details keeps the visible boundaries');
+  field('Phường tra tờ thửa').value='25813';
+  field('Số tờ bản đồ').value='1';field('Số thửa đất').value='2';
+  field('Tra tờ thửa').events.submit({preventDefault(){}});
+  assert(pending[4].url.includes('search.json?area=25813&sheet=1&parcel=2'));
+  deliver(4,{type:'FeatureCollection',features:[feature],matched:1,truncated:false});await flush();
+  assert(pending[5].url.includes('/900/planning.json?area=25813'));
+  close.events.click();
+  deliver(5,{parcel:feature.properties,plans:[{type:'LATE RESULT'}],queried_at:'2026-10-27'});await flush();
+  assert(!nodes.some(n=>n.textContent==='LATE RESULT'),'Closed details must ignore late responses');
+  field('Tra tờ thửa').events.submit({preventDefault(){}});
+  const beforePan=pending.length;events.movestart();
+  deliver(beforePan-1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
+  assert.equal(pending.length,beforePan,'A late search must not move the map after a manual pan');
+  const toggle=nodes.find(n=>n.attributes['aria-label']==='Bật ranh thửa đất');
+  toggle.checked=false;toggle.events.change();assert.equal(layers.size,0);
+  dispose();assert.equal(Object.keys(events).length,0);
+  env.RADAR_PLANNING_CONFIG={parcelBase:'/api/planning/parcels'};
+  const beforeProduction=pending.length;
+  const disposeProduction=api.mount(map,L,env);
+  assert.equal(pending[beforeProduction].url,'/api/planning/parcels/config.json');
+  deliver(beforeProduction,{min_zoom:17,count:1,excluded_count:0,areas:[
+    {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900}]});
+  await flush();
+  assert(pending[beforeProduction+1].url.startsWith('/api/planning/parcels/viewport.json?bbox='));
+  deliver(beforeProduction+1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
+  [...layers][0].polygon.click({});
+  assert(pending[beforeProduction+2].url.startsWith('/api/planning/parcels/900/planning.json'));
+  disposeProduction();
+  console.log('Parcel viewport, multi-area selection, toggle and cleanup passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});

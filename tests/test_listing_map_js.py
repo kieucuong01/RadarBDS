@@ -51,6 +51,17 @@ def test_mode_base_layer_and_precision_contracts():
     assert _run_node("mapApi.normalizeAccuracyRadius(100000)") == 20000
 
 
+def test_viewport_queries_discard_dashboard_filters_and_keep_only_map_mode():
+    snapshot = "{mode:'all',query:'city=BẾN+CÁT&ward=Mỹ+Phước&price_max=1&q=DX43&date_range=1w'}"
+    result = _run_node(f"mapApi.viewportSnapshot({snapshot},[106.60001,11.01001,106.63999,11.04999])")
+    assert result['mode'] == 'all'
+    from urllib.parse import parse_qs
+    assert parse_qs(result['query']) == {'bbox': ['106.6,11.01,106.64,11.05']}
+    assert _run_node(f"mapApi.viewportSnapshot({snapshot},[1,2,0,3])") is None
+    assert _run_node(f"mapApi.initialBoundsUrl({snapshot})").startswith('/api/map-initial-bounds?city=')
+    assert 'price' not in _run_node(f"mapApi.initialBoundsUrl({snapshot})")
+
+
 def test_summary_and_item_urls_preserve_frozen_filter_snapshot():
     snapshot = "{mode:'all',query:'city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=Ph%C3%BA+L%E1%BB%A3i&complete=1'}"
     summary = _run_node(f"mapApi.buildSummaryUrl({snapshot})")
@@ -232,6 +243,15 @@ def test_map_base_layers_have_complete_attribution():
     assert "World_Imagery" in layers["satellite"]["url"]
     assert "Esri" in layers["satellite"]["attribution"]
     assert "Maxar" in layers["satellite"]["attribution"]
+
+
+def test_base_images_remain_visible_at_gis_zooms_without_requesting_missing_native_levels():
+    from services.planning_tiles import native_layers
+
+    planning_max = max(layer['manifest']['max_zoom'] for layer in native_layers())
+    for layer in _run_node("mapApi.mapBaseLayers()").values():
+        assert layer['maxZoom'] >= planning_max
+        assert layer['maxNativeZoom'] == 19
 
 
 def test_street_tile_failure_switches_provider_once_and_ignores_stale_errors():

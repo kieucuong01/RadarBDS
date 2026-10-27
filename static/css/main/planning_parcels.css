@@ -1,0 +1,38 @@
+.planning-parcel-settings{border-top:1px solid #dce7e0;margin-top:14px;padding-top:12px}
+.planning-parcel-toggle{display:flex!important;align-items:center;gap:8px;min-height:36px;font-size:13px;font-weight:700}
+.planning-parcel-toggle input{accent-color:#10765b;width:18px;height:18px}
+.planning-parcel-actions button{margin-top:8px}
+.planning-parcel-settings p{font-size:12px;color:#60726a;margin:8px 0}
+.planning-parcel-card{position:absolute;right:114px;top:150px;width:420px;max-width:calc(100% - 20px);background:#fff;border:1px solid #cfded4;border-radius:15px;box-shadow:0 8px 30px #163a2c30;pointer-events:auto;overflow:hidden}
+.planning-parcel-close{position:absolute;z-index:2;right:8px;top:8px;width:44px;height:44px;border:0;border-radius:50%;background:#f2f6f3;color:#435d4f;font-size:27px!important;line-height:1}
+.planning-parcel-body{padding:18px;max-height:calc(100dvh - 270px);overflow:auto;overscroll-behavior:contain}
+.planning-parcel-info h3{margin:1px 42px 3px 0;font-size:18px;line-height:1.4;color:#17392d}
+.planning-parcel-area{display:block;font-size:21px;color:#11755b;margin-bottom:6px}
+.planning-parcel-location{margin:5px 0 15px;font-size:12px;color:#60736a;max-width:calc(100% - 22px)}
+.parcel-planning-plan{border-top:1px solid #dde7e1;padding-top:12px;margin-top:14px}
+.parcel-planning-plan h4{font-size:14px;color:#0b7257;margin:0 0 4px}
+.parcel-plan-name{font-size:11px;color:#6b7d73;margin:0 0 8px}
+.parcel-planning-zone{border-top:1px dashed #e1e9e4}
+.parcel-planning-zone>summary{display:grid;grid-template-columns:64px 90px minmax(0,1fr);align-items:center;gap:8px;min-height:48px;list-style:none;cursor:pointer;padding:8px 0}
+.parcel-planning-zone>summary::-webkit-details-marker{display:none}
+.parcel-zone-code{font-size:10px;line-height:1.4;padding:4px;background:#edf5ef;color:#24684f;border:1px solid #cfe2d5;border-radius:5px;overflow-wrap:anywhere;text-align:center;font-weight:700}
+.parcel-zone-area{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.parcel-zone-name{font-size:12px;line-height:1.45}
+.parcel-zone-name:after{content:'⌄';display:inline-block;margin-left:6px;color:#84958a}
+.parcel-planning-zone[open]>summary{background:#f6faf7}
+.parcel-plan-metadata>summary{min-height:40px;padding:11px 0;font-size:11px;cursor:pointer;color:#6b7d73}
+.planning-parcel-body dl{margin:4px 0 10px}
+.parcel-info-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;border-bottom:1px solid #edf1ee;padding:7px 0;font-size:12px}
+.parcel-info-row dt{color:#6b7c72}.parcel-info-row dd{margin:0;text-align:right;overflow-wrap:anywhere;font-weight:500}
+.planning-parcel-notice{font-size:11px!important;color:#77877d;margin:12px 0 0;line-height:1.5}
+.planning-parcel-body>a{display:block;font-size:11px;color:#11755b;margin-top:14px;text-decoration:underline}
+.planning-parcel-info>p:last-child{font-size:11px;color:#77877d}
+.planning-parcel-results button{background:#f0f7f2!important;border:1px solid #d0e3d5!important;color:#196348!important;text-align:left;padding:10px}
+.planning-parcel-standalone-settings{position:absolute;left:10px;bottom:10px;pointer-events:auto;background:white;padding:10px}
+@media(max-width:1100px){
+ .planning-parcel-card{left:10px;right:10px;top:auto;bottom:max(36px,env(safe-area-inset-bottom));width:auto;max-width:none}
+ .planning-parcel-body{max-height:52dvh;padding:16px}
+ .planning-parcel-info h3{font-size:17px}
+ .parcel-planning-zone>summary{grid-template-columns:58px 86px minmax(0,1fr);gap:6px}
+ .listing-map-workspace:has(.planning-parcel-card:not([hidden])) .listing-map-mobile-sheet{display:none}
+}

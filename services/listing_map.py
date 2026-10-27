@@ -70,6 +70,16 @@ class MapFilters:
     date_range: str = "1m"
     complete_only: bool = False
     include_guland_high_activity: bool = False
+    bbox: tuple[float, ...] | None = None
+
+
+def _viewport_sql(bbox, alias):
+    if bbox is None:
+        return '', []
+    if not bbox:
+        return 'FALSE', []
+    west, south, east, north = bbox
+    return f'{alias}.lat BETWEEN ? AND ? AND {alias}.lng BETWEEN ? AND ?', [south,north,west,east]
 
 
 def clear_listing_map_cache() -> None:
@@ -499,6 +509,7 @@ def load_listing_map_summary(
     if mode not in {"signals", "all"}:
         raise ValueError("invalid map mode")
     filters = _normalized_filters(filters, tier)
+    spatial_sql, spatial_params = _viewport_sql(filters.bbox, 'ml')
 
     with get_conn() as conn:
         data_version, use_read_model = _listing_map_query_context(conn, mode)
@@ -590,6 +601,7 @@ def load_listing_map_summary(
                            0
                        )::INTEGER AS ward_count
                 FROM effective_map_locations ml
+                {'WHERE ' + spatial_sql if spatial_sql else ''}
                 GROUP BY ml.location_key,
                          ml.lat,
                          ml.lng,
@@ -605,8 +617,9 @@ def load_listing_map_summary(
                          END,
                          COUNT(*) DESC,
                          ml.location_key
+                {'LIMIT 1001' if filters.bbox is not None else ''}
                 """,
-                params,
+                params + spatial_params,
             ).fetchall()
 
 
@@ -614,7 +627,7 @@ def load_listing_map_summary(
         total = int(_row_value(first, "total_count", 0) or 0)
         mapped = int(_row_value(first, "mapped_count", 0) or 0)
         locations = []
-        for row in rows:
+        for row in (rows[:1000] if filters.bbox is not None else rows):
             location_key = _row_value(row, "location_key")
             if not location_key:
                 continue
@@ -700,6 +713,8 @@ def load_listing_map_summary(
             },
             "locations": locations,
         }
+        if filters.bbox is not None:
+            payload.update(viewport=True, truncated=len(rows)>1000)
         return _cache_put(cache_key, payload)
 
 
@@ -715,6 +730,14 @@ def load_listing_map_items(
     if mode not in {"signals", "all"}:
         raise ValueError("invalid map mode")
     filters = _normalized_filters(filters, tier)
+    spatial_sql, spatial_params = _viewport_sql(filters.bbox, 'f')
+    if not location_key and filters.bbox is None:
+        raise ValueError('location key or viewport required')
+    conditions = (["f.location_key = ?"] if location_key else ["f.location_key IS NOT NULL"])
+    condition_params = [location_key] if location_key else []
+    if spatial_sql:
+        conditions.append(spatial_sql)
+        condition_params.extend(spatial_params)
     page = max(int(page), 1)
     limit = min(max(int(limit), 1), 50)
     offset = (page - 1) * limit
@@ -775,11 +798,11 @@ def load_listing_map_items(
                        primary_img.img_url AS primary_img_url
                 FROM effective_map_locations f
                 {_primary_image_join(use_read_model=use_read_model)}
-                WHERE f.location_key = ?
+                WHERE {' AND '.join(conditions)}
                 ORDER BY f.publisher_rank ASC, f.activity_at DESC, f.id DESC
                 LIMIT ? OFFSET ?
                 """,
-                params + [location_key, limit, offset],
+                params + condition_params + [limit, offset],
             ).fetchall()
 
 

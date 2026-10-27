@@ -72,6 +72,11 @@ def api_map_listings(**kwargs):
     return _impl("api_map_listings", **kwargs)
 
 
+@bp.route('/api/map-initial-bounds')
+def api_map_initial_bounds(**kwargs):
+    return _impl('api_map_initial_bounds', **kwargs)
+
+
 @bp.route('/api/map-listing-items')
 def api_map_listing_items(**kwargs):
     return _impl("api_map_listing_items", **kwargs)

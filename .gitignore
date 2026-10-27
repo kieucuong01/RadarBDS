@@ -56,6 +56,7 @@ services/radar_ask/tools/__pycache__/
 services/radar_ask/tools/**/*.pyc
 .local/
 static/maps/planning/overlays/
+data/planning/
 
 # Graphify generated graph artifacts are rebuilt per environment.
 graphify-out/

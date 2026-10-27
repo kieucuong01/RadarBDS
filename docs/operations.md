@@ -1211,6 +1211,12 @@ contains a paid grant.
 
 ### Versioned planning overlay snapshot
 
+The optional live GIS/parcel extension is described in
+`planning_sources/binh-duong-native-gis.md#production-activation`.
+It uses a separately verified read-only asset and `/api/planning/` routes;
+the loopback `/local-planning/` runner remains private. Disable with
+`RADAR_PLANNING_LIVE_ENABLED=0` and restart to restore the existing snapshot.
+
 The public Maps overlay is enabled only when `config/planning_release.json`
 and every file in its immutable snapshot pass hash verification at web-worker
 startup. `RADAR_PLANNING_MAP_ENABLED=0` plus service restart disables the feature.

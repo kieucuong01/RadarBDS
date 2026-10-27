@@ -17,9 +17,9 @@ const catalog = {layers: [{id: manifest.id,name: 'Thới Hòa',status:'overlay_r
   {id:officialManifest.id,name:'Mỹ Phước',status:'overlay_ready',decision:'2913/2022',
    source:'gis',source_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh',manifest:officialManifest}]};
 
-function harness(cityValue, publicConfig) {
+function harness(cityValue, publicConfig, openingBounds) {
   const nodes = [], layers = new Set(), handlers = {}, zoomHandlers = new Set();
-  let resolveFetch, removed = false, signal;
+  let resolveFetch, removed = false, signal, visibleBounds = openingBounds;
   const fetches=[];
   const env = {AbortController, RADAR_PLANNING_CONFIG:publicConfig, matchMedia: () => ({matches: false}),
     document: {getElementById(id) {return id==='cityInput'?{value:cityValue}:null;}, createElement(tag) {
@@ -28,6 +28,7 @@ function harness(cityValue, publicConfig) {
         setAttribute(k,v) {this.attributes[k]=v;}, getAttribute(k) {return this.attributes[k];},
         removeAttribute(k) {delete this.attributes[k];},
         addEventListener(k,fn) {this.events[k]=fn;}};
+      el.remove=()=>{removed=true;};
       nodes.push(el); return el;
     }},
     fetch(url, options) {fetches.push(url);signal=options.signal; return new Promise(r=>{resolveFetch=r;});}};
@@ -35,10 +36,13 @@ function harness(cityValue, publicConfig) {
       layers.delete(x); x.attached=false;
       if (x.events.remove) x.events.remove();
     },
+    getContainer:()=>({appendChild(){}}),
     on(k,fn) {handlers[k]=fn;}, off(k) {delete handlers[k];},
-    getBounds: () => ({intersects: () => true}), fitBounds(bounds) {this.fitted=bounds;}};
+    getBounds: () => ({intersects: b => !visibleBounds || (visibleBounds[0][0] <= b[1][0] && visibleBounds[1][0] >= b[0][0]
+      && visibleBounds[0][1] <= b[1][1] && visibleBounds[1][1] >= b[0][1])}), fitBounds(bounds) {this.fitted=bounds;}};
   const L = {DomEvent: {disableClickPropagation() {}, disableScrollPropagation() {}},
     control: () => ({addTo() {}, remove() {removed=true;}}),
+    tileLayer(url,options) {const layer=this.imageOverlay(url,options.bounds,options);layer.kind='tile';return layer;},
     imageOverlay(url,bounds,options) {
       return {events: {}, options, url, on(k,fn) {this.events[k]=fn;}, off() {this.events={};},
         addTo() {
@@ -51,6 +55,7 @@ function harness(cityValue, publicConfig) {
     }};
   const dispose = api.mount(map,L,env);
   return {nodes,layers,handlers,dispose,map,fetches, zoom() {zoomHandlers.forEach(fn=>fn());},
+    move(bounds) {visibleBounds=bounds;handlers.moveend();},
     get signal() {return signal;}, get removed() {return removed;},
     deliver(data=catalog) {resolveFetch({ok: true,json: async()=>data});}};
 }
@@ -80,8 +85,18 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const inspect=control('Xem hồ sơ và chú giải quy hoạch');
   const change=(el,value)=>{el.value=value;el.events.change();};
   const toggle=(el,checked)=>{el.checked=checked;el.events.change();};
-  assert.equal(h.layers.size,6,'All available GIS layers across both cities render immediately');
-  assert.equal(part.checked,true);assert.equal(gen.checked,true);
+  assert.equal(h.layers.size,4,'Only partition is enabled by default');
+  assert.equal(part.checked,true);assert.equal(gen.checked,false);
+  const quickGen=control('Bật/tắt quy hoạch chung đô thị');
+  const quickOpacity=control('Độ hiển thị lớp đang chọn');
+  assert.ok(quickGen,'Planning types must be reachable outside the layers popover');
+  quickGen.events.click();assert.equal(gen.checked,true);assert.equal(h.layers.size,6);
+  const originalLayers=[...h.layers];
+  quickOpacity.value='35';quickOpacity.events.input();
+  assert.ok([...h.layers].filter(x=>x.url.includes('general')).every(x=>x.options.opacity===.35));
+  assert.deepEqual([...h.layers],originalLayers,'Opacity must never rebuild or download images');
+  quickGen.events.click();assert.equal(gen.checked,false);
+  toggle(gen,true);assert.equal(h.layers.size,6);
   assert.equal(partSource.value,'gis');assert.equal(genSource.value,'gis');
   assert.equal(h.nodes.filter(x=>x.type==='checkbox').length,2,'Only map-type toggles remain');
   assert.ok(!h.nodes.some(x=>x.attributes['aria-label']?.startsWith('Chọn quy hoạch')));
@@ -127,7 +142,10 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   pdfSource.value='document';pdfSource.events.change();assert.equal(unavailable.layers.size,1);
   unavailable.dispose();unavailable.zoom();
   const cityOnly=harness();cityOnly.deliver({layers:[general,tdmGeneral]});await flush();
-  assert.equal(cityOnly.layers.size,2,'City-wide general sources render without any ward catalogue');
+  assert.equal(cityOnly.layers.size,0,'General plans stay off until explicitly enabled');
+  const cityGeneral=cityOnly.nodes.find(x=>x.attributes['aria-label']==='Bật quy hoạch chung đô thị');
+  cityGeneral.checked=true;cityGeneral.events.change();
+  assert.equal(cityOnly.layers.size,2,'General plans render when explicitly enabled');
   cityOnly.dispose();cityOnly.zoom();
   const coverage=harness();coverage.deliver({layers:[{...tdmWard,id:'tdm-supplement',
     manifest:{...tdmWard.manifest,id:'tdm-supplement',map_scale:null}}]});await flush();
@@ -145,10 +163,36 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert.ok([...published.layers].every(x=>x.url.startsWith(prefix)));
   assert.ok(!published.nodes.some(x=>x.textContent==='THỬ NGHIỆM LOCAL'));
   published.dispose();published.zoom();
+  const nearBounds=[[11.01,106.59],[11.05,106.63]],farBounds=[[11.10,106.60],[11.16,106.70]];
+  const lazy=harness(undefined,undefined,nearBounds);
+  lazy.deliver({layers:[{...catalog.layers[0],manifest:{...manifest,bounds:nearBounds}},
+    {...catalog.layers[1],manifest:{...manifest,id:catalog.layers[1].id,bounds:farBounds}}]});await flush();
+  assert.equal(lazy.layers.size,1,'Off-screen images must not start downloading');
+  assert.ok([...lazy.layers][0].url.includes(manifest.id));
+  lazy.move(farBounds);lazy.zoom();assert.equal(lazy.layers.size,1);
+  assert.ok([...lazy.layers][0].url.includes(catalog.layers[1].id),'Panning loads the new region and detaches old zoom handlers');
+  lazy.move([[11,106.5],[11.18,106.8]]);assert.equal(lazy.layers.size,2,'Zooming out loads all neighboring visible regions');
+  lazy.move([[11.3,106.8],[11.4,106.9]]);lazy.zoom();assert.equal(lazy.layers.size,0);
+  lazy.dispose();lazy.zoom();
+  const nativePart={...catalog.layers[3],id:'bd-partition-tiles',city:'Bình Dương (cũ)',scope:'region',
+    manifest:{...officialManifest,id:'bd-partition-tiles',render_mode:'xyz',tile_size:256,min_zoom:8,max_zoom:23,
+      tile_template:'/local-planning/gis-tiles/partition/{z}/{x}/{y}.png'}};
+  const nativeGeneral={...nativePart,id:'bd-general-tiles',theme:'urban_general',
+    manifest:{...nativePart.manifest,id:'bd-general-tiles',tile_template:'/local-planning/gis-tiles/urban_general/{z}/{x}/{y}.png'}};
+  assert.equal(api.validCatalog({layers:[nativePart,nativeGeneral]}),true);
+  assert.equal(api.validManifest({...nativePart.manifest,tile_template:'https://evil.invalid/{z}.png'}),false);
+  const native=harness(undefined,undefined,nearBounds);
+  native.deliver({layers:[{...catalog.layers[3],inspection_only:true},nativePart,nativeGeneral]});await flush();
+  assert.equal(native.layers.size,1,'Archived GIS snapshots must not overpaint the native grid');
+  const nativeLayer=[...native.layers][0];assert.equal(nativeLayer.kind,'tile');
+  assert.equal(nativeLayer.options.tileSize,256);assert.equal(nativeLayer.options.maxNativeZoom,23);
+  native.move(farBounds);native.zoom();assert(native.layers.has(nativeLayer),'Panning/zooming reuses the native tile provider');
+  nativeLayer.events.tileerror();assert(native.layers.has(nativeLayer),'One failed tile must not remove the whole GIS collection');
+  native.dispose();native.zoom();assert.equal(native.layers.size,0);
   const late=harness();late.dispose();late.deliver();await flush();
   assert.equal(late.nodes.find(x=>x.type==='checkbox').disabled,true);assert.equal(late.layers.size,0);
   const invalid=harness();invalid.deliver({...manifest,status:'approved'});await flush();
   assert.equal(invalid.nodes.find(x=>x.type==='checkbox').disabled,true);assert.equal(invalid.layers.size,0);
   invalid.dispose();
-  console.log('Planning overlay: all-area defaults, independent types/sources/opacity, retry/zoom and lifecycle passed.');
+  console.log('Planning overlay: viewport loading, partition default, independent sources/opacity and zoom lifecycle passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
