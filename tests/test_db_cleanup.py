@@ -310,9 +310,15 @@ class DbCleanupTest(unittest.TestCase):
     def test_old_notifications_deleted(self):
         from db.connection import get_conn
 
+        with get_conn() as conn:
+            anchor = datetime.fromisoformat(conn.execute(
+                "SELECT timezone('UTC', CURRENT_TIMESTAMP)::text"
+            ).fetchone()[0])
+        old = (anchor - timedelta(days=181)).isoformat(timespec='seconds')
+        recent = (anchor - timedelta(days=1)).isoformat(timespec='seconds')
         lid = self._insert_listing(url="u-notif")
-        self._insert_notification(lid, "2024-01-01T00:00:00")
-        self._insert_notification(lid, "2026-05-01T00:00:00")
+        self._insert_notification(lid, old)
+        self._insert_notification(lid, recent)
 
         self._run_cleanup(apply=True, vacuum=False)
 
@@ -323,7 +329,7 @@ class DbCleanupTest(unittest.TestCase):
             ).fetchall()
         sent_ats = [r[0] for r in rows]
         self.assertEqual(len(sent_ats), 1)
-        self.assertEqual(sent_ats[0], "2026-05-01T00:00:00")
+        self.assertEqual(sent_ats[0], recent)
 
     def test_unpriceable_listings_and_raw_are_deleted(self):
         from db.connection import get_conn
