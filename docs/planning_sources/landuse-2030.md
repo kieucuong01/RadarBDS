@@ -29,8 +29,12 @@ Border controls: HCM's tile intersecting Tân An contains some source pixels,
 but is transparent at the actual tested Tân An coordinate, whereas Bình Dương's
 tile is opaque there. HCM's Bến Cát tile is fully transparent. Bình Dương's
 tile at Quận 1 is 404, so its display window is tightened to the outward-rounded
-union of the existing 91 historical administrative reference windows. The
-mainland BRVT and island windows stay separate to avoid loading a wide empty sea.
+union of the existing 91 historical administrative reference windows. The HCM
+window similarly contains all 320 source ward windows but stops north at
+11.161°. Production QA at Bến Cát found six missing HCM tiles at zoom 12, row
+1919 (south edge 11.1784°), outside every historic HCM ward. The tighter window
+avoids that unnecessary row rather than hiding real source errors. Mainland
+BRVT and island windows stay separate to avoid loading a wide empty sea.
 
 ## Integration and limitations
 

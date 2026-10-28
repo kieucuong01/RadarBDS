@@ -30,7 +30,7 @@
       "manifest": {
         "id": "hcm-land-use-2030-guland", "status": "reference_overlay",
         "title": "Quy hoạch sử dụng đất 2030 · TP.HCM (cũ)",
-        "bounds": [[10.3,106.3],[11.2,107.05]],
+        "bounds": [[10.354,106.356],[11.161,107.028]],
         "source_kind": "guland_reference", "alignment_method": "source_xyz",
         "legend_available": false, "map_scale": null,
         "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
