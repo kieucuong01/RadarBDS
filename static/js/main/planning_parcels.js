@@ -169,11 +169,13 @@
           }
         });
     }
-    function loadViewport() {
+    function loadViewport(retryAttempt) {
       if (disposed || !config) return;
+      var attempt = Number.isInteger(retryAttempt) ? retryAttempt : 0;
       if (viewRequest) viewRequest.abort();
       var sequence = ++viewSeq;
-      var visible = config.areas.some(function (a) { return map.getBounds().intersects(a.bounds); });
+      var visible = config.coverage_bounds ? map.getBounds().intersects(config.coverage_bounds)
+        : config.areas.some(function (a) { return map.getBounds().intersects(a.bounds); });
       if (!toggle.checked || map.getZoom() < config.min_zoom || !visible) {
         remove(layer); layer = null;
         status.textContent = !toggle.checked ? 'Đang tắt ranh thửa đất.' : !visible
@@ -183,7 +185,10 @@
       var b = map.getBounds(), bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
       viewRequest = new env.AbortController(); status.textContent = 'Đang tải ranh trong vùng xem…';
       env.fetch(apiBase + '/viewport.json?bbox=' + encodeURIComponent(bbox), {signal: viewRequest.signal, cache: 'no-store'})
-        .then(function (response) { if (!response.ok) throw new Error('Parcel data unavailable'); return response.json(); })
+        .then(function (response) {
+          if (!response.ok) { var error = new Error('Parcel data unavailable'); error.status = response.status; throw error; }
+          return response.json();
+        })
         .then(function (data) {
           if (disposed || sequence !== viewSeq) return;
           if (data.type !== 'FeatureCollection' || !Array.isArray(data.features) || data.features.length > 1500) throw new Error('Invalid parcel data');
@@ -194,10 +199,17 @@
               polygon.on('click', function (event) { L.DomEvent.stopPropagation(event); select(feature); });
             }}).addTo(map);
           remove(previous);
-          status.textContent = data.features.length + ' ranh thửa trong vùng xem'
-            + (data.truncated ? ' Vùng quá dày; phóng to để xem đầy đủ.' : '');
+          status.textContent = (data.features.length ? data.features.length + ' ranh thửa trong vùng xem'
+            : 'GIS chưa trả ranh thửa trong vùng xem này.')
+            + (data.truncated ? ' Vùng quá dày; phóng to để xem đầy đủ.' : '')
+            + (data.excluded_count ? ' Có ' + data.excluded_count + ' ranh lỗi nguồn được tạm loại.' : '');
         }).catch(function (error) {
-          if (!disposed && sequence === viewSeq && error.name !== 'AbortError') status.textContent = 'Chưa tải được ranh. Thử phóng to hoặc di chuyển bản đồ.';
+          if (disposed || sequence !== viewSeq || error.name === 'AbortError') return;
+          if (error.status === 503 && attempt < 2) {
+            status.textContent = 'GIS đang bận; đang thử tải lại ranh…';
+            env.clearTimeout(timer);
+            timer = env.setTimeout(function () { loadViewport(attempt+1); }, (attempt+1)*1000);
+          } else status.textContent = 'Chưa tải được ranh. Thử phóng to hoặc di chuyển bản đồ.';
         });
     }
     function move() {
@@ -243,6 +255,20 @@
         map.fitBounds(region.bounds, {maxZoom: region.max_zoom, padding: [24,24], animate: false});
         areaMenu.open = false;
         areaStatus.textContent = region.notice || 'Đã đến ' + region.name + '. Bật Phân khu để xem quy hoạch GIS.';
+        return;
+      }
+      var cityAreas = navigationAreas.filter(function (a) { return a.city === citySelect.value; });
+      var district = cityAreas.length ? Number(cityAreas[0].district) : 0;
+      if (config.live_expanded && cityAreas.length && !(district >= 718 && district <= 726)) {
+        var windows = selected ? [selected] : cityAreas;
+        var bounds = [[Math.min.apply(null, windows.map(function (a) { return a.bounds[0][0]; })),
+          Math.min.apply(null, windows.map(function (a) { return a.bounds[0][1]; }))],
+          [Math.max.apply(null, windows.map(function (a) { return a.bounds[1][0]; })),
+          Math.max.apply(null, windows.map(function (a) { return a.bounds[1][1]; }))]];
+        closeInfo();
+        map.fitBounds(bounds, {maxZoom: selected ? 15 : 13, padding: [24,24], animate: false});
+        areaMenu.open = false;
+        areaStatus.textContent = 'Đã đến ' + (selected ? selected.ward + ' · ' : '') + citySelect.value + '. Phóng gần để xem ranh GIS.';
         return;
       }
       var query = new URLSearchParams({city: citySelect.value}); if (selected) query.set('ward', selected.ward);
@@ -297,7 +323,7 @@
             searchStatus.textContent = 'Đã tìm thấy thửa. Bấm từng dòng quy hoạch để xem chỉ tiêu.';
             focusFeature(data.features[0]); return;
           }
-          searchStatus.textContent = 'Nguồn có ' + data.matched + ' bản ghi trùng tờ/thửa. Chọn để kiểm tra vị trí.'
+          searchStatus.textContent = 'Nguồn có ' + (data.truncated ? 'ít nhất ' : '') + data.matched + ' bản ghi trùng tờ/thửa. Chọn để kiểm tra vị trí.'
             + (data.truncated ? ' Đang hiện 20 kết quả đầu.' : '');
           data.features.forEach(function (feature, index) {
             var button = node('button', results, 'Kết quả ' + (index+1) + ' · ' + area(feature.properties.area)); button.type = 'button';
@@ -319,6 +345,10 @@
     example.addEventListener('click', function () {
       if (!config) return;
       var startingView = viewSeq, nearest = closestArea();
+      if (config.live_expanded && !config.areas.some(function (a) { return map.getBounds().intersects(a.bounds); })) {
+        status.textContent = 'GIS chưa có phường tham chiếu tại đây. Hãy phóng gần để kiểm tra ranh theo vùng xem.';
+        return;
+      }
       example.disabled = true;
       var request = config.example ? Promise.resolve(config.example) :
         env.fetch(apiBase + '/sample.json?area=' + encodeURIComponent(nearest.area_id), {signal: lifetime.signal, cache: 'no-store'})
@@ -347,7 +377,8 @@
         citySelect.value = navigationNearest.city; fillWards(navigationNearest.area_id || navigationNearest.code);
         data.areas.forEach(function (a) { node('option', searchArea, a.city + ' · ' + a.ward).value = a.area_id; });
         searchArea.value = nearest.area_id;
-        badge.textContent = data.areas.length + ' phường · ' + format(data.count) + ' ranh thửa GIS. Phóng to để bấm chọn.';
+        badge.textContent = data.live_expanded ? 'Ranh GIS tải theo vùng xem · TP.HCM mới. Dữ liệu nguồn chưa phủ kín mọi khu vực.'
+          : data.areas.length + ' phường · ' + format(data.count) + ' ranh thửa GIS. Phóng to để bấm chọn.';
         if (data.excluded_count) node('p', settings, format(data.excluded_count) + ' ranh lỗi nguồn đã được tạm loại.').className = 'planning-parcel-notice';
         loadViewport();
       }).catch(function (error) { if (!disposed && error.name !== 'AbortError') status.textContent = 'Chưa có dữ liệu ranh thửa cho bản thử.'; });

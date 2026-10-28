@@ -82,7 +82,7 @@ def install_live(app,site):
     if not install_tiles(app,cache,prefix='/api/planning/gis-tiles',max_entries=128,
                          metadata_directory=root/'metadata'):
         return False
-    install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels')
+    install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels',expanded=True)
     old=app.config.get('PLANNING_OVERLAY_CONFIG')
     layers=[]
     if old:

@@ -72,8 +72,10 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   const beforeProduction=pending.length;
   const disposeProduction=api.mount(map,L,env);
   assert.equal(pending[beforeProduction].url,'/api/planning/parcels/config.json');
-  deliver(beforeProduction,{min_zoom:17,count:1,excluded_count:0,areas:[
-    {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900}]});
+  deliver(beforeProduction,{min_zoom:17,count:1,excluded_count:0,live_expanded:true,
+    coverage_bounds:[[8.5,106.25],[11.65,107.65]],areas:[
+    {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',district:'721',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900},
+    {area_id:'26740',ward:'Bến Nghé',city:'Quận 1',district:'760',bounds:[[10.77,106.69],[10.78,106.71]]}]});
   await flush();
   assert(pending[beforeProduction+1].url.startsWith('/api/planning/parcels/viewport.json?bbox='));
   deliver(beforeProduction+1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
@@ -88,6 +90,15 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   regionForm.events.submit({preventDefault(){}});
   assert.deepEqual(map.fitted,[[10.3,106.3],[11.2,107.05]]);
   assert.equal(pending.length,beforeRegion,'Region navigation must not ask the Bình Dương-only listing service for bounds');
+  city.value='Quận 1';city.events.change();ward.value='26740';
+  regionForm.events.submit({preventDefault(){}});
+  assert.deepEqual(map.fitted,[[10.77,106.69],[10.78,106.71]]);
+  assert.equal(pending.length,beforeRegion,'Expanded ward navigation uses public reference windows, not BD listing bounds');
+  events.moveend();env.tick();
+  const busy=pending.length-1;
+  pending[busy].resolve({ok:false,status:503});await flush();
+  assert(nodes.some(n=>n.textContent==='GIS đang bận; đang thử tải lại ranh…'));
+  env.tick();assert.equal(pending.length,busy+2,'A settled view retries bounded upstream backpressure');
   disposeProduction();
   console.log('Parcel viewport, multi-area selection, toggle and cleanup passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});

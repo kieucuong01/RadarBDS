@@ -134,7 +134,7 @@ if __name__ == '__main__':
     parcel_catalog = ROOT / '.local/planning-parcels/parcels.sqlite'
     if parcel_catalog.is_file():
         from services.planning_parcel_catalog import install_catalog
-        install_catalog(app_module.app, parcel_catalog)
+        install_catalog(app_module.app, parcel_catalog, expanded=True)
     elif (parcel_directory / 'parcels.geojson').is_file():
         from services.planning_parcels import install_parcel_pilot
         install_parcel_pilot(app_module.app, parcel_directory)

@@ -67,7 +67,8 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
         'catalogUrl':'/static/maps/planning/overlays/old/catalog.json'}
     monkeypatch.setenv('RADAR_PLANNING_LIVE_ENABLED','1')
     monkeypatch.setattr(NativeGISTiles,'fetch',lambda *a:png())
-    monkeypatch.setattr(PublicGIS,'request',lambda *a,**kw:[])
+    monkeypatch.setattr(PublicGIS,'request',lambda self,path,**kw:
+        [] if path == '/thong-tin-quy-hoach/dnm' else {'features': []})
     assert install_live(app,tmp_path) is True
     assert app.config['PLANNING_OVERLAY_CONFIG']['assetBase'].endswith('/old/')
     assert app.config['PLANNING_OVERLAY_CONFIG']['parcelBase']=='/api/planning/parcels'
@@ -79,7 +80,9 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert len(native)==2
     assert all(a['manifest']['tile_template'].startswith('/api/planning/gis-tiles/') for a in native)
     response=client.get('/api/planning/parcels/config.json')
-    assert len(response.json['areas'])==91 and response.json['count']==91
+    assert len(response.json['areas'])==422 and response.json['count']==91
+    assert response.json['count_scope']=='historic_binh_duong_snapshot'
+    assert response.json['live_expanded'] is True
     assert response.headers['Cache-Control']=='private, no-store'
     assert client.get('/local-planning/parcels/config.json').status_code==404
     assert client.get('/api/planning/parcels/999999/planning.json').status_code==404
