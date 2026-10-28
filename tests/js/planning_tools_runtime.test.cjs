@@ -61,6 +61,7 @@ test('drawing never enables double-click zoom when it was already disabled',()=>
 test('legend is source-specific, lazy, searchable and aborts on disposal',async()=>{
  assert(legend.valid(catalog));assert.equal(catalog.groups.reduce((n,g)=>n+g.rows.length,0),400);
  assert.equal(catalog.groups.filter(g=>g.theme!=='land_codes').reduce((n,g)=>n+g.rows.length,0),333);
+ assert(!legend.valid({...catalog,groups:[{...catalog.groups[1],theme:'urban_general'}]}),'A partition legend must not be labelled general planning');
  assert(!legend.valid({...catalog,groups:[{...catalog.groups[0],source_url:'https://evil.invalid'}]}));
  assert(!legend.valid({...catalog,groups:[{...catalog.groups[0],rows:[{code:'A',label:'B',image:'data:image/svg+xml,<svg>'}]}]}));
  assert.equal(legend.normalize('Đất ở đô thị'),'dat o do thi');

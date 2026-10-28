@@ -244,7 +244,7 @@
     var disposeLegend = env.RadarPlanningLegend ? env.RadarPlanningLegend.mount(map, L, env, ui, actions, function () {
       var documents = catalog.filter(function (item) { return item.source === 'document' && item.manifest && item.manifest.legend_available !== false; });
       return {theme:activeTheme.id, active:activeTheme.toggle.checked, source:activeTheme.source.value, assetBase:assetBase, documents:documents,
-        selectedDocument:documents.some(function (item) { return item.id === selector.value; }) ? selector.value : null};
+        selectedDocument:documents.some(function (item) { return item.id === selector.value && item.theme === activeTheme.id; }) ? selector.value : null};
     }) : null;
     function keydown(event) {
       event.stopPropagation();

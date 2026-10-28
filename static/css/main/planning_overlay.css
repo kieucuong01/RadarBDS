@@ -108,7 +108,7 @@
 .planning-legend-tables table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
 .planning-legend-tables td,.planning-legend-tables th{text-align:left;padding:7px 5px;border-bottom:1px solid #e0eae4;overflow-wrap:anywhere}
 .planning-legend-tables th:first-child{width:28%}.planning-legend-tables th:nth-child(2){width:42px}
-.planning-legend-tables td:first-child{font-weight:700}.planning-legend-tables td img{vertical-align:middle;image-rendering:auto}
+.planning-legend-tables td:first-child{font-weight:700}.planning-legend-tables td img{vertical-align:middle;image-rendering:auto;border:1px solid #dce7e0}
 .planning-legend-tables a{display:inline-block;font-size:11px;color:#10765b;margin-top:6px;text-decoration:underline}
 .planning-document-legend{width:100%;height:auto}
 .listing-map-workspace:has(.planning-land-legend:not([hidden])) .listing-map-mobile-sheet,.listing-map-workspace:has(.planning-land-legend:not([hidden])) .listing-map-filter-summary{visibility:hidden;pointer-events:none}

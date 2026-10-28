@@ -4,14 +4,18 @@
   if(root) root.RadarPlanningLegend=api;
 })(typeof window!=='undefined'?window:null,function(){
   'use strict';
+  var services={partition:['SuDungDat_QHPK_HCM_V2','QHXD_SDD_2025_QHPK_V3'],
+    urban_general:['SuDungDat_QHC_HCM','QHXD_SDD_2025_QHCDT'],detailed:['SuDungDat_QHCT_HCM','QHXD_SDD_2025_QHCT']};
   function valid(data) {
     return data && typeof data.captured_at==='string' && Number.isFinite(Date.parse(data.captured_at)) && Array.isArray(data.groups) && data.groups.length>0 && data.groups.length<=12
       && data.groups.every(function(g){
+        if(!g||typeof g.source_url!=='string') return false;
+        var source=g.source_url.match(/^https:\/\/api-gisxaydung\.tphcm\.gov\.vn\/arcgis\/rest\/services\/HCM\/([A-Za-z0-9_]+)\/MapServer\/[012]$/);
         return ['land_codes','partition','urban_general','detailed'].indexOf(g.theme)>=0 && typeof g.title==='string' && g.title.length<=100
           && (g.theme==='land_codes' ? g.source_url==='https://congbaocdn.chinhphu.vn/CongBaoCP/VanBan/2024/7/42595/51505-1-2024991-99208-2024-tt-btnmt.pdf#page=81'
-            : /^https:\/\/api-gisxaydung\.tphcm\.gov\.vn\/arcgis\/rest\/services\/HCM\/(SuDungDat_QHPK_HCM_V2|SuDungDat_QHC_HCM|SuDungDat_QHCT_HCM|QHXD_SDD_2025_QHPK_V3|QHXD_SDD_2025_QHCDT|QHXD_SDD_2025_QHCT)\/MapServer\/[012]$/.test(g.source_url||''))
+            : source && services[g.theme].indexOf(source[1])>=0)
           && Array.isArray(g.rows) && g.rows.length<=200 && g.rows.every(function(r){
-            return typeof r.code==='string' && r.code.length<=100 && typeof r.label==='string' && r.label.length<=160
+            return r && typeof r.code==='string' && r.code.length<=100 && typeof r.label==='string' && r.label.length<=160
               && typeof r.image==='string' && r.image.length<=8192 && /^data:image\/png;base64,iVBORw0KGgo[A-Za-z0-9+/=]+$/.test(r.image);
           });
       });
@@ -66,7 +70,8 @@
           var swatch=node('img',node('td',tr));swatch.alt='';swatch.width=swatch.height=28;swatch.src=r.image;
           node('td',tr,r.label);
         });
-        var source=node('a',body,g.theme==='land_codes'?'Nguồn bảng mã · Công báo':'Nguồn ký hiệu GIS');source.href=g.source_url;source.target='_blank';source.rel='noopener noreferrer';
+        var source=node('a',body,g.theme==='land_codes'?'Nguồn bảng mã · Công báo':'Mở cổng GIS nguồn');
+        source.href=g.theme==='land_codes'?g.source_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh';source.target='_blank';source.rel='noopener noreferrer';
       });
       status.textContent=count?count+' ký hiệu · '+new Date(data.captured_at).toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}):'Không tìm thấy ký hiệu phù hợp.';
     }
