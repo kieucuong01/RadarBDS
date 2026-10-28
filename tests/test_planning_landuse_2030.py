@@ -13,6 +13,9 @@ def test_landuse_sources_cover_three_former_regions_and_islands_without_relabeli
         assert layer['manifest']['max_native_zoom'] == 17
         assert layer['manifest']['legend_available'] is False
         assert layer['source_url'].startswith('https://guland.vn/')
+        visible = [layer['decision'], layer['manifest']['notice']]
+        assert all('guland' not in text.lower() for text in visible)
+        assert '>Nguồn dữ liệu QH 2030<' in layer['manifest']['attribution']
     assert {a['area_id'] for a in LANDUSE_2030_LAYERS} == {
         'binh-duong-legacy','hcm-legacy','brvt-legacy','con-dao'}
     config = json.loads((Path(__file__).resolve().parents[1]/'config/planning_landuse_2030.json').read_text(encoding='utf8'))

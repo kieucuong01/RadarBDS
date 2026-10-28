@@ -64,13 +64,20 @@
  .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:62px!important;max-width:calc(100% - 116px)!important;left:50%!important;flex-wrap:wrap;justify-content:center;padding:2px 4px;gap:2px}
  .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary select,.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary button{min-width:0;max-width:100%;width:auto;min-height:34px}
  .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary span{display:none}
-  .planning-layer-dock{left:50%;max-width:calc(100% - 20px);flex-wrap:nowrap}
+  .planning-layer-dock{left:50%;max-width:calc(100% - 20px);flex-wrap:wrap;justify-content:center}
  .planning-layer-chip{padding:0 14px;font-size:12px;white-space:nowrap}
   .planning-opacity-control{top:128px;width:94px}
  .planning-opacity-control input[type=range]{height:72px}
  .listing-map-workspace:has(.listing-map-mobile-sheet.is-expanded) .planning-layer-dock,.listing-map-workspace:has(.listing-map-mobile-sheet.is-expanded) .planning-opacity-control{display:none}
  .listing-map-workspace.is-focus-mode .planning-layer-dock{bottom:16px}
 }
-@media(max-width:760px){.planning-layer-dock{bottom:calc(clamp(236px,34dvh,320px) + 12px)}}
+@media(max-width:760px){
+ .planning-layer-dock{bottom:calc(clamp(236px,34dvh,320px) + 12px)}
+ .planning-opacity-control{left:10px;right:auto;top:128px;flex-direction:row;width:calc(100% - 20px);gap:0}
+ .planning-opacity-control select{width:88px;flex:0 0 88px;border:0}
+ .planning-opacity-control button{width:44px;flex:0 0 44px}
+ .planning-opacity-control output{min-width:32px}
+ .planning-opacity-control input[type=range]{writing-mode:horizontal-tb;direction:ltr;width:0;min-width:24px;flex:1;height:38px;margin:0 4px}
+}
 @media(max-width:1100px) and (max-height:740px){.planning-opacity-control{top:120px}.planning-opacity-control input[type=range]{height:48px}}
 @media(max-width:360px){.planning-map-popover>summary{font-size:11px;padding:0 8px;gap:5px}.planning-layer-chip{font-size:11px;padding:0 8px}}

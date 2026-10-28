@@ -64,7 +64,7 @@ def test_cached_gateway_keeps_exact_source_bytes_and_is_private(tmp_path, monkey
     assert client.get('/local-planning/gis-tiles/unknown/19/1/1.png').status_code == 400
     catalog=client.get('/local-planning/catalog.json').json
     native=[x for x in catalog['layers'] if x.get('manifest',{}).get('source_kind')=='official_gis']
-    assert {x['theme'] for x in native} == {'partition','urban_general'}
+    assert {x['theme'] for x in native} == {'partition','urban_general','detailed'}
     assert all(x['manifest']['tile_size']==256 and x['source']=='gis' for x in native)
 
 
@@ -115,7 +115,7 @@ def test_source_service_change_never_reuses_an_old_collection_tile(tmp_path,monk
     assert len(calls)==2
 
 
-@pytest.mark.parametrize('theme',['partition','urban_general'])
+@pytest.mark.parametrize('theme',['partition','urban_general','detailed'])
 def test_supplement_fills_only_source_gaps_without_scaling(tmp_path,monkeypatch,theme):
     from services.planning_tiles import NativeGISTiles,SERVICES,SUPPLEMENTS
     foreground=Image.new('RGBA',(256,256),(0,0,0,0))
@@ -145,6 +145,7 @@ def test_partition_native_tiles_cover_expanded_hcm_without_widening_general(tmp_
     monkeypatch.setattr(NativeGISTiles,'fetch',lambda *args:payload)
     cache=NativeGISTiles(tmp_path)
     assert cache.get('partition',z,x,y)==payload
+    assert cache.get('detailed',z,x,y)==payload
     if lat<10.75 or lon>107.1:
         with pytest.raises(LookupError):
             cache.get('urban_general',z,x,y)
@@ -152,3 +153,23 @@ def test_partition_native_tiles_cover_expanded_hcm_without_widening_general(tmp_
     south,west=layer['manifest']['bounds'][0];north,east=layer['manifest']['bounds'][1]
     assert south<lat<north and west<lon<east
     assert layer['city']=='TP.HCM mới'
+
+
+def test_packaged_detailed_grids_are_verified_without_mutating_parcel_release(tmp_path, monkeypatch):
+    import services.planning_tiles as tiles
+    folder=tmp_path/'metadata';folder.mkdir()
+    for name in ('partition','urban_general','partition_supplement','urban_general_supplement'):
+        (folder/f'{name}.json').write_text(json.dumps(metadata()),encoding='utf8')
+    assert tiles.NativeGISTiles(tmp_path/'cache',metadata_directory=folder).verified
+    grids=tmp_path/'grids';grids.mkdir()
+    for name in ('detailed','detailed_supplement'):
+        data=json.loads((tiles.PACKAGED_GRID_DIR/f'{name}.json').read_text(encoding='utf8'))
+        assert data['service']==tiles.METADATA_SERVICES[name]
+        tiles.validate_grid(data)
+        (grids/f'{name}.json').write_text(json.dumps(data),encoding='utf8')
+    monkeypatch.setattr(tiles,'PACKAGED_GRID_DIR',grids)
+    path=grids/'detailed.json';data=json.loads(path.read_text())
+    data['source_url']='https://example.invalid/other-service'
+    path.write_text(json.dumps(data))
+    assert not tiles.NativeGISTiles(tmp_path/'cache',metadata_directory=folder).verified
+    assert not (folder/'detailed.json').exists(), 'Do not alter the immutable parcel asset metadata'

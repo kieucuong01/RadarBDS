@@ -11,11 +11,11 @@
     var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-brvt\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
     if (data.render_mode !== undefined && (data.render_mode !== 'xyz'
         || !(reference2030 ? referenceTemplate.test(data.tile_template || '') && data.max_native_zoom === 17
-          : /^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || ''))
+          : /^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general|detailed)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || ''))
         || data.tile_size !== 256 || data.min_zoom !== 8 || data.max_zoom !== 23)) return false;
     if (reference2030 && data.render_mode !== 'xyz') return false;
     var b = data.bounds;
-    var expanded = data.render_mode === 'xyz' && (reference2030 || /\/partition\//.test(data.tile_template));
+    var expanded = data.render_mode === 'xyz' && (reference2030 || /\/(partition|detailed)\//.test(data.tile_template));
     return Array.isArray(b) && b.length === 2 && b.every(function (point) {
       return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite);
     }) && b[0][0] >= (expanded ? 8.5 : 10.75) && b[1][0] <= 11.65 && b[0][0] < b[1][0]
@@ -30,7 +30,7 @@
 
   function themeLabel(item) {
     var scale = item.manifest && item.manifest.map_scale;
-    return (item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
+    return (item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
       ? '1/' + scale.toLocaleString('vi-VN') : 'Chưa xác minh tỷ lệ');
   }
 
@@ -41,7 +41,7 @@
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
       ids.add(item.id);
       if (item.city !== undefined && (typeof item.city !== 'string' || !item.city.trim() || item.city.length > 80)) return false;
-      if (item.theme !== undefined && ['partition', 'urban_general', 'land_use_2030'].indexOf(item.theme) < 0) return false;
+      if (item.theme !== undefined && ['partition', 'urban_general', 'detailed', 'land_use_2030'].indexOf(item.theme) < 0) return false;
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
           && !(item.source === 'guland' && item.theme === 'land_use_2030' && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
@@ -67,6 +67,7 @@
     var themes = [
       {id: 'partition', name: 'quy hoạch phân khu', title: 'Quy hoạch phân khu', short: 'Phân khu'},
       {id: 'urban_general', name: 'quy hoạch chung đô thị', title: 'Quy hoạch chung đô thị', short: 'QH chung'},
+      {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'Chi tiết'},
       {id: 'land_use_2030', name: 'quy hoạch sử dụng đất 2030', title: 'Quy hoạch sử dụng đất 2030', short: 'QH 2030'}
     ];
     var overlays = new Map(), failedIds = new Set();
@@ -145,6 +146,7 @@
       theme.quick.type = 'button'; theme.quick.className = 'planning-layer-chip'; theme.quick.disabled = true;
       theme.quick.setAttribute('aria-label', 'Bật/tắt ' + theme.name);
       theme.quick.setAttribute('aria-pressed', 'false');
+      if (theme.id === 'detailed') theme.quick.title = 'Quy hoạch chi tiết theo từng đồ án; phóng gần để xem rõ';
       var card = node('fieldset', body);
       card.className = 'planning-overlay-theme';
       var themeLabel = node('label', card);
@@ -157,7 +159,7 @@
       theme.source = node('select', sourceLabel); theme.source.disabled = true;
       theme.source.setAttribute('aria-label', 'Nguồn ' + theme.name);
       if (theme.id === 'land_use_2030') {
-        node('option', theme.source, 'Guland · QH 2030 (tham khảo)').value = 'guland';
+        node('option', theme.source, 'Bản đồ tham khảo').value = 'guland';
         theme.source.value = 'guland';
       } else {
         node('option', theme.source, 'GIS · Cổng dữ liệu').value = 'gis';
@@ -287,7 +289,7 @@
         var theme = themes.find(function (entry) { return entry.id === item.theme; });
         var layerOptions = {
           pane: 'planningPilot', opacity: opacity(theme.slider.value), interactive: false,
-          zIndex: (item.theme === 'partition' ? 100 : item.theme === 'land_use_2030' ? 300 : 200) + index,
+          zIndex: (item.theme === 'partition' ? 100 : item.theme === 'detailed' ? 250 : item.theme === 'land_use_2030' ? 300 : 200) + index,
           // Leaflet deduplicates identical provider credits across selected wards.
           attribution: data.source_kind === 'official_gis'
             ? 'Sở Quy hoạch – Kiến trúc TP.HCM · GIS công khai'
@@ -333,7 +335,8 @@
         var missing = expected.size - covered.size;
         var native = ready.some(function (item) { return item.manifest.render_mode === 'xyz'; });
         theme.status.textContent = native ? (theme.id === 'land_use_2030'
-          ? 'Nguồn Guland · tải ô ảnh theo vùng nhìn. Chưa xác minh phủ kín hoặc hiệu lực hồ sơ; xem nguồn để đối chiếu.'
+          ? 'Bản đồ tham khảo · tải ô ảnh theo vùng nhìn. Chưa xác minh phủ kín hoặc hiệu lực hồ sơ; xem nguồn để đối chiếu.'
+          : theme.id === 'detailed' ? 'Quy hoạch chi tiết theo từng đồ án · phóng gần để xem rõ. Vùng trống cần đối chiếu nguồn.'
           : 'Ô GIS gốc theo từng mức zoom · ' + ready.find(function (item) { return item.manifest.render_mode === 'xyz'; }).city + '. Vùng trống cần kiểm tra thêm nguồn.') : ready.length + ' lớp sẵn sàng' + (missing && ready.length
           ? ' · ' + missing + ' khu vực chưa có nguồn này.' : '.')
           + (!ready.length
@@ -361,12 +364,12 @@
       selector.value = item.id;
       legendImage.removeAttribute('src');
       source.href = item.source_url;
-      source.textContent = (item.source === 'guland' ? 'Guland · ' : manifest && manifest.source_kind === 'official_gis' ? 'Cổng GIS và chú giải · ' : 'Hồ sơ gốc · ') + item.name;
+      source.textContent = (item.source === 'guland' ? 'Nguồn dữ liệu · ' : manifest && manifest.source_kind === 'official_gis' ? 'Cổng GIS và chú giải · ' : 'Hồ sơ gốc · ') + item.name;
       preview.hidden = item.status !== 'document_only';
       if (!preview.hidden) { preview.href = item.preview_url; preview.textContent = 'Xem bản vẽ ' + item.name; }
       legendImage.alt = 'Chú giải gốc · ' + item.name;
       metadata.textContent = themeLabel(item)
-        + ' · ' + (item.source === 'guland' ? 'Guland (tham khảo)' : item.source === 'gis' ? 'GIS' : 'Bản vẽ / PDF') + ' · ' + item.decision + (manifest
+        + ' · ' + (item.source === 'guland' ? 'Tham khảo' : item.source === 'gis' ? 'GIS' : 'Bản vẽ / PDF') + ' · ' + item.decision + (manifest
         ? manifest.alignment_method === 'official_coordinates' ? ' · Căn chỉnh theo tọa độ gốc của cổng GIS.'
         : manifest.alignment_method === 'source_xyz' ? ' · Theo lưới ô bản đồ của nguồn.'
         : ' · Kiểm tra căn chỉnh: sai số lớn nhất ' + manifest.check_max_m + ' m tại ' + manifest.check_count + ' điểm thử.'
@@ -400,7 +403,7 @@
           var suffix = item.status === 'overlay_ready' ? String(item.manifest.source_kind || '').indexOf('primary_consultant') === 0 ? ' · Nguồn tư vấn' : ' · Lớp phủ'
             : item.status === 'document_only' ? ' · Bản vẽ' : ' · Chưa có lớp';
           node('option', selector, item.name + ' · ' + themeLabel(item)
-            + ' · ' + (item.source === 'guland' ? 'Guland' : item.source === 'gis' ? 'GIS' : 'PDF/ảnh') + suffix).value = item.id;
+            + ' · ' + (item.source === 'guland' ? 'Tham khảo' : item.source === 'gis' ? 'GIS' : 'PDF/ảnh') + suffix).value = item.id;
         });
         selector.disabled = false;
         themes.forEach(function (theme) { theme.source.disabled = false; });

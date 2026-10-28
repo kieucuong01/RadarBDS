@@ -77,7 +77,7 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert next(a for a in data['layers'] if a['id']=='old-gis')['inspection_only']
     assert next(a for a in data['layers'] if a['id']=='drawing')['source']=='document'
     native=[a for a in data['layers'] if a.get('manifest',{}).get('source_kind')=='official_gis']
-    assert len(native)==2
+    assert len(native)==3
     assert all(a['manifest']['tile_template'].startswith('/api/planning/gis-tiles/') for a in native)
     reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
     assert len(reference)==4 and all(a['source']=='guland' for a in reference)
@@ -92,6 +92,9 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert client.get('/api/planning/parcels/1/planning.json').status_code==200
     z,x,y=tan_an_tile()
     assert client.get(f'/api/planning/gis-tiles/partition/{z}/{x}/{y}.png').data==png()
+    detailed=client.get(f'/api/planning/gis-tiles/detailed/{z}/{x}/{y}.png')
+    assert detailed.status_code==200 and detailed.data==png()
+    assert detailed.headers['Cache-Control']=='private, no-store'
     (folder/'parcels.sqlite').write_bytes(b'changed')
     with pytest.raises(ValueError):validate_assets(tmp_path,verify_hashes=True)
 

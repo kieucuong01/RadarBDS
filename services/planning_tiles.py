@@ -18,10 +18,13 @@ import requests
 from services.planning_parcels import API, SOURCE
 from config.planning_regions import PLANNING_BOUNDS, PLANNING_REGIONS
 
-SERVICES = {'partition':'SuDungDat_QHPK_HCM_V2','urban_general':'SuDungDat_QHC_HCM'}
+SERVICES = {'partition':'SuDungDat_QHPK_HCM_V2','urban_general':'SuDungDat_QHC_HCM',
+            'detailed':'SuDungDat_QHCT_HCM'}
 PARTITION_SUPPLEMENT = 'QHXD_SDD_2025_QHPK_V3'
-SUPPLEMENTS = {'partition':PARTITION_SUPPLEMENT,'urban_general':'QHXD_SDD_2025_QHCDT'}
+SUPPLEMENTS = {'partition':PARTITION_SUPPLEMENT,'urban_general':'QHXD_SDD_2025_QHCDT',
+               'detailed':'QHXD_SDD_2025_QHCT'}
 METADATA_SERVICES = {**SERVICES,**{theme+'_supplement':service for theme,service in SUPPLEMENTS.items()}}
+PACKAGED_GRID_DIR = Path(__file__).resolve().parents[1]/'config/planning_gis_metadata'
 ORIGIN = math.pi*6378137
 RESOLUTION = 2*ORIGIN/256
 HEADERS = {'User-Agent':'Mozilla/5.0','Referer':SOURCE,'Origin':'https://gisxaydung.tphcm.gov.vn'}
@@ -71,7 +74,15 @@ class NativeGISTiles:
         metadata_directory = Path(metadata_directory) if metadata_directory else self.directory/'metadata'
         try:
             for theme in METADATA_SERVICES:
-                validate_grid(json.loads((metadata_directory/f'{theme}.json').read_text(encoding='utf8')))
+                if theme in ('detailed','detailed_supplement'):
+                    # Small verified grids ship with code; do not rebuild the 965 MB parcel release.
+                    metadata = json.loads((PACKAGED_GRID_DIR/f'{theme}.json').read_text(encoding='utf8'))
+                    expected = API+'/arcm/rest/services/HCM/'+METADATA_SERVICES[theme]+'/MapServer'
+                    if metadata.get('service') != METADATA_SERVICES[theme] or metadata.get('source_url') != expected:
+                        raise ValueError('Detailed GIS source identity mismatch')
+                else:
+                    metadata = json.loads((metadata_directory/f'{theme}.json').read_text(encoding='utf8'))
+                validate_grid(metadata)
             self.verified = True
         except (OSError,ValueError,KeyError,TypeError):
             pass
@@ -211,10 +222,12 @@ class NativeGISTiles:
 def native_layers(prefix='/local-planning/gis-tiles'):
     result=[]
     for theme in SERVICES:
-        region = 'TP.HCM mới' if theme=='partition' else 'Bình Dương (cũ)'
-        area_id = 'hcm-expanded' if theme=='partition' else 'binh-duong-legacy'
-        identifier=('hcm-expanded' if theme=='partition' else 'binh-duong')+'-'+theme.replace('_','-')+'-native-gis'
-        title = 'Phân khu và quy hoạch chung xã' if theme=='partition' else 'Quy hoạch chung đô thị'
+        expanded = theme in ('partition','detailed')
+        region = 'TP.HCM mới' if expanded else 'Bình Dương (cũ)'
+        area_id = 'hcm-expanded' if expanded else 'binh-duong-legacy'
+        identifier=('hcm-expanded' if expanded else 'binh-duong')+'-'+theme.replace('_','-')+'-native-gis'
+        title = {'partition':'Phân khu và quy hoạch chung xã','urban_general':'Quy hoạch chung đô thị',
+                 'detailed':'Quy hoạch chi tiết'}[theme]
         manifest={'id':identifier,'status':'reference_overlay' if prefix.startswith('/api/') else 'local_experiment','title':title+' · '+region,
                   'bounds':PLANNING_BOUNDS[theme],'source_kind':'official_gis',
                   'alignment_method':'official_coordinates','legend_available':False,'map_scale':None,
