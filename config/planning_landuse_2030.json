@@ -1,0 +1,81 @@
+{
+  "source_checked_on": "2026-10-28",
+  "layers": [
+    {
+      "id": "binh-duong-land-use-2030-guland",
+      "name": "Sử dụng đất 2030 · Bình Dương (cũ)",
+      "city": "Bình Dương (cũ)", "scope": "region", "area_id": "binh-duong-legacy",
+      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "decision": "Theo lớp QH 2030 của Guland; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "manifest": {
+        "id": "binh-duong-land-use-2030-guland", "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bình Dương (cũ)",
+        "bounds": [[10.862,106.334],[11.503,106.968]],
+        "source_kind": "guland_reference", "alignment_method": "source_xyz",
+        "legend_available": false, "map_scale": null,
+        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Guland · QHSDĐ 2030 (tham khảo)</a>",
+        "notice": "Nguồn Guland · lớp QH 2030, độc lập với phân khu và quy hoạch chung. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+      }
+    },
+    {
+      "id": "hcm-land-use-2030-guland",
+      "name": "Sử dụng đất 2030 · TP.HCM (cũ)",
+      "city": "TP.HCM (cũ)", "scope": "region", "area_id": "hcm-legacy",
+      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "decision": "Theo lớp QH 2030 của Guland; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "manifest": {
+        "id": "hcm-land-use-2030-guland", "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · TP.HCM (cũ)",
+        "bounds": [[10.3,106.3],[11.2,107.05]],
+        "source_kind": "guland_reference", "alignment_method": "source_xyz",
+        "legend_available": false, "map_scale": null,
+        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Guland · QHSDĐ 2030 (tham khảo)</a>",
+        "notice": "Nguồn Guland · lớp QH 2030, độc lập với phân khu và quy hoạch chung. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+      }
+    },
+    {
+      "id": "brvt-land-use-2030-guland",
+      "name": "Sử dụng đất 2030 · Bà Rịa–Vũng Tàu (cũ)",
+      "city": "Bà Rịa–Vũng Tàu (cũ)", "scope": "region", "area_id": "brvt-legacy",
+      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "decision": "Theo lớp QH 2030 của Guland; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "manifest": {
+        "id": "brvt-land-use-2030-guland", "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bà Rịa–Vũng Tàu (cũ)",
+        "bounds": [[10.3,107.0],[10.9,107.65]],
+        "source_kind": "guland_reference", "alignment_method": "source_xyz",
+        "legend_available": false, "map_scale": null,
+        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Guland · QHSDĐ 2030 (tham khảo)</a>",
+        "notice": "Nguồn Guland · lớp QH 2030. Ảnh nguồn 512 px được đặt trong ô XYZ 256 px như bản đồ nguồn. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+      }
+    },
+    {
+      "id": "con-dao-land-use-2030-guland",
+      "name": "Sử dụng đất 2030 · Côn Đảo",
+      "city": "Côn Đảo", "scope": "region", "area_id": "con-dao",
+      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "decision": "Theo lớp QH 2030 của Guland; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau/huyen-con-dao",
+      "manifest": {
+        "id": "con-dao-land-use-2030-guland", "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Côn Đảo",
+        "bounds": [[8.6,106.5],[8.8,106.75]],
+        "source_kind": "guland_reference", "alignment_method": "source_xyz",
+        "legend_available": false, "map_scale": null,
+        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Guland · QHSDĐ 2030 (tham khảo)</a>",
+        "notice": "Nguồn Guland · lớp QH 2030. Dữ liệu có ở điểm thử Côn Sơn, chưa xác nhận phủ kín các đảo. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+      }
+    }
+  ]
+}

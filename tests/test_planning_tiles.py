@@ -63,7 +63,7 @@ def test_cached_gateway_keeps_exact_source_bytes_and_is_private(tmp_path, monkey
     assert client.get(f'/local-planning/gis-tiles/urban_general/{z}/{x}/{y}.png',headers={'Host':'evil.invalid'}).status_code == 404
     assert client.get('/local-planning/gis-tiles/unknown/19/1/1.png').status_code == 400
     catalog=client.get('/local-planning/catalog.json').json
-    native=[x for x in catalog['layers'] if x.get('manifest',{}).get('render_mode')=='xyz']
+    native=[x for x in catalog['layers'] if x.get('manifest',{}).get('source_kind')=='official_gis']
     assert {x['theme'] for x in native} == {'partition','urban_general'}
     assert all(x['manifest']['tile_size']==256 and x['source']=='gis' for x in native)
 

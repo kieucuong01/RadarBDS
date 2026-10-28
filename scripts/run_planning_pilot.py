@@ -65,6 +65,8 @@ def install_pilot(app, directory=None):
             if native and item.get('source') == 'gis':
                 item['inspection_only'] = True
         result.extend(native)
+        from config.planning_regions import LANDUSE_2030_LAYERS
+        result.extend(LANDUSE_2030_LAYERS)
         return jsonify(layers=result)
 
     @app.get('/local-planning/<layer_id>/<name>')

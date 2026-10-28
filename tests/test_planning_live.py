@@ -76,9 +76,11 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     data=client.get('/api/planning/catalog.json').json
     assert next(a for a in data['layers'] if a['id']=='old-gis')['inspection_only']
     assert next(a for a in data['layers'] if a['id']=='drawing')['source']=='document'
-    native=[a for a in data['layers'] if a.get('manifest',{}).get('render_mode')=='xyz']
+    native=[a for a in data['layers'] if a.get('manifest',{}).get('source_kind')=='official_gis']
     assert len(native)==2
     assert all(a['manifest']['tile_template'].startswith('/api/planning/gis-tiles/') for a in native)
+    reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
+    assert len(reference)==4 and all(a['source']=='guland' for a in reference)
     response=client.get('/api/planning/parcels/config.json')
     assert len(response.json['areas'])==422 and response.json['count']==91
     assert response.json['count_scope']=='historic_binh_duong_snapshot'
