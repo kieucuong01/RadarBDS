@@ -87,3 +87,28 @@ def test_viewport_api_ignores_dashboard_filters_but_keeps_source_policy(monkeypa
         assert filters.sources == ('facebook',)
         assert filters.bbox == (106.6,11.01,106.64,11.05)
     assert client.get('/api/map-listings?mode=all&bbox=nan,1,2,3').status_code == 400
+
+
+@pytest.mark.parametrize('mode',['all','signals'])
+def test_filtered_bbox_applies_sidebar_to_markers_recent_and_group_details(monkeypatch,mode):
+    import app as app_module
+    captured=[]
+    def summary(**kwargs):
+        captured.append(kwargs['filters']);return {'locations':[],'summary':{'total':0,'mapped':0}}
+    def items(**kwargs):
+        captured.append(kwargs['filters']);return {'items':[],'total':0}
+    monkeypatch.setattr(app_module,'load_listing_map_summary',summary)
+    monkeypatch.setattr(app_module,'load_listing_map_items',items)
+    client=app_module.app.test_client()
+    query={'mode':mode,'bbox':'106.60,11.01,106.64,11.05','scope':'filtered',
+           'ward':'Tân An','price_max':'1.5','area_min':'80','q':'DX43','date_range':'1m',
+           'include_recent':'1','complete':'1'}
+    assert client.get('/api/map-listings',query_string=query).status_code==200
+    assert client.get('/api/map-listing-items',query_string={**query,'location_key':'ward:thu-dau-mot:tan-an'}).status_code==200
+    assert len(captured)==3
+    for filters in captured:
+        assert filters.bbox==(106.6,11.01,106.64,11.05)
+        assert filters.wards==('Tân An',) and filters.keyword=='DX43'
+        assert filters.price_max==1.5 and filters.area_min==80 and filters.date_range=='1m'
+        assert filters.sources==('facebook',)
+        assert filters.complete_only==(mode=='all')

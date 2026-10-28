@@ -4744,10 +4744,13 @@ _LISTING_MAP_SENSITIVE_KEYS = frozenset({
 
 
 def _listing_map_filters(req, mode: str) -> MapFilters:
+    bbox = None
     if 'bbox' in req.args:
         from services.listing_map_viewport import parse_bbox
-        return MapFilters(bbox=parse_bbox(req.args['bbox']), date_range='3m',
-                          sources=tuple(normalize_sources_for_tier([], current_tier())))
+        bbox = parse_bbox(req.args['bbox'])
+        if req.args.get('scope') != 'filtered':
+            return MapFilters(bbox=bbox, date_range='3m',
+                              sources=tuple(normalize_sources_for_tier([], current_tier())))
     (
         active_city,
         wards,
@@ -4762,6 +4765,7 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
     ranges = _request_range_filter_kwargs(req)
     tier = current_tier()
     return MapFilters(
+        bbox=bbox,
         city=active_city,
         wards=tuple(wards or ()),
         sources=tuple(sources or ()),

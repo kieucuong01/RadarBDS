@@ -62,6 +62,19 @@ def test_viewport_queries_discard_dashboard_filters_and_keep_only_map_mode():
     assert 'price' not in _run_node(f"mapApi.initialBoundsUrl({snapshot})")
 
 
+def test_filtered_viewport_keeps_every_dashboard_filter_until_exploration():
+    from urllib.parse import parse_qs
+    snapshot = "{mode:'signals',query:'ward=Tân+An&price_max=1.5&area_min=80&q=DX43&date_range=1m&only_drops=1&complete=1'}"
+    result = _run_node(f"mapApi.viewportSnapshot({snapshot},[106.6,11.01,106.64,11.05],true)")
+    assert result['mode'] == 'signals'
+    query = parse_qs(result['query'])
+    assert query == {'ward':['Tân An'],'price_max':['1.5'],'area_min':['80'],'q':['DX43'],
+                     'date_range':['1m'],'only_drops':['1'],'complete':['1'],
+                     'bbox':['106.6,11.01,106.64,11.05'],'scope':['filtered']}
+    explored = _run_node(f"mapApi.viewportSnapshot({snapshot},[106.6,11.01,106.64,11.05],false)")
+    assert parse_qs(explored['query']) == {'bbox':['106.6,11.01,106.64,11.05']}
+
+
 def test_summary_and_item_urls_preserve_frozen_filter_snapshot():
     snapshot = "{mode:'all',query:'city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&ward=Ph%C3%BA+L%E1%BB%A3i&complete=1'}"
     summary = _run_node(f"mapApi.buildSummaryUrl({snapshot})")

@@ -48,6 +48,7 @@
     snapshot: null,
     entrySnapshot: null,
     viewSnapshot: null,
+    browseViewport: false,
     initialBounds: null,
     initialController: null,
     viewportTimer: null,
@@ -379,19 +380,22 @@
     return '/api/map-initial-bounds?' + params.toString();
   }
 
-  function viewportSnapshot(snapshot, bounds) {
+  function viewportSnapshot(snapshot, bounds, filtered) {
     var safe = normalizedSnapshot(snapshot);
     if (!safe || !Array.isArray(bounds) || bounds.length !== 4 || !bounds.every(Number.isFinite)) return null;
     var b = [Math.max(-180, Math.floor(bounds[0]*10000)/10000), Math.max(-90, Math.floor(bounds[1]*10000)/10000),
       Math.min(180, Math.ceil(bounds[2]*10000)/10000), Math.min(90, Math.ceil(bounds[3]*10000)/10000)];
     if (b[0] >= b[2] || b[1] >= b[3]) return null;
-    return {mode: safe.mode, query: new URLSearchParams({bbox: b.join(',')}).toString()};
+    var params = new URLSearchParams(filtered ? safe.query : '');
+    params.set('bbox', b.join(','));
+    if (filtered) params.set('scope','filtered');
+    return {mode: safe.mode, query: params.toString()};
   }
 
   function currentViewSnapshot() {
     if (!state.map) return null;
     var b = state.map.getBounds();
-    return viewportSnapshot(state.snapshot, [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
+    return viewportSnapshot(state.snapshot, [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], !state.browseViewport);
   }
 
   function renderMapScopeControls() {
@@ -404,15 +408,19 @@
     });
     select.value = state.snapshot.mode;
     select.addEventListener('change', function () {
-      state.snapshot = {mode: select.value, query: ''};
+      state.snapshot = {mode: select.value, query: state.snapshot.query};
       state.loadedViewportKey = null; state.recentPayload = null;
       setPanelView('recent-loading'); requestSummary();
     });
     container.appendChild(select);
-    container.appendChild(create('span','','Trong vùng nhìn · 3 tháng gần đây'));
+    container.appendChild(create('span','',state.browseViewport
+      ? 'Theo vùng nhìn · 3 tháng gần đây' : 'Theo bộ lọc · ' + filterSummaryText(state.snapshot)));
     var back = create('button','','Về vùng đã lọc'); back.type = 'button';
     back.addEventListener('click', function () {
+      state.browseViewport = false;
+      renderMapScopeControls();
       frameOpeningArea(root.L);
+      requestSummary();
     });
     container.appendChild(back);
   }
@@ -985,6 +993,7 @@
     state.focusMode = Boolean(enabled);
     if (state.workspace) {
       state.workspace.classList.toggle("is-focus-mode", state.focusMode);
+      state.workspace.setAttribute('aria-modal',state.focusMode ? 'true' : 'false');
     }
     if (root && root.document && root.document.body) {
       root.document.body.classList.toggle(
@@ -1017,6 +1026,13 @@
   function toggleFocusMode() {
     if (!state.open) return false;
     return setFocusMode(!state.focusMode);
+  }
+
+  function toggleFilters() {
+    if (typeof root.toggleMenu === 'function') root.toggleMenu();
+    root.setTimeout(function () {
+      if (state.map) state.map.invalidateSize({pan:false});
+    },320);
   }
 
   function setStatus(text, busy) {
@@ -1544,6 +1560,13 @@
       if (state.summaryController) state.summaryController.abort();
       ++summarySequence; state.pendingViewportKey = null;
     });
+    state.map.on('dragstart', function () {
+      // Programmatic framing, parcel selection and zooming keep the sidebar scope.
+      if (!state.browseViewport) {
+        state.browseViewport = true;
+        renderMapScopeControls();
+      }
+    });
     state.map.on('moveend', function () {
       root.clearTimeout(state.viewportTimer);
       state.viewportTimer = root.setTimeout(function () {
@@ -2037,7 +2060,8 @@
     var model = panelTabModel(viewKind);
     var header = create("div", "listing-map-panel-heading");
     var titleWrap = create("div", "listing-map-panel-title");
-    titleWrap.appendChild(create("h3", "", state.viewSnapshot && model.active === 'recent' ? 'Tin mới trong vùng nhìn' : model.title));
+    titleWrap.appendChild(create("h3", "", model.active === 'recent'
+      ? (state.browseViewport ? 'Tin mới trong vùng nhìn' : 'Tin theo bộ lọc') : model.title));
     if (model.active === "recent") {
       var unmapped = safeCount(
         state.summary && state.summary.summary
@@ -2131,7 +2155,7 @@
       list.appendChild(create(
         "p",
         "listing-map-empty",
-        state.viewSnapshot ? 'Chưa có tin đủ vị trí trong vùng nhìn. Thử kéo hoặc thu nhỏ bản đồ.' : 'Chưa có deal mới phù hợp với bộ lọc hiện tại.'
+        state.browseViewport ? 'Chưa có tin đủ vị trí trong vùng nhìn. Thử kéo hoặc thu nhỏ bản đồ.' : 'Chưa có tin đủ vị trí phù hợp với bộ lọc hiện tại.'
       ));
     }
     shell.appendChild(list);
@@ -2439,7 +2463,7 @@
   function setSummaryStatus(payload) {
     var summary = (payload && payload.summary) || {};
     if (payload && payload.viewport) {
-      setStatus(safeCount(summary.mapped) + ' tin trong vùng nhìn (3 tháng) · ' + (payload.locations || []).length + ' vị trí'
+      setStatus(safeCount(summary.mapped) + (state.browseViewport ? ' tin trong vùng nhìn (3 tháng)' : ' tin theo bộ lọc') + ' · ' + (payload.locations || []).length + ' vị trí'
         + (payload.truncated ? '. Đang giới hạn 1.000 vị trí; phóng to để xem chi tiết.' : '.'), false);
       return;
     }
@@ -3118,7 +3142,7 @@
     state.summaryController = new AbortController();
     var controller = state.summaryController;
     state.pendingViewportKey = viewKey;
-    setStatus('Đang cập nhật tin trong vùng nhìn…', true);
+    setStatus(state.browseViewport ? 'Đang cập nhật tin trong vùng nhìn…' : 'Đang cập nhật tin theo bộ lọc…', true);
     return fetchJson(viewKey + '&include_recent=1', controller)
       .then(function (payload) {
         if (!state.open || sequence !== summarySequence) return;
@@ -3190,7 +3214,8 @@
     state.open = true;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;
-    state.snapshot = {mode:'all',query:''};
+    state.snapshot = safe;
+    state.browseViewport = false;
     state.viewSnapshot = null; state.loadedViewportKey = null; state.pendingViewportKey = null;
     state.workspace = workspace;
     state.summary = null;
@@ -3243,12 +3268,33 @@
     if (!state.open || !safe) return Promise.resolve();
     closePreview();
     state.entrySnapshot = safe;
+    state.snapshot = safe;
+    state.browseViewport = false;
+    state.loadedViewportKey = null; state.pendingViewportKey = null;
+    ++summarySequence; ++itemSequence;
+    if (state.summaryController) state.summaryController.abort();
+    if (state.itemController) state.itemController.abort();
+    if (state.initialController) state.initialController.abort();
+    root.clearTimeout(state.viewportTimer);
+    state.recentPayload = null; state.selectedGroup = null; state.summary = null;
+    cancelMarkerRender(); clearMarkerLabels();
+    if (state.markerLayer) state.markerLayer.clearLayers();
+    setPanelView('recent-loading');
     state.dashboardSyncNeeded = state.dashboardSyncNeeded
       || Boolean(options.markDashboardDirty);
-    var controller = new AbortController();
+    if (!state.map) return startMapLoad(safe);
+    var controller = state.initialController = new AbortController();
+    renderMapScopeControls();
     return fetchJson(initialBoundsUrl(safe), controller).then(function (payload) {
-      if (state.open && state.entrySnapshot === safe) state.initialBounds = payload.bounds;
-    }).catch(function () {});
+      if (!state.open || state.entrySnapshot !== safe) return;
+      state.initialBounds = payload.bounds;
+      if (state.browseViewport) return;
+      frameOpeningArea(root.L);
+      return requestSummary();
+    }).catch(function (error) {
+      if (error && error.name === 'AbortError') return;
+      if (state.open && state.entrySnapshot === safe) return requestSummary();
+    });
   }
 
   function isOpen() {
@@ -3399,6 +3445,10 @@
   function onKeydown(event) {
     if (!state.open || isSignalModalOpen()) return;
     if (event.key === "Escape") {
+      var sidebar = element('sidebar');
+      if (sidebar && sidebar.classList.contains('show') && typeof root.hideSidebarMobile === 'function') {
+        root.hideSidebarMobile(); return;
+      }
       event.preventDefault();
       if (state.preview) {
         closePreview(true);
@@ -3412,6 +3462,7 @@
       return;
     }
     if (event.key !== "Tab") return;
+    if (!state.focusMode) return;
     var focusable = focusableElements();
     if (!focusable.length) return;
     var first = focusable[0];
@@ -3514,6 +3565,7 @@
     loadLeaflet: loadLeaflet,
     toggleAdminEditMode: toggleAdminEditMode,
     toggleFocusMode: toggleFocusMode,
+    toggleFilters: toggleFilters,
     showRecent: showRecent,
     showLocations: showLocations,
     isOpen: isOpen,

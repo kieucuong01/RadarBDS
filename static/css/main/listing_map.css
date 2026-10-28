@@ -3,7 +3,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  left: 0;
+  left: 280px;
   z-index: 180;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
@@ -13,8 +13,7 @@
 }
 
 body.listing-map-open .sidebar {
-  display: none;
-  position: relative;
+  display: flex;
   z-index: 190;
   box-shadow: 10px 0 32px rgba(2, 6, 23, 0.28);
 }
@@ -78,7 +77,7 @@ body.listing-map-open .sidebar {
 }
 
 .listing-map-filter-button {
-  display: none;
+  display: inline-flex;
 }
 
 .listing-map-grid-button {
@@ -291,7 +290,6 @@ body.listing-map-focus-mode .listing-map-workspace {
 
 .listing-map-filter-summary select,.listing-map-filter-summary button{font:inherit;border:1px solid #94a3b8;border-radius:6px;padding:5px 7px;background:#fff;color:#0f172a;cursor:pointer}
 .listing-map-filter-summary span{font-size:11px;font-weight:500}
-body.listing-map-open #listingMapFilterButton{display:none}
 @media(max-width:760px){.listing-map-filter-summary span{display:none}.listing-map-filter-summary{max-width:calc(100% - 68px)!important;left:58px!important;top:86px!important;padding:4px 6px;gap:5px}.listing-map-filter-summary select,.listing-map-filter-summary button{font-size:11px;padding:5px}}
 @media(max-width:480px){.listing-map-filter-summary{top:4px!important;max-width:134px!important;flex-wrap:wrap;padding:2px 4px;gap:2px}.listing-map-filter-summary select,.listing-map-filter-summary button{width:100%}}
 
@@ -1163,7 +1161,7 @@ body.listing-map-open .mobile-bottom-nav {
   }
 
   body.listing-map-open .sidebar.show {
-    z-index: 220;
+    z-index: 1001;
   }
 }
 

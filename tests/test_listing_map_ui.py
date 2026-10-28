@@ -52,7 +52,7 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
     assert 'aria-hidden="true"' in html
     assert 'id="listingMapWorkspace"' in html
     assert 'role="dialog"' in html
-    assert 'aria-modal="true"' in html
+    assert 'aria-modal="false"' in html
     assert 'aria-labelledby="listingMapTitle"' in html
     assert 'aria-describedby="listingMapDescription"' not in html
     assert 'id="listingMapDescription"' not in html
@@ -426,11 +426,11 @@ def test_listing_map_workspace_body_gets_stable_remaining_height():
     assert "grid-template-rows: auto auto auto minmax(0, 1fr);" not in styles
 
 
-def test_desktop_map_exploration_hides_dashboard_filters_and_keeps_listing_rail():
+def test_desktop_map_retains_sidebar_filters_and_keeps_listing_rail():
     styles = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
 
     assert re.search(
-        r"\.listing-map-workspace\s*\{[^}]*left:\s*0;",
+        r"\.listing-map-workspace\s*\{[^}]*left:\s*280px;",
         styles,
         re.S,
     )
@@ -442,7 +442,8 @@ def test_desktop_map_exploration_hides_dashboard_filters_and_keeps_listing_rail(
     )
     assert ".listing-map-panel-tabs" in styles
     assert ".listing-map-recent" in styles
-    assert re.search(r'body\.listing-map-open \.sidebar\s*\{[^}]*display:\s*none;',styles,re.S)
+    assert re.search(r'body\.listing-map-open \.sidebar\s*\{[^}]*display:\s*flex;',styles,re.S)
+    assert 'body.listing-map-open #listingMapFilterButton{display:none}' not in styles
 
 
 def test_mobile_map_workspace_uses_filter_button_and_newest_deal_bottom_sheet():
