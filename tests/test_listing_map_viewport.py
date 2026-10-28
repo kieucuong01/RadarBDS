@@ -112,3 +112,36 @@ def test_filtered_bbox_applies_sidebar_to_markers_recent_and_group_details(monke
         assert filters.price_max==1.5 and filters.area_min==80 and filters.date_range=='1m'
         assert filters.sources==('facebook',)
         assert filters.complete_only==(mode=='all')
+
+
+@pytest.mark.parametrize('mode', ['all', 'signals'])
+def test_dragged_viewport_keeps_listing_criteria_without_default_city(monkeypatch, mode):
+    import app as app_module
+    captured = []
+    def summary(**kwargs):
+        captured.append(kwargs['filters'])
+        return {'locations': [], 'summary': {'total': 0, 'mapped': 0}}
+    def items(**kwargs):
+        captured.append(kwargs['filters'])
+        return {'items': [], 'total': 0}
+    monkeypatch.setattr(app_module, 'load_listing_map_summary', summary)
+    monkeypatch.setattr(app_module, 'load_listing_map_items', items)
+    client = app_module.app.test_client()
+    query = {'mode': mode, 'bbox': '106.60,11.01,106.64,11.05', 'scope': 'viewport',
+             'date_range': '1w', 'price_min': '0.5', 'price_max': '1.5',
+             'area_min': '80', 'area_max': '150', 'prop_type': ['dat_nen', 'nha_dat'],
+             'price_range': ['0.5:1', '1.2:1.5'], 'area_range': ['80:100', '120:150'],
+             'include_recent': '1', 'complete': '1', 'source': 'guland'}
+    assert client.get('/api/map-listings', query_string=query).status_code == 200
+    assert client.get('/api/map-listing-items', query_string={**query, 'location_key': 'ward:ben-cat:my-phuoc'}).status_code == 200
+    assert len(captured) == 3
+    for filters in captured:
+        assert not filters.city and filters.wards == ()
+        assert filters.date_range == '1w'
+        assert filters.price_min == 0.5 and filters.price_max == 1.5
+        assert filters.area_min == 80 and filters.area_max == 150
+        assert set(filters.prop_types) == {'dat_nen', 'nha_dat'}
+        assert filters.price_ranges == ((0.5, 1.0), (1.2, 1.5))
+        assert filters.area_ranges == ((80.0, 100.0), (120.0, 150.0))
+        assert filters.sources == ('facebook',)
+        assert filters.complete_only == (mode == 'all')

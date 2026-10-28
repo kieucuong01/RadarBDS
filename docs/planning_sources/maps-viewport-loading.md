@@ -10,8 +10,9 @@ read from existing checked-in boundary references, with a centre fallback when a
 boundary is unavailable. A small `/api/map-initial-bounds` request avoids scanning
 listings to determine the opening view. No source GIS request is made at runtime.
 
-Only a real user `dragstart` switches listing scope to independent viewport
-exploration with the public three-month window. Zooming, resizing, initial framing,
+Only a real user `dragstart` switches listing geography to the current viewport.
+Dragging drops city/ward restrictions while retaining date, price/area ranges,
+property types and all other permitted non-geographic filters. Zooming, resizing, initial framing,
 parcel selection and other programmatic movements preserve the filtered scope.
 Existing tier/source/public-visibility and actionable-signal rules apply in both.
 “Về vùng đã lọc” restores the active sidebar filters and opening area. Changing a
@@ -40,7 +41,8 @@ alternatives and parcel selection keep their existing source and precision limit
   response.
 - Round viewport edges outward to four decimal places for stable bounded keys.
 - `scope=filtered` combines bbox with the existing parsed/tier-clamped filters.
-  Plain bbox queries retain independent exploration semantics. Summary markers,
+  Dragging uses `scope=viewport`, retaining criteria while clearing geography;
+  plain bbox requests remain a legacy three-month API fallback. Summary markers,
   recent cards and grouped details always share the current scope.
 - One summary request includes markers and the first 20 recent cards from that
   viewport. There is no separate global `/api/listings` or `/api/signals` request
@@ -79,7 +81,8 @@ partition-only defaults, off-screen image exclusion, panning and zoom-out loads,
 independent sources/opacity and removed-layer listener cleanup. Browser checks
 also inspect real request URLs, visible image counts and card changes.
 
-The filter-first browser check used a Bến Cát price cap of one billion. Opening
+The earlier filter-first browser check (superseded by retained filters on drag)
+used a Bến Cát price cap of one billion. Opening
 and zoom requests retained `city`, `price_max`, date/type filters and
 `scope=filtered`, returning zero matching positions in that local snapshot.
 A real drag issued a plain bbox query and returned 12 nearby listings, including
@@ -111,3 +114,13 @@ nginx -t && systemctl reload nginx
 
 Until this happens, Nginx's old restrictive header still blocks location prompts
 even though Flask and the repository Nginx template have been corrected.
+
+### Retain listing criteria during dragging (2026-10-28)
+
+Opening requests use `scope=filtered`; dragging uses `scope=viewport`.
+Only city/ward parameters (including array aliases and `ward_mode`) are removed
+from the snapshot when exploring, leaving
+repeated price/area ranges, multiple property types, time window and other public
+criteria intact across markers, recent cards and group details. Returning to the
+filtered area restores the geographic criteria too. Parcel outlines use 0.7px
+strokes at 28% opacity with no fill; the selected parcel remains highlighted.

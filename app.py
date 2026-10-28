@@ -4748,7 +4748,7 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
     if 'bbox' in req.args:
         from services.listing_map_viewport import parse_bbox
         bbox = parse_bbox(req.args['bbox'])
-        if req.args.get('scope') != 'filtered':
+        if req.args.get('scope') not in {'filtered', 'viewport'}:
             return MapFilters(bbox=bbox, date_range='3m',
                               sources=tuple(normalize_sources_for_tier([], current_tier())))
     (
@@ -4760,7 +4760,9 @@ def _listing_map_filters(req, mode: str) -> MapFilters:
         _trend_period,
         mos_min,
     ) = get_base_filters(req)
-    if not wards and active_city in CITY_MAP:
+    if bbox is not None and req.args.get('scope') == 'viewport':
+        active_city, wards = "", []
+    elif not wards and active_city in CITY_MAP:
         wards = CITY_MAP[active_city]
     ranges = _request_range_filter_kwargs(req)
     tier = current_tier()

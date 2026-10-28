@@ -388,9 +388,12 @@
     var b = [Math.max(-180, Math.floor(bounds[0]*10000)/10000), Math.max(-90, Math.floor(bounds[1]*10000)/10000),
       Math.min(180, Math.ceil(bounds[2]*10000)/10000), Math.min(90, Math.ceil(bounds[3]*10000)/10000)];
     if (b[0] >= b[2] || b[1] >= b[3]) return null;
-    var params = new URLSearchParams(filtered ? safe.query : '');
+    var params = new URLSearchParams(safe.query);
+    if (!filtered) {
+      ['city', 'city[]', 'ward', 'ward[]', 'ward_mode'].forEach(function (key) { params.delete(key); });
+    }
     params.set('bbox', b.join(','));
-    if (filtered) params.set('scope','filtered');
+    params.set('scope', filtered ? 'filtered' : 'viewport');
     return {mode: safe.mode, query: params.toString()};
   }
 
@@ -416,7 +419,7 @@
     });
     container.appendChild(select);
     container.appendChild(create('span','',state.browseViewport
-      ? 'Theo vùng nhìn · 3 tháng gần đây' : 'Theo bộ lọc · ' + filterSummaryText(state.snapshot)));
+      ? 'Theo vùng nhìn · ' + filterSummaryText(state.snapshot, true) : 'Theo bộ lọc · ' + filterSummaryText(state.snapshot)));
     var back = create('button','','Về vùng đã lọc'); back.type = 'button';
     back.addEventListener('click', function () {
       state.browseViewport = false;
@@ -488,7 +491,7 @@
     };
   }
 
-  function filterSummaryText(snapshot) {
+  function filterSummaryText(snapshot, dateOnly) {
     var safe = normalizedSnapshot(snapshot);
     if (!safe) return "Toàn khu vực";
     var params = new URLSearchParams(safe.query);
@@ -505,7 +508,7 @@
     var areaLabel = wards.length
       ? wards.length + " khu vực"
       : "Toàn khu vực";
-    return dateLabel + " · " + areaLabel;
+    return dateOnly ? dateLabel : dateLabel + " · " + areaLabel;
   }
 
   function recentItemModel(item) {
@@ -2499,7 +2502,7 @@
   function setSummaryStatus(payload) {
     var summary = (payload && payload.summary) || {};
     if (payload && payload.viewport) {
-      setStatus(safeCount(summary.mapped) + (state.browseViewport ? ' tin trong vùng nhìn (3 tháng)' : ' tin theo bộ lọc') + ' · ' + (payload.locations || []).length + ' vị trí'
+      setStatus(safeCount(summary.mapped) + (state.browseViewport ? ' tin trong vùng nhìn' : ' tin theo bộ lọc') + ' · ' + (payload.locations || []).length + ' vị trí'
         + (payload.truncated ? '. Đang giới hạn 1.000 vị trí; phóng to để xem chi tiết.' : '.'), false);
       return;
     }

@@ -51,28 +51,32 @@ def test_mode_base_layer_and_precision_contracts():
     assert _run_node("mapApi.normalizeAccuracyRadius(100000)") == 20000
 
 
-def test_viewport_queries_discard_dashboard_filters_and_keep_only_map_mode():
-    snapshot = "{mode:'all',query:'city=BẾN+CÁT&ward=Mỹ+Phước&price_max=1&q=DX43&date_range=1w'}"
+def test_viewport_queries_drop_only_geographic_filters_and_keep_map_mode():
+    snapshot = "{mode:'all',query:'city=BẾN+CÁT&ward=Mỹ+Phước&city[]=Thuận+An&ward[]=An+Phú&ward_mode=none&price_max=1&q=DX43&date_range=1w'}"
     result = _run_node(f"mapApi.viewportSnapshot({snapshot},[106.60001,11.01001,106.63999,11.04999])")
     assert result['mode'] == 'all'
     from urllib.parse import parse_qs
-    assert parse_qs(result['query']) == {'bbox': ['106.6,11.01,106.64,11.05']}
+    assert parse_qs(result['query']) == {'price_max':['1'],'q':['DX43'],'date_range':['1w'],
+                                        'bbox':['106.6,11.01,106.64,11.05'],'scope':['viewport']}
     assert _run_node(f"mapApi.viewportSnapshot({snapshot},[1,2,0,3])") is None
     assert _run_node(f"mapApi.initialBoundsUrl({snapshot})").startswith('/api/map-initial-bounds?city=')
     assert 'price' not in _run_node(f"mapApi.initialBoundsUrl({snapshot})")
 
 
-def test_filtered_viewport_keeps_every_dashboard_filter_until_exploration():
+def test_viewport_exploration_keeps_non_geographic_filters():
     from urllib.parse import parse_qs
-    snapshot = "{mode:'signals',query:'ward=Tân+An&price_max=1.5&area_min=80&q=DX43&date_range=1m&only_drops=1&complete=1'}"
+    snapshot = "{mode:'signals',query:'city=THỦ+DẦU+MỘT&ward=Tân+An&price_max=1.5&area_min=80&q=DX43&date_range=1m&only_drops=1&complete=1&prop_type=dat_nen&prop_type=nha_dat'}"
     result = _run_node(f"mapApi.viewportSnapshot({snapshot},[106.6,11.01,106.64,11.05],true)")
     assert result['mode'] == 'signals'
     query = parse_qs(result['query'])
-    assert query == {'ward':['Tân An'],'price_max':['1.5'],'area_min':['80'],'q':['DX43'],
+    assert query == {'city':['THỦ DẦU MỘT'],'ward':['Tân An'],'price_max':['1.5'],'area_min':['80'],'q':['DX43'],
                      'date_range':['1m'],'only_drops':['1'],'complete':['1'],
+                     'prop_type':['dat_nen','nha_dat'],
                      'bbox':['106.6,11.01,106.64,11.05'],'scope':['filtered']}
     explored = _run_node(f"mapApi.viewportSnapshot({snapshot},[106.6,11.01,106.64,11.05],false)")
-    assert parse_qs(explored['query']) == {'bbox':['106.6,11.01,106.64,11.05']}
+    expected = {key:value for key,value in query.items() if key not in ('city','ward')}
+    expected['scope'] = ['viewport']
+    assert parse_qs(explored['query']) == expected
 
 
 def test_summary_and_item_urls_preserve_frozen_filter_snapshot():

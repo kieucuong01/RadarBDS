@@ -187,7 +187,7 @@
           if (disposed || sequence !== viewSeq) return;
           if (data.type !== 'FeatureCollection' || !Array.isArray(data.features) || data.features.length > 1500) throw new Error('Invalid parcel data');
           var previous = layer;
-          layer = L.geoJSON(data, {pane: 'planningParcels', style: {color: '#334155', weight: 1.2, fillOpacity: 0.02},
+          layer = L.geoJSON(data, {pane: 'planningParcels', style: {color: '#334155', weight: 0.7, opacity: 0.28, fillOpacity: 0},
             onEachFeature: function (feature, polygon) {
               polygon.bindTooltip('Tờ ' + format(feature.properties.sheet) + ' · Thửa ' + format(feature.properties.parcel));
               polygon.on('click', function (event) { L.DomEvent.stopPropagation(event); select(feature); });
