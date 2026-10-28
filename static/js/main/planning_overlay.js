@@ -239,6 +239,13 @@
     ui.layerBody = body;
     var disposeParcels = env.RADAR_PARCEL_PILOT && env.RadarPlanningParcels
       ? env.RadarPlanningParcels.mount(map, L, env, ui) : null;
+    var actions = node('div', rail); actions.className = 'planning-drawing-actions';
+    var disposeMeasure = env.RadarPlanningMeasure ? env.RadarPlanningMeasure.mount(map, L, env, ui, actions) : null;
+    var disposeLegend = env.RadarPlanningLegend ? env.RadarPlanningLegend.mount(map, L, env, ui, actions, function () {
+      var documents = catalog.filter(function (item) { return item.source === 'document' && item.manifest && item.manifest.legend_available !== false; });
+      return {theme:activeTheme.id, active:activeTheme.toggle.checked, source:activeTheme.source.value, assetBase:assetBase, documents:documents,
+        selectedDocument:documents.some(function (item) { return item.id === selector.value; }) ? selector.value : null};
+    }) : null;
     function keydown(event) {
       event.stopPropagation();
       if (event.key === 'Escape') ui.panels.forEach(function (p) { p.open = false; });
@@ -433,6 +440,8 @@
       if (disposed) return;
       disposed = true;
       controller.abort();
+      if (disposeMeasure) disposeMeasure();
+      if (disposeLegend) disposeLegend();
       if (disposeParcels) disposeParcels();
       map.off('moveend', viewportChanged);
       map.off('unload', dispose);

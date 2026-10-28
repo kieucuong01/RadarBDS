@@ -108,6 +108,8 @@
     box.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeInfo(); });
     function select(feature) {
       if (disposed || !toggle.checked) return;
+      var mapClasses = map.getContainer().classList;
+      if (mapClasses && mapClasses.contains('planning-is-drawing')) return;
       ++searchSeq; if (searchRequest) searchRequest.abort(); searchSubmit.disabled = !config;
       if (selectionRequest) selectionRequest.abort();
       var sequence = ++selectionSeq;
@@ -382,13 +384,14 @@
         if (data.excluded_count) node('p', settings, format(data.excluded_count) + ' ranh lỗi nguồn đã được tạm loại.').className = 'planning-parcel-notice';
         loadViewport();
       }).catch(function (error) { if (!disposed && error.name !== 'AbortError') status.textContent = 'Chưa có dữ liệu ranh thửa cho bản thử.'; });
-    map.on('moveend', move); map.on('movestart', moveStart);
+    map.on('moveend', move); map.on('movestart', moveStart); map.on('planning:drawing-start', closeInfo);
     function dispose() {
       if (disposed) return;
       disposed = true; ++viewSeq; ++selectionSeq; ++searchSeq; ++navigationSeq;
       lifetime.abort(); if (viewRequest) viewRequest.abort(); if (selectionRequest) selectionRequest.abort();
       if (searchRequest) searchRequest.abort(); if (navigationRequest) navigationRequest.abort();
       env.clearTimeout(timer); map.off('moveend', move); map.off('movestart', moveStart); map.off('unload', dispose);
+      map.off('planning:drawing-start', closeInfo);
       remove(layer); remove(highlight);
       if (!sharedUI) ui.root.remove();
     }

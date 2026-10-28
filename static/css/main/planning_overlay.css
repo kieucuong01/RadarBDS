@@ -81,3 +81,48 @@
 }
 @media(max-width:1100px) and (max-height:740px){.planning-opacity-control{top:120px}.planning-opacity-control input[type=range]{height:48px}}
 @media(max-width:360px){.planning-map-popover>summary{font-size:11px;padding:0 8px;gap:5px}.planning-layer-chip{font-size:11px;padding:0 8px}}
+.planning-drawing-actions{display:flex;flex-direction:column;gap:4px;width:100%;margin-top:5px;padding-top:5px;border-top:1px solid #dce7e0}
+.planning-opacity-control .planning-drawing-actions button{font-size:11px;font-weight:700;min-height:44px;padding:4px;line-height:1.25}
+.planning-drawing-actions button[aria-pressed=true]{background:#11755b;color:#fff}
+.planning-measure-result{position:absolute;top:64px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 130px);padding:10px 14px;border:1px solid #c6ddd1;border-radius:12px;background:#fff;box-shadow:0 3px 16px #15382c24;pointer-events:auto;text-align:center;font-size:12px}
+.planning-measure-result>[role=status]{font-weight:700}
+.planning-measure-result p{font-size:11px;color:#526b61;max-width:390px;margin:5px auto 0}
+.planning-measure-result-actions{display:flex;justify-content:center;gap:6px;margin-top:6px}
+.planning-measure-result-actions button{min-height:36px;border:1px solid #c6ddd1;border-radius:8px;padding:4px 10px;color:#0d6f54;background:#f1f8f4}
+.planning-measure-result-actions button:last-child{min-width:36px}
+.planning-measure-label{padding:2px 5px;border:1px solid #9bbdaf;border-radius:5px;background:#fff;color:#174a3b;box-shadow:0 1px 4px #16382b24;font-size:11px;font-weight:600;white-space:nowrap;pointer-events:none}
+.planning-measure-label:before{display:none}
+.planning-measure-area{padding:5px 8px;border-color:#08765b;font-size:12px;font-weight:800}
+.planning-is-drawing{cursor:crosshair}
+.planning-is-drawing .leaflet-marker-pane *,.planning-is-drawing .leaflet-planningParcels-pane *,.planning-is-drawing .leaflet-planningParcelSelected-pane *{pointer-events:none!important}
+.planning-is-drawing .planning-layer-dock{display:none}
+.listing-map-workspace:has(.planning-is-drawing) .listing-map-mobile-sheet{display:none}
+.listing-map-workspace:has(.planning-measure-result:not([hidden])) .listing-map-filter-summary{visibility:hidden;pointer-events:none}
+.planning-land-legend{position:absolute;z-index:4;top:64px;left:50%;transform:translateX(-50%);width:520px;max-width:calc(100% - 20px);max-height:calc(100% - 80px);overflow:auto;overscroll-behavior:contain;padding:16px;border:1px solid #cadcd2;border-radius:14px;background:#fff;box-shadow:0 10px 34px #15382c35;pointer-events:auto}
+.planning-legend-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.planning-legend-heading h3{margin:0;font-size:17px}
+.planning-legend-heading button{min-width:44px;min-height:44px;border:0;border-radius:8px;background:#f2f6f3;font-size:22px;color:#365a4a}
+.planning-land-legend select,.planning-land-legend input{width:100%;min-height:44px;margin-top:8px;border:1px solid #cadbd1;border-radius:8px;background:#fff;padding:8px;color:#183b32}
+.planning-legend-note,.planning-land-legend [role=status]{font-size:12px;color:#526b61}
+.planning-legend-tables h4{margin:16px 0 8px;font-size:13px}
+.planning-legend-tables table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.planning-legend-tables td,.planning-legend-tables th{text-align:left;padding:7px 5px;border-bottom:1px solid #e0eae4;overflow-wrap:anywhere}
+.planning-legend-tables th:first-child{width:28%}.planning-legend-tables th:nth-child(2){width:42px}
+.planning-legend-tables td:first-child{font-weight:700}.planning-legend-tables td img{vertical-align:middle;image-rendering:auto}
+.planning-legend-tables a{display:inline-block;font-size:11px;color:#10765b;margin-top:6px;text-decoration:underline}
+.planning-document-legend{width:100%;height:auto}
+.listing-map-workspace:has(.planning-land-legend:not([hidden])) .listing-map-mobile-sheet,.listing-map-workspace:has(.planning-land-legend:not([hidden])) .listing-map-filter-summary{visibility:hidden;pointer-events:none}
+@media(max-width:1100px){
+ .planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-opacity-control{flex-wrap:wrap}
+ .planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-drawing-actions{flex-direction:row;flex:0 0 100%}
+ .planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-opacity-control .planning-drawing-actions button{width:auto;flex:1}
+}
+@media(max-width:760px){
+ .planning-opacity-control{flex-wrap:wrap}
+ .planning-drawing-actions{flex:0 0 100%;flex-direction:row}
+ .planning-opacity-control .planning-drawing-actions button{width:auto;flex:1}
+ .planning-measure-result{max-width:calc(100% - 20px);padding:8px 12px}
+ .planning-measure-result-actions button{min-height:44px}
+ .planning-is-drawing .planning-measure-result{top:auto;bottom:12px;width:calc(100% - 20px)}
+ .planning-land-legend input,.planning-land-legend select{font-size:16px}
+}
