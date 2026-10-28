@@ -493,3 +493,42 @@ def test_review25_explicit_total_replaces_structured_rectangular_estimate():
                                "area_m2": 120.6})
     assert record is not None and record["area_m2"] == 130.0
     assert record["measurement_provenance"]["area_m2"] == "declared_text"
+
+
+# Four reviewed field-cases, TWO independent patterns: each pair is a repost.
+REVIEW27_PROPERTY_CONTEXT_CASES = [
+    (84188, "CÓ NGAY CĂN TRỌ CHO THUÊ", "Trọ xây kiêng cố, chắc chắn bao gồm 1 kiot và 7 phòng trọ", "nha_tro"),
+    (84407, "CÓ NGAY CĂN TRỌ CHO THUÊ", "Trọ xây kiêng cố, chắc chắn bao gồm 1 kiot và 7 phòng trọ", "nha_tro"),
+    (84120, "Cần bán gấp đất góc mặt tiền đường Vành Đai", "DT: 292m², 2 mặt tiền; Thích hợp xây căn hộ dịch vụ, nhà ở, kinh doanh…", "dat_nen"),
+    (84608, "Cần bán gấp đất góc mặt tiền đường Vành Đai", "DT: 292m², 2 mặt tiền; Thích hợp xây căn hộ dịch vụ, nhà ở, kinh doanh…", "dat_nen"),
+]
+
+
+@pytest.mark.parametrize("listing_id,title,description,expected", REVIEW27_PROPERTY_CONTEXT_CASES)
+def test_review27_existing_rental_vs_future_building_use(listing_id, title, description, expected):
+    assert classify_property_type(title, description, 292, 100) == expected
+
+
+@pytest.mark.parametrize("listing_id,title,description,expected", REVIEW27_PROPERTY_CONTEXT_CASES)
+def test_review27_property_context_full_normalization(listing_id, title, description, expected):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/property-control",
+                               "title": title, "description": description})
+    assert record is not None and record["property_type"] == expected
+
+
+@pytest.mark.parametrize("title,description,expected", [
+    ("Bán đất", "Thích hợp xây căn trọ cho thuê", "dat_nen"),
+    ("Bán đất", "Có thể xây căn trọ, thu nhập dự kiến", "dat_nen"),
+    ("Bán đất", "Thích hợp xây căn hộ dịch vụ, nhà ở, kinh doanh", "dat_nen"),
+    ("Bán đất", "Phù hợp xây căn hộ dịch vụ, nhà ở", "dat_nen"),
+    ("Bán đất", "Thích hợp xây căn hộ dịch vụ. Nhà ở hiện hữu 3PN, 2WC", "nha_dat"),
+    ("Bán đất", "Thích hợp xây căn hộ dịch vụ, nhà ở 3PN hiện hữu", "nha_dat"),
+    ("Bán căn hộ dịch vụ", "Nhà ở, kinh doanh, đang cho thuê", "chung_cu"),
+    ("Bán nhà cấp 4", "Phù hợp xây căn hộ dịch vụ, nhà ở, kinh doanh", "nha_dat"),
+    ("Bán căn trọ đang cho thuê", "1 kiot, thu nhập hàng tháng", "nha_tro"),
+    ("Bán căn trọ", "Trọ xây kiên cố bao gồm 1 kiot và 7 phòng trọ", "nha_tro"),
+    ("Bán nhà", "Nhà trong khu dân cư, 2PN", "nha_dat"),
+    ("Bán dãy trọ", "12 phòng trọ đang cho thuê", "nha_tro"),
+])
+def test_review27_property_context_controls(title, description, expected):
+    assert classify_property_type(title, description, 292, 100) == expected

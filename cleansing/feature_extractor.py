@@ -1615,7 +1615,8 @@ _POTENTIAL_USE_BUILDING_RE = re.compile(
     r'\b(?:phu\s*hop|thich\s*hop|co\s*the|dat\s*de|de)\b.{0,80}'
     r'\b(?:lam|xay|xay\s*dung|kinh\s*doanh)\b.{0,180}'
     r'\b(?:toa\s*nha|van\s*phong|cong\s*ty|khach\s*san|can\s*ho|'
-    r'chung\s*cu|nha\s*nghi|biet\s*thu|villa|nha\s*tro|phong\s*tro)\b',
+    r'chung\s*cu|nha\s*nghi|biet\s*thu|villa|nha\s*tro|phong\s*tro|can\s*tro)\b'
+    r'(?:\s+dich\s+vu)?(?:\s*,\s*nha\s+o(?=\s*(?:[,.;…]|$)))?',
     re.IGNORECASE,
 )
 
@@ -1998,12 +1999,12 @@ def classify_property_type(
     text_for_tro = _ascii_fold(text)
     text_for_tro = re.sub(
         r'\b(?:phu\s*hop|thich\s*hop|co\s*the|[dđ]at\s*[dđ]e|[dđ]e\s*xay|xay|lam)'
-        r'\b.{0,70}\b(?:nha|phong|day|khu)?\s*tro(?:\s*dau\s*tu)?\b',
+        r'\b.{0,70}\b(?:nha|phong|day|khu|can)?\s*tro(?:\s*dau\s*tu)?\b',
         ' ', text_for_tro, flags=re.IGNORECASE,
     )
     if has_land_only_kw:
         text_for_tro = re.sub(r'\bphong\s*tro\s*dau\s*tu\b', ' ', text_for_tro, flags=re.IGNORECASE)
-    if re.search(r'nha\s*tro\b|phong\s*tro\b|day\s*tro\b|khu\s*tro\b|kinh\s*doanh\s*tro\b', text_for_tro):
+    if re.search(r'\b(?:nha|phong|day|khu|can)\s*tro\b|kinh\s*doanh\s*tro\b', text_for_tro):
         return 'nha_tro'
 
     # ── url_hint branching ──
