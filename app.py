@@ -228,7 +228,8 @@ if os.getenv('RADAR_PLANNING_MAP_ENABLED','1').lower() not in {'0','false','off'
 
 @app.context_processor
 def inject_planning_overlay():
-    return {'planning_overlay_config': app.config.get('PLANNING_OVERLAY_CONFIG')}
+    return {'planning_overlay_config': app.config.get('PLANNING_OVERLAY_CONFIG'),
+            'planning_navigation_regions': app.extensions.get('planning_navigation_regions', [])}
 
 
 

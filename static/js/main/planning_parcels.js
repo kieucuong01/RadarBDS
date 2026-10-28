@@ -6,6 +6,7 @@
   'use strict';
   function mount(map, L, env, sharedUI) {
     var doc = env.document, disposed = false, config, navigationAreas, timer, viewRequest, selectionRequest;
+    var navigationRegions = Array.isArray(env.RADAR_PLANNING_REGIONS) ? env.RADAR_PLANNING_REGIONS : [];
     var apiBase = env.RADAR_PLANNING_CONFIG && env.RADAR_PLANNING_CONFIG.parcelBase || '/local-planning/parcels';
     var viewSeq = 0, selectionSeq = 0, searchSeq = 0, navigationSeq = 0, layer, highlight, searchRequest, navigationRequest;
     var lifetime = new env.AbortController();
@@ -216,7 +217,9 @@
       })[0];
     }
     function fillWards(selected) {
-      wardSelect.replaceChildren(); node('option', wardSelect, 'Toàn thành phố').value = '';
+      var region = navigationRegions.find(function (r) { return r.id === citySelect.value; });
+      wardSelect.disabled = Boolean(region);
+      wardSelect.replaceChildren(); node('option', wardSelect, region ? 'Toàn khu vực' : 'Toàn thành phố').value = '';
       navigationAreas.filter(function (a) { return a.city === citySelect.value; }).forEach(function (a) {
         node('option', wardSelect, a.ward).value = a.area_id || a.code;
       });
@@ -234,6 +237,14 @@
       event.preventDefault(); if (!config || disposed) return;
       if (navigationRequest) navigationRequest.abort();
       var seq = ++navigationSeq, selected = navigationAreas.find(function (a) { return (a.area_id || a.code) === wardSelect.value; });
+      var region = navigationRegions.find(function (r) { return r.id === citySelect.value; });
+      if (region) {
+        closeInfo();
+        map.fitBounds(region.bounds, {maxZoom: region.max_zoom, padding: [24,24], animate: false});
+        areaMenu.open = false;
+        areaStatus.textContent = region.notice || 'Đã đến ' + region.name + '. Bật Phân khu để xem quy hoạch GIS.';
+        return;
+      }
       var query = new URLSearchParams({city: citySelect.value}); if (selected) query.set('ward', selected.ward);
       navigationRequest = new env.AbortController(); areaSubmit.disabled = true;
       areaStatus.textContent = 'Đang mở khu vực…'; closeInfo();
@@ -332,6 +343,7 @@
         navigationAreas = Array.isArray(data.navigation_areas) && data.navigation_areas.length ? data.navigation_areas : data.areas;
         var nearest = closestArea(), navigationNearest = closestArea(navigationAreas);
         Array.from(new Set(navigationAreas.map(function (a) { return a.city; }))).forEach(function (city) { node('option', citySelect, city).value = city; });
+        navigationRegions.forEach(function (region) { node('option', citySelect, region.name).value = region.id; });
         citySelect.value = navigationNearest.city; fillWards(navigationNearest.area_id || navigationNearest.code);
         data.areas.forEach(function (a) { node('option', searchArea, a.city + ' · ' + a.ward).value = a.area_id; });
         searchArea.value = nearest.area_id;

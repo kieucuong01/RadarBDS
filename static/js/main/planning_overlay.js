@@ -11,10 +11,11 @@
         || !/^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || '')
         || data.tile_size !== 256 || data.min_zoom !== 8 || data.max_zoom !== 23)) return false;
     var b = data.bounds;
+    var expanded = data.render_mode === 'xyz' && /\/partition\//.test(data.tile_template);
     return Array.isArray(b) && b.length === 2 && b.every(function (point) {
       return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite);
-    }) && b[0][0] >= 10.75 && b[1][0] <= 11.65 && b[0][0] < b[1][0]
-      && b[0][1] >= 106.25 && b[1][1] <= 107.10 && b[0][1] < b[1][1]
+    }) && b[0][0] >= (expanded ? 8.5 : 10.75) && b[1][0] <= 11.65 && b[0][0] < b[1][0]
+      && b[0][1] >= 106.25 && b[1][1] <= (expanded ? 107.65 : 107.10) && b[0][1] < b[1][1]
       && typeof data.title === 'string' && typeof data.notice === 'string';
   }
 
@@ -317,7 +318,7 @@
         var covered = new Set(ready.map(function (item) { return item.city + '|' + item.area_id; }));
         var missing = expected.size - covered.size;
         var native = ready.some(function (item) { return item.manifest.render_mode === 'xyz'; });
-        theme.status.textContent = native ? 'Ô GIS gốc theo từng mức zoom · vùng hỗ trợ Bình Dương cũ. Vùng trống cần kiểm tra thêm nguồn.' : ready.length + ' lớp sẵn sàng' + (missing && ready.length
+        theme.status.textContent = native ? 'Ô GIS gốc theo từng mức zoom · ' + ready.find(function (item) { return item.manifest.render_mode === 'xyz'; }).city + '. Vùng trống cần kiểm tra thêm nguồn.' : ready.length + ' lớp sẵn sàng' + (missing && ready.length
           ? ' · ' + missing + ' khu vực chưa có nguồn này.' : '.')
           + (!ready.length
             ? ' ' + ((records[0] && records[0].message) || 'Nguồn này chưa có lớp phủ được xác minh.') : '');

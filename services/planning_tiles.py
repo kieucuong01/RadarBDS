@@ -16,6 +16,7 @@ from PIL import Image
 import requests
 
 from services.planning_parcels import API, SOURCE
+from config.planning_regions import PLANNING_BOUNDS, PLANNING_REGIONS
 
 SERVICES = {'partition':'SuDungDat_QHPK_HCM_V2','urban_general':'SuDungDat_QHC_HCM'}
 PARTITION_SUPPLEMENT = 'QHXD_SDD_2025_QHPK_V3'
@@ -148,7 +149,8 @@ class NativeGISTiles:
         west,south,east,north = tile_bounds(z,x,y)
         lon1,lon2 = math.degrees(west/6378137),math.degrees(east/6378137)
         lat1,lat2 = math.degrees(math.atan(math.sinh(south/6378137))),math.degrees(math.atan(math.sinh(north/6378137)))
-        if lon2 < 106.25 or lon1 > 107.1 or lat2 < 10.75 or lat1 > 11.65:
+        (min_lat,min_lon),(max_lat,max_lon) = PLANNING_BOUNDS[theme]
+        if lon2 < min_lon or lon1 > max_lon or lat2 < min_lat or lat1 > max_lat:
             raise LookupError('Tile outside supported area')
         source_key = SERVICES[theme]+'-'+SUPPLEMENTS[theme]
         path = self.directory/theme/source_key/str(z)/str(x)/f'{y}.png'
@@ -209,17 +211,19 @@ class NativeGISTiles:
 def native_layers(prefix='/local-planning/gis-tiles'):
     result=[]
     for theme in SERVICES:
-        identifier='binh-duong-'+theme.replace('_','-')+'-native-gis'
+        region = 'TP.HCM mới' if theme=='partition' else 'Bình Dương (cũ)'
+        area_id = 'hcm-expanded' if theme=='partition' else 'binh-duong-legacy'
+        identifier=('hcm-expanded' if theme=='partition' else 'binh-duong')+'-'+theme.replace('_','-')+'-native-gis'
         title = 'Phân khu và quy hoạch chung xã' if theme=='partition' else 'Quy hoạch chung đô thị'
-        manifest={'id':identifier,'status':'reference_overlay' if prefix.startswith('/api/') else 'local_experiment','title':title+' · Bình Dương (cũ)',
-                  'bounds':[[10.75,106.25],[11.65,107.1]],'source_kind':'official_gis',
+        manifest={'id':identifier,'status':'reference_overlay' if prefix.startswith('/api/') else 'local_experiment','title':title+' · '+region,
+                  'bounds':PLANNING_BOUNDS[theme],'source_kind':'official_gis',
                   'alignment_method':'official_coordinates','legend_available':False,'map_scale':None,
                   'render_mode':'xyz','tile_template':prefix+'/'+theme+'/{z}/{x}/{y}.png',
                   'tile_size':256,'min_zoom':8,'max_zoom':23,
                   'notice':'Ô GIS gốc trên cùng lưới zoom; bổ sung vùng trống từ '+SUPPLEMENTS[theme]+' dưới lớp nền chính. '
                     +'Lưu đệm tối đa 24 giờ. Vùng trống không đồng nghĩa không có quy hoạch; chưa xác minh hiệu lực hoặc độ chính xác địa chính.'}
-        result.append({'id':identifier,'name':manifest['title'],'city':'Bình Dương (cũ)','scope':'region',
-                       'area_id':'binh-duong-legacy','theme':theme,'source':'gis','status':'overlay_ready',
+        result.append({'id':identifier,'name':manifest['title'],'city':region,'scope':'region',
+                       'area_id':area_id,'theme':theme,'source':'gis','status':'overlay_ready',
                        'decision':'Theo từng đồ án trên GIS','source_url':SOURCE,'manifest':manifest})
     return result
 
@@ -229,6 +233,7 @@ def install_tiles(app,directory,prefix='/local-planning/gis-tiles',max_entries=4
     cache=NativeGISTiles(directory,max_entries=max_entries,metadata_directory=metadata_directory)
     if not cache.verified:return False
     app.extensions['planning_native_layers']=native_layers(prefix)
+    app.extensions['planning_navigation_regions']=PLANNING_REGIONS
     @app.get(prefix+'/<theme>/<int:z>/<int:x>/<int:y>.png')
     def planning_tile(theme,z,x,y):
         try:

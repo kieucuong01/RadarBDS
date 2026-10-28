@@ -13,7 +13,7 @@ const map = {createPane:()=>({style:{}}),on(k,f){events[k]=f;},off(k){delete eve
   getContainer:()=>({appendChild(){}}),
   getZoom:()=>18,getCenter:()=>({lat:11.02,lng:106.65}),
   getBounds:()=>({getWest:()=>west,getEast:()=>west+.004,getSouth:()=>11.02,getNorth:()=>11.024,intersects:()=>true}),
-  removeLayer(l){layers.delete(l);},fitBounds(){},setView(){}};
+  removeLayer(l){layers.delete(l);},fitBounds(bounds){this.fitted=bounds;},setView(){}};
 const L = {DomEvent:{disableClickPropagation(){},disableScrollPropagation(){},stopPropagation(){}},
   control:()=>({addTo(){},remove(){}}),geoJSON(data,options){
     const layer={data,options,addTo(){layers.add(this);return this;},getBounds:()=>[[11.02,106.65],[11.021,106.651]]};
@@ -68,6 +68,7 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   toggle.checked=false;toggle.events.change();assert.equal(layers.size,0);
   dispose();assert.equal(Object.keys(events).length,0);
   env.RADAR_PLANNING_CONFIG={parcelBase:'/api/planning/parcels'};
+  env.RADAR_PLANNING_REGIONS=[{id:'hcm-legacy',name:'TP.HCM (cũ)',bounds:[[10.3,106.3],[11.2,107.05]],max_zoom:12}];
   const beforeProduction=pending.length;
   const disposeProduction=api.mount(map,L,env);
   assert.equal(pending[beforeProduction].url,'/api/planning/parcels/config.json');
@@ -78,6 +79,15 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   deliver(beforeProduction+1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
   [...layers][0].polygon.click({});
   assert(pending[beforeProduction+2].url.startsWith('/api/planning/parcels/900/planning.json'));
+  const city=nodes.filter(n=>n.attributes['aria-label']==='Thành phố trên bản đồ').at(-1);
+  const ward=nodes.filter(n=>n.attributes['aria-label']==='Phường trên bản đồ').at(-1);
+  assert(city.children.some(n=>n.value==='hcm-legacy'));
+  city.value='hcm-legacy';city.events.change();assert.equal(ward.disabled,true);
+  const beforeRegion=pending.length;
+  const regionForm=nodes.filter(n=>n.tag==='form'&&!n.attributes['aria-label']).at(-1);
+  regionForm.events.submit({preventDefault(){}});
+  assert.deepEqual(map.fitted,[[10.3,106.3],[11.2,107.05]]);
+  assert.equal(pending.length,beforeRegion,'Region navigation must not ask the Bình Dương-only listing service for bounds');
   disposeProduction();
   console.log('Parcel viewport, multi-area selection, toggle and cleanup passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});

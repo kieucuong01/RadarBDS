@@ -133,3 +133,22 @@ def test_supplement_fills_only_source_gaps_without_scaling(tmp_path,monkeypatch,
     assert result.getpixel((10,10))==(255,0,0,255)
     assert result.getpixel((11,10))==(180,120,30,255)
     assert calls==[SERVICES[theme],SUPPLEMENTS[theme]]
+
+
+@pytest.mark.parametrize('lat,lon', [(10.776,106.701),(10.412,106.954),(10.353,107.084),(10.536,107.405),(8.686,106.61)])
+def test_partition_native_tiles_cover_expanded_hcm_without_widening_general(tmp_path, monkeypatch, lat, lon):
+    from services.planning_tiles import NativeGISTiles, native_layers
+    z=15
+    x=int((lon+180)/360*2**z)
+    y=int((1-math.asinh(math.tan(math.radians(lat)))/math.pi)/2*2**z)
+    payload=png()
+    monkeypatch.setattr(NativeGISTiles,'fetch',lambda *args:payload)
+    cache=NativeGISTiles(tmp_path)
+    assert cache.get('partition',z,x,y)==payload
+    if lat<10.75 or lon>107.1:
+        with pytest.raises(LookupError):
+            cache.get('urban_general',z,x,y)
+    layer=next(layer for layer in native_layers() if layer['theme']=='partition')
+    south,west=layer['manifest']['bounds'][0];north,east=layer['manifest']['bounds'][1]
+    assert south<lat<north and west<lon<east
+    assert layer['city']=='TP.HCM mới'

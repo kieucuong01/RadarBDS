@@ -41,12 +41,17 @@ Rollback: set `RADAR_PLANNING_LIVE_ENABLED=0` and restart `radar-bds.service`.
 The previous validated static GIS/PDF release resumes; keep runtime asset
 directories for recovery. Source gaps documented below remain gaps after deployment.
 
-The user-confirmed scope is **Bình Dương cũ only**: Thủ Dầu Một (14), Bến Cát
+The original pilot scope was **Bình Dương cũ only**: Thủ Dầu Một (14), Bến Cát
 (8), Thuận An (10), Dĩ An (7), Tân Uyên (12), Bắc Tân Uyên (10), Bàu Bàng (7),
 Dầu Tiếng (12) and Phú Giáo (11). The total is 91 historic wards/communes.
 Use their historic district/ward codes for capture, navigation and coverage
 audits. The official GIS is now hosted by Hồ Chí Minh City; that hostname does
-not expand this pilot to the rest of the merged city or former Bà Rịa–Vũng Tàu.
+not by itself expand the pilot to the rest of the merged city or former Bà Rịa–Vũng Tàu.
+
+The partition tile family was subsequently expanded on 2026-10-28 at the user's
+request; see [expanded HCM partition scope and source audit](hcm-expanded-partition.md).
+The 91-area parcel asset and urban general-planning scope described here remain
+limited to historic Bình Dương.
 
 ## Planning imagery
 

@@ -194,6 +194,8 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const nativeGeneral={...nativePart,id:'bd-general-tiles',theme:'urban_general',
     manifest:{...nativePart.manifest,id:'bd-general-tiles',tile_template:'/local-planning/gis-tiles/urban_general/{z}/{x}/{y}.png'}};
   assert.equal(api.validCatalog({layers:[nativePart,nativeGeneral]}),true);
+  assert.equal(api.validManifest({...nativePart.manifest,bounds:[[8.5,106.25],[11.65,107.65]]}),true,'Native partition tiles cover the new HCM including islands');
+  assert.equal(api.validManifest({...manifest,bounds:[[8.5,106.25],[11.65,107.65]]}),false,'Old drawing assets keep their verified footprint');
   assert.equal(api.validManifest({...nativePart.manifest,tile_template:'https://evil.invalid/{z}.png'}),false);
   const native=harness(undefined,undefined,nearBounds);
   native.deliver({layers:[{...catalog.layers[3],inspection_only:true},nativePart,nativeGeneral]});await flush();
