@@ -5,6 +5,25 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
   var emptyImage = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+  var pools = new WeakMap();
+  function schedule(env, start) {
+    var pool = pools.get(env);
+    if (!pool) { pool = {active:0, queue:[]}; pools.set(env, pool); }
+    function drain() {
+      while (pool.active < 4 && pool.queue.length) {
+        var next = pool.queue.shift(); next.running = true; pool.active++; next.start();
+      }
+    }
+    var job = {start:start, running:false, released:false};
+    pool.queue.push(job); drain();
+    return function () {
+      if (job.released) return;
+      job.released = true;
+      if (job.running) pool.active--;
+      else pool.queue.splice(pool.queue.indexOf(job), 1);
+      drain();
+    };
+  }
   function url(template, coords) {
     return template.replace(/\{([zxy])\}/g, function (_, key) { return String(coords[key]); });
   }
@@ -16,7 +35,7 @@
         var tile = env.document.createElement('canvas');
         tile.width = tile.height = 256;
         tile.setAttribute('role', 'presentation');
-        var context = tile.getContext('2d'), images = [], stopped = false, settled = false, fallback = false, timer;
+        var context = tile.getContext('2d'), images = [], stopped = false, settled = false, fallback = false, timer, release;
         var foreground, background;
         function clearImages() {
           images.forEach(function (img) { img.onload = img.onerror = null; img.src = emptyImage; });
@@ -27,10 +46,10 @@
           settled = true; pending.delete(tile);
           env.clearTimeout(timer);
           tile.setAttribute('data-planning-transport', error ? 'error' : transport);
-          clearImages(); done(error || null, tile);
+          clearImages(); if (release) release(); done(error || null, tile);
         }
         tile.cancelPlanningLoad = function () {
-          stopped = true; pending.delete(tile); env.clearTimeout(timer); clearImages();
+          stopped = true; pending.delete(tile); env.clearTimeout(timer); clearImages(); if (release) release();
         };
         pending.add(tile);
         function load(template, success, failure) {
@@ -61,16 +80,19 @@
           context.drawImage(background, 0, 0); context.drawImage(foreground, 0, 0);
           finish(null, 'direct');
         }
-        if (!context) { gateway(); return tile; }
-        timer = env.setTimeout(gateway, 8000);
-        load(manifest.source_tiles.primary, function (img) { foreground = img; paint(); }, gateway);
-        load(manifest.source_tiles.supplement, function (img) { background = img; paint(); }, gateway);
+        // Share four active tiles across layers; queued tiles do not time out before they start.
+        release = schedule(env, function () {
+          if (!context) { gateway(); return; }
+          timer = env.setTimeout(gateway, 8000);
+          load(manifest.source_tiles.primary, function (img) { foreground = img; paint(); }, gateway);
+          load(manifest.source_tiles.supplement, function (img) { background = img; paint(); }, gateway);
+        });
         return tile;
       }
     });
     var layer = new Layer(options);
     layer.on('tileunload', function (event) { if (event.tile.cancelPlanningLoad) event.tile.cancelPlanningLoad(); });
-    layer.on('remove', function () { Array.from(pending).forEach(function (tile) { tile.cancelPlanningLoad(); }); });
+    layer.on('remove', function () { Array.from(pending).reverse().forEach(function (tile) { tile.cancelPlanningLoad(); }); });
     return layer;
   }
   return {create: create};

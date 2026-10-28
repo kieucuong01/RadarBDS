@@ -15,7 +15,7 @@ function harness() {
   const env={document:doc,setTimeout(fn,ms){timers.set(++seq,{fn,ms});return seq;},clearTimeout(id){timers.delete(id);}};
   const layer=api.create({GridLayer:Grid},env,manifest,{opacity:.35});
   const tile=layer.createTile({z:15,x:42,y:84},(err,tile)=>results.push({err,tile}));
-  return {layer,tile,images,draws,results,timers};
+  return {layer,tile,images,draws,results,timers,env,manifest,L:{GridLayer:Grid}};
 }
 {
  const h=harness();const [p,s]=h.images;assert(p.src.endsWith('/15/84/42'));
@@ -50,5 +50,25 @@ function harness() {
  const fallbackTimeout=[...h.timers.values()][0];assert.equal(fallbackTimeout.ms,15000);
  fallbackTimeout.fn();assert(h.results[0].err);assert.equal(h.tile.attrs['data-planning-transport'],'error');
  assert.equal(h.timers.size,0);
+}
+{
+ const h=harness();
+ const second=api.create(h.L,h.env,h.manifest,{opacity:.35});
+ const extra=Array.from({length:4},(_,x)=>second.createTile({z:15,x,y:84},()=>{}));
+ assert.equal(h.images.length,8,'Four tiles across both layers may load their two sources');
+ assert.equal(h.timers.size,4,'Queued tiles have no timeout yet');
+ extra[3].cancelPlanningLoad();
+ h.images[0].onload();h.images[1].onload();
+ assert.equal(h.images.length,8,'A cancelled queued tile must never start');
+ second.events.remove();assert.equal(h.timers.size,0);
+}
+{
+ const h=harness();
+ for(let x=0;x<4;x++)h.layer.createTile({z:15,x,y:84},()=>{});
+ assert.equal(h.images.length,8);
+ h.images[0].onload();h.images[1].onload();
+ assert.equal(h.images.length,10,'Completing a tile starts the next queued tile');
+ assert.equal(h.timers.size,4);
+ h.layer.events.remove();assert.equal(h.timers.size,0);
 }
 console.log('Native planning tiles: direct composite, gateway fallback, unload and stale callbacks passed');

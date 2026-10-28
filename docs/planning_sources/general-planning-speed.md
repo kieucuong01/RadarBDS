@@ -37,7 +37,9 @@ Source templates are allowlisted by exact host, service family and XYZ path.
 No canvas pixel reading, export, credentials or CORS workaround is used.
 
 Loading remains viewport-only: settled zoom/pan updates, one tile buffer and
-no whole-city preload. Tile removal cancels detached image requests and ignores
+no whole-city preload. A shared queue allows four active tiles across all three
+official layers (at most eight source images); timeout starts when a queued tile
+actually begins. Tile removal cancels queued and detached image requests and ignores
 late callbacks. Direct source errors, wrong dimensions or an 8-second timeout
 use the existing same-origin gateway; its browser fallback has a 15-second
 timeout so loading cannot remain pending indefinitely. Sources can still be
