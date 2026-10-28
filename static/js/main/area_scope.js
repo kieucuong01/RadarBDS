@@ -934,7 +934,7 @@
       applyStoredFiltersToParams(params, scope);
     }
     const nextUrl = `${root.location.pathname || '/'}?${params.toString()}${root.location.hash || ''}`;
-    root.history.replaceState(null, '', nextUrl);
+    root.history.replaceState(root.history.state, '', nextUrl);
   }
 
   function applyDashboardScope(scope, options) {

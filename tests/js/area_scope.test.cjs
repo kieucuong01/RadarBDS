@@ -647,7 +647,10 @@ const manualPopupDoc = {
 window.document = manualPopupDoc;
 window.location = { pathname: '/', search: '?tab=signals&price_range=2%3A&area_range=%3A150', hash: '' };
 let manualPopupUrl = '';
-window.history = { replaceState(_state, _title, url) { manualPopupUrl = url; } };
+window.history = { state: {radarListingMap:true}, replaceState(state, _title, url) {
+  assert.equal(state.radarListingMap,true,'Area filtering must preserve the Maps history entry');
+  manualPopupUrl = url;
+} };
 api.showChooser(manualPopupDoc);
 manualPopupInputs.areaScopePriceMin.value = '1.25';
 manualPopupInputs.areaScopePriceMax.value = '2.75';

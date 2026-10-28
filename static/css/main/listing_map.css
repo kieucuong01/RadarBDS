@@ -18,7 +18,7 @@ body.listing-map-open .sidebar {
   box-shadow: 10px 0 32px rgba(2, 6, 23, 0.28);
 }
 
-.sidebar.collapsed ~ .main .listing-map-workspace {
+.sidebar.collapsed ~ .listing-map-workspace {
   left: 0;
 }
 
@@ -271,7 +271,9 @@ body.listing-map-focus-mode .listing-map-workspace {
   position: absolute;
   z-index: 610;
   top: 12px;
-  left: 58px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -290,7 +292,7 @@ body.listing-map-focus-mode .listing-map-workspace {
 
 .listing-map-filter-summary select,.listing-map-filter-summary button{font:inherit;border:1px solid #94a3b8;border-radius:6px;padding:5px 7px;background:#fff;color:#0f172a;cursor:pointer}
 .listing-map-filter-summary span{font-size:11px;font-weight:500}
-@media(max-width:760px){.listing-map-filter-summary span{display:none}.listing-map-filter-summary{max-width:calc(100% - 68px)!important;left:58px!important;top:86px!important;padding:4px 6px;gap:5px}.listing-map-filter-summary select,.listing-map-filter-summary button{font-size:11px;padding:5px}}
+@media(max-width:760px){.listing-map-filter-summary span{display:none}.listing-map-filter-summary{max-width:calc(100% - 68px)!important;left:50%!important;top:86px!important;padding:4px 6px;gap:5px}.listing-map-filter-summary select,.listing-map-filter-summary button{font-size:11px;padding:5px}}
 @media(max-width:480px){.listing-map-filter-summary{top:4px!important;max-width:134px!important;flex-wrap:wrap;padding:2px 4px;gap:2px}.listing-map-filter-summary select,.listing-map-filter-summary button{width:100%}}
 
 .listing-map-canvas {
@@ -1270,7 +1272,7 @@ body.listing-map-open .mobile-bottom-nav {
 
   .listing-map-filter-summary {
     top: 10px;
-    left: 10px;
+    left: 50%;
     min-height: 38px;
     border-radius: 12px;
     font-size: 0.68rem;

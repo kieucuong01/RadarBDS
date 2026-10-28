@@ -58,6 +58,8 @@
     map: null,
     disposePlanningOverlay: null,
     markerLayer: null,
+    markerRenderer: null,
+    disposeMapResize: null,
     markerLabelLayer: null,
     markerLabelGroups: [],
     markerLabelFrameId: null,
@@ -825,7 +827,7 @@
 
   function geolocationErrorMessage(error) {
     var code = Number(error && error.code);
-    if (code === 1) return "Bạn chưa cấp quyền vị trí.";
+    if (code === 1) return "Vị trí đang bị chặn. Hãy cho phép Vị trí trong cài đặt trang web của trình duyệt rồi thử lại.";
     if (code === 2) return "Không xác định được vị trí.";
     if (code === 3) return "Định vị quá thời gian, hãy thử lại.";
     return "Không thể định vị lúc này.";
@@ -1033,6 +1035,27 @@
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize({pan:false});
     },320);
+  }
+
+  function observeMapSize(map, environment) {
+    var env = environment || root;
+    var container = map.getContainer();
+    var width = container.clientWidth, height = container.clientHeight;
+    var disposed = false;
+    function resize() {
+      if (disposed || !container.clientWidth || !container.clientHeight) return;
+      if (width === container.clientWidth && height === container.clientHeight) return;
+      width = container.clientWidth;
+      height = container.clientHeight;
+      map.invalidateSize({pan: false});
+    }
+    if (typeof env.ResizeObserver === 'function') {
+      var observer = new env.ResizeObserver(resize);
+      observer.observe(container);
+      return function () { disposed = true; observer.disconnect(); };
+    }
+    env.addEventListener('resize', resize);
+    return function () { disposed = true; env.removeEventListener('resize', resize); };
   }
 
   function setStatus(text, busy) {
@@ -1322,6 +1345,8 @@
     state.locationRequestId += 1;
     var requestId = state.locationRequestId;
     setLocationButtonLoading(true);
+    showMapFeedback("Hãy chọn Cho phép nếu trình duyệt hỏi quyền truy cập vị trí.", "info");
+    // Calling this from the user click lets the browser request permission.
     geolocation.getCurrentPosition(function (position) {
       if (!isCurrentLocationCallback(
         requestId,
@@ -1507,7 +1532,16 @@
       clearUserLocation();
       state.map.remove();
     }
+    if (state.disposeMapResize) state.disposeMapResize();
     state.map = L.map(canvas, mapOptions());
+    state.disposeMapResize = observeMapSize(state.map, root);
+    var filterSummary = element('listingMapFilterSummary');
+    if (filterSummary) {
+      L.DomEvent.disableClickPropagation(filterSummary);
+      L.DomEvent.disableScrollPropagation(filterSummary);
+    }
+    // SVG paths catch clicks only on markers, leaving empty map space to parcels.
+    state.markerRenderer = L.svg({pane: 'markerPane'});
     var definitions = mapBaseLayers();
     state.baseLayers = {
       street: L.tileLayer(definitions.street.url, definitions.street),
@@ -1580,7 +1614,7 @@
       state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root);
     }
     root.setTimeout(function () {
-      if (state.map) state.map.invalidateSize();
+      if (state.map) state.map.invalidateSize({pan: false});
     }, 0);
   }
 
@@ -2433,7 +2467,9 @@
     var lng = Number(group.lng);
     var marker = root.L.circleMarker(
       [lat, lng],
-      markerStyle(group.precision, state.map.getZoom())
+      Object.assign(markerStyle(group.precision, state.map.getZoom()), {
+        renderer: state.markerRenderer, pane: 'markerPane', bubblingMouseEvents: false
+      })
     );
     marker._radarPrecision = group.precision;
     marker.bindTooltip(makeTooltip(group));
@@ -3332,8 +3368,11 @@
     closePreview();
     if (state.disposePlanningOverlay) state.disposePlanningOverlay();
     state.disposePlanningOverlay = null;
+    if (state.disposeMapResize) state.disposeMapResize();
+    state.disposeMapResize = null;
     if (state.map) state.map.remove();
     state.map = null;
+    state.markerRenderer = null;
     state.markerLayer = null;
     state.markerLabelLayer = null;
     state.markerLabelGroups = [];
@@ -3486,7 +3525,7 @@
       if (!state.open) return;
       renderActiveView();
       root.setTimeout(function () {
-        if (state.map) state.map.invalidateSize();
+        if (state.map) state.map.invalidateSize({pan: false});
       }, 0);
     };
     if (typeof state.mediaQuery.addEventListener === "function") {
@@ -3507,6 +3546,7 @@
   }
 
   return {
+    observeMapSize: observeMapSize,
     normalizeMode: normalizeMode,
     buildSummaryUrl: buildSummaryUrl,
     viewportSnapshot: viewportSnapshot,

@@ -137,7 +137,7 @@ function _pushSignalModalHistory(listingId) {
     return;
   }
   history.pushState(
-    { signalModal: true, signalId: String(listingId) },
+    { ...history.state, signalModal: true, signalId: String(listingId) },
     '',
     _signalModalUrl(listingId)
   );

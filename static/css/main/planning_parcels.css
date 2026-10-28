@@ -3,7 +3,7 @@
 .planning-parcel-toggle input{accent-color:#10765b;width:18px;height:18px}
 .planning-parcel-actions button{margin-top:8px}
 .planning-parcel-settings p{font-size:12px;color:#60726a;margin:8px 0}
-.planning-parcel-card{position:absolute;right:114px;top:150px;width:420px;max-width:calc(100% - 20px);background:#fff;border:1px solid #cfded4;border-radius:15px;box-shadow:0 8px 30px #163a2c30;pointer-events:auto;overflow:hidden}
+.planning-parcel-card{position:absolute;left:50%;right:auto;transform:translateX(-50%);top:150px;width:420px;max-width:calc(100% - 20px);background:#fff;border:1px solid #cfded4;border-radius:15px;box-shadow:0 8px 30px #163a2c30;pointer-events:auto;overflow:hidden}
 .planning-parcel-close{position:absolute;z-index:2;right:8px;top:8px;width:44px;height:44px;border:0;border-radius:50%;background:#f2f6f3;color:#435d4f;font-size:27px!important;line-height:1}
 .planning-parcel-body{padding:18px;max-height:calc(100dvh - 270px);overflow:auto;overscroll-behavior:contain}
 .planning-parcel-info h3{margin:1px 42px 3px 0;font-size:18px;line-height:1.4;color:#17392d}
@@ -30,7 +30,7 @@
 .planning-parcel-results button{background:#f0f7f2!important;border:1px solid #d0e3d5!important;color:#196348!important;text-align:left;padding:10px}
 .planning-parcel-standalone-settings{position:absolute;left:10px;bottom:10px;pointer-events:auto;background:white;padding:10px}
 @media(max-width:1100px){
- .planning-parcel-card{left:10px;right:10px;top:auto;bottom:max(36px,env(safe-area-inset-bottom));width:auto;max-width:none}
+ .planning-parcel-card{left:50%;right:auto;top:auto;bottom:max(36px,env(safe-area-inset-bottom));width:420px;max-width:calc(100% - 20px)}
  .planning-parcel-body{max-height:52dvh;padding:16px}
  .planning-parcel-info h3{font-size:17px}
  .parcel-planning-zone>summary{grid-template-columns:58px 86px minmax(0,1fr);gap:6px}

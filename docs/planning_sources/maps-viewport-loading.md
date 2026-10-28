@@ -24,7 +24,7 @@ For a single selected ward, opening zoom is at least 14: a narrow portrait scree
 does not shrink the ward to show unnecessary surrounding city area. Returning to
 the opening area uses the same framing and emits one final viewport change.
 
-Only partition planning is on initially. General urban planning is off. Catalogue
+Both planning layers are off initially. Enabling either starts at 35% opacity; changing opacity is retained while toggling that layer within the same Maps session. Catalogue
 entries remain available regardless of city/ward selection, but raster images
 are attached only when their native bounds intersect the current view, with a
 5% spatial buffer. Panning or zooming out can therefore reveal other wards/cities
@@ -86,3 +86,28 @@ A real drag issued a plain bbox query and returned 12 nearby listings, including
 prices above the original cap. Editing the sidebar cap to 1.5 immediately
 returned to a single filtered summary request. The sidebar stayed visible at
 1280px; its mobile sheet was interactive at 390px with no horizontal overflow.
+
+### Map controls and interactions (2026-10-28)
+
+The planning toolbar, filter summary, layer dock and parcel card are centered on
+`listingMapCanvas`, excluding the sidebar and listing rail. Listing point markers
+use one SVG renderer in Leaflet's marker pane above parcel canvases; empty SVG
+space remains transparent to parcel clicks. Container ResizeObserver updates
+Leaflet sizing without panning when filters collapse, expand or the layout changes.
+Area filter URL updates retain the Maps history entry, so closing a listing modal
+returns to the same map and viewport. Geolocation policy permits `self` only in
+Flask and Nginx; access is requested by the explicit location button, with browser
+permission still required. Previously denied permission must be reset by the user
+in browser site settings; the app cannot force the browser to prompt again.
+
+Production Nginx is managed separately from a normal code deploy. The deploy
+account cannot write `/etc/nginx/sites-available/radar-bds.conf`. A root operator
+must apply the same narrow header change and validate/reload Nginx:
+
+```sh
+sed -i 's/geolocation=()/geolocation=(self)/g' /etc/nginx/sites-available/radar-bds.conf
+nginx -t && systemctl reload nginx
+```
+
+Until this happens, Nginx's old restrictive header still blocks location prompts
+even though Flask and the repository Nginx template have been corrected.

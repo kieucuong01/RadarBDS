@@ -475,7 +475,7 @@ def test_current_location_zoom_never_zooms_out():
 def test_geolocation_errors_use_concise_vietnamese_copy():
     assert _run_node(
         "mapApi.geolocationErrorMessage({code:1})"
-    ) == "Bạn chưa cấp quyền vị trí."
+    ) == "Vị trí đang bị chặn. Hãy cho phép Vị trí trong cài đặt trang web của trình duyệt rồi thử lại."
     assert _run_node(
         "mapApi.geolocationErrorMessage({code:2})"
     ) == "Không xác định được vị trí."

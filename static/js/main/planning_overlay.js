@@ -20,7 +20,7 @@
 
   function opacity(value) {
     var number = Number(value);
-    return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) / 100 : 0.65;
+    return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) / 100 : 0.35;
   }
 
   function themeLabel(item) {
@@ -99,8 +99,8 @@
     themes.forEach(function (theme) { theme.railOption = node('option', railType, theme.id === 'partition' ? 'Phân khu' : 'QH chung'); theme.railOption.value = theme.id; });
     railType.value = activeTheme.id;
     var increase = node('button', rail, '+'); increase.type = 'button'; increase.setAttribute('aria-label', 'Tăng độ hiển thị 10 phần trăm');
-    var railValue = node('output', rail, '65%');
-    var railSlider = node('input', rail); railSlider.type = 'range'; railSlider.min = '0'; railSlider.max = '100'; railSlider.value = '65'; railSlider.step = '1';
+    var railValue = node('output', rail, '35%');
+    var railSlider = node('input', rail); railSlider.type = 'range'; railSlider.min = '0'; railSlider.max = '100'; railSlider.value = '35'; railSlider.step = '1';
     railSlider.disabled = increase.disabled = true;
     railSlider.setAttribute('aria-label', 'Độ hiển thị lớp đang chọn');
     var decrease = node('button', rail, '−'); decrease.type = 'button'; decrease.setAttribute('aria-label', 'Giảm độ hiển thị 10 phần trăm');
@@ -136,13 +136,13 @@
       theme.quick = node('button', dock, theme.id === 'partition' ? 'Phân khu' : 'QH chung');
       theme.quick.type = 'button'; theme.quick.className = 'planning-layer-chip'; theme.quick.disabled = true;
       theme.quick.setAttribute('aria-label', 'Bật/tắt ' + theme.name);
-      theme.quick.setAttribute('aria-pressed', String(theme.id === 'partition'));
+      theme.quick.setAttribute('aria-pressed', 'false');
       var card = node('fieldset', body);
       card.className = 'planning-overlay-theme';
       var themeLabel = node('label', card);
       themeLabel.className = 'planning-overlay-toggle';
       theme.toggle = node('input', themeLabel); theme.toggle.type = 'checkbox';
-      theme.toggle.checked = theme.id === 'partition'; theme.toggle.disabled = true;
+      theme.toggle.checked = false; theme.toggle.disabled = true;
       theme.toggle.setAttribute('aria-label', 'Bật ' + theme.name);
       node('span', themeLabel, theme.title);
       var sourceLabel = node('label', card, 'Nguồn');
@@ -152,9 +152,9 @@
       node('option', theme.source, 'Bản vẽ / PDF').value = 'document';
       theme.source.value = 'gis';
       var opacityLabel = node('label', card, 'Độ hiển thị ');
-      theme.value = node('output', opacityLabel, '65%');
+      theme.value = node('output', opacityLabel, '35%');
       theme.slider = node('input', opacityLabel); theme.slider.type = 'range';
-      theme.slider.min = '0'; theme.slider.max = '100'; theme.slider.step = '1'; theme.slider.value = '65';
+      theme.slider.min = '0'; theme.slider.max = '100'; theme.slider.step = '1'; theme.slider.value = '35';
       theme.slider.disabled = true;
       theme.slider.setAttribute('aria-label', 'Độ hiển thị ' + theme.name);
       theme.status = node('p', card, 'Đang kiểm tra nguồn dữ liệu…');

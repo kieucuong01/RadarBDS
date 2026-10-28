@@ -5,7 +5,7 @@
 .planning-map-ui button,.planning-map-ui summary,.planning-map-ui select{cursor:pointer;touch-action:manipulation}
 .planning-map-ui button:disabled,.planning-map-ui input:disabled{opacity:.5;cursor:default}
 .planning-map-ui :focus-visible{outline:3px solid #16846b;outline-offset:2px}
-.planning-map-toolbar{position:absolute;left:58px;top:10px;display:flex;gap:8px;pointer-events:auto;max-width:calc(100% - 220px)}
+.planning-map-toolbar{position:absolute;left:50%;transform:translateX(-50%);width:max-content;top:10px;display:flex;gap:8px;pointer-events:auto;max-width:calc(100% - 100px)}
 .planning-map-toolbar>div:empty{display:none}
 .planning-map-popover>summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid #d7e1dc;border-radius:24px;background:#fff;box-shadow:0 2px 8px #15382c18;font-size:13px;font-weight:700;white-space:nowrap}
 .planning-map-popover>summary::-webkit-details-marker{display:none}
@@ -34,7 +34,7 @@
 .planning-overlay-body a{display:block;color:#0c7054;margin:8px 0;text-decoration:underline}
 .planning-overlay-body img{width:100%;height:auto}
 .planning-overlay-body img:not([src]){display:none}
-.planning-layer-dock{position:absolute;left:12px;bottom:14px;display:flex;flex-wrap:wrap;gap:6px;padding:5px;background:#fff;border:1px solid #d5e1da;border-radius:28px;box-shadow:0 2px 12px #15382c20;pointer-events:auto}
+.planning-layer-dock{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);bottom:14px;display:flex;flex-wrap:wrap;gap:6px;padding:5px;background:#fff;border:1px solid #d5e1da;border-radius:28px;box-shadow:0 2px 12px #15382c20;pointer-events:auto}
 .planning-layer-chip{min-height:44px;padding:0 18px;border:0;border-radius:23px;background:#f1f5f2;color:#3e574b;font-weight:700}
 .planning-layer-chip[aria-pressed=true]{background:#11755b;color:#fff}
 .planning-layer-chip[aria-pressed=true]:before{content:'✓';margin-right:6px}
@@ -46,11 +46,11 @@
 .planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-layer-dock{display:none}
 .planning-map-ui:has(.planning-map-popover[open]) .planning-layer-dock,.planning-map-ui:has(.planning-map-popover[open]) .planning-opacity-control{display:none}
 .listing-map-workspace:has(.planning-map-popover[open]) .listing-map-filter-summary{visibility:hidden;pointer-events:none}
-.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:64px;max-width:calc(100% - 220px)}
+.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:64px;max-width:calc(100% - 116px);flex-wrap:wrap;justify-content:center}
 @media(max-width:1100px){
- .planning-map-toolbar{left:58px;top:8px;gap:5px;max-width:calc(100% - 68px)}
+ .planning-map-toolbar{left:50%;top:8px;gap:5px;max-width:calc(100% - 68px)}
  .planning-map-popover>summary{padding:0 11px;gap:7px;font-size:12px}
- .planning-map-form,.planning-overlay-body{left:-48px;top:52px;width:min(350px,calc(100vw - 20px));max-width:calc(100vw - 20px);max-height:calc(100dvh - 200px)}
+ .planning-map-form,.planning-overlay-body{left:50%;transform:translateX(-50%);top:52px;width:min(350px,calc(100vw - 20px));max-width:calc(100vw - 20px);max-height:calc(100dvh - 200px)}
  .planning-map-form select,.planning-map-form input{font-size:16px}
  .planning-map-ui:has(.planning-map-popover[open]) .planning-parcel-card{visibility:hidden;pointer-events:none}
   .listing-map-workspace:has(.planning-map-popover[open]) .listing-map-mobile-sheet{display:none}
@@ -61,10 +61,10 @@
   .planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-opacity-control input[type=range]{writing-mode:horizontal-tb;direction:ltr;width:0;min-width:24px;flex:1;height:38px;margin:0 4px}
   .listing-map-workspace:has(.planning-parcel-card:not([hidden])) .listing-map-filter-summary,.listing-map-workspace:has(.planning-parcel-card:not([hidden])) .leaflet-control-layers{visibility:hidden;pointer-events:none}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-top:64px}
- .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:62px!important;max-width:134px!important;left:58px!important;flex-wrap:wrap;padding:2px 4px;gap:2px}
- .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary select,.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary button{width:100%}
+ .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:62px!important;max-width:calc(100% - 116px)!important;left:50%!important;flex-wrap:wrap;justify-content:center;padding:2px 4px;gap:2px}
+ .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary select,.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary button{min-width:0;max-width:100%;width:auto;min-height:34px}
  .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary span{display:none}
-  .planning-layer-dock{left:10px;max-width:calc(100% - 120px)}
+  .planning-layer-dock{left:50%;max-width:calc(100% - 20px);flex-wrap:nowrap}
  .planning-layer-chip{padding:0 14px;font-size:12px;white-space:nowrap}
   .planning-opacity-control{top:128px;width:94px}
  .planning-opacity-control input[type=range]{height:72px}

@@ -59,7 +59,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
 
     assert "window.RADAR_ASSETS" in html
-    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729\"" in html
+    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=maps-controls-20261028\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-date-default-20261021a\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=" in html
@@ -843,7 +843,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
         'data-range-name="price_range"',
         'data-range-name="area_range"',
         "js/main/filters.js') }}?v=listings-perf-20261021",
-        "js/main/area_scope.js') }}?v=area-scope-manual-ranges-20261020",
+        "js/main/area_scope.js') }}?v=maps-controls-20261028",
         "toggleRangePreset",
         "selectedRangeTokens",
         "applyRangeParamsFromUrl",

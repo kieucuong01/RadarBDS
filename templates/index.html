@@ -91,20 +91,20 @@
     window.RADAR_SAVED_PAGE = {{ saved_page | default(false) | tojson }};
     window.INITIAL_WARDS_BY_CITY = {{ wards_by_city | tojson }};
     window.RADAR_ASSETS = {
-      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=signal-detail-regression-20260729",
+      modal: "{{ url_for('static', filename='js/main/modal.js') }}?v=maps-controls-20261028",
       market: "{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-date-default-20261021a",
       listings: "{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021",
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=maps-filter-first-20261028"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=maps-controls-20261028"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=maps-filter-first-20261028"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=maps-controls-20261028"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -121,12 +121,12 @@
   {% include "partials/public_footer_assets.html" %}
   {% if (planning_pilot_enabled | default(false)) or (planning_overlay_config | default(none)) %}
   <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }};</script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=planning-map-tools-20261028">
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-live-release-20261028"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=maps-controls-20261028">
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=maps-controls-20261028"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=planning-map-tools-20261028">
-  <script defer src="{{ url_for('static', filename='js/main/planning_parcels.js') }}?v=planning-live-release-20261028"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=maps-controls-20261028">
+  <script defer src="{{ url_for('static', filename='js/main/planning_parcels.js') }}?v=maps-controls-20261028"></script>
   {% endif %}
   {% endif %}
 </head>
@@ -1601,7 +1601,7 @@
   <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-alerts-20261005"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=area-scope-manual-ranges-20261020"></script>
+  <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=maps-controls-20261028"></script>
   <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-dismiss-20261020"></script>
 </body>
 

@@ -97,6 +97,8 @@ def test_nginx_config_hides_version_and_covers_dynamic_and_static_responses():
     text = config_path.read_text(encoding="utf-8")
 
     assert text.count("server_tokens off;") == 2
+    assert text.count("geolocation=(self)") == 4
+    assert "geolocation=()" not in text
     for header in (
         "Strict-Transport-Security",
         "X-Content-Type-Options",
@@ -121,7 +123,7 @@ def test_flask_adds_security_headers_to_success_api_and_error_responses():
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "strict-origin-when-cross-origin",
-        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(self), payment=(), usb=()",
         "Content-Security-Policy": (
             "default-src 'self'; script-src 'self' 'unsafe-inline' "
             "https://cdn.jsdelivr.net https://unpkg.com https://www.googletagmanager.com; "
