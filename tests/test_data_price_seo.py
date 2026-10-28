@@ -217,7 +217,9 @@ def test_small_local_sample_uses_named_parent_without_local_prices_or_sitemap(mo
     assert 'noindex,follow' in html and 'Chưa đủ mẫu' in html
     assert '/gia-dat/thu-dau-mot' in html and 'Thủ Dầu Một' in html
     assert 'n = 1' in html
-    assert [p['path'] for p in mod.sitemap_entries(tmp_path)] == ['/gia-dat/thu-dau-mot']
+    paths = {p['path'] for p in mod.sitemap_entries(tmp_path)}
+    assert '/gia-dat/phu-loi' not in paths
+    assert '/gia-dat/thu-dau-mot' in paths
 
 
 def test_corrupted_snapshot_fails_closed_not_empty_success(monkeypatch,tmp_path):

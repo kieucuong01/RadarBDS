@@ -17,13 +17,13 @@ def test_v3_ward_uses_own_cohort_not_neighbor_or_parent_samples(slug, name):
     mod = engine()
     rows = [row(i, ward=name) for i in range(15)] + [row(100, ward='Phú Lợi')]
     snap = packet(mod, rows)
-    assert snap['scope_registry_version'] == 3
+    assert snap['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
     own = snap['scopes'][slug]
     assert own['wards'] == [name] and own['parent'] == 'thu-dau-mot'
     assert own['sample_count'] == 15
     assert all(f['scope'] == slug and f['sample_count'] == 15 for f in own['facts'].values())
     assert snap['scopes']['thu-dau-mot']['sample_count'] == 16
-    assert len(snap['scopes']) == 8
+    assert set(snap['scopes']) == set(mod.SCOPES)
 
 
 def test_actual_frozen_v2_keeps_bytes_hash_claims_and_exact_original_scope_set(tmp_path):
