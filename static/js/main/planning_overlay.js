@@ -14,8 +14,18 @@
           : /^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general|detailed)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || ''))
         || data.tile_size !== 256 || data.min_zoom !== 8 || data.max_zoom !== 23)) return false;
     if (reference2030 && data.render_mode !== 'xyz') return false;
+    if (data.source_tiles !== undefined) {
+      var collection = (data.tile_template || '').match(/\/gis-tiles\/(partition|urban_general|detailed)\//);
+      var sources = {partition:['SuDungDat_QHPK_HCM_V2','QHXD_SDD_2025_QHPK_V3'],
+        urban_general:['SuDungDat_QHC_HCM','QHXD_SDD_2025_QHCDT'],detailed:['SuDungDat_QHCT_HCM','QHXD_SDD_2025_QHCT']};
+      if (data.source_kind !== 'official_gis' || !collection || !data.source_tiles) return false;
+      var base = 'https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/';
+      var suffix = '/MapServer/tile/{z}/{y}/{x}';
+      if (data.source_tiles.primary !== base + sources[collection[1]][0] + suffix
+          || data.source_tiles.supplement !== base + sources[collection[1]][1] + suffix) return false;
+    }
     var b = data.bounds;
-    var expanded = data.render_mode === 'xyz' && (reference2030 || /\/(partition|detailed)\//.test(data.tile_template));
+    var expanded = data.render_mode === 'xyz';
     return Array.isArray(b) && b.length === 2 && b.every(function (point) {
       return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite);
     }) && b[0][0] >= (expanded ? 8.5 : 10.75) && b[1][0] <= 11.65 && b[0][0] < b[1][0]
@@ -296,10 +306,14 @@
             : data.attribution || item.city + ' · ' + item.name + ' · bản thử căn chỉnh'
         };
         var tiled = data.render_mode === 'xyz';
-        var layer = tiled ? L.tileLayer(data.tile_template, Object.assign(layerOptions, {
+        var tileOptions = Object.assign({}, layerOptions, {
           bounds:data.bounds, tileSize:256, minZoom:8, maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
-        })) : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
+        });
+        var layer = tiled ? data.source_tiles && env.RadarPlanningNativeTiles
+          ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
+          : L.tileLayer(data.tile_template, tileOptions)
+          : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
         var entry = {item: item, layer: layer, loaded: false};
         overlays.set(item.id, entry);
         layer.on('load', function () {

@@ -79,7 +79,7 @@ def install_live(app,site):
     from services.planning_parcel_catalog import install_catalog
     from services.planning_tiles import install_tiles
     cache=Path(site)/'data/planning/tile-cache'
-    if not install_tiles(app,cache,prefix='/api/planning/gis-tiles',max_entries=128,
+    if not install_tiles(app,cache,prefix='/api/planning/gis-tiles',max_entries=512,
                          metadata_directory=root/'metadata'):
         return False
     install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels',expanded=True)

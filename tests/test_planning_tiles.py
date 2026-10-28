@@ -136,7 +136,7 @@ def test_supplement_fills_only_source_gaps_without_scaling(tmp_path,monkeypatch,
 
 
 @pytest.mark.parametrize('lat,lon', [(10.776,106.701),(10.412,106.954),(10.353,107.084),(10.536,107.405),(8.686,106.61)])
-def test_partition_native_tiles_cover_expanded_hcm_without_widening_general(tmp_path, monkeypatch, lat, lon):
+def test_native_families_cover_expanded_hcm(tmp_path, monkeypatch, lat, lon):
     from services.planning_tiles import NativeGISTiles, native_layers
     z=15
     x=int((lon+180)/360*2**z)
@@ -146,13 +146,31 @@ def test_partition_native_tiles_cover_expanded_hcm_without_widening_general(tmp_
     cache=NativeGISTiles(tmp_path)
     assert cache.get('partition',z,x,y)==payload
     assert cache.get('detailed',z,x,y)==payload
-    if lat<10.75 or lon>107.1:
-        with pytest.raises(LookupError):
-            cache.get('urban_general',z,x,y)
+    assert cache.get('urban_general',z,x,y)==payload
     layer=next(layer for layer in native_layers() if layer['theme']=='partition')
     south,west=layer['manifest']['bounds'][0];north,east=layer['manifest']['bounds'][1]
     assert south<lat<north and west<lon<east
     assert layer['city']=='TP.HCM mới'
+    general=next(layer for layer in native_layers() if layer['theme']=='urban_general')
+    assert general['manifest']['bounds']==layer['manifest']['bounds']
+    assert '/SuDungDat_QHC_HCM/MapServer/tile/' in general['manifest']['source_tiles']['primary']
+
+
+def test_native_canvas_runtime_handles_fallback_and_unloads():
+    import subprocess
+    result=subprocess.run(['node','tests/planning_native_tiles_runtime.cjs'],capture_output=True,text=True)
+    assert result.returncode==0,result.stdout+result.stderr
+
+
+def test_shared_tile_cache_is_bounded_by_disk_bytes(tmp_path,monkeypatch):
+    from services.planning_tiles import NativeGISTiles
+    monkeypatch.setattr(NativeGISTiles,'fetch',lambda *args:png())
+    cache=NativeGISTiles(tmp_path,max_entries=512,max_bytes=1500)
+    z,x,y=tan_an_tile()
+    for dx in range(6):cache.get('partition',z,x+dx,y)
+    cached=list(tmp_path.rglob('*.png'))
+    assert sum(p.stat().st_size+p.with_suffix('.json').stat().st_size for p in cached)<=1500
+    assert len(cached)<6
 
 
 def test_packaged_detailed_grids_are_verified_without_mutating_parcel_release(tmp_path, monkeypatch):

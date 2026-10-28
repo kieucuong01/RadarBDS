@@ -6,7 +6,7 @@ LANDUSE_2030_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_landus
                                      .read_text(encoding='utf8'))['layers'])
 BINH_DUONG_BOUNDS = [[10.75, 106.25], [11.65, 107.1]]
 HCM_EXPANDED_BOUNDS = [[8.5, 106.25], [11.65, 107.65]]
-PLANNING_BOUNDS = {'partition': HCM_EXPANDED_BOUNDS, 'urban_general': BINH_DUONG_BOUNDS,
+PLANNING_BOUNDS = {'partition': HCM_EXPANDED_BOUNDS, 'urban_general': HCM_EXPANDED_BOUNDS,
                    'detailed': HCM_EXPANDED_BOUNDS}
 PLANNING_REGIONS = [
     {'id': 'hcm-expanded', 'name': 'Toàn TP.HCM mới', 'bounds': HCM_EXPANDED_BOUNDS, 'max_zoom': 10},

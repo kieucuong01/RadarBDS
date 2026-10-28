@@ -122,7 +122,8 @@
   {% if (planning_pilot_enabled | default(false)) or (planning_overlay_config | default(none)) %}
   <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }}; window.RADAR_PLANNING_REGIONS = {{ (planning_navigation_regions | default([])) | tojson }};</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=planning-detailed-20261028">
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-detailed-20261028"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=planning-speed-20261028"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-speed-20261028"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=maps-controls-20261028">

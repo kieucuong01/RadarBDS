@@ -195,6 +195,12 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
     manifest:{...nativePart.manifest,id:'bd-general-tiles',tile_template:'/local-planning/gis-tiles/urban_general/{z}/{x}/{y}.png'}};
   assert.equal(api.validCatalog({layers:[nativePart,nativeGeneral]}),true);
   assert.equal(api.validManifest({...nativePart.manifest,bounds:[[8.5,106.25],[11.65,107.65]]}),true,'Native partition tiles cover the new HCM including islands');
+  assert.equal(api.validManifest({...nativeGeneral.manifest,bounds:[[8.5,106.25],[11.65,107.65]]}),true,'General planning covers all three former regions');
+  const sourceTiles={primary:'https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/SuDungDat_QHC_HCM/MapServer/tile/{z}/{y}/{x}',
+    supplement:'https://api-gisxaydung.tphcm.gov.vn/arcm/rest/services/HCM/QHXD_SDD_2025_QHCDT/MapServer/tile/{z}/{y}/{x}'};
+  assert.equal(api.validManifest({...nativeGeneral.manifest,source_tiles:sourceTiles}),true);
+  assert.equal(api.validManifest({...nativeGeneral.manifest,source_tiles:{...sourceTiles,primary:'https://evil.invalid/tile/{z}/{y}/{x}'}}),false);
+  assert.equal(api.validManifest({...nativePart.manifest,source_tiles:sourceTiles}),false,'Do not substitute another planning family');
   assert.equal(api.validManifest({...manifest,bounds:[[8.5,106.25],[11.65,107.65]]}),false,'Old drawing assets keep their verified footprint');
   assert.equal(api.validManifest({...nativePart.manifest,tile_template:'https://evil.invalid/{z}.png'}),false);
   const native=harness(undefined,undefined,nearBounds);

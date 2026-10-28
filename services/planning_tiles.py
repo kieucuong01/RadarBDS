@@ -62,10 +62,11 @@ def validate_png(payload):
 
 
 class NativeGISTiles:
-    def __init__(self,directory,max_entries=4096,metadata_directory=None):
+    def __init__(self,directory,max_entries=4096,metadata_directory=None,max_bytes=64_000_000):
         self.directory = Path(directory).resolve()
         self.directory.mkdir(parents=True,exist_ok=True)
         self.max_entries = max_entries
+        self.max_bytes = max_bytes
         self.count = len(list(self.directory.rglob('*.png')))
         self.lock = threading.Lock()
         self.gate = threading.BoundedSemaphore(4)
@@ -209,13 +210,18 @@ class NativeGISTiles:
                 # Recount shared disk contents: production has several worker processes.
                 files=[]
                 for candidate in self.directory.rglob('*.png'):
-                    try: files.append((candidate.stat().st_mtime,candidate))
+                    try:
+                        stat=candidate.stat()
+                        audit_path=candidate.with_suffix('.json')
+                        size=stat.st_size+(audit_path.stat().st_size if audit_path.exists() else 0)
+                        files.append((stat.st_mtime,candidate,size))
                     except FileNotFoundError: pass
-                files=[p for _,p in sorted(files)]
                 self.count=len(files)
-                if self.count>self.max_entries:
-                    for old in files[:self.count-self.max_entries]:
-                        old.unlink(missing_ok=True);old.with_suffix('.json').unlink(missing_ok=True);self.count -= 1
+                total_bytes=sum(size for _,_,size in files)
+                for _,old,size in sorted(files):
+                    if self.count<=self.max_entries and total_bytes<=self.max_bytes:break
+                    old.unlink(missing_ok=True);old.with_suffix('.json').unlink(missing_ok=True)
+                    self.count-=1;total_bytes-=size
             return payload
         finally:
             with self.lock:
@@ -225,16 +231,17 @@ class NativeGISTiles:
 def native_layers(prefix='/local-planning/gis-tiles'):
     result=[]
     for theme in SERVICES:
-        expanded = theme in ('partition','detailed')
-        region = 'TP.HCM mới' if expanded else 'Bình Dương (cũ)'
-        area_id = 'hcm-expanded' if expanded else 'binh-duong-legacy'
-        identifier=('hcm-expanded' if expanded else 'binh-duong')+'-'+theme.replace('_','-')+'-native-gis'
+        region = 'TP.HCM mới'
+        area_id = 'hcm-expanded'
+        identifier='hcm-expanded-'+theme.replace('_','-')+'-native-gis'
         title = {'partition':'Phân khu và quy hoạch chung xã','urban_general':'Quy hoạch chung đô thị',
                  'detailed':'Quy hoạch chi tiết'}[theme]
         manifest={'id':identifier,'status':'reference_overlay' if prefix.startswith('/api/') else 'local_experiment','title':title+' · '+region,
                   'bounds':PLANNING_BOUNDS[theme],'source_kind':'official_gis',
                   'alignment_method':'official_coordinates','legend_available':False,'map_scale':None,
                   'render_mode':'xyz','tile_template':prefix+'/'+theme+'/{z}/{x}/{y}.png',
+                  'source_tiles':{'primary':API+'/arcm/rest/services/HCM/'+SERVICES[theme]+'/MapServer/tile/{z}/{y}/{x}',
+                                  'supplement':API+'/arcm/rest/services/HCM/'+SUPPLEMENTS[theme]+'/MapServer/tile/{z}/{y}/{x}'},
                   'tile_size':256,'min_zoom':8,'max_zoom':23,
                   'notice':'Ô GIS gốc trên cùng lưới zoom; bổ sung vùng trống từ '+SUPPLEMENTS[theme]+' dưới lớp nền chính. '
                     +'Lưu đệm tối đa 24 giờ. Vùng trống không đồng nghĩa không có quy hoạch; chưa xác minh hiệu lực hoặc độ chính xác địa chính.'}

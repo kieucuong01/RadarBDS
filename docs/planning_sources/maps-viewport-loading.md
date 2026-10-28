@@ -25,7 +25,7 @@ For a single selected ward, opening zoom is at least 14: a narrow portrait scree
 does not shrink the ward to show unnecessary surrounding city area. Returning to
 the opening area uses the same framing and emits one final viewport change.
 
-Both planning layers are off initially. Enabling either starts at 35% opacity; changing opacity is retained while toggling that layer within the same Maps session. Catalogue
+All planning layers are off initially. Enabling a layer starts at 35% opacity; changing opacity is retained while toggling that layer within the same Maps session. Catalogue
 entries remain available regardless of city/ward selection, but raster images
 are attached only when their native bounds intersect the current view, with a
 5% spatial buffer. Panning or zooming out can therefore reveal other wards/cities
