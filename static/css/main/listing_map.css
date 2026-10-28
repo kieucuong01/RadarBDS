@@ -267,6 +267,20 @@ body.listing-map-focus-mode .listing-map-workspace {
   min-height: 0;
 }
 
+.listing-map-workspace.listings-hidden {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.listing-map-workspace.listings-hidden .listing-map-workspace-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+.listing-map-workspace.listings-hidden .listing-map-panel,
+.listing-map-workspace.listings-hidden .listing-map-mobile-sheet,
+.listing-map-workspace.listings-hidden .listing-map-filter-summary,
+.listing-map-workspace.listings-hidden .listing-map-precision-legend,
+.listing-map-workspace.listings-hidden .listing-map-status {
+  display: none !important;
+}
+
 .listing-map-filter-summary {
   position: absolute;
   z-index: 610;

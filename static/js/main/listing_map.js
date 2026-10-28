@@ -12,6 +12,7 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
+  var VALID_PLANNING_THEMES = ["partition", "urban_general", "detailed", "land_use_2030"];
   var DIRECTORY_BATCH_SIZE = 100;
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
   var MARKER_BATCH_SIZE = 200;
@@ -51,6 +52,7 @@
     browseViewport: false,
     initialBounds: null,
     planningTheme: null,
+    listingsVisible: true,
     initialController: null,
     viewportTimer: null,
     loadedViewportKey: null,
@@ -996,6 +998,31 @@
       : null;
   }
 
+  function setListingsVisible(visible) {
+    visible = Boolean(visible);
+    if (state.listingsVisible === visible) return visible;
+    state.listingsVisible = visible;
+    if (state.workspace) state.workspace.classList.toggle('listings-hidden', !visible);
+    if (!visible) {
+      ++summarySequence; ++itemSequence;
+      if (state.summaryController) state.summaryController.abort();
+      if (state.itemController) state.itemController.abort();
+      root.clearTimeout(state.viewportTimer);
+      state.pendingViewportKey = null; state.loadedViewportKey = null;
+      cancelMarkerRender(); clearMarkerLabels();
+      if (state.markerLayer) state.markerLayer.clearLayers();
+      closePreview();
+      if (state.adminEdit) cancelAdminEdit();
+      state.selectedGroup = null; state.summary = null; state.recentPayload = null;
+      setMobileSheetExpanded(false);
+      setPanelView('recent-loading');
+    } else if (state.open) {
+      if (state.map) state.map.invalidateSize({pan: false});
+      requestSummary();
+    }
+    return visible;
+  }
+
   function setFocusMode(enabled) {
     state.focusMode = Boolean(enabled);
     if (state.workspace) {
@@ -1616,7 +1643,11 @@
       },350);
     });
     if ((root.RADAR_PLANNING_PILOT || root.RADAR_PLANNING_CONFIG) && root.RadarPlanningOverlay) {
-      state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root, {initialTheme:state.planningTheme});
+      state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root, {
+        initialTheme: state.planningTheme,
+        listingsVisible: state.listingsVisible,
+        onToggleListings: function () { return setListingsVisible(!state.listingsVisible); }
+      });
     }
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize({pan: false});
@@ -2396,7 +2427,7 @@
   }
 
   function refreshMarkerLabels() {
-    if (!state.map || !state.markerLabelLayer || !root.L) return;
+    if (!state.listingsVisible || !state.map || !state.markerLabelLayer || !root.L) return;
     state.markerLabelLayer.clearLayers();
     var zoom = state.map.getZoom();
 
@@ -2552,7 +2583,7 @@
 
   function renderMarkers(payload, options) {
     options = options || {};
-    if (!state.map || !state.markerLayer) return;
+    if (!state.listingsVisible || !state.map || !state.markerLayer) return;
     cancelMarkerRender();
     state.markerLayer.clearLayers();
     clearMarkerLabels();
@@ -3081,7 +3112,7 @@
   }
 
   function selectGroup(group) {
-    if (!state.open || !state.snapshot) return;
+    if (!state.open || !state.listingsVisible || !state.snapshot) return;
     closePreview();
     state.selectedGroup = group;
     var adminTargetKind = adminEditTargetKind(group, state.adminEditMode);
@@ -3172,7 +3203,7 @@
 
   function requestSummary(options) {
     options = options || {};
-    if (!state.open || !state.snapshot) return Promise.resolve();
+    if (!state.open || !state.listingsVisible || !state.snapshot) return Promise.resolve();
     var view = currentViewSnapshot();
     if (!view) return Promise.resolve();
     var viewKey = buildSummaryUrl(view);
@@ -3186,7 +3217,7 @@
     setStatus(state.browseViewport ? 'Đang cập nhật tin trong vùng nhìn…' : 'Đang cập nhật tin theo bộ lọc…', true);
     return fetchJson(viewKey + '&include_recent=1', controller)
       .then(function (payload) {
-        if (!state.open || sequence !== summarySequence) return;
+        if (!state.open || !state.listingsVisible || sequence !== summarySequence) return;
         state.loadedViewportKey = viewKey; state.pendingViewportKey = null;
         if (payload.recent) {
           state.recentPayload = {};
@@ -3253,7 +3284,8 @@
     }
     captureDashboardState();
     state.open = true;
-    state.planningTheme = options.planningTheme || null;
+    state.planningTheme = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0 ? options.planningTheme : null;
+    state.listingsVisible = !state.planningTheme;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;
     state.snapshot = safe;
@@ -3270,7 +3302,8 @@
     state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
     state.dashboardSyncNeeded = false;
     setMobileSheetExpanded(false);
-    setFocusMode(false);
+    setFocusMode(Boolean(state.planningTheme));
+    workspace.classList.toggle('listings-hidden', !state.listingsVisible);
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
     var filterSummary = element("listingMapFilterSummary");

@@ -33,6 +33,14 @@ without selecting them. Off-screen image layers are removed in Leaflet's correct
 remove-then-off order; immutable production URLs retain browser caching. PDF
 alternatives and parcel selection keep their existing source and precision limits.
 
+An explicit planning entry (Tools or the planning hub) opens the selected theme
+at 35%, in the existing fullscreen focus mode, with listings hidden. The
+Hide/Show listings button follows Layers in the planning toolbar and is
+independent of fullscreen. Hiding clears markers and labels, closes previews,
+aborts listing requests and pauses viewport listing loads. Showing fetches the
+current viewport with the current non-geographic filters retained. Ordinary
+Maps still opens in its normal layout with listings visible and planning off.
+
 ## Requests and limits
 
 - Query after `moveend` settles for 350 ms, not continuously during dragging.

@@ -1,0 +1,64 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const source=fs.readFileSync('static/js/main/listing_map.js','utf8');
+function functions(...names){return names.map(name=>{
+ const start=source.indexOf('  function '+name+'(');
+ assert.ok(start>=0,'Missing '+name);
+ return source.slice(start,source.indexOf('\n  function ',start+1));
+}).join('\n');}
+
+test('planning entries start fullscreen without listings; ordinary and invalid entries retain normal Maps',async()=>{
+ for(const theme of [null,'partition','urban_general','detailed','land_use_2030','invalid']){
+  let focus;
+  const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
+  const ctx={state:{open:false},VALID_PLANNING_THEMES:['partition','urban_general','detailed','land_use_2030'],
+   normalizedSnapshot:x=>x,element:()=>el,captureDashboardState(){},setMobileSheetExpanded(){},
+   setFocusMode:value=>{focus=value;},syncAdminEditModeToggle(){},filterSummaryText:()=>'',emitTrack(){},
+   root:{document:{body:el},history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
+   DIRECTORY_BATCH_SIZE:100,startMapLoad:async()=>{}};
+  vm.createContext(ctx);vm.runInContext(functions('open'),ctx);
+  await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme});
+  const planning=ctx.VALID_PLANNING_THEMES.includes(theme);
+  assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,planning);
+ }
+});
+
+test('hiding cancels pending listing work and showing reloads the current viewport once',()=>{
+ let summaryAborts=0,itemAborts=0,clears=0,closed=0,reloaded=0,cancelled=0,labels=0,resized=0;
+ const classes=new Set();
+ const ctx={state:{open:true,listingsVisible:true,summaryController:{abort(){summaryAborts++;}},
+  itemController:{abort(){itemAborts++;}},markerLayer:{clearLayers(){clears++;}},
+  map:{invalidateSize(options){assert.equal(options.pan,false);resized++;}},
+  workspace:{classList:{toggle(name,value){if(value)classes.add(name);else classes.delete(name);}}}},
+  summarySequence:0,itemSequence:0,cancelMarkerRender(){cancelled++;},clearMarkerLabels(){labels++;},
+  closePreview(){closed++;},requestSummary(){reloaded++;return Promise.resolve();},
+  setPanelView(){},setStatus(){},root:{clearTimeout(){}},setMobileSheetExpanded(){}};
+ vm.createContext(ctx);vm.runInContext(functions('setListingsVisible','requestSummary'),ctx);
+ // The visibility setter calls the real loader; observe its current-view lookup instead of fetching.
+ ctx.currentViewSnapshot=()=>{reloaded++;return null;};ctx.state.snapshot={mode:'all',query:'price_max=3'};
+ assert.equal(ctx.setListingsVisible(false),false);
+ assert.equal(summaryAborts,1);assert.equal(itemAborts,1);assert.equal(clears,1);
+ assert.equal(cancelled,1);assert.equal(labels,1);assert.equal(closed,1);
+ assert.ok(classes.has('listings-hidden'));
+ ctx.requestSummary();assert.equal(reloaded,0,'Hidden Maps must not request listings when moved or refreshed');
+ ctx.setListingsVisible(false);assert.equal(summaryAborts,1,'Repeated hiding is idempotent');
+ assert.equal(ctx.setListingsVisible(true),true);assert.equal(reloaded,1);
+ assert.equal(resized,1,'Read the current map size before loading the newly visible listings');
+ assert.equal(classes.has('listings-hidden'),false);
+});
+
+test('a listing response arriving after hiding cannot restore markers or cards',async()=>{
+ let deliver,rendered=0;
+ const ctx={AbortController,state:{open:true,listingsVisible:true,snapshot:{mode:'all'},markerLayer:{clearLayers(){}}},
+  summarySequence:0,itemSequence:0,currentViewSnapshot:()=>({mode:'all',query:'price_max=3'}),
+  buildSummaryUrl:()=>'/api/map-listings?scope=viewport&price_max=3',
+  fetchJson:()=>new Promise(resolve=>{deliver=resolve;}),setStatus(){},
+  renderSummary(){rendered++;},cancelMarkerRender(){},clearMarkerLabels(){},closePreview(){},
+  setMobileSheetExpanded(){},setPanelView(){},root:{clearTimeout(){}}};
+ vm.createContext(ctx);vm.runInContext(functions('requestSummary','setListingsVisible'),ctx);
+ const pending=ctx.requestSummary();ctx.setListingsVisible(false);
+ deliver({locations:[{lat:11,lng:106.6}],recent:{items:[{id:1}]}});await pending;
+ assert.equal(rendered,0);assert.equal(ctx.state.recentPayload,null);
+});

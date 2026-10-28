@@ -7,7 +7,7 @@
 .planning-map-ui :focus-visible{outline:3px solid #16846b;outline-offset:2px}
 .planning-map-toolbar{position:absolute;left:50%;transform:translateX(-50%);width:max-content;top:10px;display:flex;gap:8px;pointer-events:auto;max-width:calc(100% - 100px)}
 .planning-map-toolbar>div:empty{display:none}
-.planning-map-popover>summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid #d7e1dc;border-radius:24px;background:#fff;box-shadow:0 2px 8px #15382c18;font-size:13px;font-weight:700;white-space:nowrap}
+.planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid #d7e1dc;border-radius:24px;background:#fff;box-shadow:0 2px 8px #15382c18;font-size:13px;font-weight:700;white-space:nowrap}
 .planning-map-popover>summary::-webkit-details-marker{display:none}
 .planning-map-popover>summary:after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px}
 .planning-map-popover[open]>summary{color:#0c7358;border-color:#16846b;background:#f0faf5}
@@ -49,7 +49,7 @@
 .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:64px;max-width:calc(100% - 116px);flex-wrap:wrap;justify-content:center}
 @media(max-width:1100px){
  .planning-map-toolbar{left:50%;top:8px;gap:5px;max-width:calc(100% - 68px)}
- .planning-map-popover>summary{padding:0 11px;gap:7px;font-size:12px}
+ .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle{padding:0 11px;gap:7px;font-size:12px}
  .planning-map-form,.planning-overlay-body{left:50%;transform:translateX(-50%);top:52px;width:min(350px,calc(100vw - 20px));max-width:calc(100vw - 20px);max-height:calc(100dvh - 200px)}
  .planning-map-form select,.planning-map-form input{font-size:16px}
  .planning-map-ui:has(.planning-map-popover[open]) .planning-parcel-card{visibility:hidden;pointer-events:none}
@@ -125,4 +125,26 @@
  .planning-measure-result-actions button{min-height:44px}
  .planning-is-drawing .planning-measure-result{top:auto;bottom:12px;width:calc(100% - 20px)}
  .planning-land-legend input,.planning-land-legend select{font-size:16px}
+}
+
+@media(max-width:760px){
+ .planning-map-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:330px;max-width:calc(100% - 68px);gap:5px}
+ .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle{width:100%;justify-content:center;padding:0 6px;font-size:12px}
+ .planning-map-form,.planning-overlay-body{top:102px}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-top:112px}
+ .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:108px!important}
+ .planning-opacity-control{top:176px}
+ .planning-measure-result,.planning-land-legend{top:106px}
+}
+
+@media(min-width:761px) and (max-width:1200px){
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-map-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:330px;max-width:calc(100% - 68px);gap:5px}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-map-popover>summary{width:100%;justify-content:center;padding:0 6px;font-size:12px}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-listings-toggle{width:100%;justify-content:center;padding:0 6px;font-size:12px}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-map-form,.listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-overlay-body{top:102px}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .listing-map-filter-summary{top:110px!important}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .listing-map-filter-summary span{display:none}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .leaflet-control-layers{margin-top:156px}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-opacity-control{top:220px}
+ .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-opacity-control input[type=range]{height:48px}
 }

@@ -17,7 +17,7 @@ const catalog = {layers: [{id: manifest.id,name: 'Thới Hòa',status:'overlay_r
   {id:officialManifest.id,name:'Mỹ Phước',status:'overlay_ready',decision:'2913/2022',
    source:'gis',source_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh',manifest:officialManifest}]};
 
-function harness(cityValue, publicConfig, openingBounds, initialTheme) {
+function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOptions) {
   const nodes = [], layers = new Set(), handlers = {}, zoomHandlers = new Set();
   let resolveFetch, removed = false, signal, visibleBounds = openingBounds;
   const fetches=[];
@@ -53,7 +53,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme) {
           this.events.remove=()=>zoomHandlers.delete(zoom);
         }, setOpacity(value) {this.options.opacity=value;}};
     }};
-  const dispose = api.mount(map,L,env,{initialTheme});
+  const dispose = api.mount(map,L,env,{initialTheme,...listingOptions});
   return {nodes,layers,handlers,dispose,map,fetches, zoom() {zoomHandlers.forEach(fn=>fn());},
     move(bounds) {visibleBounds=bounds;handlers.moveend();},
     get signal() {return signal;}, get removed() {return removed;},
@@ -76,6 +76,19 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
     manifest:{...officialManifest,id:'tdm-phu-cuong',map_scale:2000,bounds:[[10.94,106.63],[11.09,106.72]]}};
   const tdmGeneral={...general,id:'tdm-general',name:'Thủ Dầu Một',city:'Thủ Dầu Một',
     manifest:{...tdmWard.manifest,id:'tdm-general',map_scale:null}};
+  let listingsVisible=false,toggled=0;
+  const visibility=harness('BẾN CÁT',undefined,undefined,'partition',{
+    listingsVisible:false,onToggleListings(){toggled++;return listingsVisible=!listingsVisible;}});
+  const visibilityButton=visibility.nodes.find(x=>x.className==='planning-listings-toggle');
+  const visibilityToolbar=visibility.nodes.find(x=>x.className==='planning-map-toolbar');
+  assert.ok(visibilityToolbar.children.indexOf(visibilityButton)===3,'Listing toggle immediately follows map layers');
+  assert.equal(visibilityButton.textContent,'Hiện tin đăng');
+  assert.equal(visibilityButton.attributes['aria-pressed'],'false');
+  visibilityButton.events.click();assert.equal(toggled,1);
+  assert.equal(visibilityButton.textContent,'Ẩn tin đăng');
+  assert.equal(visibilityButton.attributes['aria-pressed'],'true');
+  visibilityButton.events.click();assert.equal(visibilityButton.textContent,'Hiện tin đăng');
+  visibility.dispose();
   const pdf={...catalog.layers[0],id:'thoi-hoa-document',source:'document',manifest:{...manifest,id:'thoi-hoa-document'}};
   const explicit=harness('BẾN CÁT',undefined,undefined,'urban_general');
   explicit.deliver({layers:[catalog.layers[0],general]});await flush();

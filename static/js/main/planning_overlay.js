@@ -105,6 +105,19 @@
       if (box.open) ui.panels.forEach(function (p) { if (p !== box) p.open = false; });
     });
     node('summary', box, 'Lớp bản đồ');
+    if (typeof options.onToggleListings === 'function') {
+      var listingsToggle = node('button', toolbar);
+      listingsToggle.type = 'button'; listingsToggle.className = 'planning-listings-toggle';
+      listingsToggle.setAttribute('aria-controls', 'listingMapPanel listingMapMobileSheet');
+      function syncListingsToggle(visible) {
+        listingsToggle.textContent = visible ? 'Ẩn tin đăng' : 'Hiện tin đăng';
+        listingsToggle.setAttribute('aria-pressed', String(visible));
+      }
+      syncListingsToggle(options.listingsVisible !== false);
+      listingsToggle.addEventListener('click', function () {
+        syncListingsToggle(options.onToggleListings());
+      });
+    }
     var body = node('div', box);
     body.className = 'planning-overlay-body';
     node('span', body, published ? 'DỮ LIỆU QUY HOẠCH THAM KHẢO' : 'THỬ NGHIỆM LOCAL').className = 'planning-overlay-badge';
