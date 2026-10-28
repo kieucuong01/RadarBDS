@@ -157,6 +157,8 @@ def test_partition_native_tiles_cover_expanded_hcm_without_widening_general(tmp_
 
 def test_packaged_detailed_grids_are_verified_without_mutating_parcel_release(tmp_path, monkeypatch):
     import services.planning_tiles as tiles
+    assert set(tiles.METADATA_SERVICES)=={
+        'partition','urban_general','partition_supplement','urban_general_supplement'}
     folder=tmp_path/'metadata';folder.mkdir()
     for name in ('partition','urban_general','partition_supplement','urban_general_supplement'):
         (folder/f'{name}.json').write_text(json.dumps(metadata()),encoding='utf8')
@@ -164,7 +166,7 @@ def test_packaged_detailed_grids_are_verified_without_mutating_parcel_release(tm
     grids=tmp_path/'grids';grids.mkdir()
     for name in ('detailed','detailed_supplement'):
         data=json.loads((tiles.PACKAGED_GRID_DIR/f'{name}.json').read_text(encoding='utf8'))
-        assert data['service']==tiles.METADATA_SERVICES[name]
+        assert data['service']==tiles.DETAILED_METADATA_SERVICES[name]
         tiles.validate_grid(data)
         (grids/f'{name}.json').write_text(json.dumps(data),encoding='utf8')
     monkeypatch.setattr(tiles,'PACKAGED_GRID_DIR',grids)
