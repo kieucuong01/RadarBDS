@@ -50,6 +50,46 @@ def test_planning_hub_rejects_unknown_categories():
         resolver({"slug": "invalid", "category": "not-a-category"})
 
 
+def test_planning_hub_has_lightweight_maps_entry_with_supported_choices():
+    from html.parser import HTMLParser
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/quy-hoach-binh-duong").get_data(as_text=True)
+    class EntryParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.in_form = False
+            self.select = None
+            self.values = {}
+            self.hidden = {}
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "form" and "data-planning-launch-form" in attrs:
+                assert attrs.get("action") == "/" and attrs.get("method") == "get"
+                self.in_form = True
+            if not self.in_form:
+                return
+            if tag == "select":
+                self.select = attrs["name"]
+                self.values[self.select] = []
+            if tag == "option":
+                self.values[self.select].append(attrs["value"])
+            if tag == "input" and attrs.get("type") == "hidden":
+                self.hidden[attrs["name"]] = attrs["value"]
+        def handle_endtag(self, tag):
+            if tag == "form":
+                self.in_form = False
+    parser = EntryParser()
+    parser.feed(html)
+    assert parser.hidden == {"tab": "all", "map": "1"}
+    assert parser.values["city"] == ["THỦ DẦU MỘT", "BẾN CÁT", "THUẬN AN", "DĨ AN", "TÂN UYÊN"]
+    assert parser.values["planning"] == ["partition", "urban_general", "detailed", "land_use_2030"]
+    assert "Mức độ phủ và thông tin thửa tùy nguồn GIS" in html
+    assert "planning-mini-map" not in html
+    assert "leaflet.js" not in html
+    assert "Muốn nhận tin đáng kiểm tra ở Bình Dương cũ?" in html
+
+
 def test_planning_hub_renders_data_derived_stats_and_user_language():
     import app as radar_app
 
@@ -57,10 +97,10 @@ def test_planning_hub_renders_data_derived_stats_and_user_language():
 
     assert "5 chuyên đề" in html
     assert "2 nhóm nội dung" in html
-    assert "Cập nhật gần nhất" in html
+    assert "Cập nhật chuyên đề gần nhất" in html
     assert "Bình Dương cũ là địa bàn tỉnh Bình Dương trước khi sắp xếp hành chính" in html
-    assert "Chọn bản đồ cần xem" in html
-    assert "Lọc tin đang bán theo khu vực" in html
+    assert "Xem quy hoạch trên Maps" in html
+    assert "Mở Maps xem quy hoạch" in html
     for internal_term in ("Map-first", "Mỗi card", "trang detail", "CTA về dashboard", "Signal khu này"):
         assert internal_term not in html
 
@@ -94,7 +134,7 @@ def test_planning_hub_tracking_partial_and_hooks_are_present():
 
     assert "seo_landing_viewed" in html
     assert 'data-track-cta="planning_hub_hero_list"' in html
-    assert 'data-track-cta="planning_hub_hero_dashboard"' in html
+    assert 'data-track-cta="planning_hub_open_map"' in html
     assert 'data-track-cta="planning_hub_article_thumb"' in html
     assert 'data-track-cta="planning_hub_article_title"' in html
     assert 'data-track-cta="planning_hub_article_open"' in html
@@ -214,7 +254,7 @@ def test_planning_pages_use_shareable_og_image_and_current_cache_keys():
             '<meta property="og:image" '
             'content="https://radarbds.vn/static/images/seo/radarbds-og.png">'
         ) in html
-        assert "planning-hub-20260728-1" in html or "planning-map-20260728-1" in html
+        assert "planning-entry-20261029" in html or "planning-map-20260728-1" in html
 
 
 def test_planning_geojson_files_are_valid_feature_collections():

@@ -95,7 +95,7 @@ def test_dashboard_tools_link_to_new_public_hubs_without_replacing_task_tabs():
     assert 'data-tab-target="signals"' in markup
     assert 'data-tab-target="all"' in markup
     for path in (
-        "/quy-hoach-binh-duong",
+        "/?tab=all&amp;map=1&amp;planning=partition",
         "/tin-tuc",
         "/bao-cao",
     ):

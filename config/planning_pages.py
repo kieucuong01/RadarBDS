@@ -22,24 +22,37 @@ SOURCE_36_WARDS = "https://xaydungchinhsach.chinhphu.vn/binh-duong-thong-qua-de-
 
 PLANNING_HUB = {
     "path": "/quy-hoach-binh-duong",
-    "title": "Bản đồ quy hoạch Bình Dương cũ | Radar BDS",
+    "title": "Bản đồ quy hoạch Bình Dương cũ trên Maps | Radar BDS",
     "description": (
-        "Hub bản đồ quy hoạch Bình Dương cũ: Vành đai 3, Mỹ Phước - Tân Vạn, "
-        "Vành đai 4, Quốc lộ 13 và địa giới 36 phường xã sau sáp nhập."
+        "Xem quy hoạch Bình Dương trên Maps: lớp phân khu, quy hoạch chung, chi tiết, "
+        "sử dụng đất 2030; tra tờ thửa và đo ranh. Kèm chuyên đề hạ tầng có nguồn dẫn."
     ),
     "keywords": (
         "bản đồ quy hoạch Bình Dương, quy hoạch Bình Dương cũ, Vành đai 3 Bình Dương, "
         "Mỹ Phước Tân Vạn, Vành đai 4 TP.HCM, địa giới 36 phường xã Bình Dương"
     ),
-    "hero_badge": "Bản đồ quy hoạch",
-    "hero_title": "Bản đồ quy hoạch Bình Dương cũ",
+    "hero_badge": "Quy hoạch trên Radar BDS Maps",
+    "lead_scope_label": "Bình Dương cũ",
+    "hero_title": "Xem quy hoạch Bình Dương ngay trên Maps",
     "hero_text": (
-        "Tập hợp các tuyến giao thông, địa giới và khu vực cần kiểm tra quy hoạch "
-        "trên nền bản đồ tương tác. Mỗi bài có lớp bật/tắt, khu vực bị ảnh hưởng, "
-        "nguồn văn bản và lối sang dashboard Radar BDS để xem tin đang bán quanh khu đó."
+        "Bật lớp quy hoạch trên cùng bản đồ với tin đang rao. Chọn khu vực, "
+        "điều chỉnh độ hiển thị, tra tờ/thửa hoặc vẽ ranh để đo khoảng cách và diện tích."
     ),
-    "updated_at": PLANNING_UPDATED_AT,
-    "updated_label": PLANNING_UPDATED_LABEL,
+    "updated_at": "2026-10-29",
+    "updated_label": "29/10/2026",
+    "map_cities": [
+        {"value": "THỦ DẦU MỘT", "label": "Thủ Dầu Một"},
+        {"value": "BẾN CÁT", "label": "Bến Cát"},
+        {"value": "THUẬN AN", "label": "Thuận An"},
+        {"value": "DĨ AN", "label": "Dĩ An"},
+        {"value": "TÂN UYÊN", "label": "Tân Uyên"},
+    ],
+    "map_themes": [
+        {"value": "partition", "label": "Quy hoạch phân khu · GIS"},
+        {"value": "urban_general", "label": "Quy hoạch chung đô thị · GIS"},
+        {"value": "detailed", "label": "Quy hoạch chi tiết · GIS"},
+        {"value": "land_use_2030", "label": "Sử dụng đất 2030 · tham khảo"},
+    ],
     "map_label": "Bình Dương cũ",
     "source_links": [
         {"label": "Quyết định 790/QĐ-TTg về Quy hoạch tỉnh Bình Dương", "href": SOURCE_QD_790},

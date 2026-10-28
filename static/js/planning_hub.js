@@ -17,6 +17,14 @@
 })(typeof window !== "undefined" ? window : null, function () {
   "use strict";
 
+  function mapHref(city, theme) {
+    var cities=['THỦ DẦU MỘT','BẾN CÁT','THUẬN AN','DĨ AN','TÂN UYÊN'];
+    var themes=['partition','urban_general','detailed','land_use_2030'];
+    var params=new URLSearchParams({tab:'all',map:'1',
+      city:cities.includes(city)?city:cities[0],planning:themes.includes(theme)?theme:themes[0]});
+    return '/?'+params.toString();
+  }
+
   function filterIndexes(items, category) {
     var selected = category || "all";
     var matches = [];
@@ -57,6 +65,14 @@
   function init(doc, win) {
     var hub = doc.querySelector("[data-planning-hub]");
     if (!hub) return;
+    var launchForm=hub.querySelector('[data-planning-launch-form]');
+    if(launchForm) {
+      var city=launchForm.querySelector('[name=city]'),theme=launchForm.querySelector('[name=planning]');
+      function updateMapLink() {
+        hub.querySelectorAll('[data-planning-open-map]').forEach(function(link){link.href=mapHref(city.value,theme.value);});
+      }
+      launchForm.addEventListener('change',updateMapLink);updateMapLink();
+    }
 
     var filters = Array.prototype.slice.call(hub.querySelectorAll("[data-planning-filter]"));
     var cards = Array.prototype.slice.call(hub.querySelectorAll("[data-planning-card]"));
@@ -134,6 +150,7 @@
   }
 
   return {
+    mapHref: mapHref,
     categoryFromHash: categoryFromHash,
     filterIndexes: filterIndexes,
     filterTrackContext: filterTrackContext,

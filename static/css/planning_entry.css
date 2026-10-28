@@ -1,0 +1,16 @@
+.planning-hub .planning-hero-grid{grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);align-items:center;gap:48px}
+.planning-hub .planning-hero h1{font-size:clamp(2.2rem,4.5vw,4rem);max-width:760px;line-height:1.12}
+.planning-hub .planning-hero-actions{align-items:center;gap:20px}
+.planning-entry-features{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:12px;color:#365564;font-size:.95rem}
+.planning-entry-features li::before{content:'✓';color:#137c75;margin-right:10px;font-weight:700}
+.planning-hub .planning-entry-panel{padding:28px;gap:0;border:1px solid #c8deda;box-shadow:0 16px 44px #12313f0c;background:#fff}
+.planning-entry-panel h2{margin:8px 0 24px;font-size:1.5rem;color:#12313f}
+.planning-entry-panel form{display:grid;gap:10px}
+.planning-entry-panel label{font-size:.87rem;font-weight:650;color:#365564}
+.planning-entry-panel select{width:100%;min-width:0;min-height:48px;border:1px solid #b9cecf;border-radius:8px;padding:10px 32px 10px 12px;background:#fff;color:#12313f;font:inherit;margin-bottom:8px}
+.planning-entry-panel button{width:100%;min-height:48px;margin-top:4px;cursor:pointer;font:inherit;font-weight:650}
+.planning-entry-panel select:focus-visible,.planning-entry-panel button:focus-visible{outline:3px solid #81c9bf;outline-offset:3px}
+.planning-entry-note{font-size:.82rem;line-height:1.65;color:#506a75;margin:16px 0 0}
+.planning-entry-library-meta{font-size:.85rem;color:#506a75;margin:0 0 20px}
+@media(max-width:900px){.planning-hub .planning-hero-grid{grid-template-columns:1fr;gap:28px}.planning-hub .planning-hero h1{max-width:700px}.planning-hub .planning-entry-panel{max-width:640px;width:100%;box-sizing:border-box}}
+@media(max-width:480px){.planning-hub .planning-entry-panel{padding:20px}.planning-hub .planning-hero-actions{align-items:flex-start;flex-direction:column;gap:16px}.planning-hub .planning-hero-actions .seo-button{width:100%;box-sizing:border-box}.planning-entry-features{font-size:.85rem}}

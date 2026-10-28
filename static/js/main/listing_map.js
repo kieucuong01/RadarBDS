@@ -50,6 +50,7 @@
     viewSnapshot: null,
     browseViewport: false,
     initialBounds: null,
+    planningTheme: null,
     initialController: null,
     viewportTimer: null,
     loadedViewportKey: null,
@@ -562,6 +563,7 @@
     try {
       var url = new URL(currentHref);
       url.searchParams.delete("map");
+      url.searchParams.delete("planning");
       return url.toString();
     } catch (error) {
       return String(currentHref || "");
@@ -1614,7 +1616,7 @@
       },350);
     });
     if ((root.RADAR_PLANNING_PILOT || root.RADAR_PLANNING_CONFIG) && root.RadarPlanningOverlay) {
-      state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root);
+      state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root, {initialTheme:state.planningTheme});
     }
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize({pan: false});
@@ -3251,6 +3253,7 @@
     }
     captureDashboardState();
     state.open = true;
+    state.planningTheme = options.planningTheme || null;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;
     state.snapshot = safe;

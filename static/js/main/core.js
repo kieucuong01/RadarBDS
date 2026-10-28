@@ -532,6 +532,18 @@ function closeToolsSheet(event) {
   if (wasOpen && trigger) trigger.focus();
 }
 
+async function openPlanningMapFromTools() {
+  const menu = document.getElementById('toolsMenu');
+  if (menu) menu.open = false;
+  closeToolsSheet();
+  try {
+    if (!['signals', 'all'].includes(activeTabId())) await switchTab('all', null);
+    await window.openListingMap({ planningTheme: 'partition' });
+  } catch (error) {
+    window.location.assign('/quy-hoach-binh-duong');
+  }
+}
+
 document.addEventListener('click', function (event) {
   const toolLink = event.target.closest('[data-dashboard-tool]');
   if (toolLink) {
@@ -540,6 +552,11 @@ document.addEventListener('click', function (event) {
       destination: toolLink.getAttribute('href') || '',
       source_surface: toolLink.dataset.toolSurface || 'unknown'
     });
+    if (toolLink.dataset.dashboardTool === 'planning' && event.button === 0
+        && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      openPlanningMapFromTools();
+    }
   }
   const menu = document.getElementById('toolsMenu');
   if (menu && menu.open && !menu.contains(event.target)) {

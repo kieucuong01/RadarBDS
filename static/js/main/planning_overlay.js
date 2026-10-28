@@ -65,7 +65,8 @@
     });
   }
 
-  function mount(map, L, environment) {
+  function mount(map, L, environment, options) {
+    options = options || {};
     var env = environment || window;
     var doc = env.document;
     var published = env.RADAR_PLANNING_CONFIG;
@@ -428,6 +429,8 @@
         });
         selector.disabled = false;
         themes.forEach(function (theme) { theme.source.disabled = false; });
+        var requested = themes.find(function (theme) { return theme.id === options.initialTheme; });
+        if (requested) { requested.toggle.checked = true; activeTheme = requested; }
         var initial = wantedItems(true)[0] || catalog[0];
         chooseLayer(initial); updateLayers();
       }).catch(function (error) {

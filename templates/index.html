@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=maps-pan-filters-20261028"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=planning-entry-20261029"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=maps-pan-filters-20261028"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=planning-entry-20261029"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -125,7 +125,7 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_measure.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_legend.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=planning-speed-queue-20261028"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-tools-20261029"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-entry-20261029"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=maps-controls-20261028">
@@ -420,9 +420,9 @@
               <strong>Tra cứu bảng giá đất</strong>
               <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
             </a>
-            <a class="tools-menu-item" href="/quy-hoach-binh-duong" data-dashboard-tool="planning" data-tool-surface="desktop_tools">
-              <strong>Quy hoạch &amp; bản đồ</strong>
-              <span>Xem bản đồ địa giới và các chuyên đề quy hoạch</span>
+            <a class="tools-menu-item" href="/?tab=all&amp;map=1&amp;planning=partition" data-dashboard-tool="planning" data-tool-surface="desktop_tools">
+              <strong>Quy hoạch trên Maps</strong>
+              <span>Bật lớp bản đồ, tra tờ/thửa và đo ranh</span>
             </a>
             <a class="tools-menu-item" href="/tin-tuc" data-dashboard-tool="news" data-tool-surface="desktop_tools">
               <strong>Tin tức dữ liệu</strong>
@@ -1575,9 +1575,9 @@
           <strong>Tra cứu bảng giá đất</strong>
           <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
         </a>
-        <a class="tools-menu-item" href="/quy-hoach-binh-duong" data-dashboard-tool="planning" data-tool-surface="mobile_tools_sheet">
-          <strong>Quy hoạch &amp; bản đồ</strong>
-          <span>Xem bản đồ địa giới và các chuyên đề quy hoạch</span>
+        <a class="tools-menu-item" href="/?tab=all&amp;map=1&amp;planning=partition" data-dashboard-tool="planning" data-tool-surface="mobile_tools_sheet">
+          <strong>Quy hoạch trên Maps</strong>
+          <span>Bật lớp bản đồ, tra tờ/thửa và đo ranh</span>
         </a>
         <a class="tools-menu-item" href="/tin-tuc" data-dashboard-tool="news" data-tool-surface="mobile_tools_sheet">
           <strong>Tin tức dữ liệu</strong>
@@ -1595,7 +1595,7 @@
   <div class="user-menu-backdrop" id="userMenuBackdrop" hidden aria-hidden="true" onclick="RadarAccountMenu.close()"></div>
   <script src="{{ url_for('static', filename='js/main/account_menu.js') }}?v=account-menu-20261020"></script>
   {% endif %}
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=listings-perf-20261021"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=planning-entry-20261029"></script>
   <script src="{{ url_for('static', filename='js/main/filter_runtime.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=listings-perf-20261021"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
@@ -1605,7 +1605,7 @@
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-alerts-20261005"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=maps-controls-20261028"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=area-scope-dismiss-20261020"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=planning-entry-20261029"></script>
 </body>
 
 </html>

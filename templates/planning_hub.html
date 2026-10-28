@@ -24,8 +24,9 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=public-navigation-20260729">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/planning_entry.css') }}?v=planning-entry-20261029">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
-  <script src="{{ url_for('static', filename='js/planning_hub.js') }}?v=planning-hub-20260728-1" defer></script>
+  <script src="{{ url_for('static', filename='js/planning_hub.js') }}?v=planning-entry-20261029" defer></script>
   {% include "partials/public_brand_assets.html" %}
 </head>
 
@@ -40,31 +41,33 @@
           <h1>{{ page.hero_title }}</h1>
           <p class="planning-hero-text">{{ page.hero_text }}</p>
           <div class="planning-hero-actions">
-            <a class="seo-button seo-button-primary" href="#planning-list" data-track-cta="planning_hub_hero_list">Chọn bản đồ cần xem</a>
-            <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="planning_hub_hero_dashboard">Lọc tin đang bán theo khu vực</a>
+            <a class="seo-button seo-button-primary" href="/?tab=all&amp;map=1&amp;planning=partition" data-planning-open-map data-track-cta="planning_hub_open_map">Xem quy hoạch trên Maps</a>
+            <a class="planning-text-link" href="#planning-list" data-track-cta="planning_hub_hero_list">Đọc chuyên đề quy hoạch ↓</a>
           </div>
+          <ul class="planning-entry-features" aria-label="Công cụ trên Maps">
+            <li>Bật nhiều lớp · chỉnh độ hiển thị</li>
+            <li>Tra tờ/thửa · xem thông tin quy hoạch</li>
+            <li>Vẽ ranh · đo khoảng cách và diện tích</li>
+          </ul>
         </div>
-        <aside class="planning-hub-panel" aria-label="Tóm tắt dữ liệu">
-          <dl class="planning-hub-stats">
-            <div>
-              <dt>Thư viện hiện có</dt>
-              <dd>{{ page.total_pages }} chuyên đề</dd>
-            </div>
-            <div>
-              <dt>Nhóm nội dung</dt>
-              <dd>{{ page.active_category_count }} nhóm nội dung</dd>
-            </div>
-            <div>
-              <dt>Cập nhật gần nhất</dt>
-              <dd><time datetime="{{ page.updated_at }}">{{ page.latest_updated_label }}</time></dd>
-            </div>
-          </dl>
-          <div class="planning-mini-map" aria-hidden="true">
-            <span class="mini-route mini-route-a"></span>
-            <span class="mini-route mini-route-b"></span>
-            <span class="mini-node mini-node-a"></span>
-            <span class="mini-node mini-node-b"></span>
-          </div>
+        <aside class="planning-hub-panel planning-entry-panel" aria-labelledby="planning-entry-title">
+          <p class="planning-kicker">Bắt đầu tra cứu</p>
+          <h2 id="planning-entry-title">Chọn nơi muốn xem</h2>
+          <form action="/" method="get" data-planning-launch-form>
+            <input type="hidden" name="tab" value="all">
+            <input type="hidden" name="map" value="1">
+            <label for="planning-entry-city">Khu vực ban đầu</label>
+            <select id="planning-entry-city" name="city">
+              {% for city in page.map_cities %}<option value="{{ city.value }}">{{ city.label }}</option>{% endfor %}
+            </select>
+            <label for="planning-entry-theme">Lớp bản đồ</label>
+            <select id="planning-entry-theme" name="planning">
+              {% for theme in page.map_themes %}<option value="{{ theme.value }}">{{ theme.label }}</option>{% endfor %}
+            </select>
+            <button class="seo-button seo-button-primary" type="submit" data-track-cta="planning_hub_map_submit">Mở Maps xem quy hoạch →</button>
+          </form>
+          <p class="planning-entry-note">Lớp đã chọn mở ở độ hiển thị 35%. Kéo bản đồ để xem vùng xung quanh; dùng <strong>Khu vực</strong> trên Maps để chuyển đến nơi khác trong TP.HCM mới.</p>
+          <p class="planning-entry-note">Mức độ phủ và thông tin thửa tùy nguồn GIS từng khu vực. Có thể đổi nguồn bản vẽ/PDF nếu có.</p>
         </aside>
       </div>
     </section>
@@ -86,10 +89,11 @@
         <div class="planning-section-heading">
           <div>
             <p class="planning-kicker">Chuyên mục</p>
-            <h2>Bản đồ và bài phân tích</h2>
+            <h2>Chuyên đề quy hoạch và hạ tầng</h2>
           </div>
-          <p>Mỗi chuyên đề có bản đồ tương tác, bảng khu vực bị ảnh hưởng, nguồn văn bản và lối sang dữ liệu tin đang bán phù hợp.</p>
+          <p>Các bài phân tích có bản đồ minh họa, khu vực liên quan và nguồn văn bản để đối chiếu. Để xem các lớp GIS và tra thửa, mở Maps ở trên.</p>
         </div>
+        <p class="planning-entry-library-meta">{{ page.total_pages }} chuyên đề · {{ page.active_category_count }} nhóm nội dung · Cập nhật chuyên đề gần nhất: <time>{{ page.latest_updated_label }}</time></p>
 
         <div class="planning-tabs" role="group" aria-label="Lọc nội dung quy hoạch">
           {% for tab in page.tabs %}
@@ -155,10 +159,10 @@
     <section class="seo-shell planning-cta-band">
       <div>
         <p class="planning-kicker">Radar BDS</p>
-        <h2>Từ bản đồ sang dữ liệu tin rao</h2>
-        <p>Mở dashboard để lọc theo phường, giá/m², diện tích và tín hiệu rẻ hơn fair value quanh khu đang đọc.</p>
+        <h2>Xem quy hoạch cùng tin đang bán</h2>
+        <p>Mở Maps, bật lớp cần xem và chọn tin rao ngay tại vị trí trên bản đồ. Bộ lọc giá, diện tích và loại hình vẫn có thể sử dụng cùng lúc.</p>
       </div>
-      <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-track-cta="planning_hub_bottom_dashboard">Lọc tin đang bán theo khu vực</a>
+      <a class="seo-button seo-button-primary" href="/?tab=all&amp;map=1&amp;planning=partition" data-planning-open-map data-track-cta="planning_hub_bottom_map">Mở quy hoạch trên Maps</a>
     </section>
 
     {% set lead_cta_context = "seo_planning_hub_lead" %}

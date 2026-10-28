@@ -177,7 +177,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=area-scope-dismiss-20261020" in html
+    assert "js/main/boot.js') }}?v=planning-entry-20261029" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():

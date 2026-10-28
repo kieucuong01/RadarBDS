@@ -17,7 +17,7 @@ const catalog = {layers: [{id: manifest.id,name: 'Thới Hòa',status:'overlay_r
   {id:officialManifest.id,name:'Mỹ Phước',status:'overlay_ready',decision:'2913/2022',
    source:'gis',source_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh',manifest:officialManifest}]};
 
-function harness(cityValue, publicConfig, openingBounds) {
+function harness(cityValue, publicConfig, openingBounds, initialTheme) {
   const nodes = [], layers = new Set(), handlers = {}, zoomHandlers = new Set();
   let resolveFetch, removed = false, signal, visibleBounds = openingBounds;
   const fetches=[];
@@ -53,7 +53,7 @@ function harness(cityValue, publicConfig, openingBounds) {
           this.events.remove=()=>zoomHandlers.delete(zoom);
         }, setOpacity(value) {this.options.opacity=value;}};
     }};
-  const dispose = api.mount(map,L,env);
+  const dispose = api.mount(map,L,env,{initialTheme});
   return {nodes,layers,handlers,dispose,map,fetches, zoom() {zoomHandlers.forEach(fn=>fn());},
     move(bounds) {visibleBounds=bounds;handlers.moveend();},
     get signal() {return signal;}, get removed() {return removed;},
@@ -77,6 +77,16 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const tdmGeneral={...general,id:'tdm-general',name:'Thủ Dầu Một',city:'Thủ Dầu Một',
     manifest:{...tdmWard.manifest,id:'tdm-general',map_scale:null}};
   const pdf={...catalog.layers[0],id:'thoi-hoa-document',source:'document',manifest:{...manifest,id:'thoi-hoa-document'}};
+  const explicit=harness('BẾN CÁT',undefined,undefined,'urban_general');
+  explicit.deliver({layers:[catalog.layers[0],general]});await flush();
+  assert.equal(explicit.nodes.find(x=>x.attributes['aria-label']==='Bật quy hoạch chung đô thị').checked,true);
+  assert.equal(explicit.nodes.find(x=>x.attributes['aria-label']==='Bật quy hoạch phân khu').checked,false);
+  assert.equal(explicit.layers.size,1);
+  assert.ok([...explicit.layers].every(x=>x.url.includes('ben-cat-general-gis')&&x.options.opacity===.35));
+  explicit.dispose();
+  const invalidEntry=harness('BẾN CÁT',undefined,undefined,'invalid-theme');
+  invalidEntry.deliver({layers:[catalog.layers[0],general]});await flush();
+  assert.equal(invalidEntry.layers.size,0);invalidEntry.dispose();
   const h=harness('THỦ DẦU MỘT');h.deliver({layers:[...catalog.layers,pdf,general,tdmWard,tdmGeneral]});await flush();
   const control=name=>h.nodes.find(x=>x.attributes['aria-label']===name);
   const part=control('Bật quy hoạch phân khu'),gen=control('Bật quy hoạch chung đô thị');
