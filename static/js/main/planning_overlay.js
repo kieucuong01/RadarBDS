@@ -18,6 +18,9 @@
 
   function validManifest(data) {
     if (!data || !/^[a-z0-9-]+$/.test(data.id || '') || ['local_experiment','reference_overlay'].indexOf(data.status) < 0) return false;
+    if (data.render_mode === 'geojson' && data.id === 'hcm-administrative-2025') return data.source_kind === 'official_gis_administrative'
+      && data.geojson_url === '/static/data/admin_hcm_2025/overview.json?v=administrative-20261029' && data.unit_count === 168
+      && validBounds(data.bounds,[8.5,106.25,11.65,107.75]) && typeof data.title === 'string' && typeof data.notice === 'string';
     if (data.render_mode === 'geojson') return data.id === 'hcm-transport-gis-roads'
       && data.source_kind === 'official_gis_transport'
       && data.geojson_url === '/static/data/planning_transport_roads.geojson?v=transport-gis-20261029'
@@ -90,7 +93,7 @@
 
   function themeLabel(item) {
     var scale = item.manifest && item.manifest.map_scale;
-    return (item.theme === 'transport' ? 'QH Giao thông' : item.theme === 'urban_vision_100' ? 'QH 100 năm (Dự thảo)' : item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
+    return (item.theme === 'administrative' ? 'Địa giới hành chính 2025' : item.theme === 'transport' ? 'QH Giao thông' : item.theme === 'urban_vision_100' ? 'QH 100 năm (Dự thảo)' : item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
       ? '1/' + scale.toLocaleString('vi-VN') : 'Chưa xác minh tỷ lệ');
   }
 
@@ -101,10 +104,12 @@
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
       ids.add(item.id);
       if (item.city !== undefined && (typeof item.city !== 'string' || !item.city.trim() || item.city.length > 80)) return false;
-      if (item.theme !== undefined && ['partition', 'urban_general', 'detailed', 'land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) < 0) return false;
+      if (item.theme !== undefined && ['partition', 'urban_general', 'detailed', 'land_use_2030', 'urban_vision_100', 'transport', 'administrative'].indexOf(item.theme) < 0) return false;
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
           && !(item.source === 'guland' && ['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
+      if (item.theme === 'administrative' && (item.source !== 'gis' || item.source_url !== 'https://gisxaydung.tphcm.gov.vn/tracuuttqh')) return false;
+      if ((item.theme === 'administrative') !== Boolean(item.manifest && item.manifest.source_kind === 'official_gis_administrative')) return false;
       if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template) || item.manifest.source_kind === 'official_gis_transport'))) return false;
       if (item.theme === 'urban_vision_100' && (!item.manifest || item.manifest.planning_status !== 'draft' || item.manifest.tile_template !== 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png')) return false;
       if (item.theme === 'land_use_2030' && item.manifest && item.manifest.planning_status === 'draft') return false;
@@ -134,7 +139,8 @@
       {id: 'partition', name: 'quy hoạch phân khu', title: 'Quy hoạch phân khu', short: 'QH Phân khu'},
       {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'QH Chi tiết'},
       {id: 'urban_vision_100', name: 'quy hoạch chung 100 năm (Dự thảo)', title: 'QH chung 100 năm (Dự thảo)', short: 'QH 100 năm (Dự thảo)'},
-      {id: 'transport', name: 'quy hoạch giao thông', title: 'Quy hoạch giao thông · Metro và đường chính', short: 'QH Giao thông'}
+      {id: 'transport', name: 'quy hoạch giao thông', title: 'Quy hoạch giao thông · Metro và đường chính', short: 'QH Giao thông'},
+      {id: 'administrative', name: 'địa giới hành chính TP.HCM mới', title: 'Địa giới hành chính TP.HCM mới · 168 đơn vị', short: 'Địa giới'}
     ];
     var overlays = new Map(), failedIds = new Set();
     var pane = map.createPane('planningPilot');
@@ -142,6 +148,10 @@
     pane.style.pointerEvents = 'none';
     ['planningTransportRoads','planningTransportMetro'].forEach(function(name,index){
       var transportPane=map.createPane(name);transportPane.style.zIndex=String(355+index);transportPane.style.pointerEvents='none';
+    });
+
+    ['planningAdministrative','planningAdministrativeLabels'].forEach(function(name,index){
+      var adminPane=map.createPane(name);adminPane.style.zIndex=String(index?400:357);adminPane.style.pointerEvents='none';
     });
 
     function node(tag, parent, text) {
@@ -196,7 +206,7 @@
     themes.forEach(function (theme) { theme.railOption = node('option', railType, theme.short); theme.railOption.value = theme.id; });
     railType.value = activeTheme.id;
     var increase = node('button', rail, '+'); increase.type = 'button'; increase.setAttribute('aria-label', 'Tăng độ hiển thị 10 phần trăm');
-    var initialOpacity = activeTheme.id === 'transport' ? '100' : activeTheme.id === 'land_use_2030' ? '65' : '35';
+    var initialOpacity = (activeTheme.id === 'transport' || activeTheme.id === 'administrative') ? '100' : activeTheme.id === 'land_use_2030' ? '65' : '35';
     var railValue = node('output', rail, initialOpacity + '%');
     var railSlider = node('input', rail); railSlider.type = 'range'; railSlider.min = '0'; railSlider.max = '100'; railSlider.value = initialOpacity; railSlider.step = '1';
     railSlider.disabled = increase.disabled = true;
@@ -249,7 +259,10 @@
       var sourceLabel = node('label', card, 'Nguồn');
       theme.source = node('select', sourceLabel); theme.source.disabled = true;
       theme.source.setAttribute('aria-label', 'Nguồn ' + theme.name);
-      if (theme.id === 'transport') {
+      if (theme.id === 'administrative') {
+        node('option', theme.source, 'GIS · Địa giới hành chính mới').value = 'gis';
+        theme.source.value = 'gis';
+      } else if (theme.id === 'transport') {
         node('option', theme.source, 'Metro + GIS giao thông').value = 'combined';
         theme.source.value = 'combined';
       } else if (theme.id === 'land_use_2030' || theme.id === 'urban_vision_100' || theme.id === 'transport') {
@@ -261,7 +274,7 @@
         theme.source.value = 'gis';
       }
       var opacityLabel = node('label', card, 'Độ hiển thị ');
-      var defaultOpacity = theme.id === 'transport' ? '100' : theme.id === 'land_use_2030' ? '65' : '35';
+      var defaultOpacity = (theme.id === 'transport' || theme.id === 'administrative') ? '100' : theme.id === 'land_use_2030' ? '65' : '35';
       theme.value = node('output', opacityLabel, defaultOpacity + '%');
       theme.slider = node('input', opacityLabel); theme.slider.type = 'range';
       theme.slider.min = '0'; theme.slider.max = '100'; theme.slider.step = '1'; theme.slider.value = defaultOpacity;
@@ -273,6 +286,7 @@
         if (disposed) return;
         if (theme.toggle.checked) {
           activeTheme = theme;
+          if (options.onThemeEnabled) options.onThemeEnabled(theme.id);
           catalog.forEach(function (item) { if (item.theme === theme.id) failedIds.delete(item.id); });
           var selected = catalog.find(function (item) { return item.theme === theme.id && (theme.id === 'transport' || item.source === theme.source.value) && item.status === 'overlay_ready' && !item.inspection_only; });
           if (selected) chooseLayer(selected);
@@ -406,7 +420,7 @@
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
         });
         var layer = data.render_mode === 'geojson'
-          ? env.RadarPlanningTransport.create(map,L,env,data,Object.assign({},layerOptions,{signal:controller.signal}))
+          ? (item.theme === 'administrative' ? env.RadarAdministrativeBoundaries : env.RadarPlanningTransport).create(map,L,env,data,Object.assign({},layerOptions,{signal:controller.signal}))
           : tiled ? data.source_tiles && env.RadarPlanningNativeTiles
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
@@ -462,7 +476,9 @@
         var covered = new Set(ready.map(function (item) { return item.city + '|' + item.area_id; }));
         var missing = expected.size - covered.size;
         var native = ready.some(function (item) { return item.manifest.render_mode === 'xyz'; });
-        theme.status.textContent = native ? (theme.id === 'transport'
+        theme.status.textContent = theme.id === 'administrative'
+          ? '168 phường, xã và đặc khu mới · GIS công khai. Tải chi tiết theo vùng nhìn khi phóng gần; có Côn Đảo. Bản hiển thị tham khảo.'
+          : native ? (theme.id === 'transport'
           ? 'Metro tham khảo + GIS đường hành lang / vành đai. VĐ1 gồm các đoạn đã đối chiếu, chưa xác minh khép kín. Giữ trạng thái từng đoạn GIS; xem hồ sơ nguồn.'
           : theme.id === 'urban_vision_100'
           ? 'DỰ THẢO · Định hướng 2025–2050, tầm nhìn 100 năm. Chưa xác minh phê duyệt; đối chiếu hồ sơ gốc trước khi sử dụng.'

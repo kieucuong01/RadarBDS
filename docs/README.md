@@ -30,6 +30,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | Listing Maps registry, browser evidence, map-location backfill | `listing_map_registry_automation.md`, `dev_commands.md`, `operations.md` | `services/listing_location_*`, `config/listing_map*`, `static/maps/listing-locations/*` |
 | Maps viewport loading, opening area, independent map browsing | `planning_sources/maps-viewport-loading.md` | `services/listing_map.py`, `services/listing_map_viewport.py`, `static/js/main/listing_map.js`, `static/js/main/planning_overlay.js` |
 | Reference land-use planning 2030 | `planning_sources/landuse-2030.md` | `config/planning_landuse_2030.json`, `static/js/main/planning_overlay.js`, `services/planning_live.py` |
+| HCM new administrative boundaries | `planning_sources/administrative-hcm.md` | `config/planning_administrative.json`, `static/js/main/planning_administrative.js`, `scripts/capture_administrative_boundaries.py` |
 | Transport metro and main-road reference | `planning_sources/transport.md` | `config/planning_transport.json`, `static/js/main/planning_overlay.js`, `services/planning_live.py` |
 | TP.HCM 100-year vision draft reference | `planning_sources/vision-100.md` | `config/planning_vision_100.json`, `static/js/main/planning_overlay.js`, `services/planning_live.py` |
 | Detailed planning GIS and map source labels | `planning_sources/detailed-gis.md` | `services/planning_tiles.py`, `config/planning_gis_metadata/`, `static/js/main/planning_overlay.js` |

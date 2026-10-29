@@ -91,6 +91,8 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert {a['source'] for a in transport}=={'gis','guland'}
     assert next(a for a in transport if a['source']=='gis')['manifest']['render_mode']=='geojson'
     assert next(a for a in transport if a['source']=='guland')['manifest']['max_native_zoom']==19
+    administrative=[a for a in data['layers'] if a.get('theme')=='administrative']
+    assert len(administrative)==1 and administrative[0]['manifest']['unit_count']==168
     response=client.get('/api/planning/parcels/config.json')
     assert len(response.json['areas'])==422 and response.json['count']==91
     assert response.json['count_scope']=='historic_binh_duong_snapshot'

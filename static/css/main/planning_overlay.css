@@ -151,3 +151,6 @@
 
 .listing-map-workspace .leaflet-tooltip.planning-transport-label{background:transparent;border:0;box-shadow:none;color:#fff;font-size:10px;font-weight:700;text-shadow:0 1px 2px #000,1px 0 2px #000,-1px 0 2px #000;pointer-events:none}
 .listing-map-workspace .leaflet-tooltip.planning-transport-label:before{display:none}
+
+.planning-admin-label-marker{background:none;border:0;pointer-events:none}
+.planning-admin-label-marker span{display:inline-block;transform:translate(-50%,-50%);white-space:nowrap;padding:2px 5px;border:1px solid;border-radius:4px;background:#ffffffde;color:#133f44;font-size:11px;line-height:18px;font-weight:700;box-shadow:0 1px 3px #0002}

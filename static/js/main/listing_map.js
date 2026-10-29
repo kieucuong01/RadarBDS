@@ -12,7 +12,7 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
-  var VALID_PLANNING_THEMES = ["partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport"];
+  var VALID_PLANNING_THEMES = ["partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative"];
   var DIRECTORY_BATCH_SIZE = 100;
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
   var MARKER_BATCH_SIZE = 200;
@@ -115,6 +115,10 @@
   function normalizeMode(value) {
     var mode = String(value || "").toLowerCase();
     return VALID_MODES.indexOf(mode) >= 0 ? mode : null;
+  }
+
+  function defaultBaseLayer(theme) {
+    return theme === "administrative" ? "street" : "satellite";
   }
 
   function normalizeBaseLayer(value) {
@@ -1591,8 +1595,8 @@
     bindStreetTileFallback(currentMap, state.baseLayers.street, definitions.street, function (message) {
       if (state.map === currentMap && state.activeBaseLayer === "street") setStatus(message, false);
     });
-    state.activeBaseLayer = "satellite";
-    state.baseLayers.satellite.addTo(state.map);
+    state.activeBaseLayer = defaultBaseLayer(state.planningTheme);
+    state.baseLayers[state.activeBaseLayer].addTo(state.map);
     state.baseLayerControl = L.control.layers({
       "Bản đồ đường phố": state.baseLayers.street,
       "Ảnh vệ tinh": state.baseLayers.satellite
@@ -1659,6 +1663,7 @@
         initialRegion: state.initialRegion && state.initialRegion.id,
         listingsVisible: state.listingsVisible,
         onToggleListings: function () { return setListingsVisible(!state.listingsVisible); },
+        onThemeEnabled: function (theme) { if (theme === "administrative") activateBaseLayer("street"); },
         onToggleFilters: toggleFilters
       });
     }
@@ -3349,8 +3354,8 @@
     }
     emitTrack("listing_map_opened", {
       mode: safe.mode,
-      base_layer_id: "satellite",
-      layer_ids: ["satellite"]
+      base_layer_id: defaultBaseLayer(state.planningTheme),
+      layer_ids: [defaultBaseLayer(state.planningTheme)]
     });
 
     return startMapLoad(safe);
