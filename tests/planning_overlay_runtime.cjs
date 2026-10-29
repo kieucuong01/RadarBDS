@@ -1,5 +1,14 @@
 const assert = require('node:assert/strict');
 const api = require('../static/js/main/planning_overlay.js');
+const referenceTemplate = 'https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png';
+assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1630,y:960}),
+  'path(evenodd, "M0 0H256V256H0Z M39 228L170 368L146 391L15 251Z")');
+assert.equal(api.referenceClipPath(referenceTemplate, {z:12,x:3260,y:1921}),
+  'path(evenodd, "M0 0H256V256H0Z M78 200L340 480L292 526L30 246Z")');
+assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1631,y:960}), '');
+assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1631,y:961}),
+  'path(evenodd, "M0 0H256V256H0Z M190 174L311 174L311 203L190 203Z")');
+assert.equal(api.referenceClipPath(referenceTemplate.replace('binh-duong','tp-ho-chi-minh'), {z:11,x:1630,y:960}), '');
 
 const manifest = {id: 'thoi-hoa-2909-qh01', status: 'local_experiment',
   bounds: [[11.07, 106.58], [11.14, 106.67]], title: 'Thoi Hoa', notice: 'Pilot',
@@ -105,6 +114,8 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const h=harness('THỦ DẦU MỘT');h.deliver({layers:[...catalog.layers,pdf,general,tdmWard,tdmGeneral]});await flush();
   const control=name=>h.nodes.find(x=>x.attributes['aria-label']===name);
   const part=control('Bật quy hoạch phân khu'),gen=control('Bật quy hoạch chung đô thị');
+  const dock=h.nodes.find(n=>n.className==='planning-layer-dock');
+  assert.deepEqual(dock.children.map(n=>n.textContent),['QH SDĐ 2030','QH Chung','QH Phân khu','QH Chi tiết']);
   const partSource=control('Nguồn quy hoạch phân khu'),genSource=control('Nguồn quy hoạch chung đô thị');
   const partSlider=control('Độ hiển thị quy hoạch phân khu'),genSlider=control('Độ hiển thị quy hoạch chung đô thị');
   const inspect=control('Xem hồ sơ và chú giải quy hoạch');

@@ -60,6 +60,7 @@
     pendingViewportKey: null,
     workspace: null,
     map: null,
+    baseLayerControl: null,
     disposePlanningOverlay: null,
     markerLayer: null,
     markerRenderer: null,
@@ -1590,10 +1591,16 @@
     });
     state.activeBaseLayer = "street";
     state.baseLayers.street.addTo(state.map);
-    L.control.layers({
+    state.baseLayerControl = L.control.layers({
       "Bản đồ đường phố": state.baseLayers.street,
       "Ảnh vệ tinh": state.baseLayers.satellite
-    }, null, { position: "topright", collapsed: false }).addTo(state.map);
+    }, null, { position: "topright", collapsed: true }).addTo(state.map);
+    var baseToggle = state.baseLayerControl.getContainer().querySelector('.leaflet-control-layers-toggle');
+    if (baseToggle) {
+      baseToggle.setAttribute('aria-label', 'Bản đồ nền');
+      baseToggle.title = 'Bản đồ nền';
+    }
+    syncBaseLayerControl();
     state.map.on("baselayerchange", function (event) {
       var selected = event.layer === state.baseLayers.satellite
         ? "satellite"
@@ -3419,6 +3426,7 @@
     state.disposeMapResize = null;
     if (state.map) state.map.remove();
     state.map = null;
+    state.baseLayerControl = null;
     state.markerRenderer = null;
     state.markerLayer = null;
     state.markerLabelLayer = null;
@@ -3562,6 +3570,12 @@
     }
   }
 
+  function syncBaseLayerControl() {
+    if (!state.baseLayerControl) return;
+    if (state.mediaQuery && state.mediaQuery.matches) state.baseLayerControl.collapse();
+    else state.baseLayerControl.expand();
+  }
+
   function bind(doc, win) {
     if (bound || !doc || !win) return;
     bound = true;
@@ -3570,6 +3584,7 @@
       : { matches: false };
     state.mediaQueryHandler = function () {
       if (!state.open) return;
+      syncBaseLayerControl();
       renderActiveView();
       root.setTimeout(function () {
         if (state.map) state.map.invalidateSize({pan: false});

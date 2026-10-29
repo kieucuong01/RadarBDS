@@ -38,6 +38,24 @@ BRVT and island windows stay separate to avoid loading a wide empty sea.
 
 ## Integration and limitations
 
+### Exterior source annotations — 2026-10-29
+
+The Bình Dương reference raster has two yellow provider labels on transparent
+background outside its planning footprint. The client clips only those two
+verified polygons, defined in the source zoom-11 world-pixel grid, when creating
+the affected native XYZ images. The clip scales with native coordinates, including
+overzoom, without canvas processing, extra requests or replacement imagery.
+The original source URLs and attribution remain available. Other providers are
+not altered; this is not automatic text removal from planning maps.
+
+Inspected original cells: `11/1630/960`, `11/1630/961`, `11/1631/961`, and
+`11/1632/961`. The diagonal-label exclusions intersect 424 and 2,299 visible
+pixels in the first two cells; none of their opaque pixels is a non-yellow
+planning colour. The second label lies on the transparent southern margin in
+the latter two cells. Source revisions must be rechecked before changing these
+polygons. No cadastral boundary, map title, land symbol or source colour is
+reconstructed or inferred.
+
 `config/planning_landuse_2030.json` supplies four geographic providers under
 one `land_use_2030` UI toggle. Both production and the local pilot append them
 to the catalogue. The client allowlists the exact three observed templates,

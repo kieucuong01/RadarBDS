@@ -70,8 +70,9 @@
     var toggle = node('input', label); toggle.type = 'checkbox'; toggle.checked = true;
     toggle.setAttribute('aria-label', 'Bật ranh thửa đất');
     node('span', label, 'Hiển thị ranh thửa đất');
-    var quickBoundaries = ui.dock ? node('button', ui.dock, 'Ranh') : null;
+    var quickBoundaries = ui.dock ? node('button', ui.dock, 'Ranh thửa') : null;
     if (quickBoundaries) {
+      ui.dock.prepend(quickBoundaries);
       quickBoundaries.type = 'button'; quickBoundaries.className = 'planning-layer-chip'; quickBoundaries.disabled = true;
       quickBoundaries.setAttribute('aria-label', 'Bật/tắt ranh thửa'); quickBoundaries.setAttribute('aria-pressed', 'true');
       quickBoundaries.title = 'Ranh thửa hiển thị khi phóng gần';

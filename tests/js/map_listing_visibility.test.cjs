@@ -9,6 +9,15 @@ function functions(...names){return names.map(name=>{
  return source.slice(start,source.indexOf('\n  function ',start+1));
 }).join('\n');}
 
+test('base map selector collapses on phones and expands on desktop',()=>{
+ const calls=[];
+ const ctx={state:{mediaQuery:{matches:true},baseLayerControl:{collapse(){calls.push('collapse');},expand(){calls.push('expand');}}}};
+ vm.createContext(ctx);vm.runInContext(functions('syncBaseLayerControl'),ctx);
+ ctx.syncBaseLayerControl();ctx.state.mediaQuery.matches=false;ctx.syncBaseLayerControl();
+ ctx.state.baseLayerControl=null;ctx.syncBaseLayerControl();
+ assert.deepEqual(calls,['collapse','expand']);
+});
+
 test('planning entries start fullscreen without listings; ordinary and invalid entries retain normal Maps',async()=>{
  for(const theme of [null,'partition','urban_general','detailed','land_use_2030','invalid']){
   let focus;

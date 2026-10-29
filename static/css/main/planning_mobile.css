@@ -1,0 +1,50 @@
+/* Compact touch controls: keep the centre of the map clear. */
+@media(max-width:760px){
+ .planning-map-toolbar{left:8px;right:8px;top:8px;transform:none;width:auto;max-width:none;display:grid;grid-template-columns:1fr 1fr 1.2fr 1.35fr;gap:4px}
+ .planning-map-toolbar>div{min-width:0}
+ .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle{min-height:44px;padding:0 5px;gap:5px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
+ .planning-map-form,.planning-overlay-body{top:52px;width:calc(100vw - 16px);max-width:420px;max-height:calc(100dvh - 160px)}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-top.leaflet-left{top:58px}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-top:66px;margin-right:8px;border-radius:50%;border:1px solid #d5e2da;box-shadow:0 2px 8px #15382c20}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers-expanded{border-radius:12px}
+ .listing-map-workspace .leaflet-control-layers-toggle{width:44px;height:44px;background-size:22px}
+ .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:58px!important;max-width:calc(100% - 120px)!important;max-height:82px;overflow:auto;font-size:11px}
+ .planning-opacity-control{left:auto;right:8px;top:120px;flex-direction:column;flex-wrap:nowrap;gap:2px;width:44px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+ .planning-opacity-control>button,.planning-opacity-control output,.planning-opacity-control .planning-drawing-actions button{width:44px;min-height:44px;flex:none;border:1px solid #d5e2da;border-radius:50%;background:#fff;box-shadow:0 2px 8px #15382c20;color:#126e54}
+ .planning-opacity-control>button{order:0}
+ .planning-opacity-control>button:last-of-type{order:3}
+ .planning-opacity-control input[type=range]{order:1;writing-mode:vertical-lr;direction:rtl;flex:none;width:44px;min-width:0;height:84px;margin:0;filter:drop-shadow(0 1px 2px #fff);accent-color:#11755b}
+ .planning-opacity-control output{order:2;display:flex;align-items:center;justify-content:center;padding:0 0 5px;font-size:12px;background:#11755b;color:#fff;border-color:#fff}
+ .planning-opacity-control output:after{content:'⌄';position:absolute;margin-top:26px;font-size:10px}
+ /* A native select over the percentage also works with screen readers and keyboards. */
+ .planning-opacity-control select{position:absolute;z-index:1;left:0;top:132px;width:44px;height:44px;padding:0;opacity:0}
+ .planning-opacity-control:has(select:focus-visible) output{outline:3px solid #16846b;outline-offset:2px}
+ .planning-drawing-actions{order:4;flex:none;flex-direction:column;width:44px;margin:4px 0 0;padding:0;border:0;gap:3px}
+ .planning-opacity-control .planning-drawing-actions button{font-size:0;padding:0;line-height:1}
+ .planning-drawing-actions button:before{font-size:21px;line-height:1}
+ .planning-drawing-actions button[aria-label="Vẽ ranh đo khoảng cách và diện tích"]:before{content:'✎'}
+ .planning-drawing-actions button[aria-label="Xóa ranh đã vẽ"]:before{content:'⌫'}
+ .planning-drawing-actions button[aria-label="Bảng ký hiệu các loại đất"]:before{content:'▦'}
+ .planning-drawing-actions button[aria-pressed=true]{background:#11755b;color:#fff}
+ .planning-layer-dock{left:6px;right:6px;transform:none;width:auto;max-width:none;flex-wrap:nowrap;justify-content:flex-start;gap:3px;padding:3px;border-radius:25px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
+ .planning-layer-dock::-webkit-scrollbar{display:none}
+ .planning-layer-chip{flex:0 0 auto;min-height:44px;padding:0 11px;font-size:11px;white-space:nowrap}
+ .planning-layer-chip[aria-pressed=true]:before{display:none}
+ .listing-map-workspace.is-focus-mode .planning-layer-dock,.listing-map-workspace.listings-hidden .planning-layer-dock{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+ .planning-measure-result,.planning-land-legend{top:60px}
+ .planning-measure-result{max-width:calc(100% - 120px);padding:8px}
+ .planning-is-drawing .planning-measure-result{max-width:calc(100% - 16px);bottom:20px}
+ .planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-opacity-control{display:none}
+ .listing-map-workspace:has(.leaflet-control-layers-expanded) .planning-opacity-control{visibility:hidden;pointer-events:none}
+}
+@media(max-width:760px) and (max-height:620px){
+ .planning-opacity-control{top:60px;width:92px;display:grid;grid-template-columns:44px 44px;grid-template-rows:44px 48px 44px 44px;gap:2px 4px}
+ .planning-opacity-control>button{grid-column:1;grid-row:1}
+ .planning-opacity-control>button:last-of-type{grid-row:4}
+ .planning-opacity-control input[type=range]{grid-column:1;grid-row:2}
+ .planning-opacity-control output{grid-column:1;grid-row:3}
+ .planning-opacity-control .planning-drawing-actions{grid-column:2;grid-row:1 / 5;align-self:start;margin:0}
+ .planning-opacity-control input[type=range]{height:48px}
+ .planning-opacity-control select{top:96px}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-right:108px}
+}

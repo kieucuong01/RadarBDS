@@ -50,6 +50,31 @@
     return Number.isFinite(number) ? Math.max(0, Math.min(100, number)) / 100 : 0.35;
   }
 
+  function referenceClipPath(template, coords) {
+    if (template !== 'https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png') return '';
+    // Verified exterior annotation only, in the provider's zoom-11 pixel grid.
+    // Do not erase map colours, infer land use, or change source attribution.
+    var rings = [
+      [[417319,245988],[417450,246128],[417426,246151],[417295,246011]],
+      [[417726,246190],[417847,246190],[417847,246219],[417726,246219]]
+    ];
+    var scale = Math.pow(2, coords.z - 11);
+    var holes = rings.map(function (ring) {
+      return ring.map(function (p) { return [p[0] * scale - coords.x * 256, p[1] * scale - coords.y * 256]; });
+    }).filter(function (points) {
+      return !(Math.max.apply(null, points.map(function (p) { return p[0]; })) <= 0
+        || Math.min.apply(null, points.map(function (p) { return p[0]; })) >= 256
+        || Math.max.apply(null, points.map(function (p) { return p[1]; })) <= 0
+        || Math.min.apply(null, points.map(function (p) { return p[1]; })) >= 256);
+    });
+    if (!holes.length) return '';
+    return 'path(evenodd, "M0 0H256V256H0Z ' + holes.map(function (points) {
+      return 'M' + points.map(function (p) {
+        return p.map(function (n) { return Math.round(n * 1000) / 1000; }).join(' ');
+      }).join('L') + 'Z';
+    }).join(' ') + '")';
+  }
+
   function themeLabel(item) {
     var scale = item.manifest && item.manifest.map_scale;
     return (item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
@@ -88,10 +113,10 @@
     var manifest = null;
     var catalog = [];
     var themes = [
-      {id: 'partition', name: 'quy hoạch phân khu', title: 'Quy hoạch phân khu', short: 'Phân khu'},
-      {id: 'urban_general', name: 'quy hoạch chung đô thị', title: 'Quy hoạch chung đô thị', short: 'QH chung'},
-      {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'Chi tiết'},
-      {id: 'land_use_2030', name: 'quy hoạch sử dụng đất 2030', title: 'Quy hoạch sử dụng đất 2030', short: 'QH 2030'}
+      {id: 'land_use_2030', name: 'quy hoạch sử dụng đất 2030', title: 'Quy hoạch sử dụng đất 2030', short: 'QH SDĐ 2030'},
+      {id: 'urban_general', name: 'quy hoạch chung đô thị', title: 'Quy hoạch chung đô thị', short: 'QH Chung'},
+      {id: 'partition', name: 'quy hoạch phân khu', title: 'Quy hoạch phân khu', short: 'QH Phân khu'},
+      {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'QH Chi tiết'}
     ];
     var overlays = new Map(), failedIds = new Set();
     var pane = map.createPane('planningPilot');
@@ -135,7 +160,7 @@
     node('span', body, published ? 'DỮ LIỆU QUY HOẠCH THAM KHẢO' : 'THỬ NGHIỆM LOCAL').className = 'planning-overlay-badge';
     var fit = node('button', body, 'Xem vùng có quy hoạch');
     fit.type = 'button'; fit.disabled = true;
-    var activeTheme = themes[0];
+    var activeTheme = themes.find(function (theme) { return theme.id === 'partition'; });
     var dock = node('div', ui.root); dock.className = 'planning-layer-dock';
     ui.dock = dock;
     dock.setAttribute('aria-label', 'Bật tắt nhanh quy hoạch');
@@ -153,6 +178,8 @@
     function syncQuickControls() {
       if (!activeTheme.toggle.checked) activeTheme = themes.find(function (t) { return t.toggle.checked; }) || activeTheme;
       railType.value = activeTheme.id;
+      railType.disabled = !themes.some(function (theme) { return theme.toggle.checked; });
+      railValue.title = activeTheme.short;
       railSlider.value = activeTheme.slider.value;
       railValue.textContent = activeTheme.slider.value + '%';
       railSlider.disabled = activeTheme.slider.disabled;
@@ -350,6 +377,15 @@
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
           : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
+        if (tiled && data.source_kind === 'guland_reference' && typeof layer.createTile === 'function') {
+          var createTile = layer.createTile;
+          layer.createTile = function (coords, done) {
+            var tile = createTile.call(this, coords, done);
+            var clip = referenceClipPath(data.tile_template, coords);
+            if (clip) tile.style.clipPath = clip;
+            return tile;
+          };
+        }
         if (tiled && data.coverage_windows && typeof layer._isValidTile === 'function') {
           var validTile = layer._isValidTile;
           layer._isValidTile = function (coords) {
@@ -497,5 +533,5 @@
     return dispose;
   }
 
-  return { mount: mount, validManifest: validManifest, validCatalog: validCatalog, opacity: opacity };
+  return { mount: mount, validManifest: validManifest, validCatalog: validCatalog, opacity: opacity, referenceClipPath: referenceClipPath };
 });
