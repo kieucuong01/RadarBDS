@@ -1,0 +1,85 @@
+{
+  "source_checked_on": "2026-10-29",
+  "layers": [
+    {
+      "id": "hcm-transport-roads",
+      "name": "TP.HCM · Đường chính",
+      "city": "TP.HCM (địa giới cũ)",
+      "scope": "region",
+      "area_id": "hcm-legacy",
+      "theme": "transport",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Bản đồ giao thông tham khảo; chưa xác minh tình trạng pháp lý từng tuyến",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "manifest": {
+        "id": "hcm-transport-roads",
+        "status": "reference_overlay",
+        "title": "Đường chính TP.HCM · Tham khảo",
+        "bounds": [
+          [
+            10.35,
+            106.35
+          ],
+          [
+            11.2,
+            107.05
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hcm-road-2/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach/tp-ho-chi-minh\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn giao thông · Tham khảo</a>",
+        "notice": "Metro và mạng đường theo nguồn tham khảo TP.HCM cũ. Chưa xác minh phê duyệt, tiến độ hoặc phân biệt hiện hữu/quy hoạch từng tuyến; không suy diễn từ màu. Chưa xác minh phủ Bình Dương, BRVT và Côn Đảo."
+      }
+    },
+    {
+      "id": "hcm-transport-metro",
+      "name": "TP.HCM · Metro",
+      "city": "TP.HCM (địa giới cũ)",
+      "scope": "region",
+      "area_id": "hcm-legacy",
+      "theme": "transport",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Bản đồ giao thông tham khảo; chưa xác minh tình trạng pháp lý từng tuyến",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "manifest": {
+        "id": "hcm-transport-metro",
+        "status": "reference_overlay",
+        "title": "Metro TP.HCM · Tham khảo",
+        "bounds": [
+          [
+            10.35,
+            106.35
+          ],
+          [
+            11.2,
+            107.05
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 19,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach/tp-ho-chi-minh\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn giao thông · Tham khảo</a>",
+        "notice": "Metro và mạng đường theo nguồn tham khảo TP.HCM cũ. Chưa xác minh phê duyệt, tiến độ hoặc phân biệt hiện hữu/quy hoạch từng tuyến; không suy diễn từ màu. Chưa xác minh phủ Bình Dương, BRVT và Côn Đảo."
+      }
+    }
+  ]
+}
