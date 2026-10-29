@@ -78,9 +78,9 @@ def test_dashboard_renders_lazy_accessible_map_launcher_and_workspace():
         assert f'id="{hook}"' in html
     assert 'id="listingMapMobileSheet"' in html
     assert 'data-state="collapsed"' in html
-    assert 'id="listingMapFilterButton"' in html
-    assert 'id="listingMapGridButton"' in html
-    assert "Xem dạng lưới" in html
+    assert 'id="listingMapFilterButton"' not in html
+    assert 'id="listingMapGridButton"' not in html
+    assert "Xem dạng lưới" not in html
     assert 'id="listingMapFilterSummary"' in html
     assert 'id="listingMapEditModeToggle"' not in html
     assert 'name="date_range" value="6m"' not in html
@@ -409,7 +409,7 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/filters.js') }}?v=listings-perf-20261021" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=dong-nai-2030-20261029" in template
-    assert "js/main/planning_parcels.js') }}?v=planning-mobile-20261029" in template
+    assert "js/main/planning_parcels.js') }}?v=planning-defaults-20261029" in template
     assert "listing-map-price-zoom-20260813" not in template
     assert "listing-map-compact-labels-20260813" not in template
     assert "js/main/core.js') }}?v=listing-workspace-20260811" not in template

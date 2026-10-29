@@ -2,7 +2,7 @@
 @media(max-width:760px){
  .planning-map-toolbar{left:8px;right:8px;top:8px;transform:none;width:auto;max-width:none;display:grid;grid-template-columns:1fr 1fr 1.2fr 1.35fr;gap:4px}
  .planning-map-toolbar>div{min-width:0}
- .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle{min-height:44px;padding:0 5px;gap:5px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
+ .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle,.planning-filter-button{width:100%;min-height:44px;padding:0 5px;gap:5px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
  .planning-map-form,.planning-overlay-body{top:52px;width:calc(100vw - 16px);max-width:420px;max-height:calc(100dvh - 160px)}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-top.leaflet-left{top:58px}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-top:66px;margin-right:8px;border-radius:50%;border:1px solid #d5e2da;box-shadow:0 2px 8px #15382c20}
@@ -26,11 +26,12 @@
  .planning-drawing-actions button[aria-label="Xóa ranh đã vẽ"]:before{content:'⌫'}
  .planning-drawing-actions button[aria-label="Bảng ký hiệu các loại đất"]:before{content:'▦'}
  .planning-drawing-actions button[aria-pressed=true]{background:#11755b;color:#fff}
- .planning-layer-dock{left:6px;right:6px;transform:none;width:auto;max-width:none;flex-wrap:nowrap;justify-content:flex-start;gap:3px;padding:3px;border-radius:25px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
+ .planning-layer-dock{left:4px;right:4px;transform:none;width:auto;max-width:none;flex-wrap:nowrap;justify-content:flex-start;gap:3px;padding:2px;border:0;background:transparent;box-shadow:none;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
  .planning-layer-dock::-webkit-scrollbar{display:none}
- .planning-layer-chip{flex:0 0 auto;min-height:44px;padding:0 11px;font-size:11px;white-space:nowrap}
+ .planning-layer-chip{flex:0 0 auto;min-height:44px;padding:0 9px;font-size:10px;white-space:nowrap;background:#fff;box-shadow:0 1px 5px #15382c20}
  .planning-layer-chip[aria-pressed=true]:before{display:none}
- .listing-map-workspace.is-focus-mode .planning-layer-dock,.listing-map-workspace.listings-hidden .planning-layer-dock{bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+ .listing-map-workspace.is-focus-mode .planning-layer-dock,.listing-map-workspace.listings-hidden .planning-layer-dock{bottom:calc(4px + env(safe-area-inset-bottom,0px))}
+ .listing-map-workspace.is-focus-mode .leaflet-control-attribution{margin-bottom:54px}
  .planning-measure-result,.planning-land-legend{top:60px}
  .planning-measure-result{max-width:calc(100% - 120px);padding:8px}
  .planning-is-drawing .planning-measure-result{max-width:calc(100% - 16px);bottom:20px}

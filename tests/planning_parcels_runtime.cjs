@@ -51,7 +51,8 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   assert(close,'Parcel information needs an explicit close control');
   close.events.click();
   assert.equal(layers.size,1,'Closing parcel details keeps the visible boundaries');
-  field('Phường tra tờ thửa').value='25813';
+  field('Quận / Huyện (Cũ)').value='Bến Cát';field('Quận / Huyện (Cũ)').events.change();
+  field('Phường / Xã (Cũ)').value='25813';
   field('Số tờ bản đồ').value='1';field('Số thửa đất').value='2';
   field('Tra tờ thửa').events.submit({preventDefault(){}});
   assert(pending[4].url.includes('search.json?area=25813&sheet=1&parcel=2'));
@@ -79,6 +80,16 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
     {area_id:'26740',ward:'Bến Nghé',city:'Quận 1',district:'760',bounds:[[10.77,106.69],[10.78,106.71]]}]});
   await flush();
   assert(pending[beforeProduction+1].url.startsWith('/api/planning/parcels/viewport.json?bbox='));
+  const province=nodes.filter(n=>n.attributes['aria-label']==='Tỉnh/TP').at(-1);
+  const district=nodes.filter(n=>n.attributes['aria-label']==='Quận / Huyện (Cũ)').at(-1);
+  const searchWard=nodes.filter(n=>n.attributes['aria-label']==='Phường / Xã (Cũ)').at(-1);
+  province.value='hcm';province.events.change();
+  assert.deepEqual(district.children.map(n=>n.value),['Quận 1']);
+  assert.deepEqual(searchWard.children.map(n=>n.value),['26740']);
+  province.value='brvt';province.events.change();
+  assert.equal(district.children.length,0);assert.equal(searchWard.value,'');
+  province.value='binh-duong';province.events.change();
+  assert.deepEqual(searchWard.children.map(n=>n.value),['25813']);
   deliver(beforeProduction+1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
   [...layers][0].polygon.click({});
   assert(pending[beforeProduction+2].url.startsWith('/api/planning/parcels/900/planning.json'));

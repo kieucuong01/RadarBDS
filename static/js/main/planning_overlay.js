@@ -129,12 +129,17 @@
       if (parent) parent.appendChild(item);
       return item;
     }
-    var ui = {root: node('div'), panels: [], initialRegion: options.initialRegion};
+    var ui = {root: node('div'), panels: [], initialRegion: options.initialRegion, onToggleFilters: options.onToggleFilters};
     ui.root.className = 'planning-map-ui';
     map.getContainer().appendChild(ui.root);
     var toolbar = node('div', ui.root); toolbar.className = 'planning-map-toolbar';
     toolbar.setAttribute('aria-label', 'Công cụ quy hoạch');
     ui.areaSlot = node('div', toolbar); ui.parcelSlot = node('div', toolbar);
+    if (typeof options.onToggleFilters === 'function') {
+      var filterButton = node('button', ui.areaSlot, 'Bộ lọc');
+      filterButton.type = 'button'; filterButton.className = 'planning-filter-button';
+      filterButton.addEventListener('click', options.onToggleFilters);
+    }
     var box = node('details', toolbar);
     box.className = 'planning-overlay-control planning-map-popover';
     ui.panels.push(box);
@@ -160,7 +165,8 @@
     node('span', body, published ? 'DỮ LIỆU QUY HOẠCH THAM KHẢO' : 'THỬ NGHIỆM LOCAL').className = 'planning-overlay-badge';
     var fit = node('button', body, 'Xem vùng có quy hoạch');
     fit.type = 'button'; fit.disabled = true;
-    var activeTheme = themes.find(function (theme) { return theme.id === 'partition'; });
+    var activeTheme = themes.find(function (theme) { return theme.id === options.initialTheme; })
+      || themes.find(function (theme) { return theme.id === 'partition'; });
     var dock = node('div', ui.root); dock.className = 'planning-layer-dock';
     ui.dock = dock;
     dock.setAttribute('aria-label', 'Bật tắt nhanh quy hoạch');
@@ -169,8 +175,9 @@
     themes.forEach(function (theme) { theme.railOption = node('option', railType, theme.short); theme.railOption.value = theme.id; });
     railType.value = activeTheme.id;
     var increase = node('button', rail, '+'); increase.type = 'button'; increase.setAttribute('aria-label', 'Tăng độ hiển thị 10 phần trăm');
-    var railValue = node('output', rail, '35%');
-    var railSlider = node('input', rail); railSlider.type = 'range'; railSlider.min = '0'; railSlider.max = '100'; railSlider.value = '35'; railSlider.step = '1';
+    var initialOpacity = activeTheme.id === 'land_use_2030' ? '65' : '35';
+    var railValue = node('output', rail, initialOpacity + '%');
+    var railSlider = node('input', rail); railSlider.type = 'range'; railSlider.min = '0'; railSlider.max = '100'; railSlider.value = initialOpacity; railSlider.step = '1';
     railSlider.disabled = increase.disabled = true;
     railSlider.setAttribute('aria-label', 'Độ hiển thị lớp đang chọn');
     var decrease = node('button', rail, '−'); decrease.type = 'button'; decrease.setAttribute('aria-label', 'Giảm độ hiển thị 10 phần trăm');
@@ -230,9 +237,10 @@
         theme.source.value = 'gis';
       }
       var opacityLabel = node('label', card, 'Độ hiển thị ');
-      theme.value = node('output', opacityLabel, '35%');
+      var defaultOpacity = theme.id === 'land_use_2030' ? '65' : '35';
+      theme.value = node('output', opacityLabel, defaultOpacity + '%');
       theme.slider = node('input', opacityLabel); theme.slider.type = 'range';
-      theme.slider.min = '0'; theme.slider.max = '100'; theme.slider.step = '1'; theme.slider.value = '35';
+      theme.slider.min = '0'; theme.slider.max = '100'; theme.slider.step = '1'; theme.slider.value = defaultOpacity;
       theme.slider.disabled = true;
       theme.slider.setAttribute('aria-label', 'Độ hiển thị ' + theme.name);
       theme.status = node('p', card, 'Đang kiểm tra nguồn dữ liệu…');

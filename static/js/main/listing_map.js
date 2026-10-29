@@ -1066,7 +1066,9 @@
   }
 
   function toggleFilters() {
-    if (typeof root.toggleMenu === 'function') root.toggleMenu();
+    if (state.focusMode && root.innerWidth > 1024) {
+      root.document.body.classList.toggle('listing-map-filter-open');
+    } else if (typeof root.toggleMenu === 'function') root.toggleMenu();
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize({pan:false});
     },320);
@@ -1589,8 +1591,8 @@
     bindStreetTileFallback(currentMap, state.baseLayers.street, definitions.street, function (message) {
       if (state.map === currentMap && state.activeBaseLayer === "street") setStatus(message, false);
     });
-    state.activeBaseLayer = "street";
-    state.baseLayers.street.addTo(state.map);
+    state.activeBaseLayer = "satellite";
+    state.baseLayers.satellite.addTo(state.map);
     state.baseLayerControl = L.control.layers({
       "Bản đồ đường phố": state.baseLayers.street,
       "Ảnh vệ tinh": state.baseLayers.satellite
@@ -1656,7 +1658,8 @@
         initialTheme: state.planningTheme,
         initialRegion: state.initialRegion && state.initialRegion.id,
         listingsVisible: state.listingsVisible,
-        onToggleListings: function () { return setListingsVisible(!state.listingsVisible); }
+        onToggleListings: function () { return setListingsVisible(!state.listingsVisible); },
+        onToggleFilters: toggleFilters
       });
     }
     root.setTimeout(function () {
@@ -3295,11 +3298,13 @@
       close({ reason: "replace", skipHistory: true, restore: false });
     }
     captureDashboardState();
+    if (typeof root.hideSidebarMobile === "function") root.hideSidebarMobile();
     state.open = true;
-    state.planningTheme = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0 ? options.planningTheme : null;
+    var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
+    state.planningTheme = explicitPlanning ? options.planningTheme : "land_use_2030";
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
-    state.listingsVisible = !state.planningTheme;
+    state.listingsVisible = !explicitPlanning;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;
     state.snapshot = safe;
@@ -3316,7 +3321,7 @@
     state.directoryVisibleCount = DIRECTORY_BATCH_SIZE;
     state.dashboardSyncNeeded = false;
     setMobileSheetExpanded(false);
-    setFocusMode(Boolean(state.planningTheme));
+    setFocusMode(true);
     workspace.classList.toggle('listings-hidden', !state.listingsVisible);
     workspace.hidden = false;
     root.document.body.classList.add("listing-map-open");
@@ -3344,8 +3349,8 @@
     }
     emitTrack("listing_map_opened", {
       mode: safe.mode,
-      base_layer_id: "street",
-      layer_ids: ["street"]
+      base_layer_id: "satellite",
+      layer_ids: ["satellite"]
     });
 
     return startMapLoad(safe);
@@ -3439,6 +3444,8 @@
     setMobileSheetExpanded(false);
     setFocusMode(false);
     root.document.body.classList.remove("listing-map-open");
+    root.document.body.classList.remove("listing-map-filter-open");
+    if (typeof root.hideSidebarMobile === "function") root.hideSidebarMobile();
     var launcher = element("listingMapLauncher");
     if (launcher) launcher.setAttribute("aria-expanded", "false");
 
@@ -3540,6 +3547,9 @@
     if (!state.open || isSignalModalOpen()) return;
     if (event.key === "Escape") {
       var sidebar = element('sidebar');
+      if (root.document.body.classList.contains("listing-map-filter-open")) {
+        root.document.body.classList.remove("listing-map-filter-open"); event.preventDefault(); return;
+      }
       if (sidebar && sidebar.classList.contains('show') && typeof root.hideSidebarMobile === 'function') {
         root.hideSidebarMobile(); return;
       }
@@ -3556,6 +3566,8 @@
       return;
     }
     if (event.key !== "Tab") return;
+    var filterSidebar = element("sidebar");
+    if (root.document.body.classList.contains("listing-map-filter-open") || (filterSidebar && filterSidebar.classList.contains("show"))) return;
     if (!state.focusMode) return;
     var focusable = focusableElements();
     if (!focusable.length) return;

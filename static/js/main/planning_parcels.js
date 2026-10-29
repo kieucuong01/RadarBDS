@@ -48,6 +48,7 @@
       input.setAttribute('aria-label', title); return input;
     }
     var areaMenu = popover(ui.areaSlot, 'Khu vực', 'planning-area-menu');
+    if (ui.onToggleFilters) areaMenu.hidden = true;
     var areaForm = node('form', areaMenu); areaForm.className = 'planning-map-form';
     node('h3', areaForm, 'Đến khu vực');
     var citySelect = field('select', areaForm, 'Thành phố trên bản đồ');
@@ -57,7 +58,9 @@
     var searchMenu = popover(ui.parcelSlot, 'Tờ/thửa', 'planning-parcel-search');
     var searchForm = node('form', searchMenu); searchForm.className = 'planning-map-form'; searchForm.setAttribute('aria-label', 'Tra tờ thửa');
     node('h3', searchForm, 'Tra tờ / thửa');
-    var searchArea = field('select', searchForm, 'Phường tra tờ thửa');
+    var searchProvince = field('select', searchForm, 'Tỉnh/TP');
+    var searchDistrict = field('select', searchForm, 'Quận / Huyện (Cũ)');
+    var searchArea = field('select', searchForm, 'Phường / Xã (Cũ)');
     var inputRow = node('div', searchForm); inputRow.className = 'planning-parcel-inputs';
     var sheetInput = field('input', inputRow, 'Số tờ bản đồ');
     var parcelInput = field('input', inputRow, 'Số thửa đất');
@@ -305,13 +308,38 @@
       cancelSearch(); ++navigationSeq; if (navigationRequest) navigationRequest.abort(); areaSubmit.disabled = !config;
       if (viewRequest) viewRequest.abort(); ++viewSeq;
     }
+    function provinceFor(a) {
+      var district = Number(a.district);
+      if (district >= 760 && district <= 787) return 'hcm';
+      if (district >= 747 && district <= 755) return 'brvt';
+      return 'binh-duong';
+    }
+    function fillSearchWards(selected) {
+      searchArea.replaceChildren();
+      config.areas.filter(function (a) { return provinceFor(a) === searchProvince.value && a.city === searchDistrict.value; })
+        .forEach(function (a) { node('option', searchArea, a.ward).value = a.area_id || a.code; });
+      searchArea.value = selected || (searchArea.children[0] && searchArea.children[0].value) || '';
+      searchSubmit.disabled = !searchArea.value;
+    }
+    function fillSearchDistricts(selected, ward) {
+      searchDistrict.replaceChildren();
+      Array.from(new Set(config.areas.filter(function (a) { return provinceFor(a) === searchProvince.value; }).map(function (a) { return a.city; })))
+        .forEach(function (city) { node('option', searchDistrict, city).value = city; });
+      searchDistrict.value = selected || (searchDistrict.children[0] && searchDistrict.children[0].value) || '';
+      fillSearchWards(ward);
+    }
+    [['binh-duong','Bình Dương'],['hcm','TP.HCM'],['brvt','Bà Rịa – Vũng Tàu']].forEach(function (item) {
+      node('option', searchProvince, item[1]).value = item[0];
+    });
+    searchProvince.addEventListener('change', function () { cancelSearch(); fillSearchDistricts(); });
+    searchDistrict.addEventListener('change', function () { cancelSearch(); fillSearchWards(); });
     searchArea.addEventListener('change', cancelSearch);
     sheetInput.addEventListener('input', cancelSearch); parcelInput.addEventListener('input', cancelSearch);
     searchForm.addEventListener('submit', function (event) {
       event.preventDefault(); if (disposed || !config) return;
       var sheet = String(sheetInput.value || '').trim(), parcel = String(parcelInput.value || '').trim(), areaId = searchArea.value;
       cancelSearch();
-      if (!sheet || !parcel) { searchStatus.textContent = 'Nhập đủ số tờ và số thửa.'; return; }
+      if (!areaId || !sheet || !parcel) { searchStatus.textContent = 'Chọn địa bàn và nhập đủ số tờ, số thửa.'; return; }
       var seq = searchSeq; searchRequest = new env.AbortController(); searchSubmit.disabled = true;
       searchStatus.textContent = 'Đang tìm thửa trong dữ liệu GIS…';
       var query = new URLSearchParams({area: areaId, sheet: sheet, parcel: parcel});
@@ -379,8 +407,8 @@
         navigationRegions.forEach(function (region) { node('option', citySelect, region.name).value = region.id; });
         citySelect.value = navigationRegions.some(function (r) { return r.id === ui.initialRegion; }) ? ui.initialRegion : navigationNearest.city;
         fillWards(citySelect.value === navigationNearest.city ? navigationNearest.area_id || navigationNearest.code : '');
-        data.areas.forEach(function (a) { node('option', searchArea, a.city + ' · ' + a.ward).value = a.area_id; });
-        searchArea.value = nearest.area_id;
+        searchProvince.value = provinceFor(nearest);
+        fillSearchDistricts(nearest.city, nearest.area_id || nearest.code);
         badge.textContent = data.live_expanded ? 'Ranh GIS tải theo vùng xem · TP.HCM mới. Dữ liệu nguồn chưa phủ kín mọi khu vực.'
           : data.areas.length + ' phường · ' + format(data.count) + ' ranh thửa GIS. Phóng to để bấm chọn.';
         if (data.excluded_count) node('p', settings, format(data.excluded_count) + ' ranh lỗi nguồn đã được tạm loại.').className = 'planning-parcel-notice';

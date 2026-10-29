@@ -7,7 +7,7 @@
 .planning-map-ui :focus-visible{outline:3px solid #16846b;outline-offset:2px}
 .planning-map-toolbar{position:absolute;left:50%;transform:translateX(-50%);width:max-content;top:10px;display:flex;gap:8px;pointer-events:auto;max-width:calc(100% - 100px)}
 .planning-map-toolbar>div:empty{display:none}
-.planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid #d7e1dc;border-radius:24px;background:#fff;box-shadow:0 2px 8px #15382c18;font-size:13px;font-weight:700;white-space:nowrap}
+.planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle,.planning-filter-button{list-style:none;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 14px;border:1px solid #d7e1dc;border-radius:24px;background:#fff;box-shadow:0 2px 8px #15382c18;font-size:13px;font-weight:700;white-space:nowrap}
 .planning-map-popover>summary::-webkit-details-marker{display:none}
 .planning-map-popover>summary:after{content:'';width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-top:-3px}
 .planning-map-popover[open]>summary{color:#0c7358;border-color:#16846b;background:#f0faf5}

@@ -18,7 +18,18 @@ test('base map selector collapses on phones and expands on desktop',()=>{
  assert.deepEqual(calls,['collapse','expand']);
 });
 
-test('planning entries start fullscreen without listings; ordinary and invalid entries retain normal Maps',async()=>{
+test('fullscreen filter button opens desktop sidebar and delegates mobile sheet',()=>{
+ const classes=new Set(),calls=[];
+ const ctx={state:{focusMode:true,map:{invalidateSize(){calls.push('resize');}}},
+  root:{innerWidth:1200,document:{body:{classList:{toggle(name){classes.has(name)?classes.delete(name):classes.add(name);}}}},
+   toggleMenu(){calls.push('sheet');},setTimeout(fn){fn();}}};
+ vm.createContext(ctx);vm.runInContext(functions('toggleFilters'),ctx);
+ ctx.toggleFilters();assert.ok(classes.has('listing-map-filter-open'));
+ ctx.toggleFilters();assert.equal(classes.size,0);
+ ctx.root.innerWidth=390;ctx.toggleFilters();assert.ok(calls.includes('sheet'));
+});
+
+test('all Maps entries start fullscreen with 2030 by default while planning entries hide listings',async()=>{
  for(const theme of [null,'partition','urban_general','detailed','land_use_2030','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
@@ -30,8 +41,9 @@ test('planning entries start fullscreen without listings; ordinary and invalid e
   vm.createContext(ctx);vm.runInContext(functions('open'),ctx);
   await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme,planningRegion:'dong-nai-expanded'});
   const planning=ctx.VALID_PLANNING_THEMES.includes(theme);
-  assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,planning);
-  assert.equal(ctx.state.initialRegion?.id,planning?'dong-nai-expanded':undefined);
+  assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,true);
+  assert.equal(ctx.state.planningTheme,planning?theme:'land_use_2030');
+  assert.equal(ctx.state.initialRegion?.id,'dong-nai-expanded');
  }
 });
 

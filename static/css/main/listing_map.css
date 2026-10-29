@@ -119,6 +119,10 @@ body.listing-map-focus-mode .sidebar {
   display: none !important;
 }
 
+@media (min-width: 1025px) {
+  body.listing-map-focus-mode.listing-map-filter-open .sidebar { display: flex !important; margin-left: 0; }
+}
+
 body.listing-map-focus-mode .listing-map-workspace {
   left: 0;
 }
@@ -1179,6 +1183,7 @@ body.listing-map-open .mobile-bottom-nav {
   body.listing-map-open .sidebar.show {
     z-index: 1001;
   }
+  body.listing-map-focus-mode .sidebar.show { display: flex !important; }
 }
 
 @media (max-width: 760px) {
@@ -1215,6 +1220,7 @@ body.listing-map-open .mobile-bottom-nav {
   }
 
   .listing-map-focus-button {
+    display: none;
     width: 40px;
     min-width: 40px;
     min-height: 40px;

@@ -18,14 +18,14 @@ Existing tier/source/public-visibility and actionable-signal rules apply in both
 “Về vùng đã lọc” restores the active sidebar filters and opening area. Changing a
 sidebar filter also returns to filtered scope, cancels stale requests and reframes
 the latest area. A late framing response must not undo a subsequent manual drag.
-The sidebar stays visible on desktop; the Maps filter button opens the existing
-filter sheet on mobile/tablet. Normal Maps is non-modal so keyboard users can
-reach the sidebar; focus mode keeps its own focus trap.
+Maps starts in focus mode. The toolbar filter button opens the existing desktop
+sidebar or mobile/tablet filter sheet; keyboard navigation can reach it.
 For a single selected ward, opening zoom is at least 14: a narrow portrait screen
 does not shrink the ward to show unnecessary surrounding city area. Returning to
 the opening area uses the same framing and emits one final viewport change.
 
-All planning layers are off initially. Enabling a layer starts at 35% opacity; changing opacity is retained while toggling that layer within the same Maps session. Catalogue
+Ordinary Maps opens with the 2030 layer at 65% opacity; other layers start at
+35%. Changing opacity is retained while toggling that layer within the same Maps session. Catalogue
 entries remain available regardless of city/ward selection, but raster images
 are attached only when their native bounds intersect the current view, with a
 5% spatial buffer. Panning or zooming out can therefore reveal other wards/cities
@@ -34,12 +34,12 @@ remove-then-off order; immutable production URLs retain browser caching. PDF
 alternatives and parcel selection keep their existing source and precision limits.
 
 An explicit planning entry (Tools or the planning hub) opens the selected theme
-at 35%, in the existing fullscreen focus mode, with listings hidden. The
+at its default opacity, in fullscreen focus mode, with listings hidden. The
 Hide/Show listings button follows Layers in the planning toolbar and is
 independent of fullscreen. Hiding clears markers and labels, closes previews,
 aborts listing requests and pauses viewport listing loads. Showing fetches the
 current viewport with the current non-geographic filters retained. Ordinary
-Maps still opens in its normal layout with listings visible and planning off.
+Maps opens with listings visible.
 
 ## Requests and limits
 
