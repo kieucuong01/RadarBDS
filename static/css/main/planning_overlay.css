@@ -148,3 +148,6 @@
  .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-opacity-control{top:220px}
  .listing-map-workspace:not(.is-focus-mode):not(.listings-hidden) .planning-opacity-control input[type=range]{height:48px}
 }
+
+.listing-map-workspace .leaflet-tooltip.planning-transport-label{background:transparent;border:0;box-shadow:none;color:#fff;font-size:10px;font-weight:700;text-shadow:0 1px 2px #000,1px 0 2px #000,-1px 0 2px #000;pointer-events:none}
+.listing-map-workspace .leaflet-tooltip.planning-transport-label:before{display:none}

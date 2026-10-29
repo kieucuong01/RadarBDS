@@ -64,6 +64,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
           this.events.remove=()=>zoomHandlers.delete(zoom);
         }, setOpacity(value) {this.options.opacity=value;}};
     }};
+  env.RadarPlanningTransport={create(map,L,env,data,options){return L.imageOverlay(data.geojson_url,data.bounds,options);}};
   const dispose = api.mount(map,L,env,{initialTheme,...listingOptions});
   return {nodes,layers,handlers,dispose,map,fetches, zoom() {zoomHandlers.forEach(fn=>fn());},
     move(bounds) {visibleBounds=bounds;handlers.moveend();},
@@ -325,18 +326,26 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert(api.validCatalog({layers:transport}));
   transport.forEach(item=>{
     assert.equal(api.validCatalog({layers:[{...item,theme:'land_use_2030'}]}),false);
-    assert.equal(api.validManifest({...item.manifest,min_native_zoom:11}),false);
-    assert.equal(api.validManifest({...item.manifest,max_native_zoom:17}),false);
-    assert.equal(api.validManifest({...item.manifest,tile_template:item.manifest.tile_template+'?url=evil'}),false);
+    if(item.manifest.render_mode==='xyz'){
+      assert.equal(api.validManifest({...item.manifest,min_native_zoom:11}),false);
+      assert.equal(api.validManifest({...item.manifest,max_native_zoom:17}),false);
+      assert.equal(api.validManifest({...item.manifest,tile_template:item.manifest.tile_template+'?url=evil'}),false);
+    }else{
+      assert.equal(api.validManifest({...item.manifest,geojson_url:'https://evil.invalid/roads'}),false);
+      assert.equal(api.validManifest({...item.manifest,bounds:[[0,0],[80,120]]}),false);
+    }
   });
   assert.equal(api.validCatalog({layers:[{...vision,theme:'transport'}]}),false);
   const transportOff=harness();transportOff.deliver({layers:transport});await flush();
   assert.equal(transportOff.layers.size,0,'Transport stays off until requested');transportOff.dispose();
   const th=harness(undefined,undefined,[[10.77,106.65],[10.83,106.72]],'transport');
   th.deliver({layers:[...transport,vision]});await flush();
-  assert.equal(th.layers.size,2,'One transport switch loads both road and metro imagery');
+  assert.equal(th.layers.size,2,'One switch loads GIS roads and metro together');
   const tl=[...th.layers];
-  assert(tl.every(l=>l.options.opacity===1 && l.options.minNativeZoom===12 && !l.options.interactive));
+  assert(tl.every(l=>l.options.opacity===1 && !l.options.interactive));
+  assert.equal(tl[0].options.pane,'planningTransportRoads');
+  assert.equal(tl[1].options.pane,'planningTransportMetro');
+  assert.equal(tl[1].options.minNativeZoom,12);
   assert(tl[1].options.zIndex>tl[0].options.zIndex,'Metro above the road network');
   const tt=th.nodes.find(n=>n.attributes['aria-label']==='Bật/tắt quy hoạch giao thông');
   const ts=th.nodes.find(n=>n.attributes['aria-label']==='Độ hiển thị quy hoạch giao thông');
@@ -348,7 +357,7 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   tt.events.click();assert.equal(th.layers.size,0);th.zoom();
   tt.events.click();th.zoom();assert.equal(th.layers.size,2);
   assert([...th.layers].every(l=>l.options.opacity===.8),'Re-enabling retains chosen visibility');
-  th.move([[11.3,106.6],[11.4,106.7]]);assert.equal(th.layers.size,0,'Do not fetch unverified northern coverage');
+  th.move([[13,106.6],[13.1,106.7]]);assert.equal(th.layers.size,0,'Do not load outside the verified transport extent');
   th.move([[10.77,106.65],[10.83,106.72]]);assert.equal(th.layers.size,2);
   th.dispose();th.zoom();
   const late=harness();late.dispose();late.deliver();await flush();

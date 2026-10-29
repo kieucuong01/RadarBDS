@@ -13,12 +13,15 @@
   }
 
   function transportTemplate(template) {
-    return template === 'https://r4gmiynxmeobj.vcdn.cloud/hcm-road-2/{z}/{x}/{y}.png' ? 18
-      : template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png' ? 19 : 0;
+    return template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png' ? 19 : 0;
   }
 
   function validManifest(data) {
     if (!data || !/^[a-z0-9-]+$/.test(data.id || '') || ['local_experiment','reference_overlay'].indexOf(data.status) < 0) return false;
+    if (data.render_mode === 'geojson') return data.id === 'hcm-transport-gis-roads'
+      && data.source_kind === 'official_gis_transport'
+      && data.geojson_url === '/static/data/planning_transport_roads.geojson?v=transport-gis-20261029'
+      && validBounds(data.bounds,[10,105,12.3,108]) && typeof data.title === 'string' && typeof data.notice === 'string';
     var referenceRaster = data.source_kind === 'guland_reference';
     var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-(?:brvt|dong-nai)\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
     var vision100 = referenceRaster && data.tile_template === 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png';
@@ -102,7 +105,7 @@
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
           && !(item.source === 'guland' && ['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
-      if ((item.theme === 'transport') !== Boolean(item.manifest && transportTemplate(item.manifest.tile_template))) return false;
+      if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template) || item.manifest.source_kind === 'official_gis_transport'))) return false;
       if (item.theme === 'urban_vision_100' && (!item.manifest || item.manifest.planning_status !== 'draft' || item.manifest.tile_template !== 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png')) return false;
       if (item.theme === 'land_use_2030' && item.manifest && item.manifest.planning_status === 'draft') return false;
       if (item.scope !== undefined && ['area', 'city', 'region'].indexOf(item.scope) < 0) return false;
@@ -137,6 +140,9 @@
     var pane = map.createPane('planningPilot');
     pane.style.zIndex = '350';
     pane.style.pointerEvents = 'none';
+    ['planningTransportRoads','planningTransportMetro'].forEach(function(name,index){
+      var transportPane=map.createPane(name);transportPane.style.zIndex=String(355+index);transportPane.style.pointerEvents='none';
+    });
 
     function node(tag, parent, text) {
       var item = doc.createElement(tag);
@@ -243,7 +249,10 @@
       var sourceLabel = node('label', card, 'Nguồn');
       theme.source = node('select', sourceLabel); theme.source.disabled = true;
       theme.source.setAttribute('aria-label', 'Nguồn ' + theme.name);
-      if (theme.id === 'land_use_2030' || theme.id === 'urban_vision_100' || theme.id === 'transport') {
+      if (theme.id === 'transport') {
+        node('option', theme.source, 'Metro + GIS giao thông').value = 'combined';
+        theme.source.value = 'combined';
+      } else if (theme.id === 'land_use_2030' || theme.id === 'urban_vision_100' || theme.id === 'transport') {
         node('option', theme.source, 'Bản đồ tham khảo').value = 'guland';
         theme.source.value = 'guland';
       } else {
@@ -265,7 +274,7 @@
         if (theme.toggle.checked) {
           activeTheme = theme;
           catalog.forEach(function (item) { if (item.theme === theme.id) failedIds.delete(item.id); });
-          var selected = catalog.find(function (item) { return item.theme === theme.id && item.source === theme.source.value && item.status === 'overlay_ready' && !item.inspection_only; });
+          var selected = catalog.find(function (item) { return item.theme === theme.id && (theme.id === 'transport' || item.source === theme.source.value) && item.status === 'overlay_ready' && !item.inspection_only; });
           if (selected) chooseLayer(selected);
         }
         updateLayers();
@@ -275,7 +284,7 @@
       theme.source.addEventListener('change', function () {
         if (disposed) return;
         failedIds.clear(); updateLayers();
-        var records = catalog.filter(function (entry) { return entry.theme === theme.id && entry.source === theme.source.value; });
+        var records = catalog.filter(function (entry) { return entry.theme === theme.id && (theme.id === 'transport' || entry.source === theme.source.value); });
         var item = records.find(function (entry) { return entry.status === 'overlay_ready' && !entry.inspection_only; }) || records[0];
         if (item) chooseLayer(item);
       });
@@ -331,7 +340,7 @@
     function wantedItems(readyOnly) {
       return catalog.filter(function (item) {
         var theme = themes.find(function (entry) { return entry.id === item.theme; });
-        return theme.toggle.checked && item.source === theme.source.value
+        return theme.toggle.checked && (theme.id === 'transport' || item.source === theme.source.value)
           && (!readyOnly || (item.status === 'overlay_ready' && !item.inspection_only));
       });
     }
@@ -383,7 +392,7 @@
         var data = item.manifest;
         var theme = themes.find(function (entry) { return entry.id === item.theme; });
         var layerOptions = {
-          pane: 'planningPilot', opacity: opacity(theme.slider.value), interactive: false,
+          pane: item.theme === 'transport' ? (data.render_mode === 'geojson' ? 'planningTransportRoads' : 'planningTransportMetro') : 'planningPilot', opacity: opacity(theme.slider.value), interactive: false,
           zIndex: (item.theme === 'transport' ? 400 : item.theme === 'partition' ? 100 : item.theme === 'detailed' ? 250 : item.theme === 'urban_vision_100' ? 350 : item.theme === 'land_use_2030' ? 300 : 200) + index,
           // Leaflet deduplicates identical provider credits across selected wards.
           attribution: data.source_kind === 'official_gis'
@@ -396,7 +405,9 @@
           maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
         });
-        var layer = tiled ? data.source_tiles && env.RadarPlanningNativeTiles
+        var layer = data.render_mode === 'geojson'
+          ? env.RadarPlanningTransport.create(map,L,env,data,Object.assign({},layerOptions,{signal:controller.signal}))
+          : tiled ? data.source_tiles && env.RadarPlanningNativeTiles
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
           : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
@@ -444,7 +455,7 @@
     function updateLayers() {
       themes.forEach(function (theme) {
         var all = catalog.filter(function (item) { return item.theme === theme.id; });
-        var records = all.filter(function (item) { return item.source === theme.source.value; });
+        var records = all.filter(function (item) { return theme.id === 'transport' || item.source === theme.source.value; });
         var ready = records.filter(function (item) { return item.status === 'overlay_ready' && !item.inspection_only; });
         theme.toggle.disabled = !ready.length;
         var expected = new Set(all.map(function (item) { return item.city + '|' + item.area_id; }));
@@ -452,7 +463,7 @@
         var missing = expected.size - covered.size;
         var native = ready.some(function (item) { return item.manifest.render_mode === 'xyz'; });
         theme.status.textContent = native ? (theme.id === 'transport'
-          ? 'Metro và đường chính · Nguồn tham khảo TP.HCM cũ. Chưa xác minh phê duyệt, tiến độ từng tuyến hoặc phủ Bình Dương / BRVT. Xem hồ sơ nguồn để đối chiếu.'
+          ? 'Metro tham khảo + GIS đường hành lang / vành đai. VĐ1 gồm các đoạn đã đối chiếu, chưa xác minh khép kín. Giữ trạng thái từng đoạn GIS; xem hồ sơ nguồn.'
           : theme.id === 'urban_vision_100'
           ? 'DỰ THẢO · Định hướng 2025–2050, tầm nhìn 100 năm. Chưa xác minh phê duyệt; đối chiếu hồ sơ gốc trước khi sử dụng.'
           : theme.id === 'land_use_2030'

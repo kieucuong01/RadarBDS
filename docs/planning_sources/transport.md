@@ -1,40 +1,60 @@
-# Transport reference overlay
+# Transport: metro plus official GIS corridors and ring roads
 
-Checked 2026-10-29 on the public Guland map:
+Checked 2026-10-29. Public Metro source:
 https://guland.vn/soi-quy-hoach/tp-ho-chi-minh
 
-The visible Metro control (`hcm-metro-layer`) advertises the public XYZ template
+The Metro control advertises
 `https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png`
-and native maximum 19. Its rendered transparent PNGs contain rail lines and
-station names. The regular construction-map view also renders
-`https://r4gmiynxmeobj.vcdn.cloud/hcm-road-2/{z}/{x}/{y}.png`, a transparent
-road network with major corridors. The source hides this road overlay while
-its Metro mode is active. Radar combines the road layer below metro so both
-are available through the requested single transport toggle. It does not
-classify route approval, construction progress or existing/planned status
-from colours. The two original source attributions remain available.
+with native maximum 19. Actual 256 px images verified native 12, 17, 18, 19;
+9–11 unavailable. Native 12 is downsampled for overview. The old yellow
+`hcm-road-2` raster is removed from the catalogue and client URL allowlist.
+Metro remains a reference raster for old HCM; individual approval or progress
+is not inferred from colours.
 
-Actual 256 px PNGs at HCM (10.8, 106.68) verified native 12, 17 and 18 for
-both families; metro 19 also returns a valid transparent cell. Levels 9–11
-were unavailable. Road 19 was unavailable. The configuration therefore
-downsamples native 12 for overview, caps roads at 18, and metro at 19.
-Bến Cát samples were empty or unavailable; Bà Rịa and Côn Đảo samples were
-unavailable. The loading envelope [[10.35,106.35],[11.2,107.05]] is restricted
-to the old HCM vicinity; it is neither an administrative boundary nor proof
-of complete coverage. Do not claim coverage across the expanded municipality.
+Official source: https://gisxaydung.tphcm.gov.vn/tracuuttqh
 
-The public official GIS https://gisxaydung.tphcm.gov.vn/tracuuttqh was also
-reviewed: QH Chuyên đề → Quy hoạch chuyên ngành → Hệ thống giao thông lists
-Tim đường, Chỉ giới and Giao thông. A separate Giao thông hiện trạng group
-exists. No corresponding public transport/metro service endpoint, matching
-legend or publication status was verified; direct metadata reads timed out.
-Those GIS groups have not been relabelled as an independently verified metro
-source. Use a verified official service if it becomes available.
+Its visible Giao thông hiện trạng group contains Đường hành lang, Đường Vành đai
+and Đường hiện trạng trong đô thị. The public guest handshake in PublicGIS
+gives read access to the following verified services (no browser token copied):
 
-`planning_transport.json` supplies two reference entries under `transport`,
-with exact URL and native-zoom validation. QH Giao thông starts off on ordinary
-Maps; its first enable uses 100%, and subsequent toggles retain the chosen
-visibility for that map session. It sits above other planning rasters, below
-parcels and listing markers, and does not intercept clicks. Images load only
-for the visible viewport. Ordinary Maps still starts with land-use 2030 at
-65% on satellite. Direct entry: `/?tab=all&map=1&planning=transport&region=hcm-legacy`.
+- `/arcgis/rest/services/HCM/GiaoThongHienTrang/FeatureServer/1`: 11 corridor lines.
+- `/arcgis/rest/services/HCM/GiaoThongHienTrang/FeatureServer/2`: 16 ring-road/highway
+  features, including Vành đai 3/4, Bến Lức–Long Thành, Biên Hòa–Vũng Tàu, QL51.
+- `/arcgis/rest/services/HCM/HTKT_QHCTP/FeatureServer/14`: city-plan road network.
+  A bounded keyset scan of all 3,509 names identified three VĐ2 features under
+  the source's spelling “Vành đài 2-Bao gồm: ...”, plus 43 constituent corridor
+  sections for VĐ1. Only these 46 features are captured from this network.
+
+The urban existing-road layer 3 has 1,250 features and no separately named
+Vành đai 1/2. Do not publish its entire street mesh as the requested main roads.
+The official HCM press-centre description links the VĐ1 corridor to Phạm Văn
+Đồng, Bạch Đằng/Hồng Hà/Trường Sơn/Hoàng Văn Thụ, Bảy Hiền–Thoại Ngọc Hầu–
+Hương Lộ 2 and the inner-ring section toward Nguyễn Văn Linh:
+https://ttbc-hcm.gov.vn/xe-khong-dat-chuan-vao-vung-han-che-khi-thai-tp-hcm-co-the-nhan-phat-den-400-000-dong-1020119.html
+
+**VĐ1 is a curated collection of corresponding named GIS sections, not a
+verified complete or closed alignment.** Some source features describe broad
+combined corridors (including Hồng Lạc); preserve their full original names
+and status. Do not claim an exact, continuous VĐ1 alignment from this set.
+VĐ2 is likewise shown only where the GIS names it; do not bridge missing sections.
+No route gaps are connected, and no new vertices or straight-line routes are
+invented. `source_status` retains Hiện trạng / Quy hoạch mở rộng / Quy hoạch mở mới.
+The GIS service name alone is not a construction-progress assertion.
+
+Re-capture intentionally with:
+`python -m scripts.capture_planning_transport`
+
+The curated 73-feature, ~321 KB public road asset is
+`static/data/planning_transport_roads.geojson`. It contains only road geometry,
+source service/layer/object IDs, names and source status, with WGS84 coordinates
+requested from GIS. It contains no parcel/owner/contact fields or credentials.
+Existing coordinates remain unchanged. Roads use a viewport-filtered Leaflet
+vector layer, requested only when transport is enabled and reused from memory
+after loading. Invalid data and late responses after hiding fail closed.
+Source reads happen offline during capture, never on a public map request.
+
+The single QH Giao thông toggle combines GIS vectors with Metro at 100% initially.
+Subsequent toggles retain the chosen visibility. Both stay above ordinary
+planning rasters and below parcels/markers, with no pointer interception.
+Ordinary Maps keeps QH SDĐ 2030 at 65% on satellite. Direct entry:
+`/?tab=all&map=1&planning=transport&region=hcm-legacy`.

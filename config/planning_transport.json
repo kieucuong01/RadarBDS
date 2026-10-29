@@ -2,43 +2,37 @@
   "source_checked_on": "2026-10-29",
   "layers": [
     {
-      "id": "hcm-transport-roads",
-      "name": "TP.HCM · Đường chính",
-      "city": "TP.HCM (địa giới cũ)",
+      "id": "hcm-transport-gis-roads",
+      "name": "GIS · Hành lang, vành đai và các đoạn VĐ1/VĐ2",
+      "city": "TP.HCM và các trục kết nối",
       "scope": "region",
       "area_id": "hcm-legacy",
       "theme": "transport",
-      "source": "guland",
+      "source": "gis",
       "status": "overlay_ready",
-      "decision": "Bản đồ giao thông tham khảo; chưa xác minh tình trạng pháp lý từng tuyến",
-      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "decision": "Giao thông hiện trạng và HTKT quy hoạch thành phố; giữ trạng thái từng đoạn theo GIS",
+      "source_url": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
       "manifest": {
-        "id": "hcm-transport-roads",
+        "id": "hcm-transport-gis-roads",
         "status": "reference_overlay",
-        "title": "Đường chính TP.HCM · Tham khảo",
+        "title": "GIS · Hành lang, vành đai và các đoạn VĐ1/VĐ2",
+        "source_kind": "official_gis_transport",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/planning_transport_roads.geojson?v=transport-gis-20261029",
         "bounds": [
           [
-            10.35,
-            106.35
+            10.191240746215415,
+            105.41773815054124
           ],
           [
-            11.2,
-            107.05
+            12.146295146845858,
+            107.62304485311347
           ]
         ],
-        "source_kind": "guland_reference",
-        "alignment_method": "source_xyz",
         "legend_available": false,
         "map_scale": null,
-        "render_mode": "xyz",
-        "tile_size": 256,
-        "min_zoom": 8,
-        "max_zoom": 23,
-        "min_native_zoom": 12,
-        "max_native_zoom": 18,
-        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hcm-road-2/{z}/{x}/{y}.png",
-        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach/tp-ho-chi-minh\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn giao thông · Tham khảo</a>",
-        "notice": "Metro và mạng đường theo nguồn tham khảo TP.HCM cũ. Chưa xác minh phê duyệt, tiến độ hoặc phân biệt hiện hữu/quy hoạch từng tuyến; không suy diễn từ màu. Chưa xác minh phủ Bình Dương, BRVT và Côn Đảo."
+        "attribution": "<a href=\"https://gisxaydung.tphcm.gov.vn/tracuuttqh\" target=\"_blank\" rel=\"noopener noreferrer\">Giao thông · GIS Sở QH-KT TP.HCM</a>",
+        "notice": "Hành lang và vành đai từ Giao thông hiện trạng; bổ sung đoạn VĐ1/VĐ2 từ HTKT QHCTP. VĐ1 là các đoạn đã đối chiếu, chưa xác minh tuyến khép kín. Không tự nối khoảng trống; trạng thái theo từng đoạn GIS."
       }
     },
     {
@@ -78,7 +72,7 @@
         "max_native_zoom": 19,
         "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach/tp-ho-chi-minh\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn giao thông · Tham khảo</a>",
-        "notice": "Metro và mạng đường theo nguồn tham khảo TP.HCM cũ. Chưa xác minh phê duyệt, tiến độ hoặc phân biệt hiện hữu/quy hoạch từng tuyến; không suy diễn từ màu. Chưa xác minh phủ Bình Dương, BRVT và Côn Đảo."
+        "notice": "Metro theo nguồn tham khảo TP.HCM cũ; chưa xác minh tình trạng phê duyệt hoặc tiến độ từng tuyến. Đường hành lang và vành đai là lớp GIS riêng cùng công tắc giao thông."
       }
     }
   ]
