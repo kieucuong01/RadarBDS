@@ -17,7 +17,7 @@
  .planning-opacity-control output{order:2;display:flex;align-items:center;justify-content:center;padding:0 0 5px;font-size:12px;background:#11755b;color:#fff;border-color:#fff}
  .planning-opacity-control output:after{content:'⌄';position:absolute;margin-top:26px;font-size:10px}
  /* A native select over the percentage also works with screen readers and keyboards. */
- .planning-opacity-control select{position:absolute;z-index:1;left:0;top:132px;width:44px;height:44px;padding:0;opacity:0}
+ .planning-opacity-control select{position:absolute;z-index:1;left:0;top:132px;width:44px;height:44px;padding:0;font-size:16px;opacity:0}
  .planning-opacity-control:has(select:focus-visible) output{outline:3px solid #16846b;outline-offset:2px}
  .planning-drawing-actions{order:4;flex:none;flex-direction:column;width:44px;margin:4px 0 0;padding:0;border:0;gap:3px}
  .planning-opacity-control .planning-drawing-actions button{font-size:0;padding:0;line-height:1}
