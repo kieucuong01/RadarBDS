@@ -61,7 +61,7 @@ one `land_use_2030` UI toggle. Both production and the local pilot append them
 to the catalogue. The client allowlists the exact three observed templates,
 retains the source as `guland`, and refuses to relabel it official GIS.
 
-The layer is off initially and starts at 35% opacity. Only current-view tiles
+Ordinary Maps opens this layer at 65% visibility. Only current-view tiles
 and a one-cell buffer are requested, after the user enables the layer; no
 server-side snapshot or tile cache is added. The browser loads public image
 URLs directly, keeping this traffic off the VPS. Source attribution and an
@@ -109,7 +109,7 @@ The Khu vực menu offers the combined region and each former province. A direct
 entry is `/?tab=all&map=1&planning=land_use_2030&region=dong-nai-expanded`.
 The allowlisted region frames Maps directly; `region` is stripped before listing
 filters are restored and removed when the initial shared map closes. It retains
-the planning-entry defaults: fullscreen, listings hidden, 35% visibility.
+the planning-entry defaults: fullscreen, listings hidden, 65% visibility.
 Existing listing coverage and official HCM planning/parcel bounds are unchanged.
 The region notice explicitly states that Đồng Nai parcel data is not integrated.
 
