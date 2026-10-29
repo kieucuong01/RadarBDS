@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 import uuid
+from datetime import date
 from pathlib import Path
 from unittest import mock
 
@@ -47,10 +48,21 @@ class ReprocessMapLocationIsolationTest(unittest.TestCase):
         backfill.assert_called_once_with(listing_ids=None, full=True)
 
 
+class ReviewFixtureDate(date):
+    @classmethod
+    def today(cls):
+        return cls(2026, 5, 1)
+
+
 class ReprocessReviewHiddenPolicyTest(unittest.TestCase):
     def setUp(self):
         from db import connection
         from db.schema import init_schema
+
+        # These policy fixtures share May 1; do not age them out after 180 real days.
+        clock = mock.patch('analytics.valuation.date', ReviewFixtureDate)
+        clock.start()
+        self.addCleanup(clock.stop)
 
         self.tmpdir = Path(tempfile.mkdtemp())
         self.db_path = self.tmpdir / "radar_reprocess_hidden.db"

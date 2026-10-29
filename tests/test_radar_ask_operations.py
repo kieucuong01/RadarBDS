@@ -85,7 +85,8 @@ def test_provider_smoke_refuses_before_any_live_call_without_confirmation(tmp_pa
         env=env,
         text=True,
         capture_output=True,
-        timeout=10,
+        # Allow cold PowerShell startup on shared CI; ConfigCheck performs no SSH.
+        timeout=30,
         check=False,
     )
 
