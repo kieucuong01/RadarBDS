@@ -12,6 +12,8 @@ from services.radar_ask.contracts import ProviderResponse, ProviderUsage, ToolCa
 
 
 ROOT = Path(__file__).resolve().parents[1]
+# ConfigCheck exits before SSH; allow cold PowerShell startup on shared CI.
+POWERSHELL_CONFIG_TIMEOUT = 30
 
 
 def _powershell_command() -> str:
@@ -85,8 +87,7 @@ def test_provider_smoke_refuses_before_any_live_call_without_confirmation(tmp_pa
         env=env,
         text=True,
         capture_output=True,
-        # Allow cold PowerShell startup on shared CI; ConfigCheck performs no SSH.
-        timeout=30,
+        timeout=10,
         check=False,
     )
 
@@ -158,7 +159,7 @@ def test_production_verifier_config_check_exposes_required_gates_and_capacity():
         cwd=ROOT,
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=POWERSHELL_CONFIG_TIMEOUT,
         check=False,
     )
 
@@ -210,7 +211,7 @@ def test_production_verifier_authenticated_smoke_is_explicit_and_secret_safe(tmp
         cwd=ROOT,
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=POWERSHELL_CONFIG_TIMEOUT,
         check=False,
     )
     assert unconfirmed.returncode != 0
@@ -222,7 +223,7 @@ def test_production_verifier_authenticated_smoke_is_explicit_and_secret_safe(tmp
         cwd=ROOT,
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=POWERSHELL_CONFIG_TIMEOUT,
         check=False,
     )
     assert missing.returncode != 0
@@ -238,7 +239,7 @@ def test_production_verifier_authenticated_smoke_is_explicit_and_secret_safe(tmp
         cwd=ROOT,
         text=True,
         capture_output=True,
-        timeout=10,
+        timeout=POWERSHELL_CONFIG_TIMEOUT,
         check=False,
     )
     assert checked.returncode == 0, checked.stderr
