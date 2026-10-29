@@ -3596,6 +3596,7 @@
       : { matches: false };
     state.mediaQueryHandler = function () {
       if (!state.open) return;
+      if (state.mediaQuery.matches && !state.focusMode) setFocusMode(true);
       syncBaseLayerControl();
       renderActiveView();
       root.setTimeout(function () {
