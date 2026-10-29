@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=planning-visibility-20261029"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=dong-nai-2030-20261029"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=planning-visibility-20261029"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=dong-nai-2030-20261029"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -125,7 +125,7 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_measure.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_legend.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=planning-speed-queue-20261028"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-visibility-20261029"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=dong-nai-2030-20261029"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=maps-controls-20261028">
@@ -1605,7 +1605,7 @@
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-alerts-20261005"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=maps-controls-20261028"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=planning-entry-20261029"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=dong-nai-2030-20261029"></script>
 </body>
 
 </html>

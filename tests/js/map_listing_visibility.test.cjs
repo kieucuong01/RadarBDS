@@ -16,13 +16,24 @@ test('planning entries start fullscreen without listings; ordinary and invalid e
   const ctx={state:{open:false},VALID_PLANNING_THEMES:['partition','urban_general','detailed','land_use_2030'],
    normalizedSnapshot:x=>x,element:()=>el,captureDashboardState(){},setMobileSheetExpanded(){},
    setFocusMode:value=>{focus=value;},syncAdminEditModeToggle(){},filterSummaryText:()=>'',emitTrack(){},
-   root:{document:{body:el},history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
+   root:{document:{body:el},RADAR_PLANNING_REGIONS:[{id:'dong-nai-expanded',bounds:[[10.49,106.39],[12.33,107.6]],max_zoom:10}],history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
    DIRECTORY_BATCH_SIZE:100,startMapLoad:async()=>{}};
   vm.createContext(ctx);vm.runInContext(functions('open'),ctx);
-  await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme});
+  await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme,planningRegion:'dong-nai-expanded'});
   const planning=ctx.VALID_PLANNING_THEMES.includes(theme);
   assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,planning);
+  assert.equal(ctx.state.initialRegion?.id,planning?'dong-nai-expanded':undefined);
  }
+});
+
+test('planning region opens from its public display bounds without using listing geography',async()=>{
+ const bounds=[[10.49,106.39],[12.33,107.6]];let initialized;
+ const ctx={AbortController,mapLoadSequence:0,state:{open:true,initialRegion:{bounds}},
+  loadLeaflet:async()=>({}),fetchJson(){throw Error('Must not use Binh Duong listing bounds for Dong Nai');},
+  initMap:(L,b)=>{initialized=b;},renderMapScopeControls(){},requestSummary:async()=>{},setStatus(){},setPanelView(){}};
+ vm.createContext(ctx);vm.runInContext(functions('startMapLoad'),ctx);
+ await ctx.startMapLoad({mode:'all',query:'city=BẾN CÁT'});
+ assert.deepEqual(initialized,bounds);
 });
 
 test('hiding cancels pending listing work and showing reloads the current viewport once',()=>{

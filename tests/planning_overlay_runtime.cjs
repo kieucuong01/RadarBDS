@@ -45,6 +45,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
     tileLayer(url,options) {const layer=this.imageOverlay(url,options.bounds,options);layer.kind='tile';return layer;},
     imageOverlay(url,bounds,options) {
       return {events: {}, options, url, on(k,fn) {this.events[k]=fn;}, off() {this.events={};},
+        _isValidTile(){return true;},_tileCoordsToBounds(coords){return {intersects:b=>coords.bounds[0][0]<=b[1][0]&&coords.bounds[1][0]>=b[0][0]&&coords.bounds[0][1]<=b[1][1]&&coords.bounds[1][1]>=b[0][1]};},
         addTo() {
           layers.add(this); this.attached=true;
           const zoom=()=>assert.equal(this.attached,true,'Detached layer retained a zoom handler');
@@ -255,7 +256,7 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert.equal(api.validManifest({...landuse[0].manifest,tile_template:'https://r4gmiynxmeobj.vcdn.cloud.evil.invalid/binh-duong-2030/{z}/{x}/{y}.png'}),false);
   assert.equal(api.validManifest({...landuse[0].manifest,tile_template:landuse[0].manifest.tile_template+'?token=anything'}),false);
   assert.equal(api.validManifest({...landuse[0].manifest,max_native_zoom:23}),false);
-  const lu=harness(undefined,undefined,[[11.3,106.6],[11.31,106.61]]);
+  const lu=harness(undefined,undefined,[[11.2,106.6],[11.21,106.61]]);
   lu.deliver({layers:[{...nativePart,manifest:{...nativePart.manifest,bounds:[[10.75,106.25],[11.65,107.1]]}},...landuse]});await flush();
   const lut=lu.nodes.find(n=>n.attributes['aria-label']==='Bật quy hoạch sử dụng đất 2030');
   assert.equal(lut.checked,false);assert.equal(lu.layers.size,0,'2030 requests must stay off by default');
@@ -275,6 +276,22 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert.equal(lu.layers.size,1);assert([...lu.layers][0].url.includes('/qh-brvt/sdd/'));
   assert.equal([...lu.layers][0].options.opacity,.6,'Toggling and moving preserve 2030 opacity');
   lu.dispose();lu.zoom();assert.equal(lu.layers.size,0);
+  const dn=landuse.find(x=>x.area_id==='dong-nai-expanded');
+  assert.equal(api.validManifest({...dn.manifest,min_native_zoom:8}),false,'Source images start at zoom 9');
+  assert.equal(api.validManifest({...dn.manifest,bounds:[[10.49,106.39],[13,107.6]]}),false);
+  assert.equal(api.validManifest({...landuse[0].manifest,bounds:dn.manifest.bounds}),false,'Existing HCM sources keep their original limits');
+  assert.equal(api.validManifest({...dn.manifest,coverage_windows:[[[0,0],[90,180]]]}),false);
+  const dnh=harness(undefined,undefined,[[10.93,107.23],[10.94,107.24]],'land_use_2030');
+  dnh.deliver({layers:landuse});await flush();assert.equal(dnh.layers.size,1);
+  const dnTile=[...dnh.layers][0];assert(dnTile.url.includes('/qh-dong-nai/sdd/'));
+  assert.equal(dnTile.options.minNativeZoom,9);assert.equal(dnTile.options.maxNativeZoom,17);
+  assert.equal(dnTile._isValidTile({bounds:[[11.12,106.6],[11.13,106.61]]}),false,'Do not request Dong Nai images for Binh Duong-only cells');
+  assert.equal(dnTile._isValidTile({bounds:[[11.53,106.88],[11.54,106.89]]}),true);
+  dnh.move([[11.53,106.88],[11.54,106.89]]);assert.equal(dnh.layers.size,1);
+  assert.equal([...dnh.layers][0],dnTile,'One native layer spans Dong Nai and Binh Phuoc without duplicate opacity');
+  dnh.move([[11.12,106.6],[11.13,106.61]]);
+  assert.ok(!dnh.layers.has(dnTile),'A Binh Duong-only view does not load Dong Nai imagery');
+  dnh.dispose();dnh.zoom();
   const late=harness();late.dispose();late.deliver();await flush();
   assert.equal(late.nodes.find(x=>x.type==='checkbox').disabled,true);assert.equal(late.layers.size,0);
   const invalid=harness();invalid.deliver({...manifest,status:'approved'});await flush();

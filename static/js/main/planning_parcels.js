@@ -376,7 +376,8 @@
         var nearest = closestArea(), navigationNearest = closestArea(navigationAreas);
         Array.from(new Set(navigationAreas.map(function (a) { return a.city; }))).forEach(function (city) { node('option', citySelect, city).value = city; });
         navigationRegions.forEach(function (region) { node('option', citySelect, region.name).value = region.id; });
-        citySelect.value = navigationNearest.city; fillWards(navigationNearest.area_id || navigationNearest.code);
+        citySelect.value = navigationRegions.some(function (r) { return r.id === ui.initialRegion; }) ? ui.initialRegion : navigationNearest.city;
+        fillWards(citySelect.value === navigationNearest.city ? navigationNearest.area_id || navigationNearest.code : '');
         data.areas.forEach(function (a) { node('option', searchArea, a.city + ' · ' + a.ward).value = a.area_id; });
         searchArea.value = nearest.area_id;
         badge.textContent = data.live_expanded ? 'Ranh GIS tải theo vùng xem · TP.HCM mới. Dữ liệu nguồn chưa phủ kín mọi khu vực.'

@@ -5,10 +5,18 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
 
+  function validBounds(b, limits) {
+    return Array.isArray(b) && b.length === 2 && b.every(function (p) {
+      return Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
+    }) && b[0][0] >= limits[0] && b[0][1] >= limits[1] && b[1][0] <= limits[2] && b[1][1] <= limits[3]
+      && b[0][0] < b[1][0] && b[0][1] < b[1][1];
+  }
+
   function validManifest(data) {
     if (!data || !/^[a-z0-9-]+$/.test(data.id || '') || ['local_experiment','reference_overlay'].indexOf(data.status) < 0) return false;
     var reference2030 = data.source_kind === 'guland_reference';
-    var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-brvt\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
+    var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-(?:brvt|dong-nai)\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
+    var dongNai2030 = reference2030 && data.tile_template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png';
     if (data.render_mode !== undefined && (data.render_mode !== 'xyz'
         || !(reference2030 ? referenceTemplate.test(data.tile_template || '') && data.max_native_zoom === 17
           : /^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general|detailed)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || ''))
@@ -26,11 +34,15 @@
     }
     var b = data.bounds;
     var expanded = data.render_mode === 'xyz';
-    return Array.isArray(b) && b.length === 2 && b.every(function (point) {
-      return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite);
-    }) && b[0][0] >= (expanded ? 8.5 : 10.75) && b[1][0] <= 11.65 && b[0][0] < b[1][0]
-      && b[0][1] >= 106.25 && b[1][1] <= (expanded ? 107.65 : 107.10) && b[0][1] < b[1][1]
-      && typeof data.title === 'string' && typeof data.notice === 'string';
+    var limits = dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
+    if (!validBounds(b, limits)) return false;
+    if (data.min_native_zoom !== undefined && (!dongNai2030 || data.min_native_zoom !== 9)) return false;
+    if (dongNai2030 && data.min_native_zoom !== 9) return false;
+    if (data.coverage_windows !== undefined && (!dongNai2030 || !Array.isArray(data.coverage_windows)
+        || data.coverage_windows.length !== 2 || !data.coverage_windows.every(function (w) {
+          return validBounds(w, [b[0][0],b[0][1],b[1][0],b[1][1]]);
+        }))) return false;
+    return typeof data.title === 'string' && typeof data.notice === 'string';
   }
 
   function opacity(value) {
@@ -92,7 +104,7 @@
       if (parent) parent.appendChild(item);
       return item;
     }
-    var ui = {root: node('div'), panels: []};
+    var ui = {root: node('div'), panels: [], initialRegion: options.initialRegion};
     ui.root.className = 'planning-map-ui';
     map.getContainer().appendChild(ui.root);
     var toolbar = node('div', ui.root); toolbar.className = 'planning-map-toolbar';
@@ -309,7 +321,9 @@
       if (disposed) return;
       var viewport = map.getBounds();
       var near = typeof viewport.pad === 'function' ? viewport.pad(0.05) : viewport;
-      var desired = wantedItems(true).filter(function (item) { return near.intersects(item.manifest.bounds); });
+      var desired = wantedItems(true).filter(function (item) {
+        return (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) { return near.intersects(b); });
+      });
       var desiredIds = new Set(desired.map(function (item) { return item.id; }));
       Array.from(overlays.keys()).forEach(function (id) {
         if (!desiredIds.has(id)) removeOverlay(id);
@@ -328,13 +342,22 @@
         };
         var tiled = data.render_mode === 'xyz';
         var tileOptions = Object.assign({}, layerOptions, {
-          bounds:data.bounds, tileSize:256, minZoom:8, maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
+          bounds:data.bounds, tileSize:256, minZoom:8, minNativeZoom:data.min_native_zoom || 8,
+          maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
         });
         var layer = tiled ? data.source_tiles && env.RadarPlanningNativeTiles
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
           : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
+        if (tiled && data.coverage_windows && typeof layer._isValidTile === 'function') {
+          var validTile = layer._isValidTile;
+          layer._isValidTile = function (coords) {
+            if (!validTile.call(this, coords)) return false;
+            var cell = this._tileCoordsToBounds(coords);
+            return data.coverage_windows.some(function (b) { return cell.intersects(b); });
+          };
+        }
         var entry = {item: item, layer: layer, loaded: false};
         overlays.set(item.id, entry);
         layer.on('load', function () {

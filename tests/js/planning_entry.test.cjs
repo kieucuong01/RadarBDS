@@ -34,8 +34,9 @@ test('Tools opens Maps with existing filters and chosen layer, from either listi
 });
 
 test('closing a planning deep link removes presentation flags while retaining listing filters',()=>{
- const url=new URL(mapApi.urlWithoutMapFlag('https://radarbds.vn/?tab=all&map=1&planning=detailed&city=BẾN+CÁT&price_max=3'));
+ const url=new URL(mapApi.urlWithoutMapFlag('https://radarbds.vn/?tab=all&map=1&planning=detailed&region=dong-nai-expanded&city=BẾN+CÁT&price_max=3'));
  assert.equal(url.searchParams.has('map'),false);assert.equal(url.searchParams.has('planning'),false);
+ assert.equal(url.searchParams.has('region'),false);
  assert.equal(url.searchParams.get('city'),'BẾN CÁT');assert.equal(url.searchParams.get('price_max'),'3');
 });
 test('invalid planning choices use a supported city and partition rather than arbitrary URL input',()=>{

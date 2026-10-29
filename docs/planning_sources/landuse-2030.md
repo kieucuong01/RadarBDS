@@ -59,3 +59,41 @@ location has no planning; failures leave the street map usable.
 
 Rollback: revert this code/config commit. The immutable parcel asset is not
 changed and no DB migration or additional service permission is required.
+
+## Đồng Nai mới — 2026-10-29
+
+The public source's QH 2030 button (`data-name="Quy hoạch sử dụng đất 2030"`)
+was checked on both `https://guland.vn/soi-quy-hoach/dong-nai` and
+`https://guland.vn/soi-quy-hoach/binh-phuoc`. Both load the same combined XYZ
+family: `https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png`.
+One layer covers both former provinces; adding two overlapping copies would
+incorrectly darken their overlap at partial opacity. It remains a reference
+source, never relabeled official GIS or the newly approved provincial plan.
+
+A bounded audit sampled two zooms (13 and 17) at representative points in all
+22 former district/city areas: 11 in Đồng Nai and 11 in Bình Phước. All 44
+responses were 512px PNGs with 99.595–100% nontransparent tile area. A separate
+four-location zoom audit found all 36 samples at levels 9–17 available; all
+four level-8 samples were 403. Leaflet therefore uses native levels 9–17 in
+256px XYZ cells, downsampling level 9 for a level-8 overview and overzooming
+level 17 through map level 23. No authentication, paid access or bypass is used.
+These are bounded samples, not proof of complete legal/cadastral coverage.
+
+The whole-region display window is rounded outward from the coordinate range
+in the official [05/NQ-HĐND annex](https://dongnai.gov.vn/uploads/binhphuoc/news/2026_03/nghi-quyet-05-thong-qua-dcqhdnai.pdf):
+10°30′–12°19′ N, 106°24′–107°35′ E. Two smaller reference windows cover the
+former provinces for viewport and tile eligibility, avoiding unnecessary source
+requests over central Bình Dương. These rectangles are navigation windows, not
+administrative or cadastral boundaries. Four negative checks at Bến Cát/Thủ Dầu
+Một returned 403, supporting exclusion of those unrelated cells.
+
+The Khu vực menu offers the combined region and each former province. A direct
+entry is `/?tab=all&map=1&planning=land_use_2030&region=dong-nai-expanded`.
+The allowlisted region frames Maps directly; `region` is stripped before listing
+filters are restored and removed when the initial shared map closes. It retains
+the planning-entry defaults: fullscreen, listings hidden, 35% visibility.
+Existing listing coverage and official HCM planning/parcel bounds are unchanged.
+The region notice explicitly states that Đồng Nai parcel data is not integrated.
+
+Runtime evidence stays ignored under `.local/planning-dong-nai/`; no raster
+archive, cadastral asset replacement, schema migration or server gateway is added.

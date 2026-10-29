@@ -68,7 +68,8 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   toggle.checked=false;toggle.events.change();assert.equal(layers.size,0);
   dispose();assert.equal(Object.keys(events).length,0);
   env.RADAR_PLANNING_CONFIG={parcelBase:'/api/planning/parcels'};
-  env.RADAR_PLANNING_REGIONS=[{id:'hcm-legacy',name:'TP.HCM (cũ)',bounds:[[10.3,106.3],[11.2,107.05]],max_zoom:12}];
+  env.RADAR_PLANNING_REGIONS=[{id:'hcm-legacy',name:'TP.HCM (cũ)',bounds:[[10.3,106.3],[11.2,107.05]],max_zoom:12},
+    {id:'dong-nai-expanded',name:'Đồng Nai mới',bounds:[[10.49,106.39],[12.33,107.6]],max_zoom:10,notice:'Bật QH 2030 để xem Đồng Nai và Bình Phước cũ.'}];
   const beforeProduction=pending.length;
   const disposeProduction=api.mount(map,L,env);
   assert.equal(pending[beforeProduction].url,'/api/planning/parcels/config.json');
@@ -90,6 +91,11 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   regionForm.events.submit({preventDefault(){}});
   assert.deepEqual(map.fitted,[[10.3,106.3],[11.2,107.05]]);
   assert.equal(pending.length,beforeRegion,'Region navigation must not ask the Bình Dương-only listing service for bounds');
+  city.value='dong-nai-expanded';city.events.change();
+  regionForm.events.submit({preventDefault(){}});
+  assert.deepEqual(map.fitted,[[10.49,106.39],[12.33,107.6]]);
+  assert.equal(pending.length,beforeRegion);
+  assert.ok(nodes.some(n=>n.textContent==='Bật QH 2030 để xem Đồng Nai và Bình Phước cũ.'));
   city.value='Quận 1';city.events.change();ward.value='26740';
   regionForm.events.submit({preventDefault(){}});
   assert.deepEqual(map.fitted,[[10.77,106.69],[10.78,106.71]]);

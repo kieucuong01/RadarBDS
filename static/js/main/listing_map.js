@@ -52,6 +52,7 @@
     browseViewport: false,
     initialBounds: null,
     planningTheme: null,
+    initialRegion: null,
     listingsVisible: true,
     initialController: null,
     viewportTimer: null,
@@ -436,10 +437,10 @@
   function frameOpeningArea(L) {
     if (!state.map || !state.initialBounds || !L) return;
     var bounds = L.latLngBounds(state.initialBounds);
-    var zoom = Math.min(16, state.map.getBoundsZoom(bounds, false, [50,50]));
+    var zoom = Math.min(state.initialRegion ? state.initialRegion.max_zoom : 16, state.map.getBoundsZoom(bounds, false, [50,50]));
     // A portrait phone should open near a selected ward, rather than shrinking it to show a whole city.
     var wards = new URLSearchParams(state.entrySnapshot && state.entrySnapshot.query || '').getAll('ward').filter(Boolean);
-    if (wards.length === 1) zoom = Math.max(14,zoom);
+    if (!state.initialRegion && wards.length === 1) zoom = Math.max(14,zoom);
     state.map.setView(bounds.getCenter(),zoom,{animate:false});
   }
 
@@ -566,6 +567,7 @@
       var url = new URL(currentHref);
       url.searchParams.delete("map");
       url.searchParams.delete("planning");
+      url.searchParams.delete("region");
       return url.toString();
     } catch (error) {
       return String(currentHref || "");
@@ -1645,6 +1647,7 @@
     if ((root.RADAR_PLANNING_PILOT || root.RADAR_PLANNING_CONFIG) && root.RadarPlanningOverlay) {
       state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root, {
         initialTheme: state.planningTheme,
+        initialRegion: state.initialRegion && state.initialRegion.id,
         listingsVisible: state.listingsVisible,
         onToggleListings: function () { return setListingsVisible(!state.listingsVisible); }
       });
@@ -3258,7 +3261,9 @@
   function startMapLoad(safe) {
     var loadSequence = ++mapLoadSequence;
     state.initialController = new AbortController();
-    return Promise.all([loadLeaflet(), fetchJson(initialBoundsUrl(safe), state.initialController).catch(function () {return {};})]).then(function (result) {
+    var opening = state.initialRegion ? Promise.resolve({bounds: state.initialRegion.bounds})
+      : fetchJson(initialBoundsUrl(safe), state.initialController).catch(function () {return {};});
+    return Promise.all([loadLeaflet(), opening]).then(function (result) {
       if (!state.open || loadSequence !== mapLoadSequence) return;
       state.initialBounds = result[1].bounds || null;
       initMap(result[0], state.initialBounds);
@@ -3285,6 +3290,8 @@
     captureDashboardState();
     state.open = true;
     state.planningTheme = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0 ? options.planningTheme : null;
+    var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
+    state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
     state.listingsVisible = !state.planningTheme;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;
@@ -3342,6 +3349,7 @@
     var safe = normalizedSnapshot(snapshot);
     if (!state.open || !safe) return Promise.resolve();
     closePreview();
+    state.initialRegion = null;
     state.entrySnapshot = safe;
     state.snapshot = safe;
     state.browseViewport = false;

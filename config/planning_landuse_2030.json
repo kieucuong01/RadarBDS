@@ -76,6 +76,69 @@
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
         "notice": "Lớp QH 2030 (tham khảo). Dữ liệu có ở điểm thử Côn Sơn, chưa xác nhận phủ kín các đảo. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
       }
+    },
+    {
+      "id": "dong-nai-expanded-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Đồng Nai mới",
+      "city": "Đồng Nai mới",
+      "scope": "region",
+      "area_id": "dong-nai-expanded",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "manifest": {
+        "id": "dong-nai-expanded-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Đồng Nai và Bình Phước cũ",
+        "bounds": [
+          [
+            10.49,
+            106.39
+          ],
+          [
+            12.33,
+            107.6
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH sử dụng đất 2030 tham khảo cho Đồng Nai mới, gồm Đồng Nai cũ và Bình Phước cũ. Ảnh nguồn 512 px trên ô XYZ 256 px; mức ảnh gốc 9–17. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch.",
+        "coverage_windows": [
+          [
+            [
+              10.49,
+              106.72
+            ],
+            [
+              11.59,
+              107.6
+            ]
+          ],
+          [
+            [
+              11.31,
+              106.39
+            ],
+            [
+              12.33,
+              107.43
+            ]
+          ]
+        ],
+        "min_native_zoom": 9
+      },
+      "source_checked_on": "2026-10-29"
     }
   ]
 }
