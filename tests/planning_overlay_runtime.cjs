@@ -37,6 +37,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
       if (x.events.remove) x.events.remove();
     },
     getContainer:()=>({appendChild(){}}),
+    getCenter:()=>visibleBounds ? {lat:(visibleBounds[0][0]+visibleBounds[1][0])/2,lng:(visibleBounds[0][1]+visibleBounds[1][1])/2} : null,
     on(k,fn) {handlers[k]=fn;}, off(k) {delete handlers[k];},
     getBounds: () => ({intersects: b => !visibleBounds || (visibleBounds[0][0] <= b[1][0] && visibleBounds[1][0] >= b[0][0]
       && visibleBounds[0][1] <= b[1][1] && visibleBounds[1][1] >= b[0][1])}), fitBounds(bounds) {this.fitted=bounds;}};
@@ -284,6 +285,7 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const dnh=harness(undefined,undefined,[[10.93,107.23],[10.94,107.24]],'land_use_2030');
   dnh.deliver({layers:landuse});await flush();assert.equal(dnh.layers.size,1);
   const dnTile=[...dnh.layers][0];assert(dnTile.url.includes('/qh-dong-nai/sdd/'));
+  assert.equal(dnh.nodes.find(n=>n.attributes['aria-label']==='Xem hồ sơ và chú giải quy hoạch').value,dn.id,'Source inspector follows the opening region');
   assert.equal(dnTile.options.minNativeZoom,9);assert.equal(dnTile.options.maxNativeZoom,17);
   assert.equal(dnTile._isValidTile({bounds:[[11.12,106.6],[11.13,106.61]]}),false,'Do not request Dong Nai images for Binh Duong-only cells');
   assert.equal(dnTile._isValidTile({bounds:[[11.53,106.88],[11.54,106.89]]}),true);

@@ -467,7 +467,13 @@
         themes.forEach(function (theme) { theme.source.disabled = false; });
         var requested = themes.find(function (theme) { return theme.id === options.initialTheme; });
         if (requested) { requested.toggle.checked = true; activeTheme = requested; }
-        var initial = wantedItems(true)[0] || catalog[0];
+        var ready = wantedItems(true), center = typeof map.getCenter === 'function' ? map.getCenter() : null;
+        var initial = ready.find(function (item) { return options.initialRegion && item.area_id === options.initialRegion; })
+          || ready.find(function (item) {
+            return center && (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) {
+              return b[0][0] <= center.lat && center.lat <= b[1][0] && b[0][1] <= center.lng && center.lng <= b[1][1];
+            });
+          }) || ready[0] || catalog[0];
         chooseLayer(initial); updateLayers();
       }).catch(function (error) {
         if (!disposed && error.name !== 'AbortError') {
