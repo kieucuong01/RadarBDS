@@ -14,14 +14,16 @@
 
   function validManifest(data) {
     if (!data || !/^[a-z0-9-]+$/.test(data.id || '') || ['local_experiment','reference_overlay'].indexOf(data.status) < 0) return false;
-    var reference2030 = data.source_kind === 'guland_reference';
+    var referenceRaster = data.source_kind === 'guland_reference';
     var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-(?:brvt|dong-nai)\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
-    var dongNai2030 = reference2030 && data.tile_template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png';
+    var vision100 = referenceRaster && data.tile_template === 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png';
+    if (vision100 && data.planning_status !== 'draft') return false;
+    var dongNai2030 = referenceRaster && data.tile_template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png';
     if (data.render_mode !== undefined && (data.render_mode !== 'xyz'
-        || !(reference2030 ? referenceTemplate.test(data.tile_template || '') && data.max_native_zoom === 17
+        || !(referenceRaster ? (vision100 ? data.max_native_zoom === 19 : referenceTemplate.test(data.tile_template || '') && data.max_native_zoom === 17)
           : /^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general|detailed)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || ''))
         || data.tile_size !== 256 || data.min_zoom !== 8 || data.max_zoom !== 23)) return false;
-    if (reference2030 && data.render_mode !== 'xyz') return false;
+    if (referenceRaster && data.render_mode !== 'xyz') return false;
     if (data.source_tiles !== undefined) {
       var collection = (data.tile_template || '').match(/\/gis-tiles\/(partition|urban_general|detailed)\//);
       var sources = {partition:['SuDungDat_QHPK_HCM_V2','QHXD_SDD_2025_QHPK_V3'],
@@ -34,9 +36,10 @@
     }
     var b = data.bounds;
     var expanded = data.render_mode === 'xyz';
-    var limits = dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
+    var limits = vision100 ? [10.3,106.25,11.65,107.65] : dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
     if (!validBounds(b, limits)) return false;
-    if (data.min_native_zoom !== undefined && (!dongNai2030 || data.min_native_zoom !== 9)) return false;
+    if (data.min_native_zoom !== undefined && (!(dongNai2030 || vision100) || data.min_native_zoom !== (vision100 ? 10 : 9))) return false;
+    if (vision100 && data.min_native_zoom !== 10) return false;
     if (dongNai2030 && data.min_native_zoom !== 9) return false;
     if (data.coverage_windows !== undefined && (!dongNai2030 || !Array.isArray(data.coverage_windows)
         || data.coverage_windows.length !== 2 || !data.coverage_windows.every(function (w) {
@@ -77,7 +80,7 @@
 
   function themeLabel(item) {
     var scale = item.manifest && item.manifest.map_scale;
-    return (item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
+    return (item.theme === 'urban_vision_100' ? 'QH 100 năm (Dự thảo)' : item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
       ? '1/' + scale.toLocaleString('vi-VN') : 'Chưa xác minh tỷ lệ');
   }
 
@@ -88,14 +91,16 @@
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
       ids.add(item.id);
       if (item.city !== undefined && (typeof item.city !== 'string' || !item.city.trim() || item.city.length > 80)) return false;
-      if (item.theme !== undefined && ['partition', 'urban_general', 'detailed', 'land_use_2030'].indexOf(item.theme) < 0) return false;
+      if (item.theme !== undefined && ['partition', 'urban_general', 'detailed', 'land_use_2030', 'urban_vision_100'].indexOf(item.theme) < 0) return false;
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
-          && !(item.source === 'guland' && item.theme === 'land_use_2030' && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
+          && !(item.source === 'guland' && ['land_use_2030', 'urban_vision_100'].indexOf(item.theme) >= 0 && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
+      if (item.theme === 'urban_vision_100' && (!item.manifest || item.manifest.planning_status !== 'draft' || item.manifest.tile_template !== 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png')) return false;
+      if (item.theme === 'land_use_2030' && item.manifest && item.manifest.planning_status === 'draft') return false;
       if (item.scope !== undefined && ['area', 'city', 'region'].indexOf(item.scope) < 0) return false;
       if (item.inspection_only !== undefined && typeof item.inspection_only !== 'boolean') return false;
       if (typeof item.name !== 'string' || typeof item.decision !== 'string'
-          || !/^https:\/\/(drive\.google\.com\/|bencat\.binhduong\.gov\.vn\/|bencat-hochiminhcity\.gov\.vn\/|gisxaydung\.tphcm\.gov\.vn\/|government\.cdn\.myaloha\.com\.vn\/|(?:www\.)?aapbinhduong\.com\/|guland\.vn\/soi-quy-hoach(?:[/?]|$))/.test(item.source_url || '')) return false;
+          || !/^https:\/\/(drive\.google\.com\/|bencat\.binhduong\.gov\.vn\/|bencat-hochiminhcity\.gov\.vn\/|gisxaydung\.tphcm\.gov\.vn\/|government\.cdn\.myaloha\.com\.vn\/|(?:www\.)?aapbinhduong\.com\/|guland\.vn\/(?:soi-quy-hoach(?:[/?]|$)|xem-quy-hoach\/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam$))/.test(item.source_url || '')) return false;
       if (item.status === 'overlay_ready') return validManifest(item.manifest) && item.manifest.id === item.id;
       if (item.status === 'document_only') return item.preview_url === '/local-planning/' + item.id + '/preview.webp';
       return ['source_unavailable', 'source_missing_map', 'artifact_unavailable'].indexOf(item.status) >= 0;
@@ -116,7 +121,8 @@
       {id: 'land_use_2030', name: 'quy hoạch sử dụng đất 2030', title: 'Quy hoạch sử dụng đất 2030', short: 'QH SDĐ 2030'},
       {id: 'urban_general', name: 'quy hoạch chung đô thị', title: 'Quy hoạch chung đô thị', short: 'QH Chung'},
       {id: 'partition', name: 'quy hoạch phân khu', title: 'Quy hoạch phân khu', short: 'QH Phân khu'},
-      {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'QH Chi tiết'}
+      {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'QH Chi tiết'},
+      {id: 'urban_vision_100', name: 'quy hoạch chung 100 năm (Dự thảo)', title: 'QH chung 100 năm (Dự thảo)', short: 'QH 100 năm (Dự thảo)'}
     ];
     var overlays = new Map(), failedIds = new Set();
     var pane = map.createPane('planningPilot');
@@ -228,7 +234,7 @@
       var sourceLabel = node('label', card, 'Nguồn');
       theme.source = node('select', sourceLabel); theme.source.disabled = true;
       theme.source.setAttribute('aria-label', 'Nguồn ' + theme.name);
-      if (theme.id === 'land_use_2030') {
+      if (theme.id === 'land_use_2030' || theme.id === 'urban_vision_100') {
         node('option', theme.source, 'Bản đồ tham khảo').value = 'guland';
         theme.source.value = 'guland';
       } else {
@@ -369,7 +375,7 @@
         var theme = themes.find(function (entry) { return entry.id === item.theme; });
         var layerOptions = {
           pane: 'planningPilot', opacity: opacity(theme.slider.value), interactive: false,
-          zIndex: (item.theme === 'partition' ? 100 : item.theme === 'detailed' ? 250 : item.theme === 'land_use_2030' ? 300 : 200) + index,
+          zIndex: (item.theme === 'partition' ? 100 : item.theme === 'detailed' ? 250 : item.theme === 'urban_vision_100' ? 350 : item.theme === 'land_use_2030' ? 300 : 200) + index,
           // Leaflet deduplicates identical provider credits across selected wards.
           attribution: data.source_kind === 'official_gis'
             ? 'Sở Quy hoạch – Kiến trúc TP.HCM · GIS công khai'
@@ -436,7 +442,9 @@
         var covered = new Set(ready.map(function (item) { return item.city + '|' + item.area_id; }));
         var missing = expected.size - covered.size;
         var native = ready.some(function (item) { return item.manifest.render_mode === 'xyz'; });
-        theme.status.textContent = native ? (theme.id === 'land_use_2030'
+        theme.status.textContent = native ? (theme.id === 'urban_vision_100'
+          ? 'DỰ THẢO · Định hướng 2025–2050, tầm nhìn 100 năm. Chưa xác minh phê duyệt; đối chiếu hồ sơ gốc trước khi sử dụng.'
+          : theme.id === 'land_use_2030'
           ? 'Bản đồ tham khảo · tải ô ảnh theo vùng nhìn. Chưa xác minh phủ kín hoặc hiệu lực hồ sơ; xem nguồn để đối chiếu.'
           : theme.id === 'detailed' ? 'Quy hoạch chi tiết theo từng đồ án · phóng gần để xem rõ. Vùng trống cần đối chiếu nguồn.'
           : 'Ô GIS gốc theo từng mức zoom · ' + ready.find(function (item) { return item.manifest.render_mode === 'xyz'; }).city + '. Vùng trống cần kiểm tra thêm nguồn.') : ready.length + ' lớp sẵn sàng' + (missing && ready.length

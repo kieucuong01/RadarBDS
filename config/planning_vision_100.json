@@ -1,0 +1,46 @@
+{
+  "source_checked_on": "2026-10-29",
+  "layers": [
+    {
+      "id": "hcm-vision-100-draft",
+      "name": "TP.HCM · Tầm nhìn 100 năm (Dự thảo)",
+      "city": "TP.HCM mới (phần đất liền)",
+      "scope": "region",
+      "area_id": "hcm-expanded",
+      "theme": "urban_vision_100",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Dự thảo định hướng 2025–2050, tầm nhìn 100 năm; chưa xác minh phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam",
+      "manifest": {
+        "id": "hcm-vision-100-draft",
+        "status": "reference_overlay",
+        "title": "QH chung TP.HCM tầm nhìn 100 năm (Dự thảo)",
+        "planning_status": "draft",
+        "bounds": [
+          [
+            10.3,
+            106.25
+          ],
+          [
+            11.65,
+            107.65
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 19,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/xem-quy-hoach/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn QH 100 năm · Dự thảo</a>",
+        "notice": "Bản đồ định hướng 2025–2050, tầm nhìn 100 năm (Dự thảo) theo nhãn nguồn. Chưa xác minh phê duyệt hoặc hiệu lực; không thay thế quy hoạch chung, phân khu và xác nhận quy hoạch. Côn Đảo chưa có tile được xác minh."
+      }
+    }
+  ]
+}

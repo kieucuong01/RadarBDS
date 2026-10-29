@@ -11,8 +11,9 @@ multiple themes are enabled. Icons retain accessible names and 44 px touch areas
 The rail is hidden while a parcel card or a form is open to avoid overlap.
 
 The bottom row scrolls horizontally in actual DOM order: Ranh thửa, QH SDĐ 2030,
-QH Chung, QH Phân khu, QH Chi tiết. Maps opens in focus mode on satellite imagery;
-ordinary entries enable QH SDĐ 2030 at 65% and retain listing visibility. Explicit
+QH Chung, QH Phân khu, QH Chi tiết. An additional QH 100 năm (Dự thảo) chip follows.
+Maps opens in focus mode on satellite imagery; ordinary entries enable QH SDĐ
+2030 at 65% and retain listing visibility. Explicit
 planning entries enable the requested theme and hide listings. Mobile hides the
 focus-mode control, and the toolbar's Bộ lọc opens the existing sidebar/sheet.
 Parcel lookup cascades from former province to former district and ward using the

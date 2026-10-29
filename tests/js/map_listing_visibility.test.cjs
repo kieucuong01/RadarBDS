@@ -30,10 +30,10 @@ test('fullscreen filter button opens desktop sidebar and delegates mobile sheet'
 });
 
 test('all Maps entries start fullscreen with 2030 by default while planning entries hide listings',async()=>{
- for(const theme of [null,'partition','urban_general','detailed','land_use_2030','invalid']){
+ for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
-  const ctx={state:{open:false},VALID_PLANNING_THEMES:['partition','urban_general','detailed','land_use_2030'],
+  const ctx={state:{open:false},VALID_PLANNING_THEMES:['partition','urban_general','detailed','land_use_2030','urban_vision_100'],
    normalizedSnapshot:x=>x,element:()=>el,captureDashboardState(){},setMobileSheetExpanded(){},
    setFocusMode:value=>{focus=value;},syncAdminEditModeToggle(){},filterSummaryText:()=>'',emitTrack(){},
    root:{document:{body:el},RADAR_PLANNING_REGIONS:[{id:'dong-nai-expanded',bounds:[[10.49,106.39],[12.33,107.6]],max_zoom:10}],history:{pushState(){}},location:{href:'https://radarbds.vn/'}},

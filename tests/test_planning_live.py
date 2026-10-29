@@ -82,6 +82,10 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
     assert len(reference)==5 and all(a['source']=='guland' for a in reference)
     assert any(a['area_id']=='dong-nai-expanded' for a in reference)
+    vision=[a for a in data['layers'] if a.get('theme')=='urban_vision_100']
+    assert len(vision)==1 and vision[0]['manifest']['planning_status']=='draft'
+    assert vision[0]['manifest']['min_native_zoom']==10
+    assert vision[0]['manifest']['max_native_zoom']==19
     response=client.get('/api/planning/parcels/config.json')
     assert len(response.json['areas'])==422 and response.json['count']==91
     assert response.json['count_scope']=='historic_binh_duong_snapshot'
