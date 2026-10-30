@@ -153,8 +153,8 @@ def test_catalog_isolates_each_layer_and_scopes_assets(tmp_path):
     assert catalog.status_code == 200
     assert catalog.headers['Cache-Control'] == 'private, no-store'
     layers = {row['id']: row for row in catalog.json['layers']}
-    assert len(layers) == 42
-    assert sum(row.get('theme')=='land_use_2030' for row in layers.values()) == 7
+    assert len(layers) == 98
+    assert sum(row.get('theme')=='land_use_2030' for row in layers.values()) == 63
     assert layers['hcm-vision-100-draft']['manifest']['planning_status'] == 'draft'
     assert layers['thoi-hoa-2909-qh01']['status'] == 'overlay_ready'
     assert layers['thoi-hoa-2909-qh01']['city'] == 'Bến Cát'

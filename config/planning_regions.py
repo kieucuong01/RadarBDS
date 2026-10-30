@@ -14,6 +14,16 @@ LANDUSE_AREAS = tuple(p for p in json.loads(Path(__file__).with_name('planning_l
                                           .read_text(encoding='utf8'))['provinces']
                       if any(layer['id'] in p['layer_ids'] and layer['status'] == 'overlay_ready'
                              for layer in LANDUSE_2030_LAYERS))
+LANDUSE_SOURCE_RULES = {
+    layer['id']: {key:layer['manifest'][key] for key in (
+        'tile_template','bounds','min_zoom','max_zoom','tile_size',
+        'min_native_zoom','max_native_zoom','coverage_windows') if key in layer['manifest']}
+    for layer in LANDUSE_2030_LAYERS
+}
+LANDUSE_PUBLIC_AREAS = tuple(
+    {**p,'districts':[{key:d[key] for key in ('id','name','bounds')} for d in p['districts']]}
+    for p in LANDUSE_AREAS
+)
 BINH_DUONG_BOUNDS = [[10.75, 106.25], [11.65, 107.1]]
 HCM_EXPANDED_BOUNDS = [[8.5, 106.25], [11.65, 107.65]]
 DONG_NAI_EXPANDED_BOUNDS = [[10.49, 106.39], [12.33, 107.60]]
@@ -42,3 +52,9 @@ PLANNING_REGIONS = [
     {'id': 'con-dao', 'name': 'Côn Đảo', 'bounds': [[8.65, 106.56], [8.74, 106.67]], 'max_zoom': 14,
      'notice': 'Côn Đảo: phân khu có theo từng khu vực trên GIS; vùng trống cần đối chiếu hồ sơ nguồn.'},
 ]
+PLANNING_REGIONS.extend(
+    {'id':p['region_id'],'name':p['name']+' (cũ)',
+     'bounds':p.get('focus_bounds',p['bounds']),'max_zoom':13,
+     'notice':'QH SDĐ 2030 tham khảo; dữ liệu ranh thửa và các loại quy hoạch khác chưa được tích hợp cho địa bàn này.'}
+    for p in LANDUSE_AREAS if p['region_id'] not in {r['id'] for r in PLANNING_REGIONS}
+)

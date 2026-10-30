@@ -16,8 +16,15 @@
     return template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png' ? 19 : 0;
   }
 
-  function validManifest(data) {
+  function validManifest(data, landuseRules) {
     if (!data || !/^[a-z0-9-]+$/.test(data.id || '') || ['local_experiment','reference_overlay'].indexOf(data.status) < 0) return false;
+    var rule = landuseRules && landuseRules[data.id];
+    if (rule) return data.status === 'reference_overlay' && data.source_kind === 'guland_reference' && data.render_mode === 'xyz'
+      && data.source_tiles === undefined && data.planning_status !== 'draft'
+      && validBounds(data.bounds,[7,101,24,118])
+      && ['tile_template','bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
+        return JSON.stringify(data[key]) === JSON.stringify(rule[key]);
+      }) && typeof data.title === 'string' && typeof data.notice === 'string';
     if (data.render_mode === 'geojson' && data.id === 'hcm-administrative-2025') return data.source_kind === 'official_gis_administrative'
       && data.geojson_url === '/static/data/admin_hcm_2025/overview.json?v=administrative-20261029' && data.unit_count === 168
       && validBounds(data.bounds,[8.5,106.25,11.65,107.75]) && typeof data.title === 'string' && typeof data.notice === 'string';
@@ -144,8 +151,8 @@
       ? '1/' + scale.toLocaleString('vi-VN') : 'Chưa xác minh tỷ lệ');
   }
 
-  function validCatalog(data) {
-    if (!data || !Array.isArray(data.layers) || !data.layers.length || data.layers.length > 64) return false;
+  function validCatalog(data, landuseRules) {
+    if (!data || !Array.isArray(data.layers) || !data.layers.length || data.layers.length > 128) return false;
     var ids = new Set();
     return data.layers.every(function (item) {
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
@@ -164,7 +171,7 @@
       if (item.inspection_only !== undefined && typeof item.inspection_only !== 'boolean') return false;
       if (typeof item.name !== 'string' || typeof item.decision !== 'string'
           || !/^https:\/\/(drive\.google\.com\/|bencat\.binhduong\.gov\.vn\/|bencat-hochiminhcity\.gov\.vn\/|gisxaydung\.tphcm\.gov\.vn\/|government\.cdn\.myaloha\.com\.vn\/|(?:www\.)?aapbinhduong\.com\/|guland\.vn\/(?:soi-quy-hoach(?:[/?]|$)|xem-quy-hoach\/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam$))/.test(item.source_url || '')) return false;
-      if (item.status === 'overlay_ready') return validManifest(item.manifest) && item.manifest.id === item.id;
+      if (item.status === 'overlay_ready') return validManifest(item.manifest,landuseRules) && item.manifest.id === item.id;
       if (item.status === 'document_only') return item.preview_url === '/local-planning/' + item.id + '/preview.webp';
       return ['source_unavailable', 'source_missing_map', 'artifact_unavailable'].indexOf(item.status) >= 0;
     });
@@ -373,6 +380,9 @@
     });
     var status = node('p', body, 'Đang tải thông tin lớp bản đồ…');
     status.className = 'planning-overlay-status';
+    var zoomHint = node('button',ui.root,'Phóng to để xem QH SDĐ 2030');
+    zoomHint.type='button';zoomHint.className='planning-source-zoom-hint';zoomHint.hidden=true;
+    zoomHint.addEventListener('click',function(){if(!disposed && selectedProvince)focusProvince();});
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
     var selectorLabel = node('label', body, 'Hồ sơ / chú giải của lớp');
@@ -427,6 +437,7 @@
 
     function reportCoverage() {
       if (disposed) return;
+      zoomHint.hidden=true;
       if (!themes.some(function (theme) { return theme.toggle.checked; })) {
         status.textContent = 'Đang tắt các lớp quy hoạch.'; return;
       }
@@ -441,6 +452,12 @@
           ? 'Đang hiển thị ' + entries.length + ' lớp quy hoạch trong vùng nhìn.'
           : 'Ngoài vùng có dữ liệu. Chọn “Xem vùng có quy hoạch”.';
       } else status.textContent = 'Vùng nhìn chưa có lớp đang bật. Kéo bản đồ để xem vùng lân cận hoặc chọn “Xem vùng có quy hoạch”.';
+      if (!entries.length && typeof map.getZoom === 'function' && wantedItems(true).some(function(item){
+        return nearSource(item) && map.getZoom() < (item.manifest.min_zoom || 8);
+      })) {
+        status.textContent = 'Phóng to để xem QH SDĐ 2030; nguồn này chưa có ảnh tổng quan ở mức thu nhỏ hiện tại.';
+        zoomHint.hidden=!selectedProvince;
+      }
       if (errors.length) status.textContent += ' Không tải được: ' + errors.map(function (item) { return item.name; }).join(', ')
         + '. Tắt/bật loại bản đồ để thử lại; Maps vẫn hoạt động.';
       if (entries.some(function (entry) { return entry.tileError; })) status.textContent += ' Một số ô bản đồ chưa tải được; thử thu phóng hoặc chuyển vùng để tải lại.';
@@ -463,12 +480,18 @@
       return [[Math.max(b[0][0],p[0][0]),Math.max(b[0][1],p[0][1])],
         [Math.min(b[1][0],p[1][0]),Math.min(b[1][1],p[1][1])]];
     }
+    function nearSource(item) { return map.getBounds().intersects(overlayBounds(item)); }
+    function focusProvince() {
+      env.RadarPlanningArea.focus(map,L,{bounds:selectedProvince.focus_bounds||selectedProvince.bounds,
+        district:'',min_zoom:selectedProvince.min_zoom||8});
+    }
     function syncOverlays() {
       if (disposed) return;
       var viewport = map.getBounds();
       var near = typeof viewport.pad === 'function' ? viewport.pad(0.05) : viewport;
       var desired = wantedItems(true).filter(function (item) {
-        return near.intersects(overlayBounds(item)) && (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) { return near.intersects(b); });
+        return (typeof map.getZoom !== 'function' || map.getZoom() >= (item.manifest.min_zoom || 8))
+          && near.intersects(overlayBounds(item)) && (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) { return near.intersects(b); });
       });
       var desiredIds = new Set(desired.map(function (item) { return item.id; }));
       Array.from(overlays.keys()).forEach(function (id) {
@@ -489,7 +512,7 @@
         var tiled = data.render_mode === 'xyz';
         var tileBounds = overlayBounds(item);
         var tileOptions = Object.assign({}, layerOptions, {
-          bounds:tileBounds, tileSize:256, minZoom:8, minNativeZoom:data.min_native_zoom || 8,
+          bounds:tileBounds, tileSize:256, minZoom:data.min_zoom || 8, minNativeZoom:data.min_native_zoom || 8,
           maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
         });
@@ -572,7 +595,7 @@
     fit.addEventListener('click', function () {
       if (disposed || !wantedItems(true).length) return;
       if (activeTheme.id === 'land_use_2030' && selectedProvince) {
-        env.RadarPlanningArea.focus(map,L,{bounds:selectedProvince.bounds,district:''});return;
+        focusProvince();return;
       }
       var bounds = [[Infinity, Infinity], [-Infinity, -Infinity]];
       wantedItems(true).forEach(function (item) {
@@ -616,7 +639,7 @@
         return response.json();
       }).then(function (data) {
         if (disposed) return;
-        if (!validCatalog(data)) throw new Error('invalid catalog');
+        if (!validCatalog(data,env.RADAR_LANDUSE_SOURCE_RULES)) throw new Error('invalid catalog');
         catalog = data.layers.map(function (item) {
           var city = item.city || 'Bến Cát';
           return Object.assign({}, item, {

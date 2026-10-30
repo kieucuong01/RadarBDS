@@ -9,14 +9,15 @@ def test_historic_navigation_has_all_supported_provinces_and_districts():
     layer_ids = {item['id'] for item in layers}
     assert data['default_province'] == 'binh-duong' and data['default_district'] == '718'
     provinces = data['provinces']
-    assert [(p['id'],len(p['districts'])) for p in provinces] == [('binh-duong',9),('hcm',22),('brvt',8),('dong-nai',11),('binh-phuoc',11),('tay-ninh',9),('long-an',15)]
+    assert len(provinces) == 63
+    assert [(p['id'],len(p['districts'])) for p in provinces[:7]] == [('binh-duong',9),('hcm',22),('brvt',8),('dong-nai',11),('binh-phuoc',11),('tay-ninh',9),('long-an',15)]
     assert {i for p in provinces for i in p['layer_ids']} == layer_ids
     for p in provinces:
         assert set(p['layer_ids']) <= layer_ids
         assert len({d['id'] for d in p['districts']}) == len(p['districts'])
         for d in p['districts']:
             (s,w),(n,e) = d['bounds']
-            assert 8.5 <= s < n <= 12.4 and 105.45 <= w < e <= 107.7
+            assert 7 <= s < n <= 24 and 101 <= w < e <= 118
             assert p['bounds'][0][0] <= s and p['bounds'][0][1] <= w
             assert p['bounds'][1][0] >= n and p['bounds'][1][1] >= e
     phu_rieng = next(d for p in provinces if p['id']=='binh-phuoc' for d in p['districts'] if d['name']=='Phú Riềng')

@@ -2,6 +2,15 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const api=require('../../static/js/main/planning_area.js');
 const provinces=require('../../config/planning_landuse_areas.json').provinces;
 
+test('whole-province and district framing respect sparse source zoom floors',()=>{
+ let zoom;const b={getCenter:()=>({lat:21,lng:106})};
+ const map={getBoundsZoom:()=>8,setView(c,z){zoom=z;}};
+ api.focus(map,{latLngBounds:()=>b},{bounds:[[20,105],[22,107]],district:'',min_zoom:11});assert.equal(zoom,11);
+ api.focus(map,{latLngBounds:()=>b},{bounds:[[20,105],[22,107]],district:'123',max_zoom:13,min_zoom:11});assert.equal(zoom,11);
+ const area=api.initial(provinces,'khanh-hoa-legacy');
+ assert.deepEqual(area.bounds,provinces.find(p=>p.id==='khanh-hoa').focus_bounds);
+});
+
 test('whole province fills the viewport at a closer zoom; district keeps its fitted extent',()=>{
  const calls=[],bounds={getCenter:()=>({lat:11,lng:106})};
  const L={latLngBounds:b=>{assert.deepEqual(b,provinces[0].bounds);return bounds;}};
@@ -29,7 +38,8 @@ test('area menu applies only after submit, resets districts across provinces, an
  const other={open:true},ui={areaSlot:doc.createElement('div'),panels:[other]};
  const panel=api.mount({document:doc},ui,provinces,api.initial(provinces),(p,s)=>changes.push({p,s}));
  const province=nodes.find(e=>e.attributes['aria-label']==='Tỉnh/TP (Cũ)'),district=nodes.find(e=>e.attributes['aria-label']==='Quận/Huyện (Cũ)');
- assert.deepEqual(province.children.map(e=>e.textContent),['Bình Dương','TP.HCM','Bà Rịa–Vũng Tàu','Đồng Nai','Bình Phước','Tây Ninh','Long An']);
+ assert.equal(province.children.length,63);
+ assert.deepEqual(province.children.slice(0,7).map(e=>e.textContent),['Bình Dương','TP.HCM','Bà Rịa–Vũng Tàu','Đồng Nai','Bình Phước','Tây Ninh','Long An']);
  assert.equal(district.value,'718');province.value='binh-phuoc';province.events.change();
  assert.equal(district.value,'');assert(district.children.some(e=>e.textContent==='Phú Riềng'));assert.equal(changes.length,0);
  district.value='dong-xoai';nodes.find(e=>e.tagName==='form').events.submit({preventDefault(){}});

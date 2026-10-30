@@ -121,16 +121,17 @@
   {% include "partials/public_footer_assets.html" %}
   {% if (planning_pilot_enabled | default(false)) or (planning_overlay_config | default(none)) %}
   <script>window.RADAR_LANDUSE_AREAS = {{ (planning_landuse_areas | default([])) | tojson }};</script>
+  <script>window.RADAR_LANDUSE_SOURCE_RULES = {{ (planning_landuse_source_rules | default({})) | tojson }};</script>
   <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }}; window.RADAR_PLANNING_REGIONS = {{ (planning_navigation_regions | default([])) | tojson }};</script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=administrative-20261029">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=national-2030-20261030">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_mobile.css') }}?v=planning-area-20261030">
-  <script defer src="{{ url_for('static', filename='js/main/planning_area.js') }}?v=planning-branding-20261030"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_area.js') }}?v=national-2030-20261030"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_measure.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_legend.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=maps-reuse-20261030"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_transport.js') }}?v=planning-transport-gis-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative.js') }}?v=maps-reuse-20261030"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=planning-branding-20261030"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=national-2030-20261030"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=maps-controls-20261028">

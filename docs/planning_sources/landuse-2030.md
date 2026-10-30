@@ -1,5 +1,8 @@
 # Reference land-use planning 2030
 
+Expanded to 63 historic provinces on 2026-10-30; current coverage, native zooms,
+navigation and limitations: [nationwide source audit](national-2030.md).
+
 Current selection behavior (2026-10-30): [historic province/district picker](historic-area-selection.md)
 supersedes the combined-region menu and all-provider eligibility described below.
 The default is Bình Dương / Thủ Dầu Một and only the selected province's 2030

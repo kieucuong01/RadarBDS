@@ -1,6 +1,8 @@
 .planning-map-ui{position:absolute;inset:0;z-index:1100;pointer-events:none;color:#183b32;font:14px/1.45 Inter,system-ui,sans-serif}
 .planning-map-ui *{box-sizing:border-box}
 .planning-map-ui [hidden]{display:none!important}
+.planning-source-zoom-hint{position:absolute;left:50%;bottom:76px;transform:translateX(-50%);max-width:calc(100% - 100px);padding:8px 14px;border:1px solid #d7e1dc;border-radius:22px;background:#fff;color:#10765b;box-shadow:0 2px 8px #15382c18;pointer-events:auto;z-index:2}
+@media(max-width:767px){.planning-source-zoom-hint{bottom:60px;font-size:12px!important;max-width:calc(100% - 90px)}}
 .planning-map-ui button,.planning-map-ui summary,.planning-map-ui select,.planning-map-ui input{font:inherit}
 .planning-map-ui button,.planning-map-ui summary,.planning-map-ui select{cursor:pointer;touch-action:manipulation}
 .planning-map-ui button:disabled,.planning-map-ui input:disabled{opacity:.5;cursor:default}

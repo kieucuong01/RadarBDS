@@ -1,5 +1,8 @@
 const assert = require('node:assert/strict');
 const api = require('../static/js/main/planning_overlay.js');
+const nationalLanduse = require('../config/planning_landuse_2030.json').layers;
+const ruleKeys=['tile_template','bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
+const nationalRules=Object.fromEntries(nationalLanduse.map(l=>[l.id,Object.fromEntries(ruleKeys.filter(k=>l.manifest[k]!==undefined).map(k=>[k,l.manifest[k]]))]));
 const referenceTemplate = 'https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png';
 assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1630,y:960}),
   'path(evenodd, "M0 0H256V256H0Z M39 228L170 368L146 391L15 251Z")');
@@ -28,9 +31,9 @@ const catalog = {layers: [{id: manifest.id,name: 'Thới Hòa',status:'overlay_r
 
 function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOptions, extraEnv) {
   const nodes = [], layers = new Set(), handlers = {}, zoomHandlers = new Set();
-  let resolveFetch, removed = false, signal, visibleBounds = openingBounds;
+  let resolveFetch, removed = false, signal, visibleBounds = openingBounds, visibleZoom=13;
   const fetches=[];
-  const env = {AbortController, RADAR_PLANNING_CONFIG:publicConfig, matchMedia: () => ({matches: false}),
+  const env = {AbortController, RADAR_LANDUSE_SOURCE_RULES:nationalRules, RADAR_PLANNING_CONFIG:publicConfig, matchMedia: () => ({matches: false}),
     document: {getElementById(id) {return id==='cityInput'?{value:cityValue}:null;}, createElement(tag) {
       const el = {tag, style: {}, events: {}, attributes: {}, children: [],
         appendChild(child) {this.children.push(child);},
@@ -49,7 +52,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
     getContainer:()=>({appendChild(){}}),
     getCenter:()=>visibleBounds ? {lat:(visibleBounds[0][0]+visibleBounds[1][0])/2,lng:(visibleBounds[0][1]+visibleBounds[1][1])/2} : null,
     on(k,fn) {handlers[k]=fn;}, off(k) {delete handlers[k];}, fire(k){if(handlers[k])handlers[k]();},
-    getBoundsZoom:()=>11, setView(center,zoom){this.view={center,zoom};},
+    getZoom:()=>visibleZoom, getBoundsZoom:()=>11, setView(center,zoom){this.view={center,zoom};visibleZoom=zoom;},
     getBounds: () => ({intersects: b => !visibleBounds || (visibleBounds[0][0] <= b[1][0] && visibleBounds[1][0] >= b[0][0]
       && visibleBounds[0][1] <= b[1][1] && visibleBounds[1][1] >= b[0][1])}), fitBounds(bounds) {this.fitted=bounds;}};
   const L = {DomEvent: {disableClickPropagation() {}, disableScrollPropagation() {}},
@@ -72,6 +75,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
   Object.assign(env,extraEnv);
   const dispose = api.mount(map,L,env,{initialTheme,...listingOptions});
   return {nodes,layers,handlers,dispose,map,fetches, zoom() {zoomHandlers.forEach(fn=>fn());},
+    zoomTo(z){visibleZoom=z;handlers.moveend();},
     move(bounds) {visibleBounds=bounds;handlers.moveend();},
     get signal() {return signal;}, get removed() {return removed;},
     deliver(data=catalog) {resolveFetch({ok: true,json: async()=>data});}};
@@ -269,7 +273,7 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   dt.move([[8.68,106.6],[8.69,106.62]]);assert.equal(dt.layers.size,1);
   dt.dispose();dt.zoom();
   const landuse=require('../config/planning_landuse_2030.json').layers;
-  assert.equal(api.validCatalog({layers:landuse}),true);
+  assert.equal(api.validCatalog({layers:landuse},nationalRules),true);
   assert.equal(api.validCatalog({layers:[{...landuse[0],source:'gis'}]}),false,'Guland must not be relabeled as official GIS');
   assert.equal(api.validManifest({...landuse[0].manifest,tile_template:'https://r4gmiynxmeobj.vcdn.cloud.evil.invalid/binh-duong-2030/{z}/{x}/{y}.png'}),false);
   assert.equal(api.validManifest({...landuse[0].manifest,tile_template:landuse[0].manifest.tile_template+'?token=anything'}),false);
@@ -301,6 +305,20 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert.equal(api.validManifest({...landuse[0].manifest,bounds:dn.manifest.bounds}),false,'Existing HCM sources keep their original limits');
   assert.equal(api.validManifest({...dn.manifest,coverage_windows:[[[0,0],[90,180]]]}),false);
   const areaEnv={RADAR_LANDUSE_AREAS:require('../config/planning_landuse_areas.json').provinces,RadarPlanningArea:require('../static/js/main/planning_area.js')};
+  for(const p of areaEnv.RADAR_LANDUSE_AREAS){
+    const national=harness(undefined,undefined,[[7,101],[24,118]],'land_use_2030',{initialRegion:p.region_id},areaEnv);
+    national.deliver({layers:landuse});await flush();
+    assert.equal(national.layers.size,p.layer_ids.length,p.name+' only loads selected province providers');
+    assert([...national.layers].every(l=>p.layer_ids.some(id=>landuse.find(item=>item.id===id).manifest.tile_template===l.url)));
+    if(p.id==='bac-giang'){
+      const hint=national.nodes.find(n=>n.className==='planning-source-zoom-hint');assert.equal(hint.hidden,true);
+      national.zoomTo(10);assert.equal(national.layers.size,0,'Do not downsample hundreds of native zoom-12 images at country scale');
+      assert.equal(hint.hidden,false);hint.events.click();assert(national.map.view.zoom>=11);
+      national.zoomTo(11);assert.equal(national.layers.size,1,'Source loads again at a useful viewing zoom');
+      assert.equal(hint.hidden,true);
+    }
+    national.dispose();national.zoom();assert.equal(national.layers.size,0);
+  }
   const isolated=harness(undefined,undefined,[[8.5,106.25],[12.33,107.65]],'land_use_2030',{},areaEnv);
   isolated.deliver({layers:landuse});await flush();assert.equal(isolated.layers.size,1,'Even a province-wide zoom-out loads only Binh Duong by default');
   assert([...isolated.layers][0].url.includes('binh-duong-2030'));

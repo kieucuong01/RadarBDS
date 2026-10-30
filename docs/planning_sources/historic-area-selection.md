@@ -1,5 +1,9 @@
 # Historic area selection for QH SDĐ 2030
 
+Expanded to 63 former provinces / 710 reference district windows on 2026-10-30.
+The [national source audit](national-2030.md) supersedes the seven-province
+inventory below; defaults and selected-province isolation remain.
+
 Updated 2026-10-30. Ordinary Maps starts at Bình Dương / Thủ Dầu Một, with
 land-use 2030 at 65% on satellite. Explicit historical province links remain
 usable. Expanded Đồng Nai/HCM links select the corresponding former province

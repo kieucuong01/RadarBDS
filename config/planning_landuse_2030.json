@@ -4,77 +4,160 @@
     {
       "id": "binh-duong-land-use-2030-guland",
       "name": "Sử dụng đất 2030 · Bình Dương (cũ)",
-      "city": "Bình Dương (cũ)", "scope": "region", "area_id": "binh-duong-legacy",
-      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "city": "Bình Dương (cũ)",
+      "scope": "region",
+      "area_id": "binh-duong-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
       "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
       "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
       "manifest": {
-        "id": "binh-duong-land-use-2030-guland", "status": "reference_overlay",
+        "id": "binh-duong-land-use-2030-guland",
+        "status": "reference_overlay",
         "title": "Quy hoạch sử dụng đất 2030 · Bình Dương (cũ)",
-        "bounds": [[10.862,106.334],[11.503,106.968]],
-        "source_kind": "guland_reference", "alignment_method": "source_xyz",
-        "legend_available": false, "map_scale": null,
-        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "bounds": [
+          [
+            10.862,
+            106.334
+          ],
+          [
+            11.503,
+            106.968
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
         "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "Lớp QH 2030 (tham khảo), độc lập với phân khu và quy hoạch chung. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+        "notice": "QH SDĐ 2030 tham khảo · Bình Dương cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
       }
     },
     {
       "id": "hcm-land-use-2030-guland",
       "name": "Sử dụng đất 2030 · TP.HCM (cũ)",
-      "city": "TP.HCM (cũ)", "scope": "region", "area_id": "hcm-legacy",
-      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "city": "TP.HCM (cũ)",
+      "scope": "region",
+      "area_id": "hcm-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
       "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
       "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
       "manifest": {
-        "id": "hcm-land-use-2030-guland", "status": "reference_overlay",
+        "id": "hcm-land-use-2030-guland",
+        "status": "reference_overlay",
         "title": "Quy hoạch sử dụng đất 2030 · TP.HCM (cũ)",
-        "bounds": [[10.354,106.356],[11.161,107.028]],
-        "source_kind": "guland_reference", "alignment_method": "source_xyz",
-        "legend_available": false, "map_scale": null,
-        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "bounds": [
+          [
+            10.354,
+            106.356
+          ],
+          [
+            11.161,
+            107.028
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
         "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "Lớp QH 2030 (tham khảo), độc lập với phân khu và quy hoạch chung. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+        "notice": "QH SDĐ 2030 tham khảo · TP.HCM cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 17/24 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
       }
     },
     {
       "id": "brvt-land-use-2030-guland",
       "name": "Sử dụng đất 2030 · Bà Rịa–Vũng Tàu (cũ)",
-      "city": "Bà Rịa–Vũng Tàu (cũ)", "scope": "region", "area_id": "brvt-legacy",
-      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "city": "Bà Rịa–Vũng Tàu (cũ)",
+      "scope": "region",
+      "area_id": "brvt-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
       "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
       "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
       "manifest": {
-        "id": "brvt-land-use-2030-guland", "status": "reference_overlay",
+        "id": "brvt-land-use-2030-guland",
+        "status": "reference_overlay",
         "title": "Quy hoạch sử dụng đất 2030 · Bà Rịa–Vũng Tàu (cũ)",
-        "bounds": [[10.3,107.0],[10.9,107.65]],
-        "source_kind": "guland_reference", "alignment_method": "source_xyz",
-        "legend_available": false, "map_scale": null,
-        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "bounds": [
+          [
+            10.3,
+            107.0
+          ],
+          [
+            10.9,
+            107.65
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
         "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "Lớp QH 2030 (tham khảo). Ảnh nguồn 512 px được đặt trong ô XYZ 256 px như bản đồ nguồn. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+        "notice": "QH SDĐ 2030 tham khảo · Bà Rịa–Vũng Tàu cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 9
       }
     },
     {
       "id": "con-dao-land-use-2030-guland",
       "name": "Sử dụng đất 2030 · Côn Đảo",
-      "city": "Côn Đảo", "scope": "region", "area_id": "con-dao",
-      "theme": "land_use_2030", "source": "guland", "status": "overlay_ready",
+      "city": "Côn Đảo",
+      "scope": "region",
+      "area_id": "con-dao",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
       "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
       "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau/huyen-con-dao",
       "manifest": {
-        "id": "con-dao-land-use-2030-guland", "status": "reference_overlay",
+        "id": "con-dao-land-use-2030-guland",
+        "status": "reference_overlay",
         "title": "Quy hoạch sử dụng đất 2030 · Côn Đảo",
-        "bounds": [[8.6,106.5],[8.8,106.75]],
-        "source_kind": "guland_reference", "alignment_method": "source_xyz",
-        "legend_available": false, "map_scale": null,
-        "render_mode": "xyz", "tile_size": 256, "min_zoom": 8, "max_zoom": 23, "max_native_zoom": 17,
+        "bounds": [
+          [
+            8.6,
+            106.5
+          ],
+          [
+            8.8,
+            106.75
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
         "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "Lớp QH 2030 (tham khảo). Dữ liệu có ở điểm thử Côn Sơn, chưa xác nhận phủ kín các đảo. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch."
+        "notice": "QH SDĐ 2030 tham khảo · Bà Rịa–Vũng Tàu cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 9
       }
     },
     {
@@ -113,7 +196,7 @@
         "max_native_zoom": 17,
         "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "QH sử dụng đất 2030 tham khảo cho Đồng Nai mới, gồm Đồng Nai cũ và Bình Phước cũ. Ảnh nguồn 512 px trên ô XYZ 256 px; mức ảnh gốc 9–17. Chưa xác minh đầy đủ hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính. Ô trống/lỗi không có nghĩa khu vực không có quy hoạch.",
+        "notice": "QH SDĐ 2030 tham khảo · Bình Phước cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
         "coverage_windows": [
           [
             [
@@ -176,7 +259,7 @@
         "max_native_zoom": 18,
         "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tay-ninh-2030/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "Lớp QH SDĐ 2030 tham khảo · Tây Ninh cũ, thuộc Tây Ninh mới. Tải theo vùng nhìn, ảnh gốc tới zoom 18. Chưa xác minh phủ kín, hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính; ô trống không có nghĩa không có quy hoạch."
+        "notice": "QH SDĐ 2030 tham khảo · Tây Ninh cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
       }
     },
     {
@@ -215,7 +298,2214 @@
         "max_native_zoom": 18,
         "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "Lớp QH SDĐ 2030 tham khảo · Long An cũ, thuộc Tây Ninh mới. Tải theo vùng nhìn, ảnh gốc tới zoom 18. Chưa xác minh phủ kín, hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính; ô trống không có nghĩa không có quy hoạch."
+        "notice": "QH SDĐ 2030 tham khảo · Long An cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 15/15 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "ha-noi-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hà Nội (cũ)",
+      "city": "Hà Nội (cũ)",
+      "scope": "region",
+      "area_id": "ha-noi-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "manifest": {
+        "id": "ha-noi-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hà Nội (cũ)",
+        "bounds": [
+          [
+            20.546104,
+            105.284899
+          ],
+          [
+            21.404762,
+            106.073431
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hà Nội cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 30/30 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "an-giang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · An Giang (cũ)",
+      "city": "An Giang (cũ)",
+      "scope": "region",
+      "area_id": "an-giang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/an-giang",
+      "manifest": {
+        "id": "an-giang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · An Giang (cũ)",
+        "bounds": [
+          [
+            10.183524,
+            104.776765
+          ],
+          [
+            10.960908,
+            105.57559
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/an-giang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · An Giang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "bac-giang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bắc Giang (cũ)",
+      "city": "Bắc Giang (cũ)",
+      "scope": "region",
+      "area_id": "bac-giang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-giang",
+      "manifest": {
+        "id": "bac-giang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bắc Giang (cũ)",
+        "bounds": [
+          [
+            21.121951,
+            105.880901
+          ],
+          [
+            21.626274,
+            107.102163
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bắc Giang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "bac-kan-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bắc Kạn (cũ)",
+      "city": "Bắc Kạn (cũ)",
+      "scope": "region",
+      "area_id": "bac-kan-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-kan",
+      "manifest": {
+        "id": "bac-kan-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bắc Kạn (cũ)",
+        "bounds": [
+          [
+            21.804383,
+            105.431119
+          ],
+          [
+            22.739601,
+            106.265113
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/bac-kan-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bắc Kạn cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "bac-lieu-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bạc Liêu (cũ)",
+      "city": "Bạc Liêu (cũ)",
+      "scope": "region",
+      "area_id": "bac-lieu-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-lieu",
+      "manifest": {
+        "id": "bac-lieu-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bạc Liêu (cũ)",
+        "bounds": [
+          [
+            9.014727,
+            105.232507
+          ],
+          [
+            9.639627,
+            105.862278
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/bac-lieu-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bạc Liêu cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 7/7 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "bac-ninh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bắc Ninh (cũ)",
+      "city": "Bắc Ninh (cũ)",
+      "scope": "region",
+      "area_id": "bac-ninh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "manifest": {
+        "id": "bac-ninh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bắc Ninh (cũ)",
+        "bounds": [
+          [
+            20.969118,
+            105.902546
+          ],
+          [
+            21.280538,
+            106.390798
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 17,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bắc Ninh cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "ben-tre-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bến Tre (cũ)",
+      "city": "Bến Tre (cũ)",
+      "scope": "region",
+      "area_id": "ben-tre-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ben-tre",
+      "manifest": {
+        "id": "ben-tre-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bến Tre (cũ)",
+        "bounds": [
+          [
+            9.790439,
+            106.028225
+          ],
+          [
+            10.339914,
+            106.793119
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ben-tre-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bến Tre cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "binh-thuan-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bình Thuận (cũ)",
+      "city": "Bình Thuận (cũ)",
+      "scope": "region",
+      "area_id": "binh-thuan-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-thuan",
+      "manifest": {
+        "id": "binh-thuan-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bình Thuận (cũ)",
+        "bounds": [
+          [
+            9.915074,
+            107.394199
+          ],
+          [
+            11.555543,
+            109.054739
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 9,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/binh-thuan-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bình Thuận cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 10
+      }
+    },
+    {
+      "id": "binh-dinh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Bình Định (cũ)",
+      "city": "Bình Định (cũ)",
+      "scope": "region",
+      "area_id": "binh-dinh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-dinh",
+      "manifest": {
+        "id": "binh-dinh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Bình Định (cũ)",
+        "bounds": [
+          [
+            13.515351,
+            108.601282
+          ],
+          [
+            14.716127,
+            109.301725
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/binh-dinh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Bình Định cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "ca-mau-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Cà Mau (cũ)",
+      "city": "Cà Mau (cũ)",
+      "scope": "region",
+      "area_id": "ca-mau-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ca-mau",
+      "manifest": {
+        "id": "ca-mau-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Cà Mau (cũ)",
+        "bounds": [
+          [
+            8.409036,
+            104.705411
+          ],
+          [
+            9.593427,
+            105.441267
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ca-mau-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Cà Mau cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "can-tho-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Cần Thơ (cũ)",
+      "city": "Cần Thơ (cũ)",
+      "scope": "region",
+      "area_id": "can-tho-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/can-tho",
+      "manifest": {
+        "id": "can-tho-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Cần Thơ (cũ)",
+        "bounds": [
+          [
+            9.895985,
+            105.215102
+          ],
+          [
+            10.344128,
+            105.902803
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/can-tho-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Cần Thơ cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "cao-bang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Cao Bằng (cũ)",
+      "city": "Cao Bằng (cũ)",
+      "scope": "region",
+      "area_id": "cao-bang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/cao-bang",
+      "manifest": {
+        "id": "cao-bang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Cao Bằng (cũ)",
+        "bounds": [
+          [
+            22.333928,
+            105.268443
+          ],
+          [
+            23.118983,
+            106.841259
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/cao-bang-2030-dc/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Cao Bằng cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 13/13 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "gia-lai-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Gia Lai (cũ)",
+      "city": "Gia Lai (cũ)",
+      "scope": "region",
+      "area_id": "gia-lai-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/gia-lai",
+      "manifest": {
+        "id": "gia-lai-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Gia Lai (cũ)",
+        "bounds": [
+          [
+            12.995729,
+            107.443187
+          ],
+          [
+            14.631626,
+            108.878149
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/gia-lai-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Gia Lai cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 17/17 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "ha-giang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hà Giang (cũ)",
+      "city": "Hà Giang (cũ)",
+      "scope": "region",
+      "area_id": "ha-giang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-giang",
+      "manifest": {
+        "id": "ha-giang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hà Giang (cũ)",
+        "bounds": [
+          [
+            22.165779,
+            104.33533
+          ],
+          [
+            23.391736,
+            105.591264
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/ha-giang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hà Giang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "ha-nam-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hà Nam (cũ)",
+      "city": "Hà Nam (cũ)",
+      "scope": "region",
+      "area_id": "ha-nam-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-nam",
+      "manifest": {
+        "id": "ha-nam-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hà Nam (cũ)",
+        "bounds": [
+          [
+            20.362945,
+            105.768582
+          ],
+          [
+            20.704364,
+            106.23444
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/ha-nam-2030-dc/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hà Nam cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 6/6 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "ha-tinh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hà Tĩnh (cũ)",
+      "city": "Hà Tĩnh (cũ)",
+      "scope": "region",
+      "area_id": "ha-tinh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-tinh",
+      "manifest": {
+        "id": "ha-tinh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hà Tĩnh (cũ)",
+        "bounds": [
+          [
+            17.90839,
+            105.103469
+          ],
+          [
+            18.804789,
+            106.510618
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ha-tinh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hà Tĩnh cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 13/13 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "hai-duong-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hải Dương (cũ)",
+      "city": "Hải Dương (cũ)",
+      "scope": "region",
+      "area_id": "hai-duong-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-duong",
+      "manifest": {
+        "id": "hai-duong-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hải Dương (cũ)",
+        "bounds": [
+          [
+            20.684715,
+            106.124369
+          ],
+          [
+            21.276876,
+            106.73281
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hai-duong-2030-dc/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hải Dương cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 12/12 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "hai-phong-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hải Phòng (cũ)",
+      "city": "Hải Phòng (cũ)",
+      "scope": "region",
+      "area_id": "hai-phong-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "manifest": {
+        "id": "hai-phong-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hải Phòng (cũ)",
+        "bounds": [
+          [
+            20.089559,
+            106.400638
+          ],
+          [
+            21.079064,
+            107.877703
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 10,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hải Phòng cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 14/15 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 11
+      }
+    },
+    {
+      "id": "hau-giang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hậu Giang (cũ)",
+      "city": "Hậu Giang (cũ)",
+      "scope": "region",
+      "area_id": "hau-giang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hau-giang",
+      "manifest": {
+        "id": "hau-giang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hậu Giang (cũ)",
+        "bounds": [
+          [
+            9.582151,
+            105.328639
+          ],
+          [
+            9.994115,
+            105.896806
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hau-giang-2030--dc/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hậu Giang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 6/6 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "hoa-binh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hòa Bình (cũ)",
+      "city": "Hòa Bình (cũ)",
+      "scope": "region",
+      "area_id": "hoa-binh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hoa-binh",
+      "manifest": {
+        "id": "hoa-binh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hòa Bình (cũ)",
+        "bounds": [
+          [
+            20.28736,
+            104.836475
+          ],
+          [
+            21.112769,
+            105.888
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hoa-binh-2030-2/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hòa Bình cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "hung-yen-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Hưng Yên (cũ)",
+      "city": "Hưng Yên (cũ)",
+      "scope": "region",
+      "area_id": "hung-yen-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "manifest": {
+        "id": "hung-yen-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Hưng Yên (cũ)",
+        "bounds": [
+          [
+            20.603626,
+            105.895429
+          ],
+          [
+            21.019381,
+            106.298576
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Hưng Yên cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "khanh-hoa-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Khánh Hòa (cũ)",
+      "city": "Khánh Hòa (cũ)",
+      "scope": "region",
+      "area_id": "khanh-hoa-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "manifest": {
+        "id": "khanh-hoa-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Khánh Hòa (cũ)",
+        "bounds": [
+          [
+            9.56967,
+            108.671065
+          ],
+          [
+            12.868524,
+            114.996965
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 9,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Khánh Hòa cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 10
+      }
+    },
+    {
+      "id": "kien-giang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Kiên Giang (cũ)",
+      "city": "Kiên Giang (cũ)",
+      "scope": "region",
+      "area_id": "kien-giang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/kien-giang",
+      "manifest": {
+        "id": "kien-giang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Kiên Giang (cũ)",
+        "bounds": [
+          [
+            9.254902,
+            103.186789
+          ],
+          [
+            10.542043,
+            105.548772
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/kien-giang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Kiên Giang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 15/15 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "kon-tum-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Kon Tum (cũ)",
+      "city": "Kon Tum (cũ)",
+      "scope": "region",
+      "area_id": "kon-tum-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/kon-tum",
+      "manifest": {
+        "id": "kon-tum-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Kon Tum (cũ)",
+        "bounds": [
+          [
+            13.919631,
+            107.329822
+          ],
+          [
+            15.417533,
+            108.631098
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/kon-tum-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Kon Tum cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "lai-chau-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Lai Châu (cũ)",
+      "city": "Lai Châu (cũ)",
+      "scope": "region",
+      "area_id": "lai-chau-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/lai-chau",
+      "manifest": {
+        "id": "lai-chau-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Lai Châu (cũ)",
+        "bounds": [
+          [
+            21.684822,
+            102.320802
+          ],
+          [
+            22.81644,
+            103.985314
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/lai-chau-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Lai Châu cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "lam-dong-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Lâm Đồng (cũ)",
+      "city": "Lâm Đồng (cũ)",
+      "scope": "region",
+      "area_id": "lam-dong-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/lam-dong",
+      "manifest": {
+        "id": "lam-dong-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Lâm Đồng (cũ)",
+        "bounds": [
+          [
+            11.215165,
+            107.261106
+          ],
+          [
+            12.321131,
+            108.73195
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Lâm Đồng cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 12/12 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "lang-son-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Lạng Sơn (cũ)",
+      "city": "Lạng Sơn (cũ)",
+      "scope": "region",
+      "area_id": "lang-son-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/lang-son",
+      "manifest": {
+        "id": "lang-son-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Lạng Sơn (cũ)",
+        "bounds": [
+          [
+            21.325251,
+            106.095452
+          ],
+          [
+            22.461457,
+            107.391399
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/lang-son-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Lạng Sơn cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "lao-cai-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Lào Cai (cũ)",
+      "city": "Lào Cai (cũ)",
+      "scope": "region",
+      "area_id": "lao-cai-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/lao-cai",
+      "manifest": {
+        "id": "lao-cai-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Lào Cai (cũ)",
+        "bounds": [
+          [
+            21.853403,
+            103.530409
+          ],
+          [
+            22.844871,
+            104.636661
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://guland2.sgp1.cdn.digitaloceanspaces.com/qh/lao-cai-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Lào Cai cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "nam-dinh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Nam Định (cũ)",
+      "city": "Nam Định (cũ)",
+      "scope": "region",
+      "area_id": "nam-dinh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/nam-dinh",
+      "manifest": {
+        "id": "nam-dinh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Nam Định (cũ)",
+        "bounds": [
+          [
+            19.888651,
+            105.924419
+          ],
+          [
+            20.499165,
+            106.6101
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/nam-dinh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Nam Định cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "nghe-an-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Nghệ An (cũ)",
+      "city": "Nghệ An (cũ)",
+      "scope": "region",
+      "area_id": "nghe-an-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/nghe-an",
+      "manifest": {
+        "id": "nghe-an-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Nghệ An (cũ)",
+        "bounds": [
+          [
+            18.552117,
+            103.87282
+          ],
+          [
+            20.03679,
+            105.808456
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/nghe-an-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Nghệ An cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 19/21 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "ninh-binh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Ninh Bình (cũ)",
+      "city": "Ninh Bình (cũ)",
+      "scope": "region",
+      "area_id": "ninh-binh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ninh-binh",
+      "manifest": {
+        "id": "ninh-binh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Ninh Bình (cũ)",
+        "bounds": [
+          [
+            19.915943,
+            105.540003
+          ],
+          [
+            20.454709,
+            106.180364
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ninh-binh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Ninh Bình cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "ninh-thuan-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Ninh Thuận (cũ)",
+      "city": "Ninh Thuận (cũ)",
+      "scope": "region",
+      "area_id": "ninh-thuan-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ninh-thuan",
+      "manifest": {
+        "id": "ninh-thuan-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Ninh Thuận (cũ)",
+        "bounds": [
+          [
+            11.293846,
+            108.551662
+          ],
+          [
+            12.164303,
+            109.236543
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://251db3a9dce2de5.cmccloud.com.vn/guland6/qh/ninh-thuan-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Ninh Thuận cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 7/7 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "phu-tho-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Phú Thọ (cũ)",
+      "city": "Phú Thọ (cũ)",
+      "scope": "region",
+      "area_id": "phu-tho-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/phu-tho",
+      "manifest": {
+        "id": "phu-tho-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Phú Thọ (cũ)",
+        "bounds": [
+          [
+            20.917205,
+            104.815401
+          ],
+          [
+            21.719645,
+            105.502466
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/phu-tho-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Phú Thọ cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 13/13 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "phu-yen-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Phú Yên (cũ)",
+      "city": "Phú Yên (cũ)",
+      "scope": "region",
+      "area_id": "phu-yen-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/phu-yen",
+      "manifest": {
+        "id": "phu-yen-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Phú Yên (cũ)",
+        "bounds": [
+          [
+            12.706478,
+            108.673487
+          ],
+          [
+            13.695163,
+            109.459014
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/phu-yen-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Phú Yên cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "quang-binh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Quảng Bình (cũ)",
+      "city": "Quảng Bình (cũ)",
+      "scope": "region",
+      "area_id": "quang-binh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-binh",
+      "manifest": {
+        "id": "quang-binh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Quảng Bình (cũ)",
+        "bounds": [
+          [
+            16.921433,
+            105.607924
+          ],
+          [
+            18.089951,
+            107.001462
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/quang-binh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Quảng Bình cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "quang-nam-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Quảng Nam (cũ)",
+      "city": "Quảng Nam (cũ)",
+      "scope": "region",
+      "area_id": "quang-nam-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-nam",
+      "manifest": {
+        "id": "quang-nam-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Quảng Nam (cũ)",
+        "bounds": [
+          [
+            14.951376,
+            107.210949
+          ],
+          [
+            16.067075,
+            108.746686
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/quang-nam-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Quảng Nam cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 17/18 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "quang-ngai-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Quảng Ngãi (cũ)",
+      "city": "Quảng Ngãi (cũ)",
+      "scope": "region",
+      "area_id": "quang-ngai-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ngai",
+      "manifest": {
+        "id": "quang-ngai-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Quảng Ngãi (cũ)",
+        "bounds": [
+          [
+            14.532752,
+            108.235534
+          ],
+          [
+            15.432999,
+            109.149997
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ngai-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Quảng Ngãi cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 14/14 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "quang-ninh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Quảng Ninh (cũ)",
+      "city": "Quảng Ninh (cũ)",
+      "scope": "region",
+      "area_id": "quang-ninh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "manifest": {
+        "id": "quang-ninh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Quảng Ninh (cũ)",
+        "bounds": [
+          [
+            20.716307,
+            106.439195
+          ],
+          [
+            21.665156,
+            108.08694
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Quảng Ninh cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 14/14 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "quang-tri-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Quảng Trị (cũ)",
+      "city": "Quảng Trị (cũ)",
+      "scope": "region",
+      "area_id": "quang-tri-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-tri",
+      "manifest": {
+        "id": "quang-tri-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Quảng Trị (cũ)",
+        "bounds": [
+          [
+            16.301582,
+            106.514295
+          ],
+          [
+            17.20565,
+            107.389289
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/quang-tri-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Quảng Trị cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "soc-trang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Sóc Trăng (cũ)",
+      "city": "Sóc Trăng (cũ)",
+      "scope": "region",
+      "area_id": "soc-trang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/soc-trang",
+      "manifest": {
+        "id": "soc-trang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Sóc Trăng (cũ)",
+        "bounds": [
+          [
+            8.610888,
+            105.543663
+          ],
+          [
+            9.94141,
+            106.335103
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/soc-trang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Sóc Trăng cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "son-la-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Sơn La (cũ)",
+      "city": "Sơn La (cũ)",
+      "scope": "region",
+      "area_id": "son-la-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/son-la",
+      "manifest": {
+        "id": "son-la-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Sơn La (cũ)",
+        "bounds": [
+          [
+            20.564783,
+            103.212223
+          ],
+          [
+            22.0284,
+            105.071119
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/son-la-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Sơn La cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/12 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "thai-binh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Thái Bình (cũ)",
+      "city": "Thái Bình (cũ)",
+      "scope": "region",
+      "area_id": "thai-binh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-binh",
+      "manifest": {
+        "id": "thai-binh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Thái Bình (cũ)",
+        "bounds": [
+          [
+            20.244052,
+            106.10967
+          ],
+          [
+            20.728849,
+            106.656427
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 9,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-binh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Thái Bình cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 10
+      }
+    },
+    {
+      "id": "thai-nguyen-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Thái Nguyên (cũ)",
+      "city": "Thái Nguyên (cũ)",
+      "scope": "region",
+      "area_id": "thai-nguyen-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-nguyen",
+      "manifest": {
+        "id": "thai-nguyen-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Thái Nguyên (cũ)",
+        "bounds": [
+          [
+            21.325457,
+            105.477684
+          ],
+          [
+            22.047659,
+            106.278376
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-nguyen-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Thái Nguyên cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "thanh-hoa-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Thanh Hóa (cũ)",
+      "city": "Thanh Hóa (cũ)",
+      "scope": "region",
+      "area_id": "thanh-hoa-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thanh-hoa",
+      "manifest": {
+        "id": "thanh-hoa-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Thanh Hóa (cũ)",
+        "bounds": [
+          [
+            19.286987,
+            104.375953
+          ],
+          [
+            20.67067,
+            106.075862
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thanh-hoa-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Thanh Hóa cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 27/27 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "thua-thien-hue-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Thừa Thiên Huế (cũ)",
+      "city": "Thừa Thiên Huế (cũ)",
+      "scope": "region",
+      "area_id": "thua-thien-hue-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thua-thien-hue",
+      "manifest": {
+        "id": "thua-thien-hue-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Thừa Thiên Huế (cũ)",
+        "bounds": [
+          [
+            15.993878,
+            107.016212
+          ],
+          [
+            16.742462,
+            108.210653
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/thua-thien-hue-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Thừa Thiên Huế cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "tien-giang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Tiền Giang (cũ)",
+      "city": "Tiền Giang (cũ)",
+      "scope": "region",
+      "area_id": "tien-giang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tien-giang",
+      "manifest": {
+        "id": "tien-giang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Tiền Giang (cũ)",
+        "bounds": [
+          [
+            10.19041,
+            105.799577
+          ],
+          [
+            10.587144,
+            106.816692
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/tien-giang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Tiền Giang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "tra-vinh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Trà Vinh (cũ)",
+      "city": "Trà Vinh (cũ)",
+      "scope": "region",
+      "area_id": "tra-vinh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tra-vinh",
+      "manifest": {
+        "id": "tra-vinh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Trà Vinh (cũ)",
+        "bounds": [
+          [
+            9.52957,
+            105.920981
+          ],
+          [
+            10.08995,
+            106.607011
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 11,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tra-vinh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Trà Vinh cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 12
+      }
+    },
+    {
+      "id": "tuyen-quang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Tuyên Quang (cũ)",
+      "city": "Tuyên Quang (cũ)",
+      "scope": "region",
+      "area_id": "tuyen-quang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tuyen-quang",
+      "manifest": {
+        "id": "tuyen-quang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Tuyên Quang (cũ)",
+        "bounds": [
+          [
+            21.497589,
+            104.848866
+          ],
+          [
+            22.69597,
+            105.597903
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 9,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tuyen-quang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Tuyên Quang cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 7/7 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 10
+      }
+    },
+    {
+      "id": "vinh-long-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Vĩnh Long (cũ)",
+      "city": "Vĩnh Long (cũ)",
+      "scope": "region",
+      "area_id": "vinh-long-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-long",
+      "manifest": {
+        "id": "vinh-long-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Vĩnh Long (cũ)",
+        "bounds": [
+          [
+            9.88287,
+            105.682816
+          ],
+          [
+            10.330297,
+            106.289636
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 9,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/vinh-long-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Vĩnh Long cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "min_native_zoom": 10
+      }
+    },
+    {
+      "id": "vinh-phuc-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Vĩnh Phúc (cũ)",
+      "city": "Vĩnh Phúc (cũ)",
+      "scope": "region",
+      "area_id": "vinh-phuc-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-phuc",
+      "manifest": {
+        "id": "vinh-phuc-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Vĩnh Phúc (cũ)",
+        "bounds": [
+          [
+            21.140058,
+            105.322561
+          ],
+          [
+            21.586502,
+            105.86242
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/vinh-phuc-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Vĩnh Phúc cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "yen-bai-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Yên Bái (cũ)",
+      "city": "Yên Bái (cũ)",
+      "scope": "region",
+      "area_id": "yen-bai-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/yen-bai",
+      "manifest": {
+        "id": "yen-bai-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Yên Bái (cũ)",
+        "bounds": [
+          [
+            21.316213,
+            103.886237
+          ],
+          [
+            22.291669,
+            105.138573
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/yen-bai-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Yên Bái cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 9/9 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "da-nang-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Đà Nẵng (cũ)",
+      "city": "Đà Nẵng (cũ)",
+      "scope": "region",
+      "area_id": "da-nang-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "manifest": {
+        "id": "da-nang-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Đà Nẵng (cũ)",
+        "bounds": [
+          [
+            15.760877,
+            107.818821
+          ],
+          [
+            16.909212,
+            112.794055
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Đà Nẵng cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "dak-lak-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Đắk Lắk (cũ)",
+      "city": "Đắk Lắk (cũ)",
+      "scope": "region",
+      "area_id": "dak-lak-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-lak",
+      "manifest": {
+        "id": "dak-lak-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Đắk Lắk (cũ)",
+        "bounds": [
+          [
+            12.160832,
+            107.481853
+          ],
+          [
+            13.432528,
+            109.016246
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dak-lak-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Đắk Lắk cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 15/15 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "dak-nong-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Đắk Nông (cũ)",
+      "city": "Đắk Nông (cũ)",
+      "scope": "region",
+      "area_id": "dak-nong-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-nong",
+      "manifest": {
+        "id": "dak-nong-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Đắk Nông (cũ)",
+        "bounds": [
+          [
+            11.748864,
+            107.206444
+          ],
+          [
+            12.81217,
+            108.133399
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dak-nong-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Đắk Nông cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 8/8 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "dien-bien-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Điện Biên (cũ)",
+      "city": "Điện Biên (cũ)",
+      "scope": "region",
+      "area_id": "dien-bien-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dien-bien",
+      "manifest": {
+        "id": "dien-bien-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Điện Biên (cũ)",
+        "bounds": [
+          [
+            20.892692,
+            102.144078
+          ],
+          [
+            22.548129,
+            103.600456
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dien-bien-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Điện Biên cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 10/10 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
+      }
+    },
+    {
+      "id": "dong-thap-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Đồng Tháp (cũ)",
+      "city": "Đồng Tháp (cũ)",
+      "scope": "region",
+      "area_id": "dong-thap-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-thap",
+      "manifest": {
+        "id": "dong-thap-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Đồng Tháp (cũ)",
+        "bounds": [
+          [
+            10.134119,
+            105.184112
+          ],
+          [
+            10.979111,
+            105.941977
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dong-thap-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "QH SDĐ 2030 tham khảo · Đồng Tháp cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 12/12 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn."
       }
     }
   ]

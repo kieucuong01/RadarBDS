@@ -8,13 +8,15 @@
     var district=region==='con-dao'?province.districts.find(function(d){return d.id==='con-dao';})
       :!region&&province.id==='binh-duong'?province.districts.find(function(d){return d.id==='718';}):null;
     return {province:province.id,district:district?district.id:'',region_id:province.region_id,
-      bounds:district?district.bounds:province.bounds,max_zoom:district?13:11};
+      bounds:district?district.bounds:(province.focus_bounds||province.bounds),max_zoom:13,min_zoom:province.min_zoom||8};
   }
   function focus(map,L,area){
-    if(area.district){map.fitBounds(area.bounds,{maxZoom:area.max_zoom,padding:[24,24],animate:false});return;}
+    if(area.district && (area.min_zoom||8)<=8){map.fitBounds(area.bounds,{maxZoom:area.max_zoom,padding:[24,24],animate:false});return;}
     var bounds=L.latLngBounds(area.bounds);
     // Fill the screen with the province centre instead of fitting every outer edge.
-    var zoom=Math.min(13,Math.max(map.getBoundsZoom(bounds,true,[0,0]),map.getBoundsZoom(bounds,false,[0,0])+1));
+    var zoom=area.district?map.getBoundsZoom(bounds,false,[24,24])
+      :Math.max(map.getBoundsZoom(bounds,true,[0,0]),map.getBoundsZoom(bounds,false,[0,0])+1);
+    zoom=Math.min(13,Math.max(area.min_zoom||8,zoom));
     map.setView(bounds.getCenter(),zoom,{animate:false});
   }
   function mount(env,ui,provinces,selection,onChange){
@@ -38,7 +40,7 @@
     var source=node('a',form,'Khung huyện: GIS TP.HCM · geoBoundaries / OCHA ROAP · CC BY 3.0 IGO');
     source.href='https://www.geoboundaries.org/api/current/gbOpen/VNM/ADM2/';source.target='_blank';source.rel='noopener noreferrer';
     form.addEventListener('submit',function(e){e.preventDefault();var p=selected(),d=p.districts.find(function(item){return item.id===district.value;});
-      onChange(p,{province:p.id,district:d?d.id:'',bounds:d?d.bounds:p.bounds,max_zoom:d?13:11});panel.open=false;});
+      onChange(p,{province:p.id,district:d?d.id:'',bounds:d?d.bounds:(p.focus_bounds||p.bounds),max_zoom:13,min_zoom:p.min_zoom||8});panel.open=false;});
     return panel;
   }
   return {initial:initial,mount:mount,focus:focus};

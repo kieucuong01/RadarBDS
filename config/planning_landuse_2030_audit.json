@@ -1,0 +1,2170 @@
+{
+  "checked_on": "2026-10-30",
+  "notice": "Bounded source samples, not full legal or cadastral coverage. No authentication or access bypass.",
+  "provinces": [
+    {
+      "province": "binh-duong",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Tân Uyên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/13/6527/3840.png",
+          "sha256": "c11f96c38219c5de981f2cfadbb18750d1d988970fadbffaae9d3264754a3fc7",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bàu Bàng",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/13/6522/3837.png",
+          "sha256": "0d19addb00b0b8d6f6d1764fd6f36935b7a476f1d3cb3ee22373ddd114ca022d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "hcm",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
+      "samples": 24,
+      "nonempty_samples": 17,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Quận 1",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/13/6524/3849.png",
+          "sha256": "a1bdd30acb60714c9c57fa8097a87cfafa1e417948ff3c76e7c57ef9651e9627",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Quận 5",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/13/6523/3849.png",
+          "sha256": "3cba34f181ef419f8dff585c886b44e8174bdfa76efb0045b9aea46ea3aff052",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": [
+        "Quận 3",
+        "Quận 4",
+        "Quận 7",
+        "Quận 8",
+        "Quận 11",
+        "Quận 12",
+        "Quận Bình Thạnh"
+      ]
+    },
+    {
+      "province": "brvt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 9,
+      "max_native_zoom_sampled": 17,
+      "controls": [
+        {
+          "district": "Huyện Châu Đức",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/13/6536/3852.png",
+          "sha256": "4137660f3b52724d7212c0164747a2b6f863e009a798eed36ccce290a456d048",
+          "size": [
+            512,
+            512
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Côn Đảo",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/13/6522/3897.png",
+          "sha256": "b9e5be152dfb9b139c8a6353f8d9fc53c63619e7c4447e3036fa15645e629815",
+          "size": [
+            512,
+            512
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "dong-nai",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 9,
+      "max_native_zoom_sampled": 17,
+      "controls": [
+        {
+          "district": "Huyện Cẩm Mỹ",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/13/6536/3849.png",
+          "sha256": "ef151b3b96739a0eae32c62299b2973a64d6c6bb6958f8814f06924f6c2dd4cd",
+          "size": [
+            512,
+            512
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Long Thành",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/13/6531/3849.png",
+          "sha256": "c0da532d917c7e75487d5d52dd0c20976d567971c67c4e66fd9c94a2dc52644f",
+          "size": [
+            512,
+            512
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "binh-phuoc",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-phuoc",
+      "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 9,
+      "max_native_zoom_sampled": 17,
+      "controls": [
+        {
+          "district": "Huyện Bù Gia Mập",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/13/6530/3822.png",
+          "sha256": "b531a2f99789f62789a8b99aaba2916d05f4210a06ab59347757cb90e4ded962",
+          "size": [
+            512,
+            512
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bù Đốp",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/13/6526/3821.png",
+          "sha256": "c5e29a9dac1b64ec9b25ef1d9d7513a58a3c1d7333557c98e238ca62e9bc43d2",
+          "size": [
+            512,
+            512
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "tay-ninh",
+      "source_url": "https://guland.vn/soi-quy-hoach/tay-ninh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tay-ninh-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bến Cầu",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tay-ninh-2030/13/6511/3841.png",
+          "sha256": "faeaa3c3bbe717cf9bba18ae86acc865e5b43bc5d3ab9e7ce4eb6eb658f84d9c",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Châu Thành",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tay-ninh-2030/13/6507/3836.png",
+          "sha256": "6a457f208ff218823404f937d5b9453aa4f77f7f5acb1cc97dfa17e2b06ed02b",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "long-an",
+      "source_url": "https://guland.vn/soi-quy-hoach/long-an",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
+      "samples": 15,
+      "nonempty_samples": 15,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bến Lức",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/13/6518/3851.png",
+          "sha256": "2384349ecd1a64ef8405972feaa7cc954337d49a2312132e384fb32dccc6624a",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cần Đước",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/13/6521/3854.png",
+          "sha256": "3a41b981cc8edfc88605c3e79fe5ec898f9e5501e3b6a68860c297d9b2cbfd81",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "ha-noi",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/{z}/{x}/{y}.png",
+      "samples": 30,
+      "nonempty_samples": 30,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ba Vì",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/13/6493/3603.png",
+          "sha256": "9024ee404b3e5e890123de9e96da0d616acfb8ab6b4f389a9ef42d295c18279d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Chương Mỹ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/13/6500/3610.png",
+          "sha256": "4e404caa79ba6de250c1b651ade3a468b07bab52f3ba34ed6d4443ae0c257dac",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "an-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/an-giang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/an-giang-2030/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện An Phú",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/an-giang-2030/13/6487/3847.png",
+          "sha256": "3bd914d34d9ca6f1c479a38a3d64f687dd35826477782adeea930c592cececb3",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Châu Phú",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/an-giang-2030/13/6489/3854.png",
+          "sha256": "6f2e6e4930f4b8e3d17f14b5c1c7ff3506453b4c54a050f2ef7b675dbb88ef55",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "bac-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-giang",
+      "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 17,
+      "controls": [
+        {
+          "district": "Huyện Hiệp Hòa",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/13/6507/3598.png",
+          "sha256": "c5c4c265431f447c40ef80e88e0b98541396dca461a68d9bdce45f1edcd7c744",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Lạng Giang",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/13/6513/3598.png",
+          "sha256": "03d8de98ffd7cb35af560212bd9dff6f6bc48f4a1bc4d6b004647e926445ce76",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "bac-kan",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-kan",
+      "tile_template": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/bac-kan-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ba Bể",
+          "z": 13,
+          "url": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/bac-kan-2030/13/6501/3572.png",
+          "sha256": "5942637db2b8c88a50eaa1f55fefa61bb4780fca7c9c8d5a723e39c296ab5305",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bạch Thông",
+          "z": 13,
+          "url": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/bac-kan-2030/13/6506/3577.png",
+          "sha256": "53ea2849a06ae59875aa3d9ada18b5e03e8bf852a72c94f6b1c67fdbe23e6853",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "bac-lieu",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-lieu",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/bac-lieu-2030/{z}/{x}/{y}.png",
+      "samples": 7,
+      "nonempty_samples": 7,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Hoà Bình",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/bac-lieu-2030/13/6499/3884.png",
+          "sha256": "efece1cd3f21fa831984f5d75a5dd3524c5d3bbd6a2919cd5c074d2c8eb99828",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hồng Dân",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/bac-lieu-2030/13/6495/3878.png",
+          "sha256": "f4f18a829a2085caf3d8a325886e33c5a00ce4508c6ae2f90b778aa1ab968a4e",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "bac-ninh",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 17,
+      "controls": [
+        {
+          "district": "Huyện Gia Bình",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/13/6512/3605.png",
+          "sha256": "ac22ad959fe30a35164364d82affb00905c18cc8c63bc3b3bebeb041c21b8cdb",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Lương Tài",
+          "z": 13,
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/13/6513/3606.png",
+          "sha256": "7ac7cb1d408a4443b6602cd86710e73d93429d9f3ebbbdc938b5a5a154739b8f",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "ben-tre",
+      "source_url": "https://guland.vn/soi-quy-hoach/ben-tre",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ben-tre-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ba Tri",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ben-tre-2030/13/6521/3865.png",
+          "sha256": "ed07ac0fceb80a9eb26b42c0c2ca341f6e942d6ac7e08ad96d7e96c16de605e0",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bình Đại",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ben-tre-2030/13/6524/3863.png",
+          "sha256": "289019cc118890d9b8d9147453b174fad38bfe17f6ad24bedcc4d813e1c9829d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "binh-thuan",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-thuan",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/binh-thuan-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 10,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Bình",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/binh-thuan-2030/13/6561/3838.png",
+          "sha256": "f2e0d508b52bef08da4e14bf0c277dfa6bf7a571256cf5230f57cdb91518547e",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hàm Thuận Bắc",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/binh-thuan-2030/13/6555/3840.png",
+          "sha256": "e55f08d324635beb51abeea189f4378f470cf52ba3aaa910fdbe9dc49aedf65e",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "binh-dinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-dinh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/binh-dinh-2030/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện An Lão",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/binh-dinh-2030/13/6571/3761.png",
+          "sha256": "8dac16f9f6f1c96638218e45d454885df87920f0eb73735e68f4d045ccb966b1",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hoài Ân",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/binh-dinh-2030/13/6574/3766.png",
+          "sha256": "16d467374b14ed1e79d2c680c82cc4e08f6d0d6761464099e64b4248db6e77ad",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "ca-mau",
+      "source_url": "https://guland.vn/soi-quy-hoach/ca-mau",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ca-mau-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cái Nước",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ca-mau-2030/13/6486/3890.png",
+          "sha256": "f8c003c8ef19740e10b212a1bb217ab4beab60cf887d5510872605a845bd8fbd",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Năm Căn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ca-mau-2030/13/6484/3895.png",
+          "sha256": "233cacd7fd508f955078c37b74a01ba82bbc6c6d2fac30866eb97fd340fd2ad4",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "can-tho",
+      "source_url": "https://guland.vn/soi-quy-hoach/can-tho",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/can-tho-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cờ Đỏ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/can-tho-2030/13/6495/3864.png",
+          "sha256": "c6f60eb84227bf59b83d0835dbc007bbfaa15442548ec11f6eb11c57526199cf",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Phong Điền",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/can-tho-2030/13/6500/3867.png",
+          "sha256": "9d8d655a7a0f80a99b60ffa8ef043f3669b50e9610fcd2d52abff361f6a7fc70",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "cao-bang",
+      "source_url": "https://guland.vn/soi-quy-hoach/cao-bang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/cao-bang-2030-dc/{z}/{x}/{y}.png",
+      "samples": 13,
+      "nonempty_samples": 13,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bảo Lâm",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/cao-bang-2030-dc/13/6496/3561.png",
+          "sha256": "1f42c887512de44d9956e9af4868cbc5018abc41427d5f2f6c43616035957822",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bảo Lạc",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/cao-bang-2030-dc/13/6502/3561.png",
+          "sha256": "8606f92ad2108be06df61377ef6b5e5b253e04cc068e7c24961dac2523656a74",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "gia-lai",
+      "source_url": "https://guland.vn/soi-quy-hoach/gia-lai",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/gia-lai-2030/{z}/{x}/{y}.png",
+      "samples": 17,
+      "nonempty_samples": 17,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Chư Păh",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/gia-lai-2030/13/6552/3768.png",
+          "sha256": "4d502d214005bf336f93a89a166a69b52e5c7c96b65800a568e532bd66d3c306",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Chư Prông",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/gia-lai-2030/13/6548/3783.png",
+          "sha256": "9b2ddf8946cd5db7a1ec7c1c226b4c06552a3c6dc50285ef18442a13d3f3860b",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "ha-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-giang",
+      "tile_template": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/ha-giang-2030/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Mê",
+          "z": 13,
+          "url": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/ha-giang-2030/13/6491/3563.png",
+          "sha256": "01def901a50672534e524ff2a3c260c27a7fc65a9af789325e25406bd0c34c07",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bắc Quang",
+          "z": 13,
+          "url": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/ha-giang-2030/13/6483/3572.png",
+          "sha256": "f19928501d807ad0690b523574c468fde792003fccbdb3e5967511f5834ce443",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": [
+        "Huyện Hoàng Su Phì",
+        "Huyện Yên Minh"
+      ]
+    },
+    {
+      "province": "ha-nam",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-nam",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/ha-nam-2030-dc/{z}/{x}/{y}.png",
+      "samples": 6,
+      "nonempty_samples": 6,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bình Lục",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/ha-nam-2030-dc/13/6509/3619.png",
+          "sha256": "79a8ab7693a7245597db02a77a0433be990c3277a829fef09cda31ba99285686",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Duy Tiên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/ha-nam-2030-dc/13/6506/3616.png",
+          "sha256": "12ee17fc2140f956fbd2070efbdcc98724fa4d6d52149abacd504644a24e5bb1",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "ha-tinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-tinh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ha-tinh-2030/{z}/{x}/{y}.png",
+      "samples": 13,
+      "nonempty_samples": 13,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cẩm Xuyên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ha-tinh-2030/13/6508/3674.png",
+          "sha256": "81fae9320856e2efb6498ea72f819f733e6951a34f27ee04e0918ae0bfd66ed0",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Can Lộc",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ha-tinh-2030/13/6501/3668.png",
+          "sha256": "5ceb901106dcdd201d6596b2c310b515b4fb7ebbd8052f483e424a396e139aeb",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "hai-duong",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-duong",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hai-duong-2030-dc/{z}/{x}/{y}.png",
+      "samples": 12,
+      "nonempty_samples": 12,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bình Giang",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hai-duong-2030-dc/13/6512/3610.png",
+          "sha256": "d90b4db51bcbb22c094b333600a3273f553d368a6a01fd7a33dd419a90105c70",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cẩm Giàng",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hai-duong-2030-dc/13/6513/3608.png",
+          "sha256": "bdd4fd73292af7d1f50f6ad40f4133f9950e4b91b3a1dbfc072c2a27e470a5a3",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "hai-phong",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/{z}/{x}/{y}.png",
+      "samples": 15,
+      "nonempty_samples": 14,
+      "min_native_zoom": 11,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện An Dương",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/13/6521/3609.png",
+          "sha256": "a8669ee9e9df164f85cbd99cdfa96d4ee6ed3eca7d5d18b09e6467c89e38b886",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện An Lão",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/13/6520/3611.png",
+          "sha256": "674c9f10116252cd124e4d799e4a747f20f5f82b861a1aa7bf77126a37b0a0d8",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": [
+        "Huyện Bạch Long Vĩ"
+      ]
+    },
+    {
+      "province": "hau-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/hau-giang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hau-giang-2030--dc/{z}/{x}/{y}.png",
+      "samples": 6,
+      "nonempty_samples": 6,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Long Mỹ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hau-giang-2030--dc/13/6496/3874.png",
+          "sha256": "57825bd42fc14de48b599e9cd24d93d6026de10cd1fbeb12c47aac8d429a9e08",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Phụng Hiệp",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hau-giang-2030--dc/13/6501/3872.png",
+          "sha256": "152a03367ee4d3ce7c9c8f6862a8c04d836f555fc4a21d997b8c0fd02a7f0a8a",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "hoa-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/hoa-binh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hoa-binh-2030-2/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cao Phong",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/hoa-binh-2030-2/13/6493/3614.png",
+          "sha256": "db5148430d0c26faeff8d7b1c8914e2ec8f057c9091ee8516930a55f8c17fbf6",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Kim Bôi",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/hoa-binh-2030-2/13/6497/3614.png",
+          "sha256": "906d25680da0f8c67256f61e8aa4aaf2cf5b0981c02de880c174edbce7a81b23",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "hung-yen",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ân Thi",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/13/6510/3611.png",
+          "sha256": "1bfab10a3baa4f74394c070e0b03897a5f1f9addc4fd612f5818901b07b8aa83",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Khoái Châu",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/13/6507/3610.png",
+          "sha256": "7c8147974d72aadc787a393c8ed4e80b6e64178ff04f37edaea7fd3096eb24cd",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "khanh-hoa",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 10,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cam Lâm",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/13/6578/3819.png",
+          "sha256": "581cd45b4d9ae816c5ed0a6aa009a66f5a5e5856c936625d9ff442dfe17aed44",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Diên Khánh",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/13/6577/3814.png",
+          "sha256": "2dac67677766724efe20fd39c863a25cfd03ab7bd2b3634d02f584724614a1a1",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "kien-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/kien-giang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/kien-giang-2030/{z}/{x}/{y}.png",
+      "samples": 15,
+      "nonempty_samples": 15,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện An Biên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/kien-giang-2030/13/6486/3871.png",
+          "sha256": "40910576799920650edf27f8de88e262cf3fde18af7d99f6abd5dbf5b0c6c1e0",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện An Minh",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/kien-giang-2030/13/6484/3875.png",
+          "sha256": "fa16562d82b328cbe8292af2fed0f0f7f09b8e0938fb6ff5669007927bc40e61",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "kon-tum",
+      "source_url": "https://guland.vn/soi-quy-hoach/kon-tum",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/kon-tum-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ia H' Drai",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/kon-tum-2030/13/6541/3773.png",
+          "sha256": "17c93e934869fe5a903e94b6d9617e4a472aa0917c70d6b2066c88dc7b9166d8",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Kon Plông",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/kon-tum-2030/13/6560/3755.png",
+          "sha256": "b43ac1615d66c6605e342e15e668eb7fc12e16461f95105fb266ec55d6b542c8",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "lai-chau",
+      "source_url": "https://guland.vn/soi-quy-hoach/lai-chau",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/lai-chau-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Mường Tè",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/lai-chau-2030/13/6431/3570.png",
+          "sha256": "e0236de99c27d998546d22024001805e25d2cf3434e9ce85f309ae8abe8a1334",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Nậm Nhùn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/lai-chau-2030/13/6440/3576.png",
+          "sha256": "affbc9756de67a80fdd84219b17ba8a3175fd1f8d8b3b0568a717a9c360bbde9",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "lam-dong",
+      "source_url": "https://guland.vn/soi-quy-hoach/lam-dong",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/{z}/{x}/{y}.png",
+      "samples": 12,
+      "nonempty_samples": 12,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bảo Lâm",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/13/6550/3829.png",
+          "sha256": "751c7ba07fe40b4bea9479362c65d9ade37f4ee3f25582c9aa3781fe4d31eb56",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cát Tiên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/13/6539/3828.png",
+          "sha256": "7261aec43f70546e50c8733ac8f976e8e74f6bd6927d6733ce696866e6276e9d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "lang-son",
+      "source_url": "https://guland.vn/soi-quy-hoach/lang-son",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/lang-son-2030/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Sơn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/lang-son-2030/13/6513/3587.png",
+          "sha256": "2dee93b52a66ac33f0b9c7ab4f2f111e0f0e61a1e0e7e99d7a8ebb7a2e4be954",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bình Gia",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/lang-son-2030/13/6514/3581.png",
+          "sha256": "ae450bff7a0186c995e7963ac4d7cf2079255198ccc2525c3581b2f6aea017e3",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "lao-cai",
+      "source_url": "https://guland.vn/soi-quy-hoach/lao-cai",
+      "tile_template": "https://guland2.sgp1.cdn.digitaloceanspaces.com/qh/lao-cai-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Hà",
+          "z": 13,
+          "url": "https://guland2.sgp1.cdn.digitaloceanspaces.com/qh/lao-cai-2030/13/6469/3570.png",
+          "sha256": "e6c0c6eaaa6de98eac5ba7c06bfbb8248c12c4516830be6514dfcadd262d10c0",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bảo Thắng",
+          "z": 13,
+          "url": "https://guland2.sgp1.cdn.digitaloceanspaces.com/qh/lao-cai-2030/13/6465/3573.png",
+          "sha256": "3cd868e85196b797f0920b7bf4aa8031f435f02d987e705c0170445c3cfea601",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "nam-dinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/nam-dinh",
+      "tile_template": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/nam-dinh-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Giao Thủy",
+          "z": 13,
+          "url": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/nam-dinh-2030/13/6518/3625.png",
+          "sha256": "c6ab68a7cee12c1d9986194e64643b4bf73f8ecc800135082cd2a12574eb4034",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hải Hậu",
+          "z": 13,
+          "url": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/nam-dinh-2030/13/6513/3628.png",
+          "sha256": "8941a3f88da0c22d5031a22c5e188ee0904b485b336f93ecbb757bf52efd098d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "nghe-an",
+      "source_url": "https://guland.vn/soi-quy-hoach/nghe-an",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/nghe-an-2030/{z}/{x}/{y}.png",
+      "samples": 21,
+      "nonempty_samples": 19,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Anh Sơn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/nghe-an-2030/13/6487/3656.png",
+          "sha256": "fc48626171f95824d2386fc0f16bb4ccdf61a5d539960565c306b44825ca1e56",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Diễn Châu",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/nghe-an-2030/13/6498/3654.png",
+          "sha256": "75c3cd0de3d70e110a59f640b580010683a8701ae70fff5ec005af1be879a4ba",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": [
+        "Huyện Con Cuông",
+        "Huyện Quỳ Hợp"
+      ]
+    },
+    {
+      "province": "ninh-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/ninh-binh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/ninh-binh-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Gia Viễn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ninh-binh-2030/13/6505/3623.png",
+          "sha256": "025099d3252413490fbfb5ce681f0a3c6834aa143c88324f0dc8c4bd24dc8764",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hoa Lư",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/ninh-binh-2030/13/6506/3625.png",
+          "sha256": "737bc5b32cb2ecfdf523b36f13b0fd740329dd077a2d9f424fd35d4df0c06abf",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "ninh-thuan",
+      "source_url": "https://guland.vn/soi-quy-hoach/ninh-thuan",
+      "tile_template": "https://251db3a9dce2de5.cmccloud.com.vn/guland6/qh/ninh-thuan-2030/{z}/{x}/{y}.png",
+      "samples": 7,
+      "nonempty_samples": 7,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bác Ái",
+          "z": 13,
+          "url": "https://251db3a9dce2de5.cmccloud.com.vn/guland6/qh/ninh-thuan-2030/13/6573/3822.png",
+          "sha256": "772ce8d413742c7c5ae99fae155abc3ac634326e77f277c1bcd5f172ac35441d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Ninh Sơn",
+          "z": 13,
+          "url": "https://251db3a9dce2de5.cmccloud.com.vn/guland6/qh/ninh-thuan-2030/13/6571/3827.png",
+          "sha256": "32380c0c53ae8d26e801a4270fa6dc447028220e775764b7ae87e010491eac68",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "phu-tho",
+      "source_url": "https://guland.vn/soi-quy-hoach/phu-tho",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/phu-tho-2030/{z}/{x}/{y}.png",
+      "samples": 13,
+      "nonempty_samples": 13,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cẩm Khê",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/phu-tho-2030/13/6487/3597.png",
+          "sha256": "67e9b067ce91ccb29aa9e61c9d2f0245c8006490d4296fbf2c7d17bd0e525192",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hạ Hoà",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/phu-tho-2030/13/6485/3592.png",
+          "sha256": "29ec0d3baf855784e90b2c2a8c3cd6687c9d5ab43b6749ba067fe949d33b4af6",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "phu-yen",
+      "source_url": "https://guland.vn/soi-quy-hoach/phu-yen",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/phu-yen-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Phú Hoà",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/phu-yen-2030/13/6580/3796.png",
+          "sha256": "4c7dfe2fe6492b93f998e17ae212de60afa75399e341caf2795251ed2c1ce68b",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Sơn Hòa",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/phu-yen-2030/13/6576/3792.png",
+          "sha256": "19fe009211065ba34d65ad024c7e979880339b821b00fdff0adf52b36494591d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "quang-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-binh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/quang-binh-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bố Trạch",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-binh-2030/13/6514/3691.png",
+          "sha256": "6c82b4c6f8f5fec21c1a04aabed5c23d16593b54700af1c3859fe47a7bd58457",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Lệ Thủy",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-binh-2030/13/6525/3700.png",
+          "sha256": "1c0df04bb2b15a333dd32ff43b715def002d6e044f124f92d8c6680510332f9d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "quang-nam",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-nam",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/quang-nam-2030/{z}/{x}/{y}.png",
+      "samples": 18,
+      "nonempty_samples": 17,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Trà My",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/quang-nam-2030/13/6558/3744.png",
+          "sha256": "40c40cc028283552b7b3db645e5c40790fb0ed49c4ca9f43555df64f8f8dfbd3",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Duy Xuyên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/quang-nam-2030/13/6557/3731.png",
+          "sha256": "6d83bb34ce63f2e9271160f24d5acba4754e0af1b523cb16ab1c3c630c3aaea0",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": [
+        "Huyện Tây Giang"
+      ]
+    },
+    {
+      "province": "quang-ngai",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ngai",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ngai-2030/{z}/{x}/{y}.png",
+      "samples": 14,
+      "nonempty_samples": 14,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ba Tơ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-ngai-2030/13/6570/3757.png",
+          "sha256": "b4a7d7af751d9d0fe878915ccda6aa5e8144da853c6036f34dc629ba35861b9c",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bình Sơn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-ngai-2030/13/6570/3743.png",
+          "sha256": "d4e431b71d1ebfd67482e5137446bf7ff2b5999aee4c0878f6836c18f4e61352",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "quang-ninh",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/{z}/{x}/{y}.png",
+      "samples": 14,
+      "nonempty_samples": 14,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Ba Chẽ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/13/6534/3600.png",
+          "sha256": "1c894f0853334f24c7f2c4f114ff9ab4b45e3fd20a8ec60c65785bc78b5bce82",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bình Liêu",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/13/6540/3593.png",
+          "sha256": "cb1295e275aa9e4f2bc1b9b3f88f9f2e9469bb4baebaefc510afb39a6c0e3ca8",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "quang-tri",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-tri",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/quang-tri-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cam Lộ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/quang-tri-2030/13/6529/3708.png",
+          "sha256": "d2bf9d76b9f48152a3d9645ecb491099894034d19d559d7ea2bd003719a6c248",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cồn Cỏ",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/quang-tri-2030/13/6538/3699.png",
+          "sha256": "ce6d01b3707935a4440f61054b784a9624df5dcd8b0f7bf3563b4a4e8ab86558",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "soc-trang",
+      "source_url": "https://guland.vn/soi-quy-hoach/soc-trang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/soc-trang-2030/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Châu Thành",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/soc-trang-2030/13/6505/3874.png",
+          "sha256": "14b12c955721cf6823aa52e79b6a331b86c1c3f6a63ea0735160c0be130fff0f",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cù Lao Dung",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/soc-trang-2030/13/6512/3875.png",
+          "sha256": "cd4c3dc98c2b33bf3c9ad31b758011addc7d965badd3915ef5a7718fd7f55405",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "son-la",
+      "source_url": "https://guland.vn/soi-quy-hoach/son-la",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/son-la-2030/{z}/{x}/{y}.png",
+      "samples": 12,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bắc Yên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/son-la-2030/13/6471/3601.png",
+          "sha256": "d8145fbeaf9d6ab43e8f5976bdbde768e6297538d8f9347f9e6c90f116804d67",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Mai Sơn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/son-la-2030/13/6461/3602.png",
+          "sha256": "e09e0003915459042db3471965b16b9f581d7ce1ed48f824421b9a81bb025a3a",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": [
+        "Huyện Mường La",
+        "Huyện Thuận Châu",
+        "Huyện Yên Châu"
+      ]
+    },
+    {
+      "province": "thai-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-binh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-binh-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 10,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Hưng Hà",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-binh-2030/13/6513/3616.png",
+          "sha256": "575fdc449cff4453e26b0c6b8c44ec87ba944996ffff561c916ae7ad155e2a6b",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Kiến Xương",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-binh-2030/13/6517/3621.png",
+          "sha256": "31dc96f391b5e3465f21565b2e1786bb24b98ba5cb535de904eb44f0f6c7c14d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "thai-nguyen",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-nguyen",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-nguyen-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Phú Lương",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-nguyen-2030/13/6501/3588.png",
+          "sha256": "d5c042aa29d56b3fadef92627eea6bf52b7a04ecfc72e433415f247c6d3f39d1",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Phú Bình",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-nguyen-2030/13/6507/3595.png",
+          "sha256": "b457184053dae23cc6ba3013e1ce01347ff7f0113ecf1d509bd6436dcd77fffd",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "thanh-hoa",
+      "source_url": "https://guland.vn/soi-quy-hoach/thanh-hoa",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thanh-hoa-2030/{z}/{x}/{y}.png",
+      "samples": 27,
+      "nonempty_samples": 27,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bá Thước",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/thanh-hoa-2030/13/6491/3622.png",
+          "sha256": "847fa9115f6793688c26f0490d8c5b93a1b4c7b0806db8f4c892c501b43ca41e",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cẩm Thủy",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/thanh-hoa-2030/13/6495/3626.png",
+          "sha256": "ea39743ae7e6560debce4c13a643acf5bc8af9dea0544c75c1418848d1112a2a",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "thua-thien-hue",
+      "source_url": "https://guland.vn/soi-quy-hoach/thua-thien-hue",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/thua-thien-hue-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện A Lưới",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/thua-thien-hue-2030/13/6538/3721.png",
+          "sha256": "51537b5e74f5f29fc555e10a11c08c409403d8a1bf69596bc1e70cb66513824e",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Nam Đông",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/thua-thien-hue-2030/13/6546/3724.png",
+          "sha256": "8edc18cb540a268ec23796ee95a769b2e66cc2cd8e4b01b989bd2eb2a50ddb78",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "tien-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/tien-giang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/v2/tien-giang-2030/{z}/{x}/{y}.png",
+      "samples": 11,
+      "nonempty_samples": 11,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cái Bè",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/tien-giang-2030/13/6506/3857.png",
+          "sha256": "be79e389969e0513d40022373337dd5d067d5ba032e576f54e51b74ded8ba446",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cai Lậy",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/tien-giang-2030/13/6509/3858.png",
+          "sha256": "e697ac9ea97156228ac5a57523d14e00dbd7c872299731d0cbc8f99524218c2f",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "tra-vinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/tra-vinh",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tra-vinh-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 12,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Càng Long",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tra-vinh-2030/13/6513/3867.png",
+          "sha256": "acdf891a99f387f7b74c327aa56b1bcc7d93a4b80d4e77d6ac402dad282dec57",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Cầu Kè",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tra-vinh-2030/13/6509/3870.png",
+          "sha256": "b29e5a3ca0e25a601e9acdc5666b2c1ad30074f39b9d5d4605e3e6b1cbea2683",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "tuyen-quang",
+      "source_url": "https://guland.vn/soi-quy-hoach/tuyen-quang",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tuyen-quang-2030/{z}/{x}/{y}.png",
+      "samples": 7,
+      "nonempty_samples": 7,
+      "min_native_zoom": 10,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Chiêm Hóa",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tuyen-quang-2030/13/6491/3578.png",
+          "sha256": "87db8a2cb255c50a7e99ace0e2238d32267b5b4f3a6229c063cd4174fad8c6e4",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hàm Yên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/tuyen-quang-2030/13/6485/3580.png",
+          "sha256": "b91472b3ad9d9d9354a41bc2270dd44ec1b01764cf1fafd4fad4841b4785c11c",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "vinh-long",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-long",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/vinh-long-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 10,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện  Vũng Liêm",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/vinh-long-2030/13/6511/3865.png",
+          "sha256": "1bd6e810356d3fd6f35fee085f34a73b40188f0030f142381967d6817a103c24",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Bình Tân",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/vinh-long-2030/13/6503/3864.png",
+          "sha256": "48af576f12998ec09e7ad28f358066a8b4aeb2f23abc50fe2147df0363295421",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "vinh-phuc",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-phuc",
+      "tile_template": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/vinh-phuc-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Bình Xuyên",
+          "z": 13,
+          "url": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/vinh-phuc-2030/13/6500/3599.png",
+          "sha256": "0ec48cf123aedfc245c87242af6dab96d5994b6e0f9b84b857cf9116c66d6ca8",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Lập Thạch",
+          "z": 13,
+          "url": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/vinh-phuc-2030/13/6496/3597.png",
+          "sha256": "9f0be516f2e86a6abbb3d402a1d3ac1cd39a962c474a450bbd9537eedcd6c02b",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "yen-bai",
+      "source_url": "https://guland.vn/soi-quy-hoach/yen-bai",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/yen-bai-2030/{z}/{x}/{y}.png",
+      "samples": 9,
+      "nonempty_samples": 9,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Lục Yên",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/yen-bai-2030/13/6478/3579.png",
+          "sha256": "dca1ac46817b881fa2df55abbc70279f76bbfb35c2586f40e17103e05f8938a5",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Mù Căng Chải",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/yen-bai-2030/13/6465/3587.png",
+          "sha256": "697bda860c80ae2efd2041d9d82d2a8cf0fe8070f72adabac77119e79d84e967",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "da-nang",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "tile_template": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Hòa Vang",
+          "z": 13,
+          "url": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/13/6552/3725.png",
+          "sha256": "af02fb201c60c6fecccb1b1ca7ae8e6afd26be093af5bc5b22363a27a60f6472",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Hoàng Sa",
+          "z": 13,
+          "url": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/13/6558/3725.png",
+          "sha256": "abaaeeaf404edd77e03e224d7f16b56375dc7cc556460f3ad4d65aca7ffee499",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "dak-lak",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-lak",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dak-lak-2030/{z}/{x}/{y}.png",
+      "samples": 15,
+      "nonempty_samples": 15,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Lắk",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dak-lak-2030/13/6558/3813.png",
+          "sha256": "e9a11401965009a148d55f0601ccbddd6505fa516d878644ae5d17ead18a10e8",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Buôn Đôn",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dak-lak-2030/13/6547/3800.png",
+          "sha256": "ad905cfee9673f49f7e87c545d756bbfc5065874fdd195a7199e10b9e31bae68",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "dak-nong",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-nong",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dak-nong-2030/{z}/{x}/{y}.png",
+      "samples": 8,
+      "nonempty_samples": 8,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cư Jút",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dak-nong-2030/13/6548/3805.png",
+          "sha256": "15b76423ef1fd1f392b575326eb92518ed8cfe327e44c1dfe705ee30a694dec5",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Krông Nô",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dak-nong-2030/13/6549/3812.png",
+          "sha256": "42136725f2b91c82970cb4eb3e49c20a327d18f2b8eddcb6cba7f510d87bd763",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "dien-bien",
+      "source_url": "https://guland.vn/soi-quy-hoach/dien-bien",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dien-bien-2030/{z}/{x}/{y}.png",
+      "samples": 10,
+      "nonempty_samples": 10,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Mường Nhé",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dien-bien-2030/13/6425/3576.png",
+          "sha256": "2f9c7b07c6d7bff028dce63b7e8a6d537df4ab697619e9b1af7d5061c16247c1",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Mường Chà",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dien-bien-2030/13/6443/3586.png",
+          "sha256": "75f195ed50b49b94e5387c4d75e0bf62b9a4fa2e3b9ecf5d59ff6b66e5bbb8db",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    },
+    {
+      "province": "dong-thap",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-thap",
+      "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/dong-thap-2030/{z}/{x}/{y}.png",
+      "samples": 12,
+      "nonempty_samples": 12,
+      "min_native_zoom": 8,
+      "max_native_zoom_sampled": 18,
+      "controls": [
+        {
+          "district": "Huyện Cao Lãnh",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dong-thap-2030/13/6502/3856.png",
+          "sha256": "4581554709560bb62926f2787793d13c10ab59fd6f2e9c698f1af1ae2b5039ad",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        },
+        {
+          "district": "Huyện Châu Thành",
+          "z": 13,
+          "url": "https://r4gmiynxmeobj.vcdn.cloud/dong-thap-2030/13/6503/3862.png",
+          "sha256": "e9205877089026feb143ddab357292c77e0950f3fb41d3e7f44088ccf6b6ce2d",
+          "size": [
+            256,
+            256
+          ],
+          "point_alpha": 255
+        }
+      ],
+      "empty_sample_districts": []
+    }
+  ]
+}

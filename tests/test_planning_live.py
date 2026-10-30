@@ -80,7 +80,7 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert len(native)==3
     assert all(a['manifest']['tile_template'].startswith('/api/planning/gis-tiles/') for a in native)
     reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
-    assert len(reference)==7 and all(a['source']=='guland' for a in reference)
+    assert len(reference)==63 and all(a['source']=='guland' for a in reference)
     assert any(a['area_id']=='dong-nai-expanded' for a in reference)
     assert {'tay-ninh-legacy','long-an-legacy'} <= {a['area_id'] for a in reference}
     vision=[a for a in data['layers'] if a.get('theme')=='urban_vision_100']

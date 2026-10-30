@@ -5,19 +5,19 @@ from pathlib import Path
 
 def test_landuse_sources_cover_hcm_and_new_dong_nai_without_relabeling():
     from config.planning_regions import LANDUSE_2030_LAYERS
-    assert len(LANDUSE_2030_LAYERS) == 7
-    assert len({r['id'] for r in LANDUSE_2030_LAYERS}) == 7
+    assert len(LANDUSE_2030_LAYERS) == 63
+    assert len({r['id'] for r in LANDUSE_2030_LAYERS}) == 63
     for layer in LANDUSE_2030_LAYERS:
         assert layer['theme'] == 'land_use_2030' and layer['source'] == 'guland'
         assert layer['manifest']['source_kind'] == 'guland_reference'
-        assert layer['manifest']['max_native_zoom'] == (18 if layer['area_id'] in {'tay-ninh-legacy','long-an-legacy'} else 17)
+        capped = {'binh-duong-legacy','hcm-legacy','brvt-legacy','con-dao','dong-nai-expanded','bac-giang-legacy','bac-ninh-legacy'}
+        assert layer['manifest']['max_native_zoom'] == (17 if layer['area_id'] in capped else 18)
         assert layer['manifest']['legend_available'] is False
         assert layer['source_url'].startswith('https://guland.vn/')
         visible = [layer['decision'], layer['manifest']['notice']]
         assert all('guland' not in text.lower() for text in visible)
         assert '>Nguồn dữ liệu QH 2030<' in layer['manifest']['attribution']
-    assert {a['area_id'] for a in LANDUSE_2030_LAYERS} == {
-        'binh-duong-legacy','hcm-legacy','brvt-legacy','con-dao','dong-nai-expanded','tay-ninh-legacy','long-an-legacy'}
+    assert {'binh-duong-legacy','hcm-legacy','brvt-legacy','con-dao','dong-nai-expanded','tay-ninh-legacy','long-an-legacy'} <= {a['area_id'] for a in LANDUSE_2030_LAYERS}
     config = json.loads((Path(__file__).resolve().parents[1]/'config/planning_landuse_2030.json').read_text(encoding='utf8'))
     assert config['layers'] == list(LANDUSE_2030_LAYERS)
 
