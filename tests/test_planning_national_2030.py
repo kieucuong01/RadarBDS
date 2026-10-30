@@ -56,3 +56,13 @@ def test_browser_navigation_omits_unused_shape_audit_fields():
     assert [p['id'] for p in LANDUSE_PUBLIC_AREAS] == [p['id'] for p in LANDUSE_AREAS]
     assert all(set(d)=={'id','name','bounds'} for p in LANDUSE_PUBLIC_AREAS for d in p['districts'])
     assert any('source_shape_id' in d for p in LANDUSE_AREAS for d in p['districts'])
+
+
+def test_province_opening_centre_intersects_an_enabled_provider_not_empty_sea():
+    from config.planning_regions import LANDUSE_AREAS, LANDUSE_2030_LAYERS
+    layers = {layer['id']:layer for layer in LANDUSE_2030_LAYERS}
+    for p in LANDUSE_AREAS:
+        b=p.get('focus_bounds',p['bounds']);lat=(b[0][0]+b[1][0])/2;lng=(b[0][1]+b[1][1])/2
+        assert any(layers[i]['manifest']['bounds'][0][0] <= lat <= layers[i]['manifest']['bounds'][1][0]
+                   and layers[i]['manifest']['bounds'][0][1] <= lng <= layers[i]['manifest']['bounds'][1][1]
+                   for i in p['layer_ids']),p['id']

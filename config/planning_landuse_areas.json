@@ -523,6 +523,7 @@
       "id": "brvt",
       "name": "Bà Rịa–Vũng Tàu",
       "region_id": "brvt-legacy",
+      "focus_bounds": [[10.3, 107.0], [10.9, 107.65]],
       "layer_ids": [
         "brvt-land-use-2030-guland",
         "con-dao-land-use-2030-guland"

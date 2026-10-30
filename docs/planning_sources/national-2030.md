@@ -43,6 +43,8 @@ marked `verified_source_coordinate_window`. These are navigation aids, not
 administrative or cadastral masks. District/city names with identical short
 names retain their type to distinguish them. Province overview focuses the
 largest mainland polygon; outlying island districts retain separate windows.
+Former BRVT uses its verified mainland provider extent for the initial focus,
+so the province/island union cannot centre the opening view in the empty sea.
 
 Only the chosen former province's allowlisted provider IDs are eligible.
 Combined sources such as Bắc Giang/Bắc Ninh and Đồng Nai/Bình Phước do not
