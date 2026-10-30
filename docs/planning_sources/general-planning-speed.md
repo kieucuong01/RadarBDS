@@ -66,3 +66,43 @@ console errors. Runtime tests cover source completion order, gateway fallback,
 wrong image size, both timeouts, unload cancellation and stale callbacks.
 Python checks cover expanded general bounds, source identity and cache byte and
 entry caps. Public cache privacy regression checks remain part of validation.
+
+
+## Interactive Maps audit (2026-10-30)
+
+The browser audit exercised partition, general, detailed, land-use 2030,
+100-year draft, transport and administrative layers at the same expanded HCM
+viewport, then checked zoom/pan, street/satellite and parcel interactions.
+These are individual observed browser runs, not latency percentiles or proof
+of complete geographic coverage. Raw network observations stay ignored under
+`.local/maps-performance-20261030/`.
+
+The reproducible bottleneck was recreating successful native composites after
+an off/on toggle: the same nine partition cells issued 18 direct source image
+requests and three gateway requests (645 ms request window). Some source cells
+were rejected as non-images by the browser, so HTTP caching alone still repeated
+the failure and fallback. The same nine cells now reuse their completed composite
+with zero tile requests while fresh. Coordinates, source order and the selected
+opacity remain unchanged.
+
+A window-scoped LRU retains up to 64 completed 256px canvases (16 MiB pixel
+storage) for three minutes from successful completion. Keys include both exact
+source templates, gateway template and z/x/y. Errors and cancelled/incomplete
+requests are never cached; a deferred cache-hit callback still respects Leaflet
+registration and unload cancellation. Decoded image references and completed
+cancellation closures are released. The four-active-tile queue, source timeouts,
+gateway validation, server cache bounds and private API headers are retained.
+
+Administrative polygons now remain in their layer while visible and unchanged.
+A full-resolution ward response replaces only that ward, without recreating
+all visible polygons or label DOM. Labels are recalculated on settled map moves;
+offscreen polygons are removed. The controlled 168-unit runtime check changed
+an unchanged-viewport move from 168 recreated polygons to zero, and one detail
+response from 168 recreations to one. Detail downloads retain the shared
+four-request cap and current-viewport queue.
+
+The audit also found source-dependent cold-load limits: one detailed-plan run
+needed about 18 seconds including gateway attempts. Successful composite reuse
+helps subsequent visits; it does not make unavailable or uncached upstream
+exports immediate. No missing-source cell is replaced with another planning
+family, no coverage window is reduced, and all source/PDF alternatives remain.

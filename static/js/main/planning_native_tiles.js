@@ -5,7 +5,14 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
   var emptyImage = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-  var pools = new WeakMap();
+  var pools = new WeakMap(), completed = new WeakMap();
+  // 64 RGBA tiles use at most 16 MiB of pixel storage per window. Source changes
+  // and coordinates have independent keys; failed/incomplete tiles never enter it.
+  function tileCache(env) {
+    var entries = completed.get(env);
+    if (!entries) { entries = new Map(); completed.set(env, entries); }
+    return entries;
+  }
   function schedule(env, start) {
     var pool = pools.get(env);
     if (!pool) { pool = {active:0, queue:[]}; pools.set(env, pool); }
@@ -37,21 +44,38 @@
         tile.setAttribute('role', 'presentation');
         var context = tile.getContext('2d'), images = [], stopped = false, settled = false, fallback = false, timer, release;
         var foreground, background;
+        var entries = tileCache(env), clock = env.Date || Date;
+        var key = JSON.stringify([manifest.tile_template, manifest.source_tiles.primary, manifest.source_tiles.supplement, coords.z, coords.x, coords.y]);
         function clearImages() {
           images.forEach(function (img) { img.onload = img.onerror = null; img.src = emptyImage; });
-          images = [];
+          images = []; foreground = background = null;
         }
         function finish(error, transport) {
           if (stopped || settled) return;
           settled = true; pending.delete(tile);
           env.clearTimeout(timer);
           tile.setAttribute('data-planning-transport', error ? 'error' : transport);
-          clearImages(); if (release) release(); done(error || null, tile);
+          if (!error && transport !== 'memory') {
+            var now = clock.now();
+            entries.forEach(function (entry, id) { if (entry.expires <= now) entries.delete(id); });
+            entries.delete(key); entries.set(key, {tile:tile, expires:now + 180000});
+            while (entries.size > 64) entries.delete(entries.keys().next().value);
+          }
+          clearImages(); delete tile.cancelPlanningLoad;
+          if (release) release(); done(error || null, tile);
         }
         tile.cancelPlanningLoad = function () {
           stopped = true; pending.delete(tile); env.clearTimeout(timer); clearImages(); if (release) release();
         };
         pending.add(tile);
+        var cached = entries.get(key);
+        if (cached && cached.expires > clock.now() && context) {
+          entries.delete(key); entries.set(key, cached);
+          context.drawImage(cached.tile, 0, 0);
+          timer = env.setTimeout(function () { finish(null, 'memory'); }, 0);
+          return tile;
+        }
+        if (cached) entries.delete(key);
         function load(template, success, failure) {
           var img = env.document.createElement('img'); images.push(img);
           img.alt = ''; img.decoding = 'async';

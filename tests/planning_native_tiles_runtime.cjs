@@ -5,14 +5,14 @@ function harness() {
   const doc={createElement(tag){
     if(tag==='img') {const img={naturalWidth:256,naturalHeight:256};images.push(img);return img;}
     return {attrs:{},setAttribute(k,v){this.attrs[k]=v;},getContext(){return {
-      clearRect(){draws.length=0;},drawImage(img){draws.push(img.src);}};}};
+      clearRect(){draws.length=0;},drawImage(img){draws.push(img.src || img);}};}};
   }};
   class Grid {constructor(options){this.options=options;this.events={};}on(k,fn){this.events[k]=fn;}}
   Grid.extend=methods=>{class Derived extends Grid {}Object.assign(Derived.prototype,methods);return Derived;};
   const manifest={tile_template:'/api/planning/gis-tiles/urban_general/{z}/{x}/{y}.png',
     source_tiles:{primary:'https://source/primary/{z}/{y}/{x}',supplement:'https://source/supplement/{z}/{y}/{x}'}};
   const timers=new Map();let seq=0;
-  const env={document:doc,setTimeout(fn,ms){timers.set(++seq,{fn,ms});return seq;},clearTimeout(id){timers.delete(id);}};
+  const env={Date:{now:()=>env.now},now:0,document:doc,setTimeout(fn,ms){timers.set(++seq,{fn,ms});return seq;},clearTimeout(id){timers.delete(id);}};
   const layer=api.create({GridLayer:Grid},env,manifest,{opacity:.35});
   const tile=layer.createTile({z:15,x:42,y:84},(err,tile)=>results.push({err,tile}));
   return {layer,tile,images,draws,results,timers,env,manifest,L:{GridLayer:Grid}};
@@ -71,4 +71,38 @@ function harness() {
  assert.equal(h.timers.size,4);
  h.layer.events.remove();assert.equal(h.timers.size,0);
 }
-console.log('Native planning tiles: direct composite, gateway fallback, unload and stale callbacks passed');
+{
+ const h=harness();h.images[0].onerror();h.images[2].onload();
+ const next=api.create(h.L,h.env,h.manifest,{opacity:.65});
+ const warm=next.createTile({z:15,x:42,y:84},(err,tile)=>h.results.push({err,tile}));
+ assert.equal(h.images.length,3,'A successful gateway composite is reused without repeating failed source requests');
+ assert.equal(h.results.length,1,'Leaflet must register the tile before its completion callback');
+ [...h.timers.values()][0].fn();assert.equal(h.results.length,2);
+ assert.equal(warm.attrs['data-planning-transport'],'memory');assert.equal(h.draws.at(-1),h.tile);
+ assert.equal(next.options.opacity,.65,'Cached pixels do not bake in the previous layer opacity');
+ const changed={...h.manifest,source_tiles:{...h.manifest.source_tiles,primary:'https://other/{z}/{x}/{y}'}};
+ api.create(h.L,h.env,changed,{}).createTile({z:15,x:42,y:84},()=>{});
+ assert.equal(h.images.length,5,'Different source identities cannot share composites');
+ next.events.remove();
+}
+{
+ const h=harness();h.images[0].onload();h.images[1].onload();
+ const next=api.create(h.L,h.env,h.manifest,{});
+ const warm=next.createTile({z:15,x:42,y:84},()=>assert.fail('Cancelled cache hit must not finish'));
+ const late=[...h.timers.values()][0].fn;next.events.tileunload({tile:warm});late();
+ h.env.now=180001;next.createTile({z:15,x:42,y:84},()=>{});
+ assert.equal(h.images.length,4,'Expired composites must reload');next.events.remove();
+}
+{
+ const h=harness();h.images[0].onerror();h.images[2].onerror();
+ h.layer.createTile({z:15,x:42,y:84},()=>{});assert.equal(h.images.length,5,'Failures remain retryable');h.layer.events.remove();
+}
+{
+ const h=harness();h.images[0].onload();h.images[1].onload();
+ for(let x=0;x<64;x++){
+  const at=h.images.length;h.layer.createTile({z:15,x,y:85},()=>{});h.images[at].onload();h.images[at+1].onload();
+ }
+ const at=h.images.length;h.layer.createTile({z:15,x:42,y:84},()=>{});
+ assert.equal(h.images.length,at+2,'Only 64 completed composites are retained across layers');h.layer.events.remove();
+}
+console.log('Native planning tiles: composite reuse, bounded expiry, source isolation, fallback and cancellation passed');

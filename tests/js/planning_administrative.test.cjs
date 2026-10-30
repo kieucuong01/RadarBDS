@@ -18,8 +18,8 @@ function harness(){
   getBounds:()=>({intersects:b=>viewport[0][0]<=b[1][0]&&viewport[1][0]>=b[0][0]&&viewport[0][1]<=b[1][1]&&viewport[1][1]>=b[0][1]}),
   on(k,fn){handlers.add(fn);},off(k,fn){handlers.delete(fn);}};
  function group(children=[]){const events=new Map();return {children,options:{},on(k,fn){if(!events.has(k))events.set(k,[]);events.get(k).push(fn);return this;},
-  fire(k){for(const fn of events.get(k)||[])fn();return this;},clearLayers(){this.children=[];},addLayer(x){this.children.push(x);},eachLayer(fn){this.children.forEach(fn);}};}
- const L={layerGroup:group,geoJSON(_,opts){return {...group(),opts,addData(f){this.children.push(f);},setStyle(s){this.style=s;}};},
+  fire(k){for(const fn of events.get(k)||[])fn();return this;},clearLayers(){this.children=[];},addLayer(x){this.children.push(x);},getLayers(){return this.children.slice();},removeLayer(x){this.children=this.children.filter(c=>c!==x);},eachLayer(fn){this.children.forEach(fn);}};}
+ const L={layerGroup:group,geoJSON(_,opts){return {...group(),opts,drawCount:0,addData(f){this.drawCount++;this.children.push(f);},setStyle(s){this.style=s;}};},
   divIcon:x=>x,marker(point,opts){return {point,opts,setOpacity(v){this.opts.opacity=v;},addTo(target){target.addLayer(this);return this;}};}};
  const env={document:{createElement:()=>({style:{},textContent:''})},fetch(url){calls.push(url);return new Promise(resolve=>requests.push({url,resolve}));}};
  const create=()=>api.create(map,L,env,{}, {opacity:1,attribution:'GIS'});
@@ -47,4 +47,19 @@ test('detail requests are bounded and a viewport move replaces queued wards',asy
  const request=newRequests[0];h.deliver(request,JSON.parse(fs.readFileSync(path.join(directory,'26732.json'),'utf8')));await flush();
  assert(replacement.children[0].children.every(f=>f.properties.name==='Đặc khu Côn Đảo'));
  replacement.fire('remove');assert.equal(h.handlers.size,0);
+});
+test('panning retains unchanged polygons and one detail response replaces only its own geometry',async()=>{
+ const h=harness(),root=h.create();root.fire('add');h.deliver(h.requests[0],overview);await flush();
+ const areas=root.children[0],labels=root.children[1],before=areas.children.slice(),count=areas.drawCount;
+ h.move([[8.5,106.25],[11.65,107.75]],10);
+ assert.equal(areas.drawCount,count,'A settled move with the same visible wards must not recreate polygons');
+ assert.deepEqual(areas.children,before);
+ h.move([[8.5,106.25],[11.65,107.75]],13);const label=labels.children[0];
+ const request=h.requests[1],code=request.url.match(/\/(\d{5})\.json/)[1];
+ h.deliver(request,JSON.parse(fs.readFileSync(path.join(directory,code+'.json'),'utf8')));await flush();
+ assert.equal(areas.drawCount,count+1,'Only the arriving detail geometry is painted');
+ assert.equal(labels.children[0],label,'Detail downloads must not recreate label DOM');
+ assert.equal(areas.children.length,168);
+ h.move([[8.63,106.53],[8.77,106.75]],10);
+ assert(areas.children.every(f=>f.properties.code==='26732'),'Offscreen polygons are removed');root.fire('remove');
 });
