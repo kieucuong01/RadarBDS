@@ -12,8 +12,10 @@ Only its allowlisted land-use providers are eligible. Other planning themes,
 parcel lookup and their sources remain independent. The picker works before
 the parcel catalogue finishes loading.
 
-The five supported former provinces have 61 navigation districts: Bình Dương
-9, TP.HCM 22, BRVT 8, Đồng Nai 11, Bình Phước 11. Provider readiness controls
+The seven supported former provinces have 85 navigation districts: Bình Dương
+9, TP.HCM 22, BRVT 8, Đồng Nai 11, Bình Phước 11, Tây Ninh 9 and Long An 15.
+The last two cover Tây Ninh mới; see [2030 source evidence](tay-ninh-2030.md).
+Provider readiness controls
 the province list. Côn Đảo is a district of former BRVT. Đồng Nai and Bình Phước
 share one source template, so changing between them recreates that layer with
 the selected province's existing coverage window, preserving opacity. No whole

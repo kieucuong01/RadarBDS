@@ -4,6 +4,8 @@ Current selection behavior (2026-10-30): [historic province/district picker](his
 supersedes the combined-region menu and all-provider eligibility described below.
 The default is Bình Dương / Thủ Dầu Một and only the selected province's 2030
 providers load, even after zooming out or panning.
+Former Tây Ninh and Long An are also supported for Tây Ninh mới; see
+[the 2026-10-30 source audit](tay-ninh-2030.md).
 
 Checked on 2026-10-28. The public Guland map exposes a distinct `QH 2030`
 button whose `data-name` is `Quy hoạch sử dụng đất 2030`. This family is not

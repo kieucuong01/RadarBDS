@@ -26,13 +26,14 @@
       && data.geojson_url === '/static/data/planning_transport_roads.geojson?v=transport-gis-20261029'
       && validBounds(data.bounds,[10,105,12.3,108]) && typeof data.title === 'string' && typeof data.notice === 'string';
     var referenceRaster = data.source_kind === 'guland_reference';
-    var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-(?:brvt|dong-nai)\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
+    var referenceTemplate = /^https:\/\/(?:r4gmiynxmeobj\.vcdn\.cloud\/(?:binh-duong|tp-ho-chi-minh|tay-ninh|long-an)-2030|s3\.hn-1\.cloud\.cmctelecom\.vn\/guland9\/qh-(?:brvt|dong-nai)\/sdd)\/\{z\}\/\{x\}\/\{y\}\.png$/;
+    var tayNinh2030 = referenceRaster && /^https:\/\/r4gmiynxmeobj\.vcdn\.cloud\/(?:tay-ninh|long-an)-2030\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || '');
     var vision100 = referenceRaster && data.tile_template === 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png';
     var transport = referenceRaster && transportTemplate(data.tile_template);
     if (vision100 && data.planning_status !== 'draft') return false;
     var dongNai2030 = referenceRaster && data.tile_template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png';
     if (data.render_mode !== undefined && (data.render_mode !== 'xyz'
-        || !(referenceRaster ? (transport ? data.max_native_zoom === transport : vision100 ? data.max_native_zoom === 19 : referenceTemplate.test(data.tile_template || '') && data.max_native_zoom === 17)
+        || !(referenceRaster ? (transport ? data.max_native_zoom === transport : vision100 ? data.max_native_zoom === 19 : referenceTemplate.test(data.tile_template || '') && data.max_native_zoom === (tayNinh2030 ? 18 : 17))
           : /^\/(local-planning|api\/planning)\/gis-tiles\/(partition|urban_general|detailed)\/\{z\}\/\{x\}\/\{y\}\.png$/.test(data.tile_template || ''))
         || data.tile_size !== 256 || data.min_zoom !== 8 || data.max_zoom !== 23)) return false;
     if (referenceRaster && data.render_mode !== 'xyz') return false;
@@ -48,7 +49,7 @@
     }
     var b = data.bounds;
     var expanded = data.render_mode === 'xyz';
-    var limits = transport ? [10.35,106.35,11.2,107.05] : vision100 ? [10.3,106.25,11.65,107.65] : dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
+    var limits = tayNinh2030 ? [10.25,105.45,11.85,106.85] : transport ? [10.35,106.35,11.2,107.05] : vision100 ? [10.3,106.25,11.65,107.65] : dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
     if (!validBounds(b, limits)) return false;
     if (data.min_native_zoom !== undefined && (!(dongNai2030 || vision100 || transport) || data.min_native_zoom !== (transport ? 12 : vision100 ? 10 : 9))) return false;
     if (transport && data.min_native_zoom !== 12) return false;

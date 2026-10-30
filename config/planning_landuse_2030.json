@@ -1,5 +1,5 @@
 {
-  "source_checked_on": "2026-10-28",
+  "source_checked_on": "2026-10-30",
   "layers": [
     {
       "id": "binh-duong-land-use-2030-guland",
@@ -139,6 +139,84 @@
         "min_native_zoom": 9
       },
       "source_checked_on": "2026-10-29"
+    },
+    {
+      "id": "tay-ninh-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Tây Ninh (cũ)",
+      "city": "Tây Ninh (cũ)",
+      "scope": "region",
+      "area_id": "tay-ninh-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tay-ninh",
+      "manifest": {
+        "id": "tay-ninh-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Tây Ninh (cũ)",
+        "bounds": [
+          [
+            10.962,
+            105.809
+          ],
+          [
+            11.78,
+            106.493
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/tay-ninh-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "Lớp QH SDĐ 2030 tham khảo · Tây Ninh cũ, thuộc Tây Ninh mới. Tải theo vùng nhìn, ảnh gốc tới zoom 18. Chưa xác minh phủ kín, hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính; ô trống không có nghĩa không có quy hoạch."
+      }
+    },
+    {
+      "id": "long-an-land-use-2030-reference",
+      "name": "Sử dụng đất 2030 · Long An (cũ)",
+      "city": "Long An (cũ)",
+      "scope": "region",
+      "area_id": "long-an-legacy",
+      "theme": "land_use_2030",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp sử dụng đất 2030; chưa đối chiếu hồ sơ phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/long-an",
+      "manifest": {
+        "id": "long-an-land-use-2030-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch sử dụng đất 2030 · Long An (cũ)",
+        "bounds": [
+          [
+            10.395,
+            105.498
+          ],
+          [
+            11.032,
+            106.749
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "max_native_zoom": 18,
+        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
+        "notice": "Lớp QH SDĐ 2030 tham khảo · Long An cũ, thuộc Tây Ninh mới. Tải theo vùng nhìn, ảnh gốc tới zoom 18. Chưa xác minh phủ kín, hồ sơ phê duyệt, điều chỉnh hoặc độ chính xác địa chính; ô trống không có nghĩa không có quy hoạch."
+      }
     }
   ]
 }

@@ -5,19 +5,19 @@ from pathlib import Path
 
 def test_landuse_sources_cover_hcm_and_new_dong_nai_without_relabeling():
     from config.planning_regions import LANDUSE_2030_LAYERS
-    assert len(LANDUSE_2030_LAYERS) == 5
-    assert len({r['id'] for r in LANDUSE_2030_LAYERS}) == 5
+    assert len(LANDUSE_2030_LAYERS) == 7
+    assert len({r['id'] for r in LANDUSE_2030_LAYERS}) == 7
     for layer in LANDUSE_2030_LAYERS:
         assert layer['theme'] == 'land_use_2030' and layer['source'] == 'guland'
         assert layer['manifest']['source_kind'] == 'guland_reference'
-        assert layer['manifest']['max_native_zoom'] == 17
+        assert layer['manifest']['max_native_zoom'] == (18 if layer['area_id'] in {'tay-ninh-legacy','long-an-legacy'} else 17)
         assert layer['manifest']['legend_available'] is False
         assert layer['source_url'].startswith('https://guland.vn/')
         visible = [layer['decision'], layer['manifest']['notice']]
         assert all('guland' not in text.lower() for text in visible)
         assert '>Nguồn dữ liệu QH 2030<' in layer['manifest']['attribution']
     assert {a['area_id'] for a in LANDUSE_2030_LAYERS} == {
-        'binh-duong-legacy','hcm-legacy','brvt-legacy','con-dao','dong-nai-expanded'}
+        'binh-duong-legacy','hcm-legacy','brvt-legacy','con-dao','dong-nai-expanded','tay-ninh-legacy','long-an-legacy'}
     config = json.loads((Path(__file__).resolve().parents[1]/'config/planning_landuse_2030.json').read_text(encoding='utf8'))
     assert config['layers'] == list(LANDUSE_2030_LAYERS)
 
@@ -54,3 +54,20 @@ def test_hcm_reference_window_covers_source_wards_without_loading_empty_northern
     # while viewing Bến Cát even though all historic HCM wards are south of it.
     _,tile_south,_,_ = tile_bounds(12,3261,1919)
     assert north < math.degrees(math.atan(math.sinh(tile_south/6378137)))
+
+
+def test_new_tay_ninh_sources_keep_two_former_provinces_separate_and_native_zoom_18():
+    from config.planning_regions import LANDUSE_2030_LAYERS, LANDUSE_AREAS, PLANNING_REGIONS
+    for province, count in [('tay-ninh',9),('long-an',15)]:
+        area = next(p for p in LANDUSE_AREAS if p['id']==province)
+        layer = next(p for p in LANDUSE_2030_LAYERS if p['area_id']==province+'-legacy')
+        manifest = layer['manifest']
+        assert len(area['districts']) == count
+        assert manifest['tile_template'] == f'https://r4gmiynxmeobj.vcdn.cloud/{province}-2030/{{z}}/{{x}}/{{y}}.png'
+        assert manifest['min_zoom']==8 and manifest['max_native_zoom']==18
+        assert manifest['max_zoom']==23 and manifest['tile_size']==256
+        assert next(r for r in PLANNING_REGIONS if r['id']==province+'-legacy')['bounds'] == manifest['bounds']
+        for district in area['districts']:
+            (s,w),(n,e) = district['bounds']
+            assert manifest['bounds'][0][0]<=s<n<=manifest['bounds'][1][0]
+            assert manifest['bounds'][0][1]<=w<e<=manifest['bounds'][1][1]

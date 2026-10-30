@@ -1078,6 +1078,430 @@
           107.43
         ]
       ]
+    },
+    {
+      "id": "tay-ninh",
+      "name": "Tây Ninh",
+      "region_id": "tay-ninh-legacy",
+      "layer_ids": [
+        "tay-ninh-land-use-2030-reference"
+      ],
+      "bounds": [
+        [
+          10.962521,
+          105.809912
+        ],
+        [
+          11.77963,
+          106.492408
+        ]
+      ],
+      "districts": [
+        {
+          "id": "711",
+          "name": "Bến Cầu",
+          "bounds": [
+            [
+              11.052265,
+              106.014455
+            ],
+            [
+              11.206865,
+              106.26939
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B61263365113672"
+        },
+        {
+          "id": "708",
+          "name": "Châu Thành",
+          "bounds": [
+            [
+              11.179023,
+              105.862896
+            ],
+            [
+              11.453327,
+              106.149137
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B30323481145094"
+        },
+        {
+          "id": "707",
+          "name": "Dương Minh Châu",
+          "bounds": [
+            [
+              11.188458,
+              106.138476
+            ],
+            [
+              11.471364,
+              106.364127
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B96522155706340"
+        },
+        {
+          "id": "710",
+          "name": "Gò Dầu",
+          "bounds": [
+            [
+              11.047275,
+              106.138673
+            ],
+            [
+              11.272838,
+              106.355331
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B39580963826669"
+        },
+        {
+          "id": "709",
+          "name": "Hòa Thành",
+          "bounds": [
+            [
+              11.210159,
+              106.088063
+            ],
+            [
+              11.305243,
+              106.207301
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B16996300923424"
+        },
+        {
+          "id": "705",
+          "name": "Tân Biên",
+          "bounds": [
+            [
+              11.392574,
+              105.809912
+            ],
+            [
+              11.77963,
+              106.123078
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B37342354446447"
+        },
+        {
+          "id": "706",
+          "name": "Tân Châu",
+          "bounds": [
+            [
+              11.406341,
+              106.104392
+            ],
+            [
+              11.753259,
+              106.492408
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B68440719308655"
+        },
+        {
+          "id": "712",
+          "name": "Trảng Bàng",
+          "bounds": [
+            [
+              10.962521,
+              106.163565
+            ],
+            [
+              11.246801,
+              106.447638
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B3309919066987"
+        },
+        {
+          "id": "703",
+          "name": "Tây Ninh",
+          "bounds": [
+            [
+              11.292102,
+              106.07175
+            ],
+            [
+              11.439045,
+              106.191983
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B48058598464830"
+        }
+      ]
+    },
+    {
+      "id": "long-an",
+      "name": "Long An",
+      "region_id": "long-an-legacy",
+      "layer_ids": [
+        "long-an-land-use-2030-reference"
+      ],
+      "bounds": [
+        [
+          10.395415,
+          105.498243
+        ],
+        [
+          11.031806,
+          106.748363
+        ]
+      ],
+      "districts": [
+        {
+          "id": "tan-an",
+          "name": "Tân An",
+          "bounds": [
+            [
+              10.476164,
+              106.347068
+            ],
+            [
+              10.57569,
+              106.460646
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B36271966780528"
+        },
+        {
+          "id": "kien-tuong",
+          "name": "Kiến Tường",
+          "bounds": [
+            [
+              10.686285,
+              105.817574
+            ],
+            [
+              10.917543,
+              106.005706
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B15581259777878"
+        },
+        {
+          "id": "ben-luc",
+          "name": "Bến Lức",
+          "bounds": [
+            [
+              10.589444,
+              106.326108
+            ],
+            [
+              10.798048,
+              106.560134
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B50864428315087"
+        },
+        {
+          "id": "can-duoc",
+          "name": "Cần Đước",
+          "bounds": [
+            [
+              10.436356,
+              106.482904
+            ],
+            [
+              10.640686,
+              106.739522
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B37514703849012"
+        },
+        {
+          "id": "can-giuoc",
+          "name": "Cần Giuộc",
+          "bounds": [
+            [
+              10.496776,
+              106.541524
+            ],
+            [
+              10.658183,
+              106.748363
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B44556348511886"
+        },
+        {
+          "id": "chau-thanh",
+          "name": "Châu Thành",
+          "bounds": [
+            [
+              10.395415,
+              106.414581
+            ],
+            [
+              10.531927,
+              106.589049
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B81408558281677"
+        },
+        {
+          "id": "duc-hoa",
+          "name": "Đức Hòa",
+          "bounds": [
+            [
+              10.740895,
+              106.2702
+            ],
+            [
+              11.026342,
+              106.534745
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B22890149890322"
+        },
+        {
+          "id": "duc-hue",
+          "name": "Đức Huệ",
+          "bounds": [
+            [
+              10.742941,
+              106.137662
+            ],
+            [
+              10.987143,
+              106.3926
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B23772600550478"
+        },
+        {
+          "id": "moc-hoa",
+          "name": "Mộc Hóa",
+          "bounds": [
+            [
+              10.652459,
+              105.921602
+            ],
+            [
+              10.860893,
+              106.117373
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B7527818717712"
+        },
+        {
+          "id": "tan-hung",
+          "name": "Tân Hưng",
+          "bounds": [
+            [
+              10.653724,
+              105.498243
+            ],
+            [
+              10.980564,
+              105.819841
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B65804618727956"
+        },
+        {
+          "id": "tan-thanh",
+          "name": "Tân Thạnh",
+          "bounds": [
+            [
+              10.522866,
+              105.804774
+            ],
+            [
+              10.732594,
+              106.102568
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B33329086183777"
+        },
+        {
+          "id": "tan-tru",
+          "name": "Tân Trụ",
+          "bounds": [
+            [
+              10.460316,
+              106.438378
+            ],
+            [
+              10.59762,
+              106.568849
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B79980761269040"
+        },
+        {
+          "id": "thanh-hoa",
+          "name": "Thạnh Hóa",
+          "bounds": [
+            [
+              10.57544,
+              106.039483
+            ],
+            [
+              10.810427,
+              106.335264
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B63095135263844"
+        },
+        {
+          "id": "thu-thua",
+          "name": "Thủ Thừa",
+          "bounds": [
+            [
+              10.543408,
+              106.230292
+            ],
+            [
+              10.777988,
+              106.446627
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B60662496728573"
+        },
+        {
+          "id": "vinh-hung",
+          "name": "Vĩnh Hưng",
+          "bounds": [
+            [
+              10.72949,
+              105.63571
+            ],
+            [
+              11.031806,
+              105.900283
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B51272444346298"
+        }
+      ]
     }
   ]
 }

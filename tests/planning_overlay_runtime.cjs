@@ -306,6 +306,17 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   isolated.nodes.find(n=>n.tag==='form').events.submit({preventDefault(){}});
   assert.equal(isolated.layers.size,2,'Only mainland BRVT and Con Dao are eligible for that historic province');
   assert([...isolated.layers].every(l=>l.url.includes('/qh-brvt/sdd/')));isolated.dispose();
+  const western=harness(undefined,undefined,[[10.25,105.45],[11.85,106.85]],'land_use_2030',{initialRegion:'tay-ninh-legacy'},areaEnv);
+  western.deliver({layers:landuse});await flush();assert.equal(western.layers.size,1);
+  const tnTile=[...western.layers][0];assert(tnTile.url.includes('/tay-ninh-2030/'));assert.equal(tnTile.options.maxNativeZoom,18);
+  const westernProvince=western.nodes.find(n=>n.attributes['aria-label']==='Tỉnh/TP (Cũ)');westernProvince.value='long-an';westernProvince.events.change();
+  western.nodes.find(n=>n.tag==='form').events.submit({preventDefault(){}});
+  assert.equal(western.layers.size,1);assert([...western.layers][0].url.includes('/long-an-2030/'));assert(!western.layers.has(tnTile));
+  for(const item of landuse.filter(i=>['tay-ninh-legacy','long-an-legacy'].includes(i.area_id))){
+    assert(api.validManifest(item.manifest));assert(!api.validManifest({...item.manifest,max_native_zoom:19}));
+    assert(!api.validManifest({...item.manifest,tile_template:item.manifest.tile_template.replace('vcdn.cloud','vcdn.cloud.evil.invalid')}));
+  }
+  assert(!api.validManifest({...landuse[0].manifest,bounds:tnTile.options.bounds}),'Existing HCM/BD sources cannot gain western coverage');western.dispose();
   const dnh=harness(undefined,undefined,[[10.93,107.23],[10.94,107.24]],'land_use_2030',{initialRegion:'dong-nai-legacy'},areaEnv);
   dnh.deliver({layers:landuse});await flush();assert.equal(dnh.layers.size,1);
   const dnTile=[...dnh.layers][0];assert(dnTile.url.includes('/qh-dong-nai/sdd/'));

@@ -20,6 +20,12 @@ DONG_NAI_EXPANDED_BOUNDS = [[10.49, 106.39], [12.33, 107.60]]
 PLANNING_BOUNDS = {'partition': HCM_EXPANDED_BOUNDS, 'urban_general': HCM_EXPANDED_BOUNDS,
                    'detailed': HCM_EXPANDED_BOUNDS}
 PLANNING_REGIONS = [
+    {'id':'tay-ninh-legacy','name':'Tây Ninh (cũ)',
+     'bounds':[[10.962,105.809],[11.780,106.493]],'max_zoom':11,
+     'notice':'Tây Ninh cũ: QH SDĐ 2030 tham khảo; ranh thửa chưa tích hợp cho khu vực này.'},
+    {'id':'long-an-legacy','name':'Long An (cũ)',
+     'bounds':[[10.395,105.498],[11.032,106.749]],'max_zoom':11,
+     'notice':'Long An cũ, thuộc Tây Ninh mới: QH SDĐ 2030 tham khảo; ranh thửa chưa tích hợp cho khu vực này.'},
     {'id': 'dong-nai-expanded', 'name': 'Đồng Nai mới (gồm Bình Phước cũ)',
      'bounds': DONG_NAI_EXPANDED_BOUNDS, 'max_zoom': 10,
      'notice': 'Đồng Nai mới: bật QH 2030 để xem dữ liệu Đồng Nai và Bình Phước cũ. Ranh thửa chưa được tích hợp cho địa bàn này.'},
