@@ -133,6 +133,9 @@
     var disposed = false;
     var manifest = null;
     var catalog = [];
+    var provinces = Array.isArray(env.RADAR_LANDUSE_AREAS) ? env.RADAR_LANDUSE_AREAS : [];
+    var selectedArea = options.initialArea || (env.RadarPlanningArea && env.RadarPlanningArea.initial(provinces, options.initialRegion));
+    var selectedProvince = provinces.find(function(p){return p.id === (selectedArea ? selectedArea.province : 'binh-duong');});
     var themes = [
       {id: 'land_use_2030', name: 'quy hoạch sử dụng đất 2030', title: 'Quy hoạch sử dụng đất 2030', short: 'QH SDĐ 2030'},
       {id: 'urban_general', name: 'quy hoạch chung đô thị', title: 'Quy hoạch chung đô thị', short: 'QH Chung'},
@@ -165,12 +168,27 @@
     map.getContainer().appendChild(ui.root);
     var toolbar = node('div', ui.root); toolbar.className = 'planning-map-toolbar';
     toolbar.setAttribute('aria-label', 'Công cụ quy hoạch');
+    var filterSlot = node('div', toolbar);
     ui.areaSlot = node('div', toolbar); ui.parcelSlot = node('div', toolbar);
     if (typeof options.onToggleFilters === 'function') {
-      var filterButton = node('button', ui.areaSlot, 'Bộ lọc');
+      var filterButton = node('button', filterSlot, 'Bộ lọc');
       filterButton.type = 'button'; filterButton.className = 'planning-filter-button';
       filterButton.addEventListener('click', options.onToggleFilters);
     }
+    if (selectedArea && env.RadarPlanningArea) env.RadarPlanningArea.mount(env, ui, provinces, selectedArea, function(province, area){
+      if (disposed) return;
+      if (!selectedProvince || selectedProvince.id !== province.id) {
+        Array.from(overlays.values()).forEach(function(entry){if(entry.item.theme === 'land_use_2030')removeOverlay(entry.item.id);});
+      }
+      selectedProvince = province; selectedArea = area;
+      updateLayers();
+      if (activeTheme.id === 'land_use_2030') {
+        var item = wantedItems(true).find(function(entry){return entry.theme === 'land_use_2030';});
+        if (item) chooseLayer(item);
+      }
+      map.fire('planning:area-change');
+      map.fitBounds(area.bounds, {maxZoom:area.max_zoom, padding:[24,24], animate:false});
+    });
     var box = node('details', toolbar);
     box.className = 'planning-overlay-control planning-map-popover';
     ui.panels.push(box);
@@ -355,6 +373,7 @@
       return catalog.filter(function (item) {
         var theme = themes.find(function (entry) { return entry.id === item.theme; });
         return theme.toggle.checked && (theme.id === 'transport' || item.source === theme.source.value)
+          && (theme.id !== 'land_use_2030' || (selectedProvince ? selectedProvince.layer_ids.indexOf(item.id) >= 0 : item.area_id === 'binh-duong-legacy'))
           && (!readyOnly || (item.status === 'overlay_ready' && !item.inspection_only));
       });
     }
@@ -390,12 +409,19 @@
       overlays.delete(id);
     }
 
+    function overlayBounds(item) {
+      var b=item.manifest.bounds;
+      if(item.theme !== 'land_use_2030' || !selectedProvince || !selectedProvince.load_bounds)return b;
+      var p=selectedProvince.load_bounds;
+      return [[Math.max(b[0][0],p[0][0]),Math.max(b[0][1],p[0][1])],
+        [Math.min(b[1][0],p[1][0]),Math.min(b[1][1],p[1][1])]];
+    }
     function syncOverlays() {
       if (disposed) return;
       var viewport = map.getBounds();
       var near = typeof viewport.pad === 'function' ? viewport.pad(0.05) : viewport;
       var desired = wantedItems(true).filter(function (item) {
-        return (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) { return near.intersects(b); });
+        return near.intersects(overlayBounds(item)) && (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) { return near.intersects(b); });
       });
       var desiredIds = new Set(desired.map(function (item) { return item.id; }));
       Array.from(overlays.keys()).forEach(function (id) {
@@ -414,8 +440,9 @@
             : data.attribution || item.city + ' · ' + item.name + ' · bản thử căn chỉnh'
         };
         var tiled = data.render_mode === 'xyz';
+        var tileBounds = overlayBounds(item);
         var tileOptions = Object.assign({}, layerOptions, {
-          bounds:data.bounds, tileSize:256, minZoom:8, minNativeZoom:data.min_native_zoom || 8,
+          bounds:tileBounds, tileSize:256, minZoom:8, minNativeZoom:data.min_native_zoom || 8,
           maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
         });
@@ -434,12 +461,12 @@
             return tile;
           };
         }
-        if (tiled && data.coverage_windows && typeof layer._isValidTile === 'function') {
+        if (tiled && (data.coverage_windows || item.theme === 'land_use_2030') && typeof layer._isValidTile === 'function') {
           var validTile = layer._isValidTile;
           layer._isValidTile = function (coords) {
             if (!validTile.call(this, coords)) return false;
             var cell = this._tileCoordsToBounds(coords);
-            return data.coverage_windows.some(function (b) { return cell.intersects(b); });
+            return cell.intersects(tileBounds) && (data.coverage_windows || [tileBounds]).some(function (b) { return cell.intersects(b); });
           };
         }
         var entry = {item: item, layer: layer, loaded: false};
@@ -496,6 +523,9 @@
 
     fit.addEventListener('click', function () {
       if (disposed || !wantedItems(true).length) return;
+      if (activeTheme.id === 'land_use_2030' && selectedProvince) {
+        map.fitBounds(selectedProvince.bounds, {padding:[30,30],maxZoom:11});return;
+      }
       var bounds = [[Infinity, Infinity], [-Infinity, -Infinity]];
       wantedItems(true).forEach(function (item) {
         var b = item.manifest.bounds;

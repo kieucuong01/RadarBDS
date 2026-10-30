@@ -26,7 +26,7 @@ const catalog = {layers: [{id: manifest.id,name: 'Thới Hòa',status:'overlay_r
   {id:officialManifest.id,name:'Mỹ Phước',status:'overlay_ready',decision:'2913/2022',
    source:'gis',source_url:'https://gisxaydung.tphcm.gov.vn/tracuuttqh',manifest:officialManifest}]};
 
-function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOptions) {
+function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOptions, extraEnv) {
   const nodes = [], layers = new Set(), handlers = {}, zoomHandlers = new Set();
   let resolveFetch, removed = false, signal, visibleBounds = openingBounds;
   const fetches=[];
@@ -34,6 +34,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
     document: {getElementById(id) {return id==='cityInput'?{value:cityValue}:null;}, createElement(tag) {
       const el = {tag, style: {}, events: {}, attributes: {}, children: [],
         appendChild(child) {this.children.push(child);},
+        replaceChildren() {this.children=[];},
         setAttribute(k,v) {this.attributes[k]=v;}, getAttribute(k) {return this.attributes[k];},
         removeAttribute(k) {delete this.attributes[k];},
         addEventListener(k,fn) {this.events[k]=fn;}};
@@ -47,7 +48,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
     },
     getContainer:()=>({appendChild(){}}),
     getCenter:()=>visibleBounds ? {lat:(visibleBounds[0][0]+visibleBounds[1][0])/2,lng:(visibleBounds[0][1]+visibleBounds[1][1])/2} : null,
-    on(k,fn) {handlers[k]=fn;}, off(k) {delete handlers[k];},
+    on(k,fn) {handlers[k]=fn;}, off(k) {delete handlers[k];}, fire(k){if(handlers[k])handlers[k]();},
     getBounds: () => ({intersects: b => !visibleBounds || (visibleBounds[0][0] <= b[1][0] && visibleBounds[1][0] >= b[0][0]
       && visibleBounds[0][1] <= b[1][1] && visibleBounds[1][1] >= b[0][1])}), fitBounds(bounds) {this.fitted=bounds;}};
   const L = {DomEvent: {disableClickPropagation() {}, disableScrollPropagation() {}},
@@ -66,6 +67,7 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
     }};
   env.RadarPlanningTransport={create(map,L,env,data,options){return L.imageOverlay(data.geojson_url,data.bounds,options);}};
   env.RadarAdministrativeBoundaries=env.RadarPlanningTransport;
+  Object.assign(env,extraEnv);
   const dispose = api.mount(map,L,env,{initialTheme,...listingOptions});
   return {nodes,layers,handlers,dispose,map,fetches, zoom() {zoomHandlers.forEach(fn=>fn());},
     move(bounds) {visibleBounds=bounds;handlers.moveend();},
@@ -94,7 +96,7 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
     listingsVisible:false,onToggleListings(){toggled++;return listingsVisible=!listingsVisible;}});
   const visibilityButton=visibility.nodes.find(x=>x.className==='planning-listings-toggle');
   const visibilityToolbar=visibility.nodes.find(x=>x.className==='planning-map-toolbar');
-  assert.ok(visibilityToolbar.children.indexOf(visibilityButton)===3,'Listing toggle immediately follows map layers');
+  assert.ok(visibilityToolbar.children.indexOf(visibilityButton)===4,'Listing toggle immediately follows map layers and the new area slot');
   assert.equal(visibilityButton.textContent,'Hiện tin đăng');
   assert.equal(visibilityButton.attributes['aria-pressed'],'false');
   visibilityButton.events.click();assert.equal(toggled,1);
@@ -287,7 +289,8 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   toggle(lut,false);lu.zoom();assert.equal(lu.layers.size,1);
   toggle(other,false);
   lu.move([[8.68,106.6],[8.69,106.62]]);toggle(lut,true);
-  assert.equal(lu.layers.size,1);assert([...lu.layers][0].url.includes('/qh-brvt/sdd/'));
+  assert.equal(lu.layers.size,0,'Panning to another province cannot silently load its 2030 provider');
+  lu.move([[11.2,106.6],[11.21,106.61]]);
   assert.equal([...lu.layers][0].options.opacity,.6,'Toggling and moving preserve 2030 opacity');
   lu.dispose();lu.zoom();assert.equal(lu.layers.size,0);
   const dn=landuse.find(x=>x.area_id==='dong-nai-expanded');
@@ -295,15 +298,28 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert.equal(api.validManifest({...dn.manifest,bounds:[[10.49,106.39],[13,107.6]]}),false);
   assert.equal(api.validManifest({...landuse[0].manifest,bounds:dn.manifest.bounds}),false,'Existing HCM sources keep their original limits');
   assert.equal(api.validManifest({...dn.manifest,coverage_windows:[[[0,0],[90,180]]]}),false);
-  const dnh=harness(undefined,undefined,[[10.93,107.23],[10.94,107.24]],'land_use_2030');
+  const areaEnv={RADAR_LANDUSE_AREAS:require('../config/planning_landuse_areas.json').provinces,RadarPlanningArea:require('../static/js/main/planning_area.js')};
+  const isolated=harness(undefined,undefined,[[8.5,106.25],[12.33,107.65]],'land_use_2030',{},areaEnv);
+  isolated.deliver({layers:landuse});await flush();assert.equal(isolated.layers.size,1,'Even a province-wide zoom-out loads only Binh Duong by default');
+  assert([...isolated.layers][0].url.includes('binh-duong-2030'));
+  const chooseProvince=isolated.nodes.find(n=>n.attributes['aria-label']==='Tỉnh/TP (Cũ)');chooseProvince.value='brvt';chooseProvince.events.change();
+  isolated.nodes.find(n=>n.tag==='form').events.submit({preventDefault(){}});
+  assert.equal(isolated.layers.size,2,'Only mainland BRVT and Con Dao are eligible for that historic province');
+  assert([...isolated.layers].every(l=>l.url.includes('/qh-brvt/sdd/')));isolated.dispose();
+  const dnh=harness(undefined,undefined,[[10.93,107.23],[10.94,107.24]],'land_use_2030',{initialRegion:'dong-nai-legacy'},areaEnv);
   dnh.deliver({layers:landuse});await flush();assert.equal(dnh.layers.size,1);
   const dnTile=[...dnh.layers][0];assert(dnTile.url.includes('/qh-dong-nai/sdd/'));
   assert.equal(dnh.nodes.find(n=>n.attributes['aria-label']==='Xem hồ sơ và chú giải quy hoạch').value,dn.id,'Source inspector follows the opening region');
   assert.equal(dnTile.options.minNativeZoom,9);assert.equal(dnTile.options.maxNativeZoom,17);
   assert.equal(dnTile._isValidTile({bounds:[[11.12,106.6],[11.13,106.61]]}),false,'Do not request Dong Nai images for Binh Duong-only cells');
-  assert.equal(dnTile._isValidTile({bounds:[[11.53,106.88],[11.54,106.89]]}),true);
-  dnh.move([[11.53,106.88],[11.54,106.89]]);assert.equal(dnh.layers.size,1);
-  assert.equal([...dnh.layers][0],dnTile,'One native layer spans Dong Nai and Binh Phuoc without duplicate opacity');
+  assert.equal(dnTile._isValidTile({bounds:[[11.8,106.88],[11.81,106.89]]}),false,'Dong Nai selection excludes Binh Phuoc-only cells even on the shared provider');
+  dnh.move([[11.8,106.88],[11.81,106.89]]);assert.equal(dnh.layers.size,0);
+  const provinceControl=dnh.nodes.find(n=>n.attributes['aria-label']==='Tỉnh/TP (Cũ)');
+  provinceControl.value='binh-phuoc';provinceControl.events.change();
+  const areaForm=dnh.nodes.find(n=>n.tag==='form');areaForm.events.submit({preventDefault(){}});
+  assert.equal(dnh.layers.size,1);const bpTile=[...dnh.layers][0];
+  assert.notEqual(bpTile,dnTile,'Changing former province recreates the shared provider with the new loading bounds');
+  assert.equal(bpTile.options.opacity,.65);
   dnh.move([[11.12,106.6],[11.13,106.61]]);
   assert.ok(!dnh.layers.has(dnTile),'A Binh Duong-only view does not load Dong Nai imagery');
   dnh.dispose();dnh.zoom();

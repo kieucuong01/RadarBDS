@@ -1,6 +1,6 @@
 /* Compact touch controls: keep the centre of the map clear. */
 @media(max-width:760px){
- .planning-map-toolbar{left:8px;right:8px;top:8px;transform:none;width:auto;max-width:none;display:grid;grid-template-columns:1fr 1fr 1.2fr 1.35fr;gap:4px}
+ .planning-map-toolbar{left:8px;right:8px;top:8px;transform:none;width:auto;max-width:none;display:grid;grid-template-columns:.85fr .85fr .9fr 1.1fr 1.2fr;gap:3px}
  .planning-map-toolbar>div{min-width:0}
  .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle,.planning-filter-button{width:100%;min-height:44px;padding:0 5px;gap:5px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
  .planning-map-form,.planning-overlay-body{top:52px;width:calc(100vw - 16px);max-width:420px;max-height:calc(100dvh - 160px)}

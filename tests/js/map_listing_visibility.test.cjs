@@ -100,3 +100,15 @@ test('administrative entries use OSM while ordinary planning retains satellite',
  assert.equal(ctx.defaultBaseLayer('administrative'),'street');
  for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'satellite');
 });
+test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters',async()=>{
+ const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
+ const snapshot={mode:'all',query:'city=BẾN CÁT&price_max=3&date_range=1w'};
+ const ctx={state:{open:false},VALID_PLANNING_THEMES:['land_use_2030'],normalizedSnapshot:x=>x,element:()=>el,
+  captureDashboardState(){},setMobileSheetExpanded(){},setFocusMode(){},syncAdminEditModeToggle(){},filterSummaryText:()=>'',emitTrack(){},defaultBaseLayer:()=> 'satellite',
+  root:{document:{body:el},RadarPlanningArea:require('../../static/js/main/planning_area.js'),
+   RADAR_LANDUSE_AREAS:require('../../config/planning_landuse_areas.json').provinces,RADAR_PLANNING_REGIONS:[],history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
+  DIRECTORY_BATCH_SIZE:100,startMapLoad:async()=>{}};
+ vm.createContext(ctx);vm.runInContext(functions('open'),ctx);await ctx.open(snapshot,{});
+ assert.equal(ctx.state.initialPlanningArea.province,'binh-duong');assert.equal(ctx.state.initialPlanningArea.district,'718');
+ assert.equal(ctx.state.initialRegion.id,'binh-duong-legacy');assert.equal(ctx.state.snapshot.query,snapshot.query);
+});

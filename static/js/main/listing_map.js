@@ -53,6 +53,7 @@
     initialBounds: null,
     planningTheme: null,
     initialRegion: null,
+    initialPlanningArea: null,
     listingsVisible: true,
     initialController: null,
     viewportTimer: null,
@@ -1661,6 +1662,7 @@
       state.disposePlanningOverlay = root.RadarPlanningOverlay.mount(state.map, L, root, {
         initialTheme: state.planningTheme,
         initialRegion: state.initialRegion && state.initialRegion.id,
+        initialArea: state.initialPlanningArea,
         listingsVisible: state.listingsVisible,
         onToggleListings: function () { return setListingsVisible(!state.listingsVisible); },
         onThemeEnabled: function (theme) { if (theme === "administrative") activateBaseLayer("street"); },
@@ -3309,6 +3311,10 @@
     state.planningTheme = explicitPlanning ? options.planningTheme : "land_use_2030";
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
+    state.initialPlanningArea = root.RadarPlanningArea && root.RadarPlanningArea.initial(root.RADAR_LANDUSE_AREAS, options.planningRegion);
+    if (state.initialPlanningArea && (!state.initialRegion || state.planningTheme === 'land_use_2030')) {
+      state.initialRegion = {id:state.initialPlanningArea.region_id, bounds:state.initialPlanningArea.bounds, max_zoom:state.initialPlanningArea.max_zoom};
+    }
     state.listingsVisible = !explicitPlanning;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;

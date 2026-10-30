@@ -1,0 +1,1083 @@
+{
+  "default_province": "binh-duong",
+  "default_district": "718",
+  "notice": "Địa danh trước sắp xếp 2025. Khung nhìn tham khảo, không phải ranh địa chính.",
+  "sources": {
+    "official_gis": "https://gisxaydung.tphcm.gov.vn/tracuuttqh",
+    "geoboundaries_2020": "https://www.geoboundaries.org/api/current/gbOpen/VNM/ADM2/",
+    "geoboundaries_download": "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/VNM/ADM2/geoBoundaries-VNM-ADM2_simplified.geojson",
+    "geoboundaries_sha256": "2dff75b58e71f736ca9fd6ef7c859be40c6f9a9b7ae5cd0806b36fe8cfa4c4f6",
+    "license": "CC BY 3.0 IGO; OCHA ROAP / Government of Viet Nam via geoBoundaries"
+  },
+  "provinces": [
+    {
+      "id": "binh-duong",
+      "name": "Bình Dương",
+      "region_id": "binh-duong-legacy",
+      "layer_ids": [
+        "binh-duong-land-use-2030-guland"
+      ],
+      "bounds": [
+        [
+          10.86301,
+          106.335151
+        ],
+        [
+          11.501356,
+          106.966728
+        ]
+      ],
+      "districts": [
+        {
+          "id": "718",
+          "name": "Thủ Dầu Một",
+          "bounds": [
+            [
+              10.939854,
+              106.595545
+            ],
+            [
+              11.108911,
+              106.718224
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "719",
+          "name": "Bàu Bàng",
+          "bounds": [
+            [
+              11.151414,
+              106.50179
+            ],
+            [
+              11.387764,
+              106.72157
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "720",
+          "name": "Dầu Tiếng",
+          "bounds": [
+            [
+              11.135968,
+              106.335151
+            ],
+            [
+              11.501356,
+              106.57653
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "721",
+          "name": "Bến Cát",
+          "bounds": [
+            [
+              11.034182,
+              106.507965
+            ],
+            [
+              11.229558,
+              106.69416
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "722",
+          "name": "Phú Giáo",
+          "bounds": [
+            [
+              11.188313,
+              106.643822
+            ],
+            [
+              11.492038,
+              106.953123
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "723",
+          "name": "Tân Uyên",
+          "bounds": [
+            [
+              10.959224,
+              106.68318
+            ],
+            [
+              11.154063,
+              106.825568
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "724",
+          "name": "Dĩ An",
+          "bounds": [
+            [
+              10.86301,
+              106.734528
+            ],
+            [
+              10.968313,
+              106.840216
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "725",
+          "name": "Thuận An",
+          "bounds": [
+            [
+              10.86594,
+              106.650374
+            ],
+            [
+              10.997448,
+              106.753926
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "726",
+          "name": "Bắc Tân Uyên",
+          "bounds": [
+            [
+              11.019821,
+              106.679006
+            ],
+            [
+              11.25543,
+              106.966728
+            ]
+          ],
+          "source": "official_gis"
+        }
+      ]
+    },
+    {
+      "id": "hcm",
+      "name": "TP.HCM",
+      "region_id": "hcm-legacy",
+      "layer_ids": [
+        "hcm-land-use-2030-guland"
+      ],
+      "bounds": [
+        [
+          10.354474,
+          106.356654
+        ],
+        [
+          11.160343,
+          107.0274
+        ]
+      ],
+      "districts": [
+        {
+          "id": "760",
+          "name": "Quận 1",
+          "bounds": [
+            [
+              10.75352,
+              106.681667
+            ],
+            [
+              10.796976,
+              106.714716
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "761",
+          "name": "Quận 12",
+          "bounds": [
+            [
+              10.818649,
+              106.603333
+            ],
+            [
+              10.903858,
+              106.718297
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "764",
+          "name": "Quận Gò Vấp",
+          "bounds": [
+            [
+              10.809982,
+              106.63196
+            ],
+            [
+              10.860764,
+              106.701055
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "765",
+          "name": "Quận Bình Thạnh",
+          "bounds": [
+            [
+              10.785271,
+              106.683851
+            ],
+            [
+              10.839525,
+              106.751412
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "766",
+          "name": "Quận Tân Bình",
+          "bounds": [
+            [
+              10.768754,
+              106.627904
+            ],
+            [
+              10.837328,
+              106.678618
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "767",
+          "name": "Quận Tân Phú",
+          "bounds": [
+            [
+              10.758239,
+              106.606934
+            ],
+            [
+              10.824686,
+              106.647693
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "768",
+          "name": "Quận Phú Nhuận",
+          "bounds": [
+            [
+              10.787909,
+              106.665927
+            ],
+            [
+              10.814084,
+              106.692475
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "769",
+          "name": "Thành phố Thủ Đức",
+          "bounds": [
+            [
+              10.740808,
+              106.697999
+            ],
+            [
+              10.898779,
+              106.881652
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "770",
+          "name": "Quận 3",
+          "bounds": [
+            [
+              10.765428,
+              106.664295
+            ],
+            [
+              10.792508,
+              106.698087
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "771",
+          "name": "Quận 10",
+          "bounds": [
+            [
+              10.758438,
+              106.655906
+            ],
+            [
+              10.786915,
+              106.682779
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "772",
+          "name": "Quận 11",
+          "bounds": [
+            [
+              10.753394,
+              106.634176
+            ],
+            [
+              10.778373,
+              106.661535
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "773",
+          "name": "Quận 4",
+          "bounds": [
+            [
+              10.751633,
+              106.686214
+            ],
+            [
+              10.769651,
+              106.722096
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "774",
+          "name": "Quận 5",
+          "bounds": [
+            [
+              10.746112,
+              106.650514
+            ],
+            [
+              10.765488,
+              106.687186
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "775",
+          "name": "Quận 6",
+          "bounds": [
+            [
+              10.729815,
+              106.621125
+            ],
+            [
+              10.762167,
+              106.654988
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "776",
+          "name": "Quận 8",
+          "bounds": [
+            [
+              10.692471,
+              106.597696
+            ],
+            [
+              10.75216,
+              106.69295
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "777",
+          "name": "Quận Bình Tân",
+          "bounds": [
+            [
+              10.71105,
+              106.558315
+            ],
+            [
+              10.827855,
+              106.625262
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "778",
+          "name": "Quận 7",
+          "bounds": [
+            [
+              10.697801,
+              106.690011
+            ],
+            [
+              10.777663,
+              106.767192
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "783",
+          "name": "Huyện Củ Chi",
+          "bounds": [
+            [
+              10.914453,
+              106.356654
+            ],
+            [
+              11.160343,
+              106.657066
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "784",
+          "name": "Huyện Hóc Môn",
+          "bounds": [
+            [
+              10.826069,
+              106.495333
+            ],
+            [
+              10.929332,
+              106.692835
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "785",
+          "name": "Huyện Bình Chánh",
+          "bounds": [
+            [
+              10.625693,
+              106.463556
+            ],
+            [
+              10.873641,
+              106.694901
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "786",
+          "name": "Huyện Nhà Bè",
+          "bounds": [
+            [
+              10.575672,
+              106.673121
+            ],
+            [
+              10.725474,
+              106.783855
+            ]
+          ],
+          "source": "official_gis"
+        },
+        {
+          "id": "787",
+          "name": "Huyện Cần Giờ",
+          "bounds": [
+            [
+              10.354474,
+              106.732124
+            ],
+            [
+              10.674163,
+              107.0274
+            ]
+          ],
+          "source": "official_gis"
+        }
+      ]
+    },
+    {
+      "id": "brvt",
+      "name": "Bà Rịa–Vũng Tàu",
+      "region_id": "brvt-legacy",
+      "layer_ids": [
+        "brvt-land-use-2030-guland",
+        "con-dao-land-use-2030-guland"
+      ],
+      "bounds": [
+        [
+          8.628965,
+          106.536483
+        ],
+        [
+          10.8039,
+          107.573272
+        ]
+      ],
+      "districts": [
+        {
+          "id": "vung-tau",
+          "name": "Vũng Tàu",
+          "bounds": [
+            [
+              10.32028,
+              107.041572
+            ],
+            [
+              10.483449,
+              107.213548
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B39135443664879"
+        },
+        {
+          "id": "ba-ria",
+          "name": "Bà Rịa",
+          "bounds": [
+            [
+              10.453867,
+              107.11441
+            ],
+            [
+              10.562503,
+              107.248433
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B66449035371360"
+        },
+        {
+          "id": "chau-duc",
+          "name": "Châu Đức",
+          "bounds": [
+            [
+              10.537322,
+              107.138599
+            ],
+            [
+              10.774235,
+              107.370496
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B77796697839152"
+        },
+        {
+          "id": "xuyen-moc",
+          "name": "Xuyên Mộc",
+          "bounds": [
+            [
+              10.455179,
+              107.342266
+            ],
+            [
+              10.8039,
+              107.573272
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B24499966976565"
+        },
+        {
+          "id": "long-dien",
+          "name": "Long Điền",
+          "bounds": [
+            [
+              10.377363,
+              107.174357
+            ],
+            [
+              10.514033,
+              107.260447
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B9398077823445"
+        },
+        {
+          "id": "dat-do",
+          "name": "Đất Đỏ",
+          "bounds": [
+            [
+              10.38015,
+              107.241064
+            ],
+            [
+              10.576002,
+              107.378193
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B14105634475822"
+        },
+        {
+          "id": "phu-my",
+          "name": "Phú Mỹ",
+          "bounds": [
+            [
+              10.462393,
+              106.997036
+            ],
+            [
+              10.715808,
+              107.175687
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B41485876419304"
+        },
+        {
+          "id": "con-dao",
+          "name": "Côn Đảo",
+          "bounds": [
+            [
+              8.628965,
+              106.536483
+            ],
+            [
+              8.760937,
+              106.743566
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B83873736556753"
+        }
+      ]
+    },
+    {
+      "id": "dong-nai",
+      "name": "Đồng Nai",
+      "region_id": "dong-nai-legacy",
+      "layer_ids": [
+        "dong-nai-expanded-land-use-2030-reference"
+      ],
+      "bounds": [
+        [
+          10.522389,
+          106.751253
+        ],
+        [
+          11.581889,
+          107.577287
+        ]
+      ],
+      "districts": [
+        {
+          "id": "bien-hoa",
+          "name": "Biên Hòa",
+          "bounds": [
+            [
+              10.82246,
+              106.762096
+            ],
+            [
+              11.005722,
+              106.986565
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B63438000976754"
+        },
+        {
+          "id": "long-khanh",
+          "name": "Long Khánh",
+          "bounds": [
+            [
+              10.845608,
+              107.158177
+            ],
+            [
+              11.032669,
+              107.328757
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B61199528191319"
+        },
+        {
+          "id": "long-thanh",
+          "name": "Long Thành",
+          "bounds": [
+            [
+              10.642981,
+              106.864399
+            ],
+            [
+              10.871453,
+              107.147384
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B3720110239063"
+        },
+        {
+          "id": "nhon-trach",
+          "name": "Nhơn Trạch",
+          "bounds": [
+            [
+              10.522389,
+              106.751253
+            ],
+            [
+              10.785227,
+              107.028408
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B6615511759285"
+        },
+        {
+          "id": "trang-bom",
+          "name": "Trảng Bom",
+          "bounds": [
+            [
+              10.848942,
+              106.903068
+            ],
+            [
+              11.103512,
+              107.129977
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B42890675400166"
+        },
+        {
+          "id": "vinh-cuu",
+          "name": "Vĩnh Cửu",
+          "bounds": [
+            [
+              10.972805,
+              106.774679
+            ],
+            [
+              11.512514,
+              107.23244
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B24916871487669"
+        },
+        {
+          "id": "thong-nhat",
+          "name": "Thống Nhất",
+          "bounds": [
+            [
+              10.848682,
+              107.058913
+            ],
+            [
+              11.099924,
+              107.259208
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B78615286204020"
+        },
+        {
+          "id": "cam-my",
+          "name": "Cẩm Mỹ",
+          "bounds": [
+            [
+              10.668147,
+              107.071806
+            ],
+            [
+              10.899543,
+              107.419597
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B33413589576034"
+        },
+        {
+          "id": "xuan-loc",
+          "name": "Xuân Lộc",
+          "bounds": [
+            [
+              10.765344,
+              107.237223
+            ],
+            [
+              11.088876,
+              107.577287
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B96051805348654"
+        },
+        {
+          "id": "dinh-quan",
+          "name": "Định Quán",
+          "bounds": [
+            [
+              11.023988,
+              107.108729
+            ],
+            [
+              11.397239,
+              107.461996
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B49967994067833"
+        },
+        {
+          "id": "tan-phu",
+          "name": "Tân Phú",
+          "bounds": [
+            [
+              11.176996,
+              107.177998
+            ],
+            [
+              11.581889,
+              107.543191
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B74333052983118"
+        }
+      ],
+      "load_bounds": [
+        [
+          10.49,
+          106.72
+        ],
+        [
+          11.59,
+          107.6
+        ]
+      ]
+    },
+    {
+      "id": "binh-phuoc",
+      "name": "Bình Phước",
+      "region_id": "binh-phuoc-legacy",
+      "layer_ids": [
+        "dong-nai-expanded-land-use-2030-reference"
+      ],
+      "bounds": [
+        [
+          11.301457,
+          106.413046
+        ],
+        [
+          12.296002,
+          107.427332
+        ]
+      ],
+      "districts": [
+        {
+          "id": "dong-xoai",
+          "name": "Đồng Xoài",
+          "bounds": [
+            [
+              11.457833,
+              106.756637
+            ],
+            [
+              11.573111,
+              106.933619
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B13642047560711"
+        },
+        {
+          "id": "binh-long",
+          "name": "Bình Long",
+          "bounds": [
+            [
+              11.601403,
+              106.498244
+            ],
+            [
+              11.73995,
+              106.647319
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B43417057118199"
+        },
+        {
+          "id": "phuoc-long",
+          "name": "Phước Long",
+          "bounds": [
+            [
+              11.773804,
+              106.925354
+            ],
+            [
+              11.873921,
+              107.084257
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B44117863394749"
+        },
+        {
+          "id": "chon-thanh",
+          "name": "Chơn Thành",
+          "bounds": [
+            [
+              11.353771,
+              106.538967
+            ],
+            [
+              11.604037,
+              106.778225
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B36298380371063"
+        },
+        {
+          "id": "hon-quan",
+          "name": "Hớn Quản",
+          "bounds": [
+            [
+              11.467506,
+              106.422129
+            ],
+            [
+              11.785666,
+              106.782576
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B26799209243085"
+        },
+        {
+          "id": "loc-ninh",
+          "name": "Lộc Ninh",
+          "bounds": [
+            [
+              11.656935,
+              106.413046
+            ],
+            [
+              11.990428,
+              106.76436
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B87348344277653"
+        },
+        {
+          "id": "bu-dop",
+          "name": "Bù Đốp",
+          "bounds": [
+            [
+              11.878489,
+              106.671853
+            ],
+            [
+              12.089853,
+              106.995902
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B5857215594058"
+        },
+        {
+          "id": "bu-gia-map",
+          "name": "Bù Gia Mập",
+          "bounds": [
+            [
+              11.602224,
+              106.742206
+            ],
+            [
+              12.296002,
+              107.240926
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B78542366840504"
+        },
+        {
+          "id": "bu-dang",
+          "name": "Bù Đăng",
+          "bounds": [
+            [
+              11.502141,
+              107.049379
+            ],
+            [
+              12.03909,
+              107.427332
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B33312647698223"
+        },
+        {
+          "id": "phu-rieng",
+          "name": "Phú Riềng",
+          "bounds": [
+            [
+              11.624,
+              106.863
+            ],
+            [
+              11.804,
+              107.043
+            ]
+          ],
+          "source": "verified_2030_sample_window",
+          "reference_center": [
+            11.714,
+            106.953
+          ]
+        },
+        {
+          "id": "dong-phu",
+          "name": "Đồng Phú",
+          "bounds": [
+            [
+              11.301457,
+              106.766129
+            ],
+            [
+              11.655734,
+              107.142411
+            ]
+          ],
+          "source": "geoboundaries_2020",
+          "source_shape_id": "81297802B41717626545623"
+        }
+      ],
+      "load_bounds": [
+        [
+          11.31,
+          106.39
+        ],
+        [
+          12.33,
+          107.43
+        ]
+      ]
+    }
+  ]
+}

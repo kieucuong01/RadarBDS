@@ -10,6 +10,10 @@ TRANSPORT_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_transport
                                   .read_text(encoding='utf8'))['layers'])
 ADMINISTRATIVE_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_administrative.json')
                                        .read_text(encoding='utf8'))['layers'])
+LANDUSE_AREAS = tuple(p for p in json.loads(Path(__file__).with_name('planning_landuse_areas.json')
+                                          .read_text(encoding='utf8'))['provinces']
+                      if any(layer['id'] in p['layer_ids'] and layer['status'] == 'overlay_ready'
+                             for layer in LANDUSE_2030_LAYERS))
 BINH_DUONG_BOUNDS = [[10.75, 106.25], [11.65, 107.1]]
 HCM_EXPANDED_BOUNDS = [[8.5, 106.25], [11.65, 107.65]]
 DONG_NAI_EXPANDED_BOUNDS = [[10.49, 106.39], [12.33, 107.60]]
