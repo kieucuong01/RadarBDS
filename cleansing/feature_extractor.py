@@ -60,6 +60,10 @@ def has_ambiguous_masked_price(text: str) -> bool:
 
 
 _NON_ASKING_PRICE_PATTERNS = [
+    # Compound discount amounts must be removed before compact-price priority.
+    # Keep "giảm còn X tỷ Y" intact: that names the new asking price.
+    r'\b(?:giảm|giam|hạ|ha|bớt|bot)\s*(?:giá|gia)?\s*[:：\-]?\s*'
+    r'\d+\s*(?:tỷ|ty|tỉ|ti)\s*\d{1,3}(?:\s*(?:triệu|trieu|tr))?(?!\w)',
     # "Rẻ hơn thị trường 100 triệu" / "thấp hơn 1 tỷ" is a delta, not asking price.
     r'(?:rẻ\s*hơn|re\s*hon|thấp\s*hơn|thap\s*hon)\s*(?:thị\s*trường|thi\s*truong)?\s*[:：\-]?\s*[\d,.]+\s*(?:tỷ|ty|tỉ|triệu|tr|m|k)\b',
     # Down-payment / financing snippets are not total asking price.
@@ -128,6 +132,9 @@ def extract_price(text: str) -> Optional[float]:
     t = unicodedata.normalize("NFKC", text or "").lower().strip()
     # Normalize "tỉ" (biến thể không chuẩn) → "tỷ" để pattern match thống nhất
     t = t.replace('tỉ', 'tỷ')
+    # Spaces around a decimal separator do not split one tỷ amount in two.
+    t = re.sub(r'(?<![\d,.])(\d+)\s*([,.])\s*(\d+)(?=\s*(?:tỷ|ty|ti)\b)',
+               r'\1\2\3', t)
     t = _strip_non_asking_price_phrases(t)
     t = _strip_unicode_non_asking_price_phrases(t)
     t_fold = _ascii_fold(t)

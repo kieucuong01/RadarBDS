@@ -532,3 +532,47 @@ def test_review27_property_context_full_normalization(listing_id, title, descrip
 ])
 def test_review27_property_context_controls(title, description, expected):
     assert classify_property_type(title, description, 292, 100) == expected
+
+
+# Two independent reviewed price patterns, not duplicate repost evidence.
+REVIEW29_PRICE_CASES = [
+    (85002, "GIẢM 1 tỷ 200tr MỘT Siêu phẩm nhà phố có HOÀN CÔNG; Giá Chỉ Còn 6tỷ 600 triệu làm việc chủ (Giá cũ 7tỷ8)", 6.6),
+    (84608, "Giá bán gấp: 8 ,5 ty", 8.5),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,expected", REVIEW29_PRICE_CASES)
+def test_review29_source_backed_asking_prices(listing_id, text, expected):
+    assert parse_facebook_post(text)["price_total"] == expected
+
+
+@pytest.mark.parametrize("listing_id,text,expected", REVIEW29_PRICE_CASES)
+def test_review29_asking_price_full_normalization(listing_id, text, expected):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/price-control",
+                               "title": "Bán nhà đất", "description": text, "area_m2": 100.0})
+    assert record is not None and record["price_ty"] == expected
+    assert record["price_per_m2"] == round(expected * 1000 / 100.0, 3)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Giảm 1 tỷ 200tr", None),
+    ("Giam gia 1ty200tr; gia chi con 6ty600tr", 6.6),
+    ("Hạ 1 tỷ 200 triệu; giá bán 6 tỷ 600", 6.6),
+    ("Bớt 1 tỷ 200; giá 6 tỷ 600", 6.6),
+    ("Giảm còn 1ty350tr, mô tả còn 1ty3xx", 1.35),
+    ("Giảm 400 triệu giá 4,2 tỷ chỉ còn 3,8 tỷ", 3.8),
+    ("Giá 1 tỷ 200tr", 1.2),
+    ("Giảm giá, bán 1 tỷ 200tr", 1.2),
+    ("Giảm 1 tỷ 200tr; giá thỏa thuận", None),
+    ("Giảm còn 1 tỷ 200tr", 1.2),
+    ("Giá 8 ,5 tỷ", 8.5),
+    ("Giá 8, 5 ty", 8.5),
+    ("Giá 8 . 5 ti", 8.5),
+    ("Giá 8 , 05 tỷ", 8.05),
+    ("Giá 8,5 tỷ", 8.5),
+    ("DT 8 ,5m; Giá 3 tỷ", 3.0),
+    ("Giá >1 ,5 tỷ", None),
+    ("Giá 8 ,x tỷ", None),
+])
+def test_review29_price_grammar_controls(text, expected):
+    assert parse_facebook_post(text)["price_total"] == expected
