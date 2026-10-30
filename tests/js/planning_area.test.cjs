@@ -1,6 +1,16 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const api=require('../../static/js/main/planning_area.js');
 const provinces=require('../../config/planning_landuse_areas.json').provinces;
+
+test('whole province fills the viewport at a closer zoom; district keeps its fitted extent',()=>{
+ const calls=[],bounds={getCenter:()=>({lat:11,lng:106})};
+ const L={latLngBounds:b=>{assert.deepEqual(b,provinces[0].bounds);return bounds;}};
+ const map={getBoundsZoom(b,inside,pad){assert.equal(b,bounds);assert.deepEqual(pad,[0,0]);return inside?12:10;},
+  setView(c,z,o){calls.push({c,z,o});},fitBounds(b,o){calls.push({b,o});}};
+ api.focus(map,L,{bounds:provinces[0].bounds,district:''});assert.equal(calls[0].z,12);
+ api.focus(map,L,{bounds:provinces[0].bounds,district:'718',max_zoom:13});assert.equal(calls[1].o.maxZoom,13);
+ map.getBoundsZoom=()=>18;api.focus(map,L,{bounds:provinces[0].bounds,district:''});assert.equal(calls[2].z,13);
+});
 test('ordinary Maps defaults to historic Binh Duong and Thu Dau Mot regardless of listing geography',()=>{
  const area=api.initial(provinces);assert.equal(area.province,'binh-duong');assert.equal(area.district,'718');
  assert.deepEqual(area.bounds,provinces[0].districts.find(d=>d.id==='718').bounds);assert.equal(area.max_zoom,13);

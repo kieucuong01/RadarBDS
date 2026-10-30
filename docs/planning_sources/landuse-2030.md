@@ -47,6 +47,28 @@ BRVT and island windows stay separate to avoid loading a wide empty sea.
 
 ### Exterior source annotations — 2026-10-29
 
+Superseded on 2026-10-30: the client now replaces 13 verified exterior
+provider marks with the RadarBDS wordmark (four Bình Dương, five Tây Ninh,
+four Long An). Their source-world polygons are explicit in
+`referenceAnnotations()` in `planning_overlay.js`; they are not inferred from
+yellow pixels at runtime. Two existing Bình Dương exclusions are retained;
+the other regions were checked against original zoom-12 cells. Rotated marks
+use quadrilaterals to avoid adjacent planning colours. The background stays
+transparent; map titles and source credits are retained.
+
+The replacement SVGs are inline data URLs with Leaflet georeferenced bounds.
+They share the layer's opacity and add/remove lifecycle, including repeated
+toggles and zooms. They require no extra remote images, canvas readback,
+server processing, or requests for other provinces. The original source
+templates and reference-source status are unchanged.
+
+The inspected zoom-10 overview images for Đồng Nai/Bình Phước and mainland
+BRVT contain no exterior provider marks. HCM overview cells and a zoom-11
+control currently return 404, so no unverified exclusion is applied there.
+This audit does not establish absence of marks at every zoom or on future
+source revisions. Runtime evidence is ignored under
+`.local/planning-2030-branding-20261030/`.
+
 The Bình Dương reference raster has two yellow provider labels on transparent
 background outside its planning footprint. The client clips only those two
 verified polygons, defined in the source zoom-11 world-pixel grid, when creating

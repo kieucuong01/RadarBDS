@@ -10,6 +10,13 @@
     return {province:province.id,district:district?district.id:'',region_id:province.region_id,
       bounds:district?district.bounds:province.bounds,max_zoom:district?13:11};
   }
+  function focus(map,L,area){
+    if(area.district){map.fitBounds(area.bounds,{maxZoom:area.max_zoom,padding:[24,24],animate:false});return;}
+    var bounds=L.latLngBounds(area.bounds);
+    // Fill the screen with the province centre instead of fitting every outer edge.
+    var zoom=Math.min(13,Math.max(map.getBoundsZoom(bounds,true,[0,0]),map.getBoundsZoom(bounds,false,[0,0])+1));
+    map.setView(bounds.getCenter(),zoom,{animate:false});
+  }
   function mount(env,ui,provinces,selection,onChange){
     var doc=env.document;
     function node(tag,parent,text){var e=doc.createElement(tag);if(text)e.textContent=text;if(parent)parent.appendChild(e);return e;}
@@ -34,5 +41,5 @@
       onChange(p,{province:p.id,district:d?d.id:'',bounds:d?d.bounds:p.bounds,max_zoom:d?13:11});panel.open=false;});
     return panel;
   }
-  return {initial:initial,mount:mount};
+  return {initial:initial,mount:mount,focus:focus};
 });

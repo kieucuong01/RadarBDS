@@ -43,3 +43,12 @@ Verification covers initial Thủ Dầu Một framing, independent listing filte
 all province/district counts, province-only providers at wide zoom, BRVT/island
 selection, shared-source replacement, tile eligibility, opacity and popover
 exclusivity. Browser checks exercise switching provinces and phone layout.
+
+## Province-centre framing — 2026-10-30
+
+Choosing the whole historic province now fills the viewport with its centre
+instead of shrinking the image to fit every outside edge. This uses Leaflet's
+inside-bounds zoom, at least one level closer than the whole-extent fit and
+capped at zoom 13. It applies to province deep links, the Khu vực form and
+the active 2030 layer's area shortcut. District selections retain their
+fitted bounds. Province locking and current-view-only tile loading remain.

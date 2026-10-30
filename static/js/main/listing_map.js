@@ -442,6 +442,9 @@
 
   function frameOpeningArea(L) {
     if (!state.map || !state.initialBounds || !L) return;
+    if (state.planningTheme === 'land_use_2030' && state.initialPlanningArea && !state.initialPlanningArea.district && root.RadarPlanningArea) {
+      root.RadarPlanningArea.focus(state.map,L,state.initialPlanningArea); return;
+    }
     var bounds = L.latLngBounds(state.initialBounds);
     var zoom = Math.min(state.initialRegion ? state.initialRegion.max_zoom : 16, state.map.getBoundsZoom(bounds, false, [50,50]));
     // A portrait phone should open near a selected ward, rather than shrinking it to show a whole city.

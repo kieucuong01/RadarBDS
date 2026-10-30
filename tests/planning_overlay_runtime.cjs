@@ -49,9 +49,11 @@ function harness(cityValue, publicConfig, openingBounds, initialTheme, listingOp
     getContainer:()=>({appendChild(){}}),
     getCenter:()=>visibleBounds ? {lat:(visibleBounds[0][0]+visibleBounds[1][0])/2,lng:(visibleBounds[0][1]+visibleBounds[1][1])/2} : null,
     on(k,fn) {handlers[k]=fn;}, off(k) {delete handlers[k];}, fire(k){if(handlers[k])handlers[k]();},
+    getBoundsZoom:()=>11, setView(center,zoom){this.view={center,zoom};},
     getBounds: () => ({intersects: b => !visibleBounds || (visibleBounds[0][0] <= b[1][0] && visibleBounds[1][0] >= b[0][0]
       && visibleBounds[0][1] <= b[1][1] && visibleBounds[1][1] >= b[0][1])}), fitBounds(bounds) {this.fitted=bounds;}};
   const L = {DomEvent: {disableClickPropagation() {}, disableScrollPropagation() {}},
+    latLngBounds:b=>({getCenter:()=>({lat:(b[0][0]+b[1][0])/2,lng:(b[0][1]+b[1][1])/2})}),
     control: () => ({addTo() {}, remove() {removed=true;}}),
     tileLayer(url,options) {const layer=this.imageOverlay(url,options.bounds,options);layer.kind='tile';return layer;},
     imageOverlay(url,bounds,options) {
