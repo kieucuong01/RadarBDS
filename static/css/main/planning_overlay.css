@@ -156,4 +156,4 @@
 
 
 .planning-admin-tooltip{font-size:12px;font-weight:700;color:#133f44;pointer-events:none}
-.planning-is-drawing .leaflet-planningAdministrative-pane .leaflet-interactive{pointer-events:none!important}
+.planning-is-drawing .leaflet-planningAdministrative-pane,.planning-is-drawing .leaflet-planningAdministrative-pane *{pointer-events:none!important}
