@@ -576,3 +576,55 @@ def test_review29_asking_price_full_normalization(listing_id, text, expected):
 ])
 def test_review29_price_grammar_controls(text, expected):
     assert parse_facebook_post(text)["price_total"] == expected
+
+
+# Two independent residential-label spellings, not repost evidence.
+# Newline after the phun label is preserved from the exact-ID offline snapshot:
+# excerpt-only text ending at the label can accidentally pass a bare-full rule.
+REVIEW31_RESIDENTIAL_CASES = [
+    (85253, "Diện tích 245m2 tcư 68.6m2\nĐường nhựa 12m", 245.0, 68.6, 0.28),
+    (85053, "Diện tích 5 x 30 tổng 150m phun thổ cư\n- Giá 2 tỷ 9", 150.0, 150.0, 1.0),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,area,residential,ratio", REVIEW31_RESIDENTIAL_CASES)
+def test_review31_residential_spelling_parser(listing_id, text, area, residential, ratio):
+    parsed = parse_facebook_post(text)
+    assert parsed["tho_cu_m2"] == residential
+    assert parsed["tho_cu_ratio"] == ratio
+    assert parsed["area_m2"] == area
+
+
+@pytest.mark.parametrize("listing_id,text,area,residential,ratio", REVIEW31_RESIDENTIAL_CASES)
+def test_review31_residential_spelling_full_normalization(listing_id, text, area, residential, ratio):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/residential-control",
+                               "title": "Bán đất", "description": text})
+    assert record is not None
+    assert record["tho_cu_m2"] == residential
+    assert record["tho_cu_ratio"] == ratio
+    assert record["area_m2"] == area
+    assert record["measurement_provenance"]["tho_cu_m2"] == "source_text"
+
+
+@pytest.mark.parametrize("text,area,residential,ratio", [
+    ("TCƯ 68,6m2", 245.0, 68.6, 0.28),
+    ("tcu 68.6m2", 245.0, 68.6, 0.28),
+    ("68.6m2 tcư", 245.0, 68.6, 0.28),
+    ("không tcư 68.6m2", 245.0, None, None),
+    ("chưa tcư 68.6m2", 245.0, None, None),
+    ("tcuong 68.6m2", 245.0, None, None),
+    ("PHUN THỔ CƯ\nGiá 2 tỷ 9", 150.0, 150.0, 1.0),
+    ("phun tho cu\nGia 2 ty 9", 150.0, 150.0, 1.0),
+    ("không phun thổ cư", 150.0, None, None),
+    ("chưa phun thổ cư", 150.0, None, None),
+    ("phun thuốc; thổ cư 60m2", 150.0, 60.0, 0.4),
+    ("phun thổ cư", None, None, None),
+    ("thổ cư 68.6m2", 245.0, 68.6, 0.28),
+    ("tc 60m2", 150.0, 60.0, 0.4),
+    ("full thổ cư", 150.0, 150.0, 1.0),
+    ("150m2 đất vườn", 150.0, None, None),
+])
+def test_review31_residential_spelling_controls(text, area, residential, ratio):
+    from cleansing.feature_extractor import extract_tho_cu
+
+    assert extract_tho_cu(text, area) == {"tho_cu_m2": residential, "tho_cu_ratio": ratio}
