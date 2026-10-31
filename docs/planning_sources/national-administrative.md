@@ -1,6 +1,6 @@
 # New administrative provinces nationwide
 
-The Địa giới layer covers all 34 new provinces/cities, with 3,321 commune-level
+The Địa giới (mới) layer covers all 34 new provinces/cities, with 3,321 commune-level
 units. TP.HCM's existing official GIS snapshot (168) and Đồng Nai's existing
 open snapshot (95) remain. The other 32 provinces add 3,058 units from the
 same open source used for Đồng Nai:
@@ -43,7 +43,7 @@ The generated `static/js/main/planning_administrative_sources.js` is the exact
 client allowlist: ID, URL, count, bounds, source, code membership and bounded
 vertex limits. It loads before the renderer. New provinces do not broaden the
 HCM geographic limits or allow arbitrary external URLs. The catalog is bounded
-at 160 entries to accommodate the 32 additional layers; Maps does not load all
+at 256 entries to also accommodate the separate [old boundaries](legacy-administrative.md); Maps does not load all
 province geometries together.
 
 Keep the 34-province/count/geometry/old-province coverage checks and the existing

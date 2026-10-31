@@ -9,7 +9,8 @@ VISION_100_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_vision_1
 TRANSPORT_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_transport.json')
                                   .read_text(encoding='utf8'))['layers'])
 ADMINISTRATIVE_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_administrative.json')
-                                       .read_text(encoding='utf8'))['layers'])
+                                       .read_text(encoding='utf8'))['layers']) + tuple(
+    json.loads(Path(__file__).with_name('planning_administrative_legacy.json').read_text(encoding='utf8'))['layers'])
 LANDUSE_AREAS = tuple(p for p in json.loads(Path(__file__).with_name('planning_landuse_areas.json')
                                           .read_text(encoding='utf8'))['provinces']
                       if any(layer['id'] in p['layer_ids'] and layer['status'] == 'overlay_ready'

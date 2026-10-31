@@ -47,7 +47,7 @@ def write_snapshot(output,rows,geometries,provenance):
     output.mkdir(parents=True,exist_ok=True)
     for i,(row,geometry) in enumerate(zip(rows,geometries)):
         a=row['attributes'];code=a['MaPhuongXa']
-        assert len(code)==5 and code.isdecimal()
+        assert 5<=len(code)<=8 and code.isascii() and code.isalnum()
         neighbours={colours[int(j)] for j in tree.query(geometry,predicate='intersects') if j<i}
         colour=next(c for c in range(8) if c not in neighbours);colours.append(colour)
         largest=max(geometry.geoms,key=lambda g:g.area) if geometry.geom_type=='MultiPolygon' else geometry
@@ -56,6 +56,7 @@ def write_snapshot(output,rows,geometries,provenance):
         properties={'code':code,'name':a['TenXa'],'source_id':a['OBJECTID'],
             'former_province':a['TenTinhCu'],'bounds':[[south,west],[north,east]],
             'label':[label.y,label.x],'colour':colour}
+        if a.get('TenHuyenCu'):properties['district']=a['TenHuyenCu']
         full={'type':'Feature','properties':properties,'geometry':mapping(geometry)}
         write_json(output/(code+'.json'),full)
         # Overview only: <=10 m simplification in Mercator; full source geometry at zoom 13+.

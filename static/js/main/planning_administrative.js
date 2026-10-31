@@ -8,14 +8,14 @@
       &&m.geojson_url===d.url&&m.unit_count===d.count&&JSON.stringify(m.bounds)===JSON.stringify(d.bounds)
       &&typeof m.title==='string'&&typeof m.notice==='string';
   }
-  function validCatalogItem(item){var d=item&&dataset(item.id);return !!d&&item.source==='gis'&&item.source_url===d.source&&validManifest(item.manifest)&&item.manifest.id===item.id;}
+  function validCatalogItem(item){var d=item&&dataset(item.id);return !!d&&item.theme===d.theme&&item.source==='gis'&&item.source_url===d.source&&validManifest(item.manifest)&&item.manifest.id===item.id;}
   var palette=['#38bdf8','#fb7185','#a78bfa','#fbbf24','#34d399','#f472b6','#fb923c','#2dd4bf'];
   function pair(p){return Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);}
   function bounds(b,id){var d=dataset(id);if(!d)return false;var l=d.limits;return Array.isArray(b)&&b.length===2&&b.every(pair)&&b[0][0]>=l[0]&&b[1][0]<=l[2]&&b[0][1]>=l[1]&&b[1][1]<=l[3]&&b[0][0]<b[1][0]&&b[0][1]<b[1][1];}
   function validFeature(f,expected,id){
     var d=dataset(id);if(!d)return false;var l=d.limits;
     var p=f&&f.properties,g=f&&f.geometry,vertices=0;
-    if(!f||f.type!=='Feature'||!p||!/^\d{5}$/.test(p.code||'')||!Number.isInteger(p.source_id)||p.source_id<1
+    if(!f||f.type!=='Feature'||!p||!/^[A-Z0-9]{5,8}$/.test(p.code||'')||!Number.isInteger(p.source_id)||p.source_id<1
       ||d.codes.indexOf(p.code)<0||typeof p.name!=='string'||!p.name.length||p.name.length>100||!bounds(p.bounds,id)||!pair(p.label)
       ||p.label[0]<p.bounds[0][0]||p.label[0]>p.bounds[1][0]||p.label[1]<p.bounds[0][1]||p.label[1]>p.bounds[1][1]
       ||!Number.isInteger(p.colour)||p.colour<0||p.colour>=palette.length||!g||['Polygon','MultiPolygon'].indexOf(g.type)<0)return false;
@@ -24,7 +24,7 @@
       return Array.isArray(ring)&&ring.length>=4&&ring.every(function(x){return ++vertices<=d.max_vertices&&pair(x)&&x[0]>=l[1]&&x[0]<=l[3]&&x[1]>=l[0]&&x[1]<=l[2];})
         &&ring[0][0]===ring[ring.length-1][0]&&ring[0][1]===ring[ring.length-1][1];
     });}
-    return g.type==='Polygon'?polygon(g.coordinates):Array.isArray(g.coordinates)&&g.coordinates.length>0&&g.coordinates.length<=500&&g.coordinates.every(polygon);
+    return g.type==='Polygon'?polygon(g.coordinates):Array.isArray(g.coordinates)&&g.coordinates.length>0&&g.coordinates.length<=(d.max_polygons||500)&&g.coordinates.every(polygon);
   }
   function valid(data,id){
     var d=dataset(id);if(!d)return false;
@@ -39,7 +39,7 @@
     var shared=byDataset.get(id);if(!shared){shared={overview:null,details:new Map(),pending:new Set(),subscribers:new Set()};byDataset.set(id,shared);}
     var active=false,moving=false,amount=options.opacity,queue=[],pending=shared.pending,shown=[],rendered=new Map();
     var areas=L.geoJSON(null,{pane:'planningAdministrative',interactive:true,bubblingMouseEvents:false,onEachFeature:function(f,polygon){
-      var p=f.properties,text=env.document.createElement('span');text.textContent=p.name;
+      var p=f.properties,text=env.document.createElement('span');text.textContent=p.name+(p.district?' · '+p.district+' · '+p.former_province+' (cũ)':'');
       polygon.bindTooltip(text,{pane:'planningAdministrativeLabels',permanent:false,sticky:true,direction:'top',className:'planning-admin-tooltip'});
       polygon.on('click',function(){
         if(!active||map.getContainer().classList.contains('planning-is-drawing'))return;

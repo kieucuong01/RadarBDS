@@ -12,7 +12,7 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
-  var VALID_PLANNING_THEMES = ["partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative"];
+  var VALID_PLANNING_THEMES = ["partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative", "administrative_legacy"];
   var DIRECTORY_BATCH_SIZE = 100;
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
   var MARKER_BATCH_SIZE = 200;
@@ -119,7 +119,7 @@
   }
 
   function defaultBaseLayer(theme) {
-    return theme === "administrative" ? "street" : "satellite";
+    return (theme === "administrative" || theme === "administrative_legacy") ? "street" : "satellite";
   }
 
   function normalizeBaseLayer(value) {
@@ -1690,7 +1690,7 @@
         initialArea: state.initialPlanningArea,
         listingsVisible: state.listingsVisible,
         onToggleListings: function () { return setListingsVisible(!state.listingsVisible); },
-        onThemeEnabled: function (theme) { if (theme === "administrative") activateBaseLayer("street"); },
+        onThemeEnabled: function (theme) { if (theme === "administrative" || theme === "administrative_legacy") activateBaseLayer("street"); },
         onToggleFilters: toggleFilters
       });
     }

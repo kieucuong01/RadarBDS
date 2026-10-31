@@ -95,6 +95,8 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     administrative=[a for a in data['layers'] if a.get('theme')=='administrative']
     assert len(administrative)==34
     assert sum(a['manifest']['unit_count'] for a in administrative)==3321
+    legacy=[a for a in data['layers'] if a.get('theme')=='administrative_legacy']
+    assert len(legacy)==63 and sum(a['manifest']['unit_count'] for a in legacy)==10038
     response=client.get('/api/planning/parcels/config.json')
     assert len(response.json['areas'])==422 and response.json['count']==91
     assert response.json['count_scope']=='historic_binh_duong_snapshot'

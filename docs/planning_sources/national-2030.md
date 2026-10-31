@@ -59,7 +59,7 @@ Client validation uses exact server-generated descriptors for each registered
 2030 source, including ID, URL, bounds, native/display zooms and coverage windows.
 It rejects injected `source_tiles`, changed hosts/queries, draft labels and
 expanded bounds. Official GIS and all other families retain their previous
-allowlists and geographic limits. Catalogues stay bounded at 160 entries after the nationwide administrative overlay expansion.
+allowlists and geographic limits. Catalogues stay bounded at 256 entries after adding separate old/new nationwide administrative overlays.
 
 Rollback reverts this release's config/code; no DB migration or parcel asset
 replacement is needed. Full audit images/DOM captures remain ignored under

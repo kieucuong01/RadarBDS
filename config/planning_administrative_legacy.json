@@ -1,0 +1,2401 @@
+{
+  "source_checked_on": "2026-10-31",
+  "source_revision": "f5ea3e3225b9af3534d293ac42dafa0ab82f9c85",
+  "source_blob_sha1": "d9bb9e9705603b2ce555543834e8740ba025156b",
+  "layers": [
+    {
+      "id": "binh-duong-administrative-legacy",
+      "name": "Địa giới Bình Dương (cũ) · 91 phường/xã",
+      "city": "Bình Dương (cũ)",
+      "scope": "region",
+      "area_id": "binh-duong-legacy",
+      "coverage_provinces": [
+        "binh-duong"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "binh-duong-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bình Dương (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/binh-duong/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.863349654000046,
+            106.32952234800007
+          ],
+          [
+            11.501059045000034,
+            106.96679988000005
+          ]
+        ],
+        "unit_count": 91,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "91 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "hcm-administrative-legacy",
+      "name": "Địa giới TP.HCM (cũ) · 273 phường/xã",
+      "city": "TP.HCM (cũ)",
+      "scope": "region",
+      "area_id": "hcm-legacy",
+      "coverage_provinces": [
+        "hcm"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "hcm-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới TP.HCM (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/hcm/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.37671470600003,
+            106.35671223600008
+          ],
+          [
+            11.160222830000066,
+            107.02750396700009
+          ]
+        ],
+        "unit_count": 273,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "273 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "brvt-administrative-legacy",
+      "name": "Địa giới Bà Rịa–Vũng Tàu (cũ) · 78 phường/xã",
+      "city": "Bà Rịa–Vũng Tàu (cũ)",
+      "scope": "region",
+      "area_id": "brvt-legacy",
+      "coverage_provinces": [
+        "brvt"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "brvt-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bà Rịa–Vũng Tàu (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/brvt/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            8.577138605000073,
+            106.08794206700009
+          ],
+          [
+            10.805023164000033,
+            107.57208320900008
+          ]
+        ],
+        "unit_count": 78,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "78 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "dong-nai-administrative-legacy",
+      "name": "Địa giới Đồng Nai (cũ) · 160 phường/xã",
+      "city": "Đồng Nai (cũ)",
+      "scope": "region",
+      "area_id": "dong-nai-legacy",
+      "coverage_provinces": [
+        "dong-nai"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "dong-nai-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Đồng Nai (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/dong-nai/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.579664230000049,
+            106.75011444100005
+          ],
+          [
+            11.581926748000058,
+            107.57714080800008
+          ]
+        ],
+        "unit_count": 160,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "160 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "binh-phuoc-administrative-legacy",
+      "name": "Địa giới Bình Phước (cũ) · 111 phường/xã",
+      "city": "Bình Phước (cũ)",
+      "scope": "region",
+      "area_id": "binh-phuoc-legacy",
+      "coverage_provinces": [
+        "binh-phuoc"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "binh-phuoc-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bình Phước (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/binh-phuoc/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            11.301665306000075,
+            106.41162186900004
+          ],
+          [
+            12.298408021000057,
+            107.42797563000005
+          ]
+        ],
+        "unit_count": 111,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "111 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "tay-ninh-administrative-legacy",
+      "name": "Địa giới Tây Ninh (cũ) · 94 phường/xã",
+      "city": "Tây Ninh (cũ)",
+      "scope": "region",
+      "area_id": "tay-ninh-legacy",
+      "coverage_provinces": [
+        "tay-ninh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "tay-ninh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Tây Ninh (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/tay-ninh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.96269226100003,
+            105.80837220800004
+          ],
+          [
+            11.782860000000028,
+            106.49071502700008
+          ]
+        ],
+        "unit_count": 94,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "94 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "long-an-administrative-legacy",
+      "name": "Địa giới Long An (cũ) · 186 phường/xã",
+      "city": "Long An (cũ)",
+      "scope": "region",
+      "area_id": "long-an-legacy",
+      "coverage_provinces": [
+        "long-an"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "long-an-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Long An (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/long-an/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.394538879000038,
+            105.50074025800006
+          ],
+          [
+            11.032386108000026,
+            106.74893951400009
+          ]
+        ],
+        "unit_count": 186,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "186 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ha-noi-administrative-legacy",
+      "name": "Địa giới Hà Nội (cũ) · 526 phường/xã",
+      "city": "Hà Nội (cũ)",
+      "scope": "region",
+      "area_id": "ha-noi-legacy",
+      "coverage_provinces": [
+        "ha-noi"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ha-noi-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hà Nội (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ha-noi/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.56430001700005,
+            105.28534624600007
+          ],
+          [
+            21.385410969000077,
+            106.02001178600005
+          ]
+        ],
+        "unit_count": 526,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "526 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "an-giang-administrative-legacy",
+      "name": "Địa giới An Giang (cũ) · 155 phường/xã",
+      "city": "An Giang (cũ)",
+      "scope": "region",
+      "area_id": "an-giang-legacy",
+      "coverage_provinces": [
+        "an-giang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "an-giang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới An Giang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/an-giang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.18335539900005,
+            104.77840440800009
+          ],
+          [
+            10.961936785000034,
+            105.57501441900007
+          ]
+        ],
+        "unit_count": 155,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "155 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "bac-giang-administrative-legacy",
+      "name": "Địa giới Bắc Giang (cũ) · 192 phường/xã",
+      "city": "Bắc Giang (cũ)",
+      "scope": "region",
+      "area_id": "bac-giang-legacy",
+      "coverage_provinces": [
+        "bac-giang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "bac-giang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bắc Giang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/bac-giang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.12227371800003,
+            105.88098353900006
+          ],
+          [
+            21.626491548000047,
+            107.03359669200006
+          ]
+        ],
+        "unit_count": 192,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "192 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "bac-kan-administrative-legacy",
+      "name": "Địa giới Bắc Kạn (cũ) · 108 phường/xã",
+      "city": "Bắc Kạn (cũ)",
+      "scope": "region",
+      "area_id": "bac-kan-legacy",
+      "coverage_provinces": [
+        "bac-kan"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "bac-kan-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bắc Kạn (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/bac-kan/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.80435996600005,
+            105.43107450300005
+          ],
+          [
+            22.741197429000067,
+            106.24715914400008
+          ]
+        ],
+        "unit_count": 108,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "108 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "bac-lieu-administrative-legacy",
+      "name": "Địa giới Bạc Liêu (cũ) · 64 phường/xã",
+      "city": "Bạc Liêu (cũ)",
+      "scope": "region",
+      "area_id": "bac-lieu-legacy",
+      "coverage_provinces": [
+        "bac-lieu"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "bac-lieu-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bạc Liêu (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/bac-lieu/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.019940376000022,
+            105.23235163800007
+          ],
+          [
+            9.637436962000038,
+            105.86037999000007
+          ]
+        ],
+        "unit_count": 64,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "64 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "bac-ninh-administrative-legacy",
+      "name": "Địa giới Bắc Ninh (cũ) · 121 phường/xã",
+      "city": "Bắc Ninh (cũ)",
+      "scope": "region",
+      "area_id": "bac-ninh-legacy",
+      "coverage_provinces": [
+        "bac-ninh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "bac-ninh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bắc Ninh (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/bac-ninh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.968900664000046,
+            105.90371338400007
+          ],
+          [
+            21.264307022000025,
+            106.31002480800004
+          ]
+        ],
+        "unit_count": 121,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "121 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ben-tre-administrative-legacy",
+      "name": "Địa giới Bến Tre (cũ) · 148 phường/xã",
+      "city": "Bến Tre (cũ)",
+      "scope": "region",
+      "area_id": "ben-tre-legacy",
+      "coverage_provinces": [
+        "ben-tre"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ben-tre-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bến Tre (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ben-tre/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.786068902000068,
+            106.02734086200007
+          ],
+          [
+            10.340459294000027,
+            106.79949262100007
+          ]
+        ],
+        "unit_count": 148,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "148 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "binh-thuan-administrative-legacy",
+      "name": "Địa giới Bình Thuận (cũ) · 121 phường/xã",
+      "city": "Bình Thuận (cũ)",
+      "scope": "region",
+      "area_id": "binh-thuan-legacy",
+      "coverage_provinces": [
+        "binh-thuan"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "binh-thuan-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bình Thuận (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/binh-thuan/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.970187619000058,
+            107.39446258500004
+          ],
+          [
+            11.555756569000039,
+            109.08493398100006
+          ]
+        ],
+        "unit_count": 121,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "121 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "binh-dinh-administrative-legacy",
+      "name": "Địa giới Bình Định (cũ) · 155 phường/xã",
+      "city": "Bình Định (cũ)",
+      "scope": "region",
+      "area_id": "binh-dinh-legacy",
+      "coverage_provinces": [
+        "binh-dinh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "binh-dinh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Bình Định (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/binh-dinh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            13.522808681000072,
+            108.60109710700004
+          ],
+          [
+            14.702979734000053,
+            109.37090102400003
+          ]
+        ],
+        "unit_count": 155,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "155 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ca-mau-administrative-legacy",
+      "name": "Địa giới Cà Mau (cũ) · 100 phường/xã",
+      "city": "Cà Mau (cũ)",
+      "scope": "region",
+      "area_id": "ca-mau-legacy",
+      "coverage_provinces": [
+        "ca-mau"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ca-mau-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Cà Mau (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ca-mau/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            8.38083239100007,
+            104.52254337900007
+          ],
+          [
+            9.561285737000048,
+            105.41933456400005
+          ]
+        ],
+        "unit_count": 100,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "100 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "can-tho-administrative-legacy",
+      "name": "Địa giới Cần Thơ (cũ) · 80 phường/xã",
+      "city": "Cần Thơ (cũ)",
+      "scope": "region",
+      "area_id": "can-tho-legacy",
+      "coverage_provinces": [
+        "can-tho"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "can-tho-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Cần Thơ (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/can-tho/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.91945875700003,
+            105.22569029700009
+          ],
+          [
+            10.325055596000027,
+            105.84431457500006
+          ]
+        ],
+        "unit_count": 80,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "80 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "cao-bang-administrative-legacy",
+      "name": "Địa giới Cao Bằng (cũ) · 161 phường/xã",
+      "city": "Cao Bằng (cũ)",
+      "scope": "region",
+      "area_id": "cao-bang-legacy",
+      "coverage_provinces": [
+        "cao-bang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "cao-bang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Cao Bằng (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/cao-bang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            22.356557846000044,
+            105.26628112800006
+          ],
+          [
+            23.119617462000065,
+            106.83741444100008
+          ]
+        ],
+        "unit_count": 161,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "161 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "gia-lai-administrative-legacy",
+      "name": "Địa giới Gia Lai (cũ) · 218 phường/xã",
+      "city": "Gia Lai (cũ)",
+      "scope": "region",
+      "area_id": "gia-lai-legacy",
+      "coverage_provinces": [
+        "gia-lai"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "gia-lai-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Gia Lai (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/gia-lai/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            12.995797157000027,
+            107.45111901300004
+          ],
+          [
+            14.602419853000072,
+            108.87312316900005
+          ]
+        ],
+        "unit_count": 218,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "218 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ha-giang-administrative-legacy",
+      "name": "Địa giới Hà Giang (cũ) · 193 phường/xã",
+      "city": "Hà Giang (cũ)",
+      "scope": "region",
+      "area_id": "ha-giang-legacy",
+      "coverage_provinces": [
+        "ha-giang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ha-giang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hà Giang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ha-giang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            22.16698840300006,
+            104.33434295700005
+          ],
+          [
+            23.392581289000077,
+            105.57419792700006
+          ]
+        ],
+        "unit_count": 193,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "193 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ha-nam-administrative-legacy",
+      "name": "Địa giới Hà Nam (cũ) · 98 phường/xã",
+      "city": "Hà Nam (cũ)",
+      "scope": "region",
+      "area_id": "ha-nam-legacy",
+      "coverage_provinces": [
+        "ha-nam"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ha-nam-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hà Nam (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ha-nam/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.36271821200006,
+            105.76859769600009
+          ],
+          [
+            20.703744937000067,
+            106.18355430200006
+          ]
+        ],
+        "unit_count": 98,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "98 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ha-tinh-administrative-legacy",
+      "name": "Địa giới Hà Tĩnh (cũ) · 209 phường/xã",
+      "city": "Hà Tĩnh (cũ)",
+      "scope": "region",
+      "area_id": "ha-tinh-legacy",
+      "coverage_provinces": [
+        "ha-tinh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ha-tinh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hà Tĩnh (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ha-tinh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            17.910514832000047,
+            105.10387928300008
+          ],
+          [
+            18.805569000000048,
+            106.51093168700004
+          ]
+        ],
+        "unit_count": 209,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "209 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "hai-duong-administrative-legacy",
+      "name": "Địa giới Hải Dương (cũ) · 208 phường/xã",
+      "city": "Hải Dương (cũ)",
+      "scope": "region",
+      "area_id": "hai-duong-legacy",
+      "coverage_provinces": [
+        "hai-duong"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "hai-duong-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hải Dương (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/hai-duong/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.68358676400004,
+            106.12429326900008
+          ],
+          [
+            21.237388800000076,
+            106.61152952800006
+          ]
+        ],
+        "unit_count": 208,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "208 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "hai-phong-administrative-legacy",
+      "name": "Địa giới Hải Phòng (cũ) · 167 phường/xã",
+      "city": "Hải Phòng (cũ)",
+      "scope": "region",
+      "area_id": "hai-phong-legacy",
+      "coverage_provinces": [
+        "hai-phong"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "hai-phong-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hải Phòng (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/hai-phong/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.597935359000076,
+            106.40051442000004
+          ],
+          [
+            21.020761785000047,
+            107.21247297200006
+          ]
+        ],
+        "unit_count": 167,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "167 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "hau-giang-administrative-legacy",
+      "name": "Địa giới Hậu Giang (cũ) · 75 phường/xã",
+      "city": "Hậu Giang (cũ)",
+      "scope": "region",
+      "area_id": "hau-giang-legacy",
+      "coverage_provinces": [
+        "hau-giang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "hau-giang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hậu Giang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/hau-giang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.582102776000056,
+            105.32794137500008
+          ],
+          [
+            9.994088173000023,
+            105.89768219000007
+          ]
+        ],
+        "unit_count": 75,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "75 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "hoa-binh-administrative-legacy",
+      "name": "Địa giới Hòa Bình (cũ) · 151 phường/xã",
+      "city": "Hòa Bình (cũ)",
+      "scope": "region",
+      "area_id": "hoa-binh-legacy",
+      "coverage_provinces": [
+        "hoa-binh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "hoa-binh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hòa Bình (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/hoa-binh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.30513763400006,
+            104.83651733400006
+          ],
+          [
+            21.11257553100006,
+            105.85808556600006
+          ]
+        ],
+        "unit_count": 151,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "151 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "hung-yen-administrative-legacy",
+      "name": "Địa giới Hưng Yên (cũ) · 139 phường/xã",
+      "city": "Hưng Yên (cũ)",
+      "scope": "region",
+      "area_id": "hung-yen-legacy",
+      "coverage_provinces": [
+        "hung-yen"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "hung-yen-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Hưng Yên (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/hung-yen/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.602752661000068,
+            105.89449844200004
+          ],
+          [
+            21.006982803000028,
+            106.26933912000004
+          ]
+        ],
+        "unit_count": 139,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "139 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "khanh-hoa-administrative-legacy",
+      "name": "Địa giới Khánh Hòa (cũ) · 132 phường/xã",
+      "city": "Khánh Hòa (cũ)",
+      "scope": "region",
+      "area_id": "khanh-hoa-legacy",
+      "coverage_provinces": [
+        "khanh-hoa"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "khanh-hoa-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Khánh Hòa (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/khanh-hoa/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            6.9352201780000655,
+            108.66895294200003
+          ],
+          [
+            12.86867141700003,
+            117.8530292370001
+          ]
+        ],
+        "unit_count": 132,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "132 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "kien-giang-administrative-legacy",
+      "name": "Địa giới Kiên Giang (cũ) · 143 phường/xã",
+      "city": "Kiên Giang (cũ)",
+      "scope": "region",
+      "area_id": "kien-giang-legacy",
+      "coverage_provinces": [
+        "kien-giang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "kien-giang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Kiên Giang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/kien-giang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.254313424000031,
+            103.45804423500005
+          ],
+          [
+            10.540060008000069,
+            105.53941630300005
+          ]
+        ],
+        "unit_count": 143,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "143 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "kon-tum-administrative-legacy",
+      "name": "Địa giới Kon Tum (cũ) · 102 phường/xã",
+      "city": "Kon Tum (cũ)",
+      "scope": "region",
+      "area_id": "kon-tum-legacy",
+      "coverage_provinces": [
+        "kon-tum"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "kon-tum-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Kon Tum (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/kon-tum/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            13.921567976000063,
+            107.33216102000006
+          ],
+          [
+            15.416812897000057,
+            108.54756164600008
+          ]
+        ],
+        "unit_count": 102,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "102 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "lai-chau-administrative-legacy",
+      "name": "Địa giới Lai Châu (cũ) · 106 phường/xã",
+      "city": "Lai Châu (cũ)",
+      "scope": "region",
+      "area_id": "lai-chau-legacy",
+      "coverage_provinces": [
+        "lai-chau"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "lai-chau-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Lai Châu (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/lai-chau/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.68561554000007,
+            102.32079264700008
+          ],
+          [
+            22.81112085600006,
+            103.98579406700009
+          ]
+        ],
+        "unit_count": 106,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "106 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "lam-dong-administrative-legacy",
+      "name": "Địa giới Lâm Đồng (cũ) · 137 phường/xã",
+      "city": "Lâm Đồng (cũ)",
+      "scope": "region",
+      "area_id": "lam-dong-legacy",
+      "coverage_provinces": [
+        "lam-dong"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "lam-dong-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Lâm Đồng (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/lam-dong/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            11.212204933000066,
+            107.26567703300009
+          ],
+          [
+            12.318079948000047,
+            108.72929382300003
+          ]
+        ],
+        "unit_count": 137,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "137 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "lang-son-administrative-legacy",
+      "name": "Địa giới Lạng Sơn (cũ) · 194 phường/xã",
+      "city": "Lạng Sơn (cũ)",
+      "scope": "region",
+      "area_id": "lang-son-legacy",
+      "coverage_provinces": [
+        "lang-son"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "lang-son-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Lạng Sơn (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/lang-son/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.325067855000043,
+            106.09454345700004
+          ],
+          [
+            22.460800171000074,
+            107.36394927600008
+          ]
+        ],
+        "unit_count": 194,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "194 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "lao-cai-administrative-legacy",
+      "name": "Địa giới Lào Cai (cũ) · 151 phường/xã",
+      "city": "Lào Cai (cũ)",
+      "scope": "region",
+      "area_id": "lao-cai-legacy",
+      "coverage_provinces": [
+        "lao-cai"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "lao-cai-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Lào Cai (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/lao-cai/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.875314408000065,
+            103.53075633400005
+          ],
+          [
+            22.844903138000063,
+            104.63117218000008
+          ]
+        ],
+        "unit_count": 151,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "151 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "nam-dinh-administrative-legacy",
+      "name": "Địa giới Nam Định (cũ) · 175 phường/xã",
+      "city": "Nam Định (cũ)",
+      "scope": "region",
+      "area_id": "nam-dinh-legacy",
+      "coverage_provinces": [
+        "nam-dinh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "nam-dinh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Nam Định (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/nam-dinh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            19.88841056800004,
+            105.92382625700009
+          ],
+          [
+            20.499678218000042,
+            106.59780040800007
+          ]
+        ],
+        "unit_count": 175,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "175 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "nghe-an-administrative-legacy",
+      "name": "Địa giới Nghệ An (cũ) · 412 phường/xã",
+      "city": "Nghệ An (cũ)",
+      "scope": "region",
+      "area_id": "nghe-an-legacy",
+      "coverage_provinces": [
+        "nghe-an"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "nghe-an-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Nghệ An (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/nghe-an/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            18.552413940000065,
+            103.87480013400005
+          ],
+          [
+            19.99637514500006,
+            105.80654144300007
+          ]
+        ],
+        "unit_count": 412,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "412 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ninh-binh-administrative-legacy",
+      "name": "Địa giới Ninh Bình (cũ) · 125 phường/xã",
+      "city": "Ninh Bình (cũ)",
+      "scope": "region",
+      "area_id": "ninh-binh-legacy",
+      "coverage_provinces": [
+        "ninh-binh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ninh-binh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Ninh Bình (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ninh-binh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            19.909414291000076,
+            105.54270935100004
+          ],
+          [
+            20.45405769300004,
+            106.16841888400006
+          ]
+        ],
+        "unit_count": 125,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "125 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "ninh-thuan-administrative-legacy",
+      "name": "Địa giới Ninh Thuận (cũ) · 62 phường/xã",
+      "city": "Ninh Thuận (cũ)",
+      "scope": "region",
+      "area_id": "ninh-thuan-legacy",
+      "coverage_provinces": [
+        "ninh-thuan"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "ninh-thuan-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Ninh Thuận (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/ninh-thuan/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            11.306944111000064,
+            108.55180358900009
+          ],
+          [
+            12.165128708000054,
+            109.23320770300006
+          ]
+        ],
+        "unit_count": 62,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "62 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "phu-tho-administrative-legacy",
+      "name": "Địa giới Phú Thọ (cũ) · 207 phường/xã",
+      "city": "Phú Thọ (cũ)",
+      "scope": "region",
+      "area_id": "phu-tho-legacy",
+      "coverage_provinces": [
+        "phu-tho"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "phu-tho-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Phú Thọ (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/phu-tho/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.91640663100003,
+            104.81388855000006
+          ],
+          [
+            21.71977996800007,
+            105.45747375500008
+          ]
+        ],
+        "unit_count": 207,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "207 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "phu-yen-administrative-legacy",
+      "name": "Địa giới Phú Yên (cũ) · 106 phường/xã",
+      "city": "Phú Yên (cũ)",
+      "scope": "region",
+      "area_id": "phu-yen-legacy",
+      "coverage_provinces": [
+        "phu-yen"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "phu-yen-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Phú Yên (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/phu-yen/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            12.70626831100003,
+            108.67268371600005
+          ],
+          [
+            13.695185661000039,
+            109.45894622800006
+          ]
+        ],
+        "unit_count": 106,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "106 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "quang-binh-administrative-legacy",
+      "name": "Địa giới Quảng Bình (cũ) · 145 phường/xã",
+      "city": "Quảng Bình (cũ)",
+      "scope": "region",
+      "area_id": "quang-binh-legacy",
+      "coverage_provinces": [
+        "quang-binh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "quang-binh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Quảng Bình (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/quang-binh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            16.920509338000045,
+            105.60772363700005
+          ],
+          [
+            18.08959960900006,
+            106.99194335900006
+          ]
+        ],
+        "unit_count": 145,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "145 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "quang-nam-administrative-legacy",
+      "name": "Địa giới Quảng Nam (cũ) · 233 phường/xã",
+      "city": "Quảng Nam (cũ)",
+      "scope": "region",
+      "area_id": "quang-nam-legacy",
+      "coverage_provinces": [
+        "quang-nam"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "quang-nam-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Quảng Nam (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/quang-nam/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            14.951393127000074,
+            107.21041107400004
+          ],
+          [
+            16.067552567000064,
+            108.73974902600008
+          ]
+        ],
+        "unit_count": 233,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "233 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "quang-ngai-administrative-legacy",
+      "name": "Địa giới Quảng Ngãi (cũ) · 170 phường/xã",
+      "city": "Quảng Ngãi (cũ)",
+      "scope": "region",
+      "area_id": "quang-ngai-legacy",
+      "coverage_provinces": [
+        "quang-ngai"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "quang-ngai-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Quảng Ngãi (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/quang-ngai/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            14.531601906000049,
+            108.23577117900004
+          ],
+          [
+            15.425959702000057,
+            109.08393859900008
+          ]
+        ],
+        "unit_count": 170,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "170 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "quang-ninh-administrative-legacy",
+      "name": "Địa giới Quảng Ninh (cũ) · 171 phường/xã",
+      "city": "Quảng Ninh (cũ)",
+      "scope": "region",
+      "area_id": "quang-ninh-legacy",
+      "coverage_provinces": [
+        "quang-ninh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "quang-ninh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Quảng Ninh (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/quang-ninh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.716249865000066,
+            106.43882801100006
+          ],
+          [
+            21.66382588400006,
+            108.10119444400004
+          ]
+        ],
+        "unit_count": 171,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "171 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "quang-tri-administrative-legacy",
+      "name": "Địa giới Quảng Trị (cũ) · 119 phường/xã",
+      "city": "Quảng Trị (cũ)",
+      "scope": "region",
+      "area_id": "quang-tri-legacy",
+      "coverage_provinces": [
+        "quang-tri"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "quang-tri-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Quảng Trị (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/quang-tri/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            16.301630550000027,
+            106.51616163400007
+          ],
+          [
+            17.164876938000077,
+            107.38895416300005
+          ]
+        ],
+        "unit_count": 119,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "119 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "soc-trang-administrative-legacy",
+      "name": "Địa giới Sóc Trăng (cũ) · 108 phường/xã",
+      "city": "Sóc Trăng (cũ)",
+      "scope": "region",
+      "area_id": "soc-trang-legacy",
+      "coverage_provinces": [
+        "soc-trang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "soc-trang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Sóc Trăng (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/soc-trang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.244475365000028,
+            105.54397916000005
+          ],
+          [
+            9.937806129000023,
+            106.29975128200005
+          ]
+        ],
+        "unit_count": 108,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "108 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "son-la-administrative-legacy",
+      "name": "Địa giới Sơn La (cũ) · 200 phường/xã",
+      "city": "Sơn La (cũ)",
+      "scope": "region",
+      "area_id": "son-la-legacy",
+      "coverage_provinces": [
+        "son-la"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "son-la-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Sơn La (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/son-la/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.574827194000022,
+            103.21214490000006
+          ],
+          [
+            22.030763626000066,
+            105.02529907200005
+          ]
+        ],
+        "unit_count": 200,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "200 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "thai-binh-administrative-legacy",
+      "name": "Địa giới Thái Bình (cũ) · 242 phường/xã",
+      "city": "Thái Bình (cũ)",
+      "scope": "region",
+      "area_id": "thai-binh-legacy",
+      "coverage_provinces": [
+        "thai-binh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "thai-binh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Thái Bình (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/thai-binh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.249866000000054,
+            106.10942840600006
+          ],
+          [
+            20.729139377000024,
+            106.65846765000003
+          ]
+        ],
+        "unit_count": 242,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "242 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "thai-nguyen-administrative-legacy",
+      "name": "Địa giới Thái Nguyên (cũ) · 172 phường/xã",
+      "city": "Thái Nguyên (cũ)",
+      "scope": "region",
+      "area_id": "thai-nguyen-legacy",
+      "coverage_provinces": [
+        "thai-nguyen"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "thai-nguyen-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Thái Nguyên (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/thai-nguyen/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.325138051000067,
+            105.47750854500003
+          ],
+          [
+            22.047868729000072,
+            106.23799133300008
+          ]
+        ],
+        "unit_count": 172,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "172 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "thanh-hoa-administrative-legacy",
+      "name": "Địa giới Thanh Hóa (cũ) · 547 phường/xã",
+      "city": "Thanh Hóa (cũ)",
+      "scope": "region",
+      "area_id": "thanh-hoa-legacy",
+      "coverage_provinces": [
+        "thanh-hoa"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "thanh-hoa-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Thanh Hóa (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/thanh-hoa/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            19.287081107000063,
+            104.37424963500007
+          ],
+          [
+            20.670557022000025,
+            106.07837405700008
+          ]
+        ],
+        "unit_count": 547,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "547 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "thua-thien-hue-administrative-legacy",
+      "name": "Địa giới Thừa Thiên Huế (cũ) · 133 phường/xã",
+      "city": "Thừa Thiên Huế (cũ)",
+      "scope": "region",
+      "area_id": "thua-thien-hue-legacy",
+      "coverage_provinces": [
+        "thua-thien-hue"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "thua-thien-hue-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Thừa Thiên Huế (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/thua-thien-hue/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            15.994545937000055,
+            107.01605224600007
+          ],
+          [
+            16.74318504300004,
+            108.19427892500005
+          ]
+        ],
+        "unit_count": 133,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "133 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "tien-giang-administrative-legacy",
+      "name": "Địa giới Tiền Giang (cũ) · 164 phường/xã",
+      "city": "Tiền Giang (cũ)",
+      "scope": "region",
+      "area_id": "tien-giang-legacy",
+      "coverage_provinces": [
+        "tien-giang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "tien-giang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Tiền Giang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/tien-giang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.189759371000036,
+            105.81575775100004
+          ],
+          [
+            10.586997986000029,
+            106.82682037400008
+          ]
+        ],
+        "unit_count": 164,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "164 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "tra-vinh-administrative-legacy",
+      "name": "Địa giới Trà Vinh (cũ) · 104 phường/xã",
+      "city": "Trà Vinh (cũ)",
+      "scope": "region",
+      "area_id": "tra-vinh-legacy",
+      "coverage_provinces": [
+        "tra-vinh"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "tra-vinh-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Trà Vinh (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/tra-vinh/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.52905845600003,
+            105.95150756800007
+          ],
+          [
+            10.081119537000063,
+            106.61807488100004
+          ]
+        ],
+        "unit_count": 104,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "104 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "tuyen-quang-administrative-legacy",
+      "name": "Địa giới Tuyên Quang (cũ) · 137 phường/xã",
+      "city": "Tuyên Quang (cũ)",
+      "scope": "region",
+      "area_id": "tuyen-quang-legacy",
+      "coverage_provinces": [
+        "tuyen-quang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "tuyen-quang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Tuyên Quang (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/tuyen-quang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.497589111000025,
+            104.84860229500003
+          ],
+          [
+            22.697784424000076,
+            105.59850664200007
+          ]
+        ],
+        "unit_count": 137,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "137 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "vinh-long-administrative-legacy",
+      "name": "Địa giới Vĩnh Long (cũ) · 102 phường/xã",
+      "city": "Vĩnh Long (cũ)",
+      "scope": "region",
+      "area_id": "vinh-long-legacy",
+      "coverage_provinces": [
+        "vinh-long"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "vinh-long-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Vĩnh Long (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/vinh-long/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            9.883849144000067,
+            105.68173786800008
+          ],
+          [
+            10.331324577000032,
+            106.28974445700004
+          ]
+        ],
+        "unit_count": 102,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "102 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "vinh-phuc-administrative-legacy",
+      "name": "Địa giới Vĩnh Phúc (cũ) · 121 phường/xã",
+      "city": "Vĩnh Phúc (cũ)",
+      "scope": "region",
+      "area_id": "vinh-phuc-legacy",
+      "coverage_provinces": [
+        "vinh-phuc"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "vinh-phuc-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Vĩnh Phúc (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/vinh-phuc/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.155421371000045,
+            105.32263946500007
+          ],
+          [
+            21.573841095000034,
+            105.78640050900003
+          ]
+        ],
+        "unit_count": 121,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "121 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "yen-bai-administrative-legacy",
+      "name": "Địa giới Yên Bái (cũ) · 168 phường/xã",
+      "city": "Yên Bái (cũ)",
+      "scope": "region",
+      "area_id": "yen-bai-legacy",
+      "coverage_provinces": [
+        "yen-bai"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "yen-bai-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Yên Bái (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/yen-bai/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            21.325941086000057,
+            103.88596184500005
+          ],
+          [
+            22.291866302000074,
+            105.10084533700007
+          ]
+        ],
+        "unit_count": 168,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "168 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "da-nang-administrative-legacy",
+      "name": "Địa giới Đà Nẵng (cũ) · 47 phường/xã",
+      "city": "Đà Nẵng (cũ)",
+      "scope": "region",
+      "area_id": "da-nang-legacy",
+      "coverage_provinces": [
+        "da-nang"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "da-nang-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Đà Nẵng (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/da-nang/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            15.91808676100004,
+            107.81669872200007
+          ],
+          [
+            16.225801104000027,
+            108.33842468300008
+          ]
+        ],
+        "unit_count": 47,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "47 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "dak-lak-administrative-legacy",
+      "name": "Địa giới Đắk Lắk (cũ) · 180 phường/xã",
+      "city": "Đắk Lắk (cũ)",
+      "scope": "region",
+      "area_id": "dak-lak-legacy",
+      "coverage_provinces": [
+        "dak-lak"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "dak-lak-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Đắk Lắk (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/dak-lak/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            12.160790443000053,
+            107.48418173000005
+          ],
+          [
+            13.416652534000036,
+            108.99557495100004
+          ]
+        ],
+        "unit_count": 180,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "180 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "dak-nong-administrative-legacy",
+      "name": "Địa giới Đắk Nông (cũ) · 71 phường/xã",
+      "city": "Đắk Nông (cũ)",
+      "scope": "region",
+      "area_id": "dak-nong-legacy",
+      "coverage_provinces": [
+        "dak-nong"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "dak-nong-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Đắk Nông (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/dak-nong/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            11.748735386000021,
+            107.20622800100006
+          ],
+          [
+            12.812330246000045,
+            108.11639404300007
+          ]
+        ],
+        "unit_count": 71,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "71 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "dien-bien-administrative-legacy",
+      "name": "Địa giới Điện Biên (cũ) · 129 phường/xã",
+      "city": "Điện Biên (cũ)",
+      "scope": "region",
+      "area_id": "dien-bien-legacy",
+      "coverage_provinces": [
+        "dien-bien"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "dien-bien-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Điện Biên (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/dien-bien/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            20.892666167000073,
+            102.14393626000003
+          ],
+          [
+            22.54808317900006,
+            103.59870910600006
+          ]
+        ],
+        "unit_count": 129,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "129 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    },
+    {
+      "id": "dong-thap-administrative-legacy",
+      "name": "Địa giới Đồng Tháp (cũ) · 141 phường/xã",
+      "city": "Đồng Tháp (cũ)",
+      "scope": "region",
+      "area_id": "dong-thap-legacy",
+      "coverage_provinces": [
+        "dong-thap"
+      ],
+      "theme": "administrative_legacy",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh phường/xã trước sáp nhập từ GeoJSON công khai; bản tham khảo",
+      "source_url": "https://github.com/phuongnt-oe/vietnam-polygon-export-tool",
+      "manifest": {
+        "id": "dong-thap-administrative-legacy",
+        "status": "reference_overlay",
+        "title": "Địa giới Đồng Tháp (cũ)",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_legacy/dong-thap/overview.json?v=legacy-admin-20261031",
+        "bounds": [
+          [
+            10.135042081000051,
+            105.18722660500003
+          ],
+          [
+            10.973450902000025,
+            105.94192504900008
+          ]
+        ],
+        "unit_count": 141,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/phuongnt-oe/vietnam-polygon-export-tool/tree/f5ea3e3225b9af3534d293ac42dafa0ab82f9c85\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới cũ · Vietnam Polygon Export Tool · dữ liệu tham khảo</a>",
+        "notice": "141 phường/xã cũ theo bản GeoJSON công khai trước sáp nhập; nguồn chưa ghi ngày đo/hiệu lực cụ thể. Mã là mã riêng của nguồn, không phải mã TCTK. Có thể khác các lần điều chỉnh trước 01/7/2025; chỉ dùng tham khảo."
+      }
+    }
+  ]
+}

@@ -30,10 +30,10 @@ test('fullscreen filter button opens desktop sidebar and delegates mobile sheet'
 });
 
 test('all Maps entries start fullscreen with 2030 by default while planning entries hide listings',async()=>{
- for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','invalid']){
+ for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','administrative_legacy','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
-  const ctx={state:{open:false},VALID_PLANNING_THEMES:['partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative'],
+  const ctx={state:{open:false},VALID_PLANNING_THEMES:['partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','administrative_legacy'],
    normalizedSnapshot:x=>x,element:()=>el,captureDashboardState(){},setMobileSheetExpanded(){},
    setFocusMode:value=>{focus=value;},syncAdminEditModeToggle(){},filterSummaryText:()=>'',emitTrack(){},defaultBaseLayer:theme=>theme==='administrative'?'street':'satellite',
    root:{document:{body:el},RADAR_PLANNING_REGIONS:[{id:'dong-nai-expanded',bounds:[[10.49,106.39],[12.33,107.6]],max_zoom:10}],history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
@@ -98,6 +98,7 @@ test('a listing response arriving after hiding cannot restore markers or cards',
 test('administrative entries use OSM while ordinary planning retains satellite',()=>{
  const ctx={};vm.createContext(ctx);vm.runInContext(functions('defaultBaseLayer'),ctx);
  assert.equal(ctx.defaultBaseLayer('administrative'),'street');
+ assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'street');
  for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'satellite');
 });
 test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters',async()=>{

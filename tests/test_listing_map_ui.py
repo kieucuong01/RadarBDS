@@ -410,8 +410,8 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=dong-nai-2030-20261029" in template
     assert "js/main/planning_parcels.js') }}?v=planning-area-20261030" in template
-    assert "js/main/planning_overlay.js') }}?v=national-admin-20261031" in template
-    assert "js/main/planning_administrative.js') }}?v=national-admin-20261031" in template
+    assert "js/main/planning_overlay.js') }}?v=legacy-admin-20261031" in template
+    assert "js/main/planning_administrative.js') }}?v=legacy-admin-20261031" in template
     assert "listing-map-price-zoom-20260813" not in template
     assert "listing-map-compact-labels-20260813" not in template
     assert "js/main/core.js') }}?v=listing-workspace-20260811" not in template

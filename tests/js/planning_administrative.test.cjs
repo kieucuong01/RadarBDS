@@ -114,3 +114,19 @@ test('animation pauses detail queues until the new viewport settles',async()=>{
  assert(h.requests.slice(5).every(r=>r.url.includes('/26732.json')));
  assert.equal(h.requests.length,6);root.fire('remove');assert.equal(h.handlers.size,0);
 });
+
+test('legacy wards retain district context, lazy details and their own cache',async()=>{
+ const folder=path.join(__dirname,'../../static/data/admin_vn_legacy/binh-duong');
+ const old=JSON.parse(fs.readFileSync(path.join(folder,'overview.json'),'utf8'));
+ const h=harness(),layer=h.create({id:'binh-duong-administrative-legacy'});
+ layer.fire('add');h.deliver(h.requests[0],old);await flush();
+ assert.equal(h.requests.length,1);assert(h.calls[0].includes('/admin_vn_legacy/binh-duong/'));
+ const f=old.features[0],polygon=h.interactions.get(f.properties.code);
+ assert(polygon.tooltip.text.textContent.includes(f.properties.district));
+ assert.equal(polygon.tooltip.options.permanent,false);polygon.click();assert.equal(h.views.length,1);
+ layer.fire('remove');const again=h.create({id:'binh-duong-administrative-legacy'});again.fire('add');
+ assert.equal(h.requests.length,1,'Toggling old boundaries uses the old-source cache');
+ again.fire('remove');const modern=h.create();modern.fire('add');
+ assert.equal(h.requests.length,2);assert(h.calls[1].includes('/admin_hcm_2025/'));
+ modern.fire('remove');assert.equal(h.handlers.size,0);
+});
