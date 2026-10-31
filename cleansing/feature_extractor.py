@@ -847,7 +847,7 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
 
     num = r'(\d+(?:[,.]\d+)?)'
     unit = r'(m[²2]?|mv)'
-    label = r'(?:tho\s*cu|tho|tc|odt|dat\s*o(?:\s*do\s*thi)?)'
+    label = r'(?:tho\s*cu|tho|tcu|tc|odt|dat\s*o(?:\s*do\s*thi)?)'
 
     def _value(raw: str) -> Optional[float]:
         return parse_area_number(raw)
@@ -865,6 +865,8 @@ def extract_tho_cu(text: str, total_area: Optional[float] = None) -> Dict[str, O
         return result
 
     full_patterns = [
+        # Source-backed broker spelling of "full thổ cư"; require the whole phrase.
+        r'(?<![a-z0-9])phun\s+tho\s*cu\b',
         rf'(?:full\s*{label}|{label}\s*(?:full|fun))',
         rf'100(?:[,.]0+)?\s*%\s*{label}',
         rf'{label}(?:\s|[.:：\-]){{0,8}}100(?:[,.]0+)?\s*%',
