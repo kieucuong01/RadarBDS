@@ -35,3 +35,25 @@ def test_admin_module_is_loaded_before_overlay_and_keeps_independent_source():
     item=data['layers'][0]
     assert item['theme']=='administrative' and item['source']=='gis'
     assert item['manifest']['unit_count']==168
+
+
+def test_dongnai_snapshot_has_95_valid_units_and_reference_provenance():
+    folder=ROOT/'static/data/admin_dongnai_2025'
+    data=json.loads((folder/'overview.json').read_text(encoding='utf8'))
+    assert len(data['features'])==95 and len({f['properties']['code'] for f in data['features']})==95
+    assert len(list(folder.glob('*.json')))==96
+    assert data['source_url']=='https://github.com/thanglequoc/vietnamese-provinces-database'
+    assert data['source_license']=='MIT' and len(data['source_revision'])==40
+    assert 'Copyright (c) 2021 Thang Le Quoc' in (folder/'LICENSE.txt').read_text(encoding='utf8')
+    project=Transformer.from_crs(4326,3857,always_xy=True).transform
+    for feature in data['features']:
+        p=feature['properties']
+        full=json.loads((folder/(p['code']+'.json')).read_text(encoding='utf8'))
+        geometry=shape(full['geometry']);overview=shape(feature['geometry'])
+        assert geometry.is_valid and overview.is_valid and full['properties']==p
+        assert geometry.contains(Point(p['label'][1],p['label'][0]))
+        assert transform(project,geometry).hausdorff_distance(transform(project,overview))<=10.1
+    assert (folder/'overview.json').stat().st_size<1_500_000
+    item=json.loads((ROOT/'config/planning_administrative.json').read_text(encoding='utf8'))['layers'][1]
+    assert item['coverage_provinces']==['dong-nai','binh-phuoc']
+    assert item['manifest']['source_kind']=='open_administrative_reference'

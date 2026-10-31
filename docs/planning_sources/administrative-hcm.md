@@ -51,3 +51,15 @@ The mainland and Côn Đảo are included in the full-view bounds, so the first
 province-wide view is broad. Enabling the layer on an existing filtered map
 keeps that viewport. This is a reference display, not a certified boundary
 record or a replacement for official administrative documentation.
+
+## Đồng Nai mới (2025)
+
+- 95 xã/phường gồm Đồng Nai và Bình Phước cũ, dữ liệu tham khảo từ [Vietnamese Provinces Database](https://github.com/thanglequoc/vietnamese-provinces-database), giấy phép MIT giữ tại `static/data/admin_dongnai_2025/LICENSE.txt`.
+- Chốt bản nguồn `8b78ba5118715e1fa81769286724db79346abf52`; đối chiếu SHA-1 Git blob của 95 file trước khi nhập. Nguồn tổng hợp tham chiếu bản đồ sắp xếp hành chính `sapnhap.bando.com.vn`, không phải hồ sơ địa giới pháp lý được chứng thực.
+- Giữ nguyên tọa độ ranh nguồn, chỉ loại thuộc tính không dùng. Tổng quan giản lược tối đa 10 m (Hausdorff), khoảng 1,4 MB JSON; chi tiết 95 đơn vị tổng khoảng 8,5 MB, chỉ tải đơn vị giao vùng nhìn từ zoom 13, tối đa 4 yêu cầu đồng thời. Cache tách riêng HCM/Đồng Nai.
+- Trong Khu vực chọn Đồng Nai hoặc Bình Phước (địa danh cũ), bật Địa giới. Một lớp phủ toàn bộ tỉnh mới; bộ lọc nguồn vẫn theo tỉnh cũ như QH SDĐ 2030.
+- Tái tạo từ thư mục nguồn đã tải: `python -m scripts.capture_dongnai_administrative --source <folder>`; thư mục cần danh sách GitHub `github-wards-dir.json`, commit `github-commit.json`, 95 GeoJSON gốc và `SOURCE-LICENSE.txt`. Không tải dữ liệu từ trình duyệt người dùng.
+
+## Đóng bảng điều khiển
+
+`pointerdown` capture trên document đóng Khu vực, Tờ/thửa, Lớp bản đồ khi chạm/click ra ngoài; thao tác vào trường nhập bên trong giữ bảng mở. Bảng Bộ lọc chỉ đóng khi đang mở dạng drawer trên Maps và click ngoài sidebar/nút mở; giữ cơ chế cập nhật kích thước Leaflet sau khi đóng. Listener popover được tháo khi hủy overlay; drawer dùng listener chung một lần và kiểm tra Maps đang mở.

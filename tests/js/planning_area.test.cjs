@@ -2,6 +2,17 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const api=require('../../static/js/main/planning_area.js');
 const provinces=require('../../config/planning_landuse_areas.json').provinces;
 
+test('planning choices use explicit province coverage, not overlapping bounding rectangles',()=>{
+ const bp=provinces.find(p=>p.id==='binh-phuoc'), bd=provinces.find(p=>p.id==='binh-duong');
+ const native={area_id:'hcm-expanded',theme:'partition'};
+ assert.equal(api.coversProvince(native,bd),true);
+ assert.equal(api.coversProvince(native,bp),false);
+ assert.equal(api.coversProvince({id:bp.layer_ids[0],theme:'land_use_2030'},bp),true);
+ assert.equal(api.coversProvince({id:bd.layer_ids[0],theme:'land_use_2030'},bp),false);
+ assert.equal(api.coversProvince({city:'Bến Cát',scope:'area'},bd),true);
+ assert.equal(api.coversProvince({city:'Bến Cát',scope:'area'},bp),false);
+});
+
 test('whole-province and district framing respect sparse source zoom floors',()=>{
  let zoom;const b={getCenter:()=>({lat:21,lng:106})};
  const map={getBoundsZoom:()=>8,setView(c,z){zoom=z;}};

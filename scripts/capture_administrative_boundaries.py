@@ -35,6 +35,11 @@ def capture(output,source_file=None):
     rows=sorted(data['features'],key=lambda r:r['attributes']['MaPhuongXa'])
     assert len({r['attributes']['MaPhuongXa'] for r in rows})==168
     geometries=[shape(esri_geometry(r['geometry']['rings'])) for r in rows]
+    return write_snapshot(output,rows,geometries,{'source_url':SOURCE,'source_service':'HanhChinhXa/FeatureServer/0',
+        'reference_url':'https://diaocthongthai.com/ban-do-tp-hcm-new-2025/'})
+
+
+def write_snapshot(output,rows,geometries,provenance):
     assert all(g.is_valid and not g.is_empty and g.geom_type in ('Polygon','MultiPolygon') for g in geometries)
     tree=STRtree(geometries);colours=[];overview=[]
     to_metres=Transformer.from_crs(4326,3857,always_xy=True).transform
@@ -70,7 +75,7 @@ def capture(output,source_file=None):
     bounds=[[min(f['properties']['bounds'][0][0] for f in overview),min(f['properties']['bounds'][0][1] for f in overview)],
             [max(f['properties']['bounds'][1][0] for f in overview),max(f['properties']['bounds'][1][1] for f in overview)]]
     write_json(output/'overview.json',{'type':'FeatureCollection','source_checked_on':date.today().isoformat(),
-        'source_url':SOURCE,'source_service':'HanhChinhXa/FeatureServer/0','reference_url':'https://diaocthongthai.com/ban-do-tp-hcm-new-2025/',
+        **provenance,
         'detail_min_zoom':13,'overview_simplification_metres':10,'bounds':bounds,'features':overview})
     print(json.dumps({'units':len(overview),'overview_bytes':(output/'overview.json').stat().st_size,
                       'detail_bytes':sum((output/(f['properties']['code']+'.json')).stat().st_size for f in overview),'bounds':bounds}))

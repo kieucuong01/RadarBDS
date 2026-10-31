@@ -1,5 +1,5 @@
 {
-  "source_checked_on": "2026-10-29",
+  "source_checked_on": "2026-10-31",
   "layers": [
     {
       "id": "hcm-administrative-2025",
@@ -34,6 +34,45 @@
         "legend_available": false,
         "attribution": "<a href=\"https://gisxaydung.tphcm.gov.vn/tracuuttqh\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới 2025 · GIS Sở QH-KT TP.HCM</a>",
         "notice": "168 phường, xã và đặc khu theo GIS công khai, gồm Côn Đảo. Tổng quan giản lược 10 m để tải nhẹ; từ zoom 13 tải hình học gốc theo vùng nhìn. Bản hiển thị tham khảo, không thay hồ sơ địa giới."
+      }
+    },
+    {
+      "id": "dongnai-administrative-2025",
+      "name": "Địa giới hành chính Đồng Nai mới · 95 đơn vị",
+      "city": "Đồng Nai mới",
+      "scope": "region",
+      "area_id": "dong-nai-expanded",
+      "coverage_provinces": [
+        "dong-nai",
+        "binh-phuoc"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 95 xã/phường mới từ bộ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "dongnai-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Đồng Nai mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_dongnai_2025/overview.json?v=administrative-20261031",
+        "bounds": [
+          [
+            10.579113,
+            106.411616
+          ],
+          [
+            12.298408,
+            107.577774
+          ]
+        ],
+        "unit_count": 95,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Đồng Nai · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "95 xã/phường Đồng Nai mới, gồm Đồng Nai và Bình Phước cũ. Dữ liệu mở tổng hợp, tham chiếu bản đồ sắp xếp hành chính; không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
       }
     }
   ]

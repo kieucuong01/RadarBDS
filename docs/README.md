@@ -32,7 +32,7 @@ Do not load every doc by default. The project has long crawl and product notes; 
 | Reference land-use planning 2030 | `planning_sources/landuse-2030.md` | `config/planning_landuse_2030.json`, `static/js/main/planning_overlay.js`, `services/planning_live.py` |
 | Nationwide 2030 and 63 historic provinces | `planning_sources/national-2030.md` | `config/planning_landuse_2030*.json`, `config/planning_landuse_areas.json`, `config/planning_regions.py`, `static/js/main/planning_overlay.js` |
 | Historic province/district selection and Tây Ninh mới 2030 | `planning_sources/historic-area-selection.md`, `planning_sources/tay-ninh-2030.md` | `config/planning_landuse_areas.json`, `static/js/main/planning_area.js`, `static/js/main/planning_overlay.js` |
-| HCM new administrative boundaries | `planning_sources/administrative-hcm.md` | `config/planning_administrative.json`, `static/js/main/planning_administrative.js`, `scripts/capture_administrative_boundaries.py` |
+| HCM / Dong Nai new administrative boundaries | `planning_sources/administrative-hcm.md` | `config/planning_administrative.json`, `static/js/main/planning_administrative.js`, `scripts/capture_administrative_boundaries.py` |
 | Transport metro and main-road reference | `planning_sources/transport.md` | `config/planning_transport.json`, `static/js/main/planning_overlay.js`, `services/planning_live.py` |
 | TP.HCM 100-year vision draft reference | `planning_sources/vision-100.md` | `config/planning_vision_100.json`, `static/js/main/planning_overlay.js`, `services/planning_live.py` |
 | Detailed planning GIS and map source labels | `planning_sources/detailed-gis.md` | `services/planning_tiles.py`, `config/planning_gis_metadata/`, `static/js/main/planning_overlay.js` |

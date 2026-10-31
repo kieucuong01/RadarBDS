@@ -1431,3 +1431,8 @@ body.listing-map-open .mobile-bottom-nav {
     animation: none;
   }
 }
+.listing-map-attribution{position:relative;margin:0 5px 5px 0!important}
+.listing-map-attribution>summary{list-style:none;cursor:pointer;width:24px;height:24px;line-height:24px;text-align:center;border-radius:50%;background:#ffffffe6;color:#365950;font-size:17px;box-shadow:0 1px 4px #0002}
+.listing-map-attribution>summary::-webkit-details-marker{display:none}
+.listing-map-attribution .leaflet-control-attribution{position:absolute;right:0;bottom:30px;float:none;margin:0!important;width:max-content;max-width:min(76vw,600px);padding:6px 9px;background:#fffffff2;border-radius:6px;white-space:normal}
+.listing-map-attribution:not([open]) .leaflet-control-attribution{display:none}

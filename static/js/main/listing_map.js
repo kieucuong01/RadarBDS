@@ -1082,6 +1082,20 @@
     },320);
   }
 
+  function outsideFilters(target, sidebar, trigger) {
+    return !!target && (!sidebar || !sidebar.contains(target)) && (!trigger || !trigger.contains(target));
+  }
+
+  function onOutsideFilterPointer(event) {
+    if (!state.open) return;
+    var sidebar=element('sidebar'),body=root.document.body;
+    if (!body.classList.contains('listing-map-filter-open') && !(sidebar&&sidebar.classList.contains('show'))) return;
+    if (!outsideFilters(event.target,sidebar,root.document.querySelector('.planning-filter-button'))) return;
+    body.classList.remove('listing-map-filter-open');
+    if (sidebar&&sidebar.classList.contains('show')&&typeof root.hideSidebarMobile==='function')root.hideSidebarMobile();
+    root.setTimeout(function(){if(state.map)state.map.invalidateSize({pan:false});},320);
+  }
+
   function observeMapSize(map, environment) {
     var env = environment || root;
     var container = map.getContainer();
@@ -1634,6 +1648,14 @@
     state.markerLayer = L.layerGroup().addTo(state.map);
     state.markerLabelLayer = L.layerGroup().addTo(state.map);
     mountMapActionControls(L);
+    if (state.map.attributionControl) {
+      var attribution=state.map.attributionControl.getContainer();
+      var sources=root.document.createElement('details'),sourceToggle=root.document.createElement('summary');
+      sources.className='listing-map-attribution leaflet-control';
+      sourceToggle.textContent='ⓘ';sourceToggle.setAttribute('aria-label','Nguồn bản đồ');sourceToggle.title='Nguồn bản đồ';
+      attribution.parentNode.appendChild(sources);sources.appendChild(sourceToggle);sources.appendChild(attribution);
+      L.DomEvent.disableClickPropagation(sources);L.DomEvent.disableScrollPropagation(sources);
+    }
     state.map.on("zoomend", function () {
       refreshMarkerRadii();
       scheduleMarkerLabelRefresh();
@@ -3623,6 +3645,7 @@
       state.mediaQuery.addListener(state.mediaQueryHandler);
     }
     doc.addEventListener("keydown", onKeydown);
+    doc.addEventListener('pointerdown',onOutsideFilterPointer,true);
     win.addEventListener("popstate", function (event) {
       if (shouldCloseMapOnPopstate(event, state.open)) {
         close({
@@ -3695,6 +3718,7 @@
     toggleAdminEditMode: toggleAdminEditMode,
     toggleFocusMode: toggleFocusMode,
     toggleFilters: toggleFilters,
+    outsideFilters: outsideFilters,
     showRecent: showRecent,
     showLocations: showLocations,
     isOpen: isOpen,

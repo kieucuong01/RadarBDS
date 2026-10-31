@@ -1,5 +1,15 @@
 (function(root,factory){var api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.RadarPlanningArea=api;})(typeof window!=='undefined'?window:null,function(){
   'use strict';
+  function coversProvince(item,province){
+    if(!province)return true;
+    if(item.theme==='land_use_2030')return (province.layer_ids||[]).indexOf(item.id)>=0;
+    if(Array.isArray(item.coverage_provinces))return item.coverage_provinces.indexOf(province.id)>=0;
+    var hcm=['binh-duong','hcm','brvt'];
+    if(item.area_id==='hcm-expanded')return hcm.indexOf(province.id)>=0;
+    if(item.area_id==='hcm-legacy')return province.id==='hcm'||item.theme==='transport'&&hcm.indexOf(province.id)>=0;
+    if(item.area_id===province.region_id||item.area_id===province.id+'-legacy')return true;
+    return province.id==='binh-duong'&&['Bến Cát','Thủ Dầu Một','Thuận An','Dĩ An','Tân Uyên','Bàu Bàng','Dầu Tiếng','Phú Giáo','Bắc Tân Uyên'].indexOf(item.city)>=0;
+  }
   function initial(provinces,region){
     if(!Array.isArray(provinces)||!provinces.length)return null;
     var requested=region==='dong-nai-expanded'?'dong-nai-legacy':region==='hcm-expanded'?'hcm-legacy':region;
@@ -43,5 +53,5 @@
       onChange(p,{province:p.id,district:d?d.id:'',bounds:d?d.bounds:(p.focus_bounds||p.bounds),max_zoom:13,min_zoom:p.min_zoom||8});panel.open=false;});
     return panel;
   }
-  return {initial:initial,mount:mount,focus:focus};
+  return {initial:initial,mount:mount,focus:focus,coversProvince:coversProvince};
 });
