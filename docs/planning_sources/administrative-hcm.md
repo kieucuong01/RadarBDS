@@ -40,8 +40,8 @@ version query in the manifest and module when recapturing published assets.
 
 The independent Địa giới toggle starts off on ordinary Maps and at 100% when
 selected, with light 17% polygon fills and source names. Its vectors and labels
-are below parcel/listing panes and do not intercept clicks. Labels are culled
-when crowded. Enabling it selects the existing OSM street base; other planning
+are below parcel/listing panes. Names appear only in hover tooltips; clicking a
+ward zooms into it. Enabling it selects the existing OSM street base; other planning
 entries retain their satellite default. Users can still choose satellite.
 
 Direct entry:
