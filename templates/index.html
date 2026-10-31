@@ -131,7 +131,8 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=maps-reuse-20261030"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_transport.js') }}?v=planning-transport-gis-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative.js') }}?v=map-hover-20261031"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=map-hover-20261031"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_reference_branding.js') }}?v=national-branding-20261031"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=national-branding-20261031"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=maps-controls-20261028">

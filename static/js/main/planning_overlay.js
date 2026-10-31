@@ -1,8 +1,10 @@
 (function (root, factory) {
-  var api = factory();
+  var branding = typeof module === 'object' && module.exports
+    ? require('./planning_reference_branding.js') : root && root.RadarPlanningReferenceBranding;
+  var api = factory(branding);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.RadarPlanningOverlay = api;
-})(typeof window !== 'undefined' ? window : null, function () {
+})(typeof window !== 'undefined' ? window : null, function (branding) {
   'use strict';
 
   function dismissOutsidePanels(panels,target) {
@@ -83,29 +85,8 @@
   }
 
   function referenceAnnotations(template) {
-    // Verified exterior labels, zoom-11 world pixels; never mask land colours.
-    var base = 'https://r4gmiynxmeobj.vcdn.cloud/';
-    function rect(x,y,e,s) { return [[x,y],[e,y],[e,s],[x,s]]; }
-    if (template === base + 'binh-duong-2030/{z}/{x}/{y}.png') return [
-      [[417319,245988],[417450,246128],[417426,246151],[417295,246011]],
-      [[417726,246190],[417847,246190],[417847,246219],[417726,246219]],
-      rect(417390.5,245333.5,417566.5,245366),
-      [[417908.54,245630.91],[417929.17,245748.24],[417906.13,245752.29],[417885.5,245634.96]]
-    ];
-    if (template === base + 'tay-ninh-2030/{z}/{x}/{y}.png') return [
-      rect(416685.5,244868,416831,244895.5),
-      rect(417153.5,245237,417217,245251),
-      rect(417081,245635,417185,245655.5),
-      rect(416318.5,245769,416508,245804),
-      rect(416955,246047,417084,246071.5)
-    ];
-    if (template === base + 'long-an-2030/{z}/{x}/{y}.png') return [
-      rect(416554.5,246187,416714,246216.5),
-      rect(417396.5,246467.5,417556,246497.5),
-      rect(415938,246650,416329.5,246719),
-      rect(417403.5,246866,417593.5,246901)
-    ];
-    return [];
+    // Reviewed logo footprints in zoom-11 world pixels, keyed by exact source.
+    return branding && branding[template] || [];
   }
 
   function referenceClipPath(template, coords) {

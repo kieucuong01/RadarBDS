@@ -50,9 +50,10 @@ Only the chosen former province's allowlisted provider IDs are eligible.
 Combined sources such as Bắc Giang/Bắc Ninh and Đồng Nai/Bình Phước do not
 enable a second simultaneous province. Viewport cells and one-cell buffer load
 after settled zoom/pan. No raster archive, VPS gateway or nationwide preloading
-is introduced. Original source attribution is retained. Existing 13 verified
-exterior RadarBDS branding replacements remain; newly added source annotations
-are not automatically erased from arbitrary raster colours.
+is introduced. Original source attribution is retained. The 2026-10-31 branding audit covers all 63 registered layers / 61 unique
+providers. It retains the previous 13 footprints and replaces 134 visually
+confirmed logo footprints in total. Original source links remain accessible.
+No arbitrary land-colour matching runs in the browser.
 
 Client validation uses exact server-generated descriptors for each registered
 2030 source, including ID, URL, bounds, native/display zooms and coverage windows.
@@ -63,3 +64,30 @@ allowlists and geographic limits. Catalogues stay bounded at 128 entries.
 Rollback reverts this release's config/code; no DB migration or parcel asset
 replacement is needed. Full audit images/DOM captures remain ignored under
 `.local/planning-national-2030/`.
+
+
+## Branding audit, 2026-10-31
+
+Curated coordinates and source mosaic digests: `config/planning_reference_branding.json`.
+Publish with `python -m scripts.build_planning_branding`; generated registry
+`static/js/main/planning_reference_branding.js` loads before the overlay module.
+An explicit empty entry means no logo observed in the sampled imagery, not an
+unknown or forgotten provider. Shared providers are deduplicated. The audit
+sampled 3,818 overview cells plus 158 mainland-detail cells, at most four source
+requests in flight. BRVT/Dong Nai 512-pixel images were normalized to their
+256 CSS-pixel footprint. Empty, unavailable and forbidden cells are recorded;
+no access restriction was bypassed. Khánh Hòa / Đà Nẵng mainland detail was
+checked separately because their low-zoom bounds also include distant islands.
+
+Gold-pixel/template scans only proposed candidates in the offline audit; every
+published footprint was reviewed, a Kiên Giang land-colour false positive was
+rejected, and small embedded Lâm Đồng / Phú Thọ / Quảng Nam / Quảng Trị logos
+were checked separately. Client code only clips those fixed footprints and
+places the existing RadarBDS SVG at the same geographic position. No OCR,
+image processing, proxy or whole-province raster download is added to Maps.
+Toggle/opacity cleanup is unchanged. All source images/contact sheets remain
+ignored under `.local/planning-branding-national-20261031/`.
+
+These positions describe the currently sampled provider edition. New source
+logos/editions require another review; the renderer does not erase arbitrary
+new pixels automatically.

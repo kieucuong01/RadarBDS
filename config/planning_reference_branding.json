@@ -1,0 +1,4134 @@
+{
+  "checked_on": "2026-10-31",
+  "coordinate_zoom": 11,
+  "notice": "Only reviewed logo footprints. Source links and planning content remain. Unavailable source tiles are retained in audit limits; no claim about future provider revisions.",
+  "sources": [
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "binh-duong-land-use-2030-guland"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417319,
+            245988
+          ],
+          [
+            417450,
+            246128
+          ],
+          [
+            417426,
+            246151
+          ],
+          [
+            417295,
+            246011
+          ]
+        ],
+        [
+          [
+            417726,
+            246190
+          ],
+          [
+            417847,
+            246190
+          ],
+          [
+            417847,
+            246219
+          ],
+          [
+            417726,
+            246219
+          ]
+        ],
+        [
+          [
+            417390.5,
+            245333.5
+          ],
+          [
+            417566.5,
+            245333.5
+          ],
+          [
+            417566.5,
+            245366
+          ],
+          [
+            417390.5,
+            245366
+          ]
+        ],
+        [
+          [
+            417908.54,
+            245630.91
+          ],
+          [
+            417929.17,
+            245748.24
+          ],
+          [
+            417906.13,
+            245752.29
+          ],
+          [
+            417885.5,
+            245634.96
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "binh-duong-land-use-2030-guland",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104192,
+            61184
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "82036a333697becebbdd7e7c462fa0fe6e1272bb8c428a0af158beb1656b28ea",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "hcm-land-use-2030-guland"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "hcm-land-use-2030-guland",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            834048,
+            491520
+          ],
+          "mosaic_size": [
+            2048,
+            2560
+          ],
+          "mosaic_sha256": "820617bc000359805a6c77cbd11d9ab42b0e5c7a956aea554add5b68da5cfd63",
+          "sampled_tiles": 80,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "brvt-land-use-2030-guland",
+        "con-dao-land-use-2030-guland"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "brvt-land-use-2030-guland",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            61440
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "8eac48c0e326b7b32662e7c1aff8d5e9f91dfe63e3e48cb3131a8879c789f09f",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 2
+        },
+        {
+          "layer_id": "con-dao-land-use-2030-guland",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104192,
+            62208
+          ],
+          "mosaic_size": [
+            256,
+            256
+          ],
+          "mosaic_sha256": "e4b6d11753430c2d0545ab492c4328b7e245ed2537be803eda927a673bef83c8",
+          "sampled_tiles": 1,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "dong-nai-expanded-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "dong-nai-expanded-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104192,
+            60928
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "3b87920ca14dcc4bfe4d1f71bcf3750ca3c947c6eec4eecb2f89b53efffb6001",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 2
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tay-ninh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "tay-ninh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416685.5,
+            244868
+          ],
+          [
+            416831,
+            244868
+          ],
+          [
+            416831,
+            244895.5
+          ],
+          [
+            416685.5,
+            244895.5
+          ]
+        ],
+        [
+          [
+            417153.5,
+            245237
+          ],
+          [
+            417217,
+            245237
+          ],
+          [
+            417217,
+            245251
+          ],
+          [
+            417153.5,
+            245251
+          ]
+        ],
+        [
+          [
+            417081,
+            245635
+          ],
+          [
+            417185,
+            245635
+          ],
+          [
+            417185,
+            245655.5
+          ],
+          [
+            417081,
+            245655.5
+          ]
+        ],
+        [
+          [
+            416318.5,
+            245769
+          ],
+          [
+            416508,
+            245769
+          ],
+          [
+            416508,
+            245804
+          ],
+          [
+            416318.5,
+            245804
+          ]
+        ],
+        [
+          [
+            416955,
+            246047
+          ],
+          [
+            417084,
+            246047
+          ],
+          [
+            417084,
+            246071.5
+          ],
+          [
+            416955,
+            246071.5
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "tay-ninh-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            61184
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "05831a2aa08e5503441ee311a5ee621c4d1d2a4d0be05738fcff75e23af2b1ee",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "long-an-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416554.5,
+            246187
+          ],
+          [
+            416714,
+            246187
+          ],
+          [
+            416714,
+            246216.5
+          ],
+          [
+            416554.5,
+            246216.5
+          ]
+        ],
+        [
+          [
+            417396.5,
+            246467.5
+          ],
+          [
+            417556,
+            246467.5
+          ],
+          [
+            417556,
+            246497.5
+          ],
+          [
+            417396.5,
+            246497.5
+          ]
+        ],
+        [
+          [
+            415938,
+            246650
+          ],
+          [
+            416329.5,
+            246650
+          ],
+          [
+            416329.5,
+            246719
+          ],
+          [
+            415938,
+            246719
+          ]
+        ],
+        [
+          [
+            417403.5,
+            246866
+          ],
+          [
+            417593.5,
+            246866
+          ],
+          [
+            417593.5,
+            246901
+          ],
+          [
+            417403.5,
+            246901
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "long-an-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            61440
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "cf83172bdf395400fcd42a67ca1942c069a517b3d6b434ca74f9ebd9409a3d62",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ha-noi-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ha-noi-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            57344
+          ],
+          "mosaic_size": [
+            512,
+            768
+          ],
+          "mosaic_sha256": "a74e0d142f0d047a13c565f77fe46c6c08443c1845fd35ea828b1783e002d2b5",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/an-giang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "an-giang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            414945.56,
+            247163.48
+          ],
+          [
+            415176.44,
+            247163.48
+          ],
+          [
+            415176.44,
+            247210.52
+          ],
+          [
+            414945.56,
+            247210.52
+          ]
+        ],
+        [
+          [
+            414772.92,
+            246477.12
+          ],
+          [
+            415037.08,
+            246477.12
+          ],
+          [
+            415037.08,
+            246530.88
+          ],
+          [
+            414772.92,
+            246530.88
+          ]
+        ],
+        [
+          [
+            415529.08,
+            246371.24
+          ],
+          [
+            415784.92,
+            246371.24
+          ],
+          [
+            415784.92,
+            246422.76
+          ],
+          [
+            415529.08,
+            246422.76
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "an-giang-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            61440
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "c3a468bce266317db65b032d38a61312e116322392d1f70a495e6cc871b49e75",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "bac-giang-land-use-2030-reference",
+        "bac-ninh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "bac-giang-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            832512,
+            459520
+          ],
+          "mosaic_size": [
+            3840,
+            2048
+          ],
+          "mosaic_sha256": "3ac4925e42c4fd0bfbc9cfd7ee2b8bbb784fe3b0b2caf24bbdc0f237fb0fab81",
+          "sampled_tiles": 120,
+          "unavailable_tiles": 0
+        },
+        {
+          "layer_id": "bac-ninh-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            832512,
+            460800
+          ],
+          "mosaic_size": [
+            1792,
+            1024
+          ],
+          "mosaic_sha256": "05416023605d74dee54a1625011765061426b578248fcf5bcbb3f111530b7246",
+          "sampled_tiles": 28,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/bac-kan-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "bac-kan-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416487.64,
+            229424.44
+          ],
+          [
+            416610.36,
+            229424.44
+          ],
+          [
+            416610.36,
+            229453.56
+          ],
+          [
+            416487.64,
+            229453.56
+          ]
+        ],
+        [
+          [
+            416679.72,
+            228584.44
+          ],
+          [
+            416798.28,
+            228584.44
+          ],
+          [
+            416798.28,
+            228613.56
+          ],
+          [
+            416679.72,
+            228613.56
+          ]
+        ],
+        [
+          [
+            415772.04,
+            228436.92
+          ],
+          [
+            415873.96,
+            228436.92
+          ],
+          [
+            415873.96,
+            228457.08
+          ],
+          [
+            415772.04,
+            228457.08
+          ]
+        ],
+        [
+          [
+            416159.4,
+            228264.44
+          ],
+          [
+            416294.6,
+            228264.44
+          ],
+          [
+            416294.6,
+            228293.56
+          ],
+          [
+            416159.4,
+            228293.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "bac-kan-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            56832
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "4f013d9fba551a196bc6b6d5fea30076371acc9098a313515da1bd335ee3d42a",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/bac-lieu-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "bac-lieu-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            415969.28,
+            248316.68
+          ],
+          [
+            416110.72,
+            248316.68
+          ],
+          [
+            416110.72,
+            248341.32
+          ],
+          [
+            415969.28,
+            248341.32
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "bac-lieu-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            830720,
+            495872
+          ],
+          "mosaic_size": [
+            2048,
+            2304
+          ],
+          "mosaic_sha256": "52868748d7c46fa586bac29ebe46660cee8363e8a2d9d1713456f2f449f2385d",
+          "sampled_tiles": 72,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ben-tre-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ben-tre-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ben-tre-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            833024,
+            493824
+          ],
+          "mosaic_size": [
+            2560,
+            2048
+          ],
+          "mosaic_sha256": "a645456d7db9b7b239925bfb65e93b8e11d5f83ed8a060771a191a4c171370aa",
+          "sampled_tiles": 80,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/binh-thuan-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "binh-thuan-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "binh-thuan-land-use-2030-reference",
+          "sample_zoom": 10,
+          "mosaic_origin": [
+            209152,
+            122368
+          ],
+          "mosaic_size": [
+            1536,
+            1536
+          ],
+          "mosaic_sha256": "a4c9f4c1c5912f1176ef7f1cc19aeaa9db19215fcf6bfc9cf748c3d5eea92f7e",
+          "sampled_tiles": 36,
+          "unavailable_tiles": 19
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/binh-dinh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "binh-dinh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            420982.2,
+            242215.72
+          ],
+          [
+            421179.8,
+            242215.72
+          ],
+          [
+            421179.8,
+            242258.28
+          ],
+          [
+            420982.2,
+            242258.28
+          ]
+        ],
+        [
+          [
+            421321.32,
+            241551.24
+          ],
+          [
+            421564.68,
+            241551.24
+          ],
+          [
+            421564.68,
+            241602.76
+          ],
+          [
+            421321.32,
+            241602.76
+          ]
+        ],
+        [
+          [
+            420210.68,
+            241215.96
+          ],
+          [
+            420383.32,
+            241215.96
+          ],
+          [
+            420383.32,
+            241254.04
+          ],
+          [
+            420210.68,
+            241254.04
+          ]
+        ],
+        [
+          [
+            420643.64,
+            240444.44
+          ],
+          [
+            420766.36,
+            240444.44
+          ],
+          [
+            420766.36,
+            240473.56
+          ],
+          [
+            420643.64,
+            240473.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "binh-dinh-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104960,
+            59904
+          ],
+          "mosaic_size": [
+            512,
+            768
+          ],
+          "mosaic_sha256": "66d486c832d7460e5103f1858bc63ba31f66fd4e60411ac46d297c1e2477a30a",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ca-mau-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ca-mau-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ca-mau-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            829184,
+            496128
+          ],
+          "mosaic_size": [
+            2304,
+            3584
+          ],
+          "mosaic_sha256": "5b42a5c5da936f9a0b3b9adfcbc8b0df708518a60c1d743beddecdb7f0b7f479",
+          "sampled_tiles": 126,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/can-tho-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "can-tho-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "can-tho-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            830720,
+            493824
+          ],
+          "mosaic_size": [
+            2048,
+            1536
+          ],
+          "mosaic_sha256": "f946fefbd5a4c7be10f3dd5aeb8827f4196bb8075f0fb1c056cbcbc7889654f2",
+          "sampled_tiles": 48,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/cao-bang-2030-dc/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "cao-bang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417368.04,
+            228606.76
+          ],
+          [
+            417677.96,
+            228606.76
+          ],
+          [
+            417677.96,
+            228667.24
+          ],
+          [
+            417368.04,
+            228667.24
+          ]
+        ],
+        [
+          [
+            416197.88,
+            228605.56
+          ],
+          [
+            416620.12,
+            228605.56
+          ],
+          [
+            416620.12,
+            228688.44
+          ],
+          [
+            416197.88,
+            228688.44
+          ]
+        ],
+        [
+          [
+            415518.44,
+            228359.88
+          ],
+          [
+            416119.56,
+            228359.88
+          ],
+          [
+            416119.56,
+            228474.12
+          ],
+          [
+            415518.44,
+            228474.12
+          ]
+        ],
+        [
+          [
+            416874.92,
+            227610.64
+          ],
+          [
+            417638.48,
+            227607.26
+          ],
+          [
+            417639.02,
+            227748.83
+          ],
+          [
+            416875.46,
+            227752.22
+          ]
+        ],
+        [
+          [
+            415460.04,
+            227586.76
+          ],
+          [
+            415769.96,
+            227586.76
+          ],
+          [
+            415769.96,
+            227647.24
+          ],
+          [
+            415460.04,
+            227647.24
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "cao-bang-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            56832
+          ],
+          "mosaic_size": [
+            768,
+            512
+          ],
+          "mosaic_sha256": "ef8388dcfc2d3e1509a2102b630aec5f379fc89253a1abd596cf45ff34552ae8",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/gia-lai-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "gia-lai-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            419482.3,
+            242882.3
+          ],
+          [
+            420067.0,
+            242878.76
+          ],
+          [
+            420067.59,
+            242991.56
+          ],
+          [
+            419482.88,
+            242995.1
+          ]
+        ],
+        [
+          [
+            420537.96,
+            242247.72
+          ],
+          [
+            420748.04,
+            242247.72
+          ],
+          [
+            420748.04,
+            242290.28
+          ],
+          [
+            420537.96,
+            242290.28
+          ]
+        ],
+        [
+          [
+            418708.98,
+            241981.87
+          ],
+          [
+            418846.03,
+            242376.47
+          ],
+          [
+            418781.79,
+            242402.35
+          ],
+          [
+            418644.74,
+            242007.75
+          ]
+        ],
+        [
+          [
+            420581.36,
+            241309.16
+          ],
+          [
+            420676.22,
+            241649.68
+          ],
+          [
+            420620.5,
+            241667.68
+          ],
+          [
+            420525.64,
+            241327.16
+          ]
+        ],
+        [
+          [
+            418725.37,
+            241439.46
+          ],
+          [
+            418859.46,
+            241177.41
+          ],
+          [
+            418902.67,
+            241203.05
+          ],
+          [
+            418768.58,
+            241465.11
+          ]
+        ],
+        [
+          [
+            419433.08,
+            240695.2
+          ],
+          [
+            419896.92,
+            240695.2
+          ],
+          [
+            419896.92,
+            240784.8
+          ],
+          [
+            419433.08,
+            240784.8
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "gia-lai-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            59904
+          ],
+          "mosaic_size": [
+            768,
+            1024
+          ],
+          "mosaic_sha256": "28dbabf57dc183683e7e1f8a7371436fbe53e45b3d4905d84e70faefe1eb098f",
+          "sampled_tiles": 12,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/ha-giang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ha-giang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ha-giang-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            828160,
+            454144
+          ],
+          "mosaic_size": [
+            3840,
+            4096
+          ],
+          "mosaic_sha256": "2dcd4f2febb06720836f9b7ac1d362b86fe43e63b5bc62afc6f9f1d56d708582",
+          "sampled_tiles": 240,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/ha-nam-2030-dc/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ha-nam-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ha-nam-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            57600
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "1c927c3f1fe558ac81f7c32627cf423806a33333f010b81b1de3500e9dfedc0e",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ha-tinh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ha-tinh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ha-tinh-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            58368
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "62717630230b6e44b14299844702a562543d5dca1c158442b837cedd2019b1d1",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hai-duong-2030-dc/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "hai-duong-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416719.4,
+            231316.44
+          ],
+          [
+            416854.6,
+            231316.44
+          ],
+          [
+            416854.6,
+            231345.56
+          ],
+          [
+            416719.4,
+            231345.56
+          ]
+        ],
+        [
+          [
+            417255.56,
+            231176.44
+          ],
+          [
+            417382.44,
+            231176.44
+          ],
+          [
+            417382.44,
+            231205.56
+          ],
+          [
+            417255.56,
+            231205.56
+          ]
+        ],
+        [
+          [
+            416795.16,
+            230700.44
+          ],
+          [
+            416942.84,
+            230700.44
+          ],
+          [
+            416942.84,
+            230729.56
+          ],
+          [
+            416795.16,
+            230729.56
+          ]
+        ],
+        [
+          [
+            417235.16,
+            230608.44
+          ],
+          [
+            417382.84,
+            230608.44
+          ],
+          [
+            417382.84,
+            230637.56
+          ],
+          [
+            417235.16,
+            230637.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "hai-duong-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            57600
+          ],
+          "mosaic_size": [
+            512,
+            256
+          ],
+          "mosaic_sha256": "fc644b2ae9c5fed1901a3a9f039f33ed8a2a198c7f58adc2c03a691ebae7ce1e",
+          "sampled_tiles": 2,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "hai-phong-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "hai-phong-land-use-2030-reference",
+          "sample_zoom": 11,
+          "mosaic_origin": [
+            417024,
+            230656
+          ],
+          "mosaic_size": [
+            2304,
+            1792
+          ],
+          "mosaic_sha256": "c7141312d4f39c25509e9c35d35da4a3ff285afac32feb1ca7af889b93901fe2",
+          "sampled_tiles": 63,
+          "unavailable_tiles": 48
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/hau-giang-2030--dc/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "hau-giang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            415540.44,
+            248028.68
+          ],
+          [
+            415621.56,
+            248028.68
+          ],
+          [
+            415621.56,
+            248053.32
+          ],
+          [
+            415540.44,
+            248053.32
+          ]
+        ],
+        [
+          [
+            416135.72,
+            247984.44
+          ],
+          [
+            416254.28,
+            247984.44
+          ],
+          [
+            416254.28,
+            248013.56
+          ],
+          [
+            416135.72,
+            248013.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "hau-giang-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            61696
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "5c9b74cbd5306e97bf08f344406d9ebc3a51486436789f78dfaf146a0028c5be",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/hoa-binh-2030-2/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "hoa-binh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "hoa-binh-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            57600
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "f9937321dd2085aa29bc0a42d28f8feeec7e883b34484d70075685168e5b4a54",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "hung-yen-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416763.16,
+            231156.2
+          ],
+          [
+            416910.84,
+            231156.2
+          ],
+          [
+            416910.84,
+            231189.8
+          ],
+          [
+            416763.16,
+            231189.8
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "hung-yen-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            57600
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "1bb214a92d1dd2298128a8a3460c299b729b7083c91cc7b0b1397d64a8d36777",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "khanh-hoa-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "khanh-hoa-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            840704,
+            486400
+          ],
+          "mosaic_size": [
+            2560,
+            3328
+          ],
+          "mosaic_sha256": "be1f3de013bea80f83f6e71af5c8e4815fdbf5981201aa585b5b287fb3434349",
+          "sampled_tiles": 130,
+          "unavailable_tiles": 39
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/kien-giang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "kien-giang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "kien-giang-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            824832,
+            493312
+          ],
+          "mosaic_size": [
+            6912,
+            4096
+          ],
+          "mosaic_sha256": "c72aec32cf83d3531056fd5b938e3c7eac1c9bf15c05529d5f9d6af95ccb91ca",
+          "sampled_tiles": 432,
+          "unavailable_tiles": 117
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/kon-tum-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "kon-tum-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            419007.68,
+            241326.81
+          ],
+          [
+            419360.03,
+            241180.36
+          ],
+          [
+            419387.86,
+            241258.0
+          ],
+          [
+            419035.51,
+            241404.45
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "kon-tum-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            836864,
+            478720
+          ],
+          "mosaic_size": [
+            3840,
+            4864
+          ],
+          "mosaic_sha256": "e7cb728b163d29ef1c164c8accf99b1832d0e23c7af53ee0303ce09508e12ca8",
+          "sampled_tiles": 285,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/lai-chau-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "lai-chau-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            413106.2,
+            229679.72
+          ],
+          [
+            413303.8,
+            229679.72
+          ],
+          [
+            413303.8,
+            229722.28
+          ],
+          [
+            413106.2,
+            229722.28
+          ]
+        ],
+        [
+          [
+            411690.84,
+            229176.2
+          ],
+          [
+            411855.16,
+            229176.2
+          ],
+          [
+            411855.16,
+            229209.8
+          ],
+          [
+            411690.84,
+            229209.8
+          ]
+        ],
+        [
+          [
+            412615.88,
+            229104.68
+          ],
+          [
+            412726.12,
+            229104.68
+          ],
+          [
+            412726.12,
+            229129.32
+          ],
+          [
+            412615.88,
+            229129.32
+          ]
+        ],
+        [
+          [
+            413455.96,
+            228968.68
+          ],
+          [
+            413562.04,
+            228968.68
+          ],
+          [
+            413562.04,
+            228993.32
+          ],
+          [
+            413455.96,
+            228993.32
+          ]
+        ],
+        [
+          [
+            411203.64,
+            228732.68
+          ],
+          [
+            411326.36,
+            228732.68
+          ],
+          [
+            411326.36,
+            228757.32
+          ],
+          [
+            411203.64,
+            228757.32
+          ]
+        ],
+        [
+          [
+            412211.24,
+            228300.2
+          ],
+          [
+            412354.76,
+            228300.2
+          ],
+          [
+            412354.76,
+            228333.8
+          ],
+          [
+            412211.24,
+            228333.8
+          ]
+        ],
+        [
+          [
+            412906.28,
+            228283.72
+          ],
+          [
+            413099.72,
+            228283.72
+          ],
+          [
+            413099.72,
+            228326.28
+          ],
+          [
+            412906.28,
+            228326.28
+          ]
+        ],
+        [
+          [
+            411630.04,
+            228119.72
+          ],
+          [
+            411835.96,
+            228119.72
+          ],
+          [
+            411835.96,
+            228162.28
+          ],
+          [
+            411630.04,
+            228162.28
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "lai-chau-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            102656,
+            56832
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "6f94d8f1c054f6bc9affbbaf680fc37cf869948d5421c72f85598a12122ef4b2",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "lam-dong-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            418464,
+            244192
+          ],
+          [
+            419360,
+            244192
+          ],
+          [
+            419360,
+            244360
+          ],
+          [
+            418464,
+            244360
+          ]
+        ],
+        [
+          [
+            419804,
+            245500
+          ],
+          [
+            420464,
+            245500
+          ],
+          [
+            420464,
+            245636
+          ],
+          [
+            419804,
+            245636
+          ]
+        ],
+        [
+          [
+            420208,
+            244072
+          ],
+          [
+            420416,
+            244072
+          ],
+          [
+            420416,
+            244120
+          ],
+          [
+            420208,
+            244120
+          ]
+        ],
+        [
+          [
+            419412,
+            244316
+          ],
+          [
+            419620,
+            244316
+          ],
+          [
+            419620,
+            244368
+          ],
+          [
+            419412,
+            244368
+          ]
+        ],
+        [
+          [
+            419032,
+            244700
+          ],
+          [
+            419252,
+            244700
+          ],
+          [
+            419252,
+            244756
+          ],
+          [
+            419032,
+            244756
+          ]
+        ],
+        [
+          [
+            420276,
+            245016
+          ],
+          [
+            420464,
+            245016
+          ],
+          [
+            420464,
+            245072
+          ],
+          [
+            420276,
+            245072
+          ]
+        ],
+        [
+          [
+            419760,
+            245344
+          ],
+          [
+            419944,
+            245344
+          ],
+          [
+            419944,
+            245396
+          ],
+          [
+            419760,
+            245396
+          ]
+        ],
+        [
+          [
+            419576,
+            245516
+          ],
+          [
+            419772,
+            245516
+          ],
+          [
+            419772,
+            245616
+          ],
+          [
+            419576,
+            245616
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "lam-dong-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            60928
+          ],
+          "mosaic_size": [
+            768,
+            512
+          ],
+          "mosaic_sha256": "075b87a13244c90438e1aee13462e1bf690b8578ad1afe9eb33acd1770fc56f2",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/lang-son-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "lang-son-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417293.8,
+            230023.49
+          ],
+          [
+            417593.45,
+            230019.4
+          ],
+          [
+            417594.07,
+            230071.88
+          ],
+          [
+            417294.41,
+            230075.96
+          ]
+        ],
+        [
+          [
+            418078.4,
+            229480.04
+          ],
+          [
+            418473.6,
+            229480.04
+          ],
+          [
+            418473.6,
+            229553.96
+          ],
+          [
+            418078.4,
+            229553.96
+          ]
+        ],
+        [
+          [
+            417032.76,
+            228640.44
+          ],
+          [
+            417201.24,
+            228640.44
+          ],
+          [
+            417201.24,
+            228669.56
+          ],
+          [
+            417032.76,
+            228669.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "lang-son-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            833280,
+            456960
+          ],
+          "mosaic_size": [
+            3840,
+            3840
+          ],
+          "mosaic_sha256": "73acc3350419f815e71fab894be951843853cdef52edd79ff6b10c661dc7f6d4",
+          "sampled_tiles": 225,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://guland2.sgp1.cdn.digitaloceanspaces.com/qh/lao-cai-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "lao-cai-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "lao-cai-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            825600,
+            455680
+          ],
+          "mosaic_size": [
+            3584,
+            3584
+          ],
+          "mosaic_sha256": "4155bd957700ba0044899629bc41b18b8e0e90e8dff454e576be2547e955ab7b",
+          "sampled_tiles": 196,
+          "unavailable_tiles": 14
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://guland.sgp1.cdn.digitaloceanspaces.com/qh/nam-dinh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "nam-dinh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "nam-dinh-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            832768,
+            463104
+          ],
+          "mosaic_size": [
+            2048,
+            2304
+          ],
+          "mosaic_sha256": "0b2d164e70157c3145b4595acff6b65111fe5070500c0b2157fd0480b2baac27",
+          "sampled_tiles": 72,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/nghe-an-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "nghe-an-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "nghe-an-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            826624,
+            464640
+          ],
+          "mosaic_size": [
+            5888,
+            4864
+          ],
+          "mosaic_sha256": "4d953d17e9a679ba8522906275910f9b36dc201759f59a3c7f40c481fafd0e20",
+          "sampled_tiles": 437,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ninh-binh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ninh-binh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416679.63,
+            232421.86
+          ],
+          [
+            416707.92,
+            232318.3
+          ],
+          [
+            416726.05,
+            232324.04
+          ],
+          [
+            416697.76,
+            232427.61
+          ]
+        ],
+        [
+          [
+            416170.26,
+            232136.17
+          ],
+          [
+            416275.15,
+            232199.42
+          ],
+          [
+            416263.55,
+            232221.73
+          ],
+          [
+            416158.67,
+            232158.47
+          ]
+        ],
+        [
+          [
+            416456.36,
+            231876.68
+          ],
+          [
+            416541.64,
+            231876.68
+          ],
+          [
+            416541.64,
+            231901.32
+          ],
+          [
+            416456.36,
+            231901.32
+          ]
+        ],
+        [
+          [
+            416236.28,
+            231704.68
+          ],
+          [
+            416325.72,
+            231704.68
+          ],
+          [
+            416325.72,
+            231729.32
+          ],
+          [
+            416236.28,
+            231729.32
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "ninh-binh-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            57856
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "f8506a3c6ca59bc36e625a24a93e2be753ec123e001c2d4f297f11813acef20f",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://251db3a9dce2de5.cmccloud.com.vn/guland6/qh/ninh-thuan-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "ninh-thuan-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "ninh-thuan-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104960,
+            60928
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "6329f5ac9521077ef62be88f520685300e26b32f91af6f65fb4eee96078a09bf",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/phu-tho-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "phu-tho-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            415580.0,
+            230416.0
+          ],
+          [
+            415706.0,
+            230416.0
+          ],
+          [
+            415706.0,
+            230442.0
+          ],
+          [
+            415580.0,
+            230442.0
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "phu-tho-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            829440,
+            459264
+          ],
+          "mosaic_size": [
+            2304,
+            2816
+          ],
+          "mosaic_sha256": "e19be72445bef27acc6a7c823a2f1fb6eee72eb1101de1634682f3d5edce8814",
+          "sampled_tiles": 99,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/phu-yen-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "phu-yen-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            420424.2,
+            243184.68
+          ],
+          [
+            420517.8,
+            243184.68
+          ],
+          [
+            420517.8,
+            243209.32
+          ],
+          [
+            420424.2,
+            243209.32
+          ]
+        ],
+        [
+          [
+            421392.2,
+            242708.92
+          ],
+          [
+            421485.8,
+            242708.92
+          ],
+          [
+            421485.8,
+            242729.08
+          ],
+          [
+            421392.2,
+            242729.08
+          ]
+        ],
+        [
+          [
+            420460.12,
+            242400.92
+          ],
+          [
+            420557.88,
+            242400.92
+          ],
+          [
+            420557.88,
+            242421.08
+          ],
+          [
+            420460.12,
+            242421.08
+          ]
+        ],
+        [
+          [
+            420952.12,
+            242040.68
+          ],
+          [
+            421049.88,
+            242040.68
+          ],
+          [
+            421049.88,
+            242065.32
+          ],
+          [
+            420952.12,
+            242065.32
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "phu-yen-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104960,
+            60416
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "13a4f10a73155aadb1b48a4eb22965da6a2245da93912e4e7e0958517c410cc2",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/quang-binh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "quang-binh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417674.04,
+            237075.72
+          ],
+          [
+            417879.96,
+            237075.72
+          ],
+          [
+            417879.96,
+            237118.28
+          ],
+          [
+            417674.04,
+            237118.28
+          ]
+        ],
+        [
+          [
+            417767.67,
+            236482.77
+          ],
+          [
+            417992.53,
+            236658.33
+          ],
+          [
+            417964.5,
+            236699.96
+          ],
+          [
+            417739.65,
+            236524.4
+          ]
+        ],
+        [
+          [
+            417399.38,
+            236053.45
+          ],
+          [
+            417517.99,
+            236257.82
+          ],
+          [
+            417484.15,
+            236280.6
+          ],
+          [
+            417365.54,
+            236076.23
+          ]
+        ],
+        [
+          [
+            417225.61,
+            235673.1
+          ],
+          [
+            417281.79,
+            235809.23
+          ],
+          [
+            417257.67,
+            235820.78
+          ],
+          [
+            417201.49,
+            235684.65
+          ]
+        ],
+        [
+          [
+            416544.6,
+            235366.76
+          ],
+          [
+            416825.4,
+            235366.76
+          ],
+          [
+            416825.4,
+            235427.24
+          ],
+          [
+            416544.6,
+            235427.24
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "quang-binh-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            58624
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "a68b59c1675b36987cd671d2680f145a3aa8e2aba3f6295056ac3fbc52e607dd",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/quang-nam-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "quang-nam-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            420076,
+            238636
+          ],
+          [
+            420290,
+            238636
+          ],
+          [
+            420290,
+            238684
+          ],
+          [
+            420076,
+            238684
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "quang-nam-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            59392
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "e4a8b4f4b47ceb7e65df12106384ae57a53b8a06aff6fb3ce46f09d3cf15a72f",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ngai-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "quang-ngai-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            420411.72,
+            240696.44
+          ],
+          [
+            420530.28,
+            240696.44
+          ],
+          [
+            420530.28,
+            240725.56
+          ],
+          [
+            420411.72,
+            240725.56
+          ]
+        ],
+        [
+          [
+            420965.26,
+            240200.06
+          ],
+          [
+            421043.24,
+            240354.02
+          ],
+          [
+            421017.01,
+            240369.43
+          ],
+          [
+            420939.03,
+            240215.47
+          ]
+        ],
+        [
+          [
+            419825.33,
+            240105.07
+          ],
+          [
+            419906.63,
+            240230.15
+          ],
+          [
+            419884.44,
+            240246.89
+          ],
+          [
+            419803.14,
+            240121.81
+          ]
+        ],
+        [
+          [
+            420726.44,
+            239431.96
+          ],
+          [
+            420911.56,
+            239431.96
+          ],
+          [
+            420911.56,
+            239470.04
+          ],
+          [
+            420726.44,
+            239470.04
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "quang-ngai-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104704,
+            59648
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "ffa8346e11e3bba444cee3543253c7d75e5c4c1b750133026857a2d00119f245",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "quang-ninh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417449.68,
+            230455.8
+          ],
+          [
+            417882.32,
+            230455.8
+          ],
+          [
+            417882.32,
+            230534.2
+          ],
+          [
+            417449.68,
+            230534.2
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "quang-ninh-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            834304,
+            459520
+          ],
+          "mosaic_size": [
+            4864,
+            3072
+          ],
+          "mosaic_sha256": "4ea190637c971c6b960a69a8412319760871c53ca28216f6b779b61b6f268bda",
+          "sampled_tiles": 228,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/new_24092024/quang-tri-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "quang-tri-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            418313.08,
+            237146.56
+          ],
+          [
+            418464.92,
+            237146.56
+          ],
+          [
+            418464.92,
+            237173.44
+          ],
+          [
+            418313.08,
+            237173.44
+          ]
+        ],
+        [
+          [
+            418152.6,
+            236910.44
+          ],
+          [
+            418329.4,
+            236910.44
+          ],
+          [
+            418329.4,
+            236939.56
+          ],
+          [
+            418152.6,
+            236939.56
+          ]
+        ],
+        [
+          [
+            417722.76,
+            236850.56
+          ],
+          [
+            417787.24,
+            236850.56
+          ],
+          [
+            417787.24,
+            236877.44
+          ],
+          [
+            417722.76,
+            236877.44
+          ]
+        ],
+        [
+          [
+            418298,
+            237654
+          ],
+          [
+            418450,
+            237654
+          ],
+          [
+            418450,
+            237690
+          ],
+          [
+            418298,
+            237690
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "quang-tri-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104192,
+            59136
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "a67af4af52613198e9fa9b9da817f202df7ef5cff63d8f879b10197771b612c5",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/soc-trang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "soc-trang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            415884.44,
+            248392.92
+          ],
+          [
+            415965.56,
+            248392.92
+          ],
+          [
+            415965.56,
+            248413.08
+          ],
+          [
+            415884.44,
+            248413.08
+          ]
+        ],
+        [
+          [
+            416883.64,
+            248272.44
+          ],
+          [
+            417006.36,
+            248272.44
+          ],
+          [
+            417006.36,
+            248301.56
+          ],
+          [
+            416883.64,
+            248301.56
+          ]
+        ],
+        [
+          [
+            415872.12,
+            248028.68
+          ],
+          [
+            415969.88,
+            248028.68
+          ],
+          [
+            415969.88,
+            248053.32
+          ],
+          [
+            415872.12,
+            248053.32
+          ]
+        ],
+        [
+          [
+            416183.48,
+            247612.44
+          ],
+          [
+            416314.52,
+            247612.44
+          ],
+          [
+            416314.52,
+            247641.56
+          ],
+          [
+            416183.48,
+            247641.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "soc-trang-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            61696
+          ],
+          "mosaic_size": [
+            512,
+            768
+          ],
+          "mosaic_sha256": "b8c1c7a946965a35acc0cc87986e59bba1a914a5ea8e613720a9946bb09d2879",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 2
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/son-la-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "son-la-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "son-la-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            824832,
+            458240
+          ],
+          "mosaic_size": [
+            5632,
+            4864
+          ],
+          "mosaic_sha256": "d3a7401d859a32192344c628266e93c61cd057a14ca063467c8d5276d31582ea",
+          "sampled_tiles": 418,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-binh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "thai-binh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "thai-binh-land-use-2030-reference",
+          "sample_zoom": 10,
+          "mosaic_origin": [
+            208128,
+            115456
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "5a42ade78e0441961bdf1fcfd60616b9118ac4ee7dc41cfcdde1ccec27d30f88",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 1
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thai-nguyen-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "thai-nguyen-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            415761.72,
+            230135.72
+          ],
+          [
+            415984.28,
+            230135.72
+          ],
+          [
+            415984.28,
+            230178.28
+          ],
+          [
+            415761.72,
+            230178.28
+          ]
+        ],
+        [
+          [
+            416613.48,
+            230063.48
+          ],
+          [
+            416848.52,
+            230063.48
+          ],
+          [
+            416848.52,
+            230110.52
+          ],
+          [
+            416613.48,
+            230110.52
+          ]
+        ],
+        [
+          [
+            416218.0,
+            229395.96
+          ],
+          [
+            416426.0,
+            229395.96
+          ],
+          [
+            416426.0,
+            229434.04
+          ],
+          [
+            416218.0,
+            229434.04
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "thai-nguyen-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            57088
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "46d15ea36c9399fe3b2cd6ebaab94db85c7fc3d586a33abfc606640e5736a968",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/thanh-hoa-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "thanh-hoa-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "thanh-hoa-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103424,
+            57600
+          ],
+          "mosaic_size": [
+            768,
+            1024
+          ],
+          "mosaic_sha256": "ed296fac41f003d7a32d0e0890ab6a35b73421d4f9e189052ad74c27cfdb9685",
+          "sampled_tiles": 12,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/thua-thien-hue-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "thua-thien-hue-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "thua-thien-hue-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            59136
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "4910f216ee21ebb7ddf2edabb2feca2eba8bdd03dbb404313e1c177dd87894ac",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/tien-giang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "tien-giang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417263.96,
+            247140.44
+          ],
+          [
+            417370.04,
+            247140.44
+          ],
+          [
+            417370.04,
+            247169.56
+          ],
+          [
+            417263.96,
+            247169.56
+          ]
+        ],
+        [
+          [
+            416443.56,
+            247072.44
+          ],
+          [
+            416570.44,
+            247072.44
+          ],
+          [
+            416570.44,
+            247101.56
+          ],
+          [
+            416443.56,
+            247101.56
+          ]
+        ],
+        [
+          [
+            417706.8,
+            247048.68
+          ],
+          [
+            417769.2,
+            247048.68
+          ],
+          [
+            417769.2,
+            247073.32
+          ],
+          [
+            417706.8,
+            247073.32
+          ]
+        ],
+        [
+          [
+            417047.32,
+            246688.44
+          ],
+          [
+            417186.68,
+            246688.44
+          ],
+          [
+            417186.68,
+            246717.56
+          ],
+          [
+            417047.32,
+            246717.56
+          ]
+        ],
+        [
+          [
+            416523.48,
+            246676.44
+          ],
+          [
+            416654.52,
+            246676.44
+          ],
+          [
+            416654.52,
+            246705.56
+          ],
+          [
+            416523.48,
+            246705.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "tien-giang-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103936,
+            61440
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "a1c25cfff4d4547c1201ac7a782569f666160fa83637c09bd9b614264124255f",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tra-vinh-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "tra-vinh-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            417073.39,
+            247485.12
+          ],
+          [
+            417156.93,
+            247566.1
+          ],
+          [
+            417144.21,
+            247581.32
+          ],
+          [
+            417060.67,
+            247500.35
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "tra-vinh-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            832768,
+            494592
+          ],
+          "mosaic_size": [
+            2048,
+            2048
+          ],
+          "mosaic_sha256": "845e1b23356aa2e00be656bdaba2d57abfae7b8bbb8d3b08a12c687120899c02",
+          "sampled_tiles": 64,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tuyen-quang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "tuyen-quang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            414875.52,
+            229750.76
+          ],
+          [
+            415212.48,
+            229750.76
+          ],
+          [
+            415212.48,
+            229811.24
+          ],
+          [
+            414875.52,
+            229811.24
+          ]
+        ],
+        [
+          [
+            414885.16,
+            229254.56
+          ],
+          [
+            415032.84,
+            229254.56
+          ],
+          [
+            415032.84,
+            229281.44
+          ],
+          [
+            414885.16,
+            229281.44
+          ]
+        ],
+        [
+          [
+            415752.56,
+            228984.2
+          ],
+          [
+            415931.44,
+            228984.2
+          ],
+          [
+            415931.44,
+            229017.8
+          ],
+          [
+            415752.56,
+            229017.8
+          ]
+        ],
+        [
+          [
+            414886.84,
+            228619.36
+          ],
+          [
+            415155.16,
+            228619.36
+          ],
+          [
+            415155.16,
+            228668.64
+          ],
+          [
+            414886.84,
+            228668.64
+          ]
+        ],
+        [
+          [
+            415536.24,
+            228228.08
+          ],
+          [
+            415731.76,
+            228228.08
+          ],
+          [
+            415731.76,
+            228263.92
+          ],
+          [
+            415536.24,
+            228263.92
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "tuyen-quang-land-use-2030-reference",
+          "sample_zoom": 10,
+          "mosaic_origin": [
+            207360,
+            113920
+          ],
+          "mosaic_size": [
+            768,
+            1280
+          ],
+          "mosaic_sha256": "a2a9c90d1c7e4a1b126cfe1cd440988953109b0b7386b72f5c78b68ecfacb642",
+          "sampled_tiles": 15,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/vinh-long-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "vinh-long-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416596.48,
+            247612.2
+          ],
+          [
+            416779.52,
+            247612.2
+          ],
+          [
+            416779.52,
+            247645.8
+          ],
+          [
+            416596.48,
+            247645.8
+          ]
+        ],
+        [
+          [
+            416082.2,
+            247023.0
+          ],
+          [
+            416383.8,
+            247023.0
+          ],
+          [
+            416383.8,
+            247079.0
+          ],
+          [
+            416082.2,
+            247079.0
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "vinh-long-land-use-2030-reference",
+          "sample_zoom": 10,
+          "mosaic_origin": [
+            207872,
+            123392
+          ],
+          "mosaic_size": [
+            768,
+            512
+          ],
+          "mosaic_sha256": "7de88412d5630a45b3f1e27ca112a69781fdcd318f63746b01dcc6c1365ddf02",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://251db3a9dce2de5.cmccloud.com.vn/guland4/qh/vinh-phuc-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "vinh-phuc-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            416141.0,
+            230429.4
+          ],
+          [
+            416193.0,
+            230429.4
+          ],
+          [
+            416193.0,
+            230440.6
+          ],
+          [
+            416141.0,
+            230440.6
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "vinh-phuc-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            57344
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "7bcdf8e48cd0cea8923d2cfee786caace0890a0f1a1850e33fa7ae6c1b6c4d5b",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/yen-bai-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "yen-bai-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            414387.72,
+            230252.44
+          ],
+          [
+            414506.28,
+            230252.44
+          ],
+          [
+            414506.28,
+            230281.56
+          ],
+          [
+            414387.72,
+            230281.56
+          ]
+        ],
+        [
+          [
+            414927.64,
+            230008.44
+          ],
+          [
+            415050.36,
+            230008.44
+          ],
+          [
+            415050.36,
+            230037.56
+          ],
+          [
+            414927.64,
+            230037.56
+          ]
+        ],
+        [
+          [
+            413511.64,
+            229840.68
+          ],
+          [
+            413634.36,
+            229840.68
+          ],
+          [
+            413634.36,
+            229865.32
+          ],
+          [
+            413511.64,
+            229865.32
+          ]
+        ],
+        [
+          [
+            413999.48,
+            229068.44
+          ],
+          [
+            414130.52,
+            229068.44
+          ],
+          [
+            414130.52,
+            229097.56
+          ],
+          [
+            413999.48,
+            229097.56
+          ]
+        ],
+        [
+          [
+            414695.24,
+            228936.44
+          ],
+          [
+            414838.76,
+            228936.44
+          ],
+          [
+            414838.76,
+            228965.56
+          ],
+          [
+            414695.24,
+            228965.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "yen-bai-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103168,
+            57088
+          ],
+          "mosaic_size": [
+            768,
+            512
+          ],
+          "mosaic_sha256": "dbff7a3f59475aebfdbeafaa14f73ed7aa562efc40962cb98baf1c20d0249bee",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "da-nang-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [],
+      "evidence": [
+        {
+          "layer_id": "da-nang-land-use-2030-reference",
+          "sample_zoom": 12,
+          "mosaic_origin": [
+            838144,
+            476416
+          ],
+          "mosaic_size": [
+            1792,
+            1024
+          ],
+          "mosaic_sha256": "c0076edc3648bf9e56ca75fc60296cc4735e79b83534b0d36ab30460da1571b6",
+          "sampled_tiles": 28,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "no_logo_observed_in_sampled_imagery"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/dak-lak-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "dak-lak-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            419956.68,
+            244207.0
+          ],
+          [
+            420233.32,
+            244207.0
+          ],
+          [
+            420233.32,
+            244263.0
+          ],
+          [
+            419956.68,
+            244263.0
+          ]
+        ],
+        [
+          [
+            419141.48,
+            243795.48
+          ],
+          [
+            419376.52,
+            243795.48
+          ],
+          [
+            419376.52,
+            243842.52
+          ],
+          [
+            419141.48,
+            243842.52
+          ]
+        ],
+        [
+          [
+            420751.43,
+            243786.71
+          ],
+          [
+            420809.38,
+            243620.27
+          ],
+          [
+            420838.11,
+            243631.87
+          ],
+          [
+            420780.15,
+            243798.3
+          ]
+        ],
+        [
+          [
+            418671.9,
+            242891.51
+          ],
+          [
+            418749.27,
+            242712.04
+          ],
+          [
+            418779.16,
+            242726.98
+          ],
+          [
+            418701.78,
+            242906.45
+          ]
+        ],
+        [
+          [
+            419749.47,
+            242420.33
+          ],
+          [
+            419948.79,
+            242473.26
+          ],
+          [
+            419939.49,
+            242513.9
+          ],
+          [
+            419740.16,
+            242460.97
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "dak-lak-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            60416
+          ],
+          "mosaic_size": [
+            1024,
+            768
+          ],
+          "mosaic_sha256": "6d12bdd061c8967dc93d24573e21745c9a315d72d63b7c27e17487eeb4f8b7b2",
+          "sampled_tiles": 12,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/dak-nong-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "dak-nong-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            418278.77,
+            244517.13
+          ],
+          [
+            418524.41,
+            244790.2
+          ],
+          [
+            418481.29,
+            244835.19
+          ],
+          [
+            418235.65,
+            244562.12
+          ]
+        ],
+        [
+          [
+            419503.03,
+            244355.75
+          ],
+          [
+            419644.2,
+            244637.65
+          ],
+          [
+            419598.6,
+            244664.13
+          ],
+          [
+            419457.42,
+            244382.24
+          ]
+        ],
+        [
+          [
+            418719.31,
+            243416.59
+          ],
+          [
+            418733.17,
+            243797.16
+          ],
+          [
+            418669.81,
+            243799.83
+          ],
+          [
+            418655.95,
+            243419.27
+          ]
+        ],
+        [
+          [
+            419397.39,
+            243352.69
+          ],
+          [
+            419536.59,
+            243782.25
+          ],
+          [
+            419467.82,
+            243808.1
+          ],
+          [
+            419328.61,
+            243378.54
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "dak-nong-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            104448,
+            60672
+          ],
+          "mosaic_size": [
+            512,
+            768
+          ],
+          "mosaic_sha256": "ef72412f0492e26fe8ae60e2ddf0f1ef3871be25f13904388d14033597b55302",
+          "sampled_tiles": 6,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/dien-bien-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "dien-bien-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            412767.48,
+            230628.44
+          ],
+          [
+            412898.52,
+            230628.44
+          ],
+          [
+            412898.52,
+            230657.56
+          ],
+          [
+            412767.48,
+            230657.56
+          ]
+        ],
+        [
+          [
+            411831.64,
+            230304.44
+          ],
+          [
+            411954.36,
+            230304.44
+          ],
+          [
+            411954.36,
+            230333.56
+          ],
+          [
+            411831.64,
+            230333.56
+          ]
+        ],
+        [
+          [
+            411651.32,
+            229848.44
+          ],
+          [
+            411790.68,
+            229848.44
+          ],
+          [
+            411790.68,
+            229877.56
+          ],
+          [
+            411651.32,
+            229877.56
+          ]
+        ],
+        [
+          [
+            412879.48,
+            229404.44
+          ],
+          [
+            413010.52,
+            229404.44
+          ],
+          [
+            413010.52,
+            229433.56
+          ],
+          [
+            412879.48,
+            229433.56
+          ]
+        ],
+        [
+          [
+            411227.08,
+            229232.2
+          ],
+          [
+            411378.92,
+            229232.2
+          ],
+          [
+            411378.92,
+            229265.8
+          ],
+          [
+            411227.08,
+            229265.8
+          ]
+        ],
+        [
+          [
+            412379.4,
+            229084.2
+          ],
+          [
+            412514.6,
+            229084.2
+          ],
+          [
+            412514.6,
+            229117.8
+          ],
+          [
+            412379.4,
+            229117.8
+          ]
+        ],
+        [
+          [
+            411463.64,
+            228820.44
+          ],
+          [
+            411586.36,
+            228820.44
+          ],
+          [
+            411586.36,
+            228849.56
+          ],
+          [
+            411463.64,
+            228849.56
+          ]
+        ],
+        [
+          [
+            410878.76,
+            228475.96
+          ],
+          [
+            411047.24,
+            228475.96
+          ],
+          [
+            411047.24,
+            228514.04
+          ],
+          [
+            410878.76,
+            228514.04
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "dien-bien-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            102656,
+            57088
+          ],
+          "mosaic_size": [
+            768,
+            768
+          ],
+          "mosaic_sha256": "c58d76175eb53e99ed859e0c3088540ba3103ecfd369127ef50ebe2d163a2cac",
+          "sampled_tiles": 9,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    },
+    {
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/dong-thap-2030/{z}/{x}/{y}.png",
+      "layer_ids": [
+        "dong-thap-land-use-2030-reference"
+      ],
+      "checked_on": "2026-10-31",
+      "coordinate_zoom": 11,
+      "rings": [
+        [
+          [
+            415522.68,
+            247148.16
+          ],
+          [
+            415903.32,
+            247148.16
+          ],
+          [
+            415903.32,
+            247219.84
+          ],
+          [
+            415522.68,
+            247219.84
+          ]
+        ],
+        [
+          [
+            416286.26,
+            246465.42
+          ],
+          [
+            416457.86,
+            246650.22
+          ],
+          [
+            416428.74,
+            246681.58
+          ],
+          [
+            416257.14,
+            246496.78
+          ]
+        ],
+        [
+          [
+            415334.12,
+            246459.72
+          ],
+          [
+            415535.88,
+            246459.72
+          ],
+          [
+            415535.88,
+            246502.28
+          ],
+          [
+            415334.12,
+            246502.28
+          ]
+        ],
+        [
+          [
+            415535.64,
+            246060.44
+          ],
+          [
+            415658.36,
+            246060.44
+          ],
+          [
+            415658.36,
+            246089.56
+          ],
+          [
+            415535.64,
+            246089.56
+          ]
+        ]
+      ],
+      "evidence": [
+        {
+          "layer_id": "dong-thap-land-use-2030-reference",
+          "sample_zoom": 9,
+          "mosaic_origin": [
+            103680,
+            61440
+          ],
+          "mosaic_size": [
+            512,
+            512
+          ],
+          "mosaic_sha256": "df0e367a32725b7d35b242afd56b77aebe095d42c45d57da9d4b2f18514cfa9e",
+          "sampled_tiles": 4,
+          "unavailable_tiles": 0
+        }
+      ],
+      "review": "logo_footprints_visually_confirmed"
+    }
+  ]
+}
