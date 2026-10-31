@@ -81,4 +81,30 @@ planning overlay to compare. This outline is not proof of a cadastral parcel or
 an automatic GIS planning-intersection result.
 
 Scope: coordinate/corner lookup only. The unrelated Dong Nai source integration
-remains outside this commit. No push/deploy is part of this follow-up request.
+remains outside this commit. The coordinate feature and OCR follow-up are released together when requested.
+
+## Image scan — 2026-11-01
+
+Góc ranh > Đọc góc ranh từ ảnh previews a local JPEG/PNG/WebP (up to 12 MB,
+24 MP), supports drag cropping and 90-degree rotation, then sends only the crop
+(re-encoded JPEG, up to 4 MB) to the same-origin `corners/scan.json?system=...`.
+The original file and filename are not uploaded. There is no third-party OCR.
+
+The route reads a raw body into memory, validates the raster and 8 MP cap,
+normalizes with Pillow, and runs the installed native `tesseract` through
+stdin/stdout. There are no image temp files, storage writes or raw OCR logs.
+One OCR subprocess per Gunicorn worker, OMP thread limit 1, timeout 20 seconds,
+output cap 100 KB; busy/unavailable responses fail closed. Requires the native
+Tesseract CLI and `eng` data (verified on the current VPS: 5.3.4).
+
+Only plausible numeric coordinate pairs are returned. Alphabetic/identity rows
+are discarded; skipped/numbered gaps produce warnings. No letter-to-digit or
+axis guessing is performed. Users edit a separate draft and explicitly confirm
+they checked every coordinate before copying it into Góc ranh. OCR never draws
+or requests GIS planning automatically. Existing projection and polygon guards
+still apply when the user chooses Xem ranh từ tọa độ.
+
+Closing the parcel search, changing coordinate system, selecting another image,
+cancel and Maps teardown invalidate pending OCR. Uploaded pixels are not cached;
+responses are `private, no-store`. Test artifacts use a synthetic four-point
+coordinate table and no actual certificate/person data.

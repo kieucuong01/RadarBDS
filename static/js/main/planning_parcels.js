@@ -86,6 +86,9 @@
     var cornerInput=node('textarea',cornerLabel);cornerInput.rows=6;cornerInput.maxLength=12000;cornerInput.setAttribute('aria-label','Danh sách góc ranh');
     cornerInput.placeholder='11.0200 106.6100\n11.0200 106.6110\n11.0210 106.6110';
     node('p',cornerLabel,'Mỗi dòng một điểm theo thứ tự quanh ranh: vĩ độ kinh độ (WGS84) hoặc X Y (VN-2000). Có thể dán bảng 2 cột hoặc STT X Y; cách nhau bằng khoảng trắng hoặc dấu chấm phẩy. Tối đa 100 điểm.');
+    var scanHost=node('div',coordinateSection);scanHost.hidden=true;
+    var cornerScan=env.RadarCornerScan?env.RadarCornerScan.mount(env,scanHost,{url:apiBase+'/corners/scan.json',system:function(){return coordinateSystem.value;},onApply:function(text){cancelSearch();cornerInput.value=text;searchStatus.textContent='Đã nhận tọa độ từ ảnh. Kiểm tra hệ chiếu trước khi vẽ.';}}):null;
+    searchMenu.addEventListener('toggle',function(){if(!searchMenu.open&&cornerScan)cornerScan.reset();});
     function coordinateLabels(){
       var vn=coordinateSystem.value==='vn2000';projectionLabel.hidden=!vn;
       coordinateProjection.required=vn&&searchMethod.value!=='sheet';
@@ -366,9 +369,9 @@
         ? 'Chọn hệ tọa độ và nhập đủ hai giá trị.' : 'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.';
     }
     function changeSearchMethod(){
-      cancelSearch();var coordinates=searchMethod.value==='coordinates',corners=searchMethod.value==='corners';
+      cancelSearch();if(cornerScan)cornerScan.reset();var coordinates=searchMethod.value==='coordinates',corners=searchMethod.value==='corners';
       sheetSection.hidden=coordinates||corners;coordinateSection.hidden=!(coordinates||corners);
-      firstLabel.hidden=secondLabel.hidden=corners;cornerLabel.hidden=!corners;
+      firstLabel.hidden=secondLabel.hidden=corners;cornerLabel.hidden=scanHost.hidden=!corners;
       sheetInput.required=parcelInput.required=!(coordinates||corners);
       coordinateFirst.required=coordinateSecond.required=coordinates;cornerInput.required=corners;
       coordinateProjection.required=(coordinates||corners)&&coordinateSystem.value==='vn2000';
@@ -376,7 +379,7 @@
       searchSubmit.disabled=!config;searchStatus.textContent=corners?'Dán các góc theo thứ tự quanh ranh. Ranh tự nhập dùng để đối chiếu lớp bản đồ.':coordinates?'Chọn hệ tọa độ và nhập đủ hai giá trị.':'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.';
     }
     searchMethod.addEventListener('change',changeSearchMethod);
-    coordinateSystem.addEventListener('change',function(){cancelSearch();coordinateLabels();});
+    coordinateSystem.addEventListener('change',function(){cancelSearch();if(cornerScan)cornerScan.reset();coordinateLabels();});
     [coordinateProjection,coordinateFirst,coordinateSecond,cornerInput].forEach(function(input){input.addEventListener('change',cancelSearch);input.addEventListener('input',cancelSearch);});
     function moveStart() {
       if (disposed) return;
@@ -515,6 +518,7 @@
     function dispose() {
       if (disposed) return;
       disposed = true; ++viewSeq; ++selectionSeq; ++searchSeq; ++navigationSeq;
+      if(cornerScan)cornerScan.dispose();
       lifetime.abort(); if (viewRequest) viewRequest.abort(); if (selectionRequest) selectionRequest.abort();
       if (searchRequest) searchRequest.abort(); if (navigationRequest) navigationRequest.abort();
       env.clearTimeout(timer); map.off('moveend', move); map.off('movestart', moveStart); map.off('unload', dispose);

@@ -249,4 +249,21 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
             return jsonify(error='Góc ranh không hợp lệ. Nhập 3–100 điểm theo thứ tự, kiểm tra hệ chiếu và các cạnh giao nhau.'), 400
         return jsonify(result)
 
+    @app.post(prefix+'/corners/scan.json')
+    def scan_parcel_corners():
+        from services.planning_corner_ocr import scan, OCRBusy, OCRUnavailable, MAX_BYTES
+        request.max_content_length = MAX_BYTES
+        try:
+            result = scan(request.get_data(cache=False), request.args.get('system'))
+            response = jsonify(result)
+        except ValueError:
+            response = jsonify(error='Ảnh không hợp lệ: dùng JPG, PNG hoặc WebP, tối đa 4 MB và 8 triệu điểm ảnh.'); response.status_code = 400
+        except OCRBusy:
+            response = jsonify(error='Máy đọc ảnh đang bận. Vui lòng thử lại sau ít giây.'); response.status_code = 503
+            response.headers['Retry-After'] = '3'
+        except OCRUnavailable:
+            response = jsonify(error='Chưa đọc được ảnh. Thử cắt sát bảng tọa độ, xoay ảnh thẳng hoặc nhập tay.'); response.status_code = 503
+        response.headers['Cache-Control'] = 'private, no-store'
+        return response
+
     install_planning_lookup(app, feature_by_id, prefix=prefix)

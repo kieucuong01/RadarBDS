@@ -53,3 +53,11 @@
 .parcel-center-area span{display:inline-block;background:#fffffff0;border-radius:5px;padding:3px 6px;color:#14543e;font:700 12px/18px sans-serif;white-space:nowrap;box-shadow:0 1px 5px #153b2b30}
 .parcel-radar-pin svg{width:36px;height:48px;filter:drop-shadow(0 2px 3px #132e3055)}
 .planning-map-form textarea{display:block;width:100%;min-height:120px;margin-top:6px;padding:10px;border:1px solid #cad9d1;border-radius:8px;background:#fff;color:#183b32;font:13px/1.6 monospace;resize:vertical}
+.planning-corner-scan{margin:12px 0;padding:10px;border:1px solid #cadfd3;border-radius:10px;background:#f5faf7}
+.planning-corner-scan>summary{font-size:13px;font-weight:700;cursor:pointer;color:#0f7055}
+.planning-corner-scan canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair;margin-top:10px;border:1px solid #c1d8cc}
+.planning-corner-scan-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.planning-corner-scan button{font-size:12px;padding:6px!important}
+.planning-corner-scan progress{width:100%;margin-top:10px;accent-color:#11755b}
+.planning-corner-scan .planning-corner-review-confirm{display:flex;align-items:center;gap:8px;font-weight:500}
+.planning-corner-review-confirm input{width:20px;min-height:20px;flex-shrink:0;accent-color:#11755b}
