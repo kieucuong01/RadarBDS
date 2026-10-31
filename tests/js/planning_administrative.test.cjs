@@ -123,6 +123,7 @@ test('legacy wards retain district context, lazy details and their own cache',as
  assert.equal(h.requests.length,1);assert(h.calls[0].includes('/admin_vn_legacy/binh-duong/'));
  const f=old.features[0],polygon=h.interactions.get(f.properties.code);
  assert(polygon.tooltip.text.textContent.includes(f.properties.district));
+ assert.equal(polygon.tooltip.text.textContent,f.properties.name+' · '+f.properties.district,'Old tooltip omits province');
  assert.equal(polygon.tooltip.options.permanent,false);polygon.click();assert.equal(h.views.length,1);
  layer.fire('remove');const again=h.create({id:'binh-duong-administrative-legacy'});again.fire('add');
  assert.equal(h.requests.length,1,'Toggling old boundaries uses the old-source cache');

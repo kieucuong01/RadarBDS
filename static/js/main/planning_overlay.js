@@ -211,6 +211,14 @@
     var ui = {root: node('div'), panels: [], initialRegion: options.initialRegion, onToggleFilters: options.onToggleFilters};
     ui.root.className = 'planning-map-ui';
     map.getContainer().appendChild(ui.root);
+    var tasks=new Map(),activity=node('div',ui.root);activity.className='planning-map-activity';activity.hidden=true;
+    activity.setAttribute('role','status');activity.setAttribute('aria-live','polite');
+    function taskChanged(event){
+      if(disposed)return;
+      if(event.busy)tasks.set(event.key,event.label||'Đang tải bản đồ…');else tasks.delete(event.key);
+      activity.hidden=!tasks.size;activity.textContent=tasks.size?Array.from(tasks.values()).pop():'';
+    }
+    map.on('planning:busy',taskChanged);
     var toolbar = node('div', ui.root); toolbar.className = 'planning-map-toolbar';
     toolbar.setAttribute('aria-label', 'Công cụ quy hoạch');
     var filterSlot = node('div', toolbar);
@@ -434,10 +442,12 @@
       if (disposed) return;
       zoomHint.hidden=true;
       if (!themes.some(function (theme) { return theme.toggle.checked; })) {
+        taskChanged({key:'layers',busy:false});
         status.textContent = 'Đang tắt các lớp quy hoạch.'; return;
       }
       var entries = Array.from(overlays.values());
       var loading = entries.filter(function (entry) { return !entry.loaded; }).length;
+      taskChanged({key:'layers',busy:loading>0,label:'Đang tải lớp bản đồ…'});
       var errors = wantedItems(true).filter(function (item) {
         return failedIds.has(item.id) && map.getBounds().intersects(item.manifest.bounds);
       });
@@ -587,7 +597,7 @@
             ? ' ' + ((records[0] && records[0].message) || 'Nguồn này chưa có lớp phủ được xác minh.') : '');
       });
       if (selectedProvince && (provinceChanged || activeTheme.quick.hidden) && !themes.some(function(theme){return theme.toggle.checked;})) {
-        var fallback = themes.find(function(theme){return theme.id==='land_use_2030'&&!theme.toggle.disabled;});
+        var fallback = themes.find(function(theme){return theme.id==='administrative_legacy'&&!theme.toggle.disabled;});
         if (fallback) {fallback.toggle.checked=true;activeTheme=fallback;}
       }
       Array.from(selector.children).forEach(function(option){
@@ -649,6 +659,7 @@
       if (item && !disposed) chooseLayer(item);
     });
 
+    taskChanged({key:'catalog',busy:true,label:'Đang tải danh sách lớp bản đồ…'});
     env.fetch(published ? published.catalogUrl : '/local-planning/catalog.json', { signal: controller.signal, cache: published ? 'default' : 'no-store' })
       .then(function (response) {
         if (!response.ok) throw new Error('manifest unavailable');
@@ -686,12 +697,13 @@
         if (!disposed && error.name !== 'AbortError') {
           status.textContent = 'Chưa tải được dữ liệu quy hoạch. Đóng và mở lại Maps để thử.';
         }
-      });
+      }).finally(function(){taskChanged({key:'catalog',busy:false});});
 
     function dispose() {
       if (disposed) return;
       disposed = true;
       controller.abort();
+      map.off('planning:busy',taskChanged);tasks.clear();
       if(doc.removeEventListener)doc.removeEventListener('pointerdown',outsidePointer,true);
       if (disposeMeasure) disposeMeasure();
       if (disposeLegend) disposeLegend();

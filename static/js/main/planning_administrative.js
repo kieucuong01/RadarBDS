@@ -39,7 +39,7 @@
     var shared=byDataset.get(id);if(!shared){shared={overview:null,details:new Map(),pending:new Set(),subscribers:new Set()};byDataset.set(id,shared);}
     var active=false,moving=false,amount=options.opacity,queue=[],pending=shared.pending,shown=[],rendered=new Map();
     var areas=L.geoJSON(null,{pane:'planningAdministrative',interactive:true,bubblingMouseEvents:false,onEachFeature:function(f,polygon){
-      var p=f.properties,text=env.document.createElement('span');text.textContent=p.name+(p.district?' · '+p.district+' · '+p.former_province+' (cũ)':'');
+      var p=f.properties,text=env.document.createElement('span');text.textContent=p.name+(p.district?' · '+p.district:'');
       polygon.bindTooltip(text,{pane:'planningAdministrativeLabels',permanent:false,sticky:true,direction:'top',className:'planning-admin-tooltip'});
       polygon.on('click',function(){
         if(!active||map.getContainer().classList.contains('planning-is-drawing'))return;

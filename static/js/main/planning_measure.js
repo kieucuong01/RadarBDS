@@ -148,6 +148,14 @@
       if(event.key==='Escape') { event.preventDefault(); event.stopPropagation(); setActive(false); redraw(); draw.focus({preventScroll:true}); }
     }
     function pause() { if(active) { setActive(false);redraw(); } }
+    function measureParcel(event) {
+      var outline=event.points;
+      if(!Array.isArray(outline)||outline.length<3)return;
+      if(outline.length>1000){result.hidden=false;note.textContent='Ranh có quá nhiều điểm. Dùng Vẽ ranh để đo vùng cần xem.';return;}
+      setActive(false);map.fire('planning:drawing-start');
+      points=outline.map(function(p){return {lat:p.lat,lng:p.lng};});closed=true;
+      redraw('Số đo theo phần ranh được chọn, xấp xỉ từ bản đồ.');
+    }
     function panelChanged() { if(ui.panels.some(function(p){return p.open;})) pause(); }
     draw.addEventListener('click',function(){
       if(closed) { points=[]; closed=false; }
@@ -161,9 +169,11 @@
     ui.root.addEventListener('keydown',keydown);
     ui.panels.forEach(function(p){p.addEventListener('toggle',panelChanged);});
     map.on('click',click); map.on('mousemove',move); map.on('movestart',clearPreview);map.on('planning:panel-open',pause);
+    map.on('planning:measure-parcel',measureParcel);
     return function(){
       if(disposed) return; disposed=true; setActive(false);clearPreview();
       map.off('click',click);map.off('mousemove',move);map.off('movestart',clearPreview);
+      map.off('planning:measure-parcel',measureParcel);
       map.off('planning:panel-open',pause);ui.panels.forEach(function(p){p.removeEventListener('toggle',panelChanged);});
       container.removeEventListener('keydown',keydown);
       ui.root.removeEventListener('keydown',keydown);

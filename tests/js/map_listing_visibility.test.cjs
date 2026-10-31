@@ -12,7 +12,7 @@ function functions(...names){return names.map(name=>{
 test('base map selector collapses on phones and expands on desktop',()=>{
  const calls=[];
  const ctx={state:{mediaQuery:{matches:true},baseLayerControl:{collapse(){calls.push('collapse');},expand(){calls.push('expand');}}}};
- vm.createContext(ctx);vm.runInContext(functions('syncBaseLayerControl'),ctx);
+ ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('syncBaseLayerControl'),ctx);
  ctx.syncBaseLayerControl();ctx.state.mediaQuery.matches=false;ctx.syncBaseLayerControl();
  ctx.state.baseLayerControl=null;ctx.syncBaseLayerControl();
  assert.deepEqual(calls,['collapse','expand']);
@@ -23,13 +23,13 @@ test('fullscreen filter button opens desktop sidebar and delegates mobile sheet'
  const ctx={state:{focusMode:true,map:{invalidateSize(){calls.push('resize');}}},
   root:{innerWidth:1200,document:{body:{classList:{toggle(name){classes.has(name)?classes.delete(name):classes.add(name);}}}},
    toggleMenu(){calls.push('sheet');},setTimeout(fn){fn();}}};
- vm.createContext(ctx);vm.runInContext(functions('toggleFilters'),ctx);
+ ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('toggleFilters'),ctx);
  ctx.toggleFilters();assert.ok(classes.has('listing-map-filter-open'));
  ctx.toggleFilters();assert.equal(classes.size,0);
  ctx.root.innerWidth=390;ctx.toggleFilters();assert.ok(calls.includes('sheet'));
 });
 
-test('all Maps entries start fullscreen with 2030 by default while planning entries hide listings',async()=>{
+test('all Maps entries start fullscreen with old boundaries by default while planning entries hide listings',async()=>{
  for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','administrative_legacy','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
@@ -38,11 +38,11 @@ test('all Maps entries start fullscreen with 2030 by default while planning entr
    setFocusMode:value=>{focus=value;},syncAdminEditModeToggle(){},filterSummaryText:()=>'',emitTrack(){},defaultBaseLayer:theme=>theme==='administrative'?'street':'satellite',
    root:{document:{body:el},RADAR_PLANNING_REGIONS:[{id:'dong-nai-expanded',bounds:[[10.49,106.39],[12.33,107.6]],max_zoom:10}],history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
    DIRECTORY_BATCH_SIZE:100,startMapLoad:async()=>{}};
-  vm.createContext(ctx);vm.runInContext(functions('open'),ctx);
+  ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('open'),ctx);
   await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme,planningRegion:'dong-nai-expanded'});
   const planning=ctx.VALID_PLANNING_THEMES.includes(theme);
   assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,true);
-  assert.equal(ctx.state.planningTheme,planning?theme:'land_use_2030');
+  assert.equal(ctx.state.planningTheme,planning?theme:'administrative_legacy');
   assert.equal(ctx.state.initialRegion?.id,'dong-nai-expanded');
  }
 });
@@ -52,7 +52,7 @@ test('planning region opens from its public display bounds without using listing
  const ctx={AbortController,mapLoadSequence:0,state:{open:true,initialRegion:{bounds}},
   loadLeaflet:async()=>({}),fetchJson(){throw Error('Must not use Binh Duong listing bounds for Dong Nai');},
   initMap:(L,b)=>{initialized=b;},renderMapScopeControls(){},requestSummary:async()=>{},setStatus(){},setPanelView(){}};
- vm.createContext(ctx);vm.runInContext(functions('startMapLoad'),ctx);
+ ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('startMapLoad'),ctx);
  await ctx.startMapLoad({mode:'all',query:'city=BẾN CÁT'});
  assert.deepEqual(initialized,bounds);
 });
@@ -67,7 +67,7 @@ test('hiding cancels pending listing work and showing reloads the current viewpo
   summarySequence:0,itemSequence:0,cancelMarkerRender(){cancelled++;},clearMarkerLabels(){labels++;},
   closePreview(){closed++;},requestSummary(){reloaded++;return Promise.resolve();},
   setPanelView(){},setStatus(){},root:{clearTimeout(){}},setMobileSheetExpanded(){}};
- vm.createContext(ctx);vm.runInContext(functions('setListingsVisible','requestSummary'),ctx);
+ ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('setListingsVisible','requestSummary','setMapTask'),ctx);
  // The visibility setter calls the real loader; observe its current-view lookup instead of fetching.
  ctx.currentViewSnapshot=()=>{reloaded++;return null;};ctx.state.snapshot={mode:'all',query:'price_max=3'};
  assert.equal(ctx.setListingsVisible(false),false);
@@ -89,14 +89,14 @@ test('a listing response arriving after hiding cannot restore markers or cards',
   fetchJson:()=>new Promise(resolve=>{deliver=resolve;}),setStatus(){},
   renderSummary(){rendered++;},cancelMarkerRender(){},clearMarkerLabels(){},closePreview(){},
   setMobileSheetExpanded(){},setPanelView(){},root:{clearTimeout(){}}};
- vm.createContext(ctx);vm.runInContext(functions('requestSummary','setListingsVisible'),ctx);
+ ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('requestSummary','setListingsVisible','setMapTask'),ctx);
  const pending=ctx.requestSummary();ctx.setListingsVisible(false);
  deliver({locations:[{lat:11,lng:106.6}],recent:{items:[{id:1}]}});await pending;
  assert.equal(rendered,0);assert.equal(ctx.state.recentPayload,null);
 });
 
 test('administrative entries use OSM while ordinary planning retains satellite',()=>{
- const ctx={};vm.createContext(ctx);vm.runInContext(functions('defaultBaseLayer'),ctx);
+ const ctx={};ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('defaultBaseLayer'),ctx);
  assert.equal(ctx.defaultBaseLayer('administrative'),'street');
  assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'street');
  for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'satellite');
@@ -109,7 +109,33 @@ test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters
   root:{document:{body:el},RadarPlanningArea:require('../../static/js/main/planning_area.js'),
    RADAR_LANDUSE_AREAS:require('../../config/planning_landuse_areas.json').provinces,RADAR_PLANNING_REGIONS:[],history:{pushState(){}},location:{href:'https://radarbds.vn/'}},
   DIRECTORY_BATCH_SIZE:100,startMapLoad:async()=>{}};
- vm.createContext(ctx);vm.runInContext(functions('open'),ctx);await ctx.open(snapshot,{});
+ ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('open'),ctx);await ctx.open(snapshot,{});
  assert.equal(ctx.state.initialPlanningArea.province,'binh-duong');assert.equal(ctx.state.initialPlanningArea.district,'718');
  assert.equal(ctx.state.initialRegion.id,'binh-duong-legacy');assert.equal(ctx.state.snapshot.query,snapshot.query);
+ ctx.state.open=false;await ctx.open({...snapshot,query:snapshot.query+'&ward=Tân An'},{});
+ assert.equal(ctx.state.initialRegion,null,'A selected ward must not use the default city/province frame');
+});
+
+test('multi-listing marker opens its rail and clears loading after items arrive',async()=>{
+ let resolve;const tasks=[],views=[],classes=new Set();
+ const ctx={AbortController,itemSequence:0,state:{open:true,listingsVisible:true,snapshot:{mode:'all'},map:{fire() {},invalidateSize(){}},workspace:{classList:{toggle(k,v){v?classes.add(k):classes.delete(k);}}}},
+ closePreview(){},isSingleListingGroup:g=>g.listing_count===1,adminEditTargetKind:()=>null,setMobileSheetExpanded(){},
+ setPanelView:(...args)=>views.push(args),buildItemsUrl:()=>'/api/map-listing-items',emitTrack(){},
+ fetchJson:()=>new Promise(r=>resolve=r),groupSelectionOutcome:()=>({kind:'items'}),setMapTask:(...args)=>tasks.push(args)};
+ vm.createContext(ctx);vm.runInContext(functions('setGroupPanelOpen','selectGroup'),ctx);
+ ctx.selectGroup({listing_count:3,location_key:'a'});assert(classes.has('has-group-panel'));
+ assert.equal(views[0][0],'items-loading');assert.equal(tasks[0][1],true);
+ resolve({items:[{id:1}]});await new Promise(r=>setImmediate(r));
+ assert.equal(views.at(-1)[0],'items');assert.equal(tasks.at(-1)[1],false);
+ ctx.setGroupPanelOpen(false);assert(!classes.has('has-group-panel'));
+});
+
+
+test('single ward opening zooms closer without changing the selected center',()=>{
+ let view;const center={lat:11.02,lng:106.6};
+ const ctx={URLSearchParams,state:{initialBounds:[[11,106.5],[11.1,106.7]],entrySnapshot:{query:'ward=Tân An'},
+ map:{getBoundsZoom:()=>13,setView:(...args)=>view=args}},root:{}};
+ vm.createContext(ctx);vm.runInContext(functions('frameOpeningArea'),ctx);
+ ctx.frameOpeningArea({latLngBounds:()=>({getCenter:()=>center})});
+ assert.equal(view[0],center);assert.equal(view[1],15);
 });

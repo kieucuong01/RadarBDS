@@ -21,6 +21,8 @@
         ? value.toLocaleString('vi-VN', {maximumFractionDigits: 2}) : String(value == null || value === '' ? 'Chưa có dữ liệu' : value);
     }
     function area(value) { return typeof value === 'number' && Number.isFinite(value) ? format(value) + ' m²' : 'Chưa có dữ liệu'; }
+    function busy(key,value,label){if(map.fire)map.fire('planning:busy',{key:key,busy:value,label:label});}
+    var parcelTools=env.RadarParcelTools&&L.layerGroup?env.RadarParcelTools.mount(map,L,env):null;
     function row(parent, label, value) {
       var item = node('div', parent); item.className = 'parcel-info-row';
       node('dt', item, label); node('dd', item, format(value));
@@ -92,57 +94,83 @@
     info.setAttribute('aria-live', 'polite');
     var source = node('a', body, 'Nguồn: Cổng GIS TP.HCM');
     source.href = 'https://gisxaydung.tphcm.gov.vn/tracuuttqh'; source.target = '_blank'; source.rel = 'noopener noreferrer';
-    node('p', body, 'Dữ liệu GIS tham khảo, chưa xác minh hiệu lực hoặc độ chính xác địa chính; không thay thế xác nhận quy hoạch.').className = 'planning-parcel-notice';
+    var footer=node('p', body, 'Dữ liệu GIS tham khảo, chưa xác minh hiệu lực hoặc độ chính xác địa chính; không thay thế xác nhận quy hoạch.');footer.className = 'planning-parcel-notice';
     L.DomEvent.disableClickPropagation(ui.root); L.DomEvent.disableScrollPropagation(ui.root);
     function remove(which) { if (which) map.removeLayer(which); }
     function clearInfo() { info.replaceChildren(); }
     function showParcel(feature) {
       clearInfo();
-      node('h3', info, 'Thửa ' + format(feature.properties.parcel) + ' · Tờ ' + format(feature.properties.sheet));
-      node('strong', info, area(feature.properties.area)).className = 'planning-parcel-area';
+      var heading=node('h3', info, 'Thửa ' + format(feature.properties.parcel) + ' · Tờ ' + format(feature.properties.sheet));
+      node('strong', heading, ' · '+area(feature.properties.area)).className = 'planning-parcel-area';
       node('p', info, (feature.properties.ward || config.ward) + ' · ' + (feature.properties.city || config.city) + ' (đơn vị cũ)').className = 'planning-parcel-location';
     }
     function closeInfo() {
       ++selectionSeq; if (selectionRequest) selectionRequest.abort();
-      ++searchSeq; if (searchRequest) searchRequest.abort(); searchSubmit.disabled = !config;
+      ++searchSeq; if (searchRequest) searchRequest.abort(); busy('parcel-search',false);searchSubmit.disabled = !config;
       box.hidden = true; remove(highlight); highlight = null;
+      busy('parcel-detail',false);if(parcelTools)parcelTools.clear();
       var container = map.getContainer(); if (container.focus) container.focus({preventScroll:true});
     }
     close.addEventListener('click', closeInfo);
     box.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeInfo(); });
+    function placeCard(){
+      if(box.hidden||!ui.dock||!ui.dock.getBoundingClientRect||!map.getContainer().getBoundingClientRect)return;
+      var frame=map.getContainer().getBoundingClientRect(),dock=ui.dock.getBoundingClientRect();
+      box.style.bottom=Math.max(8,frame.bottom-dock.top+8)+'px';
+      box.style.maxHeight=Math.max(100,frame.height-(frame.bottom-dock.top)-90)+'px';
+    }
+    var cardObserver=env.ResizeObserver&&ui.dock?new env.ResizeObserver(placeCard):null;
+    if(cardObserver){cardObserver.observe(ui.dock);cardObserver.observe(map.getContainer());}
     function select(feature) {
-      if (disposed || !toggle.checked) return;
-      var mapClasses = map.getContainer().classList;
-      if (mapClasses && mapClasses.contains('planning-is-drawing')) return;
-      ++searchSeq; if (searchRequest) searchRequest.abort(); searchSubmit.disabled = !config;
-      if (selectionRequest) selectionRequest.abort();
-      var sequence = ++selectionSeq;
-      selectionRequest = new env.AbortController();
+      if(disposed||!toggle.checked)return;
+      var mapClasses=map.getContainer().classList;
+      if(mapClasses&&mapClasses.contains('planning-is-drawing'))return;
+      ++searchSeq;if(searchRequest)searchRequest.abort();busy('parcel-search',false);searchSubmit.disabled=!config;
+      if(selectionRequest)selectionRequest.abort();selectionRequest=null;
+      var sequence=++selectionSeq;busy('parcel-detail',false);
       remove(highlight);
-      highlight = L.geoJSON(feature, {pane: 'planningParcelSelected', interactive: false,
-        style: {color: '#facc15', weight: 3, fillColor: '#facc15', fillOpacity: 0.18}}).addTo(map);
-      box.hidden = false;
-      if (close.focus) close.focus({preventScroll:true});
-      ui.panels.forEach(function (p) { p.open = false; });
-      if (env.matchMedia('(max-width: 1100px)').matches) {
-        map.fitBounds(highlight.getBounds(), {maxZoom: map.getZoom(), animate: false,
-          paddingTopLeft: [30, 130], paddingBottomRight: [30, Math.min(440, env.innerHeight * 0.5)]});
-      } else {
-        map.fitBounds(highlight.getBounds(), {maxZoom: map.getZoom(), animate: false,
-          paddingTopLeft: [40, 100], paddingBottomRight: [544, 40]});
-      }
+      highlight=L.geoJSON(feature,{pane:'planningParcelSelected',interactive:false,
+        style:{color:'#0f766e',weight:2.5,fillColor:'#14b8a6',fillOpacity:.1}}).addTo(map);
+      box.hidden=false;source.hidden=footer.hidden=true;
+      if(box.classList)box.classList.remove('is-expanded');
       showParcel(feature);
-      var message = node('p', info, 'Đang tra cứu thông tin thửa từ GIS…');
+      var metrics=parcelTools?parcelTools.show(feature):null;
+      var actions=node('div',info);actions.className='planning-parcel-quick-actions';
+      if(metrics){
+        var route=node('a',actions,'↗ Chỉ đường');route.href=env.RadarParcelTools.directions(metrics.center);route.target='_blank';route.rel='noopener noreferrer';
+        var draw=node('button',actions,'✎ Đo vẽ');draw.type='button';
+        draw.addEventListener('click',function(){if(map.fire)map.fire('planning:measure-parcel',{points:metrics.outline});});
+      }
+      var detailsButton=node('button',info,'Xem đầy đủ thông tin quy hoạch chi tiết');detailsButton.type='button';detailsButton.className='planning-parcel-expand';
+      var detailBody=node('div',info);detailBody.className='planning-parcel-detail';detailBody.hidden=true;
+      var requestState={loaded:false,pending:false};
+      detailsButton.addEventListener('click',function(){
+        if(disposed||sequence!==selectionSeq||requestState.pending)return;
+        if(requestState.loaded){detailBody.hidden=!detailBody.hidden;source.hidden=footer.hidden=detailBody.hidden;
+          detailsButton.textContent=detailBody.hidden?'Xem đầy đủ thông tin quy hoạch chi tiết':'Ẩn thông tin quy hoạch chi tiết';
+          if(box.classList)box.classList.toggle('is-expanded',!detailBody.hidden);placeCard();return;}
+        loadPlanning(feature,sequence,detailBody,detailsButton,requestState);
+      });
+      ui.panels.forEach(function(panel){panel.open=false;});placeCard();
+      if(metrics&&map.panInside)map.panInside(metrics.center,{paddingTopLeft:[45,90],paddingBottomRight:[80,Math.min(300,(box.offsetHeight||160)+85)],animate:false});
+    }
+    function loadPlanning(feature,sequence,detailBody,button,requestState){
+      if(disposed||sequence!==selectionSeq||requestState.pending)return;
+      requestState.pending=true;selectionRequest=new env.AbortController();
+      button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='Đang tra cứu quy hoạch…';
+      detailBody.hidden=false;detailBody.replaceChildren();source.hidden=footer.hidden=false;
+      if(box.classList)box.classList.add('is-expanded');placeCard();busy('parcel-detail',true,'Đang tra cứu quy hoạch từ GIS…');
+      var message = node('p', detailBody, 'Đang tra cứu thông tin thửa từ GIS…');
       var areaQuery = feature.properties.area_id ? '?area=' + encodeURIComponent(feature.properties.area_id) : '';
       env.fetch(apiBase + '/' + feature.id + '/planning.json' + areaQuery, {signal: selectionRequest.signal, cache: 'no-store'})
         .then(function (response) { if (!response.ok) throw new Error('GIS unavailable'); return response.json(); })
         .then(function (data) {
           if (disposed || sequence !== selectionSeq) return;
           if (!data || !data.parcel || data.parcel.id !== feature.id || !Array.isArray(data.plans)) throw new Error('Invalid GIS response');
-          message.remove();
-          if (!data.plans.length) node('p', info, 'GIS chưa trả về đồ án giao thửa này. Chưa thể kết luận thửa không có quy hoạch.');
+          message.remove();requestState.loaded=true;button.textContent='Ẩn thông tin quy hoạch chi tiết';
+          if (!data.plans.length) node('p', detailBody, 'GIS chưa trả về đồ án giao thửa này. Chưa thể kết luận thửa không có quy hoạch.');
           data.plans.forEach(function (plan) {
-            var section = node('section', info); section.className = 'parcel-planning-plan';
+            var section = node('section', detailBody); section.className = 'parcel-planning-plan';
             node('h4', section, plan.type || 'Đồ án quy hoạch');
             node('p', section, plan.name || 'Chưa có tên đồ án').className = 'parcel-plan-name';
             (plan.zones || []).forEach(function (zone) {
@@ -165,20 +193,23 @@
             if (plan.amendment) row(fields, 'Điều chỉnh theo GIS', plan.amendment + ' · ' + (plan.amendment_date || ''));
             row(fields, 'Diện tích giao GIS', area(plan.intersection_area));
           });
-          node('p', info, 'Diện tích giao do GIS tính, có thể khác diện tích thửa. Chỉ tiêu được giữ nguyên giá trị nguồn.').className = 'planning-parcel-notice';
-          node('p', info, 'Tra cứu: ' + new Date(data.queried_at).toLocaleString('vi-VN'));
+          node('p', detailBody, 'Diện tích giao do GIS tính, có thể khác diện tích thửa. Chỉ tiêu được giữ nguyên giá trị nguồn.').className = 'planning-parcel-notice';
+          node('p', detailBody, 'Tra cứu: ' + new Date(data.queried_at).toLocaleString('vi-VN'));
         }).catch(function (error) {
           if (!disposed && sequence === selectionSeq && error.name !== 'AbortError') {
-            message.textContent = 'Chưa lấy được thông tin GIS. Chưa thể kết luận quy hoạch thửa này; bấm lại thửa để thử lại.';
-            var retry = node('button', info, 'Thử lại tra cứu'); retry.type = 'button';
-            retry.addEventListener('click', function () { select(feature); });
+            message.textContent = 'Chưa lấy được thông tin GIS. Chưa thể kết luận quy hoạch thửa này; bấm Thử lại để tra cứu.';
+            var retry = node('button', detailBody, 'Thử lại tra cứu'); retry.type = 'button';
+            retry.addEventListener('click', function () { loadPlanning(feature,sequence,detailBody,button,requestState); });
           }
+        }).finally(function(){
+          if(!disposed&&sequence===selectionSeq){requestState.pending=false;button.disabled=false;button.setAttribute('aria-busy','false');busy('parcel-detail',false);if(!requestState.loaded)button.textContent='Xem đầy đủ thông tin quy hoạch chi tiết';}
         });
     }
     function loadViewport(retryAttempt) {
       if (disposed || !config) return;
       var attempt = Number.isInteger(retryAttempt) ? retryAttempt : 0;
       if (viewRequest) viewRequest.abort();
+      busy('parcel-view',false);
       var sequence = ++viewSeq;
       var visible = config.coverage_bounds ? map.getBounds().intersects(config.coverage_bounds)
         : config.areas.some(function (a) { return map.getBounds().intersects(a.bounds); });
@@ -189,7 +220,7 @@
         return;
       }
       var b = map.getBounds(), bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-      viewRequest = new env.AbortController(); status.textContent = 'Đang tải ranh trong vùng xem…';
+      viewRequest = new env.AbortController(); status.textContent = 'Đang tải ranh trong vùng xem…';busy('parcel-view',true,status.textContent);
       env.fetch(apiBase + '/viewport.json?bbox=' + encodeURIComponent(bbox), {signal: viewRequest.signal, cache: 'no-store'})
         .then(function (response) {
           if (!response.ok) { var error = new Error('Parcel data unavailable'); error.status = response.status; throw error; }
@@ -216,11 +247,11 @@
             env.clearTimeout(timer);
             timer = env.setTimeout(function () { loadViewport(attempt+1); }, (attempt+1)*1000);
           } else status.textContent = 'Chưa tải được ranh. Thử phóng to hoặc di chuyển bản đồ.';
-        });
+        }).finally(function(){if(sequence===viewSeq)busy('parcel-view',false);});
     }
     function move() {
       if (viewRequest) viewRequest.abort();
-      ++viewSeq;
+      ++viewSeq;busy('parcel-view',false);
       env.clearTimeout(timer); timer = env.setTimeout(loadViewport, 180);
     }
     function closestArea(areas) {
@@ -245,11 +276,11 @@
     }
     citySelect.addEventListener('change', function () {
       if (!config) return;
-      ++navigationSeq; if (navigationRequest) navigationRequest.abort(); areaSubmit.disabled = false;
+      ++navigationSeq; if (navigationRequest) navigationRequest.abort(); busy('parcel-area',false);areaSubmit.disabled = false;
       fillWards();
     });
     wardSelect.addEventListener('change', function () {
-      ++navigationSeq; if (navigationRequest) navigationRequest.abort(); areaSubmit.disabled = !config;
+      ++navigationSeq; if (navigationRequest) navigationRequest.abort(); busy('parcel-area',false);areaSubmit.disabled = !config;
     });
     areaForm.addEventListener('submit', function (event) {
       event.preventDefault(); if (!config || disposed) return;
@@ -272,26 +303,26 @@
           [Math.max.apply(null, windows.map(function (a) { return a.bounds[1][0]; })),
           Math.max.apply(null, windows.map(function (a) { return a.bounds[1][1]; }))]];
         closeInfo();
-        map.fitBounds(bounds, {maxZoom: selected ? 15 : 13, padding: [24,24], animate: false});
+        map.fitBounds(bounds, {maxZoom: selected ? 16 : 13, padding: [24,24], animate: false});
         areaMenu.open = false;
         areaStatus.textContent = 'Đã đến ' + (selected ? selected.ward + ' · ' : '') + citySelect.value + '. Phóng gần để xem ranh GIS.';
         return;
       }
       var query = new URLSearchParams({city: citySelect.value}); if (selected) query.set('ward', selected.ward);
       navigationRequest = new env.AbortController(); areaSubmit.disabled = true;
-      areaStatus.textContent = 'Đang mở khu vực…'; closeInfo();
+      areaStatus.textContent = 'Đang mở khu vực…';busy('parcel-area',true,areaStatus.textContent);closeInfo();
       env.fetch('/api/map-initial-bounds?' + query.toString(), {signal: navigationRequest.signal})
         .then(function (response) { if (!response.ok) throw new Error('Area unavailable'); return response.json(); })
         .then(function (data) {
           if (disposed || seq !== navigationSeq) return;
           if (!Array.isArray(data.bounds) || data.bounds.length !== 2) throw new Error('Invalid area');
-          map.fitBounds(data.bounds, {maxZoom: selected ? 15 : 13, padding: [24,24], animate: false});
-          if (selected && map.getZoom() < 14) map.setZoom(14, {animate: false});
+          map.fitBounds(data.bounds, {maxZoom: selected ? 16 : 13, padding: [24,24], animate: false});
+          if (selected && map.getZoom() < 15) map.setZoom(15, {animate: false});
           areaMenu.open = false;
           areaStatus.textContent = 'Đã đến ' + (selected ? selected.ward + ' · ' : '') + citySelect.value + '. Có thể kéo sang vùng lân cận.';
         }).catch(function (error) {
           if (!disposed && seq === navigationSeq && error.name !== 'AbortError') areaStatus.textContent = 'Chưa mở được khu vực. Vui lòng thử lại.';
-        }).finally(function () { if (!disposed && seq === navigationSeq) areaSubmit.disabled = false; });
+        }).finally(function () { if (!disposed && seq === navigationSeq){areaSubmit.disabled = false;busy('parcel-area',false);} });
     });
     function focusFeature(feature) {
       toggle.checked = true;
@@ -300,12 +331,12 @@
       select(feature);
     }
     function cancelSearch() {
-      ++searchSeq; if (searchRequest) searchRequest.abort(); searchSubmit.disabled = !config; results.replaceChildren();
+      ++searchSeq; if (searchRequest) searchRequest.abort(); busy('parcel-search',false);searchSubmit.disabled = !config; results.replaceChildren();
       searchStatus.textContent = 'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.';
     }
     function moveStart() {
       if (disposed) return;
-      cancelSearch(); ++navigationSeq; if (navigationRequest) navigationRequest.abort(); areaSubmit.disabled = !config;
+      cancelSearch(); ++navigationSeq; if (navigationRequest) navigationRequest.abort(); busy('parcel-area',false);areaSubmit.disabled = !config;
       if (viewRequest) viewRequest.abort(); ++viewSeq;
     }
     function provinceFor(a) {
@@ -341,7 +372,7 @@
       cancelSearch();
       if (!areaId || !sheet || !parcel) { searchStatus.textContent = 'Chọn địa bàn và nhập đủ số tờ, số thửa.'; return; }
       var seq = searchSeq; searchRequest = new env.AbortController(); searchSubmit.disabled = true;
-      searchStatus.textContent = 'Đang tìm thửa trong dữ liệu GIS…';
+      searchStatus.textContent = 'Đang tìm thửa trong dữ liệu GIS…';busy('parcel-search',true,searchStatus.textContent);
       var query = new URLSearchParams({area: areaId, sheet: sheet, parcel: parcel});
       env.fetch(apiBase + '/search.json?' + query.toString(), {signal: searchRequest.signal, cache: 'no-store'})
         .then(function (response) { if (!response.ok) throw new Error('Parcel search failed'); return response.json(); })
@@ -351,7 +382,7 @@
               || data.features.some(function (f) { return !f.properties || f.properties.area_id !== areaId; })) throw new Error('Invalid search response');
           if (!data.features.length) { searchStatus.textContent = 'Không tìm thấy thửa khớp. Kiểm tra số tờ, số thửa và phường theo dữ liệu cũ.'; return; }
           if (data.matched === 1 && data.features.length === 1) {
-            searchStatus.textContent = 'Đã tìm thấy thửa. Bấm từng dòng quy hoạch để xem chỉ tiêu.';
+            searchStatus.textContent = 'Đã tìm thấy thửa. Bấm xem đầy đủ nếu cần tra cứu quy hoạch.';
             focusFeature(data.features[0]); return;
           }
           searchStatus.textContent = 'Nguồn có ' + (data.truncated ? 'ít nhất ' : '') + data.matched + ' bản ghi trùng tờ/thửa. Chọn để kiểm tra vị trí.'
@@ -362,7 +393,7 @@
           });
         }).catch(function (error) {
           if (!disposed && seq === searchSeq && error.name !== 'AbortError') searchStatus.textContent = 'Chưa tìm được thửa. Vui lòng thử lại.';
-        }).finally(function () { if (!disposed && seq === searchSeq) searchSubmit.disabled = false; });
+        }).finally(function () { if (!disposed && seq === searchSeq) {searchSubmit.disabled = false;busy('parcel-search',false);} });
     });
     function changeBoundaries() {
       if (!toggle.checked) {
@@ -414,7 +445,7 @@
         if (data.excluded_count) node('p', settings, format(data.excluded_count) + ' ranh lỗi nguồn đã được tạm loại.').className = 'planning-parcel-notice';
         loadViewport();
       }).catch(function (error) { if (!disposed && error.name !== 'AbortError') status.textContent = 'Chưa có dữ liệu ranh thửa cho bản thử.'; });
-    map.on('moveend', move); map.on('movestart', moveStart); map.on('planning:drawing-start', closeInfo); map.on('planning:area-change', closeInfo);
+    map.on('moveend', move); map.on('movestart', moveStart); map.on('planning:drawing-start', closeInfo); map.on('planning:listing-selected',closeInfo); map.on('planning:area-change', closeInfo);
     function dispose() {
       if (disposed) return;
       disposed = true; ++viewSeq; ++selectionSeq; ++searchSeq; ++navigationSeq;
@@ -422,7 +453,9 @@
       if (searchRequest) searchRequest.abort(); if (navigationRequest) navigationRequest.abort();
       env.clearTimeout(timer); map.off('moveend', move); map.off('movestart', moveStart); map.off('unload', dispose);
       map.off('planning:area-change', closeInfo);
-      map.off('planning:drawing-start', closeInfo);
+      map.off('planning:drawing-start', closeInfo);map.off('planning:listing-selected',closeInfo);
+      if(cardObserver)cardObserver.disconnect();if(parcelTools)parcelTools.dispose();
+      ['parcel-view','parcel-detail','parcel-search','parcel-area'].forEach(function(key){busy(key,false);});
       remove(layer); remove(highlight);
       if (!sharedUI) ui.root.remove();
     }

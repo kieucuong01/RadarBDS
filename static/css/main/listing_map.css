@@ -1436,3 +1436,12 @@ body.listing-map-open .mobile-bottom-nav {
 .listing-map-attribution>summary::-webkit-details-marker{display:none}
 .listing-map-attribution .leaflet-control-attribution{position:absolute;right:0;bottom:30px;float:none;margin:0!important;width:max-content;max-width:min(76vw,600px);padding:6px 9px;background:#fffffff2;border-radius:6px;white-space:normal}
 .listing-map-attribution:not([open]) .leaflet-control-attribution{display:none}
+
+.listing-map-panel-close{margin-left:auto;min-width:32px;min-height:32px;border:0;border-radius:50%;background:#edf5f0;color:#235b45;font-size:22px;cursor:pointer}
+@media(min-width:761px){
+ .listing-map-workspace.is-focus-mode.has-group-panel:not(.listings-hidden) .listing-map-workspace-body{grid-template-columns:minmax(0,1fr) minmax(300px,360px)}
+ .listing-map-workspace.is-focus-mode.has-group-panel:not(.listings-hidden) .listing-map-panel{display:block!important}
+}
+@media(max-width:760px){
+ .listing-map-workspace.is-focus-mode.has-group-panel:not(.listings-hidden) .listing-map-mobile-sheet{display:block!important}
+}

@@ -449,7 +449,7 @@
     var zoom = Math.min(state.initialRegion ? state.initialRegion.max_zoom : 16, state.map.getBoundsZoom(bounds, false, [50,50]));
     // A portrait phone should open near a selected ward, rather than shrinking it to show a whole city.
     var wards = new URLSearchParams(state.entrySnapshot && state.entrySnapshot.query || '').getAll('ward').filter(Boolean);
-    if (!state.initialRegion && wards.length === 1) zoom = Math.max(14,zoom);
+    if (!state.initialRegion && wards.length === 1) zoom = Math.min(17,Math.max(15,zoom+1));
     state.map.setView(bounds.getCenter(),zoom,{animate:false});
   }
 
@@ -1013,8 +1013,10 @@
     visible = Boolean(visible);
     if (state.listingsVisible === visible) return visible;
     state.listingsVisible = visible;
+    if(!visible){state.groupPanelOpen=false;if(state.workspace)state.workspace.classList.toggle('has-group-panel',false);}
     if (state.workspace) state.workspace.classList.toggle('listings-hidden', !visible);
     if (!visible) {
+      setMapTask('group-items',false);
       ++summarySequence; ++itemSequence;
       if (state.summaryController) state.summaryController.abort();
       if (state.itemController) state.itemController.abort();
@@ -1032,6 +1034,17 @@
       requestSummary();
     }
     return visible;
+  }
+
+  function setGroupPanelOpen(visible) {
+    var changed=state.groupPanelOpen!==Boolean(visible);
+    state.groupPanelOpen = Boolean(visible);
+    if(state.workspace)state.workspace.classList.toggle('has-group-panel',state.groupPanelOpen);
+    if(changed&&state.map)state.map.invalidateSize({pan:false});
+  }
+
+  function setMapTask(key,busy,label) {
+    if(state.map&&state.map.fire)state.map.fire('planning:busy',{key:key,busy:busy,label:label});
   }
 
   function setFocusMode(enabled) {
@@ -1122,6 +1135,7 @@
     if (!status) return;
     status.textContent = String(text || "");
     status.setAttribute("aria-busy", busy ? "true" : "false");
+    setMapTask('listings',Boolean(busy),text);
   }
 
   function clearElement(target) {
@@ -1351,6 +1365,7 @@
   }
 
   function setLocationButtonLoading(loading) {
+    setMapTask('location',Boolean(loading),'Đang xác định vị trí…');
     if (!state.locationButton) return;
     state.locationButton.disabled = Boolean(loading);
     state.locationButton.setAttribute(
@@ -1610,6 +1625,12 @@
       )
     };
     var currentMap = state.map;
+    Object.keys(state.baseLayers).forEach(function(id){
+      var base=state.baseLayers[id];
+      base.on('loading',function(){if(state.map===currentMap&&state.activeBaseLayer===id)setMapTask('basemap',true,'Đang tải bản đồ nền…');});
+      base.on('load',function(){if(state.map===currentMap&&state.activeBaseLayer===id)setMapTask('basemap',false);});
+      base.on('remove',function(){if(state.map===currentMap)setMapTask('basemap',false);});
+    });
     bindStreetTileFallback(currentMap, state.baseLayers.street, definitions.street, function (message) {
       if (state.map === currentMap && state.activeBaseLayer === "street") setStatus(message, false);
     });
@@ -2171,6 +2192,11 @@
     shell.appendChild(actions);
   }
 
+  function panelCloseButton() {
+    var button=create('button','listing-map-panel-close','×');button.type='button';button.setAttribute('aria-label','Ẩn danh sách tin trên bản đồ');
+    button.addEventListener('click',function(){setGroupPanelOpen(false);setMobileSheetExpanded(false);});return button;
+  }
+
   function appendPanelTabs(shell, viewKind) {
     var model = panelTabModel(viewKind);
     var header = create("div", "listing-map-panel-heading");
@@ -2190,6 +2216,7 @@
         ));
       }
     }
+    if(state.groupPanelOpen)titleWrap.appendChild(panelCloseButton());
     header.appendChild(titleWrap);
     var tabs = create("div", "listing-map-panel-tabs");
     tabs.setAttribute("role", "tablist");
@@ -2869,6 +2896,7 @@
 
   function openItem(item) {
     closePreview();
+    setMapTask('group-items',false);
     itemSequence += 1;
     if (state.itemController) state.itemController.abort();
     return openListingFromMap(root, item);
@@ -3010,6 +3038,8 @@
     cancelDirectoryRender();
     clearElement(target);
     var shell = create("div", "listing-map-panel-loading");
+    shell.setAttribute('aria-busy','true');
+    if(state.groupPanelOpen)shell.appendChild(panelCloseButton());
     if (isMobileSheet(target)) {
       appendSelectedSheetHeader(shell, createSelectedGroupBackButton());
     }
@@ -3160,6 +3190,8 @@
     if (!state.open || !state.listingsVisible || !state.snapshot) return;
     closePreview();
     state.selectedGroup = group;
+    if(state.map&&state.map.fire)state.map.fire('planning:listing-selected');
+    setGroupPanelOpen(!isSingleListingGroup(group)||state.adminEditMode);
     var adminTargetKind = adminEditTargetKind(group, state.adminEditMode);
     if (adminTargetKind === "group") {
       setMobileSheetExpanded(true);
@@ -3196,6 +3228,7 @@
       base_layer_id: state.activeBaseLayer,
       layer_ids: [state.activeBaseLayer]
     });
+    setMapTask('group-items',true,'Đang tải tin tại vị trí này…');
     fetchJson(url, controller).then(function (payload) {
       if (!state.open || sequence !== itemSequence) return;
       if (adminTargetKind === "listing") {
@@ -3226,7 +3259,7 @@
       if (error && error.name === "AbortError") return;
       if (!state.open || sequence !== itemSequence) return;
       setPanelView("items-error", group);
-    });
+    }).finally(function(){if(sequence===itemSequence)setMapTask('group-items',false);});
   }
 
   function renderSummary(payload, options) {
@@ -3267,7 +3300,7 @@
         if (payload.recent) {
           state.recentPayload = {};
           state.recentPayload[state.snapshot.mode === 'all' ? 'listings' : 'signals'] = payload.recent.items || [];
-          if (!state.adminEdit) {
+          if (!state.adminEdit && !(state.groupPanelOpen && state.selectedGroup)) {
             ++itemSequence; if (state.itemController) state.itemController.abort();
             state.selectedGroup = null;
             state.panelView = {kind:'recent',group:null,payload:state.recentPayload};
@@ -3333,11 +3366,13 @@
     if (typeof root.hideSidebarMobile === "function") root.hideSidebarMobile();
     state.open = true;
     var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
-    state.planningTheme = explicitPlanning ? options.planningTheme : "land_use_2030";
+    state.planningTheme = explicitPlanning ? options.planningTheme : "administrative_legacy";
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
     state.initialPlanningArea = root.RadarPlanningArea && root.RadarPlanningArea.initial(root.RADAR_LANDUSE_AREAS, options.planningRegion);
-    if (state.initialPlanningArea && (!state.initialRegion || state.planningTheme === 'land_use_2030')) {
+    var filteredWards = new URLSearchParams(safe.query).getAll('ward').filter(Boolean);
+    if (!options.planningRegion && filteredWards.length) state.initialRegion = null;
+    if (state.initialPlanningArea && (!state.initialRegion || state.planningTheme === 'land_use_2030') && !(!options.planningRegion && filteredWards.length)) {
       state.initialRegion = {id:state.initialPlanningArea.region_id, bounds:state.initialPlanningArea.bounds, max_zoom:state.initialPlanningArea.max_zoom};
     }
     state.listingsVisible = !explicitPlanning;
@@ -3347,6 +3382,7 @@
     state.browseViewport = false;
     state.viewSnapshot = null; state.loadedViewportKey = null; state.pendingViewportKey = null;
     state.workspace = workspace;
+    state.groupPanelOpen = false; workspace.classList.toggle('has-group-panel',false);
     state.summary = null;
     state.recentPayload = null;
     state.selectedGroup = null;

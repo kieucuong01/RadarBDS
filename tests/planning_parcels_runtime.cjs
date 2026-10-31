@@ -43,9 +43,14 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   deliver(2,{type:'FeatureCollection',features:[feature],matched:1});await flush();
   assert(!layers.has(old));
   [...layers][0].polygon.click({});
+  assert.equal(pending.length,3,'Clicking a parcel must not request GIS planning');
+  nodes.filter(n=>n.className==='planning-parcel-expand').at(-1).events.click();
   assert(pending[3].url.includes('/900/planning.json?area=25813'));
   assert(nodes.some(n=>n.textContent==='Mỹ Phước · Bến Cát (đơn vị cũ)'));
   deliver(3,{parcel:feature.properties,plans:[],queried_at:'2026-10-27'});await flush();
+  const expanded=nodes.filter(n=>n.className==='planning-parcel-expand').at(-1);
+  assert.equal(expanded.disabled,false);expanded.events.click();expanded.events.click();
+  assert.equal(pending.length,4,'Reopening cached details must not repeat the GIS request');
   const field=name=>nodes.find(n=>n.attributes['aria-label']===name);
   const close=field('Đóng thông tin thửa');
   assert(close,'Parcel information needs an explicit close control');
@@ -57,6 +62,8 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   field('Tra tờ thửa').events.submit({preventDefault(){}});
   assert(pending[4].url.includes('search.json?area=25813&sheet=1&parcel=2'));
   deliver(4,{type:'FeatureCollection',features:[feature],matched:1,truncated:false});await flush();
+  assert.equal(pending.length,5,'Sheet search opens basic information without GIS');
+  nodes.filter(n=>n.className==='planning-parcel-expand').at(-1).events.click();
   assert(pending[5].url.includes('/900/planning.json?area=25813'));
   close.events.click();
   deliver(5,{parcel:feature.properties,plans:[{type:'LATE RESULT'}],queried_at:'2026-10-27'});await flush();
@@ -92,6 +99,7 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   assert.deepEqual(searchWard.children.map(n=>n.value),['25813']);
   deliver(beforeProduction+1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
   [...layers][0].polygon.click({});
+  nodes.filter(n=>n.className==='planning-parcel-expand').at(-1).events.click();
   assert(pending[beforeProduction+2].url.startsWith('/api/planning/parcels/900/planning.json'));
   const city=nodes.filter(n=>n.attributes['aria-label']==='Thành phố trên bản đồ').at(-1);
   const ward=nodes.filter(n=>n.attributes['aria-label']==='Phường trên bản đồ').at(-1);

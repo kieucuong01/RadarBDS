@@ -45,7 +45,6 @@
 .planning-opacity-control button{width:100%;min-height:44px;border:0;border-radius:9px;background:#f3f8f5;color:#126e54;font-size:22px}
 .planning-opacity-control output{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;padding:4px}
 .planning-opacity-control input[type=range]{writing-mode:vertical-lr;direction:rtl;height:100px;width:44px;margin:4px 0;accent-color:#11755b;touch-action:none}
-.planning-map-ui:has(.planning-parcel-card:not([hidden])) .planning-layer-dock{display:none}
 .planning-map-ui:has(.planning-map-popover[open]) .planning-layer-dock,.planning-map-ui:has(.planning-map-popover[open]) .planning-opacity-control{display:none}
 .listing-map-workspace:has(.planning-map-popover[open]) .listing-map-filter-summary{visibility:hidden;pointer-events:none}
 .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:64px;max-width:calc(100% - 116px);flex-wrap:wrap;justify-content:center}
@@ -157,3 +156,9 @@
 
 .planning-admin-tooltip{font-size:12px;font-weight:700;color:#133f44;pointer-events:none}
 .planning-is-drawing .leaflet-planningAdministrative-pane,.planning-is-drawing .leaflet-planningAdministrative-pane *{pointer-events:none!important}
+
+.planning-map-activity{position:absolute;top:66px;left:50%;transform:translateX(-50%);max-width:calc(100% - 100px);display:flex;align-items:center;gap:7px;padding:6px 10px;background:#fffffff0;border-radius:18px;box-shadow:0 2px 8px #12392a20;font-size:11px;color:#145c43;pointer-events:none;z-index:15}
+.planning-map-activity[hidden]{display:none}
+.planning-map-activity:before,.planning-map-ui button[aria-busy=true]:before{content:'';display:inline-block;width:12px;height:12px;border:2px solid #c2dfd1;border-top-color:#11755b;border-radius:50%;animation:planning-loading .8s linear infinite;flex-shrink:0}
+@keyframes planning-loading{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.planning-map-activity:before,.planning-map-ui button[aria-busy=true]:before{animation:none}}
