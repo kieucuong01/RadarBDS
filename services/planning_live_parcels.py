@@ -20,6 +20,8 @@ class SourceBusy(Exception):
 
 
 class LiveParcels:
+    coordinate_bounds = (106.25, 8.5, 107.65, 11.65)
+
     def __init__(self, client=None, cache_bytes=8_000_000):
         self.client = client or PublicGIS()
         self.areas = json.loads((Path(__file__).resolve().parents[1]/'config/planning_parcel_areas.json')
@@ -152,6 +154,20 @@ class LiveParcels:
                                    'spatialReference': {'wkid': 4326}}),
             'geometryType': 'esriGeometryEnvelope', 'inSR': 4326,
             'spatialRel': 'esriSpatialRelIntersects'}, bbox=bbox)
+
+    def point(self, longitude, latitude):
+        from shapely.geometry import Point, shape
+        west, south, east, north = self.coordinate_bounds
+        if not (west <= longitude <= east and south <= latitude <= north):
+            return dict(type='FeatureCollection', features=[], matched=0, truncated=False)
+        result = self._query(('point', longitude, latitude), dict(where=EXPANDED_WHERE,
+            geometry=json.dumps({'x': longitude, 'y': latitude, 'spatialReference': {'wkid': 4326}}),
+            geometryType='esriGeometryPoint', inSR=4326, spatialRel='esriSpatialRelIntersects'), limit=20)
+        point = Point(longitude, latitude)
+        features = [f for f in result['features'] if shape(f['geometry']).covers(point)]
+        if result['features'] and not features:
+            raise ValueError('Source ignored coordinate query')
+        return dict(result, features=features, matched=len(features))
 
     def _area_where(self, area):
         ref = self.by_area.get(area)

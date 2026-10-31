@@ -121,6 +121,14 @@ class ParcelCatalog:
             rows = conn.execute('SELECT feature FROM parcels WHERE '+condition+' ORDER BY id LIMIT 20',params).fetchall()
         return [json.loads(row[0]) for row in rows],count
 
+    def point(self, longitude, latitude):
+        from shapely.geometry import Point, shape
+        features, count = self.viewport((longitude, latitude, longitude, latitude))
+        if count > 1500:
+            raise ValueError('Coordinate overlaps too many source envelopes')
+        point = Point(longitude, latitude)
+        return [f for f in features if shape(f['geometry']).covers(point)]
+
 
 def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
     """Adapt the existing loopback routes; retain lookup guards and bounded cache."""
@@ -212,5 +220,33 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
                             truncated=live['truncated'] or count+live['matched']>1500)
             return source_result(combined)
         return jsonify(type='FeatureCollection',features=features,truncated=count>1500,matched=count)
+
+    @app.get(prefix+'/coordinates.json')
+    def parcel_coordinates():
+        from services.planning_coordinates import coordinate_point
+        from pyproj.exceptions import ProjError
+        try:
+            longitude, latitude, accuracy = coordinate_point(request.args)
+        except (ValueError, ProjError):
+            return jsonify(error='Tọa độ không hợp lệ. Kiểm tra thứ tự X/Y và hệ chiếu theo hồ sơ.'), 400
+        def lookup():
+            features = catalog.point(longitude, latitude)
+            remote = expanded.point(longitude, latitude) if expanded and not features else {}
+            merged = {f['id']: f for f in features + remote.get('features', [])}
+            return dict(type='FeatureCollection', features=list(merged.values())[:20],
+                        matched=len(merged), truncated=remote.get('truncated', False) or len(merged)>20,
+                        point=[latitude, longitude], transform_accuracy_m=accuracy)
+        return source_result(lookup)
+
+    @app.post(prefix+'/corners.json')
+    def parcel_corners():
+        from services.planning_coordinates import coordinate_outline
+        from pyproj.exceptions import ProjError
+        request.max_content_length = 16000
+        try:
+            result = coordinate_outline(request.get_json(silent=True))
+        except (ValueError, ProjError):
+            return jsonify(error='Góc ranh không hợp lệ. Nhập 3–100 điểm theo thứ tự, kiểm tra hệ chiếu và các cạnh giao nhau.'), 400
+        return jsonify(result)
 
     install_planning_lookup(app, feature_by_id, prefix=prefix)

@@ -26,6 +26,20 @@ class Source:
 BBOX = (106.700,10.775,106.702,10.777)
 
 
+def test_coordinate_query_requires_polygon_membership_and_preserves_source_scope():
+    source = Source(); live = LiveParcels(client=source)
+    result = live.point(106.70055, 10.77555)
+    assert result['features'][0]['id'] == 2821079
+    assert source.calls[0][1]['geometryType'] == 'esriGeometryPoint'
+    assert source.calls[0][1]['resultRecordCount'] == 20
+    assert 'PRIVATE' not in str(result)
+    with pytest.raises(ValueError, match='ignored coordinate'):
+        live.point(106.7015, 10.7765)
+    previous = len(source.calls)
+    assert live.point(105.8, 21.02)['features'] == []
+    assert len(source.calls) == previous
+
+
 def test_viewport_uses_native_spatial_query_and_strips_personal_fields():
     source = Source()
     live = LiveParcels(client=source)

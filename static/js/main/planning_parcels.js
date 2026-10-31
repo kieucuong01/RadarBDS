@@ -8,7 +8,7 @@
     var doc = env.document, disposed = false, config, navigationAreas, timer, viewRequest, selectionRequest;
     var navigationRegions = Array.isArray(env.RADAR_PLANNING_REGIONS) ? env.RADAR_PLANNING_REGIONS : [];
     var apiBase = env.RADAR_PLANNING_CONFIG && env.RADAR_PLANNING_CONFIG.parcelBase || '/local-planning/parcels';
-    var viewSeq = 0, selectionSeq = 0, searchSeq = 0, navigationSeq = 0, layer, highlight, searchRequest, navigationRequest;
+    var viewSeq = 0, selectionSeq = 0, searchSeq = 0, navigationSeq = 0, layer, highlight, coordinateMarker, searchRequest, navigationRequest;
     var lifetime = new env.AbortController();
     function node(tag, parent, text) {
       var element = doc.createElement(tag);
@@ -59,14 +59,42 @@
     var areaStatus = node('p', areaForm, 'Địa bàn theo dữ liệu cũ. Kéo bản đồ để xem thêm vùng bên cạnh.'); areaStatus.setAttribute('role', 'status');
     var searchMenu = popover(ui.parcelSlot, 'Tờ/thửa', 'planning-parcel-search');
     var searchForm = node('form', searchMenu); searchForm.className = 'planning-map-form'; searchForm.setAttribute('aria-label', 'Tra tờ thửa');
-    node('h3', searchForm, 'Tra tờ / thửa');
-    var searchProvince = field('select', searchForm, 'Tỉnh/TP');
-    var searchDistrict = field('select', searchForm, 'Quận / Huyện (Cũ)');
-    var searchArea = field('select', searchForm, 'Phường / Xã (Cũ)');
-    var inputRow = node('div', searchForm); inputRow.className = 'planning-parcel-inputs';
+    node('h3', searchForm, 'Tra thửa đất');
+    var searchMethod = field('select', searchForm, 'Tra cứu theo');
+    [['sheet','Tờ / thửa'],['coordinates','Tọa độ'],['corners','Góc ranh']].forEach(function(item){node('option',searchMethod,item[1]).value=item[0];});
+    searchMethod.value='sheet';
+    var sheetSection = node('div', searchForm);
+    var searchProvince = field('select', sheetSection, 'Tỉnh/TP');
+    var searchDistrict = field('select', sheetSection, 'Quận / Huyện (Cũ)');
+    var searchArea = field('select', sheetSection, 'Phường / Xã (Cũ)');
+    var inputRow = node('div', sheetSection); inputRow.className = 'planning-parcel-inputs';
     var sheetInput = field('input', inputRow, 'Số tờ bản đồ');
     var parcelInput = field('input', inputRow, 'Số thửa đất');
     [sheetInput,parcelInput].forEach(function (input) { input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 32; input.required = true; input.autocomplete = 'off'; });
+    var coordinateSection=node('div',searchForm);coordinateSection.hidden=true;
+    var coordinateSystem=field('select',coordinateSection,'Hệ tọa độ');
+    [['wgs84','WGS84 · Google Maps'],['vn2000','VN-2000']].forEach(function(item){node('option',coordinateSystem,item[1]).value=item[0];});coordinateSystem.value='wgs84';
+    var projectionLabel=node('label',coordinateSection,'Hệ chiếu VN-2000');projectionLabel.hidden=true;
+    var coordinateProjection=node('select',projectionLabel);coordinateProjection.setAttribute('aria-label','Hệ chiếu VN-2000');
+    node('option',coordinateProjection,'Chọn hệ chiếu theo hồ sơ').value='';
+    [['tm3-10545','Múi 3° · KTT 105°45′ (Bình Dương, TP.HCM)'],['tm3-10615','Múi 3° · KTT 106°15′ (Bình Phước)'],['tm3-10745','Múi 3° · KTT 107°45′ (Đồng Nai, BRVT)'],['utm48','Múi 6° · UTM 48N'],['utm49','Múi 6° · UTM 49N']].forEach(function(item){node('option',coordinateProjection,item[1]).value=item[0];});coordinateProjection.value='';
+    var firstLabel=node('label',coordinateSection),firstTitle=node('span',firstLabel,'Vĩ độ'),coordinateFirst=node('input',firstLabel);
+    var secondLabel=node('label',coordinateSection),secondTitle=node('span',secondLabel,'Kinh độ'),coordinateSecond=node('input',secondLabel);
+    [coordinateFirst,coordinateSecond].forEach(function(input){input.type='text';input.inputMode='decimal';input.maxLength=32;input.autocomplete='off';});
+    node('p',coordinateSection,'Nhập tọa độ thập phân, không dùng dấu phân cách hàng nghìn. VN-2000 cần chọn đúng hệ chiếu theo hồ sơ; kết quả tham khảo.');
+    var cornerLabel=node('label',coordinateSection,'Danh sách góc ranh');cornerLabel.hidden=true;
+    var cornerInput=node('textarea',cornerLabel);cornerInput.rows=6;cornerInput.maxLength=12000;cornerInput.setAttribute('aria-label','Danh sách góc ranh');
+    cornerInput.placeholder='11.0200 106.6100\n11.0200 106.6110\n11.0210 106.6110';
+    node('p',cornerLabel,'Mỗi dòng một điểm theo thứ tự quanh ranh: vĩ độ kinh độ (WGS84) hoặc X Y (VN-2000). Có thể dán bảng 2 cột hoặc STT X Y; cách nhau bằng khoảng trắng hoặc dấu chấm phẩy. Tối đa 100 điểm.');
+    function coordinateLabels(){
+      var vn=coordinateSystem.value==='vn2000';projectionLabel.hidden=!vn;
+      coordinateProjection.required=vn&&searchMethod.value!=='sheet';
+      cornerInput.placeholder=vn?'1218730.50 594520.25\n1218730.50 594550.25\n1218760.50 594550.25':'11.0200 106.6100\n11.0200 106.6110\n11.0210 106.6110';
+      firstTitle.textContent=vn?'X · Tọa độ bắc (m)':'Vĩ độ';secondTitle.textContent=vn?'Y · Tọa độ đông (m)':'Kinh độ';
+      coordinateFirst.setAttribute('aria-label',firstTitle.textContent);coordinateSecond.setAttribute('aria-label',secondTitle.textContent);
+      coordinateFirst.placeholder=vn?'Ví dụ 1220000.50':'Ví dụ 11.0205';coordinateSecond.placeholder=vn?'Ví dụ 600000.25':'Ví dụ 106.6105';
+    }
+    coordinateLabels();
     var searchSubmit = node('button', searchForm, 'Tìm thửa đất'); searchSubmit.type = 'submit'; searchSubmit.disabled = true;
     var searchStatus = node('p', searchForm, 'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.'); searchStatus.setAttribute('role', 'status');
     var results = node('div', searchForm); results.className = 'planning-parcel-results';
@@ -99,6 +127,7 @@
     function remove(which) { if (which) map.removeLayer(which); }
     function clearInfo() { info.replaceChildren(); }
     function showParcel(feature) {
+      remove(coordinateMarker);coordinateMarker=null;
       clearInfo();
       var heading=node('h3', info, 'Thửa ' + format(feature.properties.parcel) + ' · Tờ ' + format(feature.properties.sheet));
       node('strong', heading, ' · '+area(feature.properties.area)).className = 'planning-parcel-area';
@@ -332,8 +361,23 @@
     }
     function cancelSearch() {
       ++searchSeq; if (searchRequest) searchRequest.abort(); busy('parcel-search',false);searchSubmit.disabled = !config; results.replaceChildren();
-      searchStatus.textContent = 'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.';
+      searchStatus.textContent = searchMethod.value==='corners'
+        ? 'Dán các góc theo thứ tự quanh ranh. Ranh tự nhập dùng để đối chiếu lớp bản đồ.' : searchMethod.value==='coordinates'
+        ? 'Chọn hệ tọa độ và nhập đủ hai giá trị.' : 'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.';
     }
+    function changeSearchMethod(){
+      cancelSearch();var coordinates=searchMethod.value==='coordinates',corners=searchMethod.value==='corners';
+      sheetSection.hidden=coordinates||corners;coordinateSection.hidden=!(coordinates||corners);
+      firstLabel.hidden=secondLabel.hidden=corners;cornerLabel.hidden=!corners;
+      sheetInput.required=parcelInput.required=!(coordinates||corners);
+      coordinateFirst.required=coordinateSecond.required=coordinates;cornerInput.required=corners;
+      coordinateProjection.required=(coordinates||corners)&&coordinateSystem.value==='vn2000';
+      searchSubmit.textContent=corners?'Xem ranh từ tọa độ':coordinates?'Tìm thửa theo tọa độ':'Tìm thửa đất';
+      searchSubmit.disabled=!config;searchStatus.textContent=corners?'Dán các góc theo thứ tự quanh ranh. Ranh tự nhập dùng để đối chiếu lớp bản đồ.':coordinates?'Chọn hệ tọa độ và nhập đủ hai giá trị.':'Nhập đúng số tờ, số thửa và phường theo dữ liệu GIS.';
+    }
+    searchMethod.addEventListener('change',changeSearchMethod);
+    coordinateSystem.addEventListener('change',function(){cancelSearch();coordinateLabels();});
+    [coordinateProjection,coordinateFirst,coordinateSecond,cornerInput].forEach(function(input){input.addEventListener('change',cancelSearch);input.addEventListener('input',cancelSearch);});
     function moveStart() {
       if (disposed) return;
       cancelSearch(); ++navigationSeq; if (navigationRequest) navigationRequest.abort(); busy('parcel-area',false);areaSubmit.disabled = !config;
@@ -369,18 +413,40 @@
     searchForm.addEventListener('submit', function (event) {
       event.preventDefault(); if (disposed || !config) return;
       var sheet = String(sheetInput.value || '').trim(), parcel = String(parcelInput.value || '').trim(), areaId = searchArea.value;
+      var coordinates=searchMethod.value==='coordinates',corners=searchMethod.value==='corners';
       cancelSearch();
-      if (!areaId || !sheet || !parcel) { searchStatus.textContent = 'Chọn địa bàn và nhập đủ số tờ, số thửa.'; return; }
+      if (!coordinates&&!corners&&(!areaId || !sheet || !parcel)) { searchStatus.textContent = 'Chọn địa bàn và nhập đủ số tờ, số thửa.'; return; }
+      if(coordinates&&(!coordinateFirst.value.trim()||!coordinateSecond.value.trim())){searchStatus.textContent='Nhập đủ hai tọa độ.';return;}
+      if(corners&&!String(cornerInput.value||'').trim()){searchStatus.textContent='Nhập ít nhất 3 góc ranh.';return;}
       var seq = searchSeq; searchRequest = new env.AbortController(); searchSubmit.disabled = true;
-      searchStatus.textContent = 'Đang tìm thửa trong dữ liệu GIS…';busy('parcel-search',true,searchStatus.textContent);
+      searchStatus.textContent = corners?'Đang chuyển tọa độ và dựng ranh…':'Đang tìm thửa trong dữ liệu GIS…';busy('parcel-search',true,searchStatus.textContent);
       var query = new URLSearchParams({area: areaId, sheet: sheet, parcel: parcel});
-      env.fetch(apiBase + '/search.json?' + query.toString(), {signal: searchRequest.signal, cache: 'no-store'})
+      if(coordinates)query=new URLSearchParams({system:coordinateSystem.value,crs:coordinateProjection.value,first:coordinateFirst.value.trim(),second:coordinateSecond.value.trim()});
+      var requestOptions={signal:searchRequest.signal,cache:'no-store'};
+      if(corners){requestOptions.method='POST';requestOptions.headers={'Content-Type':'application/json'};requestOptions.body=JSON.stringify({system:coordinateSystem.value,crs:coordinateProjection.value,corners:cornerInput.value});}
+      env.fetch(apiBase + (corners?'/corners.json':(coordinates?'/coordinates.json?':'/search.json?')+query.toString()),requestOptions)
         .then(function (response) { if (!response.ok) throw new Error('Parcel search failed'); return response.json(); })
         .then(function (data) {
           if (disposed || seq !== searchSeq) return;
+          if(corners){
+            var metrics=env.RadarParcelTools&&env.RadarParcelTools.metrics(data);
+            if(!metrics||!data.properties||data.properties.origin!=='user_corners')throw new Error('Invalid corner outline');
+            searchStatus.textContent='Đã dựng ranh tự nhập. Bật lớp quy hoạch để đối chiếu; đây không phải ranh thửa đã xác minh từ GIS.';
+            searchMenu.open=false;remove(coordinateMarker);coordinateMarker=null;
+            if(map.fire)map.fire('planning:measure-parcel',{points:metrics.outline,origin:'user_corners'});
+            map.fitBounds(L.geoJSON(data).getBounds(),{maxZoom:19,padding:[65,100],animate:false});return;
+          }
           if (data.type !== 'FeatureCollection' || !Array.isArray(data.features) || data.features.length > 20
-              || data.features.some(function (f) { return !f.properties || f.properties.area_id !== areaId; })) throw new Error('Invalid search response');
-          if (!data.features.length) { searchStatus.textContent = 'Không tìm thấy thửa khớp. Kiểm tra số tờ, số thửa và phường theo dữ liệu cũ.'; return; }
+              || data.features.some(function (f) { return !f.properties || !coordinates&&f.properties.area_id !== areaId; })) throw new Error('Invalid search response');
+          if (!data.features.length) {
+            if(coordinates){
+              if(!Array.isArray(data.point)||data.point.length!==2||!data.point.every(Number.isFinite))throw new Error('Invalid coordinate result');
+              map.setView(data.point,19,{animate:false});remove(coordinateMarker);
+              if(L.circleMarker)coordinateMarker=L.circleMarker(data.point,{pane:'planningParcelSelected',interactive:false,radius:7,color:'#7c3aed',fillOpacity:.65}).addTo(map);
+              searchStatus.textContent='Đã đến tọa độ. Nguồn hiện chưa trả ranh tại điểm này; hãy kiểm tra hệ chiếu và vùng có dữ liệu.';
+            }else searchStatus.textContent = 'Không tìm thấy thửa khớp. Kiểm tra số tờ, số thửa và phường theo dữ liệu cũ.';
+            return;
+          }
           if (data.matched === 1 && data.features.length === 1) {
             searchStatus.textContent = 'Đã tìm thấy thửa. Bấm xem đầy đủ nếu cần tra cứu quy hoạch.';
             focusFeature(data.features[0]); return;
@@ -392,8 +458,8 @@
             button.addEventListener('click', function () { if (!disposed) focusFeature(feature); });
           });
         }).catch(function (error) {
-          if (!disposed && seq === searchSeq && error.name !== 'AbortError') searchStatus.textContent = 'Chưa tìm được thửa. Vui lòng thử lại.';
-        }).finally(function () { if (!disposed && seq === searchSeq) {searchSubmit.disabled = false;busy('parcel-search',false);} });
+          if (!disposed && seq === searchSeq && error.name !== 'AbortError') searchStatus.textContent = corners?'Chưa dựng được ranh. Kiểm tra 3–100 điểm theo thứ tự, hệ chiếu và các cạnh giao nhau.':coordinates?'Chưa tra được tọa độ. Kiểm tra thứ tự hai giá trị, hệ chiếu và thử lại.':'Chưa tìm được thửa. Vui lòng thử lại.';
+        }).finally(function () { if (!disposed && seq === searchSeq){searchSubmit.disabled = false;busy('parcel-search',false);} });
     });
     function changeBoundaries() {
       if (!toggle.checked) {
@@ -456,7 +522,7 @@
       map.off('planning:drawing-start', closeInfo);map.off('planning:listing-selected',closeInfo);
       if(cardObserver)cardObserver.disconnect();if(parcelTools)parcelTools.dispose();
       ['parcel-view','parcel-detail','parcel-search','parcel-area','parcel-sample'].forEach(function(key){busy(key,false);});
-      remove(layer); remove(highlight);
+      remove(layer); remove(highlight);remove(coordinateMarker);
       if (!sharedUI) ui.root.remove();
     }
     map.on('unload', dispose);
