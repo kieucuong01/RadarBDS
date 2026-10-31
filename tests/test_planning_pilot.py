@@ -153,7 +153,7 @@ def test_catalog_isolates_each_layer_and_scopes_assets(tmp_path):
     assert catalog.status_code == 200
     assert catalog.headers['Cache-Control'] == 'private, no-store'
     layers = {row['id']: row for row in catalog.json['layers']}
-    assert len(layers) == 99
+    assert len(layers) == 131
     assert layers['dongnai-administrative-2025']['manifest']['unit_count'] == 95
     assert layers['dongnai-administrative-2025']['coverage_provinces'] == ['dong-nai','binh-phuoc']
     assert sum(row.get('theme')=='land_use_2030' for row in layers.values()) == 63

@@ -1,10 +1,12 @@
 (function (root, factory) {
   var branding = typeof module === 'object' && module.exports
     ? require('./planning_reference_branding.js') : root && root.RadarPlanningReferenceBranding;
-  var api = factory(branding);
+  var administrative = typeof module === 'object' && module.exports
+    ? require('./planning_administrative.js') : root && root.RadarAdministrativeBoundaries;
+  var api = factory(branding, administrative);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.RadarPlanningOverlay = api;
-})(typeof window !== 'undefined' ? window : null, function (branding) {
+})(typeof window !== 'undefined' ? window : null, function (branding, administrative) {
   'use strict';
 
   function dismissOutsidePanels(panels,target) {
@@ -32,12 +34,8 @@
       && ['tile_template','bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
         return JSON.stringify(data[key]) === JSON.stringify(rule[key]);
       }) && typeof data.title === 'string' && typeof data.notice === 'string';
-    if (data.render_mode === 'geojson' && data.id === 'hcm-administrative-2025') return data.source_kind === 'official_gis_administrative'
-      && data.geojson_url === '/static/data/admin_hcm_2025/overview.json?v=administrative-20261029' && data.unit_count === 168
-      && validBounds(data.bounds,[8.5,106.25,11.65,107.75]) && typeof data.title === 'string' && typeof data.notice === 'string';
-    if (data.render_mode === 'geojson' && data.id === 'dongnai-administrative-2025') return data.source_kind === 'open_administrative_reference'
-      && data.geojson_url === '/static/data/admin_dongnai_2025/overview.json?v=administrative-20261031' && data.unit_count === 95
-      && validBounds(data.bounds,[10,106,13,109]) && typeof data.title === 'string' && typeof data.notice === 'string';
+    if (data.render_mode === 'geojson' && ['official_gis_administrative','open_administrative_reference'].indexOf(data.source_kind)>=0)
+      return !!administrative && administrative.validManifest(data);
     if (data.render_mode === 'geojson') return data.id === 'hcm-transport-gis-roads'
       && data.source_kind === 'official_gis_transport'
       && data.geojson_url === '/static/data/planning_transport_roads.geojson?v=transport-gis-20261029'
@@ -141,7 +139,7 @@
   }
 
   function validCatalog(data, landuseRules) {
-    if (!data || !Array.isArray(data.layers) || !data.layers.length || data.layers.length > 128) return false;
+    if (!data || !Array.isArray(data.layers) || !data.layers.length || data.layers.length > 160) return false;
     var ids = new Set();
     return data.layers.every(function (item) {
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
@@ -151,15 +149,14 @@
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
           && !(item.source === 'guland' && ['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
-      if (item.theme === 'administrative' && (item.source !== 'gis' || !((item.id === 'hcm-administrative-2025' && item.source_url === 'https://gisxaydung.tphcm.gov.vn/tracuuttqh') || (item.id === 'dongnai-administrative-2025' && item.source_url === 'https://github.com/thanglequoc/vietnamese-provinces-database')))) return false;
+      if (item.theme === 'administrative' && (!administrative || !administrative.validCatalogItem(item))) return false;
       if ((item.theme === 'administrative') !== Boolean(item.manifest && ['official_gis_administrative','open_administrative_reference'].indexOf(item.manifest.source_kind) >= 0)) return false;
       if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template) || item.manifest.source_kind === 'official_gis_transport'))) return false;
       if (item.theme === 'urban_vision_100' && (!item.manifest || item.manifest.planning_status !== 'draft' || item.manifest.tile_template !== 'https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png')) return false;
       if (item.theme === 'land_use_2030' && item.manifest && item.manifest.planning_status === 'draft') return false;
       if (item.scope !== undefined && ['area', 'city', 'region'].indexOf(item.scope) < 0) return false;
       if (item.inspection_only !== undefined && typeof item.inspection_only !== 'boolean') return false;
-      var openAdministrativeSource = item.theme === 'administrative' && item.id === 'dongnai-administrative-2025'
-        && item.source_url === 'https://github.com/thanglequoc/vietnamese-provinces-database';
+      var openAdministrativeSource = item.theme === 'administrative' && administrative && administrative.validCatalogItem(item);
       if (typeof item.name !== 'string' || typeof item.decision !== 'string'
           || !openAdministrativeSource && !/^https:\/\/(drive\.google\.com\/|bencat\.binhduong\.gov\.vn\/|bencat-hochiminhcity\.gov\.vn\/|gisxaydung\.tphcm\.gov\.vn\/|government\.cdn\.myaloha\.com\.vn\/|(?:www\.)?aapbinhduong\.com\/|guland\.vn\/(?:soi-quy-hoach(?:[/?]|$)|xem-quy-hoach\/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam$))/.test(item.source_url || '')) return false;
       if (item.status === 'overlay_ready') return validManifest(item.manifest,landuseRules) && item.manifest.id === item.id;

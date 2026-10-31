@@ -13,11 +13,11 @@ test('administrative source includes exactly 168 unique units and Con Dao with b
  const f=overview.features[0];assert(!api.validFeature({...f,properties:{...f.properties,code:'../bad'}}));
 });
 function harness(){
- let zoom=10,viewport=[[8.5,106.25],[11.65,107.75]];const handlers=new Set(),calls=[],requests=[],interactions=new Map(),views=[];
+ let zoom=10,viewport=[[8.5,106.25],[11.65,107.75]];const handlers=new Set(),calls=[],requests=[],interactions=new Map(),views=[],events=new Map();
  const container={classList:{contains:()=>false}};
  const map={getContainer:()=>container,getMaxZoom:()=>19,getBoundsZoom:()=>14,setView:(point,z)=>views.push({point,zoom:z}),getZoom:()=>zoom,getSize:()=>({x:1280,y:800}),latLngToContainerPoint:()=>({x:200,y:200}),
   getBounds:()=>({intersects:b=>viewport[0][0]<=b[1][0]&&viewport[1][0]>=b[0][0]&&viewport[0][1]<=b[1][1]&&viewport[1][1]>=b[0][1]}),
-  on(k,fn){handlers.add(fn);},off(k,fn){handlers.delete(fn);}};
+  on(k,fn){handlers.add(fn);if(!events.has(k))events.set(k,new Set());events.get(k).add(fn);},off(k,fn){handlers.delete(fn);if(events.has(k))events.get(k).delete(fn);}};
  function group(children=[]){const events=new Map();return {children,options:{},on(k,fn){if(!events.has(k))events.set(k,[]);events.get(k).push(fn);return this;},
   fire(k){for(const fn of events.get(k)||[])fn();return this;},clearLayers(){this.children=[];},addLayer(x){this.children.push(x);},getLayers(){return this.children.slice();},removeLayer(x){this.children=this.children.filter(c=>c!==x);},eachLayer(fn){this.children.forEach(fn);}};}
  const L={layerGroup:group,geoJSON(_,opts){return {...group(),opts,drawCount:0,addData(f){this.drawCount++;this.children.push(f);if(opts.onEachFeature){const polygon={bindTooltip(text,options){this.tooltip={text,options};return this;},on(type,fn){this[type]=fn;return this;}};opts.onEachFeature(f,polygon);interactions.set(f.properties.code,polygon);}},setStyle(s){this.style=s;}};},
@@ -25,7 +25,7 @@ function harness(){
  const env={document:{createElement:()=>({style:{},textContent:''})},fetch(url){calls.push(url);return new Promise(resolve=>requests.push({url,resolve}));}};
  const create=(manifest={})=>api.create(map,L,env,manifest, {opacity:1,attribution:'GIS'});
  function deliver(request,data){request.resolve({ok:true,json:async()=>data});}
- return {create,calls,requests,handlers,interactions,views,container,deliver,move(b,z=zoom){viewport=b;zoom=z;[...handlers].forEach(fn=>fn());}};
+ return {create,calls,requests,handlers,interactions,views,container,deliver,start(){for(const fn of events.get('movestart')||[])fn();},move(b,z=zoom){viewport=b;zoom=z;for(const fn of events.get('moveend')||[])fn();}};
 }
 test('overview is lazy, ignores hidden late responses, and cached toggles do not re-download',async()=>{
  const h=harness(),root=h.create();assert.equal(h.calls.length,0);root.fire('add');assert.equal(h.calls.length,1);
@@ -101,4 +101,16 @@ test('ward names appear only as hover tooltips and clicks zoom to the ward',asyn
  h.move([[8.5,106.25],[11.65,107.75]],17);polygon.click();assert.equal(h.views[1].zoom,18,'Already close: never zoom out');
  h.container.classList.contains=()=>true;polygon.click();assert.equal(h.views.length,2,'Drawing mode takes priority');
  root.fire('remove');polygon.click();assert.equal(h.views.length,2,'Removed layers cannot move map');
+});
+
+
+test('animation pauses detail queues until the new viewport settles',async()=>{
+ const h=harness(),root=h.create();root.fire('add');h.deliver(h.requests[0],overview);await flush();
+ h.move([[8.5,106.25],[11.65,107.75]],13);assert.equal(h.requests.length,5);
+ h.start();
+ for(const r of h.requests.slice(1,5)){const code=r.url.match(/\/(\d{5})\.json/)[1];h.deliver(r,JSON.parse(fs.readFileSync(path.join(directory,code+'.json'),'utf8')));}
+ await flush();assert.equal(h.requests.length,5,'No replacement requests from an animating old viewport');
+ h.move([[8.63,106.53],[8.77,106.75]],13);
+ assert(h.requests.slice(5).every(r=>r.url.includes('/26732.json')));
+ assert.equal(h.requests.length,6);root.fire('remove');assert.equal(h.handlers.size,0);
 });

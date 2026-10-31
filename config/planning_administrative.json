@@ -74,6 +74,1248 @@
         "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Đồng Nai · Vietnamese Provinces Database (MIT)</a>",
         "notice": "95 xã/phường Đồng Nai mới, gồm Đồng Nai và Bình Phước cũ. Dữ liệu mở tổng hợp, tham chiếu bản đồ sắp xếp hành chính; không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
       }
+    },
+    {
+      "id": "vn-01-administrative-2025",
+      "name": "Địa giới hành chính Hà Nội mới · 126 đơn vị",
+      "city": "Hà Nội mới",
+      "scope": "region",
+      "area_id": "vn-01-expanded",
+      "coverage_provinces": [
+        "ha-noi"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 126 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-01-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Hà Nội mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/01/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.564283,
+            105.285352
+          ],
+          [
+            21.385421,
+            106.020128
+          ]
+        ],
+        "unit_count": 126,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Hà Nội · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "126 đơn vị cấp xã của Hà Nội mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-04-administrative-2025",
+      "name": "Địa giới hành chính Cao Bằng mới · 56 đơn vị",
+      "city": "Cao Bằng mới",
+      "scope": "region",
+      "area_id": "vn-04-expanded",
+      "coverage_provinces": [
+        "cao-bang"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 56 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-04-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Cao Bằng mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/04/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            22.356642,
+            105.265716
+          ],
+          [
+            23.119845,
+            106.8373
+          ]
+        ],
+        "unit_count": 56,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Cao Bằng · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "56 đơn vị cấp xã của Cao Bằng mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-08-administrative-2025",
+      "name": "Địa giới hành chính Tuyên Quang mới · 124 đơn vị",
+      "city": "Tuyên Quang mới",
+      "scope": "region",
+      "area_id": "vn-08-expanded",
+      "coverage_provinces": [
+        "ha-giang",
+        "tuyen-quang"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 124 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-08-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Tuyên Quang mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/08/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            21.497579,
+            104.33423
+          ],
+          [
+            23.392643,
+            105.599155
+          ]
+        ],
+        "unit_count": 124,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Tuyên Quang · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "124 đơn vị cấp xã của Tuyên Quang mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-11-administrative-2025",
+      "name": "Địa giới hành chính Điện Biên mới · 45 đơn vị",
+      "city": "Điện Biên mới",
+      "scope": "region",
+      "area_id": "vn-11-expanded",
+      "coverage_provinces": [
+        "dien-bien"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 45 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-11-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Điện Biên mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/11/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.884804,
+            102.143914
+          ],
+          [
+            22.548166,
+            103.598477
+          ]
+        ],
+        "unit_count": 45,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Điện Biên · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "45 đơn vị cấp xã của Điện Biên mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-12-administrative-2025",
+      "name": "Địa giới hành chính Lai Châu mới · 38 đơn vị",
+      "city": "Lai Châu mới",
+      "scope": "region",
+      "area_id": "vn-12-expanded",
+      "coverage_provinces": [
+        "lai-chau"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 38 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-12-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Lai Châu mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/12/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            21.685743,
+            102.320675
+          ],
+          [
+            22.811227,
+            103.985094
+          ]
+        ],
+        "unit_count": 38,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Lai Châu · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "38 đơn vị cấp xã của Lai Châu mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-14-administrative-2025",
+      "name": "Địa giới hành chính Sơn La mới · 75 đơn vị",
+      "city": "Sơn La mới",
+      "scope": "region",
+      "area_id": "vn-14-expanded",
+      "coverage_provinces": [
+        "son-la"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 75 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-14-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Sơn La mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/14/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.573602,
+            103.212048
+          ],
+          [
+            22.030504,
+            105.032914
+          ]
+        ],
+        "unit_count": 75,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Sơn La · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "75 đơn vị cấp xã của Sơn La mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-15-administrative-2025",
+      "name": "Địa giới hành chính Lào Cai mới · 99 đơn vị",
+      "city": "Lào Cai mới",
+      "scope": "region",
+      "area_id": "vn-15-expanded",
+      "coverage_provinces": [
+        "lao-cai",
+        "yen-bai"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 99 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-15-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Lào Cai mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/15/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            21.32594,
+            103.530833
+          ],
+          [
+            22.844892,
+            105.100413
+          ]
+        ],
+        "unit_count": 99,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Lào Cai · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "99 đơn vị cấp xã của Lào Cai mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-19-administrative-2025",
+      "name": "Địa giới hành chính Thái Nguyên mới · 92 đơn vị",
+      "city": "Thái Nguyên mới",
+      "scope": "region",
+      "area_id": "vn-19-expanded",
+      "coverage_provinces": [
+        "bac-kan",
+        "thai-nguyen"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 92 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-19-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Thái Nguyên mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/19/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            21.325724,
+            105.430832
+          ],
+          [
+            22.741266,
+            106.247189
+          ]
+        ],
+        "unit_count": 92,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Thái Nguyên · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "92 đơn vị cấp xã của Thái Nguyên mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-20-administrative-2025",
+      "name": "Địa giới hành chính Lạng Sơn mới · 65 đơn vị",
+      "city": "Lạng Sơn mới",
+      "scope": "region",
+      "area_id": "vn-20-expanded",
+      "coverage_provinces": [
+        "lang-son"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 65 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-20-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Lạng Sơn mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/20/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            21.325233,
+            106.095314
+          ],
+          [
+            22.461645,
+            107.363944
+          ]
+        ],
+        "unit_count": 65,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Lạng Sơn · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "65 đơn vị cấp xã của Lạng Sơn mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-22-administrative-2025",
+      "name": "Địa giới hành chính Quảng Ninh mới · 54 đơn vị",
+      "city": "Quảng Ninh mới",
+      "scope": "region",
+      "area_id": "vn-22-expanded",
+      "coverage_provinces": [
+        "quang-ninh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 54 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-22-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Quảng Ninh mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/22/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.685198,
+            106.438835
+          ],
+          [
+            21.663807,
+            108.093373
+          ]
+        ],
+        "unit_count": 54,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Quảng Ninh · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "54 đơn vị cấp xã của Quảng Ninh mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-24-administrative-2025",
+      "name": "Địa giới hành chính Bắc Ninh mới · 99 đơn vị",
+      "city": "Bắc Ninh mới",
+      "scope": "region",
+      "area_id": "vn-24-expanded",
+      "coverage_provinces": [
+        "bac-giang",
+        "bac-ninh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 99 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-24-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Bắc Ninh mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/24/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.969346,
+            105.881138
+          ],
+          [
+            21.626484,
+            107.03352
+          ]
+        ],
+        "unit_count": 99,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Bắc Ninh · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "99 đơn vị cấp xã của Bắc Ninh mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-25-administrative-2025",
+      "name": "Địa giới hành chính Phú Thọ mới · 148 đơn vị",
+      "city": "Phú Thọ mới",
+      "scope": "region",
+      "area_id": "vn-25-expanded",
+      "coverage_provinces": [
+        "phu-tho",
+        "vinh-phuc",
+        "hoa-binh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 148 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-25-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Phú Thọ mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/25/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.305121,
+            104.813867
+          ],
+          [
+            21.719531,
+            105.861808
+          ]
+        ],
+        "unit_count": 148,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Phú Thọ · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "148 đơn vị cấp xã của Phú Thọ mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-31-administrative-2025",
+      "name": "Địa giới hành chính Hải Phòng mới · 114 đơn vị",
+      "city": "Hải Phòng mới",
+      "scope": "region",
+      "area_id": "vn-31-expanded",
+      "coverage_provinces": [
+        "hai-phong",
+        "hai-duong"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 114 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-31-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Hải Phòng mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/31/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.123082,
+            106.124276
+          ],
+          [
+            21.237375,
+            107.743095
+          ]
+        ],
+        "unit_count": 114,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Hải Phòng · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "114 đơn vị cấp xã của Hải Phòng mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-33-administrative-2025",
+      "name": "Địa giới hành chính Hưng Yên mới · 104 đơn vị",
+      "city": "Hưng Yên mới",
+      "scope": "region",
+      "area_id": "vn-33-expanded",
+      "coverage_provinces": [
+        "hung-yen",
+        "thai-binh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 104 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-33-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Hưng Yên mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/33/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            20.24901,
+            105.894504
+          ],
+          [
+            21.00703,
+            106.659473
+          ]
+        ],
+        "unit_count": 104,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Hưng Yên · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "104 đơn vị cấp xã của Hưng Yên mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-37-administrative-2025",
+      "name": "Địa giới hành chính Ninh Bình mới · 129 đơn vị",
+      "city": "Ninh Bình mới",
+      "scope": "region",
+      "area_id": "vn-37-expanded",
+      "coverage_provinces": [
+        "ninh-binh",
+        "ha-nam",
+        "nam-dinh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 129 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-37-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Ninh Bình mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/37/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            19.866024,
+            105.542773
+          ],
+          [
+            20.703681,
+            106.598691
+          ]
+        ],
+        "unit_count": 129,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Ninh Bình · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "129 đơn vị cấp xã của Ninh Bình mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-38-administrative-2025",
+      "name": "Địa giới hành chính Thanh Hoá mới · 166 đơn vị",
+      "city": "Thanh Hoá mới",
+      "scope": "region",
+      "area_id": "vn-38-expanded",
+      "coverage_provinces": [
+        "thanh-hoa"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 166 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-38-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Thanh Hoá mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/38/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            19.287075,
+            104.374163
+          ],
+          [
+            20.670085,
+            106.07595
+          ]
+        ],
+        "unit_count": 166,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Thanh Hoá · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "166 đơn vị cấp xã của Thanh Hoá mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-40-administrative-2025",
+      "name": "Địa giới hành chính Nghệ An mới · 130 đơn vị",
+      "city": "Nghệ An mới",
+      "scope": "region",
+      "area_id": "vn-40-expanded",
+      "coverage_provinces": [
+        "nghe-an"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 130 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-40-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Nghệ An mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/40/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            18.55212,
+            103.874793
+          ],
+          [
+            19.99777,
+            105.966151
+          ]
+        ],
+        "unit_count": 130,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Nghệ An · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "130 đơn vị cấp xã của Nghệ An mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-42-administrative-2025",
+      "name": "Địa giới hành chính Hà Tĩnh mới · 69 đơn vị",
+      "city": "Hà Tĩnh mới",
+      "scope": "region",
+      "area_id": "vn-42-expanded",
+      "coverage_provinces": [
+        "ha-tinh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 69 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-42-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Hà Tĩnh mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/42/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            17.913805,
+            105.10387
+          ],
+          [
+            18.766263,
+            106.510723
+          ]
+        ],
+        "unit_count": 69,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Hà Tĩnh · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "69 đơn vị cấp xã của Hà Tĩnh mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-44-administrative-2025",
+      "name": "Địa giới hành chính Quảng Trị mới · 78 đơn vị",
+      "city": "Quảng Trị mới",
+      "scope": "region",
+      "area_id": "vn-44-expanded",
+      "coverage_provinces": [
+        "quang-binh",
+        "quang-tri"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 78 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-44-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Quảng Trị mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/44/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            16.299517,
+            105.608026
+          ],
+          [
+            18.090157,
+            107.389464
+          ]
+        ],
+        "unit_count": 78,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Quảng Trị · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "78 đơn vị cấp xã của Quảng Trị mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-46-administrative-2025",
+      "name": "Địa giới hành chính Huế mới · 40 đơn vị",
+      "city": "Huế mới",
+      "scope": "region",
+      "area_id": "vn-46-expanded",
+      "coverage_provinces": [
+        "thua-thien-hue"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 40 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-46-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Huế mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/46/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            15.994675,
+            107.034486
+          ],
+          [
+            16.742918,
+            108.210449
+          ]
+        ],
+        "unit_count": 40,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Huế · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "40 đơn vị cấp xã của Huế mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-48-administrative-2025",
+      "name": "Địa giới hành chính Đà Nẵng mới · 94 đơn vị",
+      "city": "Đà Nẵng mới",
+      "scope": "region",
+      "area_id": "vn-48-expanded",
+      "coverage_provinces": [
+        "da-nang",
+        "quang-nam"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 94 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-48-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Đà Nẵng mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/48/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            14.951316,
+            107.21054
+          ],
+          [
+            17.120279,
+            112.736122
+          ]
+        ],
+        "unit_count": 94,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Đà Nẵng · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "94 đơn vị cấp xã của Đà Nẵng mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-51-administrative-2025",
+      "name": "Địa giới hành chính Quảng Ngãi mới · 96 đơn vị",
+      "city": "Quảng Ngãi mới",
+      "scope": "region",
+      "area_id": "vn-51-expanded",
+      "coverage_provinces": [
+        "quang-ngai",
+        "kon-tum"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 96 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-51-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Quảng Ngãi mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/51/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            13.92365,
+            107.332208
+          ],
+          [
+            15.433271,
+            109.147416
+          ]
+        ],
+        "unit_count": 96,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Quảng Ngãi · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "96 đơn vị cấp xã của Quảng Ngãi mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-52-administrative-2025",
+      "name": "Địa giới hành chính Gia Lai mới · 135 đơn vị",
+      "city": "Gia Lai mới",
+      "scope": "region",
+      "area_id": "vn-52-expanded",
+      "coverage_provinces": [
+        "gia-lai",
+        "binh-dinh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 135 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-52-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Gia Lai mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/52/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            12.99602,
+            107.45136
+          ],
+          [
+            14.703128,
+            109.370951
+          ]
+        ],
+        "unit_count": 135,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Gia Lai · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "135 đơn vị cấp xã của Gia Lai mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-56-administrative-2025",
+      "name": "Địa giới hành chính Khánh Hoà mới · 65 đơn vị",
+      "city": "Khánh Hoà mới",
+      "scope": "region",
+      "area_id": "vn-56-expanded",
+      "coverage_provinces": [
+        "khanh-hoa",
+        "ninh-thuan"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 65 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-56-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Khánh Hoà mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/56/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            7.183812,
+            108.551542
+          ],
+          [
+            12.869069,
+            117.827998
+          ]
+        ],
+        "unit_count": 65,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Khánh Hoà · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "65 đơn vị cấp xã của Khánh Hoà mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-66-administrative-2025",
+      "name": "Địa giới hành chính Đắk Lắk mới · 102 đơn vị",
+      "city": "Đắk Lắk mới",
+      "scope": "region",
+      "area_id": "vn-66-expanded",
+      "coverage_provinces": [
+        "dak-lak",
+        "phu-yen"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 102 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-66-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Đắk Lắk mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/66/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            12.160547,
+            107.484181
+          ],
+          [
+            13.695296,
+            109.458875
+          ]
+        ],
+        "unit_count": 102,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Đắk Lắk · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "102 đơn vị cấp xã của Đắk Lắk mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-68-administrative-2025",
+      "name": "Địa giới hành chính Lâm Đồng mới · 124 đơn vị",
+      "city": "Lâm Đồng mới",
+      "scope": "region",
+      "area_id": "vn-68-expanded",
+      "coverage_provinces": [
+        "lam-dong",
+        "binh-thuan",
+        "dak-nong"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 124 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-68-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Lâm Đồng mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/68/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            10.48313,
+            107.206173
+          ],
+          [
+            12.812495,
+            108.969445
+          ]
+        ],
+        "unit_count": 124,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Lâm Đồng · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "124 đơn vị cấp xã của Lâm Đồng mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-80-administrative-2025",
+      "name": "Địa giới hành chính Tây Ninh mới · 96 đơn vị",
+      "city": "Tây Ninh mới",
+      "scope": "region",
+      "area_id": "vn-80-expanded",
+      "coverage_provinces": [
+        "tay-ninh",
+        "long-an"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 96 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-80-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Tây Ninh mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/80/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            10.394556,
+            105.500114
+          ],
+          [
+            11.782858,
+            106.748357
+          ]
+        ],
+        "unit_count": 96,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Tây Ninh · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "96 đơn vị cấp xã của Tây Ninh mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-82-administrative-2025",
+      "name": "Địa giới hành chính Đồng Tháp mới · 102 đơn vị",
+      "city": "Đồng Tháp mới",
+      "scope": "region",
+      "area_id": "vn-82-expanded",
+      "coverage_provinces": [
+        "dong-thap",
+        "tien-giang"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 102 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-82-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Đồng Tháp mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/82/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            10.134823,
+            105.187232
+          ],
+          [
+            10.973446,
+            106.807813
+          ]
+        ],
+        "unit_count": 102,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Đồng Tháp · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "102 đơn vị cấp xã của Đồng Tháp mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-86-administrative-2025",
+      "name": "Địa giới hành chính Vĩnh Long mới · 124 đơn vị",
+      "city": "Vĩnh Long mới",
+      "scope": "region",
+      "area_id": "vn-86-expanded",
+      "coverage_provinces": [
+        "vinh-long",
+        "ben-tre",
+        "tra-vinh"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 124 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-86-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Vĩnh Long mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/86/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            9.527162,
+            105.681642
+          ],
+          [
+            10.34014,
+            106.791831
+          ]
+        ],
+        "unit_count": 124,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Vĩnh Long · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "124 đơn vị cấp xã của Vĩnh Long mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-91-administrative-2025",
+      "name": "Địa giới hành chính An Giang mới · 102 đơn vị",
+      "city": "An Giang mới",
+      "scope": "region",
+      "area_id": "vn-91-expanded",
+      "coverage_provinces": [
+        "an-giang",
+        "kien-giang"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 102 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-91-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính An Giang mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/91/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            9.256305,
+            103.457256
+          ],
+          [
+            10.961932,
+            105.57572
+          ]
+        ],
+        "unit_count": 102,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới An Giang · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "102 đơn vị cấp xã của An Giang mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-92-administrative-2025",
+      "name": "Địa giới hành chính Cần Thơ mới · 103 đơn vị",
+      "city": "Cần Thơ mới",
+      "scope": "region",
+      "area_id": "vn-92-expanded",
+      "coverage_provinces": [
+        "can-tho",
+        "hau-giang",
+        "soc-trang"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 103 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-92-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Cần Thơ mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/92/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            9.245156,
+            105.225759
+          ],
+          [
+            10.324991,
+            106.298168
+          ]
+        ],
+        "unit_count": 103,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Cần Thơ · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "103 đơn vị cấp xã của Cần Thơ mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
+    },
+    {
+      "id": "vn-96-administrative-2025",
+      "name": "Địa giới hành chính Cà Mau mới · 64 đơn vị",
+      "city": "Cà Mau mới",
+      "scope": "region",
+      "area_id": "vn-96-expanded",
+      "coverage_provinces": [
+        "ca-mau",
+        "bac-lieu"
+      ],
+      "theme": "administrative",
+      "source": "gis",
+      "status": "overlay_ready",
+      "decision": "Ranh 64 xã/phường/đặc khu từ dữ liệu mở, chỉ tham khảo",
+      "source_url": "https://github.com/thanglequoc/vietnamese-provinces-database",
+      "manifest": {
+        "id": "vn-96-administrative-2025",
+        "status": "reference_overlay",
+        "title": "Địa giới hành chính Cà Mau mới",
+        "source_kind": "open_administrative_reference",
+        "render_mode": "geojson",
+        "geojson_url": "/static/data/admin_vn_2025/96/overview.json?v=national-admin-20261031",
+        "bounds": [
+          [
+            8.380348,
+            104.522279
+          ],
+          [
+            9.637433,
+            105.860463
+          ]
+        ],
+        "unit_count": 64,
+        "map_scale": null,
+        "legend_available": false,
+        "attribution": "<a href=\"https://github.com/thanglequoc/vietnamese-provinces-database\" target=\"_blank\" rel=\"noopener noreferrer\">Địa giới Cà Mau · Vietnamese Provinces Database (MIT)</a>",
+        "notice": "64 đơn vị cấp xã của Cà Mau mới. Nguồn mở tổng hợp, không thay hồ sơ địa giới pháp lý. Tổng quan giản lược 10 m; từ zoom 13 tải ranh gốc theo vùng nhìn."
+      }
     }
   ]
 }

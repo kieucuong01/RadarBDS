@@ -71,6 +71,11 @@ def write_snapshot(output,rows,geometries,provenance):
             if isinstance(value,(list,tuple)):return [rounded(v) for v in value]
             return round(value,7)
         simplified_json=mapping(simplified);simplified_json['coordinates']=rounded(simplified_json['coordinates'])
+        # Rounding can close very narrow rings; preserve precision rather than repair the boundary.
+        if not shape(simplified_json).is_valid:
+            simplified_json=mapping(simplified)
+        if not shape(simplified_json).is_valid:
+            simplified_json=mapping(geometry)
         overview.append({'type':'Feature','properties':properties,'geometry':simplified_json})
     bounds=[[min(f['properties']['bounds'][0][0] for f in overview),min(f['properties']['bounds'][0][1] for f in overview)],
             [max(f['properties']['bounds'][1][0] for f in overview),max(f['properties']['bounds'][1][1] for f in overview)]]
