@@ -411,7 +411,7 @@
         status.textContent = 'GIS chưa có phường tham chiếu tại đây. Hãy phóng gần để kiểm tra ranh theo vùng xem.';
         return;
       }
-      example.disabled = true;
+      example.disabled = true;busy('parcel-sample',true,'Đang tải thửa mẫu…');
       var request = config.example ? Promise.resolve(config.example) :
         env.fetch(apiBase + '/sample.json?area=' + encodeURIComponent(nearest.area_id), {signal: lifetime.signal, cache: 'no-store'})
           .then(function (response) { if (!response.ok) throw new Error('Sample unavailable'); return response.json(); });
@@ -420,7 +420,7 @@
         focusFeature(feature);
       }).catch(function (error) {
         if (!disposed && error.name !== 'AbortError') status.textContent = 'Chưa lấy được thửa mẫu. Hãy phóng to để chọn thửa trực tiếp.';
-      }).finally(function () { if (!disposed) example.disabled = false; });
+      }).finally(function () { if (!disposed){example.disabled = false;busy('parcel-sample',false);} });
     });
     env.fetch(apiBase + '/config.json', {signal: lifetime.signal, cache: 'no-store'})
       .then(function (response) { if (!response.ok) throw new Error('Parcel config missing'); return response.json(); })
@@ -455,7 +455,7 @@
       map.off('planning:area-change', closeInfo);
       map.off('planning:drawing-start', closeInfo);map.off('planning:listing-selected',closeInfo);
       if(cardObserver)cardObserver.disconnect();if(parcelTools)parcelTools.dispose();
-      ['parcel-view','parcel-detail','parcel-search','parcel-area'].forEach(function(key){busy(key,false);});
+      ['parcel-view','parcel-detail','parcel-search','parcel-area','parcel-sample'].forEach(function(key){busy(key,false);});
       remove(layer); remove(highlight);
       if (!sharedUI) ui.root.remove();
     }

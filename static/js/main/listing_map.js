@@ -1016,6 +1016,7 @@
     if(!visible){state.groupPanelOpen=false;if(state.workspace)state.workspace.classList.toggle('has-group-panel',false);}
     if (state.workspace) state.workspace.classList.toggle('listings-hidden', !visible);
     if (!visible) {
+      setMapTask('listings',false);
       setMapTask('group-items',false);
       ++summarySequence; ++itemSequence;
       if (state.summaryController) state.summaryController.abort();

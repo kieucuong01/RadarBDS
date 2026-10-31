@@ -58,11 +58,11 @@ test('planning region opens from its public display bounds without using listing
 });
 
 test('hiding cancels pending listing work and showing reloads the current viewport once',()=>{
- let summaryAborts=0,itemAborts=0,clears=0,closed=0,reloaded=0,cancelled=0,labels=0,resized=0;
+ let summaryAborts=0,itemAborts=0,clears=0,closed=0,reloaded=0,cancelled=0,labels=0,resized=0;const busyTasks=[];
  const classes=new Set();
  const ctx={state:{open:true,listingsVisible:true,summaryController:{abort(){summaryAborts++;}},
   itemController:{abort(){itemAborts++;}},markerLayer:{clearLayers(){clears++;}},
-  map:{invalidateSize(options){assert.equal(options.pan,false);resized++;}},
+  map:{fire(name,event){busyTasks.push(event);},invalidateSize(options){assert.equal(options.pan,false);resized++;}},
   workspace:{classList:{toggle(name,value){if(value)classes.add(name);else classes.delete(name);}}}},
   summarySequence:0,itemSequence:0,cancelMarkerRender(){cancelled++;},clearMarkerLabels(){labels++;},
   closePreview(){closed++;},requestSummary(){reloaded++;return Promise.resolve();},
@@ -72,6 +72,7 @@ test('hiding cancels pending listing work and showing reloads the current viewpo
  ctx.currentViewSnapshot=()=>{reloaded++;return null;};ctx.state.snapshot={mode:'all',query:'price_max=3'};
  assert.equal(ctx.setListingsVisible(false),false);
  assert.equal(summaryAborts,1);assert.equal(itemAborts,1);assert.equal(clears,1);
+ assert(busyTasks.some(t=>t.key==='listings'&&t.busy===false),'Hiding listings clears the cancelled request spinner');
  assert.equal(cancelled,1);assert.equal(labels,1);assert.equal(closed,1);
  assert.ok(classes.has('listings-hidden'));
  ctx.requestSummary();assert.equal(reloaded,0,'Hidden Maps must not request listings when moved or refreshed');
