@@ -32,7 +32,7 @@ The ignored archive is `data/planning/binh-phuoc-parcels/`:
 
 - `identifiers.json`: one verified sorted source ID set.
 - `manifest.json`: source/scope, capture interval, ID hash, batch hashes and
-  accepted/excluded progress. `collecting` is not `complete`.
+  accepted/excluded/quarantined progress. `collecting` is not `complete`.
 - `<offset>.geojson`: sanitized original WGS84 features; explicit invalid-source
   exclusions by source ID. Public identifiers retain the existing 10^12 offset.
 
@@ -41,6 +41,15 @@ administrative codes. They never request owner/certificate/contact fields.
 `DongNaiParcels` performs the existing CRS, original-ring validity, extent,
 membership, field and namespace validation. Original vertices, holes and
 disconnected pieces are retained. Geometry failures are not repaired.
+
+The first long run stopped after 84,000 processed records on an unknown source
+ward code. The collector now separates unverified localities without weakening
+the live adapter: valid original geometry and the six allowlisted attributes
+remain in `quarantined_features`, with `locality_verified=false`. No ward name
+is guessed. Quarantined records are a subset of `excluded`, not accepted public
+features; their IDs are raw source IDs. Never merge them into the live feature
+array or treat them as verified administrative membership. Invalid geometry
+and unverified locality have explicit per-source-ID exclusion reasons.
 
 Writes replace completed files atomically; a batch only enters the manifest
 after its file is complete. Resume checks every recorded batch hash and skips
@@ -60,12 +69,14 @@ was then started for the remaining records. Its PID/start timestamp and logs
 are recorded under `.local/free-parcel-source-20261102/`:
 
 - `binh-phuoc-job.json`
-- `binh-phuoc-download.out.log`
-- `binh-phuoc-download.err.log`
+- The receipt's `stdout` and `stderr` paths (these change on a resumed run).
 
 Always recheck that PID/process and the current manifest. These files describe
 a local job; do not call it completed, deployed or still running from this dated
 note. **Only one writer may use this archive directory.**
+The resumed run preserved all earlier batch hashes and passed the formerly
+blocking batch. Inspect the current manifest/logs for counts rather than using
+the pilot counts above as a current snapshot.
 
 ## Former Đồng Nai: boundary-image seeds plus ordinary browser clicks
 

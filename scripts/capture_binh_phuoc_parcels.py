@@ -85,21 +85,50 @@ def normalise_batch(data, requested):
     returned = [row.get('attributes', {}).get('OBJECTID') for row in rows]
     if any(type(i) is not int for i in returned) or len(set(returned)) != len(requested) or set(returned) != set(requested):
         raise ValueError('GIS batch identifier mismatch')
+    if data.get('spatialReference', {}).get('wkid') != 4326:
+        raise ValueError('Unexpected GIS coordinate system')
+    references = DongNaiParcels().by_area
+    eligible, unverified = [], []
+    for row in rows:
+        attrs = row['attributes']
+        key = f"bp-{attrs.get('MaQuanHuyen')}-{attrs.get('MaPhuongXa')}"
+        (eligible if key in references else unverified).append(row)
+    checked = dict(data, features=eligible)
 
     class CapturedResponse:
         def request(self, path, *, params):
-            return data
+            return checked
 
     # Reuse the live adapter's CRS, original-ring, field and administrative guards.
     provider = DongNaiParcels(client=CapturedResponse())
     result = provider._query(('offline-batch',), {}, limit=1000)
     accepted = {f['properties']['source_id'] for f in result['features']}
     excluded = sorted(set(requested)-accepted)
-    if not accepted <= set(requested) or len(excluded) != result['excluded_count']:
+    if not accepted <= set(requested) or len(excluded) != result['excluded_count']+len(unverified):
         raise ValueError('Incomplete geometry validation')
+    reasons = {str(i): 'invalid_source_geometry' for i in excluded}
+    quarantined = []
+    from services.planning_dongnai_info import _polygon
+    from shapely.geometry import mapping
+    from shapely.errors import GEOSException
+    for row in unverified:
+        identifier = row['attributes']['OBJECTID']
+        reasons[str(identifier)] = 'unverified_source_locality'
+        try:
+            geometry = mapping(_polygon((row.get('geometry') or {}).get('rings')))
+        except (ValueError, TypeError, GEOSException):
+            reasons[str(identifier)] += '_and_invalid_geometry'
+            continue
+        attrs = {k: row['attributes'].get(k) for k in FIELDS.split(',')}
+        if any(v is not None and type(v) not in (str, int, float) for v in attrs.values()):
+            raise ValueError('Invalid quarantined source attributes')
+        quarantined.append(dict(type='Feature', id=identifier, geometry=geometry,
+                                properties=dict(source=SOURCE, source_attributes=attrs,
+                                                locality_verified=False)))
     return dict(type='FeatureCollection', source=SOURCE, query_endpoint=QUERY,
                 captured_at=datetime.now(timezone.utc).isoformat(), requested_ids=requested,
-                excluded_ids=excluded, features=result['features'])
+                excluded_ids=excluded, excluded_reasons=reasons, quarantined_features=quarantined,
+                features=result['features'])
 
 
 def download(directory, max_batches=1):
@@ -126,6 +155,7 @@ def download(directory, max_batches=1):
                         status='collecting', accepted=0, excluded=0, batches={})
         write_json(manifest_path, manifest)
     downloaded = 0
+    manifest.setdefault('quarantined', 0)
     for offset in range(0, len(ids), BATCH_SIZE):
         key = str(offset)
         target = directory/f'{offset:07d}.geojson'
@@ -142,12 +172,14 @@ def download(directory, max_batches=1):
         batch = normalise_batch(raw, requested)
         digest = write_json(target, batch)
         accepted, excluded = len(batch['features']), len(batch['excluded_ids'])
-        manifest['batches'][key] = dict(sha256=digest, accepted=accepted, excluded=excluded)
+        quarantine = len(batch['quarantined_features'])
+        manifest['batches'][key] = dict(sha256=digest, accepted=accepted, excluded=excluded, quarantined=quarantine)
         manifest['accepted'] += accepted
         manifest['excluded'] += excluded
+        manifest['quarantined'] += quarantine
         write_json(manifest_path, manifest)
         downloaded += 1
-        print(f"Captured {manifest['accepted']}; excluded {manifest['excluded']}; source {len(ids)}", flush=True)
+        print(f"Captured {manifest['accepted']}; excluded {manifest['excluded']}; quarantined {manifest['quarantined']}; source {len(ids)}", flush=True)
     if len(manifest['batches']) == (len(ids)+BATCH_SIZE-1)//BATCH_SIZE and manifest['status'] != 'complete':
         current_ids = identifiers(where)
         if sha256(encode(current_ids)).hexdigest() != manifest['ids_sha256']:

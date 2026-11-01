@@ -14,6 +14,7 @@ class Source:
         self.fail = False
         self.duplicate = False
         self.invalid = False
+        self.unverified = False
 
     def __call__(self, params):
         if params.get('returnCountOnly'):
@@ -34,6 +35,8 @@ class Source:
                                           [106.8901, 11.5301], [106.89, 11.5301], [106.89, 11.53]]]}}
             if self.invalid and identifier == self.ids[0]:
                 row['geometry'] = None
+            if self.unverified and identifier == self.ids[0]:
+                row['attributes']['MaPhuongXa'] = '99999'
             rows.append(row)
         if self.duplicate:
             rows[-1] = deepcopy(rows[0])
@@ -97,6 +100,33 @@ def test_corrupted_cached_file_stops_resume(tmp_path, monkeypatch):
     (tmp_path/'0000000.geojson').write_text('{}')
     with pytest.raises(ValueError, match='hash'):
         capture.download(tmp_path, max_batches=0)
+
+
+def test_unknown_locality_is_quarantined_without_guessing_names_or_losing_geometry(tmp_path, monkeypatch):
+    source = configure(monkeypatch)
+    source.unverified = True
+    result = capture.download(tmp_path, max_batches=0)
+    assert result['accepted'] == 4 and result['excluded'] == result['quarantined'] == 1
+    batch = json.loads((tmp_path/'0000000.geojson').read_text())
+    assert batch['excluded_reasons']['49268'] == 'unverified_source_locality'
+    feature = batch['quarantined_features'][0]
+    assert feature['geometry']['type'] == 'Polygon'
+    assert feature['properties']['locality_verified'] is False
+    assert feature['properties']['source_attributes']['MaPhuongXa'] == '99999'
+    assert 'PRIVATE' not in json.dumps(batch)
+
+
+def test_unknown_locality_cannot_bypass_the_crs_guard(tmp_path, monkeypatch):
+    source = configure(monkeypatch)
+    source.unverified = True
+    def wrong_crs(params):
+        result = source(params)
+        if 'features' in result:
+            result['spatialReference'] = {'wkid': 3857}
+        return result
+    monkeypatch.setattr(capture, 'source_query', wrong_crs)
+    with pytest.raises(ValueError, match='coordinate system'):
+        capture.download(tmp_path, max_batches=1)
 
 
 def test_transient_reads_retry_only_twice(monkeypatch):
