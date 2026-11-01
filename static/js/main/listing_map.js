@@ -190,6 +190,7 @@
     );
     satellite.on('add', function () { if (!map.hasLayer(labels)) labels.addTo(map); });
     satellite.on('remove', function () { if (map.hasLayer(labels)) map.removeLayer(labels); });
+    if (root && root.RadarSatelliteLabels) root.RadarSatelliteLabels.mount(L, map, satellite, labels, function(message){setStatus(message,false);});
     return labels;
   }
 

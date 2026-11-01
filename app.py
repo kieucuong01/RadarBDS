@@ -216,6 +216,8 @@ from auth.core import (
 )
 
 app = Flask(__name__)
+from services.map_label_tiles import install as install_map_label_tiles
+install_map_label_tiles(app)
 from services.planning_assets import load_release as load_planning_release
 app.config['PLANNING_OVERLAY_CONFIG'] = (
     load_planning_release(Path(__file__).resolve().parent)

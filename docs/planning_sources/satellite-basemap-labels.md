@@ -1,5 +1,38 @@
 # Satellite basemap labels
 
+## Detailed OSM labels (2026-11-01)
+
+At zoom 15+, satellite labels now use OSM Shortbread `street_labels`,
+`place_labels` and (zoom 17+) named `pois`. No street-map background or road
+painting is included. Canvas text is laid out again at each display zoom instead
+of enlarging old raster text. Local street names are not filtered by road class.
+
+The 100 KB Protomaps Leaflet 4.0.1 renderer is lazy loaded from a local vendored
+file. Its one local patch rejects non-2xx vector responses before protobuf parsing;
+otherwise an HTTP error could be silently treated as a blank tile. Fetches queue
+at two concurrent reads and cancel on base switch/map removal. The raster Hybrid
+overlay below remains the overview/failure fallback.
+
+`/api/map-labels/osm/14/{x}/{y}.mvt` is a fixed-host, bounded gateway because both
+deployed CSP headers restrict `connect-src`. It never forwards user credentials,
+follows redirects, or accepts arbitrary URLs. Scope: mainland Vietnam tiles
+intersecting 8–24 N, 102–110 E. Size cap 1 MB; cache 256 entries/32 MB per worker,
+7-day lifetime; two upstream sessions per worker; 1,800 requests/hour/IP. Client
+responses cache 7 days. No tiles are crawled or packaged for offline use.
+
+Upstream User-Agent identifies RadarBDS with its public URL. A small visible
+OpenStreetMap copyright link accompanies this layer. OSM infrastructure is best
+effort; at higher sustained traffic migrate to a contracted/self-hosted Shortbread
+source. See https://operations.osmfoundation.org/policies/vector/ .
+
+Verified source data at the user's examples:
+
+- 11.022086, 106.617125: native tile 14/13044/7687 contains `Đường ĐX 126`,
+  `Đường Đx 127`, and `Đường ĐX 128`.
+- 11.137674, 106.654575: native tile 14/13045/7681 contains `Đường NG2`.
+
+## Raster overview and fallback
+
 Satellite imagery in listing Maps uses Esri World Imagery. Road and place labels
 use the transparent `World_Hybrid_Overlay` service on `who.maptiles.arcgis.com`.
 It includes minor roads and landmarks beyond the former `World_Transportation`

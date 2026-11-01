@@ -16,7 +16,7 @@ test('satellite labels follow base-layer lifecycle without blocking parcels or d
     tileLayer(url, options) { const layer = {url, options, addTo() { additions++; active.add(this); }}; tiles.push(layer); return layer; }
   };
   const start = source.indexOf('  function bindSatelliteLabels(');
-  const ctx = {L, map, satellite: {on(name, fn) { handlers[name] = fn; }}};
+  const ctx = {L, map, root:null, satellite: {on(name, fn) { handlers[name] = fn; }}};
   vm.createContext(ctx);
   vm.runInContext(source.slice(start, source.indexOf('\n  function ', start + 1)) +
     '\nlabels = bindSatelliteLabels(L, map, satellite);', ctx);
