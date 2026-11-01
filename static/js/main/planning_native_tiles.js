@@ -34,6 +34,45 @@
   function url(template, coords) {
     return template.replace(/\{([zxy])\}/g, function (_, key) { return String(coords[key]); });
   }
+  function createReference(L, env, manifest, options) {
+    if (!L.TileLayer || !L.TileLayer.extend) return L.tileLayer(manifest.tile_template, options);
+    var pending = new Set();
+    var Layer = L.TileLayer.extend({
+      _abortLoading:function(){
+        var zoom=this._tileZoom;
+        Array.from(pending).reverse().forEach(function(tile){if(tile.planningZoom!==zoom)tile.cancelPlanningLoad();});
+        if(L.TileLayer.prototype._abortLoading)L.TileLayer.prototype._abortLoading.call(this);
+      },
+      createTile: function (coords, done) {
+        var tile=env.document.createElement('img'),stopped=false,settled=false,timer,release;
+        tile.planningZoom=coords.z;
+        tile.alt='';tile.decoding='async';tile.setAttribute('role','presentation');
+        function clear() {env.clearTimeout(timer);tile.onload=tile.onerror=null;pending.delete(tile);}
+        function finish(error) {
+          if(stopped||settled)return;
+          settled=true;clear();if(release)release();done(error||null,tile);
+        }
+        tile.cancelPlanningLoad=function(){
+          if(stopped||settled)return;
+          stopped=true;clear();tile.src=emptyImage;if(release)release();
+        };
+        pending.add(tile);
+        release=schedule(env,function(){
+          tile.onload=function(){finish([256,512].indexOf(tile.naturalWidth)>=0&&tile.naturalWidth===tile.naturalHeight?null:new Error('Invalid planning image'));};
+          tile.onerror=function(){finish(new Error('Planning image unavailable'));};
+          // TileLayer ignores completion for its exact empty-image sentinel.
+          timer=env.setTimeout(function(){tile.src=emptyImage+'#timeout';finish(new Error('Planning image timed out'));},15000);
+          tile.src=url(manifest.tile_template,coords);
+        });
+        return tile;
+      }
+    });
+    var layer=new Layer(manifest.tile_template,options);
+    layer.on('tileunload',function(event){if(event.tile.cancelPlanningLoad)event.tile.cancelPlanningLoad();});
+    layer.on('tileabort',function(event){if(event.tile.cancelPlanningLoad)event.tile.cancelPlanningLoad();});
+    layer.on('remove',function(){Array.from(pending).reverse().forEach(function(tile){tile.cancelPlanningLoad();});});
+    return layer;
+  }
   function create(L, env, manifest, options) {
     if (!L.GridLayer || !L.GridLayer.extend || !manifest.source_tiles) return L.tileLayer(manifest.tile_template, options);
     var pending = new Set();
@@ -130,5 +169,5 @@
     layer.on('remove', function () { Array.from(pending).reverse().forEach(function (tile) { tile.cancelPlanningLoad(); }); });
     return layer;
   }
-  return {create: create};
+  return {create: create, createReference:createReference};
 });

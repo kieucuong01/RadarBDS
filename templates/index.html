@@ -126,16 +126,16 @@
   <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }}; window.RADAR_PLANNING_REGIONS = {{ (planning_navigation_regions | default([])) | tojson }};</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=parcel-ux-20261031b">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_mobile.css') }}?v=planning-area-20261030">
-  <script defer src="{{ url_for('static', filename='js/main/planning_area.js') }}?v=national-partition-20261101c"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_area.js') }}?v=partition-mosaics-20261101"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_measure.js') }}?v=coordinates-corners-20261101"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_legend.js') }}?v=planning-tools-20261029"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=maps-public-tiles-20261101"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=partition-mosaics-20261101"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_transport.js') }}?v=planning-transport-gis-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative_sources.js') }}?v=legacy-admin-20261031"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative.js') }}?v=parcel-ux-20261031b"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_reference_branding.js') }}?v=national-branding-20261031"></script>
   <script defer src="{{ url_for('static', filename='js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=national-partition-20261101c"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=partition-mosaics-20261101"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=parcel-label-compact-20261101">

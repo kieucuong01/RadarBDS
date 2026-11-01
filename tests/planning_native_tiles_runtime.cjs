@@ -1,5 +1,34 @@
 const assert = require('node:assert/strict');
 const api = require('../static/js/main/planning_native_tiles.js');
+function referenceQueueTest() {
+ const images=[],timers=new Map(),results=[];let tick=0;
+ class Tile {constructor(options){this.options=options;this.events={};}on(k,fn){this.events[k]=fn;}}
+ Tile.extend=methods=>{class Child extends Tile {}Object.assign(Child.prototype,methods);return Child;};
+ const env={document:{createElement(){const img={naturalWidth:256,naturalHeight:256,setAttribute(){}};images.push(img);return img;}},
+  setTimeout(fn,ms){timers.set(++tick,{fn,ms});return tick;},clearTimeout(id){timers.delete(id);}};
+ const source={tile_template:'https://public.example/{z}/{x}/{y}.png'};
+ const first=api.createReference({TileLayer:Tile},env,source,{}),second=api.createReference({TileLayer:Tile},env,source,{});
+ const tiles=Array.from({length:6},(_,x)=>(x<3?first:second).createTile({z:15,x,y:4},(error)=>results.push(error)));
+ assert.equal(images.filter(i=>i.src).length,4,'Reference sheets share four active image loads');
+ assert.equal(timers.size,4,'Queued images do not time out before starting');
+ second.events.tileunload({tile:tiles[5]});images[0].onload();
+ assert(images[4].src.endsWith('/15/4/4.png'));assert(!images[5].src.includes('public.example'));
+ images[1].onerror();assert.equal(results.length,2);assert(results[1]);
+ const late=images[2].onload;first.events.remove();late();assert.equal(results.length,2);
+ second.events.remove();assert.equal(timers.size,0);assert(images.every(i=>i.onload===null));
+ const zoomLayer=api.createReference({TileLayer:Tile},env,source,{});
+ const stale=Array.from({length:6},(_,x)=>zoomLayer.createTile({z:15,x,y:9},()=>assert.fail('Old zoom completion')));
+ zoomLayer._tileZoom=16;zoomLayer._abortLoading();
+ assert.equal(timers.size,0,'Zoom abort releases active jobs and cancels queued old-zoom images immediately');
+ assert(stale.every(i=>!i.src.includes('public.example')));
+ let completed=0;
+ const fresh=zoomLayer.createTile({z:16,x:4,y:9},(error,tile)=>{
+   assert(error);assert.notEqual(tile.src,'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=','Leaflet ignores completion with its empty-image sentinel');completed++;
+ });
+ assert(fresh.src.endsWith('/16/4/9.png'),'New zoom starts without waiting15seconds');
+ [...timers.values()][0].fn();assert.equal(completed,1);assert.equal(timers.size,0);zoomLayer.events.remove();
+}
+referenceQueueTest();
 function harness() {
   const images=[], draws=[], results=[];
   const doc={createElement(tag){

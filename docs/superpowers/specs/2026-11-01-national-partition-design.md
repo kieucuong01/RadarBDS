@@ -1,6 +1,6 @@
 # QH Phân khu các tỉnh còn lại — nguồn Guland
 
-Ngày: 2026-11-01. Trạng thái: **đã triển khai local26 nguồn (16 nguồn tại `6b5ae926` và10 đồ án bổ sung); chưa push/deploy, chưa phủ đủ các tỉnh còn lại**.
+Ngày: 2026-11-01. Trạng thái: **đã triển khai local416 nguồn ở48 tỉnh cũ; chưa push/deploy, chưa phủ đủ các tỉnh còn lại**.
 Baseline: `945274fc`, `docs/maps-agent-guide.md`.
 
 ## Yêu cầu mới nhất
@@ -29,7 +29,7 @@ quy hoạch và không bịa tỷ lệ 1/2000 cho tất cả nguồn.
 
 Các trang `https://guland.vn/soi-quy-hoach/<tinh-cu>` là điểm vào theo registry
 2030 đã có. Lúc viết thiết kế **chưa có actual partition template ngoài HCM được xác minh**;
-trạng thái hiện tại và26 nguồn đã kiểm nằm trong `docs/planning_sources/national-partition.md`.
+trạng thái hiện tại và nguồn đã kiểm nằm trong `docs/planning_sources/national-partition.md`.
 Trang SEO/legend có chữ phân khu chưa chứng minh provider
 đó có lớp phân khu ở tỉnh đang chọn. Captures cũ chỉ giữ control2030, không đủ
 để dùng cho phân khu. HTTP trực tiếp Cần Thơ/Hà Nội trả challenge/403.

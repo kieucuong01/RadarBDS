@@ -42,6 +42,20 @@ Hai terminal-browser tests bị treo đã dừng; không báo chúng đạt. Ch�
 Review phát hiện floor lấy nhầm theme khác khi bật đồng thời; đã sửa và kiểm
 runtime Bình Phước +2030, tái hiện lỗi12≠15 trước sửa và đạt sau sửa.
 
+**Đợt ghép huyện theo yêu cầu tiếp:**671 huyện/60 tỉnh,438 hồ sơ,422 template;
+395 nguồn mới đạt samplegate; loại thêm5 bản `(lyk)` lấy ý kiến,390 nguồn mới dùng,
+tổng416 nguồn48 tỉnh.11 nguồn mới chưa dùng được;
+12 tỉnh chưa có nguồn đạt. Huyện query ward_id rỗng để gom cả đồ án xã/phường.
+Ruling: dùng chung nút tỉnh nhưng mỗi template có load envelope từ alpha pixel,
+exactrules, nativezoom đã kiểm; không tạo ảnh giả phủ kín tỉnh hoặc xóa GIS hiện có.
+Catalogue cap1024 và theme zIndex band1024; pool4 cùng nativeGIS cho ảnh reference,
+cancel queued+active khi rời vùng. Tests135JS+30Python+overlay/native pass.
+Browser Long An/Vinh trước tối ưu cuối thấy ảnh; sau đó browser bị Work settings
+tắt, chưa có rendered proof sau thu envelope/pool4. Chưa push/deploy.
+Final review phát hiện TileLayer zoomabort khác tileunload và sentinel timeout
+làm Leaflet bỏ done. Đã thêm `_abortLoading` hủy queued/active, `tileabort` idempotent,
+timeout src fragment riêng; tests tái hiện lỗi trước sửa và đạt sau sửa.
+
 ## Task 2 — Registry và tích hợp theo tỉnh
 
 - [x] Sau khi có source đã kiểm: thêm `config/planning_partition_reference.json`, registry revision và exact descriptors trong `config/planning_regions.py`/context template.

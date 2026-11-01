@@ -55,3 +55,10 @@ test('actual checked partition registry validates and filters by historic provin
   assert.equal(api.validCatalog({layers:[{...l,theme:'land_use_2030'}]},null,actual),false);
  }
 });
+
+test('a provincial mosaic can contain hundreds of registered schemes with a fixed catalogue ceiling',()=>{
+ const layers=Array.from({length:1025},(_,i)=>({...item,id:'scheme-'+i,manifest:{...item.manifest,id:'scheme-'+i}}));
+ const registered=Object.fromEntries(layers.map(l=>[l.id,rules[item.id]]));
+ assert.equal(api.validCatalog({layers:layers.slice(0,500)},null,registered),true);
+ assert.equal(api.validCatalog({layers},null,registered),false);
+});

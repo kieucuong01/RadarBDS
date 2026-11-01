@@ -148,7 +148,7 @@
   }
 
   function validCatalog(data, landuseRules, partitionRules) {
-    if (!data || !Array.isArray(data.layers) || !data.layers.length || data.layers.length > 256) return false;
+    if (!data || !Array.isArray(data.layers) || !data.layers.length || data.layers.length > 1024) return false;
     var ids = new Set();
     return data.layers.every(function (item) {
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
@@ -525,7 +525,7 @@
         var theme = themes.find(function (entry) { return entry.id === item.theme; });
         var layerOptions = {
           pane: item.theme === 'transport' ? (data.render_mode === 'geojson' ? 'planningTransportRoads' : 'planningTransportMetro') : 'planningPilot', opacity: opacity(theme.slider.value), interactive: false,
-          zIndex: (item.theme === 'transport' ? 400 : item.theme === 'partition' ? 100 : item.theme === 'detailed' ? 250 : item.theme === 'urban_vision_100' ? 350 : item.theme === 'land_use_2030' ? 300 : 200) + index,
+          zIndex: (item.theme === 'transport' ? 400 : item.theme === 'partition' ? 100 : item.theme === 'detailed' ? 250 : item.theme === 'urban_vision_100' ? 350 : item.theme === 'land_use_2030' ? 300 : 200) * 1024 + index,
           // Leaflet deduplicates identical provider credits across selected wards.
           attribution: item.theme==='partition' && item.source==='guland' ? '' : data.source_kind === 'official_gis'
             ? 'Sở Quy hoạch – Kiến trúc TP.HCM · GIS công khai'
@@ -542,6 +542,8 @@
           ? (isAdministrative(item.theme) ? env.RadarAdministrativeBoundaries : env.RadarPlanningTransport).create(map,L,env,data,Object.assign({},layerOptions,{signal:controller.signal}))
           : tiled ? data.source_tiles && env.RadarPlanningNativeTiles
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
+          : item.theme==='partition' && item.source==='guland' && env.RadarPlanningNativeTiles && env.RadarPlanningNativeTiles.createReference
+          ? env.RadarPlanningNativeTiles.createReference(L,env,data,tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
           : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
         if (tiled && data.source_kind === 'guland_reference' && typeof layer.createTile === 'function') {
