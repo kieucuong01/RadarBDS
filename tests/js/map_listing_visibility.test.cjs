@@ -29,7 +29,7 @@ test('fullscreen filter button opens desktop sidebar and delegates mobile sheet'
  ctx.root.innerWidth=390;ctx.toggleFilters();assert.ok(calls.includes('sheet'));
 });
 
-test('all Maps entries start fullscreen with old boundaries by default while planning entries hide listings',async()=>{
+test('Maps defaults to partition on satellite while explicit planning entries retain their theme',async()=>{
  for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','administrative_legacy','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
@@ -42,7 +42,7 @@ test('all Maps entries start fullscreen with old boundaries by default while pla
   await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme,planningRegion:'dong-nai-expanded'});
   const planning=ctx.VALID_PLANNING_THEMES.includes(theme);
   assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,true);
-  assert.equal(ctx.state.planningTheme,planning?theme:'administrative_legacy');
+  assert.equal(ctx.state.planningTheme,planning?theme:'partition');
   assert.equal(ctx.state.initialRegion?.id,'dong-nai-expanded');
  }
 });

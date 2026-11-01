@@ -176,6 +176,24 @@
     };
   }
 
+  function bindSatelliteLabels(L, map, satellite) {
+    // Keep labels above planning images, below parcels and clickable listing markers.
+    var pane = map.createPane('satelliteLabels');
+    pane.style.zIndex = '405';
+    pane.style.pointerEvents = 'none';
+    var labels = L.layerGroup(['World_Transportation', 'World_Boundaries_and_Places'].map(function (service) {
+      return L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/' + service + '/MapServer/tile/{z}/{y}/{x}',
+        {pane: 'satelliteLabels', maxNativeZoom: 19, maxZoom: 23, interactive: false,
+          updateWhenIdle: true, keepBuffer: 1,
+          attribution: 'Labels &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community'}
+      );
+    }));
+    satellite.on('add', function () { if (!map.hasLayer(labels)) labels.addTo(map); });
+    satellite.on('remove', function () { if (map.hasLayer(labels)) map.removeLayer(labels); });
+    return labels;
+  }
+
   function bindStreetTileFallback(map, street, definition, notify) {
     var switched = false;
     var backupFailed = false;
@@ -1625,6 +1643,7 @@
         definitions.satellite
       )
     };
+    bindSatelliteLabels(L, state.map, state.baseLayers.satellite);
     var currentMap = state.map;
     Object.keys(state.baseLayers).forEach(function(id){
       var base=state.baseLayers[id];
@@ -3367,7 +3386,7 @@
     if (typeof root.hideSidebarMobile === "function") root.hideSidebarMobile();
     state.open = true;
     var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
-    state.planningTheme = explicitPlanning ? options.planningTheme : "administrative_legacy";
+    state.planningTheme = explicitPlanning ? options.planningTheme : "partition";
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
     state.initialPlanningArea = root.RadarPlanningArea && root.RadarPlanningArea.initial(root.RADAR_LANDUSE_AREAS, options.planningRegion);

@@ -346,7 +346,7 @@
         theme.source.value = 'gis';
       }
       var opacityLabel = node('label', card, 'Độ hiển thị ');
-      var defaultOpacity = (theme.id === 'transport' || isAdministrative(theme.id)) ? '100' : theme.id === 'land_use_2030' ? '65' : '35';
+      var defaultOpacity = (theme.id === 'transport' || isAdministrative(theme.id)) ? '100' : theme.id === 'land_use_2030' ? '65' : theme.id === 'partition' ? '50' : '35';
       theme.value = node('output', opacityLabel, defaultOpacity + '%');
       theme.slider = node('input', opacityLabel); theme.slider.type = 'range';
       theme.slider.min = '0'; theme.slider.max = '100'; theme.slider.step = '1'; theme.slider.value = defaultOpacity;
