@@ -1,0 +1,9 @@
+{
+  "description": "Radar Maps private bypass",
+  "expression": "(http.host eq \"radarbds.vn\" and (starts_with(http.request.uri.path, \"/api/planning/\") or starts_with(http.request.uri.path, \"/api/map-labels/osm/\")) and (http.cookie ne \"\" or any(http.request.headers[\"authorization\"][*] ne \"\") or http.request.uri.query ne \"\"))",
+  "action": "set_cache_settings",
+  "action_parameters": {
+    "cache": false
+  },
+  "enabled": true
+}

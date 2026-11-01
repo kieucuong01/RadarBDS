@@ -23,6 +23,9 @@ def test_osm_geometry_browser_cache_does_not_expand_edge_allowlist(client, monke
     assert 'Pragma' not in response.headers
     response = client.get(path, headers={'Authorization':'Bearer test-only'})
     assert response.headers['Cache-Control'] == 'private, no-store'
+    client.set_cookie('radar_maps_probe', 'test-only')
+    assert client.get(path).headers['Cache-Control'] == 'private, no-store'
+    client.delete_cookie('radar_maps_probe')
     client.set_cookie(SESSION_COOKIE_NAME, 'test-only')
     response = client.get(path)
     assert response.headers['Cache-Control'] == 'private, no-store'

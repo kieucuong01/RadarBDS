@@ -121,6 +121,15 @@ cookie/Authorization private/no-store bypass. Invalid-release 404s remain
 uncached. `X-Radar-Edge-Cache` is an origin Nginx header replayed by Cloudflare;
 on a CF HIT its historical MISS value does not represent a new origin request.
 
+An explicit final `Radar Maps private bypass` rule
+(`2c64973a50804cd897a0ddfd7160d1f4`,
+`deployment/cloudflare/maps-private-bypass.json`) covers both Maps API namespaces
+when any Cookie, Authorization or query string is present. This is necessary:
+excluding these requests from the positive rule alone does **not** prevent
+Cloudflare's default PNG caching. A non-session cookie probe caught that default
+behavior; the explicit bypass restores origin private/no-store behavior. Keep
+this rule after the positive Maps rule. Existing listing rules are unchanged.
+
 Bounded external probe: 75/75 snapshot responses were CF HIT, median 137 ms,
 p95 1,690 ms including fresh TLS connections. A gzip k6 probe with 100 sessions,
 two cells and one cached GIS image delivered 1,563 reads with 100% HTTP 200/HIT,
@@ -136,3 +145,21 @@ and aborts on cache/privacy/error violations. Results are retained even on
 failure. It does not exercise cold regions, live GIS or detailed lookups, and
 1,000 VUs does not mean 1,000 simultaneous requests or 1,000 RPS. Mobile render,
 cold-source/failure scenarios and mixed real browsing require separate evidence.
+
+Independent Ubuntu run
+`https://github.com/kieucuong01/RadarBDS/actions/runs/41302228425` passed all four
+stages on application commit `f18b9fb72afa9164ae6bbcf120a1d2b778d1af79`:
+
+| VUs | Successful reads | CF HIT | Read p95 / p99 | Four-resource batch p95 |
+| --- | ---: | ---: | ---: | ---: |
+| 25 | 564 | 100% | 63 / 116 ms | 139 ms |
+| 100 | 2,396 | 100% | 57 / 82 ms | 92 ms |
+| 250 | 5,996 | 99.98% | 43 / 68 ms | 85 ms |
+| 1,000 | 23,620 | 100% | 62 / 130 ms | 130 ms |
+
+At 1,000 VUs connection warmup p95 was 984 ms, measured separately. The service
+remained active; post-run host sample had 97% idle CPU and zero swap I/O. These
+measurements do not establish mobile rendering speed, unique cold keys, sustained
+1,000 RPS, or full interactive Maps capacity. The bypass follow-up changes no
+anonymous warm key. To roll back edge changes, disable the two Maps-specific
+rules, leaving the existing private/public listing rules intact.
