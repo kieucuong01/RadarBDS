@@ -23,7 +23,7 @@ def main():
     env=Path('/etc/radar-bds/radar.env')
     include='    include /etc/nginx/snippets/radar-maps-cache-location.inc;\n'
     text=site.read_text();env_text=env.read_text()
-    if include not in text:
+    if 'include /etc/nginx/snippets/radar-maps-cache-location' not in text:
         marker='    location / {'
         if text.count(marker)!=1:
             raise SystemExit('Unexpected site configuration; review insertion point manually')
