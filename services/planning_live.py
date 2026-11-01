@@ -129,6 +129,9 @@ def planning_response_headers(response):
         if request.endpoint=='planning_parcel_cell' and anonymous:
             response.headers['Cache-Control']='public, max-age='+response.headers.pop('X-Radar-Cell-TTL','300')
             response.vary.add('Cookie');response.vary.add('Authorization')
+        elif request.endpoint in ('parcel_config','planning_live_catalog') and anonymous:
+            response.headers['Cache-Control']='public, max-age=60'
+            response.vary.add('Cookie');response.vary.add('Authorization')
         elif request.endpoint=='planning_tile' and anonymous:
             response.headers['Cache-Control']='public, max-age=3600'
             response.vary.add('Cookie');response.vary.add('Authorization')

@@ -10,7 +10,7 @@
     if(libraryPromise)return libraryPromise;
     libraryPromise=new Promise(function(resolve,reject){
       var script=root.document.createElement('script');
-      script.src='/static/vendor/protomaps-leaflet-4.0.1.js';script.async=true;
+      script.src='/static/vendor/protomaps-leaflet-4.0.1.js?v=public-geometry-20261101';script.async=true;
       script.onload=function(){if(root.protomapsL)resolve(root.protomapsL);else reject(new Error('OSM renderer unavailable'));};
       script.onerror=function(){script.remove();libraryPromise=null;reject(new Error('OSM renderer unavailable'));};
       root.document.head.appendChild(script);

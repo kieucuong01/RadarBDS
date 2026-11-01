@@ -80,7 +80,7 @@
         var controller=new env.AbortController();requests.set(key,controller);
         (function(cell,request){
           var parts=cell.split('/'),base=baseKey(cell),live=parts[2]==='live',url=(live?options.liveTemplate:options.template).replace('{x}',parts[0]).replace('{y}',parts[1]);
-          env.fetch(url,{signal:request.signal}).then(function(response){if(!response.ok){var error=new Error('Cell unavailable');error.status=response.status;throw error;}return response.json();})
+          env.fetch(url,{signal:request.signal,credentials:'omit'}).then(function(response){if(!response.ok){var error=new Error('Cell unavailable');error.status=response.status;throw error;}return response.json();})
             .then(function(data){if(disposed||request.signal.aborted)return;if(data.type!=='FeatureCollection'||!Array.isArray(data.features)||data.features.length>1500)throw new Error('Invalid cell');if(live){
                 var old=cache.get(base);if(!old)return;
                 var merged=new Map(old.data.features.map(function(f){return [f.id,f];}));data.features.forEach(function(f){merged.set(f.id,f);});

@@ -114,3 +114,21 @@ function harness() {
  h.images.at(-1).onload();layer.events.remove();
 }
 console.log('Native planning tiles: composite reuse, bounded expiry, source isolation, fallback and cancellation passed');
+
+(async()=>{
+ const h=harness();h.layer.events.remove();const requests=[],revoked=[];let blobs=0;
+ h.env.AbortController=AbortController;
+ h.env.URL={createObjectURL(){blobs++;return 'blob:planning-test';},revokeObjectURL(value){revoked.push(value);}};
+ h.env.fetch=(url,options)=>new Promise(resolve=>requests.push({url,options,resolve}));
+ const layer=api.create(h.L,h.env,{...h.manifest,gateway_first:true},{});
+ layer.createTile({z:17,x:1,y:2},()=>{});
+ assert.equal(requests[0].options.credentials,'omit','Public images use anonymous delivery even on a signed-in dashboard');
+ requests[0].resolve({ok:true,blob:async()=>({})});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(h.images.at(-1).src,'blob:planning-test');h.images.at(-1).onload();
+ assert.deepEqual(revoked,['blob:planning-test'],'Completed image blob is released after drawing');
+ layer.createTile({z:17,x:2,y:2},()=>{});layer.events.remove();
+ assert(requests[1].options.signal.aborted,'Hiding a layer cancels its anonymous image fetch');
+ requests[1].resolve({ok:true,blob:async()=>({})});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(blobs,1,'Late images cannot recreate blobs after the layer is removed');
+ console.log('Public image delivery: omitted credentials, blob cleanup and late cancellation passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});

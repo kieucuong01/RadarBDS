@@ -101,7 +101,7 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert len(response.json['areas'])==422 and response.json['count']==91
     assert response.json['count_scope']=='historic_binh_duong_snapshot'
     assert response.json['live_expanded'] is True
-    assert response.headers['Cache-Control']=='private, no-store'
+    assert response.headers['Cache-Control']=='public, max-age=60'
     assert client.get('/local-planning/parcels/config.json').status_code==404
     assert client.get('/api/planning/parcels/999999/planning.json').status_code==404
     assert client.get('/api/planning/parcels/1/planning.json?area=bad').status_code==404

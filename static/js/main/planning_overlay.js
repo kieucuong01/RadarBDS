@@ -660,7 +660,7 @@
     });
 
     taskChanged({key:'catalog',busy:true,label:'Đang tải danh sách lớp bản đồ…'});
-    env.fetch(published ? published.catalogUrl : '/local-planning/catalog.json', { signal: controller.signal, cache: published ? 'default' : 'no-store' })
+    env.fetch(published ? published.catalogUrl : '/local-planning/catalog.json', { signal: controller.signal, cache: published ? 'default' : 'no-store', credentials: published ? 'omit' : 'same-origin' })
       .then(function (response) {
         if (!response.ok) throw new Error('manifest unavailable');
         return response.json();

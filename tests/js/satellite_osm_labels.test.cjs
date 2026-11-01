@@ -47,6 +47,7 @@ test('pinned vector decoder rejects HTTP failures before parsing error text as a
  const vendor=fs.readFileSync('static/vendor/protomaps-leaflet-4.0.1.js','utf8');
  assert.ok(vendor.includes('if(!c.ok)throw new Error("Vector tile HTTP "+c.status)'));
  assert.ok(!vendor.includes('eval('));
+ assert.ok(vendor.includes('fetch(n,{signal:s,credentials:"omit"})'),'Public MVT reads omit dashboard cookies');
 });
 
 test('OSM reads are bounded at two and queued work is cancelled on base switch',async()=>{

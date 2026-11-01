@@ -439,7 +439,7 @@
       searchStatus.textContent = corners?'Đang chuyển tọa độ và dựng ranh…':'Đang tìm thửa trong dữ liệu GIS…';busy('parcel-search',true,searchStatus.textContent);
       var query = new URLSearchParams({area: areaId, sheet: sheet, parcel: parcel});
       if(coordinates)query=new URLSearchParams({system:coordinateSystem.value,crs:coordinateProjection.value,first:coordinateFirst.value.trim(),second:coordinateSecond.value.trim()});
-      var requestOptions={signal:searchRequest.signal,cache:'no-store'};
+      var requestOptions={signal:searchRequest.signal,cache:'default',credentials:'omit'};
       if(corners){requestOptions.method='POST';requestOptions.headers={'Content-Type':'application/json'};requestOptions.body=JSON.stringify({system:coordinateSystem.value,crs:coordinateProjection.value,corners:cornerInput.value});}
       env.fetch(apiBase + (corners?'/corners.json':(coordinates?'/coordinates.json?':'/search.json?')+query.toString()),requestOptions)
         .then(function (response) { if (!response.ok) throw new Error('Parcel search failed'); return response.json(); })

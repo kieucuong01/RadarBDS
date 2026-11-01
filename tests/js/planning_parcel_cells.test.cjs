@@ -16,7 +16,7 @@ function harness(featureTemplate,liveTemplate){
  return {controller,pending,polygons,status,selected,frames,groups,deliver,setX(v){x=v;},disable(){enabled=false;},tick(){while(frames.length)frames.shift()();}};
 }
 test('fixed cells reuse warm data, keep existing geometry and avoid duplicate parcel objects',async()=>{
- const h=harness();h.controller.update();assert.equal(h.pending.length,1);h.deliver(0,[1,2]);await flush();
+ const h=harness();h.controller.update();assert.equal(h.pending.length,1);assert.equal(h.pending[0].options.credentials,'omit');h.deliver(0,[1,2]);await flush();
  assert.equal(h.polygons.length,2);h.polygons[0].click({});assert.equal(h.selected[0].id,1);
  h.controller.update();assert.equal(h.pending.length,1,'Same cell makes no new requests');assert.equal(h.polygons.length,2);
  h.setX(52178);h.controller.update();h.deliver(1,[2,3]);await flush();

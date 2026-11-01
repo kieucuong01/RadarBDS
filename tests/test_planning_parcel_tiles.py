@@ -106,6 +106,8 @@ def test_cache_policy_is_exact_and_keeps_credentials_errors_and_originals_privat
     # Match production registration order: planning policy runs before generic headers.
     app.after_request(radar_app.add_response_headers)
     install(app,Catalog(),None,tmp_path,'release')
+    app.add_url_rule('/api/planning/parcels/config.json', 'parcel_config', lambda: {'public':True})
+    app.add_url_rule('/api/planning/catalog.json', 'planning_live_catalog', lambda: {'layers':[]})
     app.after_request(planning_response_headers)
     client=app.test_client();url='/api/planning/parcel-cells/release/snapshot/104354/61498.json'
     anonymous=client.get(url)
@@ -117,6 +119,13 @@ def test_cache_policy_is_exact_and_keeps_credentials_errors_and_originals_privat
     client.delete_cookie('radar_session')
     assert client.get(url.replace('snapshot/','bad/')).headers['Cache-Control']=='private, no-store'
     assert client.get('/api/planning/parcel-original/release/1.json').headers['Cache-Control']=='private, no-store'
+    for path in ('/api/planning/parcels/config.json','/api/planning/catalog.json'):
+        assert client.get(path).headers['Cache-Control']=='public, max-age=60'
+        assert 'X-Radar-Public-Cache' not in client.get(path).headers
+        assert client.get(path,headers={'Authorization':'Bearer test'}).headers['Cache-Control']=='private, no-store'
+        client.set_cookie('radar_session','test')
+        assert client.get(path).headers['Cache-Control']=='private, no-store'
+        client.delete_cookie('radar_session')
 
 
 def test_slow_live_loads_cannot_starve_snapshot_cache(tmp_path):

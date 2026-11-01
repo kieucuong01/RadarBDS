@@ -43,11 +43,15 @@
         tile.width = tile.height = 256;
         tile.setAttribute('role', 'presentation');
         var context = tile.getContext('2d'), images = [], stopped = false, settled = false, fallback = false, timer, release;
-        var foreground, background;
+        var foreground, background, imageRequests=[];
         var entries = tileCache(env), clock = env.Date || Date;
         var key = JSON.stringify([manifest.tile_template, manifest.source_tiles.primary, manifest.source_tiles.supplement, coords.z, coords.x, coords.y]);
         function clearImages() {
-          images.forEach(function (img) { img.onload = img.onerror = null; img.src = emptyImage; });
+          imageRequests.forEach(function(request){request.abort();});imageRequests=[];
+          images.forEach(function (img) {
+            img.onload = img.onerror = null; img.src = emptyImage;
+            if(img.planningBlobUrl)env.URL.revokeObjectURL(img.planningBlobUrl);
+          });
           images = []; foreground = background = null;
         }
         function finish(error, transport) {
@@ -85,7 +89,14 @@
             success(img);
           };
           img.onerror = function () { if (!stopped && !settled) failure(); };
-          img.src = url(template, coords);
+          if(template===manifest.tile_template&&env.fetch&&env.URL&&env.URL.createObjectURL&&env.AbortController){
+            // Public geometry must not carry the dashboard session/analytics cookies.
+            var request=new env.AbortController();imageRequests.push(request);
+            env.fetch(url(template,coords),{credentials:'omit',signal:request.signal})
+              .then(function(response){if(!response.ok)throw new Error('Planning tile unavailable');return response.blob();})
+              .then(function(blob){if(stopped||settled)return;img.planningBlobUrl=env.URL.createObjectURL(blob);img.src=img.planningBlobUrl;})
+              .catch(function(error){if(!stopped&&!settled&&error.name!=='AbortError')failure();});
+          }else img.src = url(template, coords);
         }
         function gateway() {
           if (stopped || settled || fallback) return;
