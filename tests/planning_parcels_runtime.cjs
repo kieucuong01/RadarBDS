@@ -84,12 +84,17 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   deliver(beforeProduction,{min_zoom:17,count:1,excluded_count:0,live_expanded:true,
     coverage_bounds:[[8.5,106.25],[11.65,107.65]],areas:[
     {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',district:'721',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900},
-    {area_id:'26740',ward:'Bến Nghé',city:'Quận 1',district:'760',bounds:[[10.77,106.69],[10.78,106.71]]}]});
+    {area_id:'26740',ward:'Bến Nghé',city:'Quận 1',district:'760',bounds:[[10.77,106.69],[10.78,106.71]]},
+    {area_id:'bp-689-25201',ward:'Phường Tân Bình',city:'Thành phố Đồng Xoài',district:'689',province:'binh-phuoc',bounds:[[11.5,106.8],[11.6,106.9]]}]});
   await flush();
   assert(pending[beforeProduction+1].url.startsWith('/api/planning/parcels/viewport.json?bbox='));
   const province=nodes.filter(n=>n.attributes['aria-label']==='Tỉnh/TP').at(-1);
   const district=nodes.filter(n=>n.attributes['aria-label']==='Quận / Huyện (Cũ)').at(-1);
   const searchWard=nodes.filter(n=>n.attributes['aria-label']==='Phường / Xã (Cũ)').at(-1);
+  assert(province.children.some(n=>n.value==='binh-phuoc'));
+  province.value='binh-phuoc';province.events.change();
+  assert.deepEqual(district.children.map(n=>n.value),['Thành phố Đồng Xoài']);
+  assert.deepEqual(searchWard.children.map(n=>n.value),['bp-689-25201']);
   province.value='hcm';province.events.change();
   assert.deepEqual(district.children.map(n=>n.value),['Quận 1']);
   assert.deepEqual(searchWard.children.map(n=>n.value),['26740']);
@@ -128,20 +133,20 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   coordinateMethod.value='coordinates';coordinateMethod.events.change();
   const first=nodes.filter(n=>n.attributes['aria-label']==='Vĩ độ').at(-1);
   const second=nodes.filter(n=>n.attributes['aria-label']==='Kinh độ').at(-1);
-  first.value='11.0205';second.value='106.6505';
+  first.value='11.53';second.value='106.89';
   first.events.input();
   assert(nodes.some(n=>n.textContent==='Chọn hệ tọa độ và nhập đủ hai giá trị.'));
   const coordinateForm=nodes.filter(n=>n.attributes['aria-label']==='Tra tờ thửa').at(-1);
   let coordinateIndex=pending.length;coordinateForm.events.submit({preventDefault(){}});
   assert(pending[coordinateIndex].url.includes('/coordinates.json?system=wgs84'));
-  const coordinateFeature={...feature};
-  deliver(coordinateIndex,{type:'FeatureCollection',features:[coordinateFeature],matched:1,point:[11.0205,106.6505]});await flush();
-  assert(!pending.at(-1).url.includes('/900/planning.json'),'Coordinate lookup opens only basic information');
+  const coordinateFeature={...feature,id:1000000049268,properties:{...feature.properties,id:1000000049268,area_id:'bp-689-25201',source:'https://gis.dongnai.gov.vn/'}};
+  deliver(coordinateIndex,{type:'FeatureCollection',features:[coordinateFeature],matched:1,point:[11.53,106.89]});await flush();
+  assert(!pending.at(-1).url.includes('/1000000049268/planning.json'),'Coordinate lookup opens only basic information');
   nodes.filter(n=>n.className==='planning-parcel-expand').at(-1).events.click();
-  assert(pending.at(-1).url.includes('/900/planning.json?area=25813'),'Coordinate lookup opens the actual returned parcel, independent of the sheet-search ward');
+  assert(pending.at(-1).url.includes('/1000000049268/planning.json?area=bp-689-25201'),'Coordinate lookup opens the actual returned parcel, independent of the sheet-search ward');
   coordinateIndex=pending.length;coordinateForm.events.submit({preventDefault(){}});
   map.fitted=null;events.movestart();
-  deliver(coordinateIndex,{type:'FeatureCollection',features:[coordinateFeature],matched:1,point:[11.0205,106.6505]});await flush();
+  deliver(coordinateIndex,{type:'FeatureCollection',features:[coordinateFeature],matched:1,point:[11.53,106.89]});await flush();
   assert.equal(map.fitted,null,'A late coordinate result must not move the map after a manual pan');
   coordinateMethod.value='corners';coordinateMethod.events.change();
   const cornerField=nodes.filter(n=>n.attributes['aria-label']==='Danh sách góc ranh').at(-1);

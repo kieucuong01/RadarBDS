@@ -132,6 +132,9 @@
     function showParcel(feature) {
       remove(coordinateMarker);coordinateMarker=null;
       clearInfo();
+      var dongnai = feature.properties.source === 'https://gis.dongnai.gov.vn/';
+      source.textContent = dongnai ? 'Nguồn: Cổng GIS Đồng Nai · Bình Phước cũ' : 'Nguồn: Cổng GIS TP.HCM';
+      source.href = dongnai ? 'https://gis.dongnai.gov.vn/' : 'https://gisxaydung.tphcm.gov.vn/tracuuttqh';
       var heading=node('h3', info, 'Thửa ' + format(feature.properties.parcel) + ' · Tờ ' + format(feature.properties.sheet));
       node('strong', heading, ' · '+area(feature.properties.area)).className = 'planning-parcel-area';
       node('p', info, (feature.properties.ward || config.ward) + ' · ' + (feature.properties.city || config.city) + ' (đơn vị cũ)').className = 'planning-parcel-location';
@@ -204,7 +207,10 @@
           if (disposed || sequence !== selectionSeq) return;
           if (!data || !data.parcel || data.parcel.id !== feature.id || !Array.isArray(data.plans)) throw new Error('Invalid GIS response');
           message.remove();requestState.loaded=true;button.textContent='Ẩn thông tin quy hoạch chi tiết';
-          if (!data.plans.length) node('p', detailBody, 'GIS chưa trả về đồ án giao thửa này. Chưa thể kết luận thửa không có quy hoạch.');
+          if (!data.plans.length) node('p', detailBody, data.unavailable_layers && data.unavailable_layers.length
+            ? 'Chưa tải đủ các lớp quy hoạch. Chưa thể kết luận quy hoạch của thửa này.' : data.planning_available === false
+            ? 'Đã có ranh thửa. Nguồn này chưa hỗ trợ tra giao quy hoạch; hãy đối chiếu lớp bản đồ đang bật.'
+            : 'GIS chưa trả về đồ án giao thửa này. Chưa thể kết luận thửa không có quy hoạch.');
           data.plans.forEach(function (plan) {
             var section = node('section', detailBody); section.className = 'parcel-planning-plan';
             node('h4', section, plan.type || 'Đồ án quy hoạch');
@@ -229,7 +235,12 @@
             if (plan.amendment) row(fields, 'Điều chỉnh theo GIS', plan.amendment + ' · ' + (plan.amendment_date || ''));
             row(fields, 'Diện tích giao GIS', area(plan.intersection_area));
           });
-          node('p', detailBody, 'Diện tích giao do GIS tính, có thể khác diện tích thửa. Chỉ tiêu được giữ nguyên giá trị nguồn.').className = 'planning-parcel-notice';
+          if (data.plans.length) node('p', detailBody, data.intersection_method === 'geodesic_wgs84'
+            ? 'Diện tích giao do RadarBDS tính từ hình học GIS, có thể khác diện tích hồ sơ. Các đồ án có thể chồng lấn; chỉ tiêu giữ nguyên theo nguồn.'
+            : 'Diện tích giao do GIS tính, có thể khác diện tích thửa. Chỉ tiêu được giữ nguyên giá trị nguồn.').className = 'planning-parcel-notice';
+          if (data.intersection_method === 'geodesic_wgs84') node('p', detailBody, 'Tra QH chi tiết và QH chung của GIS Đồng Nai. Chưa bao gồm QH phân khu và QH SDĐ 2030.').className = 'planning-parcel-notice';
+          if (Array.isArray(data.unavailable_layers) && data.unavailable_layers.length) node('p', detailBody,
+            'Chưa tải được: ' + data.unavailable_layers.join(', ') + '. Kết quả hiện tại chưa đầy đủ; vui lòng thử lại sau.').className = 'planning-parcel-notice';
           node('p', detailBody, 'Tra cứu: ' + new Date(data.queried_at).toLocaleString('vi-VN'));
         }).catch(function (error) {
           if (!disposed && sequence === selectionSeq && error.name !== 'AbortError') {
@@ -401,6 +412,7 @@
       if (viewRequest) viewRequest.abort(); ++viewSeq;
     }
     function provinceFor(a) {
+      if (a.province === 'binh-phuoc') return 'binh-phuoc';
       var district = Number(a.district);
       if (district >= 760 && district <= 787) return 'hcm';
       if (district >= 747 && district <= 755) return 'brvt';
@@ -505,7 +517,7 @@
         if (!disposed && error.name !== 'AbortError') status.textContent = 'Chưa lấy được thửa mẫu. Hãy phóng to để chọn thửa trực tiếp.';
       }).finally(function () { if (!disposed){example.disabled = false;busy('parcel-sample',false);} });
     });
-    env.fetch(apiBase + '/config.json', {signal: lifetime.signal, cache: 'no-store'})
+    env.fetch(apiBase + '/config.json', {signal: lifetime.signal, cache: 'default', credentials:'omit'})
       .then(function (response) { if (!response.ok) throw new Error('Parcel config missing'); return response.json(); })
       .then(function (data) {
         if (disposed) return;
@@ -514,6 +526,9 @@
         if (!Array.isArray(data.areas) || !data.areas.length || data.min_zoom !== 17
             || data.areas.some(function (a) { return !Array.isArray(a.bounds) || a.bounds.length !== 2; })) throw new Error('Invalid parcel config');
         config = data; example.disabled = false; areaSubmit.disabled = searchSubmit.disabled = false;
+        if (data.areas.some(function (a) { return a.province === 'binh-phuoc'; })) {
+          node('option', searchProvince, 'Bình Phước (cũ) · Đồng Nai').value = 'binh-phuoc';
+        }
         if (quickBoundaries) quickBoundaries.disabled = false;
         navigationAreas = Array.isArray(data.navigation_areas) && data.navigation_areas.length ? data.navigation_areas : data.areas;
         var nearest = closestArea(), navigationNearest = closestArea(navigationAreas);
@@ -523,7 +538,8 @@
         fillWards(citySelect.value === navigationNearest.city ? navigationNearest.area_id || navigationNearest.code : '');
         searchProvince.value = provinceFor(nearest);
         fillSearchDistricts(nearest.city, nearest.area_id || nearest.code);
-        badge.textContent = data.live_expanded ? 'Ranh GIS tải theo vùng xem · TP.HCM mới. Dữ liệu nguồn chưa phủ kín mọi khu vực.'
+        badge.textContent = data.regional_sources ? 'Ranh tải theo vùng xem · TP.HCM và Bình Phước cũ thuộc Đồng Nai. Nguồn chưa phủ kín; chưa có ranh Đồng Nai cũ.'
+          : data.live_expanded ? 'Ranh GIS tải theo vùng xem · TP.HCM mới. Dữ liệu nguồn chưa phủ kín mọi khu vực.'
           : data.areas.length + ' phường · ' + format(data.count) + ' ranh thửa GIS. Phóng to để bấm chọn.';
         if (data.excluded_count) node('p', settings, format(data.excluded_count) + ' ranh lỗi nguồn đã được tạm loại.').className = 'planning-parcel-notice';
         loadViewport();

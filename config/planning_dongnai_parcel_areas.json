@@ -1,0 +1,2449 @@
+{
+  "source": "https://gis.dongnai.gov.vn/",
+  "checked_on": "2026-10-31",
+  "reference_only": "Historical source administrative bounds, not proof of complete parcel coverage. Duplicate source ward codes are scoped by district. Coverage is former Binh Phuoc, not former Dong Nai.",
+  "areas": [
+    {
+      "code": "25216",
+      "area_id": "bp-688-25216",
+      "district": "688",
+      "ward": "Phường Thác Mơ",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.808200000000001,
+          106.99
+        ],
+        [
+          11.8696,
+          107.0618
+        ]
+      ],
+      "center": [
+        11.8389,
+        107.02590000000001
+      ]
+    },
+    {
+      "code": "25217",
+      "area_id": "bp-688-25217",
+      "district": "688",
+      "ward": "Phường Long Thủy",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8351,
+          106.98389999999999
+        ],
+        [
+          11.8676,
+          107.01360000000001
+        ]
+      ],
+      "center": [
+        11.85135,
+        106.99875
+      ]
+    },
+    {
+      "code": "25219",
+      "area_id": "bp-688-25219",
+      "district": "688",
+      "ward": "Phường Phước Bình",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7799,
+          106.9409
+        ],
+        [
+          11.8212,
+          106.9903
+        ]
+      ],
+      "center": [
+        11.80055,
+        106.9656
+      ]
+    },
+    {
+      "code": "25220",
+      "area_id": "bp-688-25220",
+      "district": "688",
+      "ward": "Phường Long Phước",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8009,
+          106.92309999999999
+        ],
+        [
+          11.851799999999999,
+          106.96910000000001
+        ]
+      ],
+      "center": [
+        11.82635,
+        106.9461
+      ]
+    },
+    {
+      "code": "25237",
+      "area_id": "bp-688-25237",
+      "district": "688",
+      "ward": "Phường Sơn Giang",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7997,
+          106.96079999999999
+        ],
+        [
+          11.8401,
+          107.0197
+        ]
+      ],
+      "center": [
+        11.8199,
+        106.99025
+      ]
+    },
+    {
+      "code": "25245",
+      "area_id": "bp-688-25245",
+      "district": "688",
+      "ward": "Xã Long Giang",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8309,
+          106.92609999999999
+        ],
+        [
+          11.8775,
+          106.99090000000001
+        ]
+      ],
+      "center": [
+        11.854199999999999,
+        106.9585
+      ]
+    },
+    {
+      "code": "25249",
+      "area_id": "bp-688-25249",
+      "district": "688",
+      "ward": "Xã Phước Tín",
+      "city": "Thị xã Phước Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.773100000000001,
+          106.9647
+        ],
+        [
+          11.830599999999999,
+          107.07740000000001
+        ]
+      ],
+      "center": [
+        11.80185,
+        107.02105
+      ]
+    },
+    {
+      "code": "25195",
+      "area_id": "bp-689-25195",
+      "district": "689",
+      "ward": "Phường Tân Phú",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5291,
+          106.86989999999999
+        ],
+        [
+          11.572899999999999,
+          106.9033
+        ]
+      ],
+      "center": [
+        11.550999999999998,
+        106.88659999999999
+      ]
+    },
+    {
+      "code": "25198",
+      "area_id": "bp-689-25198",
+      "district": "689",
+      "ward": "Phường Tân Đồng",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5373,
+          106.90039999999999
+        ],
+        [
+          11.5773,
+          106.92630000000001
+        ]
+      ],
+      "center": [
+        11.5573,
+        106.91335000000001
+      ]
+    },
+    {
+      "code": "25201",
+      "area_id": "bp-689-25201",
+      "district": "689",
+      "ward": "Phường Tân Bình",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5119,
+          106.86999999999999
+        ],
+        [
+          11.5377,
+          106.9024
+        ]
+      ],
+      "center": [
+        11.524799999999999,
+        106.8862
+      ]
+    },
+    {
+      "code": "25204",
+      "area_id": "bp-689-25204",
+      "district": "689",
+      "ward": "Phường Tân Xuân",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.495700000000001,
+          106.89269999999999
+        ],
+        [
+          11.532499999999999,
+          106.932
+        ]
+      ],
+      "center": [
+        11.5141,
+        106.91235
+      ]
+    },
+    {
+      "code": "25205",
+      "area_id": "bp-689-25205",
+      "district": "689",
+      "ward": "Phường Tân Thiện",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5241,
+          106.8976
+        ],
+        [
+          11.5413,
+          106.933
+        ]
+      ],
+      "center": [
+        11.5327,
+        106.9153
+      ]
+    },
+    {
+      "code": "25207",
+      "area_id": "bp-689-25207",
+      "district": "689",
+      "ward": "Xã Tân Thành",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.481,
+          106.755
+        ],
+        [
+          11.5662,
+          106.84190000000001
+        ]
+      ],
+      "center": [
+        11.5236,
+        106.79845
+      ]
+    },
+    {
+      "code": "25210",
+      "area_id": "bp-689-25210",
+      "district": "689",
+      "ward": "Phường Tiến Thành",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5059,
+          106.83009999999999
+        ],
+        [
+          11.5704,
+          106.89370000000001
+        ]
+      ],
+      "center": [
+        11.53815,
+        106.86189999999999
+      ]
+    },
+    {
+      "code": "25213",
+      "area_id": "bp-689-25213",
+      "district": "689",
+      "ward": "Xã Tiến Hưng",
+      "city": "Thành phố Đồng Xoài",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4609,
+          106.797
+        ],
+        [
+          11.5161,
+          106.9238
+        ]
+      ],
+      "center": [
+        11.4885,
+        106.8604
+      ]
+    },
+    {
+      "code": "25320",
+      "area_id": "bp-690-25320",
+      "district": "690",
+      "ward": "Phường Hưng Chiến",
+      "city": "Thị xã Bình Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6044,
+          106.56009999999999
+        ],
+        [
+          11.660499999999999,
+          106.6195
+        ]
+      ],
+      "center": [
+        11.632449999999999,
+        106.5898
+      ]
+    },
+    {
+      "code": "25324",
+      "area_id": "bp-690-25324",
+      "district": "690",
+      "ward": "Phường An Lộc",
+      "city": "Thị xã Bình Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6483,
+          106.55619999999999
+        ],
+        [
+          11.673,
+          106.61280000000001
+        ]
+      ],
+      "center": [
+        11.66065,
+        106.58449999999999
+      ]
+    },
+    {
+      "code": "25325",
+      "area_id": "bp-690-25325",
+      "district": "690",
+      "ward": "Phường Phú Thịnh",
+      "city": "Thị xã Bình Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.650500000000001,
+          106.6081
+        ],
+        [
+          11.6699,
+          106.6371
+        ]
+      ],
+      "center": [
+        11.6602,
+        106.6226
+      ]
+    },
+    {
+      "code": "25326",
+      "area_id": "bp-690-25326",
+      "district": "690",
+      "ward": "Phường Phú Đức",
+      "city": "Thị xã Bình Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.631300000000001,
+          106.60669999999999
+        ],
+        [
+          11.6556,
+          106.6268
+        ]
+      ],
+      "center": [
+        11.643450000000001,
+        106.61675
+      ]
+    },
+    {
+      "code": "25333",
+      "area_id": "bp-690-25333",
+      "district": "690",
+      "ward": "Xã Thanh Lương",
+      "city": "Thị xã Bình Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6812,
+          106.4956
+        ],
+        [
+          11.7409,
+          106.6319
+        ]
+      ],
+      "center": [
+        11.71105,
+        106.56375
+      ]
+    },
+    {
+      "code": "25336",
+      "area_id": "bp-690-25336",
+      "district": "690",
+      "ward": "Xã Thanh Phú",
+      "city": "Thị xã Bình Long",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6652,
+          106.5589
+        ],
+        [
+          11.724499999999999,
+          106.64710000000001
+        ]
+      ],
+      "center": [
+        11.694849999999999,
+        106.60300000000001
+      ]
+    },
+    {
+      "code": "25222",
+      "area_id": "bp-691-25222",
+      "district": "691",
+      "ward": "Xã Bù Gia Mập",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.9898,
+          107.06949999999999
+        ],
+        [
+          12.2986,
+          107.2407
+        ]
+      ],
+      "center": [
+        12.144200000000001,
+        107.1551
+      ]
+    },
+    {
+      "code": "25225",
+      "area_id": "bp-691-25225",
+      "district": "691",
+      "ward": "Xã Đak Ơ",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.982800000000001,
+          106.9593
+        ],
+        [
+          12.1645,
+          107.14070000000001
+        ]
+      ],
+      "center": [
+        12.07365,
+        107.05000000000001
+      ]
+    },
+    {
+      "code": "25228",
+      "area_id": "bp-691-25228",
+      "district": "691",
+      "ward": "Xã Đức Hạnh",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8345,
+          107.0071
+        ],
+        [
+          11.9224,
+          107.0792
+        ]
+      ],
+      "center": [
+        11.87845,
+        107.04315
+      ]
+    },
+    {
+      "code": "25229",
+      "area_id": "bp-691-25229",
+      "district": "691",
+      "ward": "Xã Phú Văn",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.894300000000001,
+          107.0221
+        ],
+        [
+          12.0048,
+          107.1524
+        ]
+      ],
+      "center": [
+        11.94955,
+        107.08725
+      ]
+    },
+    {
+      "code": "25231",
+      "area_id": "bp-691-25231",
+      "district": "691",
+      "ward": "Xã Đa Kia",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8457,
+          106.8397
+        ],
+        [
+          11.921999999999999,
+          106.9577
+        ]
+      ],
+      "center": [
+        11.883849999999999,
+        106.89869999999999
+      ]
+    },
+    {
+      "code": "25232",
+      "area_id": "bp-691-25232",
+      "district": "691",
+      "ward": "Xã Phước Minh",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8995,
+          106.83189999999999
+        ],
+        [
+          11.9878,
+          106.9441
+        ]
+      ],
+      "center": [
+        11.94365,
+        106.888
+      ]
+    },
+    {
+      "code": "25234",
+      "area_id": "bp-691-25234",
+      "district": "691",
+      "ward": "Xã Bình Thắng",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8221,
+          106.74719999999999
+        ],
+        [
+          11.915799999999999,
+          106.8549
+        ]
+      ],
+      "center": [
+        11.86895,
+        106.80105
+      ]
+    },
+    {
+      "code": "25267",
+      "area_id": "bp-691-25267",
+      "district": "691",
+      "ward": "Xã Phú Nghĩa",
+      "city": "Huyện Bù Gia Mập",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8576,
+          106.89689999999999
+        ],
+        [
+          12.0107,
+          107.0729
+        ]
+      ],
+      "center": [
+        11.934149999999999,
+        106.9849
+      ]
+    },
+    {
+      "code": "25270",
+      "area_id": "bp-692-25270",
+      "district": "692",
+      "ward": "Thị trấn Lộc Ninh",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8276,
+          106.57279999999999
+        ],
+        [
+          11.863199999999999,
+          106.6059
+        ]
+      ],
+      "center": [
+        11.8454,
+        106.58935
+      ]
+    },
+    {
+      "code": "25273",
+      "area_id": "bp-692-25273",
+      "district": "692",
+      "ward": "Xã Lộc Hòa",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.896700000000001,
+          106.5422
+        ],
+        [
+          11.9748,
+          106.6315
+        ]
+      ],
+      "center": [
+        11.93575,
+        106.58685
+      ]
+    },
+    {
+      "code": "25276",
+      "area_id": "bp-692-25276",
+      "district": "692",
+      "ward": "Xã Lộc An",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.879800000000001,
+          106.61149999999999
+        ],
+        [
+          11.9894,
+          106.69470000000001
+        ]
+      ],
+      "center": [
+        11.9346,
+        106.6531
+      ]
+    },
+    {
+      "code": "25279",
+      "area_id": "bp-692-25279",
+      "district": "692",
+      "ward": "Xã Lộc Tấn",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8518,
+          106.41279999999999
+        ],
+        [
+          11.9714,
+          106.64760000000001
+        ]
+      ],
+      "center": [
+        11.9116,
+        106.53020000000001
+      ]
+    },
+    {
+      "code": "25280",
+      "area_id": "bp-692-25280",
+      "district": "692",
+      "ward": "Xã Lộc Thạnh",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.888,
+          106.4117
+        ],
+        [
+          11.9889,
+          106.61670000000001
+        ]
+      ],
+      "center": [
+        11.93845,
+        106.5142
+      ]
+    },
+    {
+      "code": "25282",
+      "area_id": "bp-692-25282",
+      "district": "692",
+      "ward": "Xã Lộc Hiệp",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.858,
+          106.6437
+        ],
+        [
+          11.9139,
+          106.7497
+        ]
+      ],
+      "center": [
+        11.885950000000001,
+        106.69669999999999
+      ]
+    },
+    {
+      "code": "25285",
+      "area_id": "bp-692-25285",
+      "district": "692",
+      "ward": "Xã Lộc Thiện",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8222,
+          106.43799999999999
+        ],
+        [
+          11.8828,
+          106.5871
+        ]
+      ],
+      "center": [
+        11.8525,
+        106.51255
+      ]
+    },
+    {
+      "code": "25288",
+      "area_id": "bp-692-25288",
+      "district": "692",
+      "ward": "Xã Lộc Thuận",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8084,
+          106.5997
+        ],
+        [
+          11.8706,
+          106.6962
+        ]
+      ],
+      "center": [
+        11.839500000000001,
+        106.64795000000001
+      ]
+    },
+    {
+      "code": "25291",
+      "area_id": "bp-692-25291",
+      "district": "692",
+      "ward": "Xã Lộc Quang",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.774700000000001,
+          106.68719999999999
+        ],
+        [
+          11.8399,
+          106.76410000000001
+        ]
+      ],
+      "center": [
+        11.807300000000001,
+        106.72565
+      ]
+    },
+    {
+      "code": "25292",
+      "area_id": "bp-692-25292",
+      "district": "692",
+      "ward": "Xã Lộc Phú",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.831900000000001,
+          106.6818
+        ],
+        [
+          11.878599999999999,
+          106.7616
+        ]
+      ],
+      "center": [
+        11.85525,
+        106.7217
+      ]
+    },
+    {
+      "code": "25294",
+      "area_id": "bp-692-25294",
+      "district": "692",
+      "ward": "Xã Lộc Thành",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.715200000000001,
+          106.41409999999999
+        ],
+        [
+          11.84,
+          106.5746
+        ]
+      ],
+      "center": [
+        11.7776,
+        106.49435
+      ]
+    },
+    {
+      "code": "25297",
+      "area_id": "bp-692-25297",
+      "district": "692",
+      "ward": "Xã Lộc Thái",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.778,
+          106.574
+        ],
+        [
+          11.8355,
+          106.6204
+        ]
+      ],
+      "center": [
+        11.806750000000001,
+        106.5972
+      ]
+    },
+    {
+      "code": "25300",
+      "area_id": "bp-692-25300",
+      "district": "692",
+      "ward": "Xã Lộc Điền",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7699,
+          106.6116
+        ],
+        [
+          11.830499999999999,
+          106.7051
+        ]
+      ],
+      "center": [
+        11.8002,
+        106.65835
+      ]
+    },
+    {
+      "code": "25303",
+      "area_id": "bp-692-25303",
+      "district": "692",
+      "ward": "Xã Lộc Hưng",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.751000000000001,
+          106.5406
+        ],
+        [
+          11.8238,
+          106.6011
+        ]
+      ],
+      "center": [
+        11.787400000000002,
+        106.57085000000001
+      ]
+    },
+    {
+      "code": "25305",
+      "area_id": "bp-692-25305",
+      "district": "692",
+      "ward": "Xã Lộc Thịnh",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.657300000000001,
+          106.4335
+        ],
+        [
+          11.7731,
+          106.6055
+        ]
+      ],
+      "center": [
+        11.7152,
+        106.5195
+      ]
+    },
+    {
+      "code": "25306",
+      "area_id": "bp-692-25306",
+      "district": "692",
+      "ward": "Xã Lộc Khánh",
+      "city": "Huyện Lộc Ninh",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7367,
+          106.5988
+        ],
+        [
+          11.7983,
+          106.6787
+        ]
+      ],
+      "center": [
+        11.7675,
+        106.63875
+      ]
+    },
+    {
+      "code": "25308",
+      "area_id": "bp-693-25308",
+      "district": "693",
+      "ward": "Thị trấn Thanh Bình",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.9364,
+          106.7896
+        ],
+        [
+          11.9697,
+          106.84410000000001
+        ]
+      ],
+      "center": [
+        11.953050000000001,
+        106.81685
+      ]
+    },
+    {
+      "code": "25309",
+      "area_id": "bp-693-25309",
+      "district": "693",
+      "ward": "Xã Hưng Phước",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.997,
+          106.761
+        ],
+        [
+          12.0846,
+          106.8546
+        ]
+      ],
+      "center": [
+        12.0408,
+        106.8078
+      ]
+    },
+    {
+      "code": "25310",
+      "area_id": "bp-693-25310",
+      "district": "693",
+      "ward": "Xã Phước Thiện",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.974400000000001,
+          106.8059
+        ],
+        [
+          12.0951,
+          106.99510000000001
+        ]
+      ],
+      "center": [
+        12.03475,
+        106.9005
+      ]
+    },
+    {
+      "code": "25312",
+      "area_id": "bp-693-25312",
+      "district": "693",
+      "ward": "Xã Thiện Hưng",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.966000000000001,
+          106.7461
+        ],
+        [
+          12.0387,
+          106.87370000000001
+        ]
+      ],
+      "center": [
+        12.00235,
+        106.8099
+      ]
+    },
+    {
+      "code": "25315",
+      "area_id": "bp-693-25315",
+      "district": "693",
+      "ward": "Xã Thanh Hòa",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8957,
+          106.7306
+        ],
+        [
+          12.0084,
+          106.84230000000001
+        ]
+      ],
+      "center": [
+        11.95205,
+        106.78645
+      ]
+    },
+    {
+      "code": "25318",
+      "area_id": "bp-693-25318",
+      "district": "693",
+      "ward": "Xã Tân Thành",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8869,
+          106.67009999999999
+        ],
+        [
+          11.9801,
+          106.7442
+        ]
+      ],
+      "center": [
+        11.9335,
+        106.70715
+      ]
+    },
+    {
+      "code": "25321",
+      "area_id": "bp-693-25321",
+      "district": "693",
+      "ward": "Xã Tân Tiến",
+      "city": "Huyện Bù Đốp",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8796,
+          106.7203
+        ],
+        [
+          11.9846,
+          106.79100000000001
+        ]
+      ],
+      "center": [
+        11.9321,
+        106.75565
+      ]
+    },
+    {
+      "code": "25327",
+      "area_id": "bp-694-25327",
+      "district": "694",
+      "ward": "Xã Thanh An",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.692300000000001,
+          106.68249999999999
+        ],
+        [
+          11.7834,
+          106.7702
+        ]
+      ],
+      "center": [
+        11.737850000000002,
+        106.72635
+      ]
+    },
+    {
+      "code": "25330",
+      "area_id": "bp-694-25330",
+      "district": "694",
+      "ward": "Xã An Khương",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6761,
+          106.61489999999999
+        ],
+        [
+          11.7713,
+          106.69810000000001
+        ]
+      ],
+      "center": [
+        11.723700000000001,
+        106.6565
+      ]
+    },
+    {
+      "code": "25339",
+      "area_id": "bp-694-25339",
+      "district": "694",
+      "ward": "Xã An Phú",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6377,
+          106.45769999999999
+        ],
+        [
+          11.700099999999999,
+          106.56630000000001
+        ]
+      ],
+      "center": [
+        11.6689,
+        106.512
+      ]
+    },
+    {
+      "code": "25345",
+      "area_id": "bp-694-25345",
+      "district": "694",
+      "ward": "Xã Tân Hưng",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.585700000000001,
+          106.68669999999999
+        ],
+        [
+          11.704799999999999,
+          106.783
+        ]
+      ],
+      "center": [
+        11.64525,
+        106.73485
+      ]
+    },
+    {
+      "code": "25348",
+      "area_id": "bp-694-25348",
+      "district": "694",
+      "ward": "Xã Minh Đức",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5458,
+          106.4798
+        ],
+        [
+          11.6211,
+          106.59710000000001
+        ]
+      ],
+      "center": [
+        11.58345,
+        106.53845000000001
+      ]
+    },
+    {
+      "code": "25349",
+      "area_id": "bp-694-25349",
+      "district": "694",
+      "ward": "Xã Minh Tâm",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5692,
+          106.4529
+        ],
+        [
+          11.6661,
+          106.5754
+        ]
+      ],
+      "center": [
+        11.617650000000001,
+        106.51415
+      ]
+    },
+    {
+      "code": "25351",
+      "area_id": "bp-694-25351",
+      "district": "694",
+      "ward": "Xã Phước An",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5503,
+          106.6133
+        ],
+        [
+          11.6466,
+          106.69300000000001
+        ]
+      ],
+      "center": [
+        11.59845,
+        106.65315000000001
+      ]
+    },
+    {
+      "code": "25354",
+      "area_id": "bp-694-25354",
+      "district": "694",
+      "ward": "Xã Thanh Bình",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5767,
+          106.5915
+        ],
+        [
+          11.6326,
+          106.63690000000001
+        ]
+      ],
+      "center": [
+        11.60465,
+        106.61420000000001
+      ]
+    },
+    {
+      "code": "25357",
+      "area_id": "bp-694-25357",
+      "district": "694",
+      "ward": "Thị trấn Tân Khai",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5113,
+          106.58189999999999
+        ],
+        [
+          11.5822,
+          106.6572
+        ]
+      ],
+      "center": [
+        11.54675,
+        106.61955
+      ]
+    },
+    {
+      "code": "25360",
+      "area_id": "bp-694-25360",
+      "district": "694",
+      "ward": "Xã Đồng Nơ",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4674,
+          106.51939999999999
+        ],
+        [
+          11.5725,
+          106.58680000000001
+        ]
+      ],
+      "center": [
+        11.51995,
+        106.5531
+      ]
+    },
+    {
+      "code": "25361",
+      "area_id": "bp-694-25361",
+      "district": "694",
+      "ward": "Xã Tân Hiệp",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.481200000000001,
+          106.42179999999999
+        ],
+        [
+          11.555399999999999,
+          106.5498
+        ]
+      ],
+      "center": [
+        11.5183,
+        106.4858
+      ]
+    },
+    {
+      "code": "25378",
+      "area_id": "bp-694-25378",
+      "district": "694",
+      "ward": "Xã Tân Lợi",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6159,
+          106.622
+        ],
+        [
+          11.7041,
+          106.7145
+        ]
+      ],
+      "center": [
+        11.66,
+        106.66825
+      ]
+    },
+    {
+      "code": "25438",
+      "area_id": "bp-694-25438",
+      "district": "694",
+      "ward": "Xã Tân Quan",
+      "city": "Huyện Hớn Quản",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.505700000000001,
+          106.64489999999999
+        ],
+        [
+          11.591899999999999,
+          106.69080000000001
+        ]
+      ],
+      "center": [
+        11.5488,
+        106.66785
+      ]
+    },
+    {
+      "code": "25321",
+      "area_id": "bp-695-25321",
+      "district": "695",
+      "ward": "Xã Tân Tiến",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3864,
+          106.78739999999999
+        ],
+        [
+          11.4508,
+          106.915
+        ]
+      ],
+      "center": [
+        11.4186,
+        106.8512
+      ]
+    },
+    {
+      "code": "25363",
+      "area_id": "bp-695-25363",
+      "district": "695",
+      "ward": "Thị trấn Tân Phú",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4311,
+          106.8046
+        ],
+        [
+          11.480699999999999,
+          106.9008
+        ]
+      ],
+      "center": [
+        11.4559,
+        106.8527
+      ]
+    },
+    {
+      "code": "25366",
+      "area_id": "bp-695-25366",
+      "district": "695",
+      "ward": "Xã Thuận Lợi",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.581800000000001,
+          106.8206
+        ],
+        [
+          11.657,
+          106.96820000000001
+        ]
+      ],
+      "center": [
+        11.6194,
+        106.8944
+      ]
+    },
+    {
+      "code": "25369",
+      "area_id": "bp-695-25369",
+      "district": "695",
+      "ward": "Xã Đồng Tâm",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5581,
+          106.9627
+        ],
+        [
+          11.652199999999999,
+          107.09320000000001
+        ]
+      ],
+      "center": [
+        11.605149999999998,
+        107.02795
+      ]
+    },
+    {
+      "code": "25372",
+      "area_id": "bp-695-25372",
+      "district": "695",
+      "ward": "Xã Tân Phước",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4978,
+          106.9259
+        ],
+        [
+          11.5869,
+          107.143
+        ]
+      ],
+      "center": [
+        11.542349999999999,
+        107.03444999999999
+      ]
+    },
+    {
+      "code": "25375",
+      "area_id": "bp-695-25375",
+      "district": "695",
+      "ward": "Xã Tân Hưng",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4495,
+          106.9066
+        ],
+        [
+          11.528699999999999,
+          107.12960000000001
+        ]
+      ],
+      "center": [
+        11.4891,
+        107.0181
+      ]
+    },
+    {
+      "code": "25378",
+      "area_id": "bp-695-25378",
+      "district": "695",
+      "ward": "Xã Tân Lợi",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3718,
+          106.874
+        ],
+        [
+          11.4755,
+          107.07660000000001
+        ]
+      ],
+      "center": [
+        11.42365,
+        106.9753
+      ]
+    },
+    {
+      "code": "25381",
+      "area_id": "bp-695-25381",
+      "district": "695",
+      "ward": "Xã Tân Lập",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3085,
+          106.76939999999999
+        ],
+        [
+          11.4324,
+          106.9059
+        ]
+      ],
+      "center": [
+        11.37045,
+        106.83765
+      ]
+    },
+    {
+      "code": "25384",
+      "area_id": "bp-695-25384",
+      "district": "695",
+      "ward": "Xã Tân Hòa",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.301300000000001,
+          106.87639999999999
+        ],
+        [
+          11.4376,
+          107.042
+        ]
+      ],
+      "center": [
+        11.36945,
+        106.9592
+      ]
+    },
+    {
+      "code": "25387",
+      "area_id": "bp-695-25387",
+      "district": "695",
+      "ward": "Xã Thuận Phú",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5496,
+          106.76389999999999
+        ],
+        [
+          11.6345,
+          106.93400000000001
+        ]
+      ],
+      "center": [
+        11.59205,
+        106.84895
+      ]
+    },
+    {
+      "code": "25390",
+      "area_id": "bp-695-25390",
+      "district": "695",
+      "ward": "Xã Đồng Tiến",
+      "city": "Huyện Đồng Phú",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5306,
+          106.9131
+        ],
+        [
+          11.6096,
+          107.0408
+        ]
+      ],
+      "center": [
+        11.5701,
+        106.97695
+      ]
+    },
+    {
+      "code": "25396",
+      "area_id": "bp-696-25396",
+      "district": "696",
+      "ward": "Thị trấn Đức Phong",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7866,
+          107.21369999999999
+        ],
+        [
+          11.8261,
+          107.2673
+        ]
+      ],
+      "center": [
+        11.80635,
+        107.2405
+      ]
+    },
+    {
+      "code": "25398",
+      "area_id": "bp-696-25398",
+      "district": "696",
+      "ward": "Xã Đường 10",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.9282,
+          107.1133
+        ],
+        [
+          12.0372,
+          107.24210000000001
+        ]
+      ],
+      "center": [
+        11.982700000000001,
+        107.1777
+      ]
+    },
+    {
+      "code": "25399",
+      "area_id": "bp-696-25399",
+      "district": "696",
+      "ward": "Xã Đak Nhau",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.897,
+          107.21209999999999
+        ],
+        [
+          12.039299999999999,
+          107.31930000000001
+        ]
+      ],
+      "center": [
+        11.96815,
+        107.26570000000001
+      ]
+    },
+    {
+      "code": "25400",
+      "area_id": "bp-696-25400",
+      "district": "696",
+      "ward": "Xã Phú Sơn",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.823500000000001,
+          107.26599999999999
+        ],
+        [
+          12.007,
+          107.42760000000001
+        ]
+      ],
+      "center": [
+        11.91525,
+        107.3468
+      ]
+    },
+    {
+      "code": "25402",
+      "area_id": "bp-696-25402",
+      "district": "696",
+      "ward": "Xã Thọ Sơn",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.831100000000001,
+          107.24199999999999
+        ],
+        [
+          11.912899999999999,
+          107.3919
+        ]
+      ],
+      "center": [
+        11.872,
+        107.31694999999999
+      ]
+    },
+    {
+      "code": "25404",
+      "area_id": "bp-696-25404",
+      "district": "696",
+      "ward": "Xã Bình Minh",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7842,
+          107.05449999999999
+        ],
+        [
+          11.9119,
+          107.2518
+        ]
+      ],
+      "center": [
+        11.84805,
+        107.15315
+      ]
+    },
+    {
+      "code": "25405",
+      "area_id": "bp-696-25405",
+      "district": "696",
+      "ward": "Xã Bom Bo",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.842600000000001,
+          107.0646
+        ],
+        [
+          11.9484,
+          107.2239
+        ]
+      ],
+      "center": [
+        11.8955,
+        107.14425
+      ]
+    },
+    {
+      "code": "25411",
+      "area_id": "bp-696-25411",
+      "district": "696",
+      "ward": "Xã Đoàn Kết",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.732000000000001,
+          107.17519999999999
+        ],
+        [
+          11.876,
+          107.301
+        ]
+      ],
+      "center": [
+        11.804,
+        107.2381
+      ]
+    },
+    {
+      "code": "25414",
+      "area_id": "bp-696-25414",
+      "district": "696",
+      "ward": "Xã Đồng Nai",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.739700000000001,
+          107.2821
+        ],
+        [
+          11.844999999999999,
+          107.40960000000001
+        ]
+      ],
+      "center": [
+        11.792349999999999,
+        107.34585000000001
+      ]
+    },
+    {
+      "code": "25417",
+      "area_id": "bp-696-25417",
+      "district": "696",
+      "ward": "Xã Đức Liễu",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.685500000000001,
+          107.05909999999999
+        ],
+        [
+          11.7965,
+          107.1828
+        ]
+      ],
+      "center": [
+        11.741,
+        107.12095
+      ]
+    },
+    {
+      "code": "25420",
+      "area_id": "bp-696-25420",
+      "district": "696",
+      "ward": "Xã Thống Nhất",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5645,
+          107.14049999999999
+        ],
+        [
+          11.725,
+          107.2898
+        ]
+      ],
+      "center": [
+        11.64475,
+        107.21515
+      ]
+    },
+    {
+      "code": "25423",
+      "area_id": "bp-696-25423",
+      "district": "696",
+      "ward": "Xã Nghĩa Trung",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.571,
+          107.0486
+        ],
+        [
+          11.6886,
+          107.1593
+        ]
+      ],
+      "center": [
+        11.6298,
+        107.10395
+      ]
+    },
+    {
+      "code": "25424",
+      "area_id": "bp-696-25424",
+      "district": "696",
+      "ward": "Xã Nghĩa Bình",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6531,
+          107.06869999999999
+        ],
+        [
+          11.719899999999999,
+          107.17620000000001
+        ]
+      ],
+      "center": [
+        11.686499999999999,
+        107.12245
+      ]
+    },
+    {
+      "code": "25426",
+      "area_id": "bp-696-25426",
+      "district": "696",
+      "ward": "Xã Đăng Hà",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5006,
+          107.12169999999999
+        ],
+        [
+          11.631499999999999,
+          107.3228
+        ]
+      ],
+      "center": [
+        11.56605,
+        107.22225
+      ]
+    },
+    {
+      "code": "25429",
+      "area_id": "bp-696-25429",
+      "district": "696",
+      "ward": "Xã Phước Sơn",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6761,
+          107.17259999999999
+        ],
+        [
+          11.7805,
+          107.3061
+        ]
+      ],
+      "center": [
+        11.7283,
+        107.23935
+      ]
+    },
+    {
+      "code": "25441",
+      "area_id": "bp-696-25441",
+      "district": "696",
+      "ward": "Xã Minh Hưng",
+      "city": "Huyện Bù Đăng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7451,
+          107.09559999999999
+        ],
+        [
+          11.8295,
+          107.2236
+        ]
+      ],
+      "center": [
+        11.7873,
+        107.1596
+      ]
+    },
+    {
+      "code": "25432",
+      "area_id": "bp-697-25432",
+      "district": "697",
+      "ward": "Thị trấn Chơn Thành",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3948,
+          106.57879999999999
+        ],
+        [
+          11.4559,
+          106.65790000000001
+        ]
+      ],
+      "center": [
+        11.42535,
+        106.61834999999999
+      ]
+    },
+    {
+      "code": "25433",
+      "area_id": "bp-697-25433",
+      "district": "697",
+      "ward": "Xã Thành Tâm",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3536,
+          106.5719
+        ],
+        [
+          11.4115,
+          106.67920000000001
+        ]
+      ],
+      "center": [
+        11.38255,
+        106.62555
+      ]
+    },
+    {
+      "code": "25435",
+      "area_id": "bp-697-25435",
+      "district": "697",
+      "ward": "Xã Minh Lập",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.473600000000001,
+          106.72219999999999
+        ],
+        [
+          11.6044,
+          106.77730000000001
+        ]
+      ],
+      "center": [
+        11.539000000000001,
+        106.74975
+      ]
+    },
+    {
+      "code": "25439",
+      "area_id": "bp-697-25439",
+      "district": "697",
+      "ward": "Xã Quang Minh",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.5321,
+          106.6848
+        ],
+        [
+          11.607,
+          106.73960000000001
+        ]
+      ],
+      "center": [
+        11.56955,
+        106.7122
+      ]
+    },
+    {
+      "code": "25441",
+      "area_id": "bp-697-25441",
+      "district": "697",
+      "ward": "Xã Minh Hưng",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4547,
+          106.5564
+        ],
+        [
+          11.519599999999999,
+          106.6657
+        ]
+      ],
+      "center": [
+        11.48715,
+        106.61105
+      ]
+    },
+    {
+      "code": "25444",
+      "area_id": "bp-697-25444",
+      "district": "697",
+      "ward": "Xã Minh Long",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3703,
+          106.53939999999999
+        ],
+        [
+          11.4566,
+          106.60340000000001
+        ]
+      ],
+      "center": [
+        11.413450000000001,
+        106.5714
+      ]
+    },
+    {
+      "code": "25447",
+      "area_id": "bp-697-25447",
+      "district": "697",
+      "ward": "Xã Minh Thành",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.3823,
+          106.63879999999999
+        ],
+        [
+          11.5011,
+          106.72170000000001
+        ]
+      ],
+      "center": [
+        11.4417,
+        106.68025
+      ]
+    },
+    {
+      "code": "25450",
+      "area_id": "bp-697-25450",
+      "district": "697",
+      "ward": "Xã Nha Bích",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.4222,
+          106.65929999999999
+        ],
+        [
+          11.536299999999999,
+          106.7573
+        ]
+      ],
+      "center": [
+        11.47925,
+        106.7083
+      ]
+    },
+    {
+      "code": "25453",
+      "area_id": "bp-697-25453",
+      "district": "697",
+      "ward": "Xã Minh Thắng",
+      "city": "Huyện Chơn Thành",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.461,
+          106.6798
+        ],
+        [
+          11.5382,
+          106.75330000000001
+        ]
+      ],
+      "center": [
+        11.499600000000001,
+        106.71655000000001
+      ]
+    },
+    {
+      "code": "25240",
+      "area_id": "bp-698-25240",
+      "district": "698",
+      "ward": "Xã Long Bình",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7429,
+          106.7529
+        ],
+        [
+          11.8666,
+          106.88950000000001
+        ]
+      ],
+      "center": [
+        11.80475,
+        106.8212
+      ]
+    },
+    {
+      "code": "25243",
+      "area_id": "bp-698-25243",
+      "district": "698",
+      "ward": "Xã Bình Tân",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.728900000000001,
+          106.87459999999999
+        ],
+        [
+          11.826799999999999,
+          106.9638
+        ]
+      ],
+      "center": [
+        11.77785,
+        106.91919999999999
+      ]
+    },
+    {
+      "code": "25244",
+      "area_id": "bp-698-25244",
+      "district": "698",
+      "ward": "Xã Bình Sơn",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.8085,
+          106.8628
+        ],
+        [
+          11.8737,
+          106.9424
+        ]
+      ],
+      "center": [
+        11.8411,
+        106.9026
+      ]
+    },
+    {
+      "code": "25246",
+      "area_id": "bp-698-25246",
+      "district": "698",
+      "ward": "Xã Long Hưng",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.7395,
+          106.82639999999999
+        ],
+        [
+          11.8241,
+          106.90950000000001
+        ]
+      ],
+      "center": [
+        11.7818,
+        106.86795000000001
+      ]
+    },
+    {
+      "code": "25250",
+      "area_id": "bp-698-25250",
+      "district": "698",
+      "ward": "Xã Phước Tân",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.666500000000001,
+          106.9186
+        ],
+        [
+          11.804599999999999,
+          107.0844
+        ]
+      ],
+      "center": [
+        11.73555,
+        107.0015
+      ]
+    },
+    {
+      "code": "25252",
+      "area_id": "bp-698-25252",
+      "district": "698",
+      "ward": "Xã Bù Nho",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6731,
+          106.84509999999999
+        ],
+        [
+          11.7576,
+          106.92540000000001
+        ]
+      ],
+      "center": [
+        11.71535,
+        106.88525
+      ]
+    },
+    {
+      "code": "25255",
+      "area_id": "bp-698-25255",
+      "district": "698",
+      "ward": "Xã Long Hà",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.659500000000001,
+          106.741
+        ],
+        [
+          11.7829,
+          106.86170000000001
+        ]
+      ],
+      "center": [
+        11.7212,
+        106.80135000000001
+      ]
+    },
+    {
+      "code": "25258",
+      "area_id": "bp-698-25258",
+      "district": "698",
+      "ward": "Xã Long Tân",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.604800000000001,
+          106.7726
+        ],
+        [
+          11.7221,
+          106.88690000000001
+        ]
+      ],
+      "center": [
+        11.663450000000001,
+        106.82975
+      ]
+    },
+    {
+      "code": "25261",
+      "area_id": "bp-698-25261",
+      "district": "698",
+      "ward": "Xã Phú Trung",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.627500000000001,
+          106.9807
+        ],
+        [
+          11.7248,
+          107.0544
+        ]
+      ],
+      "center": [
+        11.67615,
+        107.01755
+      ]
+    },
+    {
+      "code": "25264",
+      "area_id": "bp-698-25264",
+      "district": "698",
+      "ward": "Xã Phú Riềng",
+      "city": "Huyện Phú Riềng",
+      "province": "binh-phuoc",
+      "bounds": [
+        [
+          11.6339,
+          106.8676
+        ],
+        [
+          11.730699999999999,
+          106.99900000000001
+        ]
+      ],
+      "center": [
+        11.6823,
+        106.9333
+      ]
+    }
+  ]
+}

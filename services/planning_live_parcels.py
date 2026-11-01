@@ -20,7 +20,16 @@ class SourceBusy(Exception):
 
 
 class LiveParcels:
+    query_path = PARCEL_QUERY
+    fallback_path = '/rest/thua-dat/query'
+    excluded_districts = LEGACY_DISTRICTS
+    all_where = EXPANDED_WHERE
     coordinate_bounds = (106.25, 8.5, 107.65, 11.65)
+    id_offset = 0
+    source = None
+
+    def _reference_key(self, code, district):
+        return code
 
     def __init__(self, client=None, cache_bytes=8_000_000):
         self.client = client or PublicGIS()
@@ -65,15 +74,15 @@ class LiveParcels:
                 return cached
             params = dict(params, f='json', outFields=FIELDS, returnGeometry='true', outSR=4326,
                           orderByFields='OBJECTID ASC', resultRecordCount=limit)
-            endpoint = PARCEL_QUERY if time.monotonic() >= self.native_retry_at else '/rest/thua-dat/query'
+            endpoint = self.query_path if time.monotonic() >= self.native_retry_at or not self.fallback_path else self.fallback_path
             try:
                 data = self.client.request(endpoint, params=params)
             except ValueError:
-                if endpoint != PARCEL_QUERY:
+                if endpoint != self.query_path or not self.fallback_path:
                     raise
                 # The same public source exposes a REST adapter when native
                 # ArcGIS intermittently returns 400/non-JSON. Validate it identically.
-                endpoint = '/rest/thua-dat/query'
+                endpoint = self.fallback_path
                 self.native_retry_at = time.monotonic()+60
                 data = self.client.request(endpoint, params=params)
             if not isinstance(data, dict):
@@ -90,12 +99,16 @@ class LiveParcels:
                 if not isinstance(row, dict) or not isinstance(row.get('attributes'), dict):
                     raise ValueError('Invalid source feature')
                 attr = row['attributes']
-                oid = attr['OBJECTID']
+                raw_oid = attr['OBJECTID']
+                if type(raw_oid) is not int or not 0 < raw_oid < 2**53 - self.id_offset:
+                    raise ValueError('Invalid source object identifier')
+                oid = raw_oid + self.id_offset
                 code, district = str(attr.get('MaPhuongXa')), str(attr.get('MaQuanHuyen'))
-                ref = self.by_area.get(code)
+                reference_key = self._reference_key(code, district)
+                ref = self.by_area.get(reference_key)
                 if (type(oid) is not int or not 0 < oid < 2**53 or oid in seen
-                        or district in LEGACY_DISTRICTS or not ref or ref['district'] != district
-                        or (area is not None and code != area) or (identifier is not None and oid != identifier)):
+                        or district in self.excluded_districts or not ref or ref['district'] != district
+                        or (area is not None and reference_key != area) or (identifier is not None and oid != identifier)):
                     raise ValueError('Parcel membership mismatch')
                 seen.add(oid)
                 props = {}
@@ -117,7 +130,8 @@ class LiveParcels:
                         or sum(len(r) for r in rings) > 20000 or any(
                         len(r) < 4 or r[0] != r[-1] or any(not isinstance(p, list) or len(p) != 2 or any(
                             type(v) not in (int, float) or not math.isfinite(v) for v in p)
-                            or not (106.25 <= p[0] <= 107.65 and 8.5 <= p[1] <= 11.65)
+                            or not (self.coordinate_bounds[0] <= p[0] <= self.coordinate_bounds[2]
+                                    and self.coordinate_bounds[1] <= p[1] <= self.coordinate_bounds[3])
                             for p in r) for r in rings)):
                     excluded += 1
                     continue
@@ -135,7 +149,9 @@ class LiveParcels:
                     # actual intersections in the requested geographic viewport.
                     outside += 1
                     continue
-                props.update(id=oid, area_id=code, ward=ref['ward'], city=ref['city'])
+                props.update(id=oid, area_id=reference_key, ward=ref['ward'], city=ref['city'])
+                if self.source:
+                    props.update(source=self.source, province=ref['province'], source_id=raw_oid)
                 features.append({'type': 'Feature', 'id': oid, 'properties': props, 'geometry': geometry})
             if rows and outside == len(rows):
                 raise ValueError('Source ignored viewport')
@@ -149,7 +165,7 @@ class LiveParcels:
 
     def viewport(self, bbox):
         west, south, east, north = bbox
-        return self._query(('viewport', *bbox), {'where': EXPANDED_WHERE,
+        return self._query(('viewport', *bbox), {'where': self.all_where,
             'geometry': json.dumps({'xmin': west, 'ymin': south, 'xmax': east, 'ymax': north,
                                    'spatialReference': {'wkid': 4326}}),
             'geometryType': 'esriGeometryEnvelope', 'inSR': 4326,
@@ -160,7 +176,7 @@ class LiveParcels:
         west, south, east, north = self.coordinate_bounds
         if not (west <= longitude <= east and south <= latitude <= north):
             return dict(type='FeatureCollection', features=[], matched=0, truncated=False)
-        result = self._query(('point', longitude, latitude), dict(where=EXPANDED_WHERE,
+        result = self._query(('point', longitude, latitude), dict(where=self.all_where,
             geometry=json.dumps({'x': longitude, 'y': latitude, 'spatialReference': {'wkid': 4326}}),
             geometryType='esriGeometryPoint', inSR=4326, spatialRel='esriSpatialRelIntersects'), limit=20)
         point = Point(longitude, latitude)
@@ -171,9 +187,9 @@ class LiveParcels:
 
     def _area_where(self, area):
         ref = self.by_area.get(area)
-        if not ref or ref['district'] in LEGACY_DISTRICTS:
+        if not ref or ref['district'] in self.excluded_districts:
             raise ValueError('Unsupported live parcel area')
-        return "MaPhuongXa = '%s' AND MaQuanHuyen = '%s'" % (area, ref['district'])
+        return "MaPhuongXa = '%s' AND MaQuanHuyen = '%s'" % (ref['code'], ref['district'])
 
     def search(self, area, sheet, parcel):
         # Values are SQL literals for the fixed source endpoint, never identifiers/URLs.
@@ -187,9 +203,9 @@ class LiveParcels:
         return features[0] if features else None
 
     def feature(self, identifier, area=None):
-        if type(identifier) is not int or not 0 < identifier < 2**53:
+        if type(identifier) is not int or not self.id_offset < identifier < 2**53:
             return None
-        if area is not None and (area not in self.by_area or self.by_area[area]['district'] in LEGACY_DISTRICTS):
+        if area is not None and (area not in self.by_area or self.by_area[area]['district'] in self.excluded_districts):
             return None
         with self.lock:
             cached = [raw for when, raw in self.cache.values() if time.monotonic()-when < 300]
@@ -197,7 +213,7 @@ class LiveParcels:
             for feature in json.loads(raw)['features']:
                 if feature['id'] == identifier:
                     return feature if area is None or feature['properties']['area_id'] == area else None
-        where = (self._area_where(area) if area else EXPANDED_WHERE) + ' AND OBJECTID = ' + str(identifier)
+        where = (self._area_where(area) if area else self.all_where) + ' AND OBJECTID = ' + str(identifier-self.id_offset)
         result = self._query(('id', identifier, area), {'where': where}, identifier=identifier, area=area, limit=1)
         return result['features'][0] if result['features'] else None
 

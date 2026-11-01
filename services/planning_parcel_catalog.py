@@ -145,9 +145,9 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
     catalog = ParcelCatalog(path)
     areas = {a['area_id']:a for a in catalog.areas}
     if expanded is True:
-        from services.planning_live_parcels import LiveParcels
-        expanded = LiveParcels()
-    live_areas = {a['code']: a for a in expanded.areas} if expanded else {}
+        from services.planning_dongnai_parcels import RegionalParcels
+        expanded = RegionalParcels()
+    live_areas = {a.get('area_id', a['code']): a for a in expanded.areas} if expanded else {}
 
     def source_result(callback):
         import requests
@@ -182,7 +182,9 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
             from config.planning_regions import HCM_EXPANDED_BOUNDS
             result.update(areas=[dict(a, **areas.get(a['code'], {})) for a in expanded.areas],
                           navigation_areas=expanded.areas, live_expanded=True,
-                          coverage_bounds=HCM_EXPANDED_BOUNDS, count_scope='historic_binh_duong_snapshot')
+                          coverage_bounds=getattr(expanded, 'coverage_bounds', HCM_EXPANDED_BOUNDS),
+                          regional_sources=hasattr(expanded, 'dongnai'),
+                          count_scope='historic_binh_duong_snapshot')
         if 'planning_parcel_cells' in app.extensions:
             result['parcel_cells'] = app.extensions['planning_parcel_cells']
         return jsonify(result)
@@ -214,7 +216,8 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
     def parcel_viewport():
         from services.planning_parcels import parcel_bbox
         try:
-            bbox = parcel_bbox(request.args.get('bbox',''), expanded=bool(expanded))
+            bbox = parcel_bbox(request.args.get('bbox',''), expanded=bool(expanded),
+                               coverage_bounds=getattr(expanded, 'coverage_bounds', None))
         except ValueError:
             return jsonify(error='Vùng xem không hợp lệ. Hãy phóng to bản đồ.'),400
         features,count = catalog.viewport(bbox)

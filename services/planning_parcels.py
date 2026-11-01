@@ -274,11 +274,14 @@ def install_parcel_pilot(app, directory):
     install_planning_lookup(app, lambda identifier: lookup.get(str(identifier)))
 
 
-def parcel_bbox(value, expanded=False):
+def parcel_bbox(value, expanded=False, coverage_bounds=None):
     west, south, east, north = map(float, value.split(','))
     min_south, max_east = (8.5, 107.65) if expanded else (10.75, 107.1)
+    max_north = 11.65
+    if coverage_bounds:
+        min_south, max_north = coverage_bounds[0][0], coverage_bounds[1][0]
     if not all(math.isfinite(v) for v in (west, south, east, north)) or not (
-        106.25 <= west < east <= max_east and min_south <= south < north <= 11.65
+        106.25 <= west < east <= max_east and min_south <= south < north <= max_north
         and east-west <= .05 and north-south <= .05):
         raise ValueError('Invalid viewport')
     return west, south, east, north
@@ -286,7 +289,10 @@ def parcel_bbox(value, expanded=False):
 
 def install_planning_lookup(app, feature_by_id, prefix='/local-planning/parcels'):
     from flask import abort, jsonify
+    from shapely.errors import GEOSException
+    from services.planning_dongnai_info import DongNaiPlanning
     client, cache = PublicGIS(), {}
+    dongnai = DongNaiPlanning()
     gate = threading.BoundedSemaphore(2)
 
     @app.get(prefix+'/<int:identifier>/planning.json')
@@ -301,18 +307,26 @@ def install_planning_lookup(app, feature_by_id, prefix='/local-planning/parcels'
             if feature is None:
                 abort(404)
             cached = cache.get(identifier)
-            if cached and time.monotonic()-cached[0] < 300:
+            if cached and time.monotonic()-cached[0] < (15 if cached[1].get('unavailable_layers') else 300):
                 return jsonify(cached[1])
-            plans = planning_info(client.request('/thong-tin-quy-hoach/dnm', body={'objectId': identifier}))
-            result = {'parcel': feature['properties'], 'plans': plans, 'source': SOURCE,
+            is_dongnai = feature['properties'].get('source') == 'https://gis.dongnai.gov.vn/'
+            regional = dongnai.lookup(feature) if is_dongnai else None
+            plans = regional['plans'] if is_dongnai else planning_info(
+                client.request('/thong-tin-quy-hoach/dnm', body={'objectId': identifier}))
+            result = {'parcel': feature['properties'], 'plans': plans,
+                      'source': feature['properties']['source'] if is_dongnai else SOURCE,
                       'queried_at': datetime.now(timezone.utc).isoformat()}
+            if is_dongnai:
+                result.update(intersection_method='geodesic_wgs84',
+                              planning_scope=['detailed', 'general_urban'],
+                              unavailable_layers=regional['unavailable_layers'])
             if len(cache) >= 128:
                 cache.pop(next(iter(cache)))
             cache[identifier] = time.monotonic(), result
             return jsonify(result)
         except SourceBusy:
             return jsonify(error='GIS đang bận. Vui lòng thử lại sau.'), 503
-        except (requests.RequestException, ValueError, KeyError, TypeError):
+        except (requests.RequestException, ValueError, KeyError, TypeError, GEOSException):
             return jsonify(error='Chưa lấy được thông tin từ GIS. Không thể kết luận quy hoạch thửa này.'), 502
         finally:
             gate.release()
