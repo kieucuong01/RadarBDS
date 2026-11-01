@@ -2,18 +2,33 @@
 
 ## Detailed OSM labels (2026-11-01)
 
-At every zoom, satellite names now use OSM Shortbread. `place_labels` appear
-from zoom 3, major `street_labels` from zoom 9, minor roads from zoom 15, and
-named `pois` from zoom 17. No street-map background or road
-painting is included. Canvas text is laid out again at each display zoom instead
+At zoom 15+, satellite names use OSM Shortbread. Below zoom 15, a sparse custom
+guide paints existing motorway/trunk/primary/secondary roads red with
+their name and route ref (for example QL13/ĐT744). It does not show neighbourhood,
+ward, or POI names, and does not use the planning transport layer or proposed roads.
+At detailed zoom, guide strokes disappear; major/minor `street_labels` and
+`place_labels` appear, with named `pois` from zoom 17. No opaque street-map
+background is painted. Both views reuse one Canvas layer and its native-tile cache.
+Canvas text is laid out again at each display zoom instead
 of enlarging old raster text. Local street names are not filtered by road class.
+
+Overview labels use name/ref anchors on major-road geometry with a 240 px repeat
+exclusion for the same route. Bridge/intersection POI names do not replace the
+road guide. Detail mode retains the original road-following OSM labels.
+
+Local performance check on 2026-11-01: two short pans back and forth within loaded
+overview coverage caused zero `/api/map-labels/osm/` requests. Across those actions,
+whole-page CDP counters recorded 63 ms script CPU and 12 ms layout CPU (includes
+other page work; this is not a frame-time or load-capacity measurement).
 
 The 100 KB Protomaps Leaflet 4.0.1 renderer is lazy loaded from a local vendored
 file. Its one local patch rejects non-2xx vector responses before protobuf parsing;
 otherwise an HTTP error could be silently treated as a blank tile. Fetches queue
-at two concurrent reads and cancel on base switch/map removal. There is no Esri
-name overlay, including at overview zoom or after upstream failure. A failed load
-leaves satellite imagery visible and reports that OSM names could not be loaded.
+at two concurrent reads and cancel on base switch/map removal. A change of native
+zoom drops queued reads and retry timers for the old zoom. Transient HTTP 502/503/504
+reads retry once (400 ms, or 2 seconds for local 503 backpressure). A failed tile
+keeps the successfully drawn tiles instead of removing the entire layer. There is
+no Esri name overlay at overview zoom or after upstream failure.
 
 `/api/map-labels/osm/{z}/{x}/{y}.mvt` (native zoom 0–14) is a fixed-host, bounded gateway because both
 deployed CSP headers restrict `connect-src`. It never forwards user credentials,

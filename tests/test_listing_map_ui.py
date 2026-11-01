@@ -411,7 +411,7 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/boot.js') }}?v=dong-nai-2030-20261029" in template
     assert "js/main/planning_parcels.js') }}?v=corner-scan-20261101" in template
     assert "js/main/planning_overlay.js') }}?v=satellite-labels-20261101" in template
-    assert "js/main/satellite_osm_labels.js') }}?v=satellite-osm-20261101" in template
+    assert "js/main/satellite_osm_labels.js') }}?v=satellite-road-guide-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template
     assert "listing-map-price-zoom-20260813" not in template
     assert "listing-map-compact-labels-20260813" not in template
