@@ -346,6 +346,18 @@ def add_response_headers(response):
         else:
             response.headers.pop("X-Radar-Public-Cache", None)
             response.headers["Cache-Control"] = "private, no-store"
+    elif request.endpoint == "osm_label_tile":
+        # Fixed public geometry can cache in the browser without joining the edge allowlist.
+        response.headers.pop("X-Radar-Public-Cache", None)
+        if (request.method in {"GET", "HEAD"} and response.status_code == 200
+                and response.mimetype == "application/vnd.mapbox-vector-tile"
+                and SESSION_COOKIE_NAME not in request.cookies
+                and "Authorization" not in request.headers and "Set-Cookie" not in response.headers):
+            response.headers["Cache-Control"] = "public, max-age=604800"
+            response.vary.add("Cookie")
+            response.vary.add("Authorization")
+        else:
+            response.headers["Cache-Control"] = "private, no-store"
     elif request.path.startswith("/api/"):
         public_cache_classified = (
             request.path

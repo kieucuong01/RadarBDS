@@ -12,6 +12,23 @@ PUBLIC_CACHE_CONTROL = (
 )
 
 
+def test_osm_geometry_browser_cache_does_not_expand_edge_allowlist(client, monkeypatch):
+    cache = radar_app.app.extensions['osm_label_tiles']
+    monkeypatch.setattr(cache, 'get', lambda *args: b'\x1a\x00')
+    path = '/api/map-labels/osm/14/13044/7687.mvt'
+    response = client.get(path)
+    assert response.status_code == 200
+    assert response.headers['Cache-Control'] == 'public, max-age=604800'
+    assert 'X-Radar-Public-Cache' not in response.headers
+    assert 'Pragma' not in response.headers
+    response = client.get(path, headers={'Authorization':'Bearer test-only'})
+    assert response.headers['Cache-Control'] == 'private, no-store'
+    client.set_cookie(SESSION_COOKIE_NAME, 'test-only')
+    response = client.get(path)
+    assert response.headers['Cache-Control'] == 'private, no-store'
+    assert 'X-Radar-Public-Cache' not in response.headers
+
+
 def test_public_html_timing_does_not_expand_public_cache_allowlist():
     response = radar_app.app.test_client().get("/chinh-sach-bao-mat")
     assert response.status_code == 200
