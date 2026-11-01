@@ -1,10 +1,37 @@
 # Phân khu tham khảo ngoài TP.HCM mới
 
-Ngày kiểm: 2026-11-01. Hiện có **416 nguồn phân khu tham khảo ở48 tỉnh cũ ngoài HCM/BD/BRVT**
-đã đăng ký local, chưa push/deploy. Người dùng chọn dùng Guland cho phần mở rộng, theo quy
+Ngày kiểm: 2026-11-01. Hiện chỉ giữ **16 lớp phân khu tổng ngoài HCM/BD/BRVT**.
+Theo yêu cầu mới, đã gỡ400 đồ án lấy từ QH khác vì chồng với lớp tổng; các số liệu
+ghép huyện phía dưới là lịch sử đã ngừng dùng. Người dùng chọn dùng Guland cho phần mở rộng, theo quy
 trình đã lấy QH2030. GIS TP.HCM/Bình Dương/BRVT hiện có giữ nguyên.
 
-## Đợt ghép đồ án theo huyện — trạng thái hiện tại
+## Sửa zoom xa và bỏ QH khác — yêu cầu mới nhất
+
+Chỉ public các entries có source_url `/soi-quy-hoach/` và control phân khu tổng đã
+kiểm; không append `xem-quy-hoach`/scheme của QH khác vào theme partition. Địa bàn
+không còn nguồn tổng không hiển thị nút phân khu. GIS HCM/BD/BRVT và các theme khác giữ nguyên.
+
+Nguồn tổng Bình Phước không có ảnh zoom0–14; đơn giản hạ minNativeZoom sẽ gọi ảnh
+không tồn tại, hoặc fan-out hàng nghìn ô zoom15. `scripts/build_planning_overview.py`
+chuẩn bị offline8742 ô zoom15 (4 kết nối, TLS, host từ registry, ảnh256/512), ghép XYZ
+và downsample thành3069 PNG zoom0–14. `config/planning_overviews.json` lưu hash từng
+file và release `035963b04e2436b6`; lần chuẩn bị này không có ô thiếu. Không dùng
+2030/chung/đồ án lẻ làm ảnh thay thế. File gốc và pyramid là runtime ignored,
+không commit PNG. Pyramid khoảng92.5MB; chỉ vài ô của viewport được tải khi xem.
+
+Deploy phải chuyển đủ artifact vào `static/maps/planning/overlays/<release>/overviews/<layer>/`,
+kiểm SHA256 đủ3069 files trước khi bật config. URL ảnh có `?v=<release>` để cache
+immutable. `manifest.overview` trong exact rules chỉ định template/min/maxzoom;
+`displayMinZoom` và tileoptions dùng mức tổng quan, loader chọn ảnh tổng quan khi
+coords.z<=14, zoom15+ vẫn URL nguồn gốc. Không nâng minNativeZoom15 ở zoom xa.
+Opacity50%, queue4, timeout/abort/unload và source bounds giữ nguyên. Version mới
+cho HTML/catalogue/JS tránh trộn catalogue400 sheet cũ với rules16 lớp mới.
+
+Test ghép XYZ/quadrants/alpha và hashrelease; runtime mount zoom13→9→0→17 giữ lớp,
+test loader lấy đúng một ô overview thấp và đúng nguồn gốc ở15. Đây là overview
+Bình Phước; các nguồn tổng khác chưa có overview vẫn theo mức zoom đã kiểm của nguồn.
+
+## Đợt ghép đồ án theo huyện — lịch sử, đã gỡ khỏi public
 
 Theo yêu cầu người dùng, mở rộng từ huyện mặc định sang **671 huyện cũ của60 tỉnh**.
 Chọn mã huyện cũ từ options công khai, đối chiếu mã/tên với navigation; không nhầm

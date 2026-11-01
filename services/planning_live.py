@@ -100,7 +100,7 @@ def install_live(app,site):
     from config.planning_regions import PARTITION_REFERENCE_LAYERS, LANDUSE_2030_LAYERS, VISION_100_LAYERS, TRANSPORT_LAYERS, ADMINISTRATIVE_LAYERS
     layers.extend((*PARTITION_REFERENCE_LAYERS, *LANDUSE_2030_LAYERS, *VISION_100_LAYERS, *TRANSPORT_LAYERS, *ADMINISTRATIVE_LAYERS))
     app.config['PLANNING_OVERLAY_CONFIG']={
-        'catalogUrl':'/api/planning/catalog.json',
+        'catalogUrl':'/api/planning/catalog.json?v=partition-summary-overview-20261101',
         'assetBase':old['assetBase'] if old else '/static/maps/planning/overlays/',
         'parcelBase':'/api/planning/parcels','release':config['release']}
     @app.get('/api/planning/catalog.json')

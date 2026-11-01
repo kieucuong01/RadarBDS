@@ -48,13 +48,14 @@ def test_partition_registry_matches_observed_controls_and_positive_tiles():
         assert PARTITION_SOURCE_RULES[layer['id']]['tile_template'] == manifest['tile_template']
 
 
-def test_scheme_sources_are_added_only_after_readable_close_zoom_samples():
+def test_public_partition_sources_use_only_the_provincial_partition_controls():
     from config.planning_regions import PARTITION_REFERENCE_LAYERS
 
     scheme_provinces = {l['coverage_provinces'][0] for l in PARTITION_REFERENCE_LAYERS
                         if '/xem-quy-hoach/' in l['source_url']}
-    assert scheme_provinces >= {'bac-kan', 'can-tho', 'ha-nam', 'hung-yen', 'nghe-an',
-                                'quang-ngai', 'son-la', 'thanh-hoa', 'vinh-long', 'yen-bai'}
+    assert scheme_provinces == set()
+    assert len(PARTITION_REFERENCE_LAYERS) == 16
+    assert all('/soi-quy-hoach/' in l['source_url'] for l in PARTITION_REFERENCE_LAYERS)
 
 
 def test_historic_district_survey_groups_verified_sheets_with_local_load_envelopes():
@@ -69,7 +70,8 @@ def test_historic_district_survey_groups_verified_sheets_with_local_load_envelop
     assert len({d['province'] for d in districts}) == 60
     assert all(d['status'] == 1 and 'district_id=' + d['district_id'] in d['request_url'] for d in districts)
     counts = Counter(l['coverage_provinces'][0] for l in PARTITION_REFERENCE_LAYERS)
-    assert counts['long-an'] >= 2 and counts['dong-nai'] >= 2
+    assert 'long-an' not in counts and 'dong-nai' not in counts
+    assert all(count == 1 for count in counts.values()), 'QH khác sheets must not overlap the provincial partition raster'
     assert not any(p in counts for p in ('hcm', 'binh-duong', 'brvt'))
     assert len(PARTITION_REFERENCE_LAYERS) < 800
     templates = [(l['coverage_provinces'][0], l['manifest']['tile_template']) for l in PARTITION_REFERENCE_LAYERS]

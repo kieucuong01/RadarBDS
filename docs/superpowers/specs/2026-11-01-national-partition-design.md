@@ -1,6 +1,8 @@
 # QH Phân khu các tỉnh còn lại — nguồn Guland
 
-Ngày: 2026-11-01. Trạng thái: **đã triển khai local416 nguồn ở48 tỉnh cũ; chưa push/deploy, chưa phủ đủ các tỉnh còn lại**.
+Ngày: 2026-11-01. Trạng thái hiện tại: **người dùng đã bỏ phương án ghép QH khác;
+chỉ giữ16 lớp phân khu tổng, thêm pyramid tổng quan Bình Phước**. Bản ghép416 nguồn
+đã từng deploy tại `f7784145`; phần dưới là thiết kế lịch sử, không được tự bật lại.
 Baseline: `945274fc`, `docs/maps-agent-guide.md`.
 
 ## Yêu cầu mới nhất

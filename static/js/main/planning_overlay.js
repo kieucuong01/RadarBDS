@@ -25,6 +25,8 @@
     return template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png' ? 19 : 0;
   }
 
+  function displayMinZoom(data) { return data.overview ? data.overview.min_zoom : data.min_zoom || 8; }
+
   function validManifest(data, landuseRules, partitionRules) {
     if (!data || !/^[a-z0-9-]+$/.test(data.id || '') || ['local_experiment','reference_overlay'].indexOf(data.status) < 0) return false;
     var rule = partitionRules && partitionRules[data.id] || landuseRules && landuseRules[data.id];
@@ -32,7 +34,7 @@
       && data.source_tiles === undefined && data.planning_status !== 'draft'
       && validBounds(data.bounds,[7,101,24,118])
       && (data.focus_bounds === undefined || validBounds(data.focus_bounds,[7,101,24,118]))
-      && ['tile_template','bounds','focus_bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
+      && ['tile_template','bounds','focus_bounds','overview','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
         return JSON.stringify(data[key]) === JSON.stringify(rule[key]);
       }) && typeof data.title === 'string' && typeof data.notice === 'string';
     if (data.render_mode === 'geojson' && ['official_gis_administrative','open_administrative_reference'].indexOf(data.source_kind)>=0)
@@ -252,7 +254,7 @@
       map.fire('planning:area-change');
       var partitionItems=wantedItems(true).filter(function(item){return item.theme==='partition'&&item.source==='guland';});
       if(!area.district && partitionItems.some(function(item){return item.manifest.focus_bounds;})){focusProvince();return;}
-      if(partitionItems.length)area=Object.assign({},area,{min_zoom:Math.max(area.min_zoom||8,Math.min.apply(null,partitionItems.map(function(item){return item.manifest.min_zoom||8;})))});
+      if(partitionItems.length)area=Object.assign({},area,{min_zoom:Math.max(area.min_zoom||8,Math.min.apply(null,partitionItems.map(function(item){return displayMinZoom(item.manifest);})))});
       env.RadarPlanningArea.focus(map,L,area);
     });
     var box = node('details', toolbar);
@@ -472,7 +474,7 @@
           : 'Ngoài vùng có dữ liệu. Chọn “Xem vùng có quy hoạch”.';
       } else status.textContent = 'Vùng nhìn chưa có lớp đang bật. Kéo bản đồ để xem vùng lân cận hoặc chọn “Xem vùng có quy hoạch”.';
       if (!entries.length && typeof map.getZoom === 'function' && wantedItems(true).some(function(item){
-        return nearSource(item) && map.getZoom() < (item.manifest.min_zoom || 8);
+        return nearSource(item) && map.getZoom() < displayMinZoom(item.manifest);
       })) {
         status.textContent = 'Phóng to để xem lớp quy hoạch; nguồn này chưa có ảnh tổng quan ở mức thu nhỏ hiện tại.';
         zoomHint.hidden=!selectedProvince;
@@ -502,7 +504,7 @@
     function nearSource(item) { return map.getBounds().intersects(overlayBounds(item)); }
     function focusProvince() {
       var items=wantedItems(true).filter(function(item){return item.theme===activeTheme.id;});
-      var minimum=items.length?Math.min.apply(null,items.map(function(item){return item.manifest.min_zoom||8;})):8;
+      var minimum=items.length?Math.min.apply(null,items.map(function(item){return displayMinZoom(item.manifest);})):8;
       var scheme=activeTheme.id==='partition' && activeTheme.source.value==='guland' && items.find(function(item){return item.manifest.focus_bounds;});
       env.RadarPlanningArea.focus(map,L,{bounds:scheme?scheme.manifest.focus_bounds:selectedProvince.focus_bounds||selectedProvince.bounds,
         district:'',min_zoom:Math.max(selectedProvince.min_zoom||8,minimum)});
@@ -512,7 +514,7 @@
       var viewport = map.getBounds();
       var near = typeof viewport.pad === 'function' ? viewport.pad(0.05) : viewport;
       var desired = wantedItems(true).filter(function (item) {
-        return (typeof map.getZoom !== 'function' || map.getZoom() >= (item.manifest.min_zoom || 8))
+        return (typeof map.getZoom !== 'function' || map.getZoom() >= displayMinZoom(item.manifest))
           && near.intersects(overlayBounds(item)) && (item.manifest.coverage_windows || [item.manifest.bounds]).some(function (b) { return near.intersects(b); });
       });
       var desiredIds = new Set(desired.map(function (item) { return item.id; }));
@@ -534,7 +536,7 @@
         var tiled = data.render_mode === 'xyz';
         var tileBounds = overlayBounds(item);
         var tileOptions = Object.assign({}, layerOptions, {
-          bounds:tileBounds, tileSize:256, minZoom:data.min_zoom || 8, minNativeZoom:data.min_native_zoom || 8,
+          bounds:tileBounds, tileSize:256, minZoom:displayMinZoom(data), minNativeZoom:data.overview ? data.overview.min_zoom : data.min_native_zoom || 8,
           maxZoom:23, maxNativeZoom:data.max_native_zoom || 23,
           updateWhenIdle:true, updateWhenZooming:false, keepBuffer:1
         });

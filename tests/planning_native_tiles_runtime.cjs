@@ -27,6 +27,12 @@ function referenceQueueTest() {
  });
  assert(fresh.src.endsWith('/16/4/9.png'),'New zoom starts without waiting15seconds');
  [...timers.values()][0].fn();assert.equal(completed,1);assert.equal(timers.size,0);zoomLayer.events.remove();
+ const overview={...source,overview:{tile_template:'/static/overview/{z}/{x}/{y}.png',min_zoom:0,max_zoom:14}};
+ const broad=api.createReference({TileLayer:Tile},env,overview,{});
+ const low=broad.createTile({z:8,x:203,y:120},()=>{});
+ assert.equal(low.src,'/static/overview/8/203/120.png','Zooming out uses one prepared overview tile, not native zoom15 children');low.onload();
+ const close=broad.createTile({z:15,x:26000,y:15000},()=>{});
+ assert.equal(close.src,'https://public.example/15/26000/15000.png','Close zoom retains the exact original source');broad.events.remove();
 }
 referenceQueueTest();
 function harness() {

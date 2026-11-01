@@ -138,6 +138,10 @@ Theme IDs: `partition`, `urban_general`, `detailed`, `land_use_2030`,
   provider thuộc tỉnh chọn mới eligible; shared provider không bật hai tỉnh cùng lúc.
 - Không tải tất cả tỉnh/phường. Dùng viewport, native min/max zoom và coverage
   windows; không có pyramid thấp thì yêu cầu zoom gần, không fan-out hàng trăm ô.
+- Bình Phước có pyramid tổng quan offline zoom0–14 từ chính nguồn tổng zoom15,
+  giữ lớp khi zoom xa. Xem `planning_sources/national-partition.md` và
+  `config/planning_overviews.json`; artifact phải upload/hash-check trước bật.
+  Không ghép lại QH khác vào phân khu:400 sheet lẻ đã gỡ theo yêu cầu mới.
 - GIS phân khu/chung/chi tiết có primary + supplement. Native ArcGIS dùng
   `/tile/{z}/{y}/{x}`; Leaflet/gateway dùng `{z}/{x}/{y}`. Giữ template nguyên dạng
   đã kiểm; không tự đảo trục hoặc xem bounds lat/lon như GeoJSON lon/lat.

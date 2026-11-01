@@ -62,7 +62,7 @@
           tile.onerror=function(){finish(new Error('Planning image unavailable'));};
           // TileLayer ignores completion for its exact empty-image sentinel.
           timer=env.setTimeout(function(){tile.src=emptyImage+'#timeout';finish(new Error('Planning image timed out'));},15000);
-          tile.src=url(manifest.tile_template,coords);
+          tile.src=url(manifest.overview && coords.z<=manifest.overview.max_zoom ? manifest.overview.tile_template : manifest.tile_template,coords);
         });
         return tile;
       }

@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const api = require('../static/js/main/planning_overlay.js');
 const nationalLanduse = require('../config/planning_landuse_2030.json').layers;
-const ruleKeys=['tile_template','bounds','focus_bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
+const ruleKeys=['tile_template','bounds','focus_bounds','overview','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
 const nationalRules=Object.fromEntries(nationalLanduse.map(l=>[l.id,Object.fromEntries(ruleKeys.filter(k=>l.manifest[k]!==undefined).map(k=>[k,l.manifest[k]]))]));
 const referenceTemplate = 'https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png';
 assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1630,y:960}),
@@ -452,18 +452,20 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const bpActive=rh.nodes.find(x=>x.attributes['aria-label']==='Lớp điều chỉnh độ hiển thị');
   bpActive.value='partition';bpActive.events.change();
   rh.nodes.find(x=>x.textContent==='Xem vùng có quy hoạch').events.click();
-  assert.equal(rh.map.view.zoom,ref.manifest.min_zoom,'Fit reference planning must respect a native zoom floor above the whole-province fit');
+  if(ref.manifest.overview)assert(rh.map.view.zoom<ref.manifest.min_zoom,'Prepared overview no longer forces users to native zoom15');
+  else assert.equal(rh.map.view.zoom,ref.manifest.min_zoom,'Fit reference planning must respect a native zoom floor above the whole-province fit');
   assert.equal(rh.map.fitted,undefined,'Reference fit must not zoom back out and remove all imagery');
   rh.dispose();
-  const scheme=require('../config/planning_partition_reference.json').layers.find(x=>x.coverage_provinces.includes('can-tho'));
-  const schemeProvince=require('../config/planning_landuse_areas.json').provinces.find(x=>x.id==='can-tho');
-  const schemeRules={[scheme.id]:{...Object.fromEntries(ruleKeys.filter(k=>scheme.manifest[k]!==undefined).map(k=>[k,scheme.manifest[k]])),source_url:scheme.source_url,coverage_provinces:scheme.coverage_provinces,area_id:scheme.area_id}};
-  const sh=harness(undefined,undefined,scheme.manifest.bounds,'partition',{initialRegion:scheme.area_id},
-    {RADAR_LANDUSE_AREAS:[schemeProvince],RADAR_PARTITION_SOURCE_RULES:schemeRules,RadarPlanningArea:require('../static/js/main/planning_area.js')});
-  sh.deliver({layers:[scheme]});await flush();
-  sh.nodes.find(x=>x.textContent==='Xem vùng có quy hoạch').events.click();
-  assert.deepEqual(sh.map.view.center,{lat:(scheme.manifest.focus_bounds[0][0]+scheme.manifest.focus_bounds[1][0])/2,lng:(scheme.manifest.focus_bounds[0][1]+scheme.manifest.focus_bounds[1][1])/2},'Fit a partial scheme at observed imagery, not the empty provincial centre');
-  sh.dispose();
+  const overviewRef={...ref,id:'overview-test',manifest:{...ref.manifest,id:'overview-test',overview:{tile_template:'/static/overview/{z}/{x}/{y}.png',min_zoom:0,max_zoom:14}}};
+  const overviewRules={[overviewRef.id]:{...Object.fromEntries(ruleKeys.filter(k=>overviewRef.manifest[k]!==undefined).map(k=>[k,overviewRef.manifest[k]])),source_url:overviewRef.source_url,coverage_provinces:overviewRef.coverage_provinces,area_id:overviewRef.area_id}};
+  const overviewMap=harness(undefined,undefined,ref.manifest.bounds,'partition',{initialRegion:ref.area_id},
+    {RADAR_LANDUSE_AREAS:[province],RADAR_PARTITION_SOURCE_RULES:overviewRules,RadarPlanningArea:require('../static/js/main/planning_area.js')});
+  overviewMap.deliver({layers:[overviewRef]});await flush();
+  assert.equal(overviewMap.layers.size,1,'Prepared overview keeps partition visible below its source min zoom15');
+  const overviewLayer=[...overviewMap.layers][0];assert.equal(overviewLayer.options.minNativeZoom,0);
+  overviewMap.zoomTo(9);assert(overviewMap.layers.has(overviewLayer),'Zooming out reuses the visible layer');
+  overviewMap.zoomTo(0);assert(overviewMap.layers.has(overviewLayer),'The overview stays enabled at world zoom without high-resolution fanout');
+  overviewMap.zoomTo(17);assert(overviewMap.layers.has(overviewLayer));overviewMap.dispose();
   const manyPartitions=Array.from({length:350},(_,i)=>({...catalog.layers[0],id:'partition-'+i,
     theme:'partition',manifest:{...manifest,id:'partition-'+i}}));
   const detailed={...catalog.layers[0],id:'detail-priority',theme:'detailed',manifest:{...manifest,id:'detail-priority'}};
@@ -474,23 +476,5 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const stacked=[...stack.layers],detailZ=stacked.find(l=>l.url.includes('detail-priority')).options.zIndex;
   assert(stacked.filter(l=>l.url.includes('partition-')).every(l=>l.options.zIndex<detailZ),'Hundreds of partition sheets must stay below detailed planning');
   stack.dispose();
-  const laSheets=require('../config/planning_partition_reference.json').layers.filter(x=>x.coverage_provinces.includes('long-an')&&x.manifest.min_zoom===13);
-  const laFirst=laSheets[0],atFocus=item=>{
-    const b=item.manifest.focus_bounds,p=[(b[0][0]+b[1][0])/2,(b[0][1]+b[1][1])/2];
-    return [[p[0]-.0001,p[1]-.0001],[p[0]+.0001,p[1]+.0001]];
-  };
-  const laSecond=laSheets.find(item=>{const b=atFocus(item),a=laFirst.manifest.bounds;return b[1][0]<a[0][0]||b[0][0]>a[1][0]||b[1][1]<a[0][1]||b[0][1]>a[1][1];});
-  assert(laSecond,'The mosaic must retain separate local envelopes for distant Long An schemes');
-  const localPair=[laFirst,laSecond],laProvince=require('../config/planning_landuse_areas.json').provinces.find(x=>x.id==='long-an');
-  const localRules=Object.fromEntries(localPair.map(ref=>[ref.id,{...Object.fromEntries(ruleKeys.filter(k=>ref.manifest[k]!==undefined).map(k=>[k,ref.manifest[k]])),source_url:ref.source_url,coverage_provinces:ref.coverage_provinces,area_id:ref.area_id}]));
-  const mosaic=harness(undefined,undefined,atFocus(laFirst),'partition',{initialRegion:laProvince.region_id},
-    {RADAR_LANDUSE_AREAS:[laProvince],RADAR_PARTITION_SOURCE_RULES:localRules,RadarPlanningArea:require('../static/js/main/planning_area.js')});
-  mosaic.deliver({layers:localPair});await flush();assert.equal(mosaic.layers.size,1,'Opening a mosaic loads only the local sheet');
-  assert.equal([...mosaic.layers][0].url,laFirst.manifest.tile_template);
-  mosaic.move(atFocus(laSecond));assert.equal(mosaic.layers.size,1,'Dragging replaces the old sheet instead of loading the entire province');
-  assert.equal([...mosaic.layers][0].url,laSecond.manifest.tile_template);
-  const mosaicToggle=mosaic.nodes.find(x=>x.attributes['aria-label']==='Bật/tắt quy hoạch phân khu');
-  mosaicToggle.events.click();assert.equal(mosaic.layers.size,0);mosaicToggle.events.click();assert.equal(mosaic.layers.size,1);
-  mosaic.dispose();
   console.log('Planning overlay: viewport loading, layers off by default, independent sources/opacity and zoom lifecycle passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

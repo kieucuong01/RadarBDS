@@ -8,7 +8,7 @@ const item={id:'ha-noi-partition-reference',theme:'partition',source:'guland',
  render_mode:'xyz',tile_template:'https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/{z}/{x}/{y}.png',
  bounds:[[20.5,105.2],[21.4,106]],min_zoom:11,max_zoom:23,min_native_zoom:12,max_native_zoom:17,
  tile_size:256,title:'Phân khu · Hà Nội',notice:'Bản đồ tham khảo'}};
-const keys=['tile_template','bounds','focus_bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
+const keys=['tile_template','bounds','focus_bounds','overview','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
 const rules={[item.id]:{...Object.fromEntries(keys.filter(k=>item.manifest[k]!==undefined).map(k=>[k,item.manifest[k]])),
  source_url:item.source_url,area_id:item.area_id,coverage_provinces:item.coverage_provinces}};
 
@@ -25,7 +25,7 @@ test('partition references require the exact registered public source and covera
  for(const changed of [{tile_template:item.manifest.tile_template+'?key=changed'},
   {tile_template:'https://evil.invalid/{z}/{x}/{y}.png'}, {source_kind:'official_gis'},
   {source_tiles:{primary:'https://evil.invalid/a'}},{bounds:[[0,0],[90,180]]},
-  {tile_size:512},{max_native_zoom:23},{focus_bounds:[[20,105],[21,106]]},{coverage_windows:[[[20,105],[21,106]]]},
+  {tile_size:512},{max_native_zoom:23},{overview:{tile_template:'https://evil.invalid/{z}/{x}/{y}.png',min_zoom:0,max_zoom:14}},{focus_bounds:[[20,105],[21,106]]},{coverage_windows:[[[20,105],[21,106]]]},
   {planning_status:'draft'}]){
   assert.equal(api.validCatalog({layers:[{...item,manifest:{...item.manifest,...changed}}]},null,rules),false,JSON.stringify(changed));
  }

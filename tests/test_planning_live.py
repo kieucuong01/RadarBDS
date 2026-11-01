@@ -80,6 +80,9 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert len(native)==3
     assert all(a['manifest']['tile_template'].startswith('/api/planning/gis-tiles/') for a in native)
     reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
+    partitions=[a for a in data['layers'] if a.get('theme')=='partition' and a.get('source')=='guland']
+    assert len(partitions)==16 and all('/soi-quy-hoach/' in a['source_url'] for a in partitions)
+    assert '?v=partition-summary-overview-20261101' in app.config['PLANNING_OVERLAY_CONFIG']['catalogUrl']
     assert len(reference)==63 and all(a['source']=='guland' for a in reference)
     assert any(a['area_id']=='dong-nai-expanded' for a in reference)
     assert {'tay-ninh-legacy','long-an-legacy'} <= {a['area_id'] for a in reference}

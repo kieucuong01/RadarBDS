@@ -56,6 +56,13 @@ Final review phát hiện TileLayer zoomabort khác tileunload và sentinel time
 làm Leaflet bỏ done. Đã thêm `_abortLoading` hủy queued/active, `tileabort` idempotent,
 timeout src fragment riêng; tests tái hiện lỗi trước sửa và đạt sau sửa.
 
+**Yêu cầu mới nhất sau releasef7784145:** gỡ400 sheet QH khác để tránh chồng với
+phân khu tổng, chỉ giữ16 entries từ control tỉnh. Không tự khôi phục các sheet đã gỡ.
+Tạo overview Bình Phước offline từ8742 tile15, không ô thiếu;3069 PNG zoom0–14,
+release035963b04e2436b6. Đã chuyển lên VPS và verify tất cả SHA256 trước kích hoạt.
+135JS+29Python+overlay/native runtime đạt; fresh review không có lỗi quan trọng.
+Ảnh zoom15+ vẫn trực tiếp source gốc, zoom thấp chỉ đọc pyramid local theo viewport.
+
 ## Task 2 — Registry và tích hợp theo tỉnh
 
 - [x] Sau khi có source đã kiểm: thêm `config/planning_partition_reference.json`, registry revision và exact descriptors trong `config/planning_regions.py`/context template.
