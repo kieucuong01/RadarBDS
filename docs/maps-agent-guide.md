@@ -328,6 +328,7 @@ Tất cả đường dẫn dưới nằm trong `docs/planning_sources/`:
 | 2030 toàn quốc, tỉnh cũ, branding | [national-2030.md](planning_sources/national-2030.md), [historic-area-selection.md](planning_sources/historic-area-selection.md), [landuse-2030.md](planning_sources/landuse-2030.md) |
 | Địa giới | [national-administrative.md](planning_sources/national-administrative.md), [legacy-administrative.md](planning_sources/legacy-administrative.md), [administrative-hcm.md](planning_sources/administrative-hcm.md) |
 | Ranh và lookup GIS | [binh-duong-native-gis.md](planning_sources/binh-duong-native-gis.md), [parcel-catalog-local-pilot.md](planning_sources/parcel-catalog-local-pilot.md), [hcm-expanded-parcels.md](planning_sources/hcm-expanded-parcels.md) |
+| Thu thập góc ranh miễn phí Đồng Nai/Bình Phước: GIS theo lô, ứng viên từ ảnh và lưu kết quả | [free-parcel-acquisition.md](planning_sources/free-parcel-acquisition.md), [dongnai-parcel-pilot.md](planning_sources/dongnai-parcel-pilot.md) |
 | Điểm, góc ranh, scan ảnh | [coordinate-lookup-and-region-controls.md](planning_sources/coordinate-lookup-and-region-controls.md) |
 | Đo vẽ / ký hiệu / mobile | [map-measure-and-symbols.md](planning_sources/map-measure-and-symbols.md), [mobile-controls.md](planning_sources/mobile-controls.md) |
 | Nhãn vệ tinh | [satellite-basemap-labels.md](planning_sources/satellite-basemap-labels.md) |
