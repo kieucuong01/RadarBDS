@@ -78,6 +78,85 @@ The resumed run preserved all earlier batch hashes and passed the formerly
 blocking batch. Inspect the current manifest/logs for counts rather than using
 the pilot counts above as a current snapshot.
 
+## Bình Phước completed capture and optional local Maps index — 2026-11-02
+
+The source-ID recheck completed: 618,668 records processed, 603,140 accepted,
+15,415 valid polygons quarantined for unknown locality codes, and 113 other
+invalid/missing-geometry records. This is complete processing of the queried
+source scope, not complete cadastral coverage of every historical ward.
+
+The public administrative layer 3 was checked again: 111 complete references,
+no missing-code entries added. A full-precision WGS84 read of that layer is
+saved in `.local/free-parcel-source-20261102/bp-admin-current.json`. Do not add
+guessed code aliases. The optional index builder can resolve a quarantined
+polygon only when the **entire original polygon** lies within exactly one valid
+official administrative polygon, with the same source district. It preserves
+the raw source ward/district codes and records
+`membership_method=official_admin_full_containment`. A centroid match, majority
+overlap, different district, ambiguous match or boundary-crossing polygon is
+insufficient. The original parcel vertices/area are never changed.
+
+The completed verified publication contains **618,053 accepted polygons**,
+including **14,913** resolved by full administrative containment. The remaining
+**615** source records comprise **502** valid polygons with unresolved locality
+and **113** invalid/missing geometries. All 11 source districts have data;
+107 of the 111 reference wards have accepted polygons. The four empty reference
+wards are Long Giang (Phước Long), Thanh An and Tân Quan (Hớn Quản), and Minh Long
+(Chơn Thành). A fresh source count for their codes 25245/25327/25438/25444 in the
+same district scope returned **zero**. Do not fill them with invented outlines.
+
+Publication index SHA-256:
+`cf1e90d1dc003dfec7ccc312214033c0638f06c4009bfa514b640f9c9801c778`,
+681,312,256 bytes. These are dated local asset facts, not deployment evidence.
+
+```powershell
+# Fetch only public administrative identifiers/names/geometry; no owner fields.
+Invoke-WebRequest -Uri 'https://gis.dongnai.gov.vn/arcgis/rest/services/NenDiaChinh/MapServer/3/query' -Method Post -Body @{f='json';where='1=1';outFields='OBJECTID,MaPhuongXa,MaQuanHuyen,TenXa,TenHuyen';returnGeometry='true';outSR='4326'} -OutFile .local/free-parcel-source-20261102/bp-admin-current.json
+& $py -X utf8 scripts/build_binh_phuoc_catalog.py --administrative .local/free-parcel-source-20261102/bp-admin-current.json
+```
+
+Without `--administrative`, only the original accepted features are indexed.
+The builder requires the complete source manifest, verifies every batch hash,
+exact ID membership and counters, validates public fields/original geometry,
+and builds an SQLite RTree plus indexed sheet/parcel lookup. Quarantine is not
+silently merged: only the explicit full-containment verification above promotes
+records. Unresolved/invalid IDs remain in the acquisition archive with reasons.
+
+The optional publication under `data/planning/binh-phuoc-parcels/` consists of:
+
+- `catalog.json`: exact counts, index SHA-256/size, capture manifest hash and
+  optional administrative-capture hash.
+- `parcels-<digest16>.sqlite`: immutable bounded spatial asset, not the
+  application's canonical database. Keep prior files for rollback.
+
+The manifest is replaced atomically after the full index passes integrity
+checks; a failed build leaves the previous publication intact. Only one builder
+may write to this directory at a time. Startup verifies the index hash, namespace,
+reference membership and totals before activation. Missing assets retain the
+existing source path; invalid assets log a warning and fail closed.
+
+`CombinedCatalog` reuses `ParcelCatalog` readers for HCM and the supplemental
+Bình Phước snapshot. Public live startup and the loopback pilot opt into the
+supplement only when its publication exists. The combined catalogue returns
+bounded cells/viewport results, indexed sheet/parcel hits and original corners.
+Fully snapshotted regional providers no longer request live viewport cells;
+the combined snapshot digest changes the shared-cell/original URL version so
+old empty cells cannot mask newly available boundaries. Other HCM sources keep
+their existing live supplementation and namespace. Empty source wards return a
+clear 404 for a sample instead of a fabricated polygon or server error.
+
+Basic parcel selection, coordinates, corner distances and area use the local
+original geometry. Detailed planning remains the existing explicit GIS action;
+this snapshot does not pre-download planning intersections. No frontend/default
+theme change or deployment of the ignored data is implied by committing code.
+
+Local verification after activation: 86 focused tests passed; real HTTP sample,
+sheet/parcel search and original-geometry reads passed in all 11 districts. A
+91-feature fixed cell returned 200 with `needs_live=false`: about 150 ms cold
+and 17 ms warm on this workstation in one sample. These are not public-edge
+or concurrency percentiles. The local home returned 200. Chrome control was
+disabled in Work settings, so rendered desktop/mobile QA was not performed.
+
 ## Former Đồng Nai: boundary-image seeds plus ordinary browser clicks
 
 The verified Guland flow exposes full polygon vertices per actual map click,
@@ -161,7 +240,9 @@ complete geometry has **not** been downloaded or verified in this investigation.
 The detailed-planning layer count query timed out and remains unresolved.
 The background parcel job does **not** download those planning layers.
 
-Neither archive is activated in production Maps by these tools. Do not widen
+The source archive alone is not activated in production Maps. The verified
+optional index above is a separate publication; shipping source code without
+the ignored index does not enable it. Do not widen
 source coverage, replace existing GIS/PDF sources or expose an incomplete
 archive as complete. Free anonymous responses/ordinary UI availability establish
 the tested technical access path; they do not establish survey accuracy, full

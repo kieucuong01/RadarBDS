@@ -6,6 +6,13 @@ parcel goal, not nationwide or province-wide completeness certification.
 
 ## Public source
 
+**2026-11-02 update:** the former-Bình-Phước source-ID acquisition is complete.
+Optional verified local spatial snapshots now support viewport cells, original
+corners and indexed sheet/parcel lookup without repeated GIS boundary queries.
+See [free acquisition and local index](free-parcel-acquisition.md#bình-phước-completed-capture-and-optional-local-maps-index--2026-11-02)
+for counters, strict locality reconciliation, activation, rollback and limits.
+Former Đồng Nai and detailed-planning offline coverage are still separate work.
+
 - Portal: https://gis.dongnai.gov.vn/
 - Portal bundle also remains available through the old Binh Phuoc HTTP portal.
   Its configuration now points to Dong Nai. The old HTTPS hostname failed

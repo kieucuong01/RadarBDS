@@ -138,15 +138,23 @@ class ParcelCatalog:
         return [f for f in features if shape(f['geometry']).covers(point)]
 
 
-def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
+def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None, supplemental=None):
     """Adapt the existing loopback routes; retain lookup guards and bounded cache."""
     from flask import abort, jsonify, request
     from services.planning_parcels import install_planning_lookup
     catalog = ParcelCatalog(path)
+    if supplemental is not None and (Path(supplemental)/'catalog.json').is_file():
+        from services.planning_binh_phuoc_catalog import CombinedCatalog, load_catalog
+        try:
+            catalog = CombinedCatalog(catalog, load_catalog(supplemental))
+        except (OSError, ValueError, KeyError, TypeError, sqlite3.Error):
+            app.logger.warning('Binh Phuoc snapshot unavailable; keeping existing parcel sources')
     areas = {a['area_id']:a for a in catalog.areas}
     if expanded is True:
         from services.planning_dongnai_parcels import RegionalParcels
         expanded = RegionalParcels()
+    if expanded and hasattr(expanded, 'snapshot_areas'):
+        expanded.snapshot_areas = set(areas)
     live_areas = {a.get('area_id', a['code']): a for a in expanded.areas} if expanded else {}
 
     def source_result(callback):
@@ -180,11 +188,13 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
                       excluded_count=sum(a['excluded_count'] for a in catalog.areas), source=SOURCE)
         if expanded:
             from config.planning_regions import HCM_EXPANDED_BOUNDS
-            result.update(areas=[dict(a, **areas.get(a['code'], {})) for a in expanded.areas],
+            result.update(areas=[dict(a, **areas.get(a.get('area_id', a['code']), {})) for a in expanded.areas],
                           navigation_areas=expanded.areas, live_expanded=True,
                           coverage_bounds=getattr(expanded, 'coverage_bounds', HCM_EXPANDED_BOUNDS),
                           regional_sources=hasattr(expanded, 'dongnai'),
                           count_scope='historic_binh_duong_snapshot')
+            if getattr(catalog, 'version', None):
+                result['count_scope'] = 'historic_binh_duong_and_binh_phuoc_snapshot'
         if 'planning_parcel_cells' in app.extensions:
             result['parcel_cells'] = app.extensions['planning_parcel_cells']
         return jsonify(result)
@@ -197,6 +207,8 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
             return source_result(lambda: expanded.sample(code))
         if area is None:
             abort(404)
+        if area.get('sample_id') is None:
+            return jsonify(error='Nguồn chưa có ranh thửa hợp lệ đã xác minh cho phường/xã này.'), 404
         return jsonify(catalog.feature(area['sample_id'],area['area_id']))
 
     @app.get(prefix+'/search.json')

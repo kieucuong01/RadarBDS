@@ -82,11 +82,16 @@ def install_live(app,site):
     if not install_tiles(app,cache,prefix='/api/planning/gis-tiles',max_entries=512,
                          metadata_directory=root/'metadata'):
         return False
-    catalog, expanded = install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels',expanded=True)
+    catalog, expanded = install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels',expanded=True,
+        supplemental=Path(site)/'data/planning/binh-phuoc-parcels')
     from services.planning_parcel_tiles import install as install_cells
     if os.getenv('RADAR_PARCEL_CELLS_ENABLED','1')=='1':
         try:
-            install_cells(app,catalog,expanded,cache,config['release'])
+            cell_release = config['release']
+            if getattr(catalog, 'version', None):
+                from hashlib import sha256
+                cell_release = sha256((cell_release+catalog.version).encode()).hexdigest()[:16]
+            install_cells(app,catalog,expanded,cache,cell_release)
         except (OSError,sqlite3.Error):
             app.logger.warning('Parcel cell cache unavailable; keeping viewport fallback')
     old=app.config.get('PLANNING_OVERLAY_CONFIG')

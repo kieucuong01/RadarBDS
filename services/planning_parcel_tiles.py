@@ -9,7 +9,8 @@ import time
 
 ZOOM = 17
 MAX_BYTES = 32_000_000
-FIELDS = ('id', 'area_id', 'sheet', 'parcel', 'area', 'ward', 'city')
+FIELDS = ('id', 'area_id', 'sheet', 'parcel', 'area', 'ward', 'city',
+          'membership_method', 'source_ward_code', 'source_district_code')
 
 
 def bounds(x, y):

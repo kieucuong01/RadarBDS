@@ -136,10 +136,12 @@ if __name__ == '__main__':
     parcel_catalog = ROOT / '.local/planning-parcels/parcels.sqlite'
     if parcel_catalog.is_file():
         from services.planning_parcel_catalog import install_catalog
-        catalog, expanded = install_catalog(app_module.app, parcel_catalog, expanded=True)
+        catalog, expanded = install_catalog(app_module.app, parcel_catalog, expanded=True,
+            supplemental=ROOT/'data/planning/binh-phuoc-parcels')
         if 'planning_parcel_cells' not in app_module.app.extensions:
             from services.planning_parcel_tiles import install as install_cells
-            install_cells(app_module.app,catalog,expanded,ROOT/'.local/planning-cell-cache','local-pilot')
+            install_cells(app_module.app,catalog,expanded,ROOT/'.local/planning-cell-cache',
+                          'local-pilot-'+getattr(catalog,'version','legacy')[:16])
     elif (parcel_directory / 'parcels.geojson').is_file():
         from services.planning_parcels import install_parcel_pilot
         install_parcel_pilot(app_module.app, parcel_directory)

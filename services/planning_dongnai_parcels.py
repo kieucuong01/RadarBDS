@@ -69,6 +69,11 @@ class RegionalParcels:
         self.hcm = hcm if hcm is not None else LiveParcels()
         self.dongnai = dongnai if dongnai is not None else DongNaiParcels()
         self.areas = self.hcm.areas + self.dongnai.areas
+        self.snapshot_areas = set()
+
+    def _covered(self, provider):
+        keys = {a.get('area_id', a['code']) for a in provider.areas}
+        return bool(keys) and keys <= self.snapshot_areas
 
     def _provider(self, area):
         return self.dongnai if area in self.dongnai.by_area else self.hcm
@@ -92,12 +97,12 @@ class RegionalParcels:
                    if a['district'] not in provider.excluded_districts)
 
     def needs_viewport(self, bbox, legacy_areas):
-        return any(self._intersects(p, bbox) for p in (self.hcm, self.dongnai))
+        return any(not self._covered(p) and self._intersects(p, bbox) for p in (self.hcm, self.dongnai))
 
     def viewport(self, bbox):
         features, matched, excluded, truncated = [], 0, 0, False
         for provider in (self.hcm, self.dongnai):
-            if self._intersects(provider, bbox):
+            if not self._covered(provider) and self._intersects(provider, bbox):
                 result = provider.viewport(bbox)
                 features.extend(result['features'])
                 matched += result['matched']
