@@ -61,3 +61,4 @@
 .planning-corner-scan progress{width:100%;margin-top:10px;accent-color:#11755b}
 .planning-corner-scan .planning-corner-review-confirm{display:flex;align-items:center;gap:8px;font-weight:500}
 .planning-corner-review-confirm input{width:20px;min-height:20px;flex-shrink:0;accent-color:#11755b}
+.planning-map-ui:has(.planning-map-popover[open]) .planning-measure-result{display:none}
