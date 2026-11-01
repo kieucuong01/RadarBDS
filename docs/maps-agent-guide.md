@@ -350,6 +350,11 @@ chạy được trên máy hoặc từ một tài liệu pilot. Kiểm `git stat
 
 Đồng Nai pilot thử nguồn công khai phục vụ Bình Phước cũ; không chứng minh phủ
 Đồng Nai cũ. ID namespace và kết quả giao quy hoạch phải đi đúng adapter nguồn.
+Khảo sát Guland ngày 2026-11-02 đã lưu cục bộ 6 thửa Đồng Nai/Bình Phước, gồm
+3 thửa có mục “Quy hoạch xây dựng”. `scripts/archive_guland_parcels.py` nhập
+capture đã lọc vào `data/planning/guland-parcels.sqlite` (ignored), giữ nguyên
+tọa độ và lịch sử kết quả. Đây là archive mẫu riêng, **chưa nối vào UI/public
+API, không phải độ phủ hai tỉnh**; xem `dongnai-parcel-pilot.md` trước khi dùng.
 Nguồn rỗng, timeout và chưa tích hợp là ba trạng thái khác nhau. Nếu tương lai
 người dùng yêu cầu release pilot, tách commit/test/manifest rõ ràng; không gộp
 vào task docs/cache chỉ vì đang ở cùng worktree.
