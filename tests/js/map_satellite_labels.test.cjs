@@ -13,8 +13,7 @@ test('satellite labels follow base-layer lifecycle without blocking parcels or d
   };
   let additions = 0;
   const L = {
-    tileLayer(url, options) { const layer = {url, options}; tiles.push(layer); return layer; },
-    layerGroup(children) { return {children, addTo() { additions++; active.add(this); }}; }
+    tileLayer(url, options) { const layer = {url, options, addTo() { additions++; active.add(this); }}; tiles.push(layer); return layer; }
   };
   const start = source.indexOf('  function bindSatelliteLabels(');
   const ctx = {L, map, satellite: {on(name, fn) { handlers[name] = fn; }}};
@@ -24,9 +23,8 @@ test('satellite labels follow base-layer lifecycle without blocking parcels or d
   assert.equal(active.size, 0, 'street mode must not request satellite labels');
   handlers.add(); handlers.add();
   assert.equal(active.size, 1); assert.equal(additions, 1);
-  assert.equal(tiles.length, 2);
-  assert.ok(tiles.some(tile => tile.url.includes('World_Transportation')));
-  assert.ok(tiles.some(tile => tile.url.includes('World_Boundaries_and_Places')));
+  assert.equal(tiles.length, 1, 'one hybrid tile replaces two legacy reference requests');
+  assert.match(tiles[0].url, /^https:\/\/who\.maptiles\.arcgis\.com\/arcgis\/rest\/services\/World_Hybrid_Overlay\/MapServer\/tile\/\{z\}\/\{y\}\/\{x\}$/);
   for (const tile of tiles) {
     assert.equal(tile.options.maxNativeZoom, 19);
     assert.equal(tile.options.maxZoom, 23);

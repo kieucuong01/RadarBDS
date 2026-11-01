@@ -181,14 +181,13 @@
     var pane = map.createPane('satelliteLabels');
     pane.style.zIndex = '405';
     pane.style.pointerEvents = 'none';
-    var labels = L.layerGroup(['World_Transportation', 'World_Boundaries_and_Places'].map(function (service) {
-      return L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/' + service + '/MapServer/tile/{z}/{y}/{x}',
-        {pane: 'satelliteLabels', maxNativeZoom: 19, maxZoom: 23, interactive: false,
-          updateWhenIdle: true, keepBuffer: 1,
-          attribution: 'Labels &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community'}
-      );
-    }));
+    // Hybrid includes local roads and landmarks absent from the older reference pair.
+    var labels = L.tileLayer(
+      'https://who.maptiles.arcgis.com/arcgis/rest/services/World_Hybrid_Overlay/MapServer/tile/{z}/{y}/{x}',
+      {pane: 'satelliteLabels', maxNativeZoom: 19, maxZoom: 23, interactive: false,
+        updateWhenIdle: true, keepBuffer: 1,
+        attribution: 'Labels &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community'}
+    );
     satellite.on('add', function () { if (!map.hasLayer(labels)) labels.addTo(map); });
     satellite.on('remove', function () { if (map.hasLayer(labels)) map.removeLayer(labels); });
     return labels;
