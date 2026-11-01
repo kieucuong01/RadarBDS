@@ -35,6 +35,10 @@
       && validBounds(data.bounds,[7,101,24,118])
       && (data.focus_bounds === undefined || validBounds(data.focus_bounds,[7,101,24,118]))
       && ['tile_template','bounds','focus_bounds','overview','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
+        if(key==='overview' && (data[key]!==undefined || rule[key]!==undefined)) {
+          return data[key] && rule[key] && Object.keys(data[key]).length===3
+            && ['tile_template','min_zoom','max_zoom'].every(function(field){return data[key][field]===rule[key][field];});
+        }
         return JSON.stringify(data[key]) === JSON.stringify(rule[key]);
       }) && typeof data.title === 'string' && typeof data.notice === 'string';
     if (data.render_mode === 'geojson' && ['official_gis_administrative','open_administrative_reference'].indexOf(data.source_kind)>=0)

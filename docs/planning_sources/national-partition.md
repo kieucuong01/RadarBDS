@@ -26,6 +26,8 @@ immutable. `manifest.overview` trong exact rules chỉ định template/min/maxz
 coords.z<=14, zoom15+ vẫn URL nguồn gốc. Không nâng minNativeZoom15 ở zoom xa.
 Opacity50%, queue4, timeout/abort/unload và source bounds giữ nguyên. Version mới
 cho HTML/catalogue/JS tránh trộn catalogue400 sheet cũ với rules16 lớp mới.
+Overview descriptor so từng trường được đăng ký, không phụ thuộc thứ tự khóa JSON
+giữa cấu hình và response Flask; khóa lạ hoặc URL/zoom thay đổi vẫn bị từ chối.
 
 Test ghép XYZ/quadrants/alpha và hashrelease; runtime mount zoom13→9→0→17 giữ lớp,
 test loader lấy đúng một ô overview thấp và đúng nguồn gốc ở15. Đây là overview

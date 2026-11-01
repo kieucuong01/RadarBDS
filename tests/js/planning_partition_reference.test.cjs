@@ -31,6 +31,17 @@ test('partition references require the exact registered public source and covera
  }
 });
 
+test('overview descriptors accept Flask sorted object keys but reject added or changed fields',()=>{
+ const expected={tile_template:'/static/overview/{z}/{x}/{y}.png',min_zoom:0,max_zoom:14};
+ const actual={max_zoom:14,min_zoom:0,tile_template:expected.tile_template};
+ const registered={[item.id]:{...rules[item.id],overview:expected}};
+ const layer={...item,manifest:{...item.manifest,overview:actual}};
+ assert.equal(api.validCatalog({layers:[layer]},null,registered),true);
+ for(const changed of [{...actual,max_zoom:18},{...actual,extra:'unregistered'},{...actual,tile_template:'https://evil.invalid/{z}/{x}/{y}.png'}]){
+  assert.equal(api.validCatalog({layers:[{...layer,manifest:{...layer.manifest,overview:changed}}]},null,registered),false);
+ }
+});
+
 test('source choice keeps a working selection and falls back only to available partition providers',()=>{
  const gis={status:'overlay_ready',source:'gis'},ref={status:'overlay_ready',source:'guland'};
  assert.equal(api.partitionSource([ref],'gis'),'guland');

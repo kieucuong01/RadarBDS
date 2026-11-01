@@ -410,7 +410,7 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=dong-nai-2030-20261029" in template
     assert "js/main/planning_parcels.js') }}?v=regional-parcels-20261101" in template
-    assert "js/main/planning_overlay.js') }}?v=partition-summary-overview-20261101" in template
+    assert "js/main/planning_overlay.js') }}?v=partition-summary-overview-20261101b" in template
     assert "js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template
