@@ -628,3 +628,66 @@ def test_review31_residential_spelling_controls(text, area, residential, ratio):
     from cleansing.feature_extractor import extract_tho_cu
 
     assert extract_tho_cu(text, area) == {"tho_cu_m2": residential, "tho_cu_ratio": ratio}
+
+
+# Four reviewed records, TWO independent patterns (each pair is a repost).
+# Exact cause-bearing, PII-free fragments from the bound offline snapshots.
+REVIEW_NOV01_AREA_SUFFIX_CASES = [
+    (85527, "Dt: 21,5 x 117👉2517m2. CLN", 2517.0, 21.5, 117.0),
+    (85432, "Dt: 21,5 x 117👉2517m2. CLN", 2517.0, 21.5, 117.0),
+    (85590, "Dt 5 * 32; 147m; Tc 60m", 147.0, 5.0, 32.0),
+    (85364, "Dt 5 * 32; 147m; Tc 60m", 147.0, 5.0, 32.0),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,area,frontage,depth", REVIEW_NOV01_AREA_SUFFIX_CASES)
+@pytest.mark.parametrize("text_field", ["title", "description"])
+@pytest.mark.parametrize("structured_area", [False, True])
+def test_review_nov01_declared_area_suffix_wins_over_rectangle(
+        listing_id, text, area, frontage, depth, text_field, structured_area):
+    raw = {"source": "facebook", "url": "https://example.invalid/area-suffix-control",
+           "title": "Bán đất", text_field: text, "price_ty": 3.0}
+    if structured_area:
+        raw["area_m2"] = round(frontage * depth, 1)
+    record = normalize_record(raw)
+    assert record is not None
+    assert record["area_m2"] == area
+    assert record["frontage_m"] == frontage
+    assert record["depth_m"] == depth
+    assert record["price_per_m2"] == round(3000 / area, 3)
+    assert record["measurement_provenance"]["area_m2"] == "declared_text"
+    if area == 147.0:
+        assert record["tho_cu_m2"] == 60.0
+        assert record["tho_cu_ratio"] == round(60 / 147, 3)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("DT 5 x 32👉147m²", 147.0),
+    ("DIỆN TÍCH 5 x 32; 147m; TC 60m", 147.0),
+    ("DT 5 x 32; 147mv", 147.0),
+    ("DT 5 x 32; 147 mét vuông", 147.0),
+    ("DT 5 x 32; 147m", 147.0),
+    ("DT 5 x 32; 147,5m; TC 60m", 147.5),
+    ("DT 5 x 32; TC 60m", 160.0),
+    ("DT 5 x 32👉60m2 thổ cư", 160.0),
+    ("DT 5 x 32; 60m2 TC", 160.0),
+    ("DT 5 x 32; 60m2 ODT", 160.0),
+    ("DT 5 x 32; 147m2 sàn", 160.0),
+    ("DT 5 x 32👉147m2 sử dụng", 160.0),
+    ("DT 5 x 32; 147m2 xây dựng", 160.0),
+    ("DT 5 x 32; 147m ngang", 160.0),
+    ("DT 5 x 32; 147m3", 160.0),
+    # Existing m2-as-frontage typo policy selects the later 6 x 20 pair;
+    # this must not be reinterpreted as a declared total of 6 square meters.
+    ("DT 5 x 32; 6m2 x 20m", 120.0),
+    ("Đường 5 x 32; 147m", 160.0),
+    ("DT 5 x 32; đường rộng 12m", 160.0),
+    ("DT 5 x 32; cách chợ 147m", 160.0),
+    ("DT 5 x 32, 147m2", 147.0),
+    ("DT 5 x 32 = 147m2", 147.0),
+    ("DT 5 x 32 (147m2)", 147.0),
+])
+def test_review_nov01_area_suffix_controls(text, expected):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/area-suffix-control",
+                               "title": "Bán đất", "description": text})
+    assert record is not None and record["area_m2"] == expected

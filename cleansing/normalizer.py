@@ -264,20 +264,28 @@ def _float_or_none(value) -> Optional[float]:
 
 
 def _declared_area_from_dimension_suffix(text: str) -> Optional[float]:
-    """Read a square-meter land total immediately following labeled dimensions."""
+    """Read a land total immediately following labeled dimensions.
+
+    Brokers also separate totals with 👉 or a semicolon. Bare ``m`` means
+    m² only after the semicolon and at a clause boundary; other separators
+    still require square-meter units, preserving linear-measure near misses.
+    """
     folded = _ascii_fold(text)
     for match in re.finditer(
         r"\b(?:dt|dien\s+tich)\s*[:=\-]?\s*"
         r"(\d+(?:[,.]\d+)?)\s*m?\s*[x×*]\s*"
-        r"(\d+(?:[,.]\d+)?)\s*m?\s*[,:\-–—]\s*"
-        r"(\d+(?:[,.]\d+)?)\s*(?:m[²2]|mv|met\s+vuong)\b"
+        r"(\d+(?:[,.]\d+)?)\s*m?\s*(?P<separator>[,:;\-–—👉])\s*"
+        r"(?P<area>\d+(?:[,.]\d+)?)\s*"
+        r"(?P<unit>m[²2]|mv|met\s+vuong|m(?=\s*(?:[;,.]|$)))\b"
         r"(?!\s*(?:[x×*]\s*\d|tho\b|tc\b|odt\b|san\b|su\s*dung\b|xay\s*dung\b))",
         folded,
     ):
+        if match.group("unit") == "m" and match.group("separator") != ";":
+            continue
         frontage = float(match.group(1).replace(',', '.'))
         depth = float(match.group(2).replace(',', '.'))
         if 2 <= frontage <= 50 and 5 <= depth <= 500:
-            area = declared_total_area(f"DT {match.group(3)}m2")
+            area = declared_total_area(f"DT {match.group('area')}m2")
             if area is not None and area > 5:
                 return area
     return None
