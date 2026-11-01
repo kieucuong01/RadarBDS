@@ -198,8 +198,13 @@ Ranh thường rất mờ (0.7px, opacity 0.28, không fill). Selection có high
 pin RadarBDS, diện tích nhỏ ở giữa và cạnh thửa. Cạnh chỉ hiện nếu đủ chỗ theo
 screen length/rotated collision boxes; tránh vùng area/pin và tính lại khi zoom.
 Diện tích sổ/nguồn có thể khác diện tích tính từ geometry; không đồng nhất hai số.
-Chỉ đường chuyển điểm đã chọn khi người dùng theo link; Đo vẽ dùng đúng nguồn
-geometry và ghi giới hạn nếu chỉ chọn một phần multipart.
+Chỉ đường chuyển điểm đã chọn khi người dùng theo link. Đo vẽ mở công cụ vẽ
+tự do (con trỏ bút) để đo đoạn hoặc vẽ đa giác chồng lên ranh đang chọn; không
+sao chép ranh thửa vào bản vẽ. Đóng popup chỉ ẩn thông tin/hủy request, vẫn giữ
+ranh, số đo và pin thửa. “Xóa ranh” xóa cả ranh chọn lẫn bản vẽ thủ công.
+`planning:draw-request` bắt đầu vẽ; `planning:selection-change` đồng bộ nút xóa;
+`planning:clear-boundaries` xóa selection. `planning:measure-parcel` vẫn dành
+cho nhập góc ranh/tọa độ, không dùng cho nút Đo vẽ của thửa.
 
 **Độ phủ:** 91 đơn vị snapshot Bình Dương; 422 tham chiếu điều hướng cũ ở adapter
 HCM gồm Bình Dương/HCM/Bà Rịa không chứng minh từng điểm có ranh. Địa giới không

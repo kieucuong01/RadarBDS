@@ -58,6 +58,27 @@ test('drawing never enables double-click zoom when it was already disabled',()=>
  h.control('Vẽ ranh đo khoảng cách và diện tích').events.click();dispose();
  assert.equal(h.map.doubleClickZoom.enabled(),false);
 });
+
+test('parcel draw request starts an empty freehand measurement and delete clears both boundaries',()=>{
+ const h=harness(),dispose=measure.mount(h.map,h.L,h.env,h.ui,h.actions);
+ const clear=h.control('Xóa ranh đã vẽ');let deleted=0;
+ h.map.on('planning:clear-boundaries',()=>deleted++);
+ h.map.fire('planning:selection-change',{selected:true});
+ assert.equal(clear.disabled,false,'A selected parcel can be deleted before anything is drawn');
+ h.map.fire('planning:draw-request');
+ assert(h.container.classList.contains('planning-is-drawing'));
+ const group=[...h.layers].find(l=>l.kind==='group');
+ assert.equal(group.children.length,0,'Do not copy the parcel outline into the new measurement');
+ h.events.click({latlng:{lat:11,lng:106}});h.events.click({latlng:{lat:11,lng:106.001}});
+ assert(h.nodes.some(n=>n.attrs.role==='status'&&n.textContent.includes('Tổng chiều dài')));
+ assert(!group.children.some(l=>l.kind==='polygon'),'Two clicks measure a segment');
+ h.events.click({latlng:{lat:11.001,lng:106.001}});
+ h.control('Khép ranh và tính diện tích').events.click();
+ assert(group.children.some(l=>l.kind==='polygon'));
+ h.control('Ẩn kết quả đo').events.click();assert(group.children.length>0,'Hiding results keeps the drawn boundary');
+ clear.events.click();assert.equal(deleted,1);assert.equal(group.children.length,0);assert(clear.disabled);
+ dispose();
+});
 test('legend is source-specific, lazy, searchable and aborts on disposal',async()=>{
  assert(legend.valid(catalog));assert.equal(catalog.groups.reduce((n,g)=>n+g.rows.length,0),400);
  assert.equal(catalog.groups.filter(g=>g.theme!=='land_codes').reduce((n,g)=>n+g.rows.length,0),333);

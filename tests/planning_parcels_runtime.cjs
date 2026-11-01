@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const api = require('../static/js/main/planning_parcels.js');
 const nodes = [], pending = [], layers = new Set(), events = {};
+const parcelEvents=[];let clearedTools=0;
 const doc = {querySelector:()=>null, createElement(tag) {
   const el = {tag,style:{},attributes:{},children:[],events:{},textContent:'',
     appendChild(child){this.children.push(child);return child;},
@@ -10,11 +11,13 @@ const doc = {querySelector:()=>null, createElement(tag) {
 }};
 let west=106.61;
 const map = {createPane:()=>({style:{}}),on(k,f){events[k]=f;},off(k){delete events[k];},
+  fire(name,data){parcelEvents.push({name,data});if(events[name])events[name](data);},
   getContainer:()=>({appendChild(){}}),
   getZoom:()=>18,getCenter:()=>({lat:11.02,lng:106.65}),
   getBounds:()=>({getWest:()=>west,getEast:()=>west+.004,getSouth:()=>11.02,getNorth:()=>11.024,intersects:()=>true}),
   removeLayer(l){layers.delete(l);},fitBounds(bounds){this.fitted=bounds;},setView(){}};
 const L = {DomEvent:{disableClickPropagation(){},disableScrollPropagation(){},stopPropagation(){}},
+  layerGroup(){},
   control:()=>({addTo(){},remove(){}}),geoJSON(data,options){
     const layer={data,options,addTo(){layers.add(this);return this;},getBounds:()=>[[11.02,106.65],[11.021,106.651]]};
     if(options && options.onEachFeature) for(const f of data.features||[]) {
@@ -24,6 +27,7 @@ const L = {DomEvent:{disableClickPropagation(){},disableScrollPropagation(){},st
     return layer;
   }};
 const env={document:doc,AbortController,matchMedia:()=>({matches:false}),setTimeout:(f)=>{env.tick=f;return 1;},clearTimeout(){},
+  RadarParcelTools:{directions:()=>'/directions',mount:()=>({show:()=>({center:{lat:11.02,lng:106.65},outline:[{lat:11.02,lng:106.65},{lat:11.02,lng:106.651},{lat:11.021,lng:106.651}]}),clear(){clearedTools++;},dispose(){}})},
   fetch(url,options){return new Promise(resolve=>pending.push({url,options,resolve}));}};
 const flush=()=>new Promise(r=>setImmediate(r));
 const deliver=(i,data)=>pending[i].resolve({ok:true,json:async()=>data});
@@ -55,7 +59,12 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   const close=field('Đóng thông tin thửa');
   assert(close,'Parcel information needs an explicit close control');
   close.events.click();
-  assert.equal(layers.size,1,'Closing parcel details keeps the visible boundaries');
+  assert.equal(layers.size,2,'Closing parcel details keeps the selected outline as well as visible boundaries');
+  assert.equal(clearedTools,0,'Closing the card keeps parcel dimensions and location pin');
+  nodes.find(n=>n.textContent==='✎ Đo vẽ').events.click();
+  assert(parcelEvents.some(e=>e.name==='planning:draw-request'&&!e.data),'Parcel action requests free drawing, not a copy of parcel edges');
+  map.fire('planning:drawing-start');assert.equal(layers.size,2,'Starting a measurement preserves its reference parcel');
+  map.fire('planning:clear-boundaries');assert.equal(layers.size,1);assert.equal(clearedTools,1);
   field('Quận / Huyện (Cũ)').value='Bến Cát';field('Quận / Huyện (Cũ)').events.change();
   field('Phường / Xã (Cũ)').value='25813';
   field('Số tờ bản đồ').value='1';field('Số thửa đất').value='2';
@@ -73,7 +82,7 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   deliver(beforePan-1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
   assert.equal(pending.length,beforePan,'A late search must not move the map after a manual pan');
   const toggle=nodes.find(n=>n.attributes['aria-label']==='Bật ranh thửa đất');
-  toggle.checked=false;toggle.events.change();assert.equal(layers.size,0);
+  toggle.checked=false;toggle.events.change();assert.equal(layers.size,1,'Turning off viewport boundaries retains the selected parcel until explicit delete');
   dispose();assert.equal(Object.keys(events).length,0);
   env.RADAR_PLANNING_CONFIG={parcelBase:'/api/planning/parcels'};
   env.RADAR_PLANNING_REGIONS=[{id:'hcm-legacy',name:'TP.HCM (cũ)',bounds:[[10.3,106.3],[11.2,107.05]],max_zoom:12},

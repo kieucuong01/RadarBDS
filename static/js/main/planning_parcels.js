@@ -143,9 +143,14 @@
       if(cellsView)cellsView.cancelSelection();
       ++selectionSeq; if (selectionRequest) selectionRequest.abort();
       ++searchSeq; if (searchRequest) searchRequest.abort(); busy('parcel-search',false);searchSubmit.disabled = !config;
-      box.hidden = true; remove(highlight); highlight = null;
-      busy('parcel-detail',false);if(parcelTools)parcelTools.clear();
+      box.hidden = true;
+      busy('parcel-detail',false);
       var container = map.getContainer(); if (container.focus) container.focus({preventScroll:true});
+    }
+    function clearSelection(){
+      closeInfo();remove(highlight);highlight=null;remove(coordinateMarker);coordinateMarker=null;
+      if(parcelTools)parcelTools.clear();
+      if(map.fire)map.fire('planning:selection-change',{selected:false});
     }
     close.addEventListener('click', closeInfo);
     box.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeInfo(); });
@@ -168,6 +173,7 @@
       remove(highlight);
       highlight=feature.display_only?null:L.geoJSON(feature,{pane:'planningParcelSelected',interactive:false,
         style:{color:'#0f766e',weight:2.5,fillColor:'#14b8a6',fillOpacity:.1}}).addTo(map);
+      if(map.fire)map.fire('planning:selection-change',{selected:!!highlight});
       box.hidden=false;source.hidden=footer.hidden=true;
       if(box.classList)box.classList.remove('is-expanded');
       showParcel(feature);
@@ -177,7 +183,7 @@
       if(metrics){
         var route=node('a',actions,'↗ Chỉ đường');route.href=env.RadarParcelTools.directions(metrics.center);route.target='_blank';route.rel='noopener noreferrer';
         var draw=node('button',actions,'✎ Đo vẽ');draw.type='button';
-        draw.addEventListener('click',function(){if(map.fire)map.fire('planning:measure-parcel',{points:metrics.outline});});
+        draw.addEventListener('click',function(){if(map.fire)map.fire('planning:draw-request');});
       }
       var detailsButton=node('button',info,'Xem đầy đủ thông tin quy hoạch chi tiết');detailsButton.type='button';detailsButton.className='planning-parcel-expand';
       var detailBody=node('div',info);detailBody.className='planning-parcel-detail';detailBody.hidden=true;
@@ -545,6 +551,7 @@
         loadViewport();
       }).catch(function (error) { if (!disposed && error.name !== 'AbortError') status.textContent = 'Chưa có dữ liệu ranh thửa cho bản thử.'; });
     map.on('moveend', move); map.on('movestart', moveStart); map.on('planning:drawing-start', closeInfo); map.on('planning:listing-selected',closeInfo); map.on('planning:area-change', closeInfo);
+    map.on('planning:clear-boundaries',clearSelection);
     function dispose() {
       if (disposed) return;
       disposed = true; ++viewSeq; ++selectionSeq; ++searchSeq; ++navigationSeq;
@@ -554,6 +561,7 @@
       if (searchRequest) searchRequest.abort(); if (navigationRequest) navigationRequest.abort();
       env.clearTimeout(timer); map.off('moveend', move); map.off('movestart', moveStart); map.off('unload', dispose);
       map.off('planning:area-change', closeInfo);
+      map.off('planning:clear-boundaries',clearSelection);
       map.off('planning:drawing-start', closeInfo);map.off('planning:listing-selected',closeInfo);
       if(cardObserver)cardObserver.disconnect();if(parcelTools)parcelTools.dispose();
       ['parcel-view','parcel-detail','parcel-search','parcel-area','parcel-sample'].forEach(function(key){busy(key,false);});

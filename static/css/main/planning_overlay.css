@@ -94,7 +94,7 @@
 .planning-measure-label{padding:2px 5px;border:1px solid #9bbdaf;border-radius:5px;background:#fff;color:#174a3b;box-shadow:0 1px 4px #16382b24;font-size:11px;font-weight:600;white-space:nowrap;pointer-events:none}
 .planning-measure-label:before{display:none}
 .planning-measure-area{padding:5px 8px;border-color:#08765b;font-size:12px;font-weight:800}
-.planning-is-drawing{cursor:crosshair}
+.leaflet-container.planning-is-drawing,.planning-is-drawing .leaflet-interactive{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cpath d='m3 23 2-7L18 3a2.8 2.8 0 0 1 4 4L9 20Z' fill='white' stroke='%230f766e' stroke-width='1.8'/%3E%3Cpath d='m5 16 4 4M16 5l5 5' fill='none' stroke='%230f766e' stroke-width='1.8'/%3E%3C/svg%3E") 3 23,crosshair}
 .planning-is-drawing .leaflet-marker-pane *,.planning-is-drawing .leaflet-planningParcels-pane *,.planning-is-drawing .leaflet-planningParcelSelected-pane *{pointer-events:none!important}
 .planning-is-drawing .planning-layer-dock{display:none}
 .listing-map-workspace:has(.planning-is-drawing) .listing-map-mobile-sheet{display:none}

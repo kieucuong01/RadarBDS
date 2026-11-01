@@ -10,7 +10,7 @@ previews the next edge. Click the first vertex or choose **Khép ranh** to close
 the polygon and show area in m² (also hectares above 10,000 m²) and perimeter.
 **Lùi điểm** removes the last draft vertex. Escape pauses the draft, and drawing
 again resumes it. Opening a lookup or legend panel also pauses the draft. Enter on the focused map adds its current centre, allowing
-keyboard panning plus point placement. Delete clears the entire manual outline.
+keyboard panning plus point placement. **Xóa ranh** clears both the manual outline and the selected parcel reference.
 Starting another outline after closing replaces the previous manual drawing.
 
 Measurements use great-circle edge lengths and a spherical area with radius
@@ -20,7 +20,11 @@ so zooming or dragging does not alter the completed result. Crossing edges,
 duplicate vertices, zero-area shapes and more than 100 draft points are rejected.
 
 While drawing, parcel and listing targets yield clicks to the map; existing
-parcel selection closes and its pending response is cancelled. The original
+parcel information popup hides and its pending response is cancelled, while the
+selected parcel outline, dimensions and pin remain visible. The parcel-card
+**Đo vẽ** action starts this same free-drawing tool with a pen cursor; it does not
+copy the parcel geometry into the measurement. Closing the parcel popup alone
+also keeps the selected reference until **Xóa ranh** or another selection. The original
 double-click zoom state is restored when drawing stops. Closing Maps disposes
 the outline, preview animation and listeners. Drafts are session-local and are
 not transmitted to a new API.

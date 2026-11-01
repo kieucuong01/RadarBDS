@@ -54,7 +54,7 @@
   function formatArea(value) { return number(value)+' m²'+(value>=10000 ? ' · '+number(value/10000)+' ha' : ''); }
 
   function mount(map, L, env, ui, actions) {
-    var doc=env.document, container=map.getContainer(), points=[], active=false, closed=false, disposed=false;
+    var doc=env.document, container=map.getContainer(), points=[], active=false, closed=false, disposed=false, hasSelection=false;
     var previewPoint, frame, restoreDoubleClick=false;
     var drawingPane=map.createPane('planningDrawing'); drawingPane.style.zIndex='630';
     var labelPane=map.createPane('planningMeasureLabels'); labelPane.style.zIndex='660'; labelPane.style.pointerEvents='none';
@@ -103,7 +103,7 @@
     }
     function redraw(message) {
       clearPreview(); drawing.clearLayers();
-      clear.disabled=!points.length; undo.disabled=!points.length; finish.disabled=points.length<3;
+      clear.disabled=!points.length&&!hasSelection; undo.disabled=!points.length; finish.disabled=points.length<3;
       result.hidden=!active && !points.length; undo.hidden=finish.hidden=!active; close.hidden=active;
       if(points.length) {
         var opts={pane:'planningDrawing',renderer:renderer,color:'#08765b',weight:2.5,fillOpacity:.08,interactive:false};
@@ -124,7 +124,7 @@
         } else output.textContent=points.length+' điểm · Tổng chiều dài '+formatDistance(total);
       } else output.textContent='Bấm lên bản đồ để đặt điểm đầu tiên.';
       if(message) note.textContent=message;
-      else note.textContent=active?'Bấm điểm đầu hoặc Khép ranh để hoàn tất. Enter: đặt điểm giữa; Esc: dừng.':'Số đo xấp xỉ theo bản đồ.';
+      else note.textContent=active?'Bấm để đặt điểm. Dừng vẽ để giữ đoạn đo; bấm điểm đầu hoặc Khép ranh để tính diện tích. Esc: dừng.':'Số đo xấp xỉ theo bản đồ.';
     }
     function add(p) {
       if(!active || disposed) return;
@@ -158,11 +158,13 @@
       ui.panels.forEach(function(panel){panel.open=false;});
     }
     function panelChanged() { if(ui.panels.some(function(p){return p.open;})) pause(); }
+    function startDrawing(){if(closed){points=[];closed=false;}setActive(true);redraw();}
+    function selectionChanged(event){hasSelection=!!event.selected;clear.disabled=!points.length&&!hasSelection;}
     draw.addEventListener('click',function(){
       if(closed) { points=[]; closed=false; }
       setActive(!active); redraw();
     });
-    clear.addEventListener('click',function(){setActive(false);points=[];closed=false;redraw();draw.focus({preventScroll:true});});
+    clear.addEventListener('click',function(){setActive(false);points=[];closed=false;hasSelection=false;map.fire('planning:clear-boundaries');redraw();draw.focus({preventScroll:true});});
     undo.addEventListener('click',function(){points.pop();redraw();});
     finish.addEventListener('click',complete);
     close.addEventListener('click',function(){result.hidden=true;});
@@ -171,10 +173,12 @@
     ui.panels.forEach(function(p){p.addEventListener('toggle',panelChanged);});
     map.on('click',click); map.on('mousemove',move); map.on('movestart',clearPreview);map.on('planning:panel-open',pause);
     map.on('planning:measure-parcel',measureParcel);
+    map.on('planning:draw-request',startDrawing);map.on('planning:selection-change',selectionChanged);
     return function(){
       if(disposed) return; disposed=true; setActive(false);clearPreview();
       map.off('click',click);map.off('mousemove',move);map.off('movestart',clearPreview);
       map.off('planning:measure-parcel',measureParcel);
+      map.off('planning:draw-request',startDrawing);map.off('planning:selection-change',selectionChanged);
       map.off('planning:panel-open',pause);ui.panels.forEach(function(p){p.removeEventListener('toggle',panelChanged);});
       container.removeEventListener('keydown',keydown);
       ui.root.removeEventListener('keydown',keydown);
