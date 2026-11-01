@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const api = require('../static/js/main/planning_overlay.js');
 const nationalLanduse = require('../config/planning_landuse_2030.json').layers;
-const ruleKeys=['tile_template','bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
+const ruleKeys=['tile_template','bounds','focus_bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'];
 const nationalRules=Object.fromEntries(nationalLanduse.map(l=>[l.id,Object.fromEntries(ruleKeys.filter(k=>l.manifest[k]!==undefined).map(k=>[k,l.manifest[k]]))]));
 const referenceTemplate = 'https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png';
 assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1630,y:960}),
@@ -445,10 +445,24 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const refRules={[ref.id]:{...Object.fromEntries(ruleKeys.filter(k=>ref.manifest[k]!==undefined).map(k=>[k,ref.manifest[k]])),source_url:ref.source_url,coverage_provinces:ref.coverage_provinces,area_id:ref.area_id}};
   const rh=harness(undefined,undefined,ref.manifest.bounds,'partition',{initialRegion:'binh-phuoc-legacy'},
     {RADAR_LANDUSE_AREAS:[province],RADAR_PARTITION_SOURCE_RULES:refRules,RadarPlanningArea:require('../static/js/main/planning_area.js')});
-  rh.deliver({layers:[ref]});await flush();
+  const bpLanduse=nationalLanduse.find(x=>province.layer_ids.includes(x.id));
+  rh.deliver({layers:[ref,bpLanduse]});await flush();
+  const bpLanduseToggle=rh.nodes.find(x=>x.attributes['aria-label']==='Bật quy hoạch sử dụng đất 2030');
+  bpLanduseToggle.checked=true;bpLanduseToggle.events.change();
+  const bpActive=rh.nodes.find(x=>x.attributes['aria-label']==='Lớp điều chỉnh độ hiển thị');
+  bpActive.value='partition';bpActive.events.change();
   rh.nodes.find(x=>x.textContent==='Xem vùng có quy hoạch').events.click();
   assert.equal(rh.map.view.zoom,ref.manifest.min_zoom,'Fit reference planning must respect a native zoom floor above the whole-province fit');
   assert.equal(rh.map.fitted,undefined,'Reference fit must not zoom back out and remove all imagery');
   rh.dispose();
+  const scheme=require('../config/planning_partition_reference.json').layers.find(x=>x.coverage_provinces.includes('can-tho'));
+  const schemeProvince=require('../config/planning_landuse_areas.json').provinces.find(x=>x.id==='can-tho');
+  const schemeRules={[scheme.id]:{...Object.fromEntries(ruleKeys.filter(k=>scheme.manifest[k]!==undefined).map(k=>[k,scheme.manifest[k]])),source_url:scheme.source_url,coverage_provinces:scheme.coverage_provinces,area_id:scheme.area_id}};
+  const sh=harness(undefined,undefined,scheme.manifest.bounds,'partition',{initialRegion:scheme.area_id},
+    {RADAR_LANDUSE_AREAS:[schemeProvince],RADAR_PARTITION_SOURCE_RULES:schemeRules,RadarPlanningArea:require('../static/js/main/planning_area.js')});
+  sh.deliver({layers:[scheme]});await flush();
+  sh.nodes.find(x=>x.textContent==='Xem vùng có quy hoạch').events.click();
+  assert.deepEqual(sh.map.view.center,{lat:(scheme.manifest.focus_bounds[0][0]+scheme.manifest.focus_bounds[1][0])/2,lng:(scheme.manifest.focus_bounds[0][1]+scheme.manifest.focus_bounds[1][1])/2},'Fit a partial scheme at observed imagery, not the empty provincial centre');
+  sh.dispose();
   console.log('Planning overlay: viewport loading, layers off by default, independent sources/opacity and zoom lifecycle passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -8,7 +8,7 @@ PARTITION_REFERENCE_LAYERS = tuple(json.loads(Path(__file__).with_name('planning
                                             .read_text(encoding='utf8'))['layers'])
 PARTITION_SOURCE_RULES = {
     layer['id']: {**{key:layer['manifest'][key] for key in (
-        'tile_template','bounds','min_zoom','max_zoom','tile_size',
+        'tile_template','bounds','focus_bounds','min_zoom','max_zoom','tile_size',
         'min_native_zoom','max_native_zoom','coverage_windows') if key in layer['manifest']},
         **{key:layer[key] for key in ('source_url','coverage_provinces','area_id')}}
     for layer in PARTITION_REFERENCE_LAYERS

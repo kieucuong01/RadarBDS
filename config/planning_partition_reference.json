@@ -1,6 +1,6 @@
 {
   "checked_on": "2026-11-01",
-  "revision": "partition-20261101",
+  "revision": "partition-20261101c",
   "notice": "Controls and bounded tile samples, not complete or legal coverage.",
   "layers": [
     {
@@ -689,6 +689,536 @@
         "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/dak-nong/{z}/{x}/{y}.png",
         "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
         "attribution": ""
+      }
+    },
+    {
+      "id": "bac-kan-partition-reference",
+      "name": "Quy hoạch phân khu xây dựng tỉnh Bắc Kạn",
+      "city": "Bắc Kạn (cũ)",
+      "scope": "region",
+      "area_id": "bac-kan-legacy",
+      "coverage_provinces": [
+        "bac-kan"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-phan-khu-xay-dung-tinh-bac-kan",
+      "manifest": {
+        "id": "bac-kan-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu xây dựng tỉnh Bắc Kạn",
+        "bounds": [
+          [
+            21.804383,
+            105.431119
+          ],
+          [
+            22.739601,
+            106.265113
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            22.2621,
+            105.865416
+          ],
+          [
+            22.2821,
+            105.885416
+          ]
+        ]
+      }
+    },
+    {
+      "id": "can-tho-partition-reference",
+      "name": "Quy hoạch xây dựng phân khu, Thành phố Cần Thơ",
+      "city": "Cần Thơ (cũ)",
+      "scope": "region",
+      "area_id": "can-tho-legacy",
+      "coverage_provinces": [
+        "can-tho"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-xay-dung-phan-khu-thanh-pho-can-tho",
+      "manifest": {
+        "id": "can-tho-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch xây dựng phân khu, Thành phố Cần Thơ",
+        "bounds": [
+          [
+            9.895985,
+            105.215102
+          ],
+          [
+            10.344128,
+            105.902803
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/can-tho--qhxdpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            10.038642,
+            105.732035
+          ],
+          [
+            10.058642,
+            105.752035
+          ]
+        ]
+      }
+    },
+    {
+      "id": "ha-nam-partition-reference",
+      "name": "Quy hoach phân khu chi tiết, Phủ Lý - Hà Nam",
+      "city": "Hà Nam (cũ)",
+      "scope": "region",
+      "area_id": "ha-nam-legacy",
+      "coverage_provinces": [
+        "ha-nam"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-phan-khu-chi-tiet-phu-ly-ha-nam",
+      "manifest": {
+        "id": "ha-nam-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoach phân khu chi tiết, Phủ Lý - Hà Nam",
+        "bounds": [
+          [
+            20.362945,
+            105.768582
+          ],
+          [
+            20.704364,
+            106.23444
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/ha-nam/phu-ly--qhpkct/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            20.577795,
+            105.907816
+          ],
+          [
+            20.597795,
+            105.927816
+          ]
+        ]
+      }
+    },
+    {
+      "id": "hung-yen-partition-reference",
+      "name": "QUY HOẠCH phân khu xây dựng tỷ lệ 1-2000 Khu công nghiệp Lý Thường Kiệt - Huyện Yên Mỹ - Khoái Châu - Ân Thi",
+      "city": "Hưng Yên (cũ)",
+      "scope": "region",
+      "area_id": "hung-yen-legacy",
+      "coverage_provinces": [
+        "hung-yen"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/qh-phan-khu-xay-dung-ty-le-1-2000-khu-cong-nghiep-ly-thuong-kiet-huyen-yen-my-khoai-chau-an-thi",
+      "manifest": {
+        "id": "hung-yen-partition-reference",
+        "status": "reference_overlay",
+        "title": "QUY HOẠCH phân khu xây dựng tỷ lệ 1-2000 Khu công nghiệp Lý Thường Kiệt - Huyện Yên Mỹ - Khoái Châu - Ân Thi",
+        "bounds": [
+          [
+            20.603626,
+            105.895429
+          ],
+          [
+            21.019381,
+            106.298576
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 17,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland10/qh-khac/hung-yen/huyen-yenmy-khoaichau-anthi--kcn-ly-thuong-kiet/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            20.844962,
+            106.012186
+          ],
+          [
+            20.864962,
+            106.032186
+          ]
+        ]
+      }
+    },
+    {
+      "id": "nghe-an-partition-reference",
+      "name": "Quy hoạch xây dựng phân khu, TP Vinh - Nghệ An",
+      "city": "Nghệ An (cũ)",
+      "scope": "region",
+      "area_id": "nghe-an-legacy",
+      "coverage_provinces": [
+        "nghe-an"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-xay-dung-phan-khu-tp-vinh-nghe-an",
+      "manifest": {
+        "id": "nghe-an-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch xây dựng phân khu, TP Vinh - Nghệ An",
+        "bounds": [
+          [
+            18.552117,
+            103.87282
+          ],
+          [
+            20.03679,
+            105.808456
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            18.692188,
+            105.674357
+          ],
+          [
+            18.712188,
+            105.694357
+          ]
+        ]
+      }
+    },
+    {
+      "id": "quang-ngai-partition-reference",
+      "name": "Quy hoạch xây dựng phân khu TP Quảng Ngãi - Tỉnh Quảng Ngãi",
+      "city": "Quảng Ngãi (cũ)",
+      "scope": "region",
+      "area_id": "quang-ngai-legacy",
+      "coverage_provinces": [
+        "quang-ngai"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-xay-dung-phan-khu-tp-quang-ngai-tinh-quang-ngai",
+      "manifest": {
+        "id": "quang-ngai-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch xây dựng phân khu TP Quảng Ngãi - Tỉnh Quảng Ngãi",
+        "bounds": [
+          [
+            14.532752,
+            108.235534
+          ],
+          [
+            15.432999,
+            109.149997
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/quang-ngai/quang-ngai--qhpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            15.113833,
+            108.79722
+          ],
+          [
+            15.133833,
+            108.81722
+          ]
+        ]
+      }
+    },
+    {
+      "id": "son-la-partition-reference",
+      "name": "Quy hoạch phân khu xây dựng, TP Sơn La - Sơn La",
+      "city": "Sơn La (cũ)",
+      "scope": "region",
+      "area_id": "son-la-legacy",
+      "coverage_provinces": [
+        "son-la"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-phan-khu-xay-dung-tp-son-la-son-la",
+      "manifest": {
+        "id": "son-la-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu xây dựng, TP Sơn La - Sơn La",
+        "bounds": [
+          [
+            20.564783,
+            103.212223
+          ],
+          [
+            22.0284,
+            105.071119
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            21.321594,
+            103.900065
+          ],
+          [
+            21.341594,
+            103.920065
+          ]
+        ]
+      }
+    },
+    {
+      "id": "thanh-hoa-partition-reference",
+      "name": "Quy hoạch xây dựng phân khu, TP Thanh Hóa",
+      "city": "Thanh Hóa (cũ)",
+      "scope": "region",
+      "area_id": "thanh-hoa-legacy",
+      "coverage_provinces": [
+        "thanh-hoa"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-xay-dung-phan-khu-tp-thanh-hoa",
+      "manifest": {
+        "id": "thanh-hoa-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch xây dựng phân khu, TP Thanh Hóa",
+        "bounds": [
+          [
+            19.286987,
+            104.375953
+          ],
+          [
+            20.67067,
+            106.075862
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            19.799346,
+            105.778727
+          ],
+          [
+            19.819346,
+            105.798727
+          ]
+        ]
+      }
+    },
+    {
+      "id": "vinh-long-partition-reference",
+      "name": "Quy hoạch phân khu xây dựng đến 2030, TP Vĩnh Long - Vĩnh Long",
+      "city": "Vĩnh Long (cũ)",
+      "scope": "region",
+      "area_id": "vinh-long-legacy",
+      "coverage_provinces": [
+        "vinh-long"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-phan-khu-xay-dung-den-2030-tp-vinh-long-vinh-long",
+      "manifest": {
+        "id": "vinh-long-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu xây dựng đến 2030, TP Vĩnh Long - Vĩnh Long",
+        "bounds": [
+          [
+            9.88287,
+            105.682816
+          ],
+          [
+            10.330297,
+            106.289636
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-xay-dung/vinh-long/thanh-pho-vinh-long/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            10.233303,
+            105.943522
+          ],
+          [
+            10.253303,
+            105.963522
+          ]
+        ]
+      }
+    },
+    {
+      "id": "yen-bai-partition-reference",
+      "name": "Quy hoạch xây dựng phân khu, TP Yên Bái",
+      "city": "Yên Bái (cũ)",
+      "scope": "region",
+      "area_id": "yen-bai-legacy",
+      "coverage_provinces": [
+        "yen-bai"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-xay-dung-phan-khu-tp-yen-bai",
+      "manifest": {
+        "id": "yen-bai-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch xây dựng phân khu, TP Yên Bái",
+        "bounds": [
+          [
+            21.316213,
+            103.886237
+          ],
+          [
+            22.291669,
+            105.138573
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/yen-bai/thanh-pho-yen-bai--qhxdpk/{z}/{x}/{y}.png",
+        "notice": "Đồ án phân khu tham khảo theo tên hồ sơ; chỉ phủ khu vực được vẽ, không phải toàn tỉnh. Chưa xác minh hiệu lực hồ sơ.",
+        "attribution": "",
+        "focus_bounds": [
+          [
+            21.709956,
+            104.883341
+          ],
+          [
+            21.729956,
+            104.903341
+          ]
+        ]
       }
     }
   ]

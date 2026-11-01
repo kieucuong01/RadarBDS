@@ -1,6 +1,7 @@
 # Phân khu tham khảo ngoài TP.HCM mới
 
-Ngày kiểm: 2026-11-01. Người dùng chọn dùng Guland cho phần mở rộng, theo quy
+Ngày kiểm: 2026-11-01. Hiện có **26 nguồn phân khu tham khảo ngoài HCM/BD/BRVT**
+đã đăng ký local, chưa push/deploy. Người dùng chọn dùng Guland cho phần mở rộng, theo quy
 trình đã lấy QH2030. GIS TP.HCM/Bình Dương/BRVT hiện có giữ nguyên.
 
 ## Những gì thực sự được kiểm
@@ -22,16 +23,30 @@ Thừa Thiên Huế, Đà Nẵng, Đắk Nông. Độ phủ chỉ theo dữ li�
 không chứng nhận phủ kín tỉnh hay thống nhất1/2000. Ví dụ nguồn Tây Ninh mang
 tên thành phố Tây Ninh, không đại diện toàn bộ tỉnh mới.
 
+Rà tiếp mục **QH khác của43 tỉnh**, thu387 tên hồ sơ và mở17 trang đồ án có
+nhãn phân khu.262 mẫu tile bổ sung (tổng580) xác minh thêm10 nguồn có ảnh đọc được
+ở zoom15+: **Bắc Kạn, Cần Thơ, Hà Nam, Hưng Yên, Nghệ An, Quảng Ngãi, Sơn La,
+Thanh Hóa, Vĩnh Long, Yên Bái**. Nhiều nguồn chỉ phủ đô thị hoặc một khu công nghiệp;
+đây không phải khẳng định phủ kín26 tỉnh.
+
+Bảy ứng viên Kon Tum, Lào Cai, Long An, Sóc Trăng, Trà Vinh, Vĩnh Phúc và Điện Biên
+chưa đăng ký: các mẫu zoom gần trả403 hoặc chưa có ảnh đủ rõ tại vị trí kiểm.
+Không vượt403, không phóng đại ảnh tổng quan zoom8/10 thành nguồn đọc được.
+Cà Mau có nhãn trộn phân khu/chi tiết/nông thôn mới nên chưa nhận làm phân khu.
+Còn34 tỉnh ngoài phạm vi GIS HCM chưa có nguồn mới đạt bước kiểm này, gồm Kiên Giang.
+Danh mục tại landing page thường phụ thuộc huyện mặc định; vẫn có thể còn đồ án
+ở huyện khác. Không coi việc rà43 danh mục này là đã rà hết từng huyện toàn quốc.
+
 ## File và cơ chế
 
-- `config/planning_partition_reference.json`:16 catalogue entries, exact template,
+- `config/planning_partition_reference.json`:26 catalogue entries, exact template,
   province IDs cũ, bounds điều hướng, native/display zoom đã kiểm.
-- `config/planning_partition_reference_audit.json`:63 trạng thái controls và318
-  mẫu URL/status/dimensions/pixels/hash. Không chứa ảnh, cookie hay dữ liệu người dùng.
+- `config/planning_partition_reference_audit.json`:63 trạng thái controls,43 danh mục
+  đồ án và580 mẫu URL/status/dimensions/pixels/hash. Không chứa ảnh, cookie hay dữ liệu người dùng.
 - `PARTITION_SOURCE_RULES` trong `config/planning_regions.py`: exact descriptors
   gồm cả source_url, coverage_provinces, area_id. Context template đưa chúng vào
   `RADAR_PARTITION_SOURCE_RULES`, client chỉ cho partition reference đã đăng ký.
-- `services/planning_live.py` append lớp mới. Catalogue hiện213 entries, dưới
+- `services/planning_live.py` append lớp mới. Catalogue hiện223 entries, dưới
   cap256; không nới cap hay host allowlist để nhập nguồn tùy ý.
 - Source picker tự chuyển sang reference khi tỉnh đó không có GIS khả dụng,
   và quay về GIS khi về HCM. Bản vẽ/PDF cũ vẫn giữ; nhãn source trung tính.
@@ -42,6 +57,12 @@ tên thành phố Tây Ninh, không đại diện toàn bộ tỉnh mới.
   nhau giữ cache identity khác nhau. Bản đồ nền/listing/ranh không đổi nguồn.
 - Nguồn Bình Phước/Bình Thuận/Đắk Nông cần zoom15+, Huế14+; chọn vùng tự nâng
   tới mức có ảnh. Khi người dùng zoom xa, dừng requests và hiện gợi ý zoom gần.
+- Đồ án riêng có `focus_bounds` quanh vị trí đã có ảnh, chỉ dùng để điều hướng;
+  không dùng khung ảnh đang thấy để cắt độ phủ thực tế của nguồn. Nút xem vùng và
+  chọn toàn tỉnh khi đang bật phân khu đưa tới vị trí này; chọn huyện cụ thể giữ huyện.
+  `focus_bounds` cũng nằm trong exact source rules, client từ chối descriptor bị đổi.
+  Zoom floor chỉ lấy nguồn của theme đang chọn: bật thêm2030/địa giới không kéo
+  mức zoom của phân khu Bình Phước xuống dưới15. Runtime test tái hiện12→15.
 - Không có geometry quy hoạch vector mới; không bổ sung tra giao thửa ở các tỉnh
   chỉ có raster. Không làm tiếp ranh thửa các tỉnh còn thiếu.
 
@@ -51,9 +72,13 @@ Registry tests đối chiếu exact descriptors, positive samples, coverage và 
 JS tests từ chối template/host/theme/province bị đổi, giữ source selection cũ khi
 còn dùng được. Kiểm thực browser local tại Hà Nội và Bình Phước/Đồng Xoài thấy
 pixel phân khu, opacity50%, toggle+zoom; mobile390px có ảnh và dock gọn.
+Đợt đồ án bổ sung kiểm browser Cần Thơ: chọn tỉnh tự tới ảnh, toggle+zoom14,
+18 tile đã load, desktop và mobile390x844 có ảnh.134 JS tests, overlay/native
+runtime và29 Python tests đạt; hai test dùng terminal browser bị treo đã dừng,
+thay bằng kiểm rendered-browser qua CUA. Chưa kiểm render riêng cả26 nguồn.
 
 Ảnh mẫu dương tính và label control không thay thế đối chiếu quyết định/đồ án
-gốc. Không coi 16 nguồn này là hoàn thành phân khu toàn quốc. Các tỉnh còn thiếu
+gốc. Không coi26 nguồn này là hoàn thành phân khu toàn quốc. Các tỉnh còn thiếu
 cần tiếp tục rà đồ án cấp huyện/xã trong kho bản đồ; không lấy QHC/SDĐ2030 lấp
 vào lớp phân khu. Không clone archive ảnh hay crawl tile toàn quốc.
 

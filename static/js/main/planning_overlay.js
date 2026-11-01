@@ -31,7 +31,8 @@
     if (rule) return data.status === 'reference_overlay' && data.source_kind === 'guland_reference' && data.render_mode === 'xyz'
       && data.source_tiles === undefined && data.planning_status !== 'draft'
       && validBounds(data.bounds,[7,101,24,118])
-      && ['tile_template','bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
+      && (data.focus_bounds === undefined || validBounds(data.focus_bounds,[7,101,24,118]))
+      && ['tile_template','bounds','focus_bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom','coverage_windows'].every(function(key){
         return JSON.stringify(data[key]) === JSON.stringify(rule[key]);
       }) && typeof data.title === 'string' && typeof data.notice === 'string';
     if (data.render_mode === 'geojson' && ['official_gis_administrative','open_administrative_reference'].indexOf(data.source_kind)>=0)
@@ -250,6 +251,7 @@
       }
       map.fire('planning:area-change');
       var partitionItems=wantedItems(true).filter(function(item){return item.theme==='partition'&&item.source==='guland';});
+      if(!area.district && partitionItems.some(function(item){return item.manifest.focus_bounds;})){focusProvince();return;}
       if(partitionItems.length)area=Object.assign({},area,{min_zoom:Math.max(area.min_zoom||8,Math.min.apply(null,partitionItems.map(function(item){return item.manifest.min_zoom||8;})))});
       env.RadarPlanningArea.focus(map,L,area);
     });
@@ -499,8 +501,10 @@
     }
     function nearSource(item) { return map.getBounds().intersects(overlayBounds(item)); }
     function focusProvince() {
-      var items=wantedItems(true),minimum=items.length?Math.min.apply(null,items.map(function(item){return item.manifest.min_zoom||8;})):8;
-      env.RadarPlanningArea.focus(map,L,{bounds:selectedProvince.focus_bounds||selectedProvince.bounds,
+      var items=wantedItems(true).filter(function(item){return item.theme===activeTheme.id;});
+      var minimum=items.length?Math.min.apply(null,items.map(function(item){return item.manifest.min_zoom||8;})):8;
+      var scheme=activeTheme.id==='partition' && activeTheme.source.value==='guland' && items.find(function(item){return item.manifest.focus_bounds;});
+      env.RadarPlanningArea.focus(map,L,{bounds:scheme?scheme.manifest.focus_bounds:selectedProvince.focus_bounds||selectedProvince.bounds,
         district:'',min_zoom:Math.max(selectedProvince.min_zoom||8,minimum)});
     }
     function syncOverlays() {

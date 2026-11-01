@@ -33,6 +33,15 @@ Sai loại bản đồ; sai CRS/grid; template chưa quan sát; tải ngoài vie
 
 **Cập nhật 2026-11-01:** browser đã hoạt động. Đã rà63 controls,318 tile samples; commit `6b5ae926` tích hợp16 nguồn có mẫu dương tính.43 tỉnh chưa thấy control tổng hợp và Kiên Giang chưa có mẫu dương tính vẫn chưa tích hợp; cần rà đồ án lẻ để mở rộng tiếp. Chưa push/deploy commit này.
 
+**Đợt tiếp:** rà43 danh mục QH khác,387 tên đồ án,17 trang phân khu,262 mẫu bổ sung.
+Đăng ký thêm10 nguồn (tổng26); bảy ứng viên chưa có ảnh zoom gần dùng được giữ ngoài registry.
+Ruling: tên hồ sơ có phân khu và mẫu zoom15+ đọc được mới tích hợp; ảnh nhỏ hoặc403
+không đủ. Giữ phạm vi đồ án riêng, không nhận phủ kín tỉnh. `focus_bounds` chỉ điều hướng.
+134 JS +29 Python +overlay/native runtime đạt, browser Cần Thơ desktop/mobile có ảnh.
+Hai terminal-browser tests bị treo đã dừng; không báo chúng đạt. Chưa push/deploy.
+Review phát hiện floor lấy nhầm theme khác khi bật đồng thời; đã sửa và kiểm
+runtime Bình Phước +2030, tái hiện lỗi12≠15 trước sửa và đạt sau sửa.
+
 ## Task 2 — Registry và tích hợp theo tỉnh
 
 - [x] Sau khi có source đã kiểm: thêm `config/planning_partition_reference.json`, registry revision và exact descriptors trong `config/planning_regions.py`/context template.
@@ -46,7 +55,7 @@ Sai loại bản đồ; sai CRS/grid; template chưa quan sát; tải ngoài vie
 
 - [x] Run registry tests, `node --test tests/js/*.cjs tests/js/test_*.js`, overlay/native runtime tests và asset/version render tests.
 - [x] Browser desktop/mobile: tỉnh mới đúng lớp; toggle+zoom+pan+opacity; requests chỉ vùng nhìn; HCM/2030/bộ lọc tin rao không regression.
-- [ ] Kiểm bản release sạch, stage riêng intended changes; cập nhật Maps guide với số nguồn/tỉnh thật và gaps.
+- [x] Kiểm bản release sạch; cập nhật tài liệu với số nguồn/tỉnh thật và gaps. Stage riêng intended changes.
 - [ ] Commit/push; chờ Quality gates exact SHA; deploy và verify nếu đến bước release được yêu cầu. Không gọi scaffolding hoặc audit-only là đã thêm bản đồ.
 
 ## Stop condition
