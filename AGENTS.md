@@ -79,7 +79,8 @@ Marketing skills:
 
 ## Core Entry Points
 
-- Maps entry: `docs/maps-agent-guide.md` is the current module/contract/invariant map. Check HEAD versus dirty work and deployed SHA before treating a local pilot as released. Missing-province parcel expansion remains paused; nationwide 2030/admin layers do not imply nationwide cadastral coverage.
+- Maps entry: `docs/maps-agent-guide.md` is the current module/contract/invariant map. Check HEAD versus dirty work and deployed SHA before treating a local pilot as released. Missing-province work follows the priority policy below; nationwide 2030/admin layers do not imply nationwide cadastral coverage.
+- Maps priority policy (2026-11-02): `docs/planning_sources/maps-priority-markets.md` records the user-approved provisional 10 historic markets, feature gaps, source evidence and continuation checklist. It is not a verified national transaction ranking. Prioritize thorough work there; defer expansion elsewhere while preserving existing layers and fixes. Do not start nationwide parcel crawling from this policy.
 
 - `radar.py`: CLI router.
 - `app.py`: Flask setup plus current route implementations.

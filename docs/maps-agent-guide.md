@@ -17,8 +17,11 @@ Baseline là mốc bàn giao, không phải khẳng định VPS sẽ luôn giữ
    tài liệu hiện hành tương ứng. Tài liệu nguồn có các lần thử lịch sử; không lấy
    default hay số giới hạn ở một đoạn lịch sử làm hành vi hiện tại.
 
-**Ranh thửa các tỉnh còn thiếu đang tạm dừng theo yêu cầu người dùng.** Giữ nguồn
-đã có hoạt động; không tự khởi động lại nghiên cứu/crawl địa chính toàn quốc.
+**Ưu tiên địa bàn cập nhật 2026-11-02:** đọc
+[10 thị trường ưu tiên và sổ tiến độ](planning_sources/maps-priority-markets.md).
+Đây là danh sách tạm được người dùng chấp nhận, chưa phải top 10 giao dịch quốc
+gia có số liệu đồng nhất. Ngoài danh sách, hoãn mở rộng khi thiếu nguồn; giữ
+nguồn đã có hoạt động, không tự khởi động crawl địa chính toàn quốc.
 QH SDĐ 2030 toàn quốc và địa giới toàn quốc không đồng nghĩa ranh thửa toàn quốc.
 
 ## 2. Bản đồ các module
@@ -321,6 +324,7 @@ Tất cả đường dẫn dưới nằm trong `docs/planning_sources/`:
 
 | Task | Đọc tiếp |
 | --- | --- |
+| Chọn tỉnh ưu tiên, kiểm tra chức năng còn thiếu và tiếp tục công việc | [maps-priority-markets.md](planning_sources/maps-priority-markets.md) |
 | Hiệu năng, CDN, limits, rollback, bằng chứng tải | [maps-performance.md](planning_sources/maps-performance.md) |
 | Scope listing, drag/filter, viewport/layout | [maps-viewport-loading.md](planning_sources/maps-viewport-loading.md), [maps-parcel-interactions.md](planning_sources/maps-parcel-interactions.md) |
 | Raster/native GIS, layer thiếu, source/PDF | [general-planning-speed.md](planning_sources/general-planning-speed.md), [detailed-gis.md](planning_sources/detailed-gis.md), [hcm-expanded-partition.md](planning_sources/hcm-expanded-partition.md) |
