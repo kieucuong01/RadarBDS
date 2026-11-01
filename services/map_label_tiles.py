@@ -12,7 +12,7 @@ MAX_TILE_BYTES = 1_000_000
 
 
 def valid_tile(z, x, y):
-    if z != 14 or not (0 <= x < 2**z and 0 <= y < 2**z):
+    if not 0 <= z <= 14 or not (0 <= x < 2**z and 0 <= y < 2**z):
         return False
     west, east = x / 2**z * 360 - 180, (x+1) / 2**z * 360 - 180
     north = math.degrees(math.atan(math.sinh(math.pi * (1-2*y/2**z))))

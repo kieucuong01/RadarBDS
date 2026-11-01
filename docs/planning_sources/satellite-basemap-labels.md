@@ -2,18 +2,20 @@
 
 ## Detailed OSM labels (2026-11-01)
 
-At zoom 15+, satellite labels now use OSM Shortbread `street_labels`,
-`place_labels` and (zoom 17+) named `pois`. No street-map background or road
+At every zoom, satellite names now use OSM Shortbread. `place_labels` appear
+from zoom 3, major `street_labels` from zoom 9, minor roads from zoom 15, and
+named `pois` from zoom 17. No street-map background or road
 painting is included. Canvas text is laid out again at each display zoom instead
 of enlarging old raster text. Local street names are not filtered by road class.
 
 The 100 KB Protomaps Leaflet 4.0.1 renderer is lazy loaded from a local vendored
 file. Its one local patch rejects non-2xx vector responses before protobuf parsing;
 otherwise an HTTP error could be silently treated as a blank tile. Fetches queue
-at two concurrent reads and cancel on base switch/map removal. The raster Hybrid
-overlay below remains the overview/failure fallback.
+at two concurrent reads and cancel on base switch/map removal. There is no Esri
+name overlay, including at overview zoom or after upstream failure. A failed load
+leaves satellite imagery visible and reports that OSM names could not be loaded.
 
-`/api/map-labels/osm/14/{x}/{y}.mvt` is a fixed-host, bounded gateway because both
+`/api/map-labels/osm/{z}/{x}/{y}.mvt` (native zoom 0–14) is a fixed-host, bounded gateway because both
 deployed CSP headers restrict `connect-src`. It never forwards user credentials,
 follows redirects, or accepts arbitrary URLs. Scope: mainland Vietnam tiles
 intersecting 8–24 N, 102–110 E. Size cap 1 MB; cache 256 entries/32 MB per worker,
@@ -31,15 +33,13 @@ Verified source data at the user's examples:
   `Đường Đx 127`, and `Đường ĐX 128`.
 - 11.137674, 106.654575: native tile 14/13045/7681 contains `Đường NG2`.
 
-## Raster overview and fallback
+## Superseded raster comparison (history only)
 
 Satellite imagery in listing Maps uses Esri World Imagery. Road and place labels
-use the transparent `World_Hybrid_Overlay` service on `who.maptiles.arcgis.com`.
+previously used the transparent `World_Hybrid_Overlay` service on `who.maptiles.arcgis.com`.
 It includes minor roads and landmarks beyond the former `World_Transportation`
 and `World_Boundaries_and_Places` pair, with one tile request instead of two.
-Labels attach to the imagery layer lifecycle, so control changes, repeated toggles,
-and imagery-error fallback remove labels. Only visible tiles are requested; pan requests wait until idle.
-Labels overzoom from level 19 through the existing GIS maximum of 23.
+It was removed after the user confirmed missing ĐX/NG roads and outdated overview names.
 
 Ordinary Maps entry now starts with satellite and only the partition planning
 theme enabled at 50% visibility. Explicit links to another planning theme retain

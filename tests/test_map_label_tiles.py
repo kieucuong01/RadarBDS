@@ -12,6 +12,12 @@ def test_rejects_out_of_scope_tiles(coords):
     assert not valid_tile(*coords)
 
 
+def test_all_overview_zoom_levels_are_supported():
+    assert valid_tile(0,0,0)
+    assert valid_tile(13,6522,3840)
+    assert valid_tile(14,13045,7681)
+
+
 def test_reuses_tile_and_bounds_cache_without_forwarding_cookies(monkeypatch):
     cache = OSMLabelTiles(max_entries=1)
     calls = []

@@ -19,16 +19,18 @@
   }
   function labelRules(P){
     var text={labelProps:['name'],font:'600 12px sans-serif',fill:'#fff',stroke:'#172b23',width:3};
+    function major(z,feature){return ['motorway','trunk','primary','secondary','tertiary'].indexOf(feature.props.kind)>=0;}
     return [
-      {dataLayer:'street_labels',minzoom:15,symbolizer:new P.LineLabelSymbolizer(Object.assign({repeatDistance:180,maxLabelChars:80},text))},
-      {dataLayer:'place_labels',minzoom:15,symbolizer:new P.CenteredTextSymbolizer(Object.assign({},text,{font:'600 13px sans-serif'}))},
+      {dataLayer:'street_labels',minzoom:9,filter:major,symbolizer:new P.LineLabelSymbolizer(Object.assign({repeatDistance:250,maxLabelChars:80},text))},
+      {dataLayer:'street_labels',minzoom:15,filter:function(z,feature){return !major(z,feature);},symbolizer:new P.LineLabelSymbolizer(Object.assign({repeatDistance:180,maxLabelChars:80},text))},
+      {dataLayer:'place_labels',minzoom:3,symbolizer:new P.CenteredTextSymbolizer(Object.assign({},text,{font:'600 13px sans-serif'}))},
       {dataLayer:'pois',minzoom:17,symbolizer:new P.CenteredTextSymbolizer(Object.assign({},text,{font:'11px sans-serif'}))}
     ];
   }
-  function mount(L,map,satellite,overview,notify){
+  function mount(L,map,satellite,notify){
     var vector,credit,pending=false,disposed=false,retryAt=0,reads=[],reading=0;
     function busy(key,value){if(!disposed)map.fire('planning:busy',{key:key,busy:value,label:'Đang tải tên đường OSM…'});}
-    function eligible(){return !disposed&&map.hasLayer(satellite)&&map.getZoom()>=15;}
+    function eligible(){return !disposed&&map.hasLayer(satellite);}
     function hide(){
       if(vector&&map.hasLayer(vector))map.removeLayer(vector);
       if(credit){credit.remove();credit=null;}
@@ -52,23 +54,19 @@
       if(!eligible()){var error=new Error('Map labels cancelled');error.name='AbortError';return Promise.reject(error);}
       return new Promise(function(resolve,reject){reads.push({run:function(){return get(coords,size);},resolve:resolve,reject:reject});pump();});
     }
-    function fallback(){
-      hide();
-      if(!disposed&&map.hasLayer(satellite)&&!map.hasLayer(overview))overview.addTo(map);
-    }
     function failed(error){
       if(disposed||error.name==='AbortError'||!map.hasLayer(satellite))return;
-      retryAt=Date.now()+30000;fallback();
-      if(notify)notify('Tên đường OSM chưa tải được; đang dùng nhãn vệ tinh dự phòng.');
+      retryAt=Date.now()+30000;hide();
+      if(notify)notify('Tên đường OSM chưa tải được. Kéo hoặc zoom lại sau ít giây để thử lại.');
     }
     function show(P){
       if(!eligible())return;
       if(!vector){
         vector=P.leafletLayer({url:'/api/map-labels/osm/{z}/{x}/{y}.mvt',
-          maxDataZoom:14,levelDiff:0,minZoom:15,maxZoom:23,
+          maxDataZoom:14,levelDiff:0,minZoom:0,maxZoom:23,
           pane:'satelliteLabels',paintRules:[],labelRules:labelRules(P),
           attribution:'&copy; OpenStreetMap contributors',updateWhenIdle:true,keepBuffer:1});
-        // The pinned renderer settles failed tile reads internally; restore fallback explicitly.
+        // The pinned renderer settles failed reads internally; surface failures explicitly.
         vector.views.forEach(function(view){
           var source=view.tileCache.source,get=source.get.bind(source);
           source.get=function(coords,size){return queuedRead(get,coords,size).catch(function(error){failed(error);throw error;});};
@@ -78,7 +76,6 @@
         vector.on('remove',function(){cancelReads();busy('osm-labels',false);});
       }
       if(!map.hasLayer(vector))vector.addTo(map);
-      if(map.hasLayer(overview))map.removeLayer(overview);
       if(!credit){
         credit=L.control({position:'bottomright'});
         credit.onAdd=function(){
@@ -91,7 +88,7 @@
       }
     }
     function sync(){
-      if(!eligible()||Date.now()<retryAt){busy('osm-labels-library',false);fallback();return;}
+      if(!eligible()||Date.now()<retryAt){busy('osm-labels-library',false);hide();return;}
       if(pending)return;
       if(vector){show();return;}
       pending=true;busy('osm-labels-library',true);

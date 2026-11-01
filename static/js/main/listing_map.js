@@ -181,17 +181,7 @@
     var pane = map.createPane('satelliteLabels');
     pane.style.zIndex = '405';
     pane.style.pointerEvents = 'none';
-    // Hybrid includes local roads and landmarks absent from the older reference pair.
-    var labels = L.tileLayer(
-      'https://who.maptiles.arcgis.com/arcgis/rest/services/World_Hybrid_Overlay/MapServer/tile/{z}/{y}/{x}',
-      {pane: 'satelliteLabels', maxNativeZoom: 19, maxZoom: 23, interactive: false,
-        updateWhenIdle: true, keepBuffer: 1,
-        attribution: 'Labels &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community'}
-    );
-    satellite.on('add', function () { if (!map.hasLayer(labels)) labels.addTo(map); });
-    satellite.on('remove', function () { if (map.hasLayer(labels)) map.removeLayer(labels); });
-    if (root && root.RadarSatelliteLabels) root.RadarSatelliteLabels.mount(L, map, satellite, labels, function(message){setStatus(message,false);});
-    return labels;
+    if (root && root.RadarSatelliteLabels) return root.RadarSatelliteLabels.mount(L, map, satellite, function(message){setStatus(message,false);});
   }
 
   function bindStreetTileFallback(map, street, definition, notify) {
