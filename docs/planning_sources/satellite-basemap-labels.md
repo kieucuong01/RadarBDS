@@ -1,6 +1,15 @@
 # Satellite basemap labels
 
-## Detailed OSM labels (2026-11-01)
+## Current behavior (2026-11-01 follow-up)
+
+Satellite zoom <15 now uses imagery only: no vector decoder, tile requests, or
+road layout. Zoom 15+ retains detailed OSM names. The overview red existing-road
+guide is opt-in under QH Giao thông (including on the street basemap), hidden at
+zoom 15+; it is an existing-road reference, not evidence of proposed planning.
+Turning transport off cancels pending reads. Existing GIS roads/metro remain.
+No replacement label provider requiring a new commercial API key was introduced.
+
+## Superseded initial guide implementation (2026-11-01)
 
 At zoom 15+, satellite names use OSM Shortbread. Below zoom 15, a sparse custom
 guide paints existing motorway/trunk/primary/secondary roads red with

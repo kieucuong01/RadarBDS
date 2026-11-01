@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const source=fs.readFileSync('static/js/main/satellite_osm_labels.js','utf8');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 
-function harness(){
+function harness(guide=false){
  const active=new Set(),events={},tasks=[],credits=[];let zoom=12,options,vector,readFn=async()=>new Map();
  const emitter=()=>({events:{},on(n,fn){this.events[n]=fn;return this;},off(n){delete this.events[n];}});
  const map={hasLayer:l=>active.has(l),getZoom:()=>zoom,on(n,fn){events[n]=fn;},off(n){delete events[n];},fire(n,e){tasks.push(e);},removeLayer(l){active.delete(l);l.events?.remove?.();}};
@@ -14,7 +14,7 @@ function harness(){
  const P={LineSymbolizer:Symbolizer,LineLabelSymbolizer:Symbolizer,CenteredTextSymbolizer:Symbolizer,leafletLayer(o){options=o;vector=emitter();vector.views=new Map([['',{tileCache:{source:{get:(...args)=>readFn(...args),zoomaborts:[]}}}]]);vector.addTo=()=>{active.add(vector);return vector;};return vector;}};
  const L={control(){const c={addTo(){credits.push(this);this.onAdd();},remove(){credits.splice(credits.indexOf(this),1);}};return c;},DomUtil:{create(){return {}; }},DomEvent:{disableClickPropagation(){}}};
  const window={protomapsL:P,setTimeout,clearTimeout};vm.runInNewContext(source,{window});
- const dispose=window.RadarSatelliteLabels.mount(L,map,satellite);
+ const dispose=window.RadarSatelliteLabels.mount(L,map,satellite,undefined,guide);
  function open(){active.add(satellite);satellite.events.add();}
  function street(){active.delete(satellite);satellite.events.remove();}
  return {active,events,tasks,credits,open,street,dispose,P,api:window.RadarSatelliteLabels,
@@ -32,14 +32,14 @@ test('OSM uses name tags for DX 126, DX 127 and NG2 without painting a street ba
 
 test('zoom, base switching and disposal keep one noninteractive OSM label layer and its visible attribution',async()=>{
  const h=harness();assert.equal(h.vector,undefined,'Street mode does not load satellite names');
- h.open();await flush();assert.ok(h.active.has(h.vector),'Overview uses the sparse major-road guide');
+ h.open();await flush();assert.equal(h.vector,undefined,'Overview must not initialize the decoder or request vector tiles');
  h.zoom(16);await flush();assert.ok(h.active.has(h.vector));
  assert.equal(h.options.url,'/api/map-labels/osm/{z}/{x}/{y}.mvt');assert.equal(h.options.maxDataZoom,14);
- assert.equal(h.options.levelDiff,0);assert.equal(h.options.paintRules.length,2);assert.equal(h.options.pane,'satelliteLabels');
+ assert.equal(h.options.levelDiff,0);assert.equal(h.options.paintRules.length,0);assert.equal(h.options.pane,'satelliteLabels');
  assert.equal(h.credits.length,1);h.zoom(17);assert.equal(h.credits.length,1);
  h.street();assert.ok(!h.active.has(h.vector));assert.equal(h.credits.length,0);
  h.open();await flush();assert.ok(h.active.has(h.vector));assert.equal(h.credits.length,1);
- h.zoom(5);assert.ok(h.active.has(h.vector),'Zooming out reuses the same layer for the lightweight road guide');assert.equal(h.credits.length,1);
+ h.zoom(5);assert.ok(!h.active.has(h.vector),'Overview removes the vector layer');assert.equal(h.credits.length,0);
  h.dispose();assert.equal(h.credits.length,0);assert.equal(Object.keys(h.events).length,0);
 });
 
@@ -104,7 +104,7 @@ test('queued requests for an obsolete native zoom never run',async()=>{
  h.open();h.zoom(16);await flush();const source=h.vector.views.get('').tileCache.source;
  const jobs=[1,2,3].map(x=>source.get({z:14,x,y:7687},256));
  const done=Promise.allSettled(jobs);
- h.zoom(13);const next=source.get({z:13,x:6522,y:3840},256);
+ const next=source.get({z:13,x:6522,y:3840},256);
  releases.splice(0).forEach(resolve=>resolve(new Map()));await flush();
  assert.deepEqual(started,[14,14,13]);releases.splice(0).forEach(resolve=>resolve(new Map()));
  await next;const results=await done;assert.equal(results.filter(r=>r.status==='rejected'&&r.reason.name==='AbortError').length,1);
@@ -117,3 +117,13 @@ test('switching basemap cancels a pending retry immediately',async()=>{
  await flush();h.street();await flush();
  assert.equal(settled,true);assert.equal((await result).name,'AbortError');assert.equal(reads,1);
 });
+
+ test('major-road guide is opt-in through transport, independent of street or satellite basemap',async()=>{
+ const h=harness(true);h.open();await flush();assert.equal(h.vector,undefined);
+ h.events['planning:transport']({enabled:true});await flush();assert.ok(h.active.has(h.vector));
+ assert.equal(h.options.paintRules.length,2);assert.ok(h.options.labelRules.every(r=>r.minzoom<15));
+ h.street();assert.ok(h.active.has(h.vector),'Transport remains on street basemap');
+ h.events['planning:transport']({enabled:false});assert.ok(!h.active.has(h.vector));
+ h.events['planning:transport']({enabled:true});await flush();h.zoom(16);assert.ok(!h.active.has(h.vector));
+ h.dispose();assert.equal(Object.keys(h.events).length,0);
+ });

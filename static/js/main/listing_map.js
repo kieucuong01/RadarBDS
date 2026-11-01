@@ -181,7 +181,12 @@
     var pane = map.createPane('satelliteLabels');
     pane.style.zIndex = '405';
     pane.style.pointerEvents = 'none';
-    if (root && root.RadarSatelliteLabels) return root.RadarSatelliteLabels.mount(L, map, satellite, function(message){setStatus(message,false);});
+    if (root && root.RadarSatelliteLabels) {
+      var notify = function(message){setStatus(message,false);};
+      var detail = root.RadarSatelliteLabels.mount(L, map, satellite, notify);
+      var transport = root.RadarSatelliteLabels.mount(L, map, satellite, notify, true);
+      return function(){detail();transport();};
+    }
   }
 
   function bindStreetTileFallback(map, street, definition, notify) {

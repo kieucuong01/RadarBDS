@@ -70,11 +70,12 @@
       {dataLayer:'pois',minzoom:17,symbolizer:new P.CenteredTextSymbolizer(Object.assign({},text,{font:'11px sans-serif'}))}
     ];
   }
-  function mount(L,map,satellite,notify){
+  function mount(L,map,satellite,notify,guide){
+    var transportEnabled=false;
     var vector,credit,pending=false,disposed=false,retryAt=0,reads=[],reading=0,nativeZoom,retries=new Set();
     function aborted(){var error=new Error('Map labels cancelled');error.name='AbortError';return error;}
-    function busy(key,value){if(!disposed)map.fire('planning:busy',{key:key,busy:value,label:'Đang tải tên đường OSM…'});}
-    function eligible(){return !disposed&&map.hasLayer(satellite);}
+    function busy(key,value){if(!disposed)map.fire('planning:busy',{key:(guide?'transport-':'')+key,busy:value,label:'Đang tải tên đường OSM…'});}
+    function eligible(){return !disposed&&(guide?transportEnabled&&map.getZoom()<15:map.hasLayer(satellite)&&map.getZoom()>=15);}
     function hide(){
       if(vector&&map.hasLayer(vector))map.removeLayer(vector);
       if(credit){credit.remove();credit=null;}
@@ -110,7 +111,7 @@
       return new Promise(function(resolve,reject){reads.push({run:run,resolve:resolve,reject:reject});pump();});
     }
     function failed(error){
-      if(disposed||error.name==='AbortError'||!map.hasLayer(satellite))return;
+      if(error.name==='AbortError'||!eligible())return;
       if(Date.now()>=retryAt&&notify)notify('Một phần tên đường chưa tải được. Các vùng đã tải vẫn được giữ lại.');
       retryAt=Date.now()+30000;
     }
@@ -118,13 +119,13 @@
       if(!eligible())return;
       if(!vector){
         vector=P.leafletLayer({url:'/api/map-labels/osm/{z}/{x}/{y}.mvt',
-          maxDataZoom:14,levelDiff:0,minZoom:0,maxZoom:23,
-          pane:'satelliteLabels',paintRules:paintRules(P),labelRules:labelRules(P),
+          maxDataZoom:14,levelDiff:0,minZoom:guide?0:15,maxZoom:guide?14:23,
+          pane:'satelliteLabels',paintRules:guide?paintRules(P):[],labelRules:labelRules(P).filter(function(rule){return guide?rule.minzoom<15:rule.minzoom>=15;}),
           attribution:'&copy; OpenStreetMap contributors',updateWhenIdle:true,keepBuffer:1});
         // The pinned renderer settles failed reads internally; surface failures explicitly.
         vector.views.forEach(function(view){
           var source=view.tileCache.source,get=source.get.bind(source);
-          source.get=function(coords,size){return queuedRead(get,coords,size).then(prepareNames).catch(function(error){failed(error);throw error;});};
+          source.get=function(coords,size){return queuedRead(get,coords,size).then(function(data){return guide?prepareNames(data):data;}).catch(function(error){failed(error);throw error;});};
         });
         vector.on('loading',function(){busy('osm-labels',true);});
         vector.on('load',function(){busy('osm-labels',false);});
@@ -143,14 +144,17 @@
       }
     }
     function sync(){
-      if(!eligible()){busy('osm-labels-library',false);hide();return;}
+      if(!eligible()){cancelReads();busy('osm-labels-library',false);hide();return;}
       if(!vector&&Date.now()<retryAt)return;
       if(pending)return;
       if(vector){show();return;}
       pending=true;busy('osm-labels-library',true);
       loadLibrary().then(show).catch(failed).finally(function(){pending=false;busy('osm-labels-library',false);});
     }
+    function transport(event){transportEnabled=Boolean(event.enabled);sync();}
+    if(guide)map.on('planning:transport',transport);
     function dispose(){
+      if(guide)map.off('planning:transport',transport);
       busy('osm-labels-library',false);hide();disposed=true;
       satellite.off('add',sync);satellite.off('remove',sync);map.off('zoomend',sync);map.off('unload',dispose);
     }
