@@ -26,7 +26,7 @@
     // Fill the screen with the province centre instead of fitting every outer edge.
     var zoom=area.district?map.getBoundsZoom(bounds,false,[24,24])
       :Math.max(map.getBoundsZoom(bounds,true,[0,0]),map.getBoundsZoom(bounds,false,[0,0])+1);
-    zoom=Math.min(13,Math.max(area.min_zoom||8,zoom));
+    zoom=Math.min(Math.max(13,area.min_zoom||8),Math.max(area.min_zoom||8,zoom));
     map.setView(bounds.getCenter(),zoom,{animate:false});
   }
   function mount(env,ui,provinces,selection,onChange){

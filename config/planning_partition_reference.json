@@ -1,0 +1,695 @@
+{
+  "checked_on": "2026-11-01",
+  "revision": "partition-20261101",
+  "notice": "Controls and bounded tile samples, not complete or legal coverage.",
+  "layers": [
+    {
+      "id": "ha-noi-partition-reference",
+      "name": "Quy hoạch phân khu · Hà Nội (cũ)",
+      "city": "Hà Nội (cũ)",
+      "scope": "region",
+      "area_id": "ha-noi-legacy",
+      "coverage_provinces": [
+        "ha-noi"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "manifest": {
+        "id": "ha-noi-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Hà Nội (cũ)",
+        "bounds": [
+          [
+            20.546104,
+            105.284899
+          ],
+          [
+            21.404762,
+            106.073431
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "bac-giang-partition-reference",
+      "name": "Quy hoạch phân khu · Bắc Giang (cũ)",
+      "city": "Bắc Giang (cũ)",
+      "scope": "region",
+      "area_id": "bac-giang-legacy",
+      "coverage_provinces": [
+        "bac-giang"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-giang",
+      "manifest": {
+        "id": "bac-giang-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Bắc Giang (cũ)",
+        "bounds": [
+          [
+            21.121951,
+            105.880901
+          ],
+          [
+            21.626274,
+            107.102163
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-han02.fptcloud.com/guland/bac-giang-qhxd/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "bac-ninh-partition-reference",
+      "name": "Quy hoạch phân khu · Bắc Ninh (cũ)",
+      "city": "Bắc Ninh (cũ)",
+      "scope": "region",
+      "area_id": "bac-ninh-legacy",
+      "coverage_provinces": [
+        "bac-ninh"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "manifest": {
+        "id": "bac-ninh-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Bắc Ninh (cũ)",
+        "bounds": [
+          [
+            20.969118,
+            105.902546
+          ],
+          [
+            21.280538,
+            106.390798
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-ninh-qhpk-2/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "binh-phuoc-partition-reference",
+      "name": "Quy hoạch phân khu · Bình Phước (cũ)",
+      "city": "Bình Phước (cũ)",
+      "scope": "region",
+      "area_id": "binh-phuoc-legacy",
+      "coverage_provinces": [
+        "binh-phuoc"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-phuoc",
+      "manifest": {
+        "id": "binh-phuoc-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Bình Phước (cũ)",
+        "bounds": [
+          [
+            11.301457,
+            106.413046
+          ],
+          [
+            12.296002,
+            107.427332
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 15,
+        "max_zoom": 23,
+        "min_native_zoom": 15,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-phuoc/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "binh-thuan-partition-reference",
+      "name": "Quy hoạch phân khu · Bình Thuận (cũ)",
+      "city": "Bình Thuận (cũ)",
+      "scope": "region",
+      "area_id": "binh-thuan-legacy",
+      "coverage_provinces": [
+        "binh-thuan"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-thuan",
+      "manifest": {
+        "id": "binh-thuan-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Bình Thuận (cũ)",
+        "bounds": [
+          [
+            9.915074,
+            107.394199
+          ],
+          [
+            11.555543,
+            109.054739
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 15,
+        "max_zoom": 23,
+        "min_native_zoom": 15,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-thuan/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "hai-duong-partition-reference",
+      "name": "Quy hoạch phân khu · Hải Dương (cũ)",
+      "city": "Hải Dương (cũ)",
+      "scope": "region",
+      "area_id": "hai-duong-legacy",
+      "coverage_provinces": [
+        "hai-duong"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-duong",
+      "manifest": {
+        "id": "hai-duong-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Hải Dương (cũ)",
+        "bounds": [
+          [
+            20.684715,
+            106.124369
+          ],
+          [
+            21.276876,
+            106.73281
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-han02.fptcloud.com/guland/hai-duong-qhxd/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "hai-phong-partition-reference",
+      "name": "Quy hoạch phân khu · Hải Phòng (cũ)",
+      "city": "Hải Phòng (cũ)",
+      "scope": "region",
+      "area_id": "hai-phong-legacy",
+      "coverage_provinces": [
+        "hai-phong"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "manifest": {
+        "id": "hai-phong-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Hải Phòng (cũ)",
+        "bounds": [
+          [
+            20.089559,
+            106.400638
+          ],
+          [
+            21.079064,
+            107.877703
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 13,
+        "max_zoom": 23,
+        "min_native_zoom": 13,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-han02.fptcloud.com/guland5/qhxd/hai-phong/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "khanh-hoa-partition-reference",
+      "name": "Quy hoạch phân khu · Khánh Hòa (cũ)",
+      "city": "Khánh Hòa (cũ)",
+      "scope": "region",
+      "area_id": "khanh-hoa-legacy",
+      "coverage_provinces": [
+        "khanh-hoa"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "manifest": {
+        "id": "khanh-hoa-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Khánh Hòa (cũ)",
+        "bounds": [
+          [
+            9.56967,
+            108.671065
+          ],
+          [
+            12.868524,
+            114.996965
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhpk/khanh-hoa-2/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "lang-son-partition-reference",
+      "name": "Quy hoạch phân khu · Lạng Sơn (cũ)",
+      "city": "Lạng Sơn (cũ)",
+      "scope": "region",
+      "area_id": "lang-son-legacy",
+      "coverage_provinces": [
+        "lang-son"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/lang-son",
+      "manifest": {
+        "id": "lang-son-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Lạng Sơn (cũ)",
+        "bounds": [
+          [
+            21.325251,
+            106.095452
+          ],
+          [
+            22.461457,
+            107.391399
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 17,
+        "tile_template": "https://s3-han02.fptcloud.com/guland/lang-son-qhxd/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "nam-dinh-partition-reference",
+      "name": "Quy hoạch phân khu · Nam Định (cũ)",
+      "city": "Nam Định (cũ)",
+      "scope": "region",
+      "area_id": "nam-dinh-legacy",
+      "coverage_provinces": [
+        "nam-dinh"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/nam-dinh",
+      "manifest": {
+        "id": "nam-dinh-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Nam Định (cũ)",
+        "bounds": [
+          [
+            19.888651,
+            105.924419
+          ],
+          [
+            20.499165,
+            106.6101
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/nam-dinh/thanh-pho-nam-dinh--qhxd/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "quang-ninh-partition-reference",
+      "name": "Quy hoạch phân khu · Quảng Ninh (cũ)",
+      "city": "Quảng Ninh (cũ)",
+      "scope": "region",
+      "area_id": "quang-ninh-legacy",
+      "coverage_provinces": [
+        "quang-ninh"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "manifest": {
+        "id": "quang-ninh-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Quảng Ninh (cũ)",
+        "bounds": [
+          [
+            20.716307,
+            106.439195
+          ],
+          [
+            21.665156,
+            108.08694
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 15,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/quang-ninh--qhpk-3/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "tay-ninh-partition-reference",
+      "name": "Quy hoạch phân khu · Tây Ninh (cũ)",
+      "city": "Tây Ninh (cũ)",
+      "scope": "region",
+      "area_id": "tay-ninh-legacy",
+      "coverage_provinces": [
+        "tay-ninh"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tay-ninh",
+      "manifest": {
+        "id": "tay-ninh-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Tây Ninh (cũ)",
+        "bounds": [
+          [
+            10.962521,
+            105.809912
+          ],
+          [
+            11.77963,
+            106.492408
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/tay-ninh/tp-tay-ninh--qhxdpk/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "thai-binh-partition-reference",
+      "name": "Quy hoạch phân khu · Thái Bình (cũ)",
+      "city": "Thái Bình (cũ)",
+      "scope": "region",
+      "area_id": "thai-binh-legacy",
+      "coverage_provinces": [
+        "thai-binh"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-binh",
+      "manifest": {
+        "id": "thai-binh-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Thái Bình (cũ)",
+        "bounds": [
+          [
+            20.244052,
+            106.10967
+          ],
+          [
+            20.728849,
+            106.656427
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/thaibinh-qhxd/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "thua-thien-hue-partition-reference",
+      "name": "Quy hoạch phân khu · Thừa Thiên Huế (cũ)",
+      "city": "Thừa Thiên Huế (cũ)",
+      "scope": "region",
+      "area_id": "thua-thien-hue-legacy",
+      "coverage_provinces": [
+        "thua-thien-hue"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thua-thien-hue",
+      "manifest": {
+        "id": "thua-thien-hue-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Thừa Thiên Huế (cũ)",
+        "bounds": [
+          [
+            15.993878,
+            107.016212
+          ],
+          [
+            16.742462,
+            108.210653
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 14,
+        "max_zoom": 23,
+        "min_native_zoom": 14,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "da-nang-partition-reference",
+      "name": "Quy hoạch phân khu · Đà Nẵng (cũ)",
+      "city": "Đà Nẵng (cũ)",
+      "scope": "region",
+      "area_id": "da-nang-legacy",
+      "coverage_provinces": [
+        "da-nang"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "manifest": {
+        "id": "da-nang-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Đà Nẵng (cũ)",
+        "bounds": [
+          [
+            15.760877,
+            107.818821
+          ],
+          [
+            16.909212,
+            112.794055
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/danang-qhc/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    },
+    {
+      "id": "dak-nong-partition-reference",
+      "name": "Quy hoạch phân khu · Đắk Nông (cũ)",
+      "city": "Đắk Nông (cũ)",
+      "scope": "region",
+      "area_id": "dak-nong-legacy",
+      "coverage_provinces": [
+        "dak-nong"
+      ],
+      "theme": "partition",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Lớp phân khu tham khảo; chưa đối chiếu quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-nong",
+      "manifest": {
+        "id": "dak-nong-partition-reference",
+        "status": "reference_overlay",
+        "title": "Quy hoạch phân khu · Đắk Nông (cũ)",
+        "bounds": [
+          [
+            11.748864,
+            107.206444
+          ],
+          [
+            12.81217,
+            108.133399
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 15,
+        "max_zoom": 23,
+        "min_native_zoom": 15,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/dak-nong/{z}/{x}/{y}.png",
+        "notice": "Bản đồ phân khu tham khảo theo lớp nguồn; chưa xác minh phủ kín, tỷ lệ thống nhất hoặc hiệu lực hồ sơ. Vùng trống cần đối chiếu đồ án gốc.",
+        "attribution": ""
+      }
+    }
+  ]
+}

@@ -315,6 +315,7 @@ Tất cả đường dẫn dưới nằm trong `docs/planning_sources/`:
 | Hiệu năng, CDN, limits, rollback, bằng chứng tải | [maps-performance.md](planning_sources/maps-performance.md) |
 | Scope listing, drag/filter, viewport/layout | [maps-viewport-loading.md](planning_sources/maps-viewport-loading.md), [maps-parcel-interactions.md](planning_sources/maps-parcel-interactions.md) |
 | Raster/native GIS, layer thiếu, source/PDF | [general-planning-speed.md](planning_sources/general-planning-speed.md), [detailed-gis.md](planning_sources/detailed-gis.md), [hcm-expanded-partition.md](planning_sources/hcm-expanded-partition.md) |
+| Phân khu tham khảo ngoài HCM: registry và khảo sát 63 tỉnh | [national-partition.md](planning_sources/national-partition.md), `config/planning_partition_reference.json`, `config/planning_partition_reference_audit.json` |
 | 2030 toàn quốc, tỉnh cũ, branding | [national-2030.md](planning_sources/national-2030.md), [historic-area-selection.md](planning_sources/historic-area-selection.md), [landuse-2030.md](planning_sources/landuse-2030.md) |
 | Địa giới | [national-administrative.md](planning_sources/national-administrative.md), [legacy-administrative.md](planning_sources/legacy-administrative.md), [administrative-hcm.md](planning_sources/administrative-hcm.md) |
 | Ranh và lookup GIS | [binh-duong-native-gis.md](planning_sources/binh-duong-native-gis.md), [parcel-catalog-local-pilot.md](planning_sources/parcel-catalog-local-pilot.md), [hcm-expanded-parcels.md](planning_sources/hcm-expanded-parcels.md) |

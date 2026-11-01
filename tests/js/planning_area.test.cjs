@@ -18,6 +18,7 @@ test('whole-province and district framing respect sparse source zoom floors',()=
  const map={getBoundsZoom:()=>8,setView(c,z){zoom=z;}};
  api.focus(map,{latLngBounds:()=>b},{bounds:[[20,105],[22,107]],district:'',min_zoom:11});assert.equal(zoom,11);
  api.focus(map,{latLngBounds:()=>b},{bounds:[[20,105],[22,107]],district:'123',max_zoom:13,min_zoom:11});assert.equal(zoom,11);
+ api.focus(map,{latLngBounds:()=>b},{bounds:[[20,105],[22,107]],district:'',min_zoom:15});assert.equal(zoom,15);
  const area=api.initial(provinces,'khanh-hoa-legacy');
  assert.deepEqual(area.bounds,provinces.find(p=>p.id==='khanh-hoa').focus_bounds);
 });

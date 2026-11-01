@@ -1,6 +1,6 @@
 # QH Phân khu các tỉnh còn lại — nguồn Guland
 
-Ngày: 2026-11-01. Trạng thái: **đề xuất chờ duyệt, chưa sửa code sản phẩm**.
+Ngày: 2026-11-01. Trạng thái: **người dùng đã duyệt, đang xác minh nguồn; chưa sửa code sản phẩm**.
 Baseline: `945274fc`, `docs/maps-agent-guide.md`.
 
 ## Yêu cầu mới nhất
@@ -108,11 +108,11 @@ theo thửa từ raster; card thửa/GIS lookup hiện tại giữ scope nguồn
 Builder-check: đã review; chưa có template Guland phân khu ngoài HCM được xác
 minh là blocker khảo sát, không phải lý do publish provider chưa đủ gate.
 
-## Quyết định cần duyệt
+## Quyết định đã duyệt
 
-Duyệt thiết kế **Guland cho phần phân khu mới, giữ GIS HCM hiện có, tích hợp theo
-source thực đã kiểm và tải theo viewport**. Sau duyệt mới lập implementation
-plan và sửa code. Browser enable là điều kiện khảo sát source đang thiếu, không
+Người dùng duyệt thiết kế **Guland cho phần phân khu mới, giữ GIS HCM hiện có,
+tích hợp theo source thực đã kiểm và tải theo viewport**. Implementation plan:
+`../plans/2026-11-01-national-partition.md`. Browser enable là điều kiện khảo sát source đang thiếu, không
 phải lý do tự tạo URL tile hoặc báo đã làm xong.
 
 ## Phụ lục: nghiên cứu GIS đã dừng theo quyết định mới
