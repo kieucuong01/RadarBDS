@@ -1,6 +1,6 @@
 # QH Phân khu các tỉnh còn lại — nguồn Guland
 
-Ngày: 2026-11-01. Trạng thái: **người dùng đã duyệt, đang xác minh nguồn; chưa sửa code sản phẩm**.
+Ngày: 2026-11-01. Trạng thái: **đã triển khai local16 nguồn tại `6b5ae926`; chưa phủ đủ các tỉnh còn lại**.
 Baseline: `945274fc`, `docs/maps-agent-guide.md`.
 
 ## Yêu cầu mới nhất
@@ -33,7 +33,7 @@ trong lượt rà này**. Trang SEO/legend có chữ phân khu chưa chứng min
 đó có lớp phân khu ở tỉnh đang chọn. Captures cũ chỉ giữ control2030, không đủ
 để dùng cho phân khu. HTTP trực tiếp Cần Thơ/Hà Nội trả challenge/403.
 
-Công cụ browser hiện báo `Local browser use is disabled in Work settings`.
+Ở bước khảo sát ban đầu công cụ browser báo `Local browser use is disabled in Work settings`; đã khắc phục và rà63 landing controls, kết quả trong `../../planning_sources/national-partition.md`.
 Cần người dùng bật browser để quan sát UI/public network bình thường. Không đổi
 user-agent/host/signed params để vượt challenge, không sao chép token trả phí,
 không dùng đăng nhập/API key của ứng dụng khác. Nếu public UI cũng chặn, giữ
