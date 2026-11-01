@@ -54,6 +54,23 @@
     return {edges:edges,center:center,outline:largest[0].slice(0,-1).map(point),computedArea:total,area:hasArea?recorded:total,areaSource:hasArea?'recorded':'geometry'};
   }
   function directions(center){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(center.lat+','+center.lng)+'&travelmode=driving';}
+  function visibleEdges(m,project){
+    var center=project(m.center),areaWidth=measure.formatArea(m.area).length*7+10,occupied=[
+      {x:center.x-areaWidth/2,y:center.y+5,w:areaWidth,h:24},
+      {x:center.x-22,y:center.y-52,w:44,h:56}
+    ];
+    function overlaps(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+    return m.edges.slice().sort(function(a,b){return b.distance-a.distance;}).slice(0,250).reduce(function(result,e){
+      var a=project(e.a),b=project(e.b),at=project(e.at),dx=b.x-a.x,dy=b.y-a.y;
+      var text=measure.formatDistance(e.distance),width=text.length*7+12,height=22;
+      if(Math.hypot(dx,dy)<width+8)return result;
+      var angle=Math.atan2(dy,dx),w=Math.abs(Math.cos(angle))*width+Math.abs(Math.sin(angle))*height,
+        h=Math.abs(Math.sin(angle))*width+Math.abs(Math.cos(angle))*height;
+      var box={x:at.x-w/2,y:at.y-h/2,w:w,h:h};
+      if(occupied.some(function(other){return overlaps(box,other);}))return result;
+      occupied.push(box);result.push(e);return result;
+    },[]);
+  }
   function mount(map,L,env){
     var group=L.layerGroup().addTo(map),selected=null,disposed=false;
     ['planningParcelDimensions','planningParcelPin'].forEach(function(name,index){var pane=map.createPane(name);pane.style.zIndex=String(423+index);pane.style.pointerEvents='none';});
@@ -62,18 +79,17 @@
     function render(){
       group.clearLayers();if(!selected||disposed)return;
       var m=selected;
-      m.edges.filter(function(e){var a=map.latLngToContainerPoint(e.a),b=map.latLngToContainerPoint(e.b);return m.edges.length<=30||Math.hypot(b.x-a.x,b.y-a.y)>=35;})
-        .sort(function(a,b){return b.distance-a.distance;}).slice(0,250).forEach(function(e){
+      visibleEdges(m,function(p){return map.latLngToContainerPoint(p);}).forEach(function(e){
           var a=map.latLngToContainerPoint(e.a),b=map.latLngToContainerPoint(e.b),angle=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
           if(angle>90)angle-=180;if(angle<-90)angle+=180;
           marker(e.at,'<span style="transform:rotate('+angle+'deg)">'+measure.formatDistance(e.distance)+'</span>','parcel-edge-label',[90,18],[45,9]);
         });
-      marker(m.center,'<span>'+measure.formatArea(m.area)+'</span>','parcel-center-area',[170,24],[85,-8]);
+      marker(m.center,'<span>'+measure.formatArea(m.area)+'</span>','parcel-center-area',[110,18],[55,-8]);
       marker(m.center,'<svg viewBox="0 0 40 52" aria-hidden="true"><path d="M20 50C16 42 2 29 2 20a18 18 0 1 1 36 0c0 9-14 22-18 30Z" fill="#11755b" stroke="white" stroke-width="2.5"/><circle cx="20" cy="20" r="11" fill="white"/><path d="M13 25V15h7a4 4 0 0 1 0 8h-7m7 0 6 5" fill="none" stroke="#11755b" stroke-width="3"/></svg>','parcel-radar-pin',[36,48],[18,48],'planningParcelPin');
     }
     map.on('zoomend',render);
     return {show:function(feature){selected=metrics(feature);render();return selected;},clear:function(){selected=null;group.clearLayers();},
       dispose:function(){disposed=true;map.off('zoomend',render);map.removeLayer(group);}};
   }
-  return {metrics:metrics,contains:contains,directions:directions,mount:mount};
+  return {metrics:metrics,contains:contains,directions:directions,visibleEdges:visibleEdges,mount:mount};
 });

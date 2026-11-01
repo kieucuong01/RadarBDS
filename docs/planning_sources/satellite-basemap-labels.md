@@ -1,6 +1,16 @@
 # Satellite basemap labels
 
-## Current behavior (2026-11-01 follow-up)
+## Current behavior (2026-11-01 Esri overview)
+
+Below zoom 15 satellite uses ready-made Esri World_Hybrid_Overlay raster labels;
+zoom 15+ retains detailed OSM labels. Red OSM road-guide rendering and its transport
+event/mount have been removed entirely. GIS transport and metro are unchanged.
+Raster updates only when idle, with one tile buffer, and disappears at zoom 15.
+Esri raster is legacy (scheduled retirement March 2028); see source below.
+Selected parcel edge labels now require enough screen length and non-overlapping
+rotated bounding boxes, with center area and pin reserved. Zoom recalculates labels.
+
+## Superseded behavior (2026-11-01 follow-up)
 
 Satellite zoom <15 now uses imagery only: no vector decoder, tile requests, or
 road layout. Zoom 15+ retains detailed OSM names. The overview red existing-road

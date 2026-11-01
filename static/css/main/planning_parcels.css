@@ -50,7 +50,7 @@
 .planning-parcel-expand{width:100%;min-height:36px;border:0;background:#edf7f3;color:#0b7055;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer}
 .parcel-edge-label,.parcel-center-area,.parcel-radar-pin{background:none;border:0;pointer-events:none!important;text-align:center}
 .parcel-edge-label span{display:block;font:600 10px/18px sans-serif;color:#263d33;text-shadow:0 1px 2px white,1px 0 2px white,-1px 0 2px white;white-space:nowrap}
-.parcel-center-area span{display:inline-block;background:#fffffff0;border-radius:5px;padding:3px 6px;color:#14543e;font:700 12px/18px sans-serif;white-space:nowrap;box-shadow:0 1px 5px #153b2b30}
+.parcel-center-area span{display:inline-block;background:#fffffff0;border-radius:3px;padding:0 3px;color:#14543e;font:600 10px/18px sans-serif;white-space:nowrap;box-shadow:0 1px 5px #153b2b30}
 .parcel-radar-pin svg{width:36px;height:48px;filter:drop-shadow(0 2px 3px #132e3055)}
 .planning-map-form textarea{display:block;width:100%;min-height:120px;margin-top:6px;padding:10px;border:1px solid #cad9d1;border-radius:8px;background:#fff;color:#183b32;font:13px/1.6 monospace;resize:vertical}
 .planning-corner-scan{margin:12px 0;padding:10px;border:1px solid #cadfd3;border-radius:10px;background:#f5faf7}

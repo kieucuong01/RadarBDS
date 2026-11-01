@@ -22,3 +22,21 @@ test('multipart and concave parcels put their pin inside a real polygon',()=>{
  assert.equal(tools.metrics(feature([[[NaN,11],[106,11],[106,12],[NaN,11]]])),null);
  assert.equal(tools.metrics(feature([])),null);
 });
+
+test('edge labels fit the segment, avoid other labels and the center pin, and return on zoom',()=>{
+ const edge=(x,y,length=100)=>({a:{x:x-length/2,y},b:{x:x+length/2,y},at:{x,y},distance:length});
+ const m={area:1234,center:{x:0,y:0},edges:[edge(0,0),edge(0,150,25),edge(0,100),edge(2,100),edge(0,250)]};
+ const project=p=>p;
+ const visible=tools.visibleEdges(m,project);
+ assert.equal(visible.length,2);assert(visible.includes(m.edges[2]));assert(visible.includes(m.edges[4]));
+ assert(!visible.includes(m.edges[0]),'Center area and pin have priority');
+ assert(!visible.includes(m.edges[1]),'Short segment cannot fit its text');
+ assert(!visible.includes(m.edges[3]),'Adjacent labels cannot overlap');
+ assert(tools.visibleEdges(m,p=>({x:p.x*8,y:p.y*8})).includes(m.edges[1]),'Zooming in reveals a previously short edge');
+});
+
+test('parcel area uses the same compact font size as edge dimensions',()=>{
+ const fs=require('node:fs');const css=fs.readFileSync('static/css/main/planning_parcels.css','utf8');
+ assert.match(css,/\.parcel-center-area span\{[^}]*font:600 10px\/18px/);
+ assert.match(css,/\.parcel-edge-label span\{[^}]*font:600 10px\/18px/);
+});

@@ -183,9 +183,7 @@
     pane.style.pointerEvents = 'none';
     if (root && root.RadarSatelliteLabels) {
       var notify = function(message){setStatus(message,false);};
-      var detail = root.RadarSatelliteLabels.mount(L, map, satellite, notify);
-      var transport = root.RadarSatelliteLabels.mount(L, map, satellite, notify, true);
-      return function(){detail();transport();};
+      return root.RadarSatelliteLabels.mount(L, map, satellite, notify);
     }
   }
 

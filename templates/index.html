@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=satellite-detail-only-20261101"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=satellite-esri-overview-20261101"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=satellite-detail-only-20261101"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=satellite-esri-overview-20261101"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -133,12 +133,12 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative_sources.js') }}?v=legacy-admin-20261031"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative.js') }}?v=parcel-ux-20261031b"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_reference_branding.js') }}?v=national-branding-20261031"></script>
-  <script defer src="{{ url_for('static', filename='js/main/satellite_osm_labels.js') }}?v=satellite-detail-only-20261101"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=satellite-detail-only-20261101"></script>
+  <script defer src="{{ url_for('static', filename='js/main/satellite_osm_labels.js') }}?v=satellite-esri-overview-20261101"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=satellite-esri-overview-20261101"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=corner-scan-20261101b">
-  <script defer src="{{ url_for('static', filename='js/main/planning_parcel_tools.js') }}?v=parcel-ux-20261031b"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=parcel-label-compact-20261101">
+  <script defer src="{{ url_for('static', filename='js/main/planning_parcel_tools.js') }}?v=parcel-label-collision-20261101"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_corner_scan.js') }}?v=corner-scan-20261101"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_parcels.js') }}?v=corner-scan-20261101"></script>
   {% endif %}

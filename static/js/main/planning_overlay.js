@@ -609,7 +609,6 @@
         var replacement=wantedItems(true)[0]||catalog.find(inSelectedProvince);
         if(replacement)chooseLayer(replacement);
       }
-      map.fire('planning:transport',{enabled:themes.some(function(theme){return theme.id==='transport'&&theme.toggle.checked;})});
       fit.disabled = !wantedItems(true).length;
       syncOverlays();
     }
@@ -703,7 +702,6 @@
     function dispose() {
       if (disposed) return;
       disposed = true;
-      map.fire('planning:transport',{enabled:false});
       controller.abort();
       map.off('planning:busy',taskChanged);tasks.clear();
       if(doc.removeEventListener)doc.removeEventListener('pointerdown',outsidePointer,true);

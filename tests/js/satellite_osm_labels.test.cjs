@@ -12,7 +12,7 @@ function harness(guide=false){
  const satellite=emitter();
  function Symbolizer(o){this.options=o;}
  const P={LineSymbolizer:Symbolizer,LineLabelSymbolizer:Symbolizer,CenteredTextSymbolizer:Symbolizer,leafletLayer(o){options=o;vector=emitter();vector.views=new Map([['',{tileCache:{source:{get:(...args)=>readFn(...args),zoomaborts:[]}}}]]);vector.addTo=()=>{active.add(vector);return vector;};return vector;}};
- const L={control(){const c={addTo(){credits.push(this);this.onAdd();},remove(){credits.splice(credits.indexOf(this),1);}};return c;},DomUtil:{create(){return {}; }},DomEvent:{disableClickPropagation(){}}};
+ const L={tileLayer(url,options){const layer=emitter();layer.addTo=()=>{active.add(layer);return layer;};layer.url=url;layer.options=options;return layer;},control(){const c={addTo(){credits.push(this);this.onAdd();},remove(){credits.splice(credits.indexOf(this),1);}};return c;},DomUtil:{create(){return {}; }},DomEvent:{disableClickPropagation(){}}};
  const window={protomapsL:P,setTimeout,clearTimeout};vm.runInNewContext(source,{window});
  const dispose=window.RadarSatelliteLabels.mount(L,map,satellite,undefined,guide);
  function open(){active.add(satellite);satellite.events.add();}
@@ -41,28 +41,6 @@ test('zoom, base switching and disposal keep one noninteractive OSM label layer 
  h.open();await flush();assert.ok(h.active.has(h.vector));assert.equal(h.credits.length,1);
  h.zoom(5);assert.ok(!h.active.has(h.vector),'Overview removes the vector layer');assert.equal(h.credits.length,0);
  h.dispose();assert.equal(h.credits.length,0);assert.equal(Object.keys(h.events).length,0);
-});
-
-test('overview paints only major roads red, with name/ref, and adds no neighbourhood labels',()=>{
- const h=harness(),rules=h.api.paintRules(h.P),major={props:{kind:'primary'}},minor={props:{kind:'residential'}};
- assert.equal(rules[1].symbolizer.options.color,'#dc5555');
- for(const rule of rules){assert.ok(rule.filter(12,major));assert.equal(rule.filter(12,minor),false);assert.equal(rule.filter(15,major),false);}
- assert.equal(h.api.roadLabel({name:'Đại lộ Bình Dương',ref:'QL.13'}),'Đại lộ Bình Dương · QL.13');
- assert.equal(h.api.roadLabel({name:'QL13',ref:'QL.13'}),'QL13');
- assert.equal(h.api.roadLabel({ref:'ĐT.744'}),'ĐT.744');
- const data=new Map([['street_labels',[
-  {props:{kind:'trunk',name:'Quốc lộ 13',ref:'QL.13'},geom:[[{x:0,y:0},{x:4,y:5},{x:8,y:10}]]},
-  {props:{kind:'trunk',name:'Cầu Ông Cộ',ref:'ĐT.744'},geom:[[{x:1,y:2}]]}
- ]]]);
- h.api.prepareNames(data);
- const label=data.get('radar_major_labels')[0];
- assert.equal(label.props.radar_road_label,'QL13');
- assert.equal(label.geom[0][0].x,4);assert.equal(label.geom[0][0].y,5);
- assert.equal(data.get('radar_major_labels').length,1,'Bridge POI names do not clutter the overview');
- const P={...h.P,CenteredTextSymbolizer:class{place(){return [{}];}}};
- const symbolizer=h.api.labelRules(P).find(rule=>rule.dataLayer==='radar_major_labels').symbolizer;
- const placed=symbolizer.place({},[],{props:{ref:'QL.13'}})[0];
- assert.equal(placed.deduplicationKey,'road-guide:ql13');assert.equal(placed.deduplicationDistance,240);
 });
 
 test('pinned vector decoder rejects HTTP failures before parsing error text as an empty tile',()=>{
@@ -118,12 +96,14 @@ test('switching basemap cancels a pending retry immediately',async()=>{
  assert.equal(settled,true);assert.equal((await result).name,'AbortError');assert.equal(reads,1);
 });
 
- test('major-road guide is opt-in through transport, independent of street or satellite basemap',async()=>{
- const h=harness(true);h.open();await flush();assert.equal(h.vector,undefined);
- h.events['planning:transport']({enabled:true});await flush();assert.ok(h.active.has(h.vector));
- assert.equal(h.options.paintRules.length,2);assert.ok(h.options.labelRules.every(r=>r.minzoom<15));
- h.street();assert.ok(h.active.has(h.vector),'Transport remains on street basemap');
- h.events['planning:transport']({enabled:false});assert.ok(!h.active.has(h.vector));
- h.events['planning:transport']({enabled:true});await flush();h.zoom(16);assert.ok(!h.active.has(h.vector));
- h.dispose();assert.equal(Object.keys(h.events).length,0);
- });
+
+test('overview is a ready-made Esri raster, removed at detail zoom and when satellite is off',async()=>{
+ const h=harness();h.open();await flush();
+ const raster=Array.from(h.active).find(layer=>layer.url);
+ assert.ok(raster.url.includes('World_Hybrid_Overlay'));assert.equal(raster.options.maxZoom,14);
+ assert.equal(h.vector,undefined,'No OSM decoder layer is created at overview');
+ h.zoom(16);await flush();assert(!h.active.has(raster));assert(h.active.has(h.vector));
+ h.zoom(12);assert(h.active.has(raster));assert(!h.active.has(h.vector));
+ h.street();assert(!h.active.has(raster));
+ h.open();assert(h.active.has(raster));h.dispose();assert(!h.active.has(raster));
+});
