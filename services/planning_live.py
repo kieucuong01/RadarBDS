@@ -82,7 +82,13 @@ def install_live(app,site):
     if not install_tiles(app,cache,prefix='/api/planning/gis-tiles',max_entries=512,
                          metadata_directory=root/'metadata'):
         return False
-    install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels',expanded=True)
+    catalog, expanded = install_catalog(app,root/'parcels.sqlite',prefix='/api/planning/parcels',expanded=True)
+    from services.planning_parcel_tiles import install as install_cells
+    if os.getenv('RADAR_PARCEL_CELLS_ENABLED','1')=='1':
+        try:
+            install_cells(app,catalog,expanded,cache,config['release'])
+        except (OSError,sqlite3.Error):
+            app.logger.warning('Parcel cell cache unavailable; keeping viewport fallback')
     old=app.config.get('PLANNING_OVERLAY_CONFIG')
     layers=[]
     if old:
@@ -105,16 +111,30 @@ def install_live(app,site):
     def limit_planning():
         if not request.path.startswith('/api/planning/'):return None
         from auth.core import client_ip_from_request
-        kind='tile' if request.path.startswith('/api/planning/gis-tiles/') else 'lookup' if request.path.endswith('/planning.json') else 'parcel'
+        kind='tile' if request.path.startswith(('/api/planning/gis-tiles/','/api/planning/parcel-cells/')) else 'lookup' if request.path.endswith('/planning.json') else 'parcel'
         if not limiter.allow(client_ip_from_request(),kind,{'tile':9000,'parcel':1800,'lookup':120}[kind]):
             response=jsonify(error='Thao tác quá nhanh. Vui lòng thử lại sau.')
             response.status_code=429;response.headers['Retry-After']='60';return response
 
-    @app.after_request
-    def planning_private(response):
-        if request.path.startswith('/api/planning/'):
-            response.headers['Cache-Control']='private, no-store'
-            response.headers['X-Robots-Tag']='noindex, nofollow'
-            response.headers.pop('X-Radar-Public-Cache',None)
-        return response
+    app.after_request(planning_response_headers)
     return True
+
+
+def planning_response_headers(response):
+    from flask import request
+    if request.path.startswith('/api/planning/'):
+        anonymous = (request.method in ('GET','HEAD') and response.status_code==200
+                     and not request.cookies and 'Authorization' not in request.headers
+                     and 'Set-Cookie' not in response.headers)
+        if request.endpoint=='planning_parcel_cell' and anonymous:
+            response.headers['Cache-Control']='public, max-age='+response.headers.pop('X-Radar-Cell-TTL','300')
+            response.vary.add('Cookie');response.vary.add('Authorization')
+        elif request.endpoint=='planning_tile' and anonymous:
+            response.headers['Cache-Control']='public, max-age=3600'
+            response.vary.add('Cookie');response.vary.add('Authorization')
+        else:
+            response.headers['Cache-Control']='private, no-store'
+            response.headers.pop('X-Radar-Cell-TTL',None)
+        response.headers['X-Robots-Tag']='noindex, nofollow'
+        response.headers.pop('X-Radar-Public-Cache',None)
+    return response

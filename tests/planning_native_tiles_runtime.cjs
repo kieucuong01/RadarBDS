@@ -105,4 +105,12 @@ function harness() {
  const at=h.images.length;h.layer.createTile({z:15,x:42,y:84},()=>{});
  assert.equal(h.images.length,at+2,'Only 64 completed composites are retained across layers');h.layer.events.remove();
 }
+{
+ const h=harness();h.layer.events.remove();const start=h.images.length;
+ const layer=api.create(h.L,h.env,{...h.manifest,gateway_first:true},{});
+ layer.createTile({z:17,x:44,y:85},()=>{});
+ assert.equal(h.images.length,start+1,'Published GIS uses one composited image instead of two upstream images');
+ assert(h.images.at(-1).src.startsWith('/api/planning/gis-tiles/'));
+ h.images.at(-1).onload();layer.events.remove();
+}
 console.log('Native planning tiles: composite reuse, bounded expiry, source isolation, fallback and cancellation passed');

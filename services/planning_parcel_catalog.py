@@ -112,6 +112,14 @@ class ParcelCatalog:
                                 +condition+' ORDER BY p.id LIMIT 1500',params).fetchall()
         return [json.loads(row[0]) for row in rows],count
 
+    def cell(self, bbox):
+        west,south,east,north=bbox
+        with self.connect() as conn:
+            rows=conn.execute('SELECT p.feature FROM bounds b JOIN parcels p ON p.id=b.id '
+                'WHERE b.west<=? AND b.east>=? AND b.south<=? AND b.north>=? '
+                'ORDER BY p.id LIMIT 1501',(east,west,north,south)).fetchall()
+        return [json.loads(row[0]) for row in rows[:1500]],len(rows)
+
     def search(self, area, sheet, parcel):
         condition = """area=? AND trim(CAST(json_extract(feature,'$.properties.sheet') AS TEXT))=?
             AND trim(CAST(json_extract(feature,'$.properties.parcel') AS TEXT))=?"""
@@ -175,6 +183,8 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
             result.update(areas=[dict(a, **areas.get(a['code'], {})) for a in expanded.areas],
                           navigation_areas=expanded.areas, live_expanded=True,
                           coverage_bounds=HCM_EXPANDED_BOUNDS, count_scope='historic_binh_duong_snapshot')
+        if 'planning_parcel_cells' in app.extensions:
+            result['parcel_cells'] = app.extensions['planning_parcel_cells']
         return jsonify(result)
 
     @app.get(prefix+'/sample.json')
@@ -267,3 +277,5 @@ def install_catalog(app, path, prefix='/local-planning/parcels', expanded=None):
         return response
 
     install_planning_lookup(app, feature_by_id, prefix=prefix)
+
+    return catalog, expanded

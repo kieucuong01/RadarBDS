@@ -409,7 +409,7 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/filters.js') }}?v=listings-perf-20261021" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=dong-nai-2030-20261029" in template
-    assert "js/main/planning_parcels.js') }}?v=corner-scan-20261101" in template
+    assert "js/main/planning_parcels.js') }}?v=parcel-cells-20261101" in template
     assert "js/main/planning_overlay.js') }}?v=satellite-esri-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=satellite-esri-overview-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template

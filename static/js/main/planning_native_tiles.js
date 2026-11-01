@@ -106,7 +106,7 @@
         }
         // Share four active tiles across layers; queued tiles do not time out before they start.
         release = schedule(env, function () {
-          if (!context) { gateway(); return; }
+          if (!context || manifest.gateway_first) { gateway(); return; }
           timer = env.setTimeout(gateway, 8000);
           load(manifest.source_tiles.primary, function (img) { foreground = img; paint(); }, gateway);
           load(manifest.source_tiles.supplement, function (img) { background = img; paint(); }, gateway);

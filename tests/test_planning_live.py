@@ -110,7 +110,7 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert client.get(f'/api/planning/gis-tiles/partition/{z}/{x}/{y}.png').data==png()
     detailed=client.get(f'/api/planning/gis-tiles/detailed/{z}/{x}/{y}.png')
     assert detailed.status_code==200 and detailed.data==png()
-    assert detailed.headers['Cache-Control']=='private, no-store'
+    assert detailed.headers['Cache-Control']=='public, max-age=3600'
     (folder/'parcels.sqlite').write_bytes(b'changed')
     with pytest.raises(ValueError):validate_assets(tmp_path,verify_hashes=True)
 

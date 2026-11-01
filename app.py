@@ -346,6 +346,9 @@ def add_response_headers(response):
         else:
             response.headers.pop("X-Radar-Public-Cache", None)
             response.headers["Cache-Control"] = "private, no-store"
+    elif request.endpoint in {"planning_parcel_cell", "planning_tile", "planning_parcel_original"}:
+        # Exact public geometry endpoints classify anonymous/private responses themselves.
+        response.headers.pop("X-Radar-Public-Cache", None)
     elif request.endpoint == "osm_label_tile":
         # Fixed public geometry can cache in the browser without joining the edge allowlist.
         response.headers.pop("X-Radar-Public-Cache", None)

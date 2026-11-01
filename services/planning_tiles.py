@@ -240,6 +240,7 @@ def native_layers(prefix='/local-planning/gis-tiles'):
                   'bounds':PLANNING_BOUNDS[theme],'source_kind':'official_gis',
                   'alignment_method':'official_coordinates','legend_available':False,'map_scale':None,
                   'render_mode':'xyz','tile_template':prefix+'/'+theme+'/{z}/{x}/{y}.png',
+                  'gateway_first':prefix.startswith('/api/') and os.getenv('RADAR_PLANNING_GATEWAY_FIRST','0')=='1',
                   'source_tiles':{'primary':API+'/arcm/rest/services/HCM/'+SERVICES[theme]+'/MapServer/tile/{z}/{y}/{x}',
                                   'supplement':API+'/arcm/rest/services/HCM/'+SUPPLEMENTS[theme]+'/MapServer/tile/{z}/{y}/{x}'},
                   'tile_size':256,'min_zoom':8,'max_zoom':23,
