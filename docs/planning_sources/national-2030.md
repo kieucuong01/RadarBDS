@@ -1,5 +1,10 @@
 # National historic-province land-use 2030
 
+Default note (2026-11-01): ordinary Maps now uses satellite + partition 50%;
+65% remains the 2030 layer's default when enabled. The province/source audit
+below describes that rollout, not the current startup theme. Start at
+[Maps agent guide](../maps-agent-guide.md) for current behavior.
+
 Checked 2026-10-30. The Khu vực picker supports 63 former provinces/cities and
 710 historic district reference windows. The existing Bình Dương / Thủ Dầu Một
 default, satellite, 65% visibility, listing filters and other planning themes

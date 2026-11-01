@@ -1,5 +1,10 @@
 # Maps: viewport loading
 
+Current entry point: [Maps agent guide](../maps-agent-guide.md). The listing-scope
+contract below remains active; historical timing/default observations are dated
+evidence, not a capacity guarantee. Public geometry caching now follows
+[maps-performance.md](maps-performance.md).
+
 ## Interaction
 
 Dashboard filters apply to the opening markers, recent cards and grouped details.
@@ -24,8 +29,10 @@ For a single selected ward, opening zoom is at least 14: a narrow portrait scree
 does not shrink the ward to show unnecessary surrounding city area. Returning to
 the opening area uses the same framing and emits one final viewport change.
 
-Ordinary Maps opens with the 2030 layer at 65% opacity; other layers start at
-35%. Changing opacity is retained while toggling that layer within the same Maps session. Catalogue
+Ordinary Maps currently opens fullscreen on satellite with partition at 50%.
+The 2030 theme defaults to 65%, transport/administrative to 100%, other planning
+themes to 35%. Explicit theme entries preserve that choice. Changing opacity is
+retained while toggling that layer within the same Maps session. Catalogue
 entries remain available regardless of city/ward selection, but raster images
 are attached only when their native bounds intersect the current view, with a
 5% spatial buffer. Panning or zooming out can therefore reveal other wards/cities

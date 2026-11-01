@@ -1,5 +1,11 @@
 # Coordinate lookup and province-specific planning controls
 
+Release note (2026-11-01): coordinate/corner/OCR features are included in the
+committed baseline described by [Maps agent guide](../maps-agent-guide.md).
+“No production deployment” in the original verification section is historical.
+This does not promote the separate, still-local Dong Nai source-adapter work to
+a released feature. Recheck HEAD/worktree/deployed SHA before reporting status.
+
 User decision, 2026-10-31: stop expanding parcel sources here. Missing provinces
 and former Dong Nai remain future work. Keep the existing sources working; do
 not restart national-source research as part of routine Maps work. A requested

@@ -1,5 +1,11 @@
 # Maps interaction update — 2026-10-31
 
+Historical interaction rollout. Its street/old-boundary defaults below were
+superseded: ordinary entry now uses satellite + partition 50%. Use the
+[Maps agent guide](../maps-agent-guide.md) for current defaults and
+[maps-performance.md](maps-performance.md) for the later cell/original-geometry
+flow. The basic-card/on-demand planning interaction below remains applicable.
+
 Normal Maps entry opens fullscreen on street tiles with old administrative boundaries enabled. Planning layers remain off; explicit links to a chosen planning layer preserve that selection. Old-boundary hover labels contain ward and district only. A ward filter controls opening bounds and opens one zoom level closer, at least zoom 15.
 
 Multi-listing markers open the right rail on desktop and the existing listing sheet on mobile. Closing that panel preserves Maps. Map work reports loading through a shared, nonblocking status badge; parcel searches, viewport geometry, GIS details, listing requests and basemap tiles clear their own task keys.

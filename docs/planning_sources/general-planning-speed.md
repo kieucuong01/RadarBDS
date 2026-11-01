@@ -1,5 +1,10 @@
 # General planning coverage and native tile transport
 
+Current transport update (2026-11-01): production uses **gateway-first after
+Nginx offload**, anonymous fetches and shared edge caching. The direct-first
+comparison below is historical. Start at [Maps agent guide](../maps-agent-guide.md)
+and [maps-performance.md](maps-performance.md) before changing cache policy.
+
 Verified 2026-10-28. This supersedes the older Bình Dương-only general-plan
 display window. The native `urban_general` layer now shares the TP.HCM expanded
 window with partition and detailed planning, including Côn Đảo. A display window

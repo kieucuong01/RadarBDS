@@ -1,5 +1,11 @@
 # On-demand parcels across expanded HCM
 
+This is the original source/viewport-adapter audit. Its browser 1,500-feature cap
+and blanket private-cache notes predate the 2026-11-01 public cell rollout.
+Current display/original-geometry limits and cache contracts:
+[Maps agent guide](../maps-agent-guide.md), [maps-performance.md](maps-performance.md).
+Source coverage observations below remain dated samples, not full coverage proof.
+
 Source audited on 2026-10-28: [public construction GIS](https://gisxaydung.tphcm.gov.vn/tracuuttqh).
 This extends cadastral parcels, separately from the partition raster rollout.
 

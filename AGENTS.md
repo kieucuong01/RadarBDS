@@ -12,6 +12,7 @@ Read this first in every new AI/dev session. It is the token-light map, not the 
 |---|---|
 | Growth marketing, SEO strategy, CRO, Hermes marketing loops | `docs/growth_marketing_workflow.md` + `docs/hermes_marketing_workflow.md` + relevant `.agents/skills/<skill>/SKILL.md` |
 | Code workflow, traps, verification | `docs/agent_playbook.md` |
+| Maps: architecture, planning layers, parcels, coordinates/OCR, UI, caching, deploy and handoff | **Start with `docs/maps-agent-guide.md`**, then only its linked task-specific docs; performance evidence in `docs/planning_sources/maps-performance.md` |
 | Module boundaries, API shape, refactor target | `docs/architecture.md` |
 | Crawl jobs, signal creation, daily automation | `docs/daily_crawl_flow.md` |
 | Daily SEO article publishing, `/tin-tuc`, @rb daily cron | `docs/daily_seo_publisher.md` + `docs/radar_bds_90_day_seo_roadmap.md` |
@@ -77,6 +78,8 @@ Marketing skills:
 - Runtime data is ignored by git: DB dumps, `data/images/`, thumbnails, logs, reports, and backups must stay uncommitted.
 
 ## Core Entry Points
+
+- Maps entry: `docs/maps-agent-guide.md` is the current module/contract/invariant map. Check HEAD versus dirty work and deployed SHA before treating a local pilot as released. Missing-province parcel expansion remains paused; nationwide 2030/admin layers do not imply nationwide cadastral coverage.
 
 - `radar.py`: CLI router.
 - `app.py`: Flask setup plus current route implementations.
