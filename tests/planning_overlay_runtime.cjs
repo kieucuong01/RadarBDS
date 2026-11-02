@@ -476,5 +476,23 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   const stacked=[...stack.layers],detailZ=stacked.find(l=>l.url.includes('detail-priority')).options.zIndex;
   assert(stacked.filter(l=>l.url.includes('partition-')).every(l=>l.options.zIndex<detailZ),'Hundreds of partition sheets must stay below detailed planning');
   stack.dispose();
+  const generalRefs=require('../config/planning_general_reference.json').layers;
+  const generalRules=Object.fromEntries(generalRefs.map(l=>[l.id,{...l.manifest,...l}]));
+  const generalProvinces=require('../config/planning_landuse_areas.json').provinces;
+  for(const ref of generalRefs){
+    const province=generalProvinces.find(p=>p.id===ref.coverage_provinces[0]);
+    const gh=harness(undefined,undefined,ref.manifest.bounds,'urban_general',
+      {initialArea:{province:province.id}},
+      {RADAR_LANDUSE_AREAS:generalProvinces,RADAR_GENERAL_SOURCE_RULES:generalRules,RadarPlanningArea:require('../static/js/main/planning_area.js')});
+    gh.deliver({layers:generalRefs});await flush();
+    assert.equal(gh.layers.size,1,'QH chung loads only the selected historic province');
+    const source=gh.nodes.find(n=>n.attributes['aria-label']==='Nguồn quy hoạch chung đô thị');
+    assert.equal(source.value,'guland','Use the verified reference when GIS is absent');
+    const layer=[...gh.layers][0];assert.equal(layer.url,ref.manifest.tile_template);assert.equal(layer.options.opacity,.35);
+    gh.zoomTo(ref.manifest.min_zoom-1);assert.equal(gh.layers.size,0,'Never fan out native tiles when the viewport is below the verified minimum');
+    gh.zoomTo(13);assert.equal(gh.layers.size,1);
+    gh.move([[9,102],[9.1,102.1]]);assert.equal(gh.layers.size,0,'Leaving the source window unloads its imagery');
+    gh.dispose();
+  }
   console.log('Planning overlay: viewport loading, layers off by default, independent sources/opacity and zoom lifecycle passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
