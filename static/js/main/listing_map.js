@@ -128,7 +128,7 @@
     var raw = (params.get('map') || '').split(',');
     var values = raw.map(Number);
     if (raw.length !== 3 || raw.some(function(v){return !v.trim();}) || !values.every(Number.isFinite)
-        || Math.abs(values[0]) > 85 || Math.abs(values[1]) > 180 || values[2] < 2 || values[2] > 23) return null;
+        || Math.abs(values[0]) > 85 || Math.abs(values[1]) > 180 || values[2] < 0 || values[2] > 23) return null;
     return {center:values.slice(0,2),zoom:values[2],base:normalizeBaseLayer(params.get('base')),
       province:params.get('province'),district:params.get('district'),theme:params.get('planning'),
       listings:params.get('listings') !== '0'};

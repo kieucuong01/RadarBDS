@@ -7,6 +7,7 @@ test('share URL restores a bounded view and rejects malformed coordinates',()=>{
  const href='https://radarbds.vn/?map=1#map=11.536,106.893,20&base=satellite&province=binh-phuoc&district=689&planning=partition&listings=0';
  assert.deepEqual(api.sharedMapView(href),{center:[11.536,106.893],zoom:20,base:'satellite',province:'binh-phuoc',district:'689',theme:'partition',listings:false});
  for(const value of ['NaN,106,18','91,106,18','11,181,18','11,106,24','11,,18','11,106'])assert.equal(api.sharedMapView('https://radarbds.vn/#map='+value),null);
+ assert.equal(api.sharedMapView('https://radarbds.vn/#map=0,0,0').zoom,0);
  assert.equal(new URL(api.urlWithoutMapFlag(href)).hash,'');
 });
 
