@@ -12,7 +12,7 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
-  var VALID_PLANNING_THEMES = ["partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative", "administrative_legacy"];
+  var VALID_PLANNING_THEMES = ["construction", "partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative", "administrative_legacy"];
   var DIRECTORY_BATCH_SIZE = 100;
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
   var MARKER_BATCH_SIZE = 200;

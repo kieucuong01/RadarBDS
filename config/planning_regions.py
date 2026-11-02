@@ -13,6 +13,14 @@ PARTITION_SOURCE_RULES = {
         **{key:layer[key] for key in ('source_url','coverage_provinces','area_id')}}
     for layer in PARTITION_REFERENCE_LAYERS
 }
+CONSTRUCTION_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_construction.json')
+                                      .read_text(encoding='utf8'))['layers'])
+CONSTRUCTION_SOURCE_RULES = {
+    layer['id']: {**{key:layer['manifest'][key] for key in (
+        'tile_template','bounds','min_zoom','max_zoom','tile_size','min_native_zoom','max_native_zoom')},
+        **{key:layer[key] for key in ('theme','source_url','coverage_provinces','area_id')}}
+    for layer in CONSTRUCTION_LAYERS
+}
 VISION_100_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_vision_100.json')
                                    .read_text(encoding='utf8'))['layers'])
 TRANSPORT_LAYERS = tuple(json.loads(Path(__file__).with_name('planning_transport.json')

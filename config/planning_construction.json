@@ -1,0 +1,1382 @@
+{
+  "checked_on": "2026-11-02",
+  "revision": "construction-20261102",
+  "layers": [
+    {
+      "id": "binh-duong-construction-reference",
+      "name": "QH xây dựng · Bình Dương (cũ)",
+      "city": "Bình Dương (cũ)",
+      "scope": "region",
+      "area_id": "binh-duong-legacy",
+      "coverage_provinces": [
+        "binh-duong"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "manifest": {
+        "id": "binh-duong-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bình Dương (cũ)",
+        "bounds": [
+          [
+            10.86301,
+            106.335151
+          ],
+          [
+            11.501356,
+            106.966728
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hcm-construction-reference",
+      "name": "QH xây dựng · TP.HCM (cũ)",
+      "city": "TP.HCM (cũ)",
+      "scope": "region",
+      "area_id": "hcm-legacy",
+      "coverage_provinces": [
+        "hcm"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "manifest": {
+        "id": "hcm-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · TP.HCM (cũ)",
+        "bounds": [
+          [
+            10.354474,
+            106.356654
+          ],
+          [
+            11.160343,
+            107.0274
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 14,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "brvt-construction-reference",
+      "name": "QH xây dựng · Bà Rịa–Vũng Tàu (cũ)",
+      "city": "Bà Rịa–Vũng Tàu (cũ)",
+      "scope": "region",
+      "area_id": "brvt-legacy",
+      "coverage_provinces": [
+        "brvt"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "manifest": {
+        "id": "brvt-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bà Rịa–Vũng Tàu (cũ)",
+        "bounds": [
+          [
+            8.628965,
+            106.536483
+          ],
+          [
+            10.8039,
+            107.573272
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "dong-nai-construction-reference",
+      "name": "QH xây dựng · Đồng Nai (cũ)",
+      "city": "Đồng Nai (cũ)",
+      "scope": "region",
+      "area_id": "dong-nai-legacy",
+      "coverage_provinces": [
+        "dong-nai"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "manifest": {
+        "id": "dong-nai-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Đồng Nai (cũ)",
+        "bounds": [
+          [
+            10.522389,
+            106.751253
+          ],
+          [
+            11.581889,
+            107.577287
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "binh-phuoc-construction-reference",
+      "name": "QH xây dựng · Bình Phước (cũ)",
+      "city": "Bình Phước (cũ)",
+      "scope": "region",
+      "area_id": "binh-phuoc-legacy",
+      "coverage_provinces": [
+        "binh-phuoc"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-phuoc",
+      "manifest": {
+        "id": "binh-phuoc-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bình Phước (cũ)",
+        "bounds": [
+          [
+            11.301457,
+            106.413046
+          ],
+          [
+            12.296002,
+            107.427332
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 16,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "bac-giang-construction-reference",
+      "name": "QH xây dựng · Bắc Giang (cũ)",
+      "city": "Bắc Giang (cũ)",
+      "scope": "region",
+      "area_id": "bac-giang-legacy",
+      "coverage_provinces": [
+        "bac-giang"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-giang",
+      "manifest": {
+        "id": "bac-giang-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bắc Giang (cũ)",
+        "bounds": [
+          [
+            21.121951,
+            105.880901
+          ],
+          [
+            21.626274,
+            107.102163
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "bac-kan-construction-reference",
+      "name": "QH xây dựng · Bắc Kạn (cũ)",
+      "city": "Bắc Kạn (cũ)",
+      "scope": "region",
+      "area_id": "bac-kan-legacy",
+      "coverage_provinces": [
+        "bac-kan"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-kan",
+      "manifest": {
+        "id": "bac-kan-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bắc Kạn (cũ)",
+        "bounds": [
+          [
+            21.804383,
+            105.431119
+          ],
+          [
+            22.739601,
+            106.265113
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 16,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "bac-ninh-construction-reference",
+      "name": "QH xây dựng · Bắc Ninh (cũ)",
+      "city": "Bắc Ninh (cũ)",
+      "scope": "region",
+      "area_id": "bac-ninh-legacy",
+      "coverage_provinces": [
+        "bac-ninh"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "manifest": {
+        "id": "bac-ninh-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bắc Ninh (cũ)",
+        "bounds": [
+          [
+            20.969118,
+            105.902546
+          ],
+          [
+            21.280538,
+            106.390798
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "binh-thuan-construction-reference",
+      "name": "QH xây dựng · Bình Thuận (cũ)",
+      "city": "Bình Thuận (cũ)",
+      "scope": "region",
+      "area_id": "binh-thuan-legacy",
+      "coverage_provinces": [
+        "binh-thuan"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-thuan",
+      "manifest": {
+        "id": "binh-thuan-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bình Thuận (cũ)",
+        "bounds": [
+          [
+            9.915074,
+            107.394199
+          ],
+          [
+            11.555543,
+            109.054739
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "binh-dinh-construction-reference",
+      "name": "QH xây dựng · Bình Định (cũ)",
+      "city": "Bình Định (cũ)",
+      "scope": "region",
+      "area_id": "binh-dinh-legacy",
+      "coverage_provinces": [
+        "binh-dinh"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-dinh",
+      "manifest": {
+        "id": "binh-dinh-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Bình Định (cũ)",
+        "bounds": [
+          [
+            13.515351,
+            108.601282
+          ],
+          [
+            14.716127,
+            109.301725
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "can-tho-construction-reference",
+      "name": "QH xây dựng · Cần Thơ (cũ)",
+      "city": "Cần Thơ (cũ)",
+      "scope": "region",
+      "area_id": "can-tho-legacy",
+      "coverage_provinces": [
+        "can-tho"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/can-tho",
+      "manifest": {
+        "id": "can-tho-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Cần Thơ (cũ)",
+        "bounds": [
+          [
+            9.895985,
+            105.215102
+          ],
+          [
+            10.344128,
+            105.902803
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 16,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "cao-bang-construction-reference",
+      "name": "QH xây dựng · Cao Bằng (cũ)",
+      "city": "Cao Bằng (cũ)",
+      "scope": "region",
+      "area_id": "cao-bang-legacy",
+      "coverage_provinces": [
+        "cao-bang"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/cao-bang",
+      "manifest": {
+        "id": "cao-bang-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Cao Bằng (cũ)",
+        "bounds": [
+          [
+            22.333928,
+            105.268443
+          ],
+          [
+            23.118983,
+            106.841259
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "gia-lai-construction-reference",
+      "name": "QH xây dựng · Gia Lai (cũ)",
+      "city": "Gia Lai (cũ)",
+      "scope": "region",
+      "area_id": "gia-lai-legacy",
+      "coverage_provinces": [
+        "gia-lai"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/gia-lai",
+      "manifest": {
+        "id": "gia-lai-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Gia Lai (cũ)",
+        "bounds": [
+          [
+            12.995729,
+            107.443187
+          ],
+          [
+            14.631626,
+            108.878149
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "ha-nam-construction-reference",
+      "name": "QH xây dựng · Hà Nam (cũ)",
+      "city": "Hà Nam (cũ)",
+      "scope": "region",
+      "area_id": "ha-nam-legacy",
+      "coverage_provinces": [
+        "ha-nam"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-nam",
+      "manifest": {
+        "id": "ha-nam-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Hà Nam (cũ)",
+        "bounds": [
+          [
+            20.362945,
+            105.768582
+          ],
+          [
+            20.704364,
+            106.23444
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "ha-tinh-construction-reference",
+      "name": "QH xây dựng · Hà Tĩnh (cũ)",
+      "city": "Hà Tĩnh (cũ)",
+      "scope": "region",
+      "area_id": "ha-tinh-legacy",
+      "coverage_provinces": [
+        "ha-tinh"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-tinh",
+      "manifest": {
+        "id": "ha-tinh-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Hà Tĩnh (cũ)",
+        "bounds": [
+          [
+            17.90839,
+            105.103469
+          ],
+          [
+            18.804789,
+            106.510618
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hai-duong-construction-reference",
+      "name": "QH xây dựng · Hải Dương (cũ)",
+      "city": "Hải Dương (cũ)",
+      "scope": "region",
+      "area_id": "hai-duong-legacy",
+      "coverage_provinces": [
+        "hai-duong"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-duong",
+      "manifest": {
+        "id": "hai-duong-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Hải Dương (cũ)",
+        "bounds": [
+          [
+            20.684715,
+            106.124369
+          ],
+          [
+            21.276876,
+            106.73281
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hai-phong-construction-reference",
+      "name": "QH xây dựng · Hải Phòng (cũ)",
+      "city": "Hải Phòng (cũ)",
+      "scope": "region",
+      "area_id": "hai-phong-legacy",
+      "coverage_provinces": [
+        "hai-phong"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "manifest": {
+        "id": "hai-phong-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Hải Phòng (cũ)",
+        "bounds": [
+          [
+            20.089559,
+            106.400638
+          ],
+          [
+            21.079064,
+            107.877703
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hau-giang-construction-reference",
+      "name": "QH xây dựng · Hậu Giang (cũ)",
+      "city": "Hậu Giang (cũ)",
+      "scope": "region",
+      "area_id": "hau-giang-legacy",
+      "coverage_provinces": [
+        "hau-giang"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hau-giang",
+      "manifest": {
+        "id": "hau-giang-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Hậu Giang (cũ)",
+        "bounds": [
+          [
+            9.582151,
+            105.328639
+          ],
+          [
+            9.994115,
+            105.896806
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hung-yen-construction-reference",
+      "name": "QH xây dựng · Hưng Yên (cũ)",
+      "city": "Hưng Yên (cũ)",
+      "scope": "region",
+      "area_id": "hung-yen-legacy",
+      "coverage_provinces": [
+        "hung-yen"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "manifest": {
+        "id": "hung-yen-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Hưng Yên (cũ)",
+        "bounds": [
+          [
+            20.603626,
+            105.895429
+          ],
+          [
+            21.019381,
+            106.298576
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "khanh-hoa-construction-reference",
+      "name": "QH xây dựng · Khánh Hòa (cũ)",
+      "city": "Khánh Hòa (cũ)",
+      "scope": "region",
+      "area_id": "khanh-hoa-legacy",
+      "coverage_provinces": [
+        "khanh-hoa"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "manifest": {
+        "id": "khanh-hoa-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Khánh Hòa (cũ)",
+        "bounds": [
+          [
+            9.56967,
+            108.671065
+          ],
+          [
+            12.868524,
+            114.996965
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "lang-son-construction-reference",
+      "name": "QH xây dựng · Lạng Sơn (cũ)",
+      "city": "Lạng Sơn (cũ)",
+      "scope": "region",
+      "area_id": "lang-son-legacy",
+      "coverage_provinces": [
+        "lang-son"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/lang-son",
+      "manifest": {
+        "id": "lang-son-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Lạng Sơn (cũ)",
+        "bounds": [
+          [
+            21.325251,
+            106.095452
+          ],
+          [
+            22.461457,
+            107.391399
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "nghe-an-construction-reference",
+      "name": "QH xây dựng · Nghệ An (cũ)",
+      "city": "Nghệ An (cũ)",
+      "scope": "region",
+      "area_id": "nghe-an-legacy",
+      "coverage_provinces": [
+        "nghe-an"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/nghe-an",
+      "manifest": {
+        "id": "nghe-an-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Nghệ An (cũ)",
+        "bounds": [
+          [
+            18.552117,
+            103.87282
+          ],
+          [
+            20.03679,
+            105.808456
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "quang-binh-construction-reference",
+      "name": "QH xây dựng · Quảng Bình (cũ)",
+      "city": "Quảng Bình (cũ)",
+      "scope": "region",
+      "area_id": "quang-binh-legacy",
+      "coverage_provinces": [
+        "quang-binh"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-binh",
+      "manifest": {
+        "id": "quang-binh-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Quảng Bình (cũ)",
+        "bounds": [
+          [
+            16.921433,
+            105.607924
+          ],
+          [
+            18.089951,
+            107.001462
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "son-la-construction-reference",
+      "name": "QH xây dựng · Sơn La (cũ)",
+      "city": "Sơn La (cũ)",
+      "scope": "region",
+      "area_id": "son-la-legacy",
+      "coverage_provinces": [
+        "son-la"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/son-la",
+      "manifest": {
+        "id": "son-la-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Sơn La (cũ)",
+        "bounds": [
+          [
+            20.564783,
+            103.212223
+          ],
+          [
+            22.0284,
+            105.071119
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "thai-binh-construction-reference",
+      "name": "QH xây dựng · Thái Bình (cũ)",
+      "city": "Thái Bình (cũ)",
+      "scope": "region",
+      "area_id": "thai-binh-legacy",
+      "coverage_provinces": [
+        "thai-binh"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-binh",
+      "manifest": {
+        "id": "thai-binh-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Thái Bình (cũ)",
+        "bounds": [
+          [
+            20.244052,
+            106.10967
+          ],
+          [
+            20.728849,
+            106.656427
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 16,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "thai-nguyen-construction-reference",
+      "name": "QH xây dựng · Thái Nguyên (cũ)",
+      "city": "Thái Nguyên (cũ)",
+      "scope": "region",
+      "area_id": "thai-nguyen-legacy",
+      "coverage_provinces": [
+        "thai-nguyen"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-nguyen",
+      "manifest": {
+        "id": "thai-nguyen-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Thái Nguyên (cũ)",
+        "bounds": [
+          [
+            21.325457,
+            105.477684
+          ],
+          [
+            22.047659,
+            106.278376
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "thanh-hoa-construction-reference",
+      "name": "QH xây dựng · Thanh Hóa (cũ)",
+      "city": "Thanh Hóa (cũ)",
+      "scope": "region",
+      "area_id": "thanh-hoa-legacy",
+      "coverage_provinces": [
+        "thanh-hoa"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thanh-hoa",
+      "manifest": {
+        "id": "thanh-hoa-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Thanh Hóa (cũ)",
+        "bounds": [
+          [
+            19.286987,
+            104.375953
+          ],
+          [
+            20.67067,
+            106.075862
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 14,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "thua-thien-hue-construction-reference",
+      "name": "QH xây dựng · Thừa Thiên Huế (cũ)",
+      "city": "Thừa Thiên Huế (cũ)",
+      "scope": "region",
+      "area_id": "thua-thien-hue-legacy",
+      "coverage_provinces": [
+        "thua-thien-hue"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/thua-thien-hue",
+      "manifest": {
+        "id": "thua-thien-hue-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Thừa Thiên Huế (cũ)",
+        "bounds": [
+          [
+            15.993878,
+            107.016212
+          ],
+          [
+            16.742462,
+            108.210653
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 14,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "vinh-phuc-construction-reference",
+      "name": "QH xây dựng · Vĩnh Phúc (cũ)",
+      "city": "Vĩnh Phúc (cũ)",
+      "scope": "region",
+      "area_id": "vinh-phuc-legacy",
+      "coverage_provinces": [
+        "vinh-phuc"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-phuc",
+      "manifest": {
+        "id": "vinh-phuc-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Vĩnh Phúc (cũ)",
+        "bounds": [
+          [
+            21.140058,
+            105.322561
+          ],
+          [
+            21.586502,
+            105.86242
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "da-nang-construction-reference",
+      "name": "QH xây dựng · Đà Nẵng (cũ)",
+      "city": "Đà Nẵng (cũ)",
+      "scope": "region",
+      "area_id": "da-nang-legacy",
+      "coverage_provinces": [
+        "da-nang"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "manifest": {
+        "id": "da-nang-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Đà Nẵng (cũ)",
+        "bounds": [
+          [
+            15.760877,
+            107.818821
+          ],
+          [
+            16.909212,
+            112.794055
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "dak-lak-construction-reference",
+      "name": "QH xây dựng · Đắk Lắk (cũ)",
+      "city": "Đắk Lắk (cũ)",
+      "scope": "region",
+      "area_id": "dak-lak-legacy",
+      "coverage_provinces": [
+        "dak-lak"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-lak",
+      "manifest": {
+        "id": "dak-lak-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Đắk Lắk (cũ)",
+        "bounds": [
+          [
+            12.160832,
+            107.481853
+          ],
+          [
+            13.432528,
+            109.016246
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "dong-thap-construction-reference",
+      "name": "QH xây dựng · Đồng Tháp (cũ)",
+      "city": "Đồng Tháp (cũ)",
+      "scope": "region",
+      "area_id": "dong-thap-legacy",
+      "coverage_provinces": [
+        "dong-thap"
+      ],
+      "theme": "construction",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH xây dựng nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-thap",
+      "manifest": {
+        "id": "dong-thap-construction-reference",
+        "status": "reference_overlay",
+        "title": "QH xây dựng · Đồng Tháp (cũ)",
+        "bounds": [
+          [
+            10.134119,
+            105.184112
+          ],
+          [
+            10.979111,
+            105.941977
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 12,
+        "tile_template": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/{z}/{x}/{y}.png",
+        "notice": "Lớp QH xây dựng theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    }
+  ]
+}

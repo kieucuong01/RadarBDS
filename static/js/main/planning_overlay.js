@@ -149,7 +149,7 @@
 
   function themeLabel(item) {
     var scale = item.manifest && item.manifest.map_scale;
-    return (isAdministrative(item.theme) ? (item.theme === 'administrative_legacy' ? 'Địa giới (cũ)' : 'Địa giới (mới)') : item.theme === 'transport' ? 'QH Giao thông' : item.theme === 'urban_vision_100' ? 'QH 100 năm (Dự thảo)' : item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
+    return (isAdministrative(item.theme) ? (item.theme === 'administrative_legacy' ? 'Địa giới (cũ)' : 'Địa giới (mới)') : item.theme === 'transport' ? 'QH Giao thông' : item.theme === 'urban_vision_100' ? 'QH 100 năm (Dự thảo)' : item.theme === 'land_use_2030' ? 'Sử dụng đất 2030' : item.theme === 'construction' ? 'Quy hoạch xây dựng' : item.theme === 'detailed' ? 'Quy hoạch chi tiết' : item.theme === 'urban_general' ? 'Quy hoạch chung' : 'Phân khu') + ' · ' + (Number.isInteger(scale) && scale > 0
       ? '1/' + scale.toLocaleString('vi-VN') : 'Chưa xác minh tỷ lệ');
   }
 
@@ -160,13 +160,13 @@
       if (!item || !/^[a-z0-9-]+$/.test(item.id || '') || ids.has(item.id)) return false;
       ids.add(item.id);
       var partitionRule = partitionRules && partitionRules[item.id];
-      if (partitionRule && (item.theme !== 'partition' || item.source !== 'guland'
+      if (partitionRule && (item.theme !== (partitionRule.theme || 'partition') || item.source !== 'guland'
           || ['source_url','coverage_provinces','area_id'].some(function(key){return JSON.stringify(item[key])!==JSON.stringify(partitionRule[key]);}))) return false;
       if (item.city !== undefined && (typeof item.city !== 'string' || !item.city.trim() || item.city.length > 80)) return false;
-      if (item.theme !== undefined && ['partition', 'urban_general', 'detailed', 'land_use_2030', 'urban_vision_100', 'transport', 'administrative', 'administrative_legacy'].indexOf(item.theme) < 0) return false;
+      if (item.theme !== undefined && ['construction', 'partition', 'urban_general', 'detailed', 'land_use_2030', 'urban_vision_100', 'transport', 'administrative', 'administrative_legacy'].indexOf(item.theme) < 0) return false;
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
-          && !(item.source === 'guland' && (['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 || item.theme === 'partition' && partitionRule) && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
+          && !(item.source === 'guland' && (['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 || ['partition','construction'].indexOf(item.theme)>=0 && partitionRule) && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
       if (isAdministrative(item.theme) && (!administrative || !administrative.validCatalogItem(item))) return false;
       if ((isAdministrative(item.theme)) !== Boolean(item.manifest && ['official_gis_administrative','open_administrative_reference'].indexOf(item.manifest.source_kind) >= 0)) return false;
       if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template) || item.manifest.source_kind === 'official_gis_transport'))) return false;
@@ -201,6 +201,7 @@
       {id: 'urban_general', name: 'quy hoạch chung đô thị', title: 'Quy hoạch chung đô thị', short: 'QH Chung'},
       {id: 'partition', name: 'quy hoạch phân khu', title: 'Quy hoạch phân khu', short: 'QH Phân khu'},
       {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'QH Chi tiết'},
+      {id: 'construction', name: 'quy hoạch xây dựng', title: 'Quy hoạch xây dựng', short: 'QH Xây dựng'},
       {id: 'urban_vision_100', name: 'quy hoạch chung 100 năm (Dự thảo)', title: 'QH chung 100 năm (Dự thảo)', short: 'QH 100 năm (Dự thảo)'},
       {id: 'transport', name: 'quy hoạch giao thông', title: 'Quy hoạch giao thông · Metro và đường chính', short: 'QH Giao thông'},
       {id: 'administrative', name: 'địa giới hành chính mới', title: 'Địa giới (mới)', short: 'Địa giới (mới)'},
@@ -359,7 +360,7 @@
       } else if (theme.id === 'transport') {
         node('option', theme.source, 'Metro + GIS giao thông').value = 'combined';
         theme.source.value = 'combined';
-      } else if (theme.id === 'land_use_2030' || theme.id === 'urban_vision_100' || theme.id === 'transport') {
+      } else if (theme.id === 'construction' || theme.id === 'land_use_2030' || theme.id === 'urban_vision_100' || theme.id === 'transport') {
         node('option', theme.source, 'Bản đồ tham khảo').value = 'guland';
         theme.source.value = 'guland';
       } else {
@@ -623,6 +624,8 @@
           ? 'Metro tham khảo + GIS đường hành lang / vành đai. VĐ1 gồm các đoạn đã đối chiếu, chưa xác minh khép kín. Giữ trạng thái từng đoạn GIS; xem hồ sơ nguồn.'
           : theme.id === 'urban_vision_100'
           ? 'DỰ THẢO · Định hướng 2025–2050, tầm nhìn 100 năm. Chưa xác minh phê duyệt; đối chiếu hồ sơ gốc trước khi sử dụng.'
+          : theme.id === 'construction'
+          ? 'Lớp QH xây dựng theo nguồn; có thể chỉ phủ một số đô thị/đồ án. Tải theo vùng nhìn; chưa xác minh hiệu lực hồ sơ.'
           : theme.id === 'land_use_2030'
           ? 'Bản đồ tham khảo · tải ô ảnh theo vùng nhìn. Chưa xác minh phủ kín hoặc hiệu lực hồ sơ; xem nguồn để đối chiếu.'
           : theme.id === 'partition' && theme.source.value === 'guland' ? 'Bản đồ phân khu tham khảo · chỉ tải vùng nhìn; chưa xác minh phủ kín hoặc hiệu lực hồ sơ.'
@@ -703,7 +706,7 @@
         return response.json();
       }).then(function (data) {
         if (disposed) return;
-        if (!validCatalog(data,env.RADAR_LANDUSE_SOURCE_RULES,env.RADAR_PARTITION_SOURCE_RULES)) throw new Error('invalid catalog');
+        if (!validCatalog(data,env.RADAR_LANDUSE_SOURCE_RULES,Object.assign({},env.RADAR_PARTITION_SOURCE_RULES,env.RADAR_CONSTRUCTION_SOURCE_RULES))) throw new Error('invalid catalog');
         catalog = data.layers.map(function (item) {
           var city = item.city || 'Bến Cát';
           return Object.assign({}, item, {

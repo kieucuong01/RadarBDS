@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=maps-compact-share-20261102c"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=construction-20261102"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=maps-compact-share-20261102c"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=construction-20261102"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -121,7 +121,7 @@
   {% include "partials/public_footer_assets.html" %}
   {% if (planning_pilot_enabled | default(false)) or (planning_overlay_config | default(none)) %}
   <script>window.RADAR_LANDUSE_AREAS = {{ (planning_landuse_areas | default([])) | tojson }};</script>
-  <script>window.RADAR_PARTITION_SOURCE_RULES = {{ (planning_partition_source_rules | default({})) | tojson }};</script>
+  <script>window.RADAR_PARTITION_SOURCE_RULES = {{ (planning_partition_source_rules | default({})) | tojson }}; window.RADAR_CONSTRUCTION_SOURCE_RULES = {{ (planning_construction_source_rules | default({})) | tojson }};</script>
   <script>window.RADAR_LANDUSE_SOURCE_RULES = {{ (planning_landuse_source_rules | default({})) | tojson }};</script>
   <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }}; window.RADAR_PLANNING_REGIONS = {{ (planning_navigation_regions | default([])) | tojson }};</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=parcel-free-draw-20261101">
@@ -135,7 +135,7 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative.js') }}?v=parcel-ux-20261031b"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_reference_branding.js') }}?v=national-branding-20261031"></script>
   <script defer src="{{ url_for('static', filename='js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=maps-compact-share-20261102c"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=construction-20261102"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=parcel-label-compact-20261101">

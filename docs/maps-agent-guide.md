@@ -136,7 +136,11 @@ guest/Free/VIP. Các điều kiện địa lý áp dụng sau manual location ov
 ## 6. Lớp quy hoạch: cấu hình, nguồn và viewport
 
 Theme IDs: `partition`, `urban_general`, `detailed`, `land_use_2030`,
-`urban_vision_100`, `transport`, `administrative`, `administrative_legacy`.
+`urban_vision_100`, `transport`, `administrative`, `administrative_legacy`, `construction`.
+
+QH xây dựng riêng: [nguồn, độ phủ và kiểm chứng](planning_sources/construction-reference.md).
+32 lớp tỉnh cũ có mẫu ảnh; không đồng nghĩa phủ kín tỉnh. Mặc định tắt, opacity35%;
+không ghép QH khác vào phân khu.
 
 - `planning_overlay.js` điều phối, kiểm manifest/catalogue, bật nguồn GIS hoặc
   bản vẽ/PDF đã chuẩn bị. Thêm nguồn phải có config, provenance/audit, descriptor

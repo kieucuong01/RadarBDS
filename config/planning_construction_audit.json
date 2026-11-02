@@ -1,0 +1,3943 @@
+{
+  "checked_on": "2026-11-02",
+  "notice": "Read-only public control observation and bounded image samples; no whole-province or legal coverage claim.",
+  "provinces": [
+    {
+      "province": "binh-duong",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "observed_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/12/3261/1919.png",
+          "z": 12,
+          "point": [
+            11.182182999999998,
+            106.65093949999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 24461,
+          "sha256": "43038fa0f422322dc0cc67a988d2c114e6b3d931b53d47df87310724dc93d91c"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/8/203/119.png",
+          "z": 8,
+          "point": [
+            11.182182999999998,
+            106.65093949999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 3786,
+          "sha256": "e0d5f3987600fe788a1ce046dc8636053c24ab2c2004a2e41d6a0d5839f88280"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/10/815/479.png",
+          "z": 10,
+          "point": [
+            11.182182999999998,
+            106.65093949999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 25479,
+          "sha256": "c87f7ab42043078cc1b42e2d46180fce7397886e43fb1e706c6a00caed82fb0c"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/14/13045/7679.png",
+          "z": 14,
+          "point": [
+            11.182182999999998,
+            106.65093949999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 27065,
+          "sha256": "588707d248296578e3d9d322a8d1a6ac6cc2873e991626d52557d0cc8384ed83"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/16/52183/30719.png",
+          "z": 16,
+          "point": [
+            11.182182999999998,
+            106.65093949999999
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1696,
+          "sha256": "4b42f0d656c54ebefd028e6182efb0c9a544c99e98dd59676bde476f70e7875f"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/18/208732/122877.png",
+          "z": 18,
+          "point": [
+            11.182182999999998,
+            106.65093949999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 19065,
+          "sha256": "4e91332c0a18339818d7b3bd1042d124959abf6260f95bf1bc75f87589ce52ee"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "hcm",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "observed_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/12/3261/1924.png",
+          "z": 12,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/15/26095/15399.png",
+          "z": 15,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 67817,
+          "sha256": "6a814cd296664ea4a83614b2de97e510dd5ff289fe2799bdee32eee048c6bc9b"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/8/203/120.png",
+          "z": 8,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/10/815/481.png",
+          "z": 10,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/14/13047/7699.png",
+          "z": 14,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 139766,
+          "sha256": "3abf02e139f344590d37250c57b1c4143bdfd0e19e248695c72da589f2360ec8"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/16/52190/30798.png",
+          "z": 16,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 49126,
+          "sha256": "69dd514460a2bcead09ed403989f173d04120ea85667f9818eb7203ecea13aa2"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/18/208762/123192.png",
+          "z": 18,
+          "point": [
+            10.7574085,
+            106.692027
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 27628,
+          "sha256": "f6a6e9cddf3185e6ab3129a75aa9fc3cd999069a99513c55cdae5c12a0b8628b"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "brvt",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "observed_template": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/12/3269/1926.png",
+          "z": 12,
+          "point": [
+            10.600000000000001,
+            107.325
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 51415,
+          "sha256": "31ea2c36fbf91ac6287413a1149d9bd8cdc22c07508555d3f2949076d79f5002"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/8/204/120.png",
+          "z": 8,
+          "point": [
+            10.600000000000001,
+            107.325
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/10/817/481.png",
+          "z": 10,
+          "point": [
+            10.600000000000001,
+            107.325
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/14/13076/7706.png",
+          "z": 14,
+          "point": [
+            10.600000000000001,
+            107.325
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/16/52305/30827.png",
+          "z": 16,
+          "point": [
+            10.600000000000001,
+            107.325
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/18/209223/123308.png",
+          "z": 18,
+          "point": [
+            10.600000000000001,
+            107.325
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "dong-nai",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/12/3267/1921.png",
+          "z": 12,
+          "point": [
+            11.052139,
+            107.16427
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 79650,
+          "sha256": "0818de932fe79caff0428dd02d5c167e8e6ab218d8030c3115f948539e0283bc"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/8/204/120.png",
+          "z": 8,
+          "point": [
+            11.052139,
+            107.16427
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 19104,
+          "sha256": "c8f2f4f5f8f65442a8a3cb8d683fe33027e72553bf564a32aadc135e67ec58f2"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/10/816/480.png",
+          "z": 10,
+          "point": [
+            11.052139,
+            107.16427
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 78779,
+          "sha256": "c20d8ead2e351b8b9c8a47204b01b1aaa58390dc77b5570394dfb9c82e022e2b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/14/13069/7685.png",
+          "z": 14,
+          "point": [
+            11.052139,
+            107.16427
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 61381,
+          "sha256": "34efa5586f15d9e7dd5b14db0af2a3ef61ef69e2ef892d7531ae1f072a827b24"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/16/52276/30743.png",
+          "z": 16,
+          "point": [
+            11.052139,
+            107.16427
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 22012,
+          "sha256": "f82b311d9665d6f0cb8164b4f30983c55216228e84d48c6306cfb5f098399606"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/18/209106/122973.png",
+          "z": 18,
+          "point": [
+            11.052139,
+            107.16427
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4716,
+          "sha256": "f0292ef995e181701ed9fcac276d9e5fc649eab88805e5c31873633baae9a7de"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "binh-phuoc",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-phuoc",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/12/3264/1912.png",
+          "z": 12,
+          "point": [
+            11.7987295,
+            106.920189
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 42110,
+          "sha256": "f74fe480f5f8f73ce07e13e2a6db834d5216457deaca61b4c2d33e4c8c1ccbb6"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/8/204/119.png",
+          "z": 8,
+          "point": [
+            11.7987295,
+            106.920189
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/10/816/478.png",
+          "z": 10,
+          "point": [
+            11.7987295,
+            106.920189
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 111771,
+          "sha256": "4231b4015099c4b1903229a0ea161ac4b09a41bea98e45a6e77a24926fee7eec"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/14/13058/7651.png",
+          "z": 14,
+          "point": [
+            11.7987295,
+            106.920189
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 16769,
+          "sha256": "fa44bda323bcd52737989b0410b9ccfe69dc5a374b359d72000f3a881b674669"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/16/52232/30604.png",
+          "z": 16,
+          "point": [
+            11.7987295,
+            106.920189
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 2108,
+          "sha256": "4400ed32b6ae093615506a310173e616cd2db9c053a15fe71334c90269c9d1bd"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/xdbp/18/208928/122419.png",
+          "z": 18,
+          "point": [
+            11.7987295,
+            106.920189
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "tay-ninh",
+      "source_url": "https://guland.vn/soi-quy-hoach/tay-ninh",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "long-an",
+      "source_url": "https://guland.vn/soi-quy-hoach/long-an",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "ha-noi",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "an-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/an-giang",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "bac-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-giang",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/12/3260/1798.png",
+          "z": 12,
+          "point": [
+            21.3932295,
+            106.535541
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1259,
+          "sha256": "9bf7bde5f1fa61f14b12d488aabc0dd572304f5b7b3d91bb8b85a67a7154928d"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/8/203/112.png",
+          "z": 8,
+          "point": [
+            21.3932295,
+            106.535541
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 16390,
+          "sha256": "de756f2293d0d74e14442242d5ddb1aed5466e4e2007e7537cc1e1a95ab3fb66"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/10/815/449.png",
+          "z": 10,
+          "point": [
+            21.3932295,
+            106.535541
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 6357,
+          "sha256": "38d427ca8e7806180fb7484b1dbe687a55f950b58f06574158158efd6b7dbd87"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/14/13040/7194.png",
+          "z": 14,
+          "point": [
+            21.3932295,
+            106.535541
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1080,
+          "sha256": "d7865c43c642604dbc64fa0b5f77a3e3a8593338a8b085a42a5a143f513b36b1"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/16/52162/28779.png",
+          "z": 16,
+          "point": [
+            21.3932295,
+            106.535541
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 875,
+          "sha256": "d7b533c2aec2a19f3093ee8ca78aeec2b28cf3b3f3132a6773a6dd19d5de1054"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-giang--qhcxd/18/208648/115118.png",
+          "z": 18,
+          "point": [
+            21.3932295,
+            106.535541
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "bac-kan",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-kan",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/12/3252/1787.png",
+          "z": 12,
+          "point": [
+            22.270072499999998,
+            105.852473
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 9140,
+          "sha256": "6ec1f17f9eeacbbdc488ebdff82b4f64e0c4dc876d5a900ae4cb37a8b59e2679"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/8/203/111.png",
+          "z": 8,
+          "point": [
+            22.270072499999998,
+            105.852473
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 9418,
+          "sha256": "ac133a787a880ee328e539bf120fb1b5fd09d23fe3ae23c05abfd2afc02aa13e"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/10/813/446.png",
+          "z": 10,
+          "point": [
+            22.270072499999998,
+            105.852473
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 13163,
+          "sha256": "1c8565f79337478f553ea8b66aa138f2659abac729808a81799d009fb1e0f0a1"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/14/13009/7151.png",
+          "z": 14,
+          "point": [
+            22.270072499999998,
+            105.852473
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 8538,
+          "sha256": "f7d943bb7e81eb6a81219751403e182e5f7f8a1af85696423224fae87c0b6a65"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/16/52037/28607.png",
+          "z": 16,
+          "point": [
+            22.270072499999998,
+            105.852473
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2588,
+          "sha256": "49e0bc35fb52ad38fa8c4a6c69544bf56ae3f50716256a116281b9f6810d5fa3"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-kan--qhpk/18/208151/114430.png",
+          "z": 18,
+          "point": [
+            22.270072499999998,
+            105.852473
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 877,
+          "sha256": "f9913b59caed6ea0039ef3446acffa2b78a1e5afea37d6279cb8656b8833a056"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "bac-lieu",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-lieu",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "bac-ninh",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/12/3256/1801.png",
+          "z": 12,
+          "point": [
+            21.129022499999998,
+            106.1751165
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2010,
+          "sha256": "27152e335d27882398235b9d993ac44ea856935e3f864e9f08d550ab474346ea"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/8/203/112.png",
+          "z": 8,
+          "point": [
+            21.129022499999998,
+            106.1751165
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 3570,
+          "sha256": "abf11fc86677ec47158352b12d3b26876f27dbff5aa811fb75c2ff63602bc646"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/10/814/450.png",
+          "z": 10,
+          "point": [
+            21.129022499999998,
+            106.1751165
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 12810,
+          "sha256": "be1c01094aacd045e35a72f6cfddf52e12ef805d46dbb4d1251d407d0d636ec9"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/14/13024/7207.png",
+          "z": 14,
+          "point": [
+            21.129022499999998,
+            106.1751165
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2678,
+          "sha256": "1039768f5de9b5fd3b5fd7ede99a7f6dcb41f0444c1a21d046aa3f2e4727996c"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/16/52096/28831.png",
+          "z": 16,
+          "point": [
+            21.129022499999998,
+            106.1751165
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5360,
+          "sha256": "5eaa3a965c8d289e01db776c85970168b51fcc5096c3adf34d1b7c290e58dfed"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/18/208386/115325.png",
+          "z": 18,
+          "point": [
+            21.129022499999998,
+            106.1751165
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 741,
+          "sha256": "d6add9ddb0eef365f6a9d95ca50e5fd687306f29ba3ffc0a00b28eb498020703"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "ben-tre",
+      "source_url": "https://guland.vn/soi-quy-hoach/ben-tre",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "binh-thuan",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-thuan",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/12/3278/1921.png",
+          "z": 12,
+          "point": [
+            11.0477085,
+            108.125286
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 20299,
+          "sha256": "696827a278a8a76994088e60420ee39bdc3328ebe68022e76f52f4d7c6ef72fc"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/8/204/120.png",
+          "z": 8,
+          "point": [
+            11.0477085,
+            108.125286
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/10/819/480.png",
+          "z": 10,
+          "point": [
+            11.0477085,
+            108.125286
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 27419,
+          "sha256": "8750bbeb3d235c17b46d991984e78053928b438cb25d90f8dde28f87ac31ca7b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/14/13112/7686.png",
+          "z": 14,
+          "point": [
+            11.0477085,
+            108.125286
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 9783,
+          "sha256": "32576a6585380a3ffdd43d1b33c5a47bb2a8aad245a26dc7d1802ad600a34e88"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/16/52451/30744.png",
+          "z": 16,
+          "point": [
+            11.0477085,
+            108.125286
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 3511,
+          "sha256": "95dbfdd754056e18bb0bdad6aa1f9e894ea9aea92e3610d86180cee5b4f7397f"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/binh-thuan/18/209806/122976.png",
+          "z": 18,
+          "point": [
+            11.0477085,
+            108.125286
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1294,
+          "sha256": "946c03c1b7a9d0c3cf809de0f6c0c6d9f76cb322711ccf05076661a1a6ccfcd3"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "binh-dinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-dinh",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3287/1885.png",
+          "z": 12,
+          "point": [
+            14.1247905,
+            108.9786245
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/15/26303/15085.png",
+          "z": 15,
+          "point": [
+            14.1247905,
+            108.9786245
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3285/1880.png",
+          "z": 12,
+          "point": [
+            14.5343015,
+            108.801031
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/15/26287/15046.png",
+          "z": 15,
+          "point": [
+            14.5343015,
+            108.801031
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3287/1883.png",
+          "z": 12,
+          "point": [
+            14.346543,
+            108.9031345
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/15/26296/15064.png",
+          "z": 15,
+          "point": [
+            14.346543,
+            108.9031345
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3289/1884.png",
+          "z": 12,
+          "point": [
+            14.24464,
+            109.12989150000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/15/26317/15073.png",
+          "z": 15,
+          "point": [
+            14.24464,
+            109.12989150000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3288/1886.png",
+          "z": 12,
+          "point": [
+            14.0617535,
+            109.0670875
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/15/26311/15091.png",
+          "z": 15,
+          "point": [
+            14.0617535,
+            109.0670875
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3286/1887.png",
+          "z": 12,
+          "point": [
+            13.945839,
+            108.886604
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/15/26295/15101.png",
+          "z": 15,
+          "point": [
+            13.945839,
+            108.886604
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/12/3289/1888.png",
+          "z": 12,
+          "point": [
+            13.8408865,
+            109.1574705
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 377,
+          "sha256": "0249c5d220914a9bd2735077bf4bd05ac3cd3f844d428d8cc29bd131759a4fc7"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/8/205/118.png",
+          "z": 8,
+          "point": [
+            13.8408865,
+            109.1574705
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1689,
+          "sha256": "379aa708b7035cd7181d5147974c298f6da2f37ab7ce4e4591e5c9d23748c1cd"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/10/822/472.png",
+          "z": 10,
+          "point": [
+            13.8408865,
+            109.1574705
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 12457,
+          "sha256": "a50cc5c7a692374e1bcda286f6b5b63a21e3229eaffc8e54907ac907293c370b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/14/13159/7555.png",
+          "z": 14,
+          "point": [
+            13.8408865,
+            109.1574705
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 572,
+          "sha256": "0064e98dfbf0791e6a5744fc50af6077f2f4bacefb002e95d9c467fd620c6a59"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/16/52639/30223.png",
+          "z": 16,
+          "point": [
+            13.8408865,
+            109.1574705
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 355,
+          "sha256": "5415f2694a6f59b4f43081f37f523c211aab8bb3263049d1743c8e49c86048bd"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/binh-dinh/quy-nhon--qhpkct/18/210558/120893.png",
+          "z": 18,
+          "point": [
+            13.8408865,
+            109.1574705
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 877,
+          "sha256": "7ad8e0dba670f4a5668c23df90dc47d30402e5b04ecc873d2d73a77d65fd2dfa"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "ca-mau",
+      "source_url": "https://guland.vn/soi-quy-hoach/ca-mau",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "can-tho",
+      "source_url": "https://guland.vn/soi-quy-hoach/can-tho",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/12/3249/1932.png",
+          "z": 12,
+          "point": [
+            10.1200565,
+            105.5589525
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 20108,
+          "sha256": "59e75e8f401f133c7a26ac930e449bf713a973c0d66382c05b8e7ef9e911b955"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/8/203/120.png",
+          "z": 8,
+          "point": [
+            10.1200565,
+            105.5589525
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/10/812/483.png",
+          "z": 10,
+          "point": [
+            10.1200565,
+            105.5589525
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 21288,
+          "sha256": "9cc40a53bee8729d24276feb6c73c049bee0f28d9d1ed500fdc73f85f1dfeef1"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/14/12996/7729.png",
+          "z": 14,
+          "point": [
+            10.1200565,
+            105.5589525
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 8463,
+          "sha256": "f05a7be17793335b03f9cfc86bea3ec4a711dc826893b29d16a85a66718892e9"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/16/51984/30916.png",
+          "z": 16,
+          "point": [
+            10.1200565,
+            105.5589525
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 331,
+          "sha256": "62299eed5dcb966e78f1a7b089720008189d35eede43109a4844e1cf76aac0c7"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/can-tho/18/207937/123664.png",
+          "z": 18,
+          "point": [
+            10.1200565,
+            105.5589525
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 179,
+          "sha256": "967cad5cf911e195668fba22ac19fe8715fed8d15e9558ad665dbe96f0f741f4"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "cao-bang",
+      "source_url": "https://guland.vn/soi-quy-hoach/cao-bang",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/12/3254/1782.png",
+          "z": 12,
+          "point": [
+            22.7264555,
+            106.0534395
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/15/26037/14258.png",
+          "z": 15,
+          "point": [
+            22.7264555,
+            106.0534395
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/12/3247/1780.png",
+          "z": 12,
+          "point": [
+            22.875838,
+            105.45963449999999
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/15/25983/14244.png",
+          "z": 15,
+          "point": [
+            22.875838,
+            105.45963449999999
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/12/3250/1780.png",
+          "z": 12,
+          "point": [
+            22.8750785,
+            105.7134055
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/15/26006/14244.png",
+          "z": 15,
+          "point": [
+            22.8750785,
+            105.7134055
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/12/3261/1782.png",
+          "z": 12,
+          "point": [
+            22.7093055,
+            106.6977125
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/15/26095/14260.png",
+          "z": 15,
+          "point": [
+            22.7093055,
+            106.6977125
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/12/3255/1780.png",
+          "z": 12,
+          "point": [
+            22.893976000000002,
+            106.110984
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/15/26042/14242.png",
+          "z": 15,
+          "point": [
+            22.893976000000002,
+            106.110984
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/12/3256/1782.png",
+          "z": 12,
+          "point": [
+            22.686600499999997,
+            106.210322
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 36938,
+          "sha256": "1025fa7fae636ba1931eea536d7004a33fd47fe2797eb7150ee28ba3a14c8558"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/8/203/111.png",
+          "z": 8,
+          "point": [
+            22.686600499999997,
+            106.210322
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1739,
+          "sha256": "d30ce2ff0a3acb6c61be078596b20720726d856cf33d9ebafcdb1ed8ad589a2d"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/10/814/445.png",
+          "z": 10,
+          "point": [
+            22.686600499999997,
+            106.210322
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 11057,
+          "sha256": "ca3c6184e057ea701cced3432d1f7072679f23bafbb7775f557b3a168a7d1546"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/14/13025/7131.png",
+          "z": 14,
+          "point": [
+            22.686600499999997,
+            106.210322
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 69254,
+          "sha256": "379ec66f310b99e1608043df53385025677ea0b83dc23cecba4ec4c63863976b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/16/52102/28525.png",
+          "z": 16,
+          "point": [
+            22.686600499999997,
+            106.210322
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 62531,
+          "sha256": "48dff5f7aebecabd25966d8bee7bef140aaedf1dd0bb1230f55423c58d13f075"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/cao-bang/thanh-pho-cao-bang--qhxdc/18/208411/114102.png",
+          "z": 18,
+          "point": [
+            22.686600499999997,
+            106.210322
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 68747,
+          "sha256": "94e65289fc68995c9971ec562d86b45b6a0e73941d79388525cd59e99c153367"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "gia-lai",
+      "source_url": "https://guland.vn/soi-quy-hoach/gia-lai",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/12/3278/1889.png",
+          "z": 12,
+          "point": [
+            13.813949000000001,
+            108.16066799999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 362,
+          "sha256": "33b2bfde4f913632ec2133f5cbd4ecc2bde2947c3fa970b519e1aa10218caf95"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/8/204/118.png",
+          "z": 8,
+          "point": [
+            13.813949000000001,
+            108.16066799999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1035,
+          "sha256": "cec1b975e9186d4552283b6d2837cd1ba862dce9ab42c325713bee4696f2cabf"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/10/819/472.png",
+          "z": 10,
+          "point": [
+            13.813949000000001,
+            108.16066799999999
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5130,
+          "sha256": "b5c2884ba802b0d824a9ca65ddb5205df3db09065370db97c2ba9235f88e950c"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/14/13114/7557.png",
+          "z": 14,
+          "point": [
+            13.813949000000001,
+            108.16066799999999
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/16/52458/30228.png",
+          "z": 16,
+          "point": [
+            13.813949000000001,
+            108.16066799999999
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/gia-lai/pleiku--30qhc/18/209832/120914.png",
+          "z": 18,
+          "point": [
+            13.813949000000001,
+            108.16066799999999
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "ha-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-giang",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "ha-nam",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-nam",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/12/3254/1809.png",
+          "z": 12,
+          "point": [
+            20.531533,
+            106.024385
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 30128,
+          "sha256": "830a393d881359b92fe51a6f335c395bafb8f39b52f8c85af08ae9b79f29f3f4"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/8/203/113.png",
+          "z": 8,
+          "point": [
+            20.531533,
+            106.024385
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/10/813/452.png",
+          "z": 10,
+          "point": [
+            20.531533,
+            106.024385
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/14/13017/7236.png",
+          "z": 14,
+          "point": [
+            20.531533,
+            106.024385
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 11558,
+          "sha256": "1cd8712d62e6caed6de5799af9b0f5cd7ea22a9b7b1f6bb5c03d7ad9723dae1a"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/16/52069/28947.png",
+          "z": 16,
+          "point": [
+            20.531533,
+            106.024385
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-nam/18/208276/115790.png",
+          "z": 18,
+          "point": [
+            20.531533,
+            106.024385
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "ha-tinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-tinh",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/12/3251/1835.png",
+          "z": 12,
+          "point": [
+            18.3396755,
+            105.818051
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2511,
+          "sha256": "3866052c1aa47a201c8151e09335fd91b8fa66ae271cb9c7739284593c8e3f53"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/8/203/114.png",
+          "z": 8,
+          "point": [
+            18.3396755,
+            105.818051
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 6148,
+          "sha256": "c4a8e9aa0013c6764296c20c921e49405bbf532ef9929d997233e1028b1c398d"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/10/812/458.png",
+          "z": 10,
+          "point": [
+            18.3396755,
+            105.818051
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 3529,
+          "sha256": "419545ed31fbadcfb4b345fbc9e1f392bc6f7f5860940934d7219e9ec56d4b68"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/14/13007/7342.png",
+          "z": 14,
+          "point": [
+            18.3396755,
+            105.818051
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4518,
+          "sha256": "24334bea5a9c4ac0554c4472f6604675c3c68b5301a104343a709fe69110b4cd"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/16/52031/29370.png",
+          "z": 16,
+          "point": [
+            18.3396755,
+            105.818051
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 8394,
+          "sha256": "1be8f4a67213f0990e2708ab31453e01f2ff45b1a2a618c9a6f1e8966c8a8bf0"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/ha-tinh--qhxdc/18/208126/117483.png",
+          "z": 18,
+          "point": [
+            18.3396755,
+            105.818051
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5202,
+          "sha256": "45196cc3646224fb6d132b85eb5863989c16a9258c4cd0123c98de4b28e3a642"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "hai-duong",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-duong",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/12/3259/1803.png",
+          "z": 12,
+          "point": [
+            20.984604500000003,
+            106.4590435
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 100285,
+          "sha256": "e081b4d597584d47bdc0edb0eda41aa32b0ef4aa068aedbabfe60ffc0804de1b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/8/203/112.png",
+          "z": 8,
+          "point": [
+            20.984604500000003,
+            106.4590435
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 8743,
+          "sha256": "0cad6f737d15a4b3e2acc0ac0081f7777cec139fa43478f768b0a8f3958e3250"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/10/814/450.png",
+          "z": 10,
+          "point": [
+            20.984604500000003,
+            106.4590435
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 35118,
+          "sha256": "d2c18ce6c1c1d511738eb774e9527161e18bdcf5188b7c5e86af112b09baf48f"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/14/13037/7214.png",
+          "z": 14,
+          "point": [
+            20.984604500000003,
+            106.4590435
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 86893,
+          "sha256": "c5ad987ab8c405460a382e2467a86ce75b25c79e7c8b4c937d6694a7f148d16d"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/16/52148/28859.png",
+          "z": 16,
+          "point": [
+            20.984604500000003,
+            106.4590435
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 71677,
+          "sha256": "477adc6215b284948d24429fc7ce8124d52960dcffaba89b7361a754aaa99993"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/hai-duong--qhxd/18/208593/115437.png",
+          "z": 18,
+          "point": [
+            20.984604500000003,
+            106.4590435
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 25799,
+          "sha256": "96353ce257f977584e28b3fe6ab962f4727ed5d83bbde4122e622563ba111bce"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "hai-phong",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/12/3261/1805.png",
+          "z": 12,
+          "point": [
+            20.8548775,
+            106.6687235
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 44154,
+          "sha256": "2bd69a4ea89ee54abd0ef3ecfda4a1ae46485ebe8d9ebd691ce5fe28b0882892"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/8/203/112.png",
+          "z": 8,
+          "point": [
+            20.8548775,
+            106.6687235
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/10/815/451.png",
+          "z": 10,
+          "point": [
+            20.8548775,
+            106.6687235
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 39408,
+          "sha256": "299e300a17c9cbb0bff34745c665a1c53a449074743dc2dbc04609583f4eb91b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/14/13046/7221.png",
+          "z": 14,
+          "point": [
+            20.8548775,
+            106.6687235
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 24451,
+          "sha256": "1210cd04efbf9b66ee10b40a1f585a3882474dc8f57baf797e5ca0de4ad03fee"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/16/52186/28884.png",
+          "z": 16,
+          "point": [
+            20.8548775,
+            106.6687235
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 9243,
+          "sha256": "b89218f58213872131b154f2efe1a1b70aa67c3fe76126f39182203da028cf5a"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/18/208745/115539.png",
+          "z": 18,
+          "point": [
+            20.8548775,
+            106.6687235
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 3695,
+          "sha256": "e42b26e370874620bd1248fdbe0d316cdd605115ffaea354fdd8e12e42b73cc3"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "hau-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/hau-giang",
+      "observed_template": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/12/3249/1936.png",
+          "z": 12,
+          "point": [
+            9.778616,
+            105.60794050000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 31694,
+          "sha256": "1f652b68a0ebb78719545840f1f08060ac40705e55536508574a3f0e3c827bbe"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/8/203/121.png",
+          "z": 8,
+          "point": [
+            9.778616,
+            105.60794050000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/10/812/484.png",
+          "z": 10,
+          "point": [
+            9.778616,
+            105.60794050000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/14/12998/7744.png",
+          "z": 14,
+          "point": [
+            9.778616,
+            105.60794050000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2119,
+          "sha256": "4d7614df2dbb5620ac7e0b6e8d9c33e8cf6371ad2fdcc4ba06acb31d4b8ccb30"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/16/51993/30979.png",
+          "z": 16,
+          "point": [
+            9.778616,
+            105.60794050000001
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hau-giang/18/207973/123916.png",
+          "z": 18,
+          "point": [
+            9.778616,
+            105.60794050000001
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "hoa-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/hoa-binh",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "hung-yen",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "observed_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/12/3255/1805.png",
+          "z": 12,
+          "point": [
+            20.813080499999998,
+            106.1287025
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/15/26044/14446.png",
+          "z": 15,
+          "point": [
+            20.813080499999998,
+            106.1287025
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/12/3255/1805.png",
+          "z": 12,
+          "point": [
+            20.812541500000002,
+            106.093458
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/15/26040/14446.png",
+          "z": 15,
+          "point": [
+            20.812541500000002,
+            106.093458
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/12/3253/1805.png",
+          "z": 12,
+          "point": [
+            20.8306635,
+            105.9765765
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 510,
+          "sha256": "f58d4f4fea344ea99df305918db8824b1764d7395b0578a041a315f26bceaebd"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/8/203/112.png",
+          "z": 8,
+          "point": [
+            20.8306635,
+            105.9765765
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1807,
+          "sha256": "e94cb26e492ca0adef00e78ff4d34a044ca96277afda096b62d0f8b79a5c3c6c"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/10/813/451.png",
+          "z": 10,
+          "point": [
+            20.8306635,
+            105.9765765
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 12975,
+          "sha256": "a0c05430d2f329929bff30c6c27b8fdafeb40dc9736beb4a839383bbcc30abea"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/14/13015/7222.png",
+          "z": 14,
+          "point": [
+            20.8306635,
+            105.9765765
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/16/52060/28889.png",
+          "z": 16,
+          "point": [
+            20.8306635,
+            105.9765765
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/18/208241/115557.png",
+          "z": 18,
+          "point": [
+            20.8306635,
+            105.9765765
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "khanh-hoa",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/12/3289/1906.png",
+          "z": 12,
+          "point": [
+            12.3312325,
+            109.07333650000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4118,
+          "sha256": "1bf9278e6af89dac562ff1f99e8cadf9661f3d6f30dd68886930a43d960df9a1"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/8/205/119.png",
+          "z": 8,
+          "point": [
+            12.3312325,
+            109.07333650000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/10/822/476.png",
+          "z": 10,
+          "point": [
+            12.3312325,
+            109.07333650000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 12614,
+          "sha256": "7a04ee352e83bb2028c9aee33ea63b99e46d48ffe45d5901ba36281de839667a"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/14/13156/7626.png",
+          "z": 14,
+          "point": [
+            12.3312325,
+            109.07333650000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1258,
+          "sha256": "fee3a62cd85f968e83dd1cf728c017d3b12927a1127a72f5adf331845482270f"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/16/52624/30505.png",
+          "z": 16,
+          "point": [
+            12.3312325,
+            109.07333650000001
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 333,
+          "sha256": "8e4d24508b251352ae8dbdab04eacbec3f7c53b5beabe2c0fa84cf181e9606b8"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/18/210496/122022.png",
+          "z": 18,
+          "point": [
+            12.3312325,
+            109.07333650000001
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 135,
+          "sha256": "c40e2163382f7287ff303cbea06c2d55844b98ce7ac8deb8d75a69c193a00014"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "kien-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/kien-giang",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "kon-tum",
+      "source_url": "https://guland.vn/soi-quy-hoach/kon-tum",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "lai-chau",
+      "source_url": "https://guland.vn/soi-quy-hoach/lai-chau",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "lam-dong",
+      "source_url": "https://guland.vn/soi-quy-hoach/lam-dong",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "lang-son",
+      "source_url": "https://guland.vn/soi-quy-hoach/lang-son",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/12/3262/1792.png",
+          "z": 12,
+          "point": [
+            21.901877,
+            106.7567805
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 28326,
+          "sha256": "adf376e54e0f346c32258599f7ce44323640e6cb75917a1d0927cbf0ea120dc2"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/8/203/112.png",
+          "z": 8,
+          "point": [
+            21.901877,
+            106.7567805
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/10/815/448.png",
+          "z": 10,
+          "point": [
+            21.901877,
+            106.7567805
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 20121,
+          "sha256": "6dfcec117916d8e45b9c8433aa34cea4a6e1daf60f1f1f6d322102e43a8606eb"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/14/13050/7170.png",
+          "z": 14,
+          "point": [
+            21.901877,
+            106.7567805
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 16213,
+          "sha256": "418b4ef5bf271f1ed79b7ef2fd83a57b9bde5ae13d729e38800b45470dd8c9b5"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/16/52202/28680.png",
+          "z": 16,
+          "point": [
+            21.901877,
+            106.7567805
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4111,
+          "sha256": "02f6cc4c13ce41fc6ec32ef9ef2d04ddff0b4d7150da8a14e5a523869fd7c57b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/lang-son/18/208809/114720.png",
+          "z": 18,
+          "point": [
+            21.901877,
+            106.7567805
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1533,
+          "sha256": "af47e70f9d1af978a3377af359385e59d5e13099cb62f43d535a50ec41368083"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "lao-cai",
+      "source_url": "https://guland.vn/soi-quy-hoach/lao-cai",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "nam-dinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/nam-dinh",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "nghe-an",
+      "source_url": "https://guland.vn/soi-quy-hoach/nghe-an",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/12/3240/1824.png",
+          "z": 12,
+          "point": [
+            19.2993605,
+            104.843401
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/15/25927/14593.png",
+          "z": 15,
+          "point": [
+            19.2993605,
+            104.843401
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/12/3243/1828.png",
+          "z": 12,
+          "point": [
+            18.9671035,
+            105.0768855
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/15/25948/14625.png",
+          "z": 15,
+          "point": [
+            18.9671035,
+            105.0768855
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/12/3240/1826.png",
+          "z": 12,
+          "point": [
+            19.063096,
+            104.789502
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/15/25922/14615.png",
+          "z": 15,
+          "point": [
+            19.063096,
+            104.789502
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/12/3249/1827.png",
+          "z": 12,
+          "point": [
+            19.0214615,
+            105.5724275
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/15/25993/14619.png",
+          "z": 15,
+          "point": [
+            19.0214615,
+            105.5724275
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/12/3249/1831.png",
+          "z": 12,
+          "point": [
+            18.683936000000003,
+            105.6301355
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 6977,
+          "sha256": "7b4eedbb3ad3fa451771583babd451f09ee16b4b06f711a6f924915b77d66cfc"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/8/203/114.png",
+          "z": 8,
+          "point": [
+            18.683936000000003,
+            105.6301355
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1475,
+          "sha256": "ff970a228eee7d7489411413cb0ac7bebc1f24bd7aa3a97ab15bd2e29d0010f0"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/10/812/457.png",
+          "z": 10,
+          "point": [
+            18.683936000000003,
+            105.6301355
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 11718,
+          "sha256": "4b8cc66d18a448c062690352088bf56bd4ce07b95a8dfcdf6f281ff1635d07cb"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/14/12999/7326.png",
+          "z": 14,
+          "point": [
+            18.683936000000003,
+            105.6301355
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 13765,
+          "sha256": "1b606ff9850c397d9dc5b266205381ac81782701ad0da8b021d85094cc76dc2d"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/16/51997/29304.png",
+          "z": 16,
+          "point": [
+            18.683936000000003,
+            105.6301355
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1262,
+          "sha256": "1f5e7837a8af0519161ed32c181818b2c6ac5aa83558ed977a85111f3e858633"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/nghe-an/vinh--qhxdpk/18/207989/117219.png",
+          "z": 18,
+          "point": [
+            18.683936000000003,
+            105.6301355
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1762,
+          "sha256": "7c4164414e50e1efb68326f18cdad08cbe7e2eb89626e2af5645b89f1c863dd5"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "ninh-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/ninh-binh",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "ninh-thuan",
+      "source_url": "https://guland.vn/soi-quy-hoach/ninh-thuan",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "phu-tho",
+      "source_url": "https://guland.vn/soi-quy-hoach/phu-tho",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "phu-yen",
+      "source_url": "https://guland.vn/soi-quy-hoach/phu-yen",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "quang-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-binh",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/12/3257/1845.png",
+          "z": 12,
+          "point": [
+            17.511934,
+            106.31036850000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 5241,
+          "sha256": "6c05f8ff13433c75cc0b3ca1453f8d98fe7c344f922b4cf089cbdf700e645e23"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/8/203/115.png",
+          "z": 8,
+          "point": [
+            17.511934,
+            106.31036850000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 10086,
+          "sha256": "0b81ad3641539569d99aeec4a0b5a70730a5e5225038cbc7b39ac4b94cc4b122"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/10/814/461.png",
+          "z": 10,
+          "point": [
+            17.511934,
+            106.31036850000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 13614,
+          "sha256": "cccd916196c2351669eebb4dc3ba4f509db672db9493ccf679ace78200e26e75"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/14/13030/7382.png",
+          "z": 14,
+          "point": [
+            17.511934,
+            106.31036850000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2285,
+          "sha256": "5c2e834c6c59475d2f217215c2059cefd1621dc3885097231bbc7bc4b851d334"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/16/52121/29529.png",
+          "z": 16,
+          "point": [
+            17.511934,
+            106.31036850000001
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 875,
+          "sha256": "d7b533c2aec2a19f3093ee8ca78aeec2b28cf3b3f3132a6773a6dd19d5de1054"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/quang-binh--qhxd/18/208484/118116.png",
+          "z": 18,
+          "point": [
+            17.511934,
+            106.31036850000001
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 875,
+          "sha256": "d7b533c2aec2a19f3093ee8ca78aeec2b28cf3b3f3132a6773a6dd19d5de1054"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "quang-nam",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-nam",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "quang-ngai",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ngai",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "quang-ninh",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "quang-tri",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-tri",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "soc-trang",
+      "source_url": "https://guland.vn/soi-quy-hoach/soc-trang",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "son-la",
+      "source_url": "https://guland.vn/soi-quy-hoach/son-la",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/12/3232/1799.png",
+          "z": 12,
+          "point": [
+            21.2903535,
+            104.141671
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 882,
+          "sha256": "cb7b4b0e98c48b388a38b687016db4ca9888a106faf29abc96a44a4fc06fdadf"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/8/202/112.png",
+          "z": 8,
+          "point": [
+            21.2903535,
+            104.141671
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 479,
+          "sha256": "f5314fdf8260cb678b01e2c790581e5f3fc3e2b6fa24294accb59975431ad407"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/10/808/449.png",
+          "z": 10,
+          "point": [
+            21.2903535,
+            104.141671
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 628,
+          "sha256": "45645e9ab3f19103c19d77fd1fde29ecdc508e612340852c1c1810190e6c7f7b"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/14/12931/7199.png",
+          "z": 14,
+          "point": [
+            21.2903535,
+            104.141671
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/16/51726/28799.png",
+          "z": 16,
+          "point": [
+            21.2903535,
+            104.141671
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-xd/son-la/tp-son-la--qhxdc/18/206905/115199.png",
+          "z": 18,
+          "point": [
+            21.2903535,
+            104.141671
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "thai-binh",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-binh",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/12/3258/1809.png",
+          "z": 12,
+          "point": [
+            20.5111975,
+            106.4020645
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 25159,
+          "sha256": "f66b91d0e79546998e041657b5193b817dea20ca792938e645701e631ec41fe9"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/8/203/113.png",
+          "z": 8,
+          "point": [
+            20.5111975,
+            106.4020645
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/10/814/452.png",
+          "z": 10,
+          "point": [
+            20.5111975,
+            106.4020645
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 30162,
+          "sha256": "e665d4aa008430068a10a9e7ce6ea6c6ed371d8b73ce2d47247ddc3225cc7038"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/14/13034/7237.png",
+          "z": 14,
+          "point": [
+            20.5111975,
+            106.4020645
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 11180,
+          "sha256": "c75e91110a7ab73c80b6f9d93acb0ef5fa9573fec8c82dbe4f513776a8833b64"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/16/52137/28951.png",
+          "z": 16,
+          "point": [
+            20.5111975,
+            106.4020645
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4076,
+          "sha256": "45c623de302afadf4436bee80439e9c312142e30a7e5a00616b5568eb02e8048"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thai-binh/18/208551/115806.png",
+          "z": 18,
+          "point": [
+            20.5111975,
+            106.4020645
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 179,
+          "sha256": "f9454b49cc7cf4646ae1e326ea9401bd5442337fcb74dec10bc3c83f5af5e5a9"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "thai-nguyen",
+      "source_url": "https://guland.vn/soi-quy-hoach/thai-nguyen",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/12/3252/1795.png",
+          "z": 12,
+          "point": [
+            21.698193,
+            105.894842
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 16648,
+          "sha256": "b8b083ff5804f3713c5b8de66ed6ee3ace22e214d4dc58879ab9b95e293c8d14"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/8/203/112.png",
+          "z": 8,
+          "point": [
+            21.698193,
+            105.894842
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2033,
+          "sha256": "ea72c8cff391f965d1e336e3f7e171a1b7e305d530263cdc0f031b4d704d59da"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/10/813/448.png",
+          "z": 10,
+          "point": [
+            21.698193,
+            105.894842
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1850,
+          "sha256": "af17d8f811229d0baf1b5ce1f5d01d307381fb72d7bd790cdd14182bbdef74ec"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/14/13011/7180.png",
+          "z": 14,
+          "point": [
+            21.698193,
+            105.894842
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/16/52045/28720.png",
+          "z": 16,
+          "point": [
+            21.698193,
+            105.894842
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/qh-khac/thai-nguyen/thanh-pho-thai-nguyen--qhxd/18/208182/114880.png",
+          "z": 18,
+          "point": [
+            21.698193,
+            105.894842
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "thanh-hoa",
+      "source_url": "https://guland.vn/soi-quy-hoach/thanh-hoa",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/12/3245/1816.png",
+          "z": 12,
+          "point": [
+            19.972984,
+            105.2271265
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/15/25962/14528.png",
+          "z": 15,
+          "point": [
+            19.972984,
+            105.2271265
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/12/3245/1811.png",
+          "z": 12,
+          "point": [
+            20.379153,
+            105.249248
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/15/25964/14488.png",
+          "z": 15,
+          "point": [
+            20.379153,
+            105.249248
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/12/3247/1813.png",
+          "z": 12,
+          "point": [
+            20.204598,
+            105.4579855
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/15/25983/14505.png",
+          "z": 15,
+          "point": [
+            20.204598,
+            105.4579855
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/12/3252/1815.png",
+          "z": 12,
+          "point": [
+            20.0548935,
+            105.857414
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/15/26019/14520.png",
+          "z": 15,
+          "point": [
+            20.0548935,
+            105.857414
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/12/3252/1816.png",
+          "z": 12,
+          "point": [
+            19.933393000000002,
+            105.88698600000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/15/26022/14531.png",
+          "z": 15,
+          "point": [
+            19.933393000000002,
+            105.88698600000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/12/3252/1817.png",
+          "z": 12,
+          "point": [
+            19.865855,
+            105.8618245
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 10302,
+          "sha256": "5590d2d3c37cb24c7ec5713b65e347512f0831d2481176809f90724cee745a40"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/8/203/113.png",
+          "z": 8,
+          "point": [
+            19.865855,
+            105.8618245
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1196,
+          "sha256": "b39d3728bfb0e95d7604fb04e2f90f4bdf31e119df43168d7e3e4b5f02b1c146"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/10/813/454.png",
+          "z": 10,
+          "point": [
+            19.865855,
+            105.8618245
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2317,
+          "sha256": "bfbc4c0717a622e03ce94046c892c01956ac99b9670bd5adcb356cd4b07861d2"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/14/13009/7269.png",
+          "z": 14,
+          "point": [
+            19.865855,
+            105.8618245
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1296,
+          "sha256": "8cbe0d07d10bb8620e9e00256fa6d6c2093fbc88931fee496ea1b8d5f427c6be"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/16/52039/29076.png",
+          "z": 16,
+          "point": [
+            19.865855,
+            105.8618245
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/thanh-hoa/tp-thanh-hoa--qhpk/18/208158/116307.png",
+          "z": 18,
+          "point": [
+            19.865855,
+            105.8618245
+          ],
+          "status": 403
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "thua-thien-hue",
+      "source_url": "https://guland.vn/soi-quy-hoach/thua-thien-hue",
+      "observed_template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/12/3272/1859.png",
+          "z": 12,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/15/26181/14873.png",
+          "z": 15,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 14896,
+          "sha256": "0fa8017493a8f2c0acec275e70e368d622a14e0a39f405d50e7bba8c84d39355"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/8/204/116.png",
+          "z": 8,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/10/818/464.png",
+          "z": 10,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/14/13090/7436.png",
+          "z": 14,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 48422,
+          "sha256": "ebf2a6f739381fb47e903bcdc15ea4f1675a742ce0f7db367165526654cac165"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/16/52362/29746.png",
+          "z": 16,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 7583,
+          "sha256": "682c79548dc914e6e0f3e380d0994285d2848f283d1c9770a31381ccf4f54a49"
+        },
+        {
+          "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhxd/hue/18/209448/118987.png",
+          "z": 18,
+          "point": [
+            16.367954,
+            107.6340425
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 11101,
+          "sha256": "9df5e5658f7da0360ad1df517ae94a87cf42c284a72bf7ffe650a7e93a0c0808"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "tien-giang",
+      "source_url": "https://guland.vn/soi-quy-hoach/tien-giang",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "tra-vinh",
+      "source_url": "https://guland.vn/soi-quy-hoach/tra-vinh",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "tuyen-quang",
+      "source_url": "https://guland.vn/soi-quy-hoach/tuyen-quang",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "vinh-long",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-long",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "vinh-phuc",
+      "source_url": "https://guland.vn/soi-quy-hoach/vinh-phuc",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/12/3249/1799.png",
+          "z": 12,
+          "point": [
+            21.36328,
+            105.61436900000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 41083,
+          "sha256": "b1d696a25f08a28d64ccba7fbcccf7140308907440c571ce8f77c61cf373e9a9"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/8/203/112.png",
+          "z": 8,
+          "point": [
+            21.36328,
+            105.61436900000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 2891,
+          "sha256": "a809e1f4b1de28f352b179274364c62b94b5941f884945db5b4017b93ace2440"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/10/812/449.png",
+          "z": 10,
+          "point": [
+            21.36328,
+            105.61436900000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 11216,
+          "sha256": "2947857791bf130a738aef1e39b2792a08897afd9756ac21978fe4ccd4a9a832"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/14/12998/7196.png",
+          "z": 14,
+          "point": [
+            21.36328,
+            105.61436900000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 30284,
+          "sha256": "9979fad2b16c39ea753681b034798853ec0e73de7d90129646d74a44e35e7806"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/16/51994/28785.png",
+          "z": 16,
+          "point": [
+            21.36328,
+            105.61436900000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 28562,
+          "sha256": "4af65c721efe97b6cdc86df8df186fbaf52a524e9d56ac812bb707a015a755c0"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/vinh-phuc--qhxdc/18/207978/115142.png",
+          "z": 18,
+          "point": [
+            21.36328,
+            105.61436900000001
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 10129,
+          "sha256": "56a68089939c6e55980399dbc0fce8914362aa5e58bedd3fe2c605904083fec3"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "yen-bai",
+      "source_url": "https://guland.vn/soi-quy-hoach/yen-bai",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "da-nang",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/12/3277/1862.png",
+          "z": 12,
+          "point": [
+            16.063813,
+            108.076939
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 29280,
+          "sha256": "614bda684c9fa80e300158f61afb2026b213762c161ba5ffce28d296ff471fc2"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/8/204/116.png",
+          "z": 8,
+          "point": [
+            16.063813,
+            108.076939
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/10/819/465.png",
+          "z": 10,
+          "point": [
+            16.063813,
+            108.076939
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 21415,
+          "sha256": "df2b029a00217af9443fb9849714ee66a0e3e159e1face79dbba65a59c6f53a2"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/14/13110/7451.png",
+          "z": 14,
+          "point": [
+            16.063813,
+            108.076939
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 17394,
+          "sha256": "65b4896f598488e28a975655c0d1f8361b04504b9aa75efca18a9535f1e43185"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/16/52442/29804.png",
+          "z": 16,
+          "point": [
+            16.063813,
+            108.076939
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4097,
+          "sha256": "311ee6827e561f32a65c8805246ac4b4bf8392c64703580350222966ad369bda"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/18/209771/119218.png",
+          "z": 18,
+          "point": [
+            16.063813,
+            108.076939
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 775,
+          "sha256": "e36b4e79e01ed079bc3248d15e99cdc3cad75d27b1aa7eaf7497270fefea0289"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "dak-lak",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-lak",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3279/1901.png",
+          "z": 12,
+          "point": [
+            12.800207499999999,
+            108.2490495
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26237/15209.png",
+          "z": 15,
+          "point": [
+            12.800207499999999,
+            108.2490495
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3279/1906.png",
+          "z": 12,
+          "point": [
+            12.321231999999998,
+            108.20755600000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26233/15253.png",
+          "z": 15,
+          "point": [
+            12.321231999999998,
+            108.20755600000001
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3274/1900.png",
+          "z": 12,
+          "point": [
+            12.878454000000001,
+            107.756986
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26192/15201.png",
+          "z": 15,
+          "point": [
+            12.878454000000001,
+            107.756986
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3278/1903.png",
+          "z": 12,
+          "point": [
+            12.577495500000001,
+            108.173226
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1380,
+          "sha256": "e0a7cbd5ca7f9e7392f47cca728faf63ce9c35fbe98462f496cfd7dec9680286"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/8/204/118.png",
+          "z": 8,
+          "point": [
+            12.577495500000001,
+            108.173226
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/10/819/475.png",
+          "z": 10,
+          "point": [
+            12.577495500000001,
+            108.173226
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/14/13115/7614.png",
+          "z": 14,
+          "point": [
+            12.577495500000001,
+            108.173226
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/16/52460/30459.png",
+          "z": 16,
+          "point": [
+            12.577495500000001,
+            108.173226
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/18/209841/121838.png",
+          "z": 18,
+          "point": [
+            12.577495500000001,
+            108.173226
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        }
+      ],
+      "status": "verified_samples"
+    },
+    {
+      "province": "dak-nong",
+      "source_url": "https://guland.vn/soi-quy-hoach/dak-nong",
+      "observed_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3273/1907.png",
+          "z": 12,
+          "point": [
+            12.278868,
+            107.67205849999999
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26184/15257.png",
+          "z": 15,
+          "point": [
+            12.278868,
+            107.67205849999999
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3273/1902.png",
+          "z": 12,
+          "point": [
+            12.679207,
+            107.7469925
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26191/15220.png",
+          "z": 15,
+          "point": [
+            12.679207,
+            107.7469925
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3275/1906.png",
+          "z": 12,
+          "point": [
+            12.369226,
+            107.898399
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26205/15249.png",
+          "z": 15,
+          "point": [
+            12.369226,
+            107.898399
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3269/1908.png",
+          "z": 12,
+          "point": [
+            12.1342265,
+            107.400577
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/15/26159/15271.png",
+          "z": 15,
+          "point": [
+            12.1342265,
+            107.400577
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/12/3275/1910.png",
+          "z": 12,
+          "point": [
+            12.0297415,
+            107.916612
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 4930,
+          "sha256": "509e6405f00ea9f9e447790ba978b69faacc880e345212bbbfab9de928cf57f2"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/8/204/119.png",
+          "z": 8,
+          "point": [
+            12.0297415,
+            107.916612
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/10/818/477.png",
+          "z": 10,
+          "point": [
+            12.0297415,
+            107.916612
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/14/13103/7640.png",
+          "z": 14,
+          "point": [
+            12.0297415,
+            107.916612
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/16/52413/30561.png",
+          "z": 16,
+          "point": [
+            12.0297415,
+            107.916612
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/daklak--qhxdc/18/209654/122247.png",
+          "z": 18,
+          "point": [
+            12.0297415,
+            107.916612
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        }
+      ],
+      "status": "unverified_shared_daklak_source"
+    },
+    {
+      "province": "dien-bien",
+      "source_url": "https://guland.vn/soi-quy-hoach/dien-bien",
+      "observed_template": null,
+      "samples": [],
+      "status": "no_public_control"
+    },
+    {
+      "province": "dong-thap",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-thap",
+      "observed_template": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/{z}/{x}/{y}.png",
+      "samples": [
+        {
+          "url": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/12/3248/1927.png",
+          "z": 12,
+          "point": [
+            10.559207,
+            105.5559035
+          ],
+          "status": 200,
+          "positive": true,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1406,
+          "sha256": "8478f5e13b84f1cef555959c525aa0fb53231c7143401eb5f22334668440002f"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/8/203/120.png",
+          "z": 8,
+          "point": [
+            10.559207,
+            105.5559035
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/10/812/481.png",
+          "z": 10,
+          "point": [
+            10.559207,
+            105.5559035
+          ],
+          "status": 403
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/14/12995/7708.png",
+          "z": 14,
+          "point": [
+            10.559207,
+            105.5559035
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/16/51983/30834.png",
+          "z": 16,
+          "point": [
+            10.559207,
+            105.5559035
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        },
+        {
+          "url": "https://s3-han02.fptcloud.com/guland4/qh-xd/dong-thap/18/207935/123339.png",
+          "z": 18,
+          "point": [
+            10.559207,
+            105.5559035
+          ],
+          "status": 200,
+          "positive": false,
+          "size": [
+            256,
+            256
+          ],
+          "bytes": 1246,
+          "sha256": "5d08edf13c8c50615485878523a6a734cc3210431890e4e0c02af00fcf575525"
+        }
+      ],
+      "status": "verified_samples"
+    }
+  ]
+}
