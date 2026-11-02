@@ -1,14 +1,17 @@
 /* Compact touch controls: keep the centre of the map clear. */
+.planning-map-ui .planning-map-toolbar{top:48px;gap:4px}
+.planning-map-ui .planning-map-popover>summary,.planning-map-ui .planning-listings-toggle,.planning-map-ui .planning-filter-button{min-height:34px;padding:0 10px;font-size:12px;gap:5px}
+.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:90px}
 @media(max-width:760px){
- .planning-map-toolbar{left:8px;right:8px;top:8px;transform:none;width:auto;max-width:none;display:grid;grid-template-columns:.85fr .85fr .9fr 1.1fr 1.2fr;gap:3px}
+ .planning-map-ui .planning-map-toolbar{left:8px;right:8px;top:calc(44px + env(safe-area-inset-top));transform:none;width:auto;max-width:none;display:grid;grid-template-columns:.85fr .85fr .9fr 1.1fr 1.2fr;gap:3px}
  .planning-map-toolbar>div{min-width:0}
- .planning-map-popover>summary,.planning-map-toolbar>.planning-listings-toggle,.planning-filter-button{width:100%;min-height:44px;padding:0 5px;gap:5px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
- .planning-map-form,.planning-overlay-body{top:52px;width:calc(100vw - 16px);max-width:420px;max-height:calc(100dvh - 160px)}
- .listing-map-workspace:has(.planning-map-toolbar) .leaflet-top.leaflet-left{top:58px}
- .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-top:66px;margin-right:8px;border-radius:50%;border:1px solid #d5e2da;box-shadow:0 2px 8px #15382c20}
+ .planning-map-ui .planning-map-popover>summary,.planning-map-ui .planning-map-toolbar>.planning-listings-toggle,.planning-map-ui .planning-filter-button{width:100%;min-height:40px;padding:0 4px;gap:4px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
+ .planning-map-form,.planning-overlay-body{top:88px;width:calc(100vw - 16px);max-width:420px;max-height:calc(100dvh - 160px)}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-top.leaflet-left{top:90px}
+ .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-top:90px;margin-right:8px;border-radius:50%;border:1px solid #d5e2da;box-shadow:0 2px 8px #15382c20}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers-expanded{border-radius:12px}
  .listing-map-workspace .leaflet-control-layers-toggle{width:44px;height:44px;background-size:22px}
- .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:58px!important;max-width:calc(100% - 120px)!important;max-height:82px;overflow:auto;font-size:11px}
+ .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:90px!important;max-width:calc(100% - 120px)!important;max-height:60px;overflow:auto;font-size:11px}
  .planning-opacity-control{left:auto;right:8px;top:120px;flex-direction:column;flex-wrap:nowrap;gap:2px;width:44px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
  .planning-opacity-control>button,.planning-opacity-control output,.planning-opacity-control .planning-drawing-actions button{width:44px;min-height:44px;flex:none;border:1px solid #d5e2da;border-radius:50%;background:#fff;box-shadow:0 2px 8px #15382c20;color:#126e54}
  .planning-opacity-control>button{order:0}

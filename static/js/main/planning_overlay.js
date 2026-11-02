@@ -250,6 +250,7 @@
         Array.from(overlays.values()).forEach(function(entry){if(entry.item.theme === 'land_use_2030')removeOverlay(entry.item.id);});
       }
       selectedProvince = province; selectedArea = area;
+      if (options.onAreaChange) options.onAreaChange(area);
       updateLayers(true);
       if (activeTheme.id === 'land_use_2030') {
         var item = wantedItems(true).find(function(entry){return entry.theme === 'land_use_2030';});
@@ -277,6 +278,8 @@
         listingsToggle.setAttribute('aria-pressed', String(visible));
       }
       syncListingsToggle(options.listingsVisible !== false);
+      var syncListingsEvent = function(event){syncListingsToggle(event.visible);};
+      map.on('planning:listings-visibility',syncListingsEvent);
       listingsToggle.addEventListener('click', function () {
         syncListingsToggle(options.onToggleListings());
       });
@@ -376,6 +379,7 @@
       theme.status.className = 'planning-overlay-metadata';
       function changeTheme() {
         if (disposed) return;
+        if (!theme.toggle.checked && options.onThemeDisabled) options.onThemeDisabled(theme.id);
         if (theme.toggle.checked) {
           if (isAdministrative(theme.id)) themes.forEach(function(other){if(other!==theme&&isAdministrative(other.id))other.toggle.checked=false;});
           activeTheme = theme;
@@ -737,6 +741,7 @@
       disposed = true;
       controller.abort();
       map.off('planning:busy',taskChanged);tasks.clear();
+      if (syncListingsEvent) map.off('planning:listings-visibility',syncListingsEvent);
       if(doc.removeEventListener)doc.removeEventListener('pointerdown',outsidePointer,true);
       if (disposeMeasure) disposeMeasure();
       if (disposeLegend) disposeLegend();

@@ -193,7 +193,7 @@ def test_shared_listing_map_startup_excludes_flag_and_preserves_history():
     )
 
     assert (
-        "const shouldOpenListingMap = searchParams.get('map') === '1';"
+        "const shouldOpenListingMap = searchParams.get('map') === '1'"
         in boot
     )
     assert "searchParams.delete('map');" in boot
@@ -377,7 +377,7 @@ def test_rendered_map_labels_are_clickable_group_targets():
     )
 
 
-def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
+def test_listing_map_header_is_compact_and_floats_above_canvas():
     root = Path(__file__).resolve().parent.parent
     styles = (root / "static/css/main/listing_map.css").read_text(
         encoding="utf-8"
@@ -387,10 +387,8 @@ def test_listing_map_header_is_compact_and_mobile_legend_stays_visible():
     assert ".listing-map-title-detail" in styles
     assert "flex-wrap: nowrap" in styles
     assert "overflow-x: auto" in styles
-    assert not re.search(
-        r"\.listing-map-precision-legend\s*\{\s*display:\s*none",
-        styles,
-    )
+    assert '.listing-map-workspace .listing-map-workspace-head{position:absolute' in styles
+    assert '.listing-map-workspace,.listing-map-workspace.listings-hidden{grid-template-rows:minmax(0,1fr)}' in styles
 
 
 def test_listing_map_assets_share_cache_version():
@@ -408,9 +406,9 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/core.js') }}?v=planning-entry-20261029" in template
     assert "js/main/filters.js') }}?v=listings-perf-20261021" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
-    assert "js/main/boot.js') }}?v=dong-nai-2030-20261029" in template
+    assert "js/main/boot.js') }}?v=maps-compact-share-20261102" in template
     assert "js/main/planning_parcels.js') }}?v=parcel-khanhhoa-20261102" in template
-    assert "js/main/planning_overlay.js') }}?v=partition-summary-overview-20261101b" in template
+    assert "js/main/planning_overlay.js') }}?v=maps-compact-share-20261102" in template
     assert "js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template

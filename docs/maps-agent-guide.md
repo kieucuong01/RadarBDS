@@ -73,9 +73,10 @@ dashboard; không có route công khai `/maps` ở baseline này.
 
 ## 4. Hành vi hiện hành phải giữ
 
-- Mở Maps thường: fullscreen/focus, nền **vệ tinh**, theme **QH Phân khu 50%**.
+- Mở Maps thường: fullscreen/focus, nền **đường phố**, theme **QH Phân khu 50%**.
   Entry chọn theme cụ thể giữ theme đó; entry địa giới dùng nền đường phố.
-- Mở quy hoạch từ Công cụ/hub: ẩn tin đăng. Maps thường vẫn hiện tin đăng.
+- Mở quy hoạch từ Công cụ/hub: ẩn tin đăng. Maps thường hiện tin trong Bình Dương;
+  chọn tỉnh khác ngoài vùng tin rao hiện có thì tự ẩn và hủy request tin. Nút Hiện tin đăng vẫn cho phép bật thủ công.
   Nút Ẩn/Hiện tin đăng độc lập với fullscreen; khi ẩn, dừng request listings.
 - Opacity độc lập theo theme và giữ khi tắt/bật trong phiên: phân khu 50%,
   SDĐ 2030 65%, giao thông/địa giới 100%, các theme còn lại 35%.
@@ -101,6 +102,10 @@ dashboard; không có route công khai `/maps` ở baseline này.
 
 Giá trị reset trong `close()` không nhất thiết là default lúc mở; kiểm `open()`
 và `defaultBaseLayer()` trước khi thay đổi default.
+
+URL Maps được cập nhật `?map=1` và fragment `#map=lat,lng,zoom&base=...&province=...&district=...&planning=...&listings=...` khi mở/pan/đổi nền/khu vực. Boot nhận cả query và fragment để không mất Maps sau bộ lọc ghi lại query. `replaceState` giữ modal/history hiện có, không thêm entry sau mỗi pan. Tọa độ/zoom được kiểm hữu hạn và khoảng hợp lệ; đóng link mở trực tiếp thì bỏ map flag/fragment.
+
+Vệ tinh Esri chỉ request ảnh gốc tới **z18**, overzoom tới 23. Đã xác minh Đồng Xoài (11.536,106.893): z19 trả HTTP 200 với placeholder, z18 có ảnh thật. Đây là giới hạn độ nét nguồn, không phải lỗi HTTP; không fan-out thêm layer/API để dò ảnh. Header nổi nhỏ, toolbar nằm dưới; legend độ chính xác không chiếm hàng header, nhãn độ chính xác từng tin vẫn giữ.
 
 ## 5. Tin rao: lọc trước, kéo rồi mới mở rộng địa lý
 

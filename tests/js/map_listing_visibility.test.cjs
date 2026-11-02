@@ -3,19 +3,19 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const source=fs.readFileSync('static/js/main/listing_map.js','utf8');
-function functions(...names){return names.map(name=>{
+function functions(...names){return 'var sharedMapView=()=>null,buildMapShareUrl=(_,href)=>href,syncMapUrl=()=>{};\n'+names.map(name=>{
  const start=source.indexOf('  function '+name+'(');
  assert.ok(start>=0,'Missing '+name);
  return source.slice(start,source.indexOf('\n  function ',start+1));
 }).join('\n');}
 
-test('base map selector collapses on phones and expands on desktop',()=>{
+test('base map selector stays compact on phones and desktop',()=>{
  const calls=[];
  const ctx={state:{mediaQuery:{matches:true},baseLayerControl:{collapse(){calls.push('collapse');},expand(){calls.push('expand');}}}};
  ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('syncBaseLayerControl'),ctx);
  ctx.syncBaseLayerControl();ctx.state.mediaQuery.matches=false;ctx.syncBaseLayerControl();
  ctx.state.baseLayerControl=null;ctx.syncBaseLayerControl();
- assert.deepEqual(calls,['collapse','expand']);
+ assert.deepEqual(calls,['collapse','collapse']);
 });
 
 test('fullscreen filter button opens desktop sidebar and delegates mobile sheet',()=>{
@@ -29,7 +29,7 @@ test('fullscreen filter button opens desktop sidebar and delegates mobile sheet'
  ctx.root.innerWidth=390;ctx.toggleFilters();assert.ok(calls.includes('sheet'));
 });
 
-test('Maps defaults to partition on satellite while explicit planning entries retain their theme',async()=>{
+test('Maps defaults to partition on street while explicit planning entries retain their theme',async()=>{
  for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','administrative_legacy','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
@@ -96,11 +96,11 @@ test('a listing response arriving after hiding cannot restore markers or cards',
  assert.equal(rendered,0);assert.equal(ctx.state.recentPayload,null);
 });
 
-test('administrative entries use OSM while ordinary planning retains satellite',()=>{
+test('all entries default to street',()=>{
  const ctx={};ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('defaultBaseLayer'),ctx);
  assert.equal(ctx.defaultBaseLayer('administrative'),'street');
  assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'street');
- for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'satellite');
+ for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'street');
 });
 test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters',async()=>{
  const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};

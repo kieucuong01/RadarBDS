@@ -119,7 +119,29 @@
   }
 
   function defaultBaseLayer(theme) {
-    return (theme === "administrative" || theme === "administrative_legacy") ? "street" : "satellite";
+    return "street";
+  }
+
+  function sharedMapView(href) {
+    var params;
+    try { params = new URLSearchParams(new URL(href).hash.slice(1)); } catch (_) { return null; }
+    var raw = (params.get('map') || '').split(',');
+    var values = raw.map(Number);
+    if (raw.length !== 3 || raw.some(function(v){return !v.trim();}) || !values.every(Number.isFinite)
+        || Math.abs(values[0]) > 85 || Math.abs(values[1]) > 180 || values[2] < 2 || values[2] > 23) return null;
+    return {center:values.slice(0,2),zoom:values[2],base:normalizeBaseLayer(params.get('base')),
+      province:params.get('province'),district:params.get('district'),theme:params.get('planning'),
+      listings:params.get('listings') !== '0'};
+  }
+
+  function syncMapUrl() {
+    if (!state.open || !state.map || !root.history.replaceState) return;
+    var url = new URL(buildMapShareUrl(state.snapshot, root.location.href));
+    var center = state.map.getCenter(), area = state.initialPlanningArea || {};
+    url.hash = new URLSearchParams({map:[center.lat.toFixed(6),center.lng.toFixed(6),state.map.getZoom()].join(','),
+      base:state.activeBaseLayer,province:area.province || '',district:area.district || '',
+      planning:state.planningTheme || 'none',listings:state.listingsVisible ? '1' : '0'}).toString();
+    root.history.replaceState(sharedMapHistoryState(root.history.state,true),'',url.toString());
   }
 
   function normalizeBaseLayer(value) {
@@ -141,7 +163,7 @@
   }
 
   function mapBaseLayers() {
-    // GIS can zoom past the source limit; retain level-19 base tiles underneath it.
+    // GIS can zoom past the source limit; enlarge available base imagery underneath it.
     return {
       street: {
         url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -158,7 +180,8 @@
       },
       satellite: {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        maxNativeZoom: 19,
+        // shortcut: use z18 globally (Đồng Xoài z19 is a placeholder); add verified regional caps if higher detail is needed.
+        maxNativeZoom: 18,
         maxZoom: 23,
         attribution: (
           "Tiles &copy; Esri &mdash; Source: Esri, Maxar, "
@@ -588,6 +611,7 @@
       url.searchParams.delete("map");
       url.searchParams.delete("planning");
       url.searchParams.delete("region");
+      if (new URLSearchParams(url.hash.slice(1)).has('map')) url.hash = '';
       return url.toString();
     } catch (error) {
       return String(currentHref || "");
@@ -1045,6 +1069,8 @@
       if (state.map) state.map.invalidateSize({pan: false});
       requestSummary();
     }
+    if (state.map) state.map.fire('planning:listings-visibility', {visible:visible});
+    syncMapUrl();
     return visible;
   }
 
@@ -1374,6 +1400,7 @@
     });
     if (!state.map.hasLayer(layer)) layer.addTo(state.map);
     state.activeBaseLayer = safeId;
+    syncMapUrl();
   }
 
   function setLocationButtonLoading(loading) {
@@ -1529,10 +1556,8 @@
   }
 
   function shareCurrentMap() {
-    var shareUrl = buildMapShareUrl(
-      state.snapshot,
-      root.location && root.location.href
-    );
+    syncMapUrl();
+    var shareUrl = root.location && root.location.href;
     if (!shareUrl) {
       showMapFeedback("Không thể tạo liên kết, hãy thử lại.", "error");
       return;
@@ -1647,7 +1672,7 @@
     bindStreetTileFallback(currentMap, state.baseLayers.street, definitions.street, function (message) {
       if (state.map === currentMap && state.activeBaseLayer === "street") setStatus(message, false);
     });
-    state.activeBaseLayer = defaultBaseLayer(state.planningTheme);
+    state.activeBaseLayer = state.sharedView ? state.sharedView.base : defaultBaseLayer(state.planningTheme);
     state.baseLayers[state.activeBaseLayer].addTo(state.map);
     state.baseLayerControl = L.control.layers({
       "Bản đồ đường phố": state.baseLayers.street,
@@ -1664,6 +1689,7 @@
         ? "satellite"
         : "street";
       state.activeBaseLayer = selected;
+      syncMapUrl();
       emitTrack("listing_map_base_layer_changed", {
         mode: state.snapshot && state.snapshot.mode,
         base_layer_id: selected,
@@ -1697,6 +1723,7 @@
     state.map.on("moveend", scheduleMarkerLabelRefresh);
     if (openingBounds) frameOpeningArea(L);
     else state.map.setView([11.02, 106.63], 11);
+    if (state.sharedView) state.map.setView(state.sharedView.center,state.sharedView.zoom,{animate:false});
     state.map.on('movestart', function () {
       if (state.summaryController) state.summaryController.abort();
       ++summarySequence; state.pendingViewportKey = null;
@@ -1709,6 +1736,7 @@
       }
     });
     state.map.on('moveend', function () {
+      syncMapUrl();
       root.clearTimeout(state.viewportTimer);
       state.viewportTimer = root.setTimeout(function () {
         if (!state.open || state.adminEdit) return;
@@ -1724,10 +1752,17 @@
         initialArea: state.initialPlanningArea,
         listingsVisible: state.listingsVisible,
         onToggleListings: function () { return setListingsVisible(!state.listingsVisible); },
-        onThemeEnabled: function (theme) { if (theme === "administrative" || theme === "administrative_legacy") activateBaseLayer("street"); },
+        onThemeEnabled: function (theme) { state.planningTheme=theme; syncMapUrl(); },
+        onThemeDisabled: function (theme) { if(state.planningTheme===theme){state.planningTheme=null;syncMapUrl();} },
+        onAreaChange: function (area) {
+          state.initialPlanningArea=area;
+          if (area.province !== 'binh-duong') setListingsVisible(false);
+          syncMapUrl();
+        },
         onToggleFilters: toggleFilters
       });
     }
+    syncMapUrl();
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize({pan: false});
     }, 0);
@@ -3378,17 +3413,30 @@
     captureDashboardState();
     if (typeof root.hideSidebarMobile === "function") root.hideSidebarMobile();
     state.open = true;
+    state.sharedView = options.initialSharedOpen ? sharedMapView(root.location.href) : null;
+    if (state.sharedView && VALID_PLANNING_THEMES.indexOf(state.sharedView.theme)>=0) options.planningTheme=state.sharedView.theme;
     var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
     state.planningTheme = explicitPlanning ? options.planningTheme : "partition";
+    if (state.sharedView && state.sharedView.theme==='none') state.planningTheme=null;
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
     state.initialPlanningArea = root.RadarPlanningArea && root.RadarPlanningArea.initial(root.RADAR_LANDUSE_AREAS, options.planningRegion);
+    if (state.sharedView) {
+      var province=(root.RADAR_LANDUSE_AREAS || []).find(function(p){return p.id===state.sharedView.province;});
+      if (province) {
+        var district=province.districts.find(function(d){return d.id===state.sharedView.district;});
+        state.initialPlanningArea={province:province.id,district:district?district.id:'',region_id:province.region_id,
+          bounds:district?district.bounds:(province.focus_bounds||province.bounds),max_zoom:13};
+      }
+    }
     var filteredWards = new URLSearchParams(safe.query).getAll('ward').filter(Boolean);
     if (!options.planningRegion && filteredWards.length) state.initialRegion = null;
     if (state.initialPlanningArea && (!state.initialRegion || state.planningTheme === 'land_use_2030') && !(!options.planningRegion && filteredWards.length)) {
       state.initialRegion = {id:state.initialPlanningArea.region_id, bounds:state.initialPlanningArea.bounds, max_zoom:state.initialPlanningArea.max_zoom};
     }
     state.listingsVisible = !explicitPlanning;
+    if (state.sharedView) state.listingsVisible=state.sharedView.listings;
+    else if (state.initialPlanningArea && state.initialPlanningArea.province !== 'binh-duong') state.listingsVisible=false;
     state.initialSharedOpen = Boolean(options.initialSharedOpen);
     state.entrySnapshot = safe;
     state.snapshot = safe;
@@ -3422,7 +3470,7 @@
       root.history.pushState(
         { radarListingMap: true },
         "",
-        root.location.href
+        buildMapShareUrl(safe,root.location.href)
       );
       state.historyPushed = true;
     } else if (state.initialSharedOpen) {
@@ -3669,8 +3717,7 @@
 
   function syncBaseLayerControl() {
     if (!state.baseLayerControl) return;
-    if (state.mediaQuery && state.mediaQuery.matches) state.baseLayerControl.collapse();
-    else state.baseLayerControl.expand();
+    state.baseLayerControl.collapse();
   }
 
   function bind(doc, win) {
@@ -3715,6 +3762,7 @@
     buildItemsUrl: buildItemsUrl,
     buildRecentUrl: buildRecentUrl,
     buildMapShareUrl: buildMapShareUrl,
+    sharedMapView: sharedMapView,
     urlWithoutMapFlag: urlWithoutMapFlag,
     sharedMapHistoryState: sharedMapHistoryState,
     normalizeBaseLayer: normalizeBaseLayer,

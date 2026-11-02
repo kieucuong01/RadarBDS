@@ -73,13 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   const searchParams = new URLSearchParams(window.location.search);
-  const shouldOpenListingMap = searchParams.get('map') === '1';
+  const shouldOpenListingMap = searchParams.get('map') === '1'
+    || new URLSearchParams(window.location.hash.slice(1)).has('map');
   searchParams.delete('map');
   const initialPlanningTheme = searchParams.get('planning');
   searchParams.delete('planning');
   const initialPlanningRegion = searchParams.get('region');
   searchParams.delete('region');
-  const initialTab = searchParams.get('tab') || window.location.hash.replace(/^#/, '');
+  const initialTab = searchParams.get('tab') || (shouldOpenListingMap ? 'signals' : window.location.hash.replace(/^#/, ''));
   const shouldOpenInitialTab = ['signals', 'all', 'market', 'insights'].includes(initialTab);
   if (shouldOpenInitialTab) searchParams.delete('tab');
   const landingIntent = (searchParams.get('intent') || '').trim().toLowerCase();
