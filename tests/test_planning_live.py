@@ -82,7 +82,7 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
     partitions=[a for a in data['layers'] if a.get('theme')=='partition' and a.get('source')=='guland']
     assert len(partitions)==16 and all('/soi-quy-hoach/' in a['source_url'] for a in partitions)
-    assert '?v=construction-20261102' in app.config['PLANNING_OVERLAY_CONFIG']['catalogUrl']
+    assert '?v=general-reference-20261102' in app.config['PLANNING_OVERLAY_CONFIG']['catalogUrl']
     assert len(reference)==63 and all(a['source']=='guland' for a in reference)
     assert any(a['area_id']=='dong-nai-expanded' for a in reference)
     assert {'tay-ninh-legacy','long-an-legacy'} <= {a['area_id'] for a in reference}

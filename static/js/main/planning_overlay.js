@@ -166,7 +166,7 @@
       if (item.theme !== undefined && ['construction', 'partition', 'urban_general', 'detailed', 'land_use_2030', 'urban_vision_100', 'transport', 'administrative', 'administrative_legacy'].indexOf(item.theme) < 0) return false;
       if (item.source !== undefined && ['gis', 'document', 'guland'].indexOf(item.source) < 0) return false;
       if ((item.source === 'guland' || item.theme === 'land_use_2030' || item.manifest && item.manifest.source_kind === 'guland_reference')
-          && !(item.source === 'guland' && (['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 || ['partition','construction'].indexOf(item.theme)>=0 && partitionRule) && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
+          && !(item.source === 'guland' && (['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 || ['partition','construction','urban_general'].indexOf(item.theme)>=0 && partitionRule) && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
       if (isAdministrative(item.theme) && (!administrative || !administrative.validCatalogItem(item))) return false;
       if ((isAdministrative(item.theme)) !== Boolean(item.manifest && ['official_gis_administrative','open_administrative_reference'].indexOf(item.manifest.source_kind) >= 0)) return false;
       if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template) || item.manifest.source_kind === 'official_gis_transport'))) return false;
@@ -366,7 +366,7 @@
       } else {
         node('option', theme.source, 'GIS · Cổng dữ liệu').value = 'gis';
         node('option', theme.source, 'Bản vẽ / PDF').value = 'document';
-        if(theme.id==='partition')node('option',theme.source,'Bản đồ phân khu').value='guland';
+        if(theme.id==='partition'||theme.id==='urban_general')node('option',theme.source,theme.id==='partition'?'Bản đồ phân khu':'Bản đồ QH chung').value='guland';
         theme.source.value = 'gis';
       }
       var opacityLabel = node('label', card, 'Độ hiển thị ');
@@ -553,7 +553,7 @@
           ? (isAdministrative(item.theme) ? env.RadarAdministrativeBoundaries : env.RadarPlanningTransport).create(map,L,env,data,Object.assign({},layerOptions,{signal:controller.signal}))
           : tiled ? data.source_tiles && env.RadarPlanningNativeTiles
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
-          : item.theme==='partition' && item.source==='guland' && env.RadarPlanningNativeTiles && env.RadarPlanningNativeTiles.createReference
+          : ['partition','urban_general'].indexOf(item.theme)>=0 && item.source==='guland' && env.RadarPlanningNativeTiles && env.RadarPlanningNativeTiles.createReference
           ? env.RadarPlanningNativeTiles.createReference(L,env,data,tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
           : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);
@@ -605,8 +605,8 @@
         var available = all.some(function(item){return item.status==='overlay_ready'&&!item.inspection_only||item.status==='document_only';});
         theme.quick.hidden = theme.card.hidden = theme.railOption.hidden = !available;
         if (!available) theme.toggle.checked = false;
-        if(theme.id==='partition') {
-          theme.source.value=partitionSource(all,theme.source.value);
+        if(theme.id==='partition'||theme.id==='urban_general') {
+          if(theme.id==='partition'||theme.source.value!=='document')theme.source.value=partitionSource(all,theme.source.value);
           Array.from(theme.source.children).forEach(function(option){
             option.disabled=!all.some(function(item){return item.source===option.value&&(item.status==='overlay_ready'&&!item.inspection_only||item.status==='document_only');});
           });
@@ -626,6 +626,8 @@
           ? 'DỰ THẢO · Định hướng 2025–2050, tầm nhìn 100 năm. Chưa xác minh phê duyệt; đối chiếu hồ sơ gốc trước khi sử dụng.'
           : theme.id === 'construction'
           ? 'Lớp QH xây dựng theo nguồn; có thể chỉ phủ một số đô thị/đồ án. Tải theo vùng nhìn; chưa xác minh hiệu lực hồ sơ.'
+          : theme.id === 'urban_general' && theme.source.value === 'guland'
+          ? 'QH chung tham khảo theo lớp nguồn; có thể chỉ phủ một số đô thị. Tải theo vùng nhìn; chưa xác minh tỷ lệ hoặc hiệu lực hồ sơ.'
           : theme.id === 'land_use_2030'
           ? 'Bản đồ tham khảo · tải ô ảnh theo vùng nhìn. Chưa xác minh phủ kín hoặc hiệu lực hồ sơ; xem nguồn để đối chiếu.'
           : theme.id === 'partition' && theme.source.value === 'guland' ? 'Bản đồ phân khu tham khảo · chỉ tải vùng nhìn; chưa xác minh phủ kín hoặc hiệu lực hồ sơ.'
@@ -706,7 +708,7 @@
         return response.json();
       }).then(function (data) {
         if (disposed) return;
-        if (!validCatalog(data,env.RADAR_LANDUSE_SOURCE_RULES,Object.assign({},env.RADAR_PARTITION_SOURCE_RULES,env.RADAR_CONSTRUCTION_SOURCE_RULES))) throw new Error('invalid catalog');
+        if (!validCatalog(data,env.RADAR_LANDUSE_SOURCE_RULES,Object.assign({},env.RADAR_PARTITION_SOURCE_RULES,env.RADAR_CONSTRUCTION_SOURCE_RULES,env.RADAR_GENERAL_SOURCE_RULES))) throw new Error('invalid catalog');
         catalog = data.layers.map(function (item) {
           var city = item.city || 'Bến Cát';
           return Object.assign({}, item, {

@@ -1,0 +1,264 @@
+{
+  "checked_on": "2026-11-02",
+  "revision": "general-reference-20261102",
+  "layers": [
+    {
+      "id": "bac-giang-general-reference",
+      "name": "QH chung · Bắc Giang (cũ)",
+      "city": "Bắc Giang (cũ)",
+      "scope": "region",
+      "area_id": "bac-giang-legacy",
+      "coverage_provinces": [
+        "bac-giang"
+      ],
+      "theme": "urban_general",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH chung nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-giang",
+      "manifest": {
+        "id": "bac-giang-general-reference",
+        "status": "reference_overlay",
+        "title": "QH chung · Bắc Giang (cũ)",
+        "bounds": [
+          [
+            21.121951,
+            105.880901
+          ],
+          [
+            21.626274,
+            107.102163
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 16,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/bac-giang--qhc/{z}/{x}/{y}.png?v=ok",
+        "notice": "Lớp QH chung theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "bac-ninh-general-reference",
+      "name": "QH chung · Bắc Ninh (cũ)",
+      "city": "Bắc Ninh (cũ)",
+      "scope": "region",
+      "area_id": "bac-ninh-legacy",
+      "coverage_provinces": [
+        "bac-ninh"
+      ],
+      "theme": "urban_general",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH chung nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "manifest": {
+        "id": "bac-ninh-general-reference",
+        "status": "reference_overlay",
+        "title": "QH chung · Bắc Ninh (cũ)",
+        "bounds": [
+          [
+            20.969118,
+            105.902546
+          ],
+          [
+            21.280538,
+            106.390798
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh/tp-bac-ninh--qhxdc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH chung theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hai-duong-general-reference",
+      "name": "QH chung · Hải Dương (cũ)",
+      "city": "Hải Dương (cũ)",
+      "scope": "region",
+      "area_id": "hai-duong-legacy",
+      "coverage_provinces": [
+        "hai-duong"
+      ],
+      "theme": "urban_general",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH chung nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-duong",
+      "manifest": {
+        "id": "hai-duong-general-reference",
+        "status": "reference_overlay",
+        "title": "QH chung · Hải Dương (cũ)",
+        "bounds": [
+          [
+            20.684715,
+            106.124369
+          ],
+          [
+            21.276876,
+            106.73281
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-duong--qhc3/{z}/{x}/{y}.png",
+        "notice": "Lớp QH chung theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "hai-phong-general-reference",
+      "name": "QH chung · Hải Phòng (cũ)",
+      "city": "Hải Phòng (cũ)",
+      "scope": "region",
+      "area_id": "hai-phong-legacy",
+      "coverage_provinces": [
+        "hai-phong"
+      ],
+      "theme": "urban_general",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH chung nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "manifest": {
+        "id": "hai-phong-general-reference",
+        "status": "reference_overlay",
+        "title": "QH chung · Hải Phòng (cũ)",
+        "bounds": [
+          [
+            20.089559,
+            106.400638
+          ],
+          [
+            21.079064,
+            107.877703
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-phong--qhc-2/{z}/{x}/{y}.png",
+        "notice": "Lớp QH chung theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "nam-dinh-general-reference",
+      "name": "QH chung · Nam Định (cũ)",
+      "city": "Nam Định (cũ)",
+      "scope": "region",
+      "area_id": "nam-dinh-legacy",
+      "coverage_provinces": [
+        "nam-dinh"
+      ],
+      "theme": "urban_general",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH chung nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/nam-dinh",
+      "manifest": {
+        "id": "nam-dinh-general-reference",
+        "status": "reference_overlay",
+        "title": "QH chung · Nam Định (cũ)",
+        "bounds": [
+          [
+            19.888651,
+            105.924419
+          ],
+          [
+            20.499165,
+            106.6101
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 8,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/nam-dinh--qhc/{z}/{x}/{y}.png",
+        "notice": "Lớp QH chung theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    },
+    {
+      "id": "quang-ninh-general-reference",
+      "name": "QH chung · Quảng Ninh (cũ)",
+      "city": "Quảng Ninh (cũ)",
+      "scope": "region",
+      "area_id": "quang-ninh-legacy",
+      "coverage_provinces": [
+        "quang-ninh"
+      ],
+      "theme": "urban_general",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Tham khảo theo lớp QH chung nguồn; chưa xác minh quyết định phê duyệt",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "manifest": {
+        "id": "quang-ninh-general-reference",
+        "status": "reference_overlay",
+        "title": "QH chung · Quảng Ninh (cũ)",
+        "bounds": [
+          [
+            20.716307,
+            106.439195
+          ],
+          [
+            21.665156,
+            108.08694
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 12,
+        "max_zoom": 23,
+        "min_native_zoom": 12,
+        "max_native_zoom": 18,
+        "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/quang-ninh--qhc-2/{z}/{x}/{y}.png",
+        "notice": "Lớp QH chung theo nút nguồn; có thể chỉ gồm một số đô thị/đồ án, không xác nhận phủ kín tỉnh hay hiệu lực hồ sơ.",
+        "attribution": "Guland"
+      }
+    }
+  ]
+}

@@ -103,10 +103,10 @@ def install_live(app,site):
         for item in layers:
             if item.get('source')=='gis':item['inspection_only']=True
     layers.extend(app.extensions['planning_native_layers'])
-    from config.planning_regions import PARTITION_REFERENCE_LAYERS, CONSTRUCTION_LAYERS, LANDUSE_2030_LAYERS, VISION_100_LAYERS, TRANSPORT_LAYERS, ADMINISTRATIVE_LAYERS
-    layers.extend((*PARTITION_REFERENCE_LAYERS, *CONSTRUCTION_LAYERS, *LANDUSE_2030_LAYERS, *VISION_100_LAYERS, *TRANSPORT_LAYERS, *ADMINISTRATIVE_LAYERS))
+    from config.planning_regions import PARTITION_REFERENCE_LAYERS, CONSTRUCTION_LAYERS, GENERAL_REFERENCE_LAYERS, LANDUSE_2030_LAYERS, VISION_100_LAYERS, TRANSPORT_LAYERS, ADMINISTRATIVE_LAYERS
+    layers.extend((*PARTITION_REFERENCE_LAYERS, *CONSTRUCTION_LAYERS, *GENERAL_REFERENCE_LAYERS, *LANDUSE_2030_LAYERS, *VISION_100_LAYERS, *TRANSPORT_LAYERS, *ADMINISTRATIVE_LAYERS))
     app.config['PLANNING_OVERLAY_CONFIG']={
-        'catalogUrl':'/api/planning/catalog.json?v=construction-20261102',
+        'catalogUrl':'/api/planning/catalog.json?v=general-reference-20261102',
         'assetBase':old['assetBase'] if old else '/static/maps/planning/overlays/',
         'parcelBase':'/api/planning/parcels','release':config['release']}
     @app.get('/api/planning/catalog.json')

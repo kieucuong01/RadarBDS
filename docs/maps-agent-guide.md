@@ -138,6 +138,9 @@ guest/Free/VIP. Các điều kiện địa lý áp dụng sau manual location ov
 Theme IDs: `partition`, `urban_general`, `detailed`, `land_use_2030`,
 `urban_vision_100`, `transport`, `administrative`, `administrative_legacy`, `construction`.
 
+QH chung bổ sung ngoài vùng GIS: [nguồn, phạm vi và kiểm chứng](planning_sources/general-reference.md).
+6 nguồn Guland được kiểm riêng, dùng cùng theme urban_general; giữ GIS/PDF hiện có.
+
 QH xây dựng riêng: [nguồn, độ phủ và kiểm chứng](planning_sources/construction-reference.md).
 32 lớp tỉnh cũ có mẫu ảnh; không đồng nghĩa phủ kín tỉnh. Mặc định tắt, opacity35%;
 không ghép QH khác vào phân khu.
