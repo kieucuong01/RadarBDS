@@ -19,6 +19,8 @@ test('moving Maps replaces the URL without new history entries and retains modal
  vm.createContext(ctx);vm.runInContext(fn('syncMapUrl'),ctx);ctx.syncMapUrl();
  assert.equal(new URL(url).searchParams.get('map'),'1');assert.equal(new URL(url).searchParams.get('price_max'),'3');
  assert.equal(api.sharedMapView(url).province,'binh-phuoc');assert.equal(entry.signalModal,true);assert.equal(entry.radarListingMap,true);
+ ctx.root.location.href=url;entry=null;ctx.syncMapUrl();
+ assert.equal(entry,null,'Settled duplicate events must not rewrite an identical URL');
 });
 
 test('opening a shared non-Binh-Duong view restores its area, explicit visibility and default street',async()=>{

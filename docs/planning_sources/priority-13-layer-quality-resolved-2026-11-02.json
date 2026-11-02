@@ -1,0 +1,2630 @@
+{
+  "scope": [
+    "binh-duong",
+    "hcm",
+    "ha-noi",
+    "dong-nai",
+    "long-an",
+    "brvt",
+    "hung-yen",
+    "hai-phong",
+    "da-nang",
+    "khanh-hoa",
+    "bac-ninh",
+    "quang-ninh",
+    "lam-dong"
+  ],
+  "method": "two bounded point samples per registered reference layer, not full coverage",
+  "inventory": [
+    {
+      "province": "binh-duong",
+      "layer": "binh-duong-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.182500000000001,
+        106.65100000000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "binh-duong",
+      "layer": "binh-duong-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.182182999999998,
+        106.65093949999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hcm",
+      "layer": "hcm-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7575,
+        106.69200000000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hcm",
+      "layer": "hcm-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 14,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7574085,
+        106.692027
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "brvt",
+      "layer": "brvt-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        10.600000000000001,
+        107.325
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "brvt",
+      "layer": "con-dao-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau/huyen-con-dao",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        8.7,
+        106.625
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "brvt",
+      "layer": "brvt-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "template": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 12,
+      "sample_point": [
+        10.600000000000001,
+        107.325
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "dong-nai",
+      "layer": "dong-nai-expanded-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        11.41,
+        106.995
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "dong-nai",
+      "layer": "dong-nai-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.052139,
+        107.16427
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "long-an",
+      "layer": "long-an-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/long-an",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7135,
+        106.1235
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "ha-noi",
+      "layer": "ha-noi-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        20.975433000000002,
+        105.7161045
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "ha-noi",
+      "layer": "ha-noi-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.1556875,
+        105.379454
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-ninh-qhpk-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.064480000000003,
+        106.21683949999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh/tp-bac-ninh--qhxdc/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 11,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3-han02.fptcloud.com/guland5/qhxd/hai-phong/{z}/{x}/{y}.png",
+      "low_zoom": 13,
+      "high_zoom": 16,
+      "sample_point": [
+        20.883966,
+        106.5954515
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-phong--qhc-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hung-yen",
+      "layer": "hung-yen-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        20.813080499999998,
+        106.1287025
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "hung-yen",
+      "layer": "hung-yen-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 12,
+      "sample_point": [
+        20.8306635,
+        105.9765765
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        12.3312325,
+        109.07333650000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhpk/khanh-hoa-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 14,
+      "sample_point": [
+        12.3312325,
+        109.07333650000001
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "lam-dong",
+      "layer": "lam-dong-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/lam-dong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.774169,
+        107.995093
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.288795999999998,
+        107.3226565
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/quang-ninh--qhpk-3/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 15,
+      "sample_point": [
+        20.9739295,
+        107.04335699999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/quang-ninh--qhc-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        20.9739295,
+        107.04335699999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        16.063813,
+        108.076939
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/danang-qhc/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        16.066741999999998,
+        108.02180150000001
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        16.063813,
+        108.076939
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard"
+    }
+  ],
+  "samples": [
+    {
+      "province": "binh-duong",
+      "layer": "binh-duong-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.182500000000001,
+        106.65100000000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 119,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/8/203/119.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 15275,
+      "sha256": "88682cf0b8e4f7b0cceb3faf8fa0a030690dd53381b43b8b0258f7811fd40b80",
+      "alpha_bbox": [
+        158,
+        195,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "binh-duong",
+      "layer": "binh-duong-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.182500000000001,
+        106.65100000000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52183,
+      "y": 30719,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/16/52183/30719.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 45106,
+      "sha256": "35be48cf310ad57afa4af2d4d91e34a35402c8e0d9e902057f4496dc0810ac56",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "binh-duong",
+      "layer": "binh-duong-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.182182999999998,
+        106.65093949999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 119,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/8/203/119.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 3786,
+      "sha256": "e0d5f3987600fe788a1ce046dc8636053c24ab2c2004a2e41d6a0d5839f88280",
+      "alpha_bbox": [
+        157,
+        195,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "binh-duong",
+      "layer": "binh-duong-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/binh-duong",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.182182999999998,
+        106.65093949999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52183,
+      "y": 30719,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland2/qhxd/binh-duong/16/52183/30719.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 1696,
+      "sha256": "4b42f0d656c54ebefd028e6182efb0c9a544c99e98dd59676bde476f70e7875f",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hcm",
+      "layer": "hcm-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7575,
+        106.69200000000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3261,
+      "y": 1924,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/12/3261/1924.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 76089,
+      "sha256": "da1cddace824013f3d9a742dcc1bf65a5a8b7e8aa14fbaa9f1fe3ad002ca9700",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hcm",
+      "layer": "hcm-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7575,
+        106.69200000000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52190,
+      "y": 30798,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/tp-ho-chi-minh-2030/16/52190/30798.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 25788,
+      "sha256": "d08eb4a0de578e4dc18ba7707ce5fffa34a7de4477136c329aec80bc4cae7103",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hcm",
+      "layer": "hcm-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 14,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7574085,
+        106.692027
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 14,
+      "x": 13047,
+      "y": 7699,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/14/13047/7699.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 139766,
+      "sha256": "3abf02e139f344590d37250c57b1c4143bdfd0e19e248695c72da589f2360ec8",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hcm",
+      "layer": "hcm-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/tp-ho-chi-minh",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 14,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7574085,
+        106.692027
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52190,
+      "y": 30798,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland3/qhxd/16/52190/30798.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 49126,
+      "sha256": "69dd514460a2bcead09ed403989f173d04120ea85667f9818eb7203ecea13aa2",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "brvt",
+      "layer": "brvt-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        10.600000000000001,
+        107.325
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 9,
+      "x": 408,
+      "y": 240,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/9/408/240.png",
+      "status": 200,
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 50400,
+      "sha256": "33bf773ddd3ff6c47d614e2df132582853acd02a96f0a21905b45632a6cba448",
+      "alpha_bbox": [
+        86,
+        277,
+        510,
+        512
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "brvt",
+      "layer": "brvt-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        10.600000000000001,
+        107.325
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52305,
+      "y": 30827,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/16/52305/30827.png",
+      "status": 200,
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 16645,
+      "sha256": "6cda845398a66594638b43954110ae7a46895d48b7e14d610bd99ea999b8af82",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "brvt",
+      "layer": "con-dao-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau/huyen-con-dao",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        8.7,
+        106.625
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 9,
+      "x": 407,
+      "y": 243,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/9/407/243.png",
+      "status": 200,
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 3930,
+      "sha256": "21abe9d4d6ddffab2c5c492c68b513fe1f05304c04c8471e741c8e93ffd9facb",
+      "alpha_bbox": [
+        265,
+        251,
+        417,
+        348
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "brvt",
+      "layer": "con-dao-land-use-2030-guland",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau/huyen-con-dao",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        8.7,
+        106.625
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52178,
+      "y": 31178,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-brvt/sdd/16/52178/31178.png",
+      "status": 200,
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 9313,
+      "sha256": "5212f0654d3dec8ffdbb71ec1eb4e3f42465e5306317e8e0bd1914f06f21fe26",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "brvt",
+      "layer": "brvt-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/ba-ria-vung-tau",
+      "template": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 12,
+      "sample_point": [
+        10.600000000000001,
+        107.325
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3269,
+      "y": 1926,
+      "url": "https://s3-han02.fptcloud.com/guland/brvt-qhxd/12/3269/1926.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 51415,
+      "sha256": "31ea2c36fbf91ac6287413a1149d9bd8cdc22c07508555d3f2949076d79f5002",
+      "alpha_bbox": [
+        104,
+        26,
+        256,
+        227
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "dong-nai",
+      "layer": "dong-nai-expanded-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        11.41,
+        106.995
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 9,
+      "x": 408,
+      "y": 239,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/9/408/239.png",
+      "status": 200,
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 148549,
+      "sha256": "1148b6325de16190e171da1b701c27f20d5f040cf970e88c715c48778a707555",
+      "alpha_bbox": [
+        0,
+        0,
+        489,
+        512
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "dong-nai",
+      "layer": "dong-nai-expanded-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
+      "low_zoom": 9,
+      "high_zoom": 16,
+      "sample_point": [
+        11.41,
+        106.995
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52245,
+      "y": 30677,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/16/52245/30677.png",
+      "status": 200,
+      "size": [
+        512,
+        512
+      ],
+      "bytes": 2720,
+      "sha256": "561764a467133736c0514c903cd2335e72e150fa567d008530518c2d6fc26aed",
+      "alpha_bbox": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "dong-nai",
+      "layer": "dong-nai-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.052139,
+        107.16427
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 204,
+      "y": 120,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/8/204/120.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 19104,
+      "sha256": "c8f2f4f5f8f65442a8a3cb8d683fe33027e72553bf564a32aadc135e67ec58f2",
+      "alpha_bbox": [
+        0,
+        0,
+        128,
+        117
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "dong-nai",
+      "layer": "dong-nai-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/dong-nai",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.052139,
+        107.16427
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52276,
+      "y": 30743,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/binh-phuoc--qhxd/16/52276/30743.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 22012,
+      "sha256": "f82b311d9665d6f0cb8164b4f30983c55216228e84d48c6306cfb5f098399606",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "long-an",
+      "layer": "long-an-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/long-an",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7135,
+        106.1235
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 120,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/8/203/120.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 42671,
+      "sha256": "64286238786cc30a7e196690d54039358498cb10e8026525761b65f54a02bab2",
+      "alpha_bbox": [
+        5,
+        24,
+        233,
+        146
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "long-an",
+      "layer": "long-an-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/long-an",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        10.7135,
+        106.1235
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52087,
+      "y": 30806,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/long-an-2030/16/52087/30806.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 39461,
+      "sha256": "1ce445f5cb0a3935a5281e8cf3c9683cc6503ba34e92f3755535b2b5539bdd35",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "ha-noi",
+      "layer": "ha-noi-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        20.975433000000002,
+        105.7161045
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 112,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/8/203/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 22487,
+      "sha256": "3e3db0a0189ffb4c99f33bfcfee243b2890d8454a4b1de168639e0011cea0f94",
+      "alpha_bbox": [
+        0,
+        110,
+        101,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "ha-noi",
+      "layer": "ha-noi-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        20.975433000000002,
+        105.7161045
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52013,
+      "y": 28861,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/ha-noi-2030-2/16/52013/28861.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 45433,
+      "sha256": "6ec15adb1afd25dd0756815deb1851d969a3de2b71a5f2e950b010ed30e35269",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "ha-noi",
+      "layer": "ha-noi-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.1556875,
+        105.379454
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 202,
+      "y": 112,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/8/202/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 3428,
+      "sha256": "9c19b2c19eede2e1074ea4782a9493d279a1a1faf3bdb4b85f22088092a0ecb2",
+      "alpha_bbox": [
+        212,
+        118,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "ha-noi",
+      "layer": "ha-noi-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/ha-noi",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.1556875,
+        105.379454
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 51951,
+      "y": 28826,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/hanoi-qhpk2/16/51951/28826.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 50676,
+      "sha256": "b648a894898eb6d384b5299ddfc0bcfcec555a4a8a98f47330255174cd8892ab",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3256,
+      "y": 1801,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/12/3256/1801.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 104450,
+      "sha256": "6cfc865ad3de43a732401d0a4d03d689192e8fa128d5d14551fae74e5d472445",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52096,
+      "y": 28831,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-bac-ninh/qh-2030/16/52096/28831.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 15862,
+      "sha256": "3b0240d4c5530cb2b6a31cc9d1e2e80027c38e73ca2cc29b055b3a8787411f5f",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-ninh-qhpk-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.064480000000003,
+        106.21683949999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3256,
+      "y": 1802,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-ninh-qhpk-2/12/3256/1802.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 116850,
+      "sha256": "30cf40297ae9c64655150813567c68912e47470c5663f4db6a533d31beabcdfc",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-ninh-qhpk-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.064480000000003,
+        106.21683949999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52104,
+      "y": 28843,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/bac-ninh-qhpk-2/16/52104/28843.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 24282,
+      "sha256": "e7d49f1a12640aa11ca9e8e1e248729189dc9cca0140f4d7ddde16cc7c6793aa",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh/tp-bac-ninh--qhxdc/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 112,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh/tp-bac-ninh--qhxdc/8/203/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 4011,
+      "sha256": "5141c3061271304876014ae994a07855a0433278afab97628418787215c68408",
+      "alpha_bbox": [
+        77,
+        132,
+        155,
+        185
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh/tp-bac-ninh--qhxdc/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52096,
+      "y": 28831,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh/tp-bac-ninh--qhxdc/16/52096/28831.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 27851,
+      "sha256": "30f3afd8202e33f6412a6c5a319f12c2b01a85685936d823d5abad974e221b1c",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 112,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/8/203/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 3570,
+      "sha256": "abf11fc86677ec47158352b12d3b26876f27dbff5aa811fb75c2ff63602bc646",
+      "alpha_bbox": [
+        81,
+        139,
+        156,
+        202
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "bac-ninh",
+      "layer": "bac-ninh-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/bac-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        21.129022499999998,
+        106.1751165
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52096,
+      "y": 28831,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-xd/bac-ninh--qhxdpk/16/52096/28831.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 5360,
+      "sha256": "5eaa3a965c8d289e01db776c85970168b51fcc5096c3adf34d1b7c290e58dfed",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 11,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 11,
+      "x": 1630,
+      "y": 902,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/11/1630/902.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 50285,
+      "sha256": "309d1d58840de1a4d3ffa6af3f8fa596452f23157f7ba542fcdffe7651e3360d",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 11,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52186,
+      "y": 28884,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/hai-phong-2030/16/52186/28884.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 10246,
+      "sha256": "56af8c4e7400ffc36199d0e8624d05c5b77bff8e105ad1fa00f0be09d9db2e6d",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3-han02.fptcloud.com/guland5/qhxd/hai-phong/{z}/{x}/{y}.png",
+      "low_zoom": 13,
+      "high_zoom": 16,
+      "sample_point": [
+        20.883966,
+        106.5954515
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 13,
+      "x": 6521,
+      "y": 3609,
+      "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hai-phong/13/6521/3609.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 69967,
+      "sha256": "8d6d33ebaf643cabc5543c4ac320c7494beec4445e21f5ff967c68c80b923ddb",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3-han02.fptcloud.com/guland5/qhxd/hai-phong/{z}/{x}/{y}.png",
+      "low_zoom": 13,
+      "high_zoom": 16,
+      "sample_point": [
+        20.883966,
+        106.5954515
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52173,
+      "y": 28879,
+      "url": "https://s3-han02.fptcloud.com/guland5/qhxd/hai-phong/16/52173/28879.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 16859,
+      "sha256": "03c026f4c4930f54d341e7094d98fa7a8123b49e9d1694d28d591c712e9cd5bf",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-phong--qhc-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3261,
+      "y": 1805,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-phong--qhc-2/12/3261/1805.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 153782,
+      "sha256": "1221d92d8323b3d6f4fe52a5d0c55a3607a9d1d84463f0028920207f2ad24b84",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-phong--qhc-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52186,
+      "y": 28884,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/hai-phong--qhc-2/16/52186/28884.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 21561,
+      "sha256": "19cb20bbbd76b9b16b01da1ac549ff77ada4261c418466a7d01a8e6663910c82",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 10,
+      "x": 815,
+      "y": 451,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/10/815/451.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 39408,
+      "sha256": "299e300a17c9cbb0bff34745c665a1c53a449074743dc2dbc04609583f4eb91b",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hai-phong",
+      "layer": "hai-phong-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/hai-phong",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        20.8548775,
+        106.6687235
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52186,
+      "y": 28884,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/hai-phong/16/52186/28884.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 9243,
+      "sha256": "b89218f58213872131b154f2efe1a1b70aa67c3fe76126f39182203da028cf5a",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hung-yen",
+      "layer": "hung-yen-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        20.813080499999998,
+        106.1287025
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 112,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/8/203/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 11953,
+      "sha256": "ba79327b9c3d8534bb289f9dbfaebb6f6d5dd6a5bd5ac43c47558d48fdc0f380",
+      "alpha_bbox": [
+        77,
+        183,
+        147,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hung-yen",
+      "layer": "hung-yen-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        20.813080499999998,
+        106.1287025
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52088,
+      "y": 28892,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/hung-yen-2030/16/52088/28892.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 69680,
+      "sha256": "d3670775228548f92191ee20c9c510bc19fbdd4d2f4adf9613e4bce8434557a6",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hung-yen",
+      "layer": "hung-yen-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 12,
+      "sample_point": [
+        20.8306635,
+        105.9765765
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 203,
+      "y": 112,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/8/203/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 1807,
+      "sha256": "e94cb26e492ca0adef00e78ff4d34a044ca96277afda096b62d0f8b79a5c3c6c",
+      "alpha_bbox": [
+        71,
+        183,
+        107,
+        210
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "hung-yen",
+      "layer": "hung-yen-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/hung-yen",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 12,
+      "sample_point": [
+        20.8306635,
+        105.9765765
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3253,
+      "y": 1805,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland7/qh-chung/hung-yen/huyen-van-giang--40c-do-thi/12/3253/1805.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 510,
+      "sha256": "f58d4f4fea344ea99df305918db8824b1764d7395b0578a041a315f26bceaebd",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        20
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        12.3312325,
+        109.07333650000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 10,
+      "x": 822,
+      "y": 476,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/10/822/476.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 26048,
+      "sha256": "fe4905206fa818c17f25890cce5f5516f62e024033bf339150cbdc3f51c0e37d",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        12.3312325,
+        109.07333650000001
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52624,
+      "y": 30505,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/khanh-hoa-2030/16/52624/30505.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 3312,
+      "sha256": "17f2d473a92616c85ca4d490d017f03048b570a3ee7e9272295d2abaa8a15abf",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhpk/khanh-hoa-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3289,
+      "y": 1909,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhpk/khanh-hoa-2/12/3289/1909.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 105752,
+      "sha256": "cd877efe8bfc4a11535aaa8cbabd1cd0cd1017513ffaaffa2d5bcaae0589dc5b",
+      "alpha_bbox": [
+        10,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhpk/khanh-hoa-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52635,
+      "y": 30553,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland9/qhpk/khanh-hoa-2/16/52635/30553.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 52026,
+      "sha256": "8cc328e14392d918cdf7a3d4814fbada6abaae7ea1b41b185ebf1033c446dc02",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 14,
+      "sample_point": [
+        12.3312325,
+        109.07333650000001
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 10,
+      "x": 822,
+      "y": 476,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/10/822/476.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 12614,
+      "sha256": "7a04ee352e83bb2028c9aee33ea63b99e46d48ffe45d5901ba36281de839667a",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "khanh-hoa",
+      "layer": "khanh-hoa-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/khanh-hoa",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 14,
+      "sample_point": [
+        12.3312325,
+        109.07333650000001
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 14,
+      "x": 13156,
+      "y": 7626,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/khanh-hoa/14/13156/7626.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 1258,
+      "sha256": "fee3a62cd85f968e83dd1cf728c017d3b12927a1127a72f5adf331845482270f",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "lam-dong",
+      "layer": "lam-dong-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/lam-dong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.774169,
+        107.995093
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 204,
+      "y": 119,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/8/204/119.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 57880,
+      "sha256": "c60e31c9577dd7d4ef9dd409ef5ff82907f4e1d5a1721c13841d992baad35b9a",
+      "alpha_bbox": [
+        71,
+        49,
+        256,
+        249
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "lam-dong",
+      "layer": "lam-dong-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/lam-dong",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        11.774169,
+        107.995093
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52427,
+      "y": 30609,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/v2/lam-dong-2030/16/52427/30609.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 49630,
+      "sha256": "df6d622ce03c825c6064337599ac7bdad714c0fa03725ab2fa20b75215c93b16",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.288795999999998,
+        107.3226565
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3269,
+      "y": 1800,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/12/3269/1800.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 173407,
+      "sha256": "664ae3f2ae5b4fae21682c5539f24770ea23c1519d8f9056bf0de11da01bda76",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        21.288795999999998,
+        107.3226565
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52305,
+      "y": 28800,
+      "url": "https://r4gmiynxmeobj.vcdn.cloud/quang-ninh-2030/16/52305/28800.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 89496,
+      "sha256": "e722755e72d528cfb6cc681e86135005e7fc032d23e9301055e2e043ab3463f1",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/quang-ninh--qhpk-3/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 15,
+      "sample_point": [
+        20.9739295,
+        107.04335699999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 204,
+      "y": 112,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/quang-ninh--qhpk-3/8/204/112.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 2946,
+      "sha256": "f387997fe72165bd72927292ba4e4ad5f286dc84cb18c50afee7c7380723aab8",
+      "alpha_bbox": [
+        18,
+        159,
+        115,
+        192
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/quang-ninh--qhpk-3/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 15,
+      "sample_point": [
+        20.9739295,
+        107.04335699999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 15,
+      "x": 26127,
+      "y": 14430,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland5/quang-ninh--qhpk-3/15/26127/14430.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 490,
+      "sha256": "6d81e5b0ef29d06af229446434337b90e3e28e89356736472d94269f7699b130",
+      "alpha_bbox": [
+        0,
+        97,
+        165,
+        210
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/quang-ninh--qhc-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        20.9739295,
+        107.04335699999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3265,
+      "y": 1803,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/quang-ninh--qhc-2/12/3265/1803.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 64733,
+      "sha256": "0dcc02f2c478d6882abc9552c0dd730643a8bd0e00b66a24421f4999f454a686",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "quang-ninh",
+      "layer": "quang-ninh-general-reference",
+      "theme": "urban_general",
+      "source_url": "https://guland.vn/soi-quy-hoach/quang-ninh",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/quang-ninh--qhc-2/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        20.9739295,
+        107.04335699999999
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52254,
+      "y": 28861,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland7/qh-chung/quang-ninh--qhc-2/16/52254/28861.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 3378,
+      "sha256": "4780fd7bf0a43ea05c4ec5f5e83757c4eae062f862279632806cae3f65fb375b",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        16.063813,
+        108.076939
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 8,
+      "x": 204,
+      "y": 116,
+      "url": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/8/204/116.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 10051,
+      "sha256": "e2d35efde443d7aa70946a54973f96f4e490613fff0797bbe29d229653707176",
+      "alpha_bbox": [
+        171,
+        78,
+        256,
+        136
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-land-use-2030-reference",
+      "theme": "land_use_2030",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/{z}/{x}/{y}.png",
+      "low_zoom": 8,
+      "high_zoom": 16,
+      "sample_point": [
+        16.063813,
+        108.076939
+      ],
+      "point_basis": "focus_midpoint_with_layer_membership",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52442,
+      "y": 29804,
+      "url": "https://sgp1.digitaloceanspaces.com/guland/qh/da-nang-2030/16/52442/29804.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 34714,
+      "sha256": "9cd8adba936754c227c16fd4b70e447750da11377e4351950e963a46d3d36a21",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/danang-qhc/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        16.066741999999998,
+        108.02180150000001
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 12,
+      "x": 3277,
+      "y": 1862,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/danang-qhc/12/3277/1862.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 55377,
+      "sha256": "e2408a6e655c96adc83c4bcdff6f38e78b07d06782cdf7c668b99ed620d31229",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-partition-reference",
+      "theme": "partition",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/danang-qhc/{z}/{x}/{y}.png",
+      "low_zoom": 12,
+      "high_zoom": 16,
+      "sample_point": [
+        16.066741999999998,
+        108.02180150000001
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52432,
+      "y": 29804,
+      "url": "https://s3-hn-2.cloud.cmctelecom.vn/guland4/danang-qhc/16/52432/29804.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 15977,
+      "sha256": "ad9a4759233a20ab5a53d258e738b3619ca0b9a9ab473cd9d5cf06893eba0f98",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        16.063813,
+        108.076939
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 10,
+      "x": 819,
+      "y": 465,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/10/819/465.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 21415,
+      "sha256": "df2b029a00217af9443fb9849714ee66a0e3e159e1face79dbba65a59c6f53a2",
+      "alpha_bbox": [
+        0,
+        73,
+        256,
+        256
+      ],
+      "nonempty": true
+    },
+    {
+      "province": "da-nang",
+      "layer": "da-nang-construction-reference",
+      "theme": "construction",
+      "source_url": "https://guland.vn/soi-quy-hoach/da-nang",
+      "template": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/{z}/{x}/{y}.png",
+      "low_zoom": 10,
+      "high_zoom": 16,
+      "sample_point": [
+        16.063813,
+        108.076939
+      ],
+      "point_basis": "previous_positive_sample",
+      "zoom_below_native": "native_minimum_guard",
+      "z": 16,
+      "x": 52442,
+      "y": 29804,
+      "url": "https://s3.hn-1.cloud.cmctelecom.vn/guland6/qh-xd/da-nang/16/52442/29804.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 4097,
+      "sha256": "311ee6827e561f32a65c8805246ac4b4bf8392c64703580350222966ad369bda",
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ],
+      "nonempty": true
+    }
+  ],
+  "checked_on": "2026-11-02",
+  "supersedes": "Earlier midpoint/HTTP-status interpretation in priority-13-layer-quality-2026-11-02",
+  "production_composite_samples": [
+    {
+      "theme": "partition",
+      "url": "https://radarbds.vn/api/planning/gis-tiles/partition/14/13044/7687.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ]
+    },
+    {
+      "theme": "urban_general",
+      "url": "https://radarbds.vn/api/planning/gis-tiles/urban_general/14/13044/7687.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "alpha_bbox": [
+        0,
+        0,
+        256,
+        256
+      ]
+    },
+    {
+      "theme": "detailed",
+      "url": "https://radarbds.vn/api/planning/gis-tiles/detailed/14/13044/7687.png",
+      "status": 200,
+      "size": [
+        256,
+        256
+      ],
+      "alpha_bbox": [
+        82,
+        76,
+        256,
+        256
+      ]
+    }
+  ]
+}

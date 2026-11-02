@@ -165,6 +165,8 @@ anonymous warm key. To roll back edge changes, disable the two Maps-specific
 rules, leaving the existing private/public listing rules intact.
 # SDĐ 2030 bounded image loading — 2026-11-02
 
+Follow-up: [Chrome mobile CPU/heap/request profile and measured limits](maps-mobile-profile-2026-11-02.md).
+
 User reported browser lag when enabling provincial SDĐ2030. Source inspection
 found this theme bypassed `RadarPlanningNativeTiles.createReference`, using
 Leaflet's direct image loader while partition/general references shared a

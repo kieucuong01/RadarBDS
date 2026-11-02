@@ -192,7 +192,7 @@
     var controller = new env.AbortController();
     var disposed = false;
     var manifest = null;
-    var catalog = [];
+    var catalog = [], catalogById = new Map();
     var provinces = Array.isArray(env.RADAR_LANDUSE_AREAS) ? env.RADAR_LANDUSE_AREAS : [];
     var selectedArea = options.initialArea || (env.RadarPlanningArea && env.RadarPlanningArea.initial(provinces, options.initialRegion));
     var selectedProvince = provinces.find(function(p){return p.id === (selectedArea ? selectedArea.province : 'binh-duong');});
@@ -491,6 +491,9 @@
       if (errors.length) status.textContent += ' Không tải được: ' + errors.map(function (item) { return item.name; }).join(', ')
         + '. Tắt/bật loại bản đồ để thử lại; Maps vẫn hoạt động.';
       if (entries.some(function (entry) { return entry.tileError; })) status.textContent += ' Một số ô bản đồ chưa tải được; thử thu phóng hoặc chuyển vùng để tải lại.';
+      if (typeof map.getZoom === 'function' && entries.some(function(entry){
+        return Number.isInteger(entry.item.manifest.max_native_zoom) && map.getZoom()>entry.item.manifest.max_native_zoom;
+      })) status.textContent += ' Một số lớp đang phóng lớn từ ảnh gốc; phóng gần hơn không tăng độ chi tiết.';
     }
 
     function removeOverlay(id) {
@@ -642,10 +645,10 @@
         if (fallback) {fallback.toggle.checked=true;activeTheme=fallback;}
       }
       Array.from(selector.children).forEach(function(option){
-        var item=catalog.find(function(entry){return entry.id===option.value;});
+        var item=catalogById.get(option.value);
         option.hidden=option.disabled=!!item&&!inSelectedProvince(item);
       });
-      var selected=catalog.find(function(item){return item.id===selector.value;});
+      var selected=catalogById.get(selector.value);
       if(selected&&!inSelectedProvince(selected)) {
         var replacement=wantedItems(true)[0]||catalog.find(inSelectedProvince);
         if(replacement)chooseLayer(replacement);
@@ -697,7 +700,7 @@
       if (legend.open && manifest && manifest.legend_available !== false) legendImage.src = assetBase + manifest.id + '/legend.webp';
     }
     selector.addEventListener('change', function () {
-      var item = catalog.find(function (entry) { return entry.id === selector.value; });
+      var item = catalogById.get(selector.value);
       if (item && !disposed) chooseLayer(item);
     });
 
@@ -717,6 +720,7 @@
             source: item.source || (item.manifest && item.manifest.source_kind === 'official_gis' ? 'gis' : 'document')
           });
         });
+        catalogById = new Map(catalog.map(function(item){return [item.id,item];}));
         catalog.forEach(function (item) {
           var suffix = item.status === 'overlay_ready' ? String(item.manifest.source_kind || '').indexOf('primary_consultant') === 0 ? ' · Nguồn tư vấn' : ' · Lớp phủ'
             : item.status === 'document_only' ? ' · Bản vẽ' : ' · Chưa có lớp';

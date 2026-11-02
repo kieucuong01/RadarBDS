@@ -86,6 +86,13 @@ con số chưa kiểm được từ PDF đó **không được dùng** để ch�
 
 ## Sổ tiếp tục cho agent sau
 
+- Chất lượng lớp: [audit 13 tỉnh, mẫu gần/xa và lỗi nguồn](priority-13-layer-quality-2026-11-02.md).
+  Không coi mẫu HTTP200 là nghiệm thu phủ kín; giữ riêng403/404 và timeout GIS primary.
+
+- Ranh GIS: xem [đợt rà lại đủ 13 địa bàn sau release b59294a6](priority-13-parcel-gis-recheck-2026-11-02.md).
+  Chưa tìm được provider mới đạt điều kiện; Bắc Ninh tenant hiện là Bắc Giang cũ,
+  Hải Phòng mới xác minh API quy hoạch/DVHC, các nguồn blocked vẫn chưa phục hồi.
+
 - **Đợt này chỉ cập nhật nghiên cứu và định hướng**, không khởi động crawl hoặc
   tuyên bố hoàn thiện 13 địa bàn. Đọc guide, HEAD và deployed SHA trước khi làm.
 - Mười nơi giữ lại: tiếp tục ma trận tính năng trong hồ sơ cũ và audit GIS 3–10.

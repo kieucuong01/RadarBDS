@@ -141,7 +141,9 @@
     url.hash = new URLSearchParams({map:[center.lat.toFixed(6),center.lng.toFixed(6),state.map.getZoom()].join(','),
       base:state.activeBaseLayer,province:area.province || '',district:area.district || '',
       planning:state.planningTheme || 'none',listings:state.listingsVisible ? '1' : '0'}).toString();
-    root.history.replaceState(sharedMapHistoryState(root.history.state,true),'',url.toString());
+    if (url.toString() !== root.location.href) {
+      root.history.replaceState(sharedMapHistoryState(root.history.state,true),'',url.toString());
+    }
   }
 
   function normalizeBaseLayer(value) {

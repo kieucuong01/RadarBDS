@@ -320,6 +320,12 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
     assert.equal(national.layers.size,p.layer_ids.length,p.name+' only loads selected province providers');
     assert.equal(queued.length,p.layer_ids.length,p.name+' uses bounded cancellable image loading');
     assert([...national.layers].every(l=>p.layer_ids.some(id=>landuse.find(item=>item.id===id).manifest.tile_template===l.url)));
+    if(p.id==='binh-duong'){
+      national.zoomTo(19);
+      assert(national.nodes.some(n=>n.textContent?.includes('phóng lớn từ ảnh gốc')),'Overzoom must explain the source detail limit');
+      national.zoomTo(13);
+      assert(!national.nodes.some(n=>n.textContent?.includes('phóng lớn từ ảnh gốc')),'Detail warning clears at native zoom');
+    }
     if(p.id==='bac-giang'){
       const hint=national.nodes.find(n=>n.className==='planning-source-zoom-hint');assert.equal(hint.hidden,true);
       national.zoomTo(10);assert.equal(national.layers.size,0,'Do not downsample hundreds of native zoom-12 images at country scale');
