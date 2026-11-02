@@ -101,10 +101,13 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     legacy=[a for a in data['layers'] if a.get('theme')=='administrative_legacy']
     assert len(legacy)==63 and sum(a['manifest']['unit_count'] for a in legacy)==10038
     response=client.get('/api/planning/parcels/config.json')
-    assert len(response.json['areas'])==533 and response.json['count']==91
+    assert len(response.json['areas'])==667 and response.json['count']==91
     assert response.json['regional_sources'] is True
     bp = [a for a in response.json['areas'] if a.get('province') == 'binh-phuoc']
     assert len(bp) == 111 and len({a['area_id'] for a in bp}) == 111
+    kh = [a for a in response.json['areas'] if a.get('province') == 'khanh-hoa']
+    assert len(kh) == 134 and len({a['district'] for a in kh}) == 8
+    assert all(a['area_id'].startswith('kh-') for a in kh)
     assert response.json['count_scope']=='historic_binh_duong_snapshot'
     assert response.json['live_expanded'] is True
     assert response.headers['Cache-Control']=='public, max-age=60'

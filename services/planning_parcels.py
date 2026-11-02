@@ -277,11 +277,13 @@ def install_parcel_pilot(app, directory):
 def parcel_bbox(value, expanded=False, coverage_bounds=None):
     west, south, east, north = map(float, value.split(','))
     min_south, max_east = (8.5, 107.65) if expanded else (10.75, 107.1)
+    min_west = 106.25
     max_north = 11.65
     if coverage_bounds:
         min_south, max_north = coverage_bounds[0][0], coverage_bounds[1][0]
+        min_west, max_east = coverage_bounds[0][1], coverage_bounds[1][1]
     if not all(math.isfinite(v) for v in (west, south, east, north)) or not (
-        106.25 <= west < east <= max_east and min_south <= south < north <= max_north
+        min_west <= west < east <= max_east and min_south <= south < north <= max_north
         and east-west <= .05 and north-south <= .05):
         raise ValueError('Invalid viewport')
     return west, south, east, north
@@ -306,6 +308,10 @@ def install_planning_lookup(app, feature_by_id, prefix='/local-planning/parcels'
             feature = feature_by_id(identifier)
             if feature is None:
                 abort(404)
+            from services.planning_khanh_hoa_parcels import SOURCE as KH_SOURCE
+            if feature['properties'].get('source') == KH_SOURCE:
+                return jsonify(parcel=feature['properties'], plans=[], planning_available=False,
+                               source=KH_SOURCE, queried_at=datetime.now(timezone.utc).isoformat())
             cached = cache.get(identifier)
             if cached and time.monotonic()-cached[0] < (15 if cached[1].get('unavailable_layers') else 300):
                 return jsonify(cached[1])

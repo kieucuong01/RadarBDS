@@ -88,9 +88,10 @@ def install_live(app,site):
     if os.getenv('RADAR_PARCEL_CELLS_ENABLED','1')=='1':
         try:
             cell_release = config['release']
-            if getattr(catalog, 'version', None):
+            if getattr(catalog, 'version', None) or getattr(expanded, 'revision', None):
                 from hashlib import sha256
-                cell_release = sha256((cell_release+catalog.version).encode()).hexdigest()[:16]
+                cell_release = sha256((cell_release+getattr(catalog,'version','')+
+                                       getattr(expanded,'revision','')).encode()).hexdigest()[:16]
             install_cells(app,catalog,expanded,cache,cell_release)
         except (OSError,sqlite3.Error):
             app.logger.warning('Parcel cell cache unavailable; keeping viewport fallback')

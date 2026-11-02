@@ -3,6 +3,12 @@
 Checked 2026-10-31. This document records source verification, not delivered
 nationwide parcel coverage. Planning imagery is independent of cadastral data.
 
+**Recheck 2026-11-02:** see [priority 3–10 audit](priority-gis-parcels-2026-11-02.md).
+Khánh Hòa public cadastre now has a verified local adapter (8 district samples).
+Long An WFS hits now responds but GetFeature still fails; old statuses below
+are historical. User requests GIS-first for these eight markets and defers
+Guland collection, so do not restart a Guland parcel crawl from this audit.
+
 The user confirmed that no additional dataset/API credentials are available and
 asked to continue with public sources. Do not use embedded third-party secrets,
 copied browser sessions or bypass denied access to build an adapter.

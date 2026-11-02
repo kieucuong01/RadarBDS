@@ -141,7 +141,7 @@ if __name__ == '__main__':
         if 'planning_parcel_cells' not in app_module.app.extensions:
             from services.planning_parcel_tiles import install as install_cells
             install_cells(app_module.app,catalog,expanded,ROOT/'.local/planning-cell-cache',
-                          'local-pilot-'+getattr(catalog,'version','legacy')[:16])
+                          'local-pilot-'+getattr(catalog,'version','legacy')[:16]+'-'+getattr(expanded,'revision',''))
     elif (parcel_directory / 'parcels.geojson').is_file():
         from services.planning_parcels import install_parcel_pilot
         install_parcel_pilot(app_module.app, parcel_directory)

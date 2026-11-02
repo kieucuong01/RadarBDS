@@ -94,7 +94,8 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
     coverage_bounds:[[8.5,106.25],[11.65,107.65]],areas:[
     {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',district:'721',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900},
     {area_id:'26740',ward:'Bến Nghé',city:'Quận 1',district:'760',bounds:[[10.77,106.69],[10.78,106.71]]},
-    {area_id:'bp-689-25201',ward:'Phường Tân Bình',city:'Thành phố Đồng Xoài',district:'689',province:'binh-phuoc',bounds:[[11.5,106.8],[11.6,106.9]]}]});
+    {area_id:'bp-689-25201',ward:'Phường Tân Bình',city:'Thành phố Đồng Xoài',district:'689',province:'binh-phuoc',bounds:[[11.5,106.8],[11.6,106.9]]},
+    {area_id:'kh-570-22465',ward:'Cam An Bắc',city:'Huyện Cam Lâm',district:'570',province:'khanh-hoa',bounds:[[11.9,108.9],[12.2,109.3]]}]});
   await flush();
   assert(pending[beforeProduction+1].url.startsWith('/api/planning/parcels/viewport.json?bbox='));
   const province=nodes.filter(n=>n.attributes['aria-label']==='Tỉnh/TP').at(-1);
@@ -104,6 +105,10 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
   province.value='binh-phuoc';province.events.change();
   assert.deepEqual(district.children.map(n=>n.value),['Thành phố Đồng Xoài']);
   assert.deepEqual(searchWard.children.map(n=>n.value),['bp-689-25201']);
+  assert(province.children.some(n=>n.value==='khanh-hoa'));
+  province.value='khanh-hoa';province.events.change();
+  assert.deepEqual(district.children.map(n=>n.value),['Huyện Cam Lâm']);
+  assert.deepEqual(searchWard.children.map(n=>n.value),['kh-570-22465']);
   province.value='hcm';province.events.change();
   assert.deepEqual(district.children.map(n=>n.value),['Quận 1']);
   assert.deepEqual(searchWard.children.map(n=>n.value),['26740']);

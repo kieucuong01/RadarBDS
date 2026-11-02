@@ -20,6 +20,9 @@ class SourceBusy(Exception):
 
 
 class LiveParcels:
+    query_fields = FIELDS
+    sheet_field = 'SoTo'
+    parcel_field = 'SoThua'
     query_path = PARCEL_QUERY
     fallback_path = '/rest/thua-dat/query'
     excluded_districts = LEGACY_DISTRICTS
@@ -30,6 +33,9 @@ class LiveParcels:
 
     def _reference_key(self, code, district):
         return code
+
+    def _attributes(self, attributes):
+        return attributes
 
     def __init__(self, client=None, cache_bytes=8_000_000):
         self.client = client or PublicGIS()
@@ -72,7 +78,7 @@ class LiveParcels:
             cached = self._get(key)
             if cached is not None:
                 return cached
-            params = dict(params, f='json', outFields=FIELDS, returnGeometry='true', outSR=4326,
+            params = dict(params, f='json', outFields=self.query_fields, returnGeometry='true', outSR=4326,
                           orderByFields='OBJECTID ASC', resultRecordCount=limit)
             endpoint = self.query_path if time.monotonic() >= self.native_retry_at or not self.fallback_path else self.fallback_path
             try:
@@ -98,7 +104,10 @@ class LiveParcels:
             for row in rows:
                 if not isinstance(row, dict) or not isinstance(row.get('attributes'), dict):
                     raise ValueError('Invalid source feature')
-                attr = row['attributes']
+                attr = self._attributes(row['attributes'])
+                if attr is None:
+                    excluded += 1
+                    continue
                 raw_oid = attr['OBJECTID']
                 if type(raw_oid) is not int or not 0 < raw_oid < 2**53 - self.id_offset:
                     raise ValueError('Invalid source object identifier')
@@ -193,8 +202,8 @@ class LiveParcels:
 
     def search(self, area, sheet, parcel):
         # Values are SQL literals for the fixed source endpoint, never identifiers/URLs.
-        where = self._area_where(area) + " AND SoTo = '%s' AND SoThua = '%s'" % (
-            sheet.replace("'", "''"), parcel.replace("'", "''"))
+        where = self._area_where(area) + " AND %s = '%s' AND %s = '%s'" % (
+            self.sheet_field, sheet.replace("'", "''"), self.parcel_field, parcel.replace("'", "''"))
         return self._query(('search', area, sheet, parcel), {'where': where}, area=area,
                            search=(sheet, parcel), limit=20)
 

@@ -1,0 +1,3524 @@
+{
+  "source": "https://gis.khanhhoa.gov.vn/",
+  "checked_on": "2026-11-02",
+  "source_query": "/arcgis/rest/services/Base/DiaChinh/MapServer/8/query",
+  "reference_only": "Source locality codes/names; district bounds for navigation only, not parcel masks or coverage proof. Trường Sa not supplied.",
+  "excluded_references": [
+    {
+      "MaXa": null,
+      "MaHuyen": null,
+      "TenPhuong": null,
+      "TenHuyen": "Vạn Ninh"
+    },
+    {
+      "MaXa": null,
+      "MaHuyen": null,
+      "TenPhuong": null,
+      "TenHuyen": "Khánh Sơn"
+    },
+    {
+      "MaXa": null,
+      "MaHuyen": null,
+      "TenPhuong": null,
+      "TenHuyen": "Cam Lâm"
+    },
+    {
+      "MaXa": "22465",
+      "MaHuyen": "570            ",
+      "TenPhuong": "Cam An Bắc",
+      "TenHuyen": "Cam Ranh"
+    },
+    {
+      "MaXa": "22519",
+      "MaHuyen": "570            ",
+      "TenPhuong": "Vạn Thạnh",
+      "TenHuyen": "Vạn Ninh"
+    }
+  ],
+  "areas": [
+    {
+      "code": "22327",
+      "area_id": "kh-568-22327",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Hòa",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Hòa",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22330",
+      "area_id": "kh-568-22330",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Hải",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Hải",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22333",
+      "area_id": "kh-568-22333",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Phước",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Phước",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22336",
+      "area_id": "kh-568-22336",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Ngọc Hiệp",
+      "source_city": "Nha Trang",
+      "source_ward": "Ngọc Hiệp",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22339",
+      "area_id": "kh-568-22339",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Thọ",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Thọ",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22342",
+      "area_id": "kh-568-22342",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Xương Huân",
+      "source_city": "Nha Trang",
+      "source_ward": "Xương Huân",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22345",
+      "area_id": "kh-568-22345",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vạn Thắng",
+      "source_city": "Nha Trang",
+      "source_ward": "Vạn Thắng",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22348",
+      "area_id": "kh-568-22348",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vạn Thạnh",
+      "source_city": "Nha Trang",
+      "source_ward": "Vạn Thạnh",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22351",
+      "area_id": "kh-568-22351",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phương Sài",
+      "source_city": "Nha Trang",
+      "source_ward": "Phương Sài",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22354",
+      "area_id": "kh-568-22354",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phương Sơn",
+      "source_city": "Nha Trang",
+      "source_ward": "Phương Sơn",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22357",
+      "area_id": "kh-568-22357",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phước Hải",
+      "source_city": "Nha Trang",
+      "source_ward": "Phước Hải",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22360",
+      "area_id": "kh-568-22360",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phước Tân",
+      "source_city": "Nha Trang",
+      "source_ward": "Phước Tân",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22363",
+      "area_id": "kh-568-22363",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Lộc Thọ",
+      "source_city": "Nha Trang",
+      "source_ward": "Lộc Thọ",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22366",
+      "area_id": "kh-568-22366",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phước Tiến",
+      "source_city": "Nha Trang",
+      "source_ward": "Phước Tiến",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22369",
+      "area_id": "kh-568-22369",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Tân Lập",
+      "source_city": "Nha Trang",
+      "source_ward": "Tân Lập",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22372",
+      "area_id": "kh-568-22372",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phước Hòa",
+      "source_city": "Nha Trang",
+      "source_ward": "Phước Hòa",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22375",
+      "area_id": "kh-568-22375",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Nguyên",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Nguyên",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22378",
+      "area_id": "kh-568-22378",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phước Long",
+      "source_city": "Nha Trang",
+      "source_ward": "Phước Long",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22381",
+      "area_id": "kh-568-22381",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Trường",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Trường",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22384",
+      "area_id": "kh-568-22384",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Lương",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Lương",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22387",
+      "area_id": "kh-568-22387",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Phương",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Phương",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22390",
+      "area_id": "kh-568-22390",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Ngọc",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Ngọc",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22393",
+      "area_id": "kh-568-22393",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Thạnh",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Thạnh",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22396",
+      "area_id": "kh-568-22396",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Trung",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Trung",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22399",
+      "area_id": "kh-568-22399",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Hiệp",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Hiệp",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22402",
+      "area_id": "kh-568-22402",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Vĩnh Thái",
+      "source_city": "Nha Trang",
+      "source_ward": "Vĩnh Thái",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22405",
+      "area_id": "kh-568-22405",
+      "district": "568",
+      "city": "Thành phố Nha Trang",
+      "ward": "Phước Đồng",
+      "source_city": "Nha Trang",
+      "source_ward": "Phước Đồng",
+      "source_district_value": "568            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.14194,
+          109.113393
+        ],
+        [
+          12.379107,
+          109.370466
+        ]
+      ],
+      "center": [
+        12.2605235,
+        109.2419295
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22408",
+      "area_id": "kh-569-22408",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Nghĩa",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Nghĩa",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22411",
+      "area_id": "kh-569-22411",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Phúc Bắc",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Phúc Bắc",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22414",
+      "area_id": "kh-569-22414",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Phúc Nam",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Phúc Nam",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22417",
+      "area_id": "kh-569-22417",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Lộc",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Lộc",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22420",
+      "area_id": "kh-569-22420",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Phú",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Phú",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22423",
+      "area_id": "kh-569-22423",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Ba Ngòi",
+      "source_city": "Cam Ranh",
+      "source_ward": "Ba Ngòi",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22426",
+      "area_id": "kh-569-22426",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Thuận",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Thuận",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22429",
+      "area_id": "kh-569-22429",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Lợi",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Lợi",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22432",
+      "area_id": "kh-569-22432",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Linh",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Linh",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22468",
+      "area_id": "kh-569-22468",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Thành Nam",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Thành Nam",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22474",
+      "area_id": "kh-569-22474",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Phước Đông",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Phước Đông",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22477",
+      "area_id": "kh-569-22477",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Thịnh Tây",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Thịnh Tây",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22480",
+      "area_id": "kh-569-22480",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Thịnh Đông",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Thịnh Đông",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22483",
+      "area_id": "kh-569-22483",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Lập",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Lập",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22486",
+      "area_id": "kh-569-22486",
+      "district": "569",
+      "city": "Thành phố Cam Ranh",
+      "ward": "Cam Bình",
+      "source_city": "Cam Ranh",
+      "source_ward": "Cam Bình",
+      "source_district_value": "569            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.768934,
+          109.002345
+        ],
+        [
+          12.02774,
+          109.323247
+        ]
+      ],
+      "center": [
+        11.898337,
+        109.162796
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22435",
+      "area_id": "kh-570-22435",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Tân",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Tân",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22438",
+      "area_id": "kh-570-22438",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Hòa",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Hòa",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22441",
+      "area_id": "kh-570-22441",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Hải Đông",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Hải Đông",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22444",
+      "area_id": "kh-570-22444",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Hải Tây",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Hải Tây",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22450",
+      "area_id": "kh-570-22450",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Hiệp Bắc",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Hiệp Bắc",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22453",
+      "area_id": "kh-570-22453",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Đức",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Đức",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22456",
+      "area_id": "kh-570-22456",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Hiệp Nam",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Hiệp Nam",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22462",
+      "area_id": "kh-570-22462",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam Thành Bắc",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam Thành Bắc",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22465",
+      "area_id": "kh-570-22465",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam An Bắc",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam An Bắc",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22471",
+      "area_id": "kh-570-22471",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Cam An Nam",
+      "source_city": "Cam Lâm",
+      "source_ward": "Cam An Nam",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22708",
+      "area_id": "kh-570-22708",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Suối Cát",
+      "source_city": "Cam Lâm",
+      "source_ward": "Suối Cát",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22711",
+      "area_id": "kh-570-22711",
+      "district": "570",
+      "city": "Huyện Cam Lâm",
+      "ward": "Suối Tân",
+      "source_city": "Cam Lâm",
+      "source_ward": "Suối Tân",
+      "source_district_value": "570            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.935382,
+          108.941816
+        ],
+        [
+          12.213055,
+          109.327801
+        ]
+      ],
+      "center": [
+        12.0742185,
+        109.13480849999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22489",
+      "area_id": "kh-571-22489",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Giã",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Giã",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22492",
+      "area_id": "kh-571-22492",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Đại Lãnh",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Đại Lãnh",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22495",
+      "area_id": "kh-571-22495",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Phước",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Phước",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22498",
+      "area_id": "kh-571-22498",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Long",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Long",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22501",
+      "area_id": "kh-571-22501",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Bình",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Bình",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22504",
+      "area_id": "kh-571-22504",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Thọ",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Thọ",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22507",
+      "area_id": "kh-571-22507",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Khánh",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Khánh",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22510",
+      "area_id": "kh-571-22510",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Phú",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Phú",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22513",
+      "area_id": "kh-571-22513",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Lương",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Lương",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22516",
+      "area_id": "kh-571-22516",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Thắng",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Thắng",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22522",
+      "area_id": "kh-571-22522",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Xuân Sơn",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Xuân Sơn",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22525",
+      "area_id": "kh-571-22525",
+      "district": "571",
+      "city": "Huyện Vạn Ninh",
+      "ward": "Vạn Hưng",
+      "source_city": "Vạn Ninh",
+      "source_ward": "Vạn Hưng",
+      "source_district_value": "571            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.546634,
+          109.087459
+        ],
+        [
+          12.868524,
+          109.46921
+        ]
+      ],
+      "center": [
+        12.707578999999999,
+        109.2783345
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22528",
+      "area_id": "kh-572-22528",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Hiệp",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Hiệp",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22531",
+      "area_id": "kh-572-22531",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Sơn",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Sơn",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22534",
+      "area_id": "kh-572-22534",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Tây",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Tây",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22537",
+      "area_id": "kh-572-22537",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Thượng",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Thượng",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22540",
+      "area_id": "kh-572-22540",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh An",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh An",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22543",
+      "area_id": "kh-572-22543",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Hải",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Hải",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22546",
+      "area_id": "kh-572-22546",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Thọ",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Thọ",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22549",
+      "area_id": "kh-572-22549",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Trung",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Trung",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22552",
+      "area_id": "kh-572-22552",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Sim",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Sim",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22555",
+      "area_id": "kh-572-22555",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Xuân",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Xuân",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22558",
+      "area_id": "kh-572-22558",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Thân",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Thân",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22561",
+      "area_id": "kh-572-22561",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Diêm",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Diêm",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22564",
+      "area_id": "kh-572-22564",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Đông",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Đông",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22567",
+      "area_id": "kh-572-22567",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Thủy",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Thủy",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22570",
+      "area_id": "kh-572-22570",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Đa",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Đa",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22573",
+      "area_id": "kh-572-22573",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Phụng",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Phụng",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22576",
+      "area_id": "kh-572-22576",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Bình",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Bình",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22579",
+      "area_id": "kh-572-22579",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Phước",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Phước",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22582",
+      "area_id": "kh-572-22582",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Phú",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Phú",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22585",
+      "area_id": "kh-572-22585",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Tân",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Tân",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22588",
+      "area_id": "kh-572-22588",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Quang",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Quang",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22591",
+      "area_id": "kh-572-22591",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Giang",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Giang",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22594",
+      "area_id": "kh-572-22594",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Hà",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Hà",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22597",
+      "area_id": "kh-572-22597",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Hưng",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Hưng",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22600",
+      "area_id": "kh-572-22600",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Lộc",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Lộc",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22603",
+      "area_id": "kh-572-22603",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Ích",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Ích",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22606",
+      "area_id": "kh-572-22606",
+      "district": "572",
+      "city": "Thị xã Ninh Hòa",
+      "ward": "Ninh Vân",
+      "source_city": "Ninh Hòa",
+      "source_ward": "Ninh Vân",
+      "source_district_value": "572            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.34287,
+          108.864053
+        ],
+        [
+          12.752593,
+          109.380327
+        ]
+      ],
+      "center": [
+        12.5477315,
+        109.12218999999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22609",
+      "area_id": "kh-573-22609",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Vĩnh",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Vĩnh",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22612",
+      "area_id": "kh-573-22612",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Hiệp",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Hiệp",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22615",
+      "area_id": "kh-573-22615",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Bình",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Bình",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22618",
+      "area_id": "kh-573-22618",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Trung",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Trung",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22621",
+      "area_id": "kh-573-22621",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Đông",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Đông",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22624",
+      "area_id": "kh-573-22624",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Thượng",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Thượng",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22627",
+      "area_id": "kh-573-22627",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Nam",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Nam",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22630",
+      "area_id": "kh-573-22630",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Sông Cầu",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Sông Cầu",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22633",
+      "area_id": "kh-573-22633",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Giang Ly",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Giang Ly",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22636",
+      "area_id": "kh-573-22636",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Cầu Bà",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Cầu Bà",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22639",
+      "area_id": "kh-573-22639",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Liên Sang",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Liên Sang",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22642",
+      "area_id": "kh-573-22642",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Thành",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Thành",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22645",
+      "area_id": "kh-573-22645",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Khánh Phú",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Khánh Phú",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22648",
+      "area_id": "kh-573-22648",
+      "district": "573",
+      "city": "Huyện Khánh Vĩnh",
+      "ward": "Sơn Thái",
+      "source_city": "Khánh Vĩnh",
+      "source_ward": "Sơn Thái",
+      "source_district_value": "573            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.087061,
+          108.671065
+        ],
+        [
+          12.504832,
+          109.067301
+        ]
+      ],
+      "center": [
+        12.2959465,
+        108.86918299999999
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22651",
+      "area_id": "kh-574-22651",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Khánh                                        ",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Khánh                                        ",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22654",
+      "area_id": "kh-574-22654",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Lâm",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Lâm",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22657",
+      "area_id": "kh-574-22657",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Điền",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Điền",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22660",
+      "area_id": "kh-574-22660",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Xuân",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Xuân",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22663",
+      "area_id": "kh-574-22663",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Sơn",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Sơn",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22666",
+      "area_id": "kh-574-22666",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Đồng",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Đồng",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22669",
+      "area_id": "kh-574-22669",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Phú",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Phú",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22672",
+      "area_id": "kh-574-22672",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Thọ",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Thọ",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22675",
+      "area_id": "kh-574-22675",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Phước",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Phước",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22678",
+      "area_id": "kh-574-22678",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Lạc",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Lạc",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22681",
+      "area_id": "kh-574-22681",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Tân",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Tân",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22684",
+      "area_id": "kh-574-22684",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Hòa",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Hòa",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22687",
+      "area_id": "kh-574-22687",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Thạnh",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Thạnh",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22690",
+      "area_id": "kh-574-22690",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Toàn",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Toàn",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22693",
+      "area_id": "kh-574-22693",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên An",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên An",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22696",
+      "area_id": "kh-574-22696",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Bình                                         ",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Bình                                         ",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22699",
+      "area_id": "kh-574-22699",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Diên Lộc",
+      "source_city": "Diên Khánh",
+      "source_ward": "Diên Lộc",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22702",
+      "area_id": "kh-574-22702",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Suối Hiệp",
+      "source_city": "Diên Khánh",
+      "source_ward": "Suối Hiệp",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22705",
+      "area_id": "kh-574-22705",
+      "district": "574",
+      "city": "Huyện Diên Khánh",
+      "ward": "Suối Tiên",
+      "source_city": "Diên Khánh",
+      "source_ward": "Suối Tiên",
+      "source_district_value": "574            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          12.165992,
+          108.935665
+        ],
+        [
+          12.389927,
+          109.143083
+        ]
+      ],
+      "center": [
+        12.2779595,
+        109.03937400000001
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22714",
+      "area_id": "kh-575-22714",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Tô Hạp                                            ",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Tô Hạp                                            ",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22717",
+      "area_id": "kh-575-22717",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Thành Sơn",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Thành Sơn",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22720",
+      "area_id": "kh-575-22720",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Sơn Lâm",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Sơn Lâm",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22723",
+      "area_id": "kh-575-22723",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Sơn Hiệp",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Sơn Hiệp",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22726",
+      "area_id": "kh-575-22726",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Sơn Bình",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Sơn Bình",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22729",
+      "area_id": "kh-575-22729",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Sơn Trung",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Sơn Trung",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22732",
+      "area_id": "kh-575-22732",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Ba Cụm Bắc",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Ba Cụm Bắc",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    },
+    {
+      "code": "22735",
+      "area_id": "kh-575-22735",
+      "district": "575",
+      "city": "Huyện Khánh Sơn",
+      "ward": "Ba Cụm Nam",
+      "source_city": "Khánh Sơn",
+      "source_ward": "Ba Cụm Nam",
+      "source_district_value": "575            ",
+      "province": "khanh-hoa",
+      "bounds": [
+        [
+          11.914514,
+          108.786217
+        ],
+        [
+          12.159841,
+          109.011101
+        ]
+      ],
+      "center": [
+        12.0371775,
+        108.898659
+      ],
+      "bounds_kind": "historic_district_navigation_window"
+    }
+  ]
+}

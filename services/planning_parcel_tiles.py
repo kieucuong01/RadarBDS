@@ -103,7 +103,8 @@ class CellCache:
 def public_feature(feature):
     properties={k:feature['properties'][k] for k in FIELDS if k in feature['properties']}
     source=feature['properties'].get('source')
-    if source in ('https://gis.dongnai.gov.vn/', 'https://gisxaydung.tphcm.gov.vn/tracuuttqh'):
+    if source in ('https://gis.dongnai.gov.vn/', 'https://gisxaydung.tphcm.gov.vn/tracuuttqh',
+                  'https://gis.khanhhoa.gov.vn/'):
         properties['source']=source
     return dict(type='Feature',id=feature['id'],geometry=feature['geometry'],properties=properties)
 

@@ -3,6 +3,12 @@
 Ngày nghiên cứu/đối chiếu: **2026-11-02**. Code đối chiếu:
 `20246dfbf8ed489c12bc1fdb696bea9fbcff62db`.
 
+**Cập nhật GIS 3–10 cùng ngày:** người dùng yêu cầu hoàn thiện nguồn GIS dùng
+được, còn tra Guland ghi lại làm sau. Xem
+[audit GIS tám địa bàn](priority-gis-parcels-2026-11-02.md) và
+[adapter Khánh Hòa mới](khanh-hoa-parcels.md). Các hàng tiến độ dưới đã cập nhật;
+baseline SHA trên là mốc đối chiếu ban đầu, không phải deployed SHA mới.
+
 ## Quyết định của người dùng và giới hạn nghiên cứu
 
 Người dùng yêu cầu ưu tiên làm Maps **kỹ, chính xác, đủ tính năng** cho 10 địa bàn
@@ -72,14 +78,14 @@ Ký hiệu: **R** = lớp tham khảo đã đăng ký; **G** = GIS đã tích h�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Bình Dương | R | G + PDF đã giữ | G | G, độ phủ còn từng khu | L, asset 91 đơn vị lịch sử | R/R | Rà lỗ phủ, click/đo cạnh và tra quy hoạch trên các huyện; kiểm chứng bản deploy hiện tại. |
 | TP.HCM cũ | R | G | G | G, không phủ liên tục | G, live theo nguồn; không có snapshot toàn thành phố | R/R | Lập ma trận coverage theo quận/phường, không suy đủ từ bbox; tối ưu cache cold/warm. |
-| Hà Nội | R | R, lớp tổng Guland | — | — | M: điểm Guland chưa xác nhận định danh địa chính; chưa có adapter | R/R | Xác minh số tờ/thửa + polygon gốc trước, sau đó adapter bounded và audit layer. |
-| Đồng Nai cũ | R qua provider Đồng Nai/Bình Phước | — | — | — | M: 18 tham chiếu riêng đã lưu; chưa có bulk/runtime adapter | R/R | Mở rộng collector có kiểm chứng nguồn; không lấy ranh Bình Phước làm độ phủ Đồng Nai cũ. |
-| Long An | R | — | — | — | M: có kết quả điểm; WFS metadata có nhưng GetFeature lỗi 500 | R/R | Khôi phục nguồn geometry hoạt động trước; tra tờ/thửa, tọa độ và source coverage sau. |
-| Hưng Yên | R | — | — | — | — | R/R | Tìm nguồn phân khu tổng/ranh; các đồ án QH khác đã gỡ, không tự ghép trở lại. |
-| Hải Phòng cũ | R | R, lớp tổng Guland | — | — | — | R/R | Rà phân khu theo huyện/phường, tìm polygon nguồn; không dùng Hải Dương thay toàn Hải Phòng cũ. |
-| Khánh Hòa cũ | R | R, lớp tổng Guland | — | — | — | R/R | Kiểm phạm vi Nha Trang/Cam Ranh và tỉnh cũ; tìm nguồn ranh có số tờ/thửa. |
-| Đà Nẵng cũ | R | R, lớp tổng Guland | — | — | — | R/R | Đối chiếu lớp GIS/quyết định, phân biệt Đà Nẵng cũ với Quảng Nam; xác minh ranh gốc. |
-| Lâm Đồng cũ | R | — | — | — | — | R/R | Khảo sát Đà Lạt, Bảo Lộc, Đức Trọng, Lâm Hà; ưu tiên geometry/tra cứu cho giao dịch đất. |
+| Hà Nội | R | R, lớp tổng Guland | — | — | M cũ / GIS `blocked_tls` | R/R | Chờ chứng chỉ cổng/API chính thức được sửa; kiểm polygon/ID thật. Guland làm sau. |
+| Đồng Nai cũ | R qua provider Đồng Nai/Bình Phước | — | — | — | M: 18 tham chiếu; GIS `blocked_maintenance` | R/R | Cổng đất đai cũ đang bảo trì; không lấy Bình Phước làm độ phủ Đồng Nai cũ. Không chạy collector Guland đợt này. |
+| Long An | R | — | — | — | M cũ / GIS `blocked_geometry`, WFS count có nhưng GetFeature 500 | R/R | Khôi phục geometry, không chỉ dựa schema/count. Guland làm sau. |
+| Hưng Yên | R | — | — | — | — / GIS chưa xác minh đúng địa bàn cũ | R/R | DB công khai đã tìm là Thái Bình cũ; cần đúng Hưng Yên cũ. Guland làm sau. |
+| Hải Phòng cũ | R | R, lớp tổng Guland | — | — | — / cổng đất đai `/og/` 404, GIS geometry chưa xác minh | R/R | Chờ route/API địa chính hoạt động; không dùng polygon quy hoạch hay Hải Dương thay thế. Guland làm sau. |
+| Khánh Hòa cũ | R | R, lớp tổng Guland | — | — | **G live, verified local: 134 refs / 8 huyện; mẫu thật đủ 8** | R/R | QA trình duyệt/độ phủ, VN-2000 địa phương và release. Count 971.792 là bản ghi nguồn, chưa tải hết; tra giao QH chưa hỗ trợ. |
+| Đà Nẵng cũ | R | R, lớp tổng Guland | — | — | — / GIS `blocked_upstream` 503/timeout | R/R | Kiểm lại portal/ArcGIS khi phục hồi; không nhầm Quảng Nam. Guland làm sau. |
+| Lâm Đồng cũ | R | — | — | — | — / GIS `blocked_tls` | R/R | Chờ chứng chỉ portal/ArcGIS hợp lệ, rồi xác minh cadastral layer. Guland làm sau. |
 
 “18 tham chiếu Đồng Nai cũ” là mẫu local từ đợt trước, không phải 18 đơn vị hành
 chính hay 18 vùng phủ đầy đủ. Không tải/khởi động collector mới chỉ vì đọc file này.
@@ -126,6 +132,11 @@ thành phân khu/chung/chi tiết để lấp chỗ trống. Không ghép lại 
 phân khu vì người dùng đã yêu cầu bỏ do chồng chéo. Giữ PDF/bản vẽ đã làm.
 
 ## Quy tắc tiếp tục và cập nhật
+
+**Chỉ đạo mới nhất cho đợt ranh thửa 3–10:** dùng GIS công khai hoạt động,
+không tắt xác minh TLS hoặc dùng relay vượt lỗi; phần cần thu thập Guland
+để `deferred_guland`, làm trong đợt sau khi được yêu cầu. Nguồn GIS bị lỗi cũng
+ghi riêng điều kiện mở lại, không coi là đã hoàn tất hoặc không có GIS.
 
 1. Đọc file này sau `docs/maps-agent-guide.md` khi chọn tỉnh tiếp theo. Tập trung
    hàng đầu còn thiếu có nguồn khả thi; khi bị chặn, ghi lại rồi xét địa bàn kế.

@@ -325,6 +325,7 @@ Tất cả đường dẫn dưới nằm trong `docs/planning_sources/`:
 | Task | Đọc tiếp |
 | --- | --- |
 | Chọn tỉnh ưu tiên, kiểm tra chức năng còn thiếu và tiếp tục công việc | [maps-priority-markets.md](planning_sources/maps-priority-markets.md) |
+| Ranh thửa ưu tiên 3–10: GIS hoạt động làm trước, Guland hoãn; Khánh Hòa mới | [priority-gis-parcels-2026-11-02.md](planning_sources/priority-gis-parcels-2026-11-02.md), [khanh-hoa-parcels.md](planning_sources/khanh-hoa-parcels.md) |
 | Hiệu năng, CDN, limits, rollback, bằng chứng tải | [maps-performance.md](planning_sources/maps-performance.md) |
 | Scope listing, drag/filter, viewport/layout | [maps-viewport-loading.md](planning_sources/maps-viewport-loading.md), [maps-parcel-interactions.md](planning_sources/maps-parcel-interactions.md) |
 | Raster/native GIS, layer thiếu, source/PDF | [general-planning-speed.md](planning_sources/general-planning-speed.md), [detailed-gis.md](planning_sources/detailed-gis.md), [hcm-expanded-partition.md](planning_sources/hcm-expanded-partition.md) |

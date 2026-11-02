@@ -133,8 +133,9 @@
       remove(coordinateMarker);coordinateMarker=null;
       clearInfo();
       var dongnai = feature.properties.source === 'https://gis.dongnai.gov.vn/';
-      source.textContent = dongnai ? 'Nguồn: Cổng GIS Đồng Nai · Bình Phước cũ' : 'Nguồn: Cổng GIS TP.HCM';
-      source.href = dongnai ? 'https://gis.dongnai.gov.vn/' : 'https://gisxaydung.tphcm.gov.vn/tracuuttqh';
+      var khanhhoa = feature.properties.source === 'https://gis.khanhhoa.gov.vn/';
+      source.textContent = khanhhoa ? 'Nguồn: Cổng GIS Khánh Hòa' : dongnai ? 'Nguồn: Cổng GIS Đồng Nai · Bình Phước cũ' : 'Nguồn: Cổng GIS TP.HCM';
+      source.href = khanhhoa ? 'https://gis.khanhhoa.gov.vn/public/8192/' : dongnai ? 'https://gis.dongnai.gov.vn/' : 'https://gisxaydung.tphcm.gov.vn/tracuuttqh';
       var heading=node('h3', info, 'Thửa ' + format(feature.properties.parcel) + ' · Tờ ' + format(feature.properties.sheet));
       node('strong', heading, ' · '+area(feature.properties.area)).className = 'planning-parcel-area';
       node('p', info, (feature.properties.ward || config.ward) + ' · ' + (feature.properties.city || config.city) + ' (đơn vị cũ)').className = 'planning-parcel-location';
@@ -418,7 +419,7 @@
       if (viewRequest) viewRequest.abort(); ++viewSeq;
     }
     function provinceFor(a) {
-      if (a.province === 'binh-phuoc') return 'binh-phuoc';
+      if (a.province === 'binh-phuoc' || a.province === 'khanh-hoa') return a.province;
       var district = Number(a.district);
       if (district >= 760 && district <= 787) return 'hcm';
       if (district >= 747 && district <= 755) return 'brvt';
@@ -534,6 +535,9 @@
         config = data; example.disabled = false; areaSubmit.disabled = searchSubmit.disabled = false;
         if (data.areas.some(function (a) { return a.province === 'binh-phuoc'; })) {
           node('option', searchProvince, 'Bình Phước (cũ) · Đồng Nai').value = 'binh-phuoc';
+        }
+        if (data.areas.some(function (a) { return a.province === 'khanh-hoa'; })) {
+          node('option', searchProvince, 'Khánh Hòa (cũ)').value = 'khanh-hoa';
         }
         if (quickBoundaries) quickBoundaries.disabled = false;
         navigationAreas = Array.isArray(data.navigation_areas) && data.navigation_areas.length ? data.navigation_areas : data.areas;

@@ -63,12 +63,16 @@ class DongNaiParcels(LiveParcels):
 
 class RegionalParcels:
     """Route verified regional sources without mixing their object identifiers."""
-    coverage_bounds = [[8.5, 106.25], [12.4, 107.65]]
+    coverage_bounds = [[8.5, 106.25], [13.0, 109.6]]
+    revision = 'regional-khanhhoa-20261102'
 
-    def __init__(self, hcm=None, dongnai=None):
+    def __init__(self, hcm=None, dongnai=None, khanhhoa=None):
+        from services.planning_khanh_hoa_parcels import KhanhHoaParcels
         self.hcm = hcm if hcm is not None else LiveParcels()
         self.dongnai = dongnai if dongnai is not None else DongNaiParcels()
-        self.areas = self.hcm.areas + self.dongnai.areas
+        self.khanhhoa = khanhhoa if khanhhoa is not None else KhanhHoaParcels()
+        self.providers = (self.hcm, self.dongnai, self.khanhhoa)
+        self.areas = [a for p in self.providers for a in p.areas]
         self.snapshot_areas = set()
 
     def _covered(self, provider):
@@ -76,7 +80,10 @@ class RegionalParcels:
         return bool(keys) and keys <= self.snapshot_areas
 
     def _provider(self, area):
-        return self.dongnai if area in self.dongnai.by_area else self.hcm
+        for provider in (self.dongnai, self.khanhhoa):
+            if area in provider.by_area:
+                return provider
+        return self.hcm
 
     def search(self, area, sheet, parcel):
         return self._provider(area).search(area, sheet, parcel)
@@ -85,7 +92,8 @@ class RegionalParcels:
         return self._provider(area).sample(area)
 
     def feature(self, identifier, area=None):
-        provider = self.dongnai if identifier >= ID_OFFSET else self.hcm
+        from services.planning_khanh_hoa_parcels import ID_OFFSET as KH_OFFSET
+        provider = self.khanhhoa if identifier >= KH_OFFSET else self.dongnai if identifier >= ID_OFFSET else self.hcm
         return provider.feature(identifier, area)
 
     @staticmethod
@@ -97,11 +105,11 @@ class RegionalParcels:
                    if a['district'] not in provider.excluded_districts)
 
     def needs_viewport(self, bbox, legacy_areas):
-        return any(not self._covered(p) and self._intersects(p, bbox) for p in (self.hcm, self.dongnai))
+        return any(not self._covered(p) and self._intersects(p, bbox) for p in self.providers)
 
     def viewport(self, bbox):
         features, matched, excluded, truncated = [], 0, 0, False
-        for provider in (self.hcm, self.dongnai):
+        for provider in self.providers:
             if not self._covered(provider) and self._intersects(provider, bbox):
                 result = provider.viewport(bbox)
                 features.extend(result['features'])
@@ -113,7 +121,7 @@ class RegionalParcels:
 
     def point(self, longitude, latitude):
         features, truncated = [], False
-        for provider in (self.hcm, self.dongnai):
+        for provider in self.providers:
             if self._intersects(provider, (longitude, latitude, longitude, latitude)):
                 result = provider.point(longitude, latitude)
                 features.extend(result['features'])
