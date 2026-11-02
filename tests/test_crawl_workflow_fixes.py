@@ -1,4 +1,5 @@
 from unittest import mock
+import json
 import signal
 
 import pytest
@@ -42,6 +43,10 @@ def test_workflow_keeps_partial_and_stage_timings(tmp_path, monkeypatch):
     assert state["timings"][0]["stage"] == "crawl_facebook"
     assert state["finished_at"]
     workflow._alert.assert_called_once()
+    with workflow.crawl_workflow("facebook"):
+        pass
+    history = [json.loads(line) for line in (tmp_path / "crawl-workflow-history.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [run["status"] for run in history] == ["partial", "done"]
 
 
 @pytest.mark.parametrize("terminated", [False, True])
@@ -73,6 +78,19 @@ def test_service_failure_catches_unhandled_kill(tmp_path, monkeypatch):
     workflow.record_service_result("guland", "oom-kill")
     assert workflow.load_workflow_status("guland")["service_result"] == "oom-kill"
     workflow._alert.assert_called_once()
+
+
+def test_service_failure_does_not_relabel_a_previous_invocation(tmp_path, monkeypatch):
+    from services import crawl_workflow as workflow
+
+    monkeypatch.setattr(workflow, "STATUS_DIR", tmp_path)
+    monkeypatch.setattr(workflow, "_alert", mock.Mock())
+    monkeypatch.setenv("INVOCATION_ID", "new-job")
+    workflow._save({"source": "guland", "status": "done", "stage": "finished", "invocation_id": "old-job"})
+    workflow.record_service_result("guland", "exit-code")
+    state = workflow.load_workflow_status("guland")
+    assert state["invocation_id"] == "new-job"
+    assert state["stage"] == "service"
 
 
 def test_image_budget_defers_without_marking_images_missing(monkeypatch):

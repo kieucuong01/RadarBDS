@@ -40,6 +40,11 @@ def load_workflow_status(source):
         return None
 
 
+def _archive(state, event):
+    with (STATUS_DIR / "crawl-workflow-history.jsonl").open("a", encoding="utf-8") as output:
+        output.write(json.dumps({**state, "event": event}, ensure_ascii=False) + "\n")
+
+
 def _alert(message):
     from alerts.ops import send_ops_alert
     try:
@@ -83,7 +88,7 @@ def crawl_workflow(source):
     previous = load_workflow_status(source)
     if previous and previous.get("status") == "running":
         _alert(f"Crawl {source}: lần trước bị gián đoạn ở bước {previous.get('stage') or 'unknown'}.")
-    state = {"source": source, "pid": os.getpid(), "started_at": _now(),
+    state = {"source": source, "pid": os.getpid(), "invocation_id": os.getenv("INVOCATION_ID"), "started_at": _now(),
              "finished_at": None, "status": "running", "stage": "startup",
              "timings": [], "warnings": []}
     _save(state)
@@ -109,9 +114,12 @@ def crawl_workflow(source):
         state["stage"] = "finished"
     finally:
         state["finished_at"] = _now()
-        _save(state)
-        signal.signal(signal.SIGTERM, old_handler)
-        _active.reset(token)
+        try:
+            _save(state)
+            _archive(state, "finished")
+        finally:
+            signal.signal(signal.SIGTERM, old_handler)
+            _active.reset(token)
 
 
 def record_service_result(source, result):
@@ -119,12 +127,16 @@ def record_service_result(source, result):
     if result == "success":
         return
     state = load_workflow_status(source) or {"source": source, "stage": "service"}
+    invocation = os.getenv("INVOCATION_ID")
+    if invocation and state.get("invocation_id") != invocation:
+        state = {"source": source, "stage": "service", "invocation_id": invocation}
     if result == "exit-code" and os.getenv("EXIT_STATUS") == "2" and state.get("status") == "partial":
         state["service_result"] = result
         _save(state)
         return
     state.update(status="error", service_result=result, finished_at=_now())
     _save(state)
+    _archive(state, "service_result")
     _alert(f"systemd crawl {source}: {result}; bước {state.get('stage')}. Xem logs/crawl-daily.log.")
 
 

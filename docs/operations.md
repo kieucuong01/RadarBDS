@@ -1064,6 +1064,7 @@ Admin crawl health should surface the latest timer/service failure and point to 
   profiles are recorded in `crawl_run_progress`; partial jobs exit with code 2.
 - `logs/crawl-workflow-facebook.json` and `logs/crawl-workflow-guland.json`
   record the entire job, active/failing stage, warnings and elapsed stage times.
+  `logs/crawl-workflow-history.jsonl` retains completed jobs and systemd failures.
   `crawl_runs` still records individual source/normalization phases only.
 - Stages include normalize, content hash, dedup, lifecycle, market trends,
   valuation, map backfill, public publication and images. Public publication
