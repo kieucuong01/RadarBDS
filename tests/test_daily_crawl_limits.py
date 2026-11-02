@@ -168,7 +168,7 @@ def test_daily_crawl_reprocesses_facebook_without_running_secondary_sources():
         crawlers._cmd_crawl(args, mode="incremental")
 
     assert events == ["facebook", "reprocess"]
-    assert download_calls == {"limit": 500}
+    assert download_calls == {"limit": 500, "max_seconds": 180}
 
 
 def test_facebook_crawl_records_health_row():
@@ -360,7 +360,7 @@ def test_postprocess_downloads_processed_listing_images_first():
          mock.patch.object(crawlers, "_clean_broker_images_after_download"):
         assert crawlers._postprocess_crawl_batch(args, 2, source_filter="facebook", image_limit=500)
 
-    assert calls == {"limit": 500, "listing_ids": [10, 20]}
+    assert calls == {"limit": 500, "listing_ids": [10, 20], "max_seconds": 180}
 
 
 def test_postprocess_skips_busy_image_lock_without_failing_crawl():
@@ -443,7 +443,7 @@ def test_secondary_crawl_limits_image_backfill():
          mock.patch.object(crawlers, "_prewarm_dashboard_cache"):
         crawlers._cmd_crawl(args, mode="incremental")
 
-    assert calls["download"] == {"limit": 500, "listing_ids": [42]}
+    assert calls["download"] == {"limit": 500, "listing_ids": [42], "max_seconds": 180}
     assert calls["clean"] == {"source": "guland", "limit": 500}
 
 
@@ -505,4 +505,4 @@ def test_guland_crawl_reprocesses_only_inserted_and_refreshed_raw_ids():
         crawlers._cmd_crawl(args, mode="incremental")
 
     assert calls["raw_ids"] == [101, 202]
-    assert calls["download"] == {"limit": 500, "listing_ids": [10, 20]}
+    assert calls["download"] == {"limit": 500, "listing_ids": [10, 20], "max_seconds": 180}

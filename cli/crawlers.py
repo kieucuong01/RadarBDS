@@ -11,6 +11,7 @@ from db.connection import advisory_lock, get_conn
 from db.moderation import normalize_phone
 from db.raw_listings import insert_raw_result, update_raw_listing_payload
 from db.schema import init_schema
+from services.crawl_workflow import crawl_workflow, timed_stage, mark_partial
 
 def _get_crawlers(source_filter=None):
     from crawler.guland_pw import GulandCrawler
@@ -59,6 +60,7 @@ def _prune_local_s3_images_after_cleanup():
     return stats
 
 
+@timed_stage("dashboard_prewarm")
 def _prewarm_dashboard_cache():
     base_url = (os.getenv("RADAR_DASHBOARD_PREWARM_URL") or "http://127.0.0.1:5000").rstrip("/")
     urls = [f"{base_url}/api/dashboard?cache_refresh=1"]
@@ -115,12 +117,15 @@ def _record_facebook_profile_runs(run_id, report, new_by_profile=None, *, failed
     from services.admin_quality import normalize_facebook_profile_url
 
     completed = set(report.get("completed_profile_urls") or [])
-    for raw_url in dict.fromkeys(report.get("attempted_profile_urls") or []):
+    unattempted = set(report.get("unattempted_profile_urls") or [])
+    for raw_url in dict.fromkeys([*(report.get("attempted_profile_urls") or []), *sorted(unattempted)]):
         url = normalize_facebook_profile_url(raw_url)
         if not url:
             continue
         try:
-            if not failed and raw_url in completed:
+            if raw_url in unattempted:
+                mark_url_error(run_id, url, "Không đủ quota Apify; profile chưa được crawl.")
+            elif not failed and raw_url in completed:
                 mark_url_done(run_id, url, (new_by_profile or {}).get(url, 0))
             else:
                 mark_url_error(run_id, url, "Lần crawl không hoàn tất; kiểm tra trạng thái nguồn.")
@@ -157,6 +162,7 @@ def _facebook_crawl_to_raw(
                 "irrelevant": 0, "out_of_area": 0, "range_filtered": 0,
                 "refreshed_images": 0, "inserted_raw_ids": [],
                 "refreshed_raw_ids": [],
+                "scheduled_skipped": True,
             }
 
     run_id = start_crawl_run("facebook", area_filter or "all")
@@ -169,6 +175,20 @@ def _facebook_crawl_to_raw(
         return None
 
     try:
+        if hasattr(crawler, "quota_preflight"):
+            budget = crawler.quota_preflight(profiles, mode, limit_override)
+            if budget and budget["uncovered_profiles"]:
+                from alerts.ops import send_ops_alert
+                message = (
+                    f"Facebook quota preflight: cần tối đa {budget['required_posts']} bài; "
+                    f"quota cục bộ có thể không đủ cho {budget['uncovered_profiles']} profile. "
+                    "Vẫn crawl các profile còn quota; kiểm tra Admin > Facebook Crawl."
+                )
+                print(f"[facebook-quota] {message}")
+                try:
+                    print(f"[ops-alert] quota warning, sent={send_ops_alert(message)}")
+                except Exception as exc:
+                    logging.getLogger(__name__).warning("Quota alert failed: %s", type(exc).__name__)
         raw_posts = crawler.crawl_all(profiles, mode=mode, limit_override=limit_override or None)
     except Exception as e:
         _record_facebook_profile_runs(run_id, getattr(crawler, "last_run_report", {}) or {}, failed=True)
@@ -366,7 +386,12 @@ def _cmd_crawl_facebook(args):
 
 def cmd_crawl(args, mode: str = "full"):
     with advisory_lock(f"crawl-{mode}"):
-        return _cmd_crawl(args, mode=mode)
+        source = getattr(args, "source", None) or ("facebook" if mode == "incremental" else "all")
+        with crawl_workflow(source) as workflow:
+            result = _cmd_crawl(args, mode=mode)
+        if workflow["status"] == "partial":
+            raise SystemExit(2)
+        return result
 
 
 def _print_facebook_import_stats(fb_stats: dict) -> None:
@@ -384,7 +409,8 @@ def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_lim
 
     print(f"\nReprocess {total_new} records moi/cap nhat...")
     from cleansing.reprocess import run_full_reprocess
-    result = run_full_reprocess()
+    with timed_stage("reprocess"):
+        result = run_full_reprocess()
     r, v = result["listings"], result["valuation"]
     print(f"Listings : {r['new']} new | {r['updated']} updated")
     print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
@@ -396,13 +422,13 @@ def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_lim
         if image_limit is None:
             download_images()
         elif processed_ids:
-            download_images(
-                limit=max(image_limit, min(3000, len(processed_ids) * 12)),
-                listing_ids=processed_ids,
-            )
+            with timed_stage("images"):
+                download_images(limit=image_limit, listing_ids=processed_ids, max_seconds=180)
         else:
-            download_images(limit=image_limit)
-        _clean_broker_images_after_download(source=source_filter, limit=image_limit)
+            with timed_stage("images"):
+                download_images(limit=image_limit, max_seconds=180)
+        with timed_stage("image_cleanup"):
+            _clean_broker_images_after_download(source=source_filter, limit=image_limit)
     except RuntimeError as e:
         if "download-images" not in str(e):
             raise
@@ -410,6 +436,7 @@ def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_lim
     return True
 
 
+@timed_stage("vip_notify")
 def _push_vip_notifications(no_alert: bool, crawl_start_ts: str) -> None:
     if no_alert:
         return
@@ -421,6 +448,7 @@ def _push_vip_notifications(no_alert: bool, crawl_start_ts: str) -> None:
               f"{push_stats['email_users']} email batches")
     except Exception as e:
         print(f"[vip-push] error: {e}")
+        mark_partial("VIP notification failed")
 
 
 def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_ts: str):
@@ -430,7 +458,14 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
     _ = (crawlers, headless)
 
     print(f"\n[facebook] Crawling by profile daily_limit (incremental)...")
-    fb_stats = _facebook_crawl_to_raw(mode="incremental", scheduled_only=True)
+    with timed_stage("crawl_facebook"):
+        fb_stats = _facebook_crawl_to_raw(mode="incremental", scheduled_only=True)
+    if fb_stats is None:
+        raise RuntimeError("Facebook crawl did not start; check profiles and token configuration")
+    if fb_stats.get("crawl_partial"):
+        mark_partial("Facebook crawl incomplete; see per-profile crawl progress")
+    if not fb_stats.get("scheduled_skipped"):
+        _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
     if fb_stats:
         _print_facebook_import_stats(fb_stats)
         fb_new = fb_stats["inserted"] + fb_stats.get("refreshed_images", 0)
@@ -447,19 +482,18 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
     if total_new == 0:
         print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
         from cleansing.download_images import download_images
-        download_images(limit=200)
+        with timed_stage("images"):
+            download_images(limit=200, max_seconds=180)
         _clean_broker_images_after_download(source=None, limit=200)
-        _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
         _prewarm_dashboard_cache()
         print(f"\nKhông có tin mới. DB không thay đổi.")
         return
 
     class _FakeArgs:
         out = None
-    cmd_export_raw(_FakeArgs())
+    with timed_stage("raw_export"):
+        cmd_export_raw(_FakeArgs())
 
-    _push_vip_notifications(no_alert, crawl_start_ts)
-    _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
     _prewarm_dashboard_cache()
 
     print(f"\n{'='*45}")
@@ -491,7 +525,10 @@ def _cmd_crawl(args, mode: str = "full"):
     crawler_exceptions: list[tuple[str, str]] = []
     for crawler in crawlers:
         try:
-            stats = crawler.run(mode=mode, headless=headless)
+            with timed_stage(f"crawl_{crawler.SOURCE_NAME}"):
+                stats = crawler.run(mode=mode, headless=headless)
+            if stats.get("errors"):
+                mark_partial(f"{crawler.SOURCE_NAME} crawl incomplete")
             if crawler.SOURCE_NAME == "guland":
                 changed_raw_ids = [
                     *(stats.get("inserted_raw_ids") or []),
@@ -505,6 +542,9 @@ def _cmd_crawl(args, mode: str = "full"):
         except Exception as e:
             print(f"[{crawler.SOURCE_NAME}] Lỗi: {e}")
             crawler_exceptions.append((crawler.SOURCE_NAME, str(e)))
+            mark_partial(f"{crawler.SOURCE_NAME} crawl failed")
+
+    _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
 
     if mode == "incremental" and not source_filter:
         print(f"\n[facebook] Crawling by profile daily_limit (incremental)...")
@@ -521,9 +561,9 @@ def _cmd_crawl(args, mode: str = "full"):
     if total_new == 0:
         print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
         from cleansing.download_images import download_images
-        download_images(limit=200)
+        with timed_stage("images"):
+            download_images(limit=200, max_seconds=180)
         _clean_broker_images_after_download(source=source_filter, limit=200)
-        _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
         _prewarm_dashboard_cache()
         print(f"\nKhông có tin mới. DB không thay đổi.")
         return
@@ -532,12 +572,12 @@ def _cmd_crawl(args, mode: str = "full"):
         print(f"\nReprocess {total_new} records moi/cap nhat...")
         if source_filter == "guland":
             from cleansing.reprocess import run_targeted_reprocess
-            result = run_targeted_reprocess(
-                list(dict.fromkeys(targeted_raw_ids))
-            )
+            with timed_stage("reprocess"):
+                result = run_targeted_reprocess(list(dict.fromkeys(targeted_raw_ids)))
         else:
             from cleansing.reprocess import run_full_reprocess
-            result = run_full_reprocess()
+            with timed_stage("reprocess"):
+                result = run_full_reprocess()
         r, v = result["listings"], result["valuation"]
         print(f"Listings : {r['new']} new | {r['updated']} updated")
         print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
@@ -547,17 +587,18 @@ def _cmd_crawl(args, mode: str = "full"):
         image_limit = 500 if source_filter else 1000
         processed_ids = result.get("listings", {}).get("processed_ids") or []
         if source_filter and processed_ids:
-            download_images(
-                limit=max(image_limit, min(3000, len(processed_ids) * 12)),
-                listing_ids=processed_ids,
-            )
+            with timed_stage("images"):
+                download_images(limit=image_limit, listing_ids=processed_ids, max_seconds=180)
         else:
-            download_images(limit=image_limit)
-        _clean_broker_images_after_download(source=source_filter, limit=image_limit)
+            with timed_stage("images"):
+                download_images(limit=image_limit, max_seconds=180)
+        with timed_stage("image_cleanup"):
+            _clean_broker_images_after_download(source=source_filter, limit=image_limit)
 
     class _FakeArgs:
         out = None
-    cmd_export_raw(_FakeArgs())
+    with timed_stage("raw_export"):
+        cmd_export_raw(_FakeArgs())
 
     if not no_alert:
         try:
@@ -569,7 +610,6 @@ def _cmd_crawl(args, mode: str = "full"):
         except Exception as e:
             print(f"[vip-push] error: {e}")
 
-    _maybe_send_ops_alert(crawl_start_ts, crawler_exceptions)
     _prewarm_dashboard_cache()
 
     print(f"\n{'='*45}")

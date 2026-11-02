@@ -702,6 +702,12 @@ def facebook_crawl_overview(
         if token.get("active", token.get("enabled", True))
     ]
     problems = []
+    for source, workflow in (ops.get("workflows") or {}).items():
+        if workflow and workflow.get("status") in {"error", "partial"}:
+            problems.append({
+                "code": "source_error",
+                "label": f"Workflow {source}: {workflow['status']} tại bước {workflow.get('stage') or 'unknown'}",
+            })
     if not schedule.get("installed"):
         problems.append({
             "code": "schedule_missing",
@@ -728,6 +734,7 @@ def facebook_crawl_overview(
         "last_facebook_run": (
             last_run if last_run and last_run.get("source") == "facebook" else None
         ),
+        "workflows": ops.get("workflows") or {},
         "latest_job": recent_jobs[0] if recent_jobs else None,
         "active_job": active_job,
         "apify": {
@@ -1215,10 +1222,16 @@ def crawl_ops_summary(
     schedule_status_fn: Callable[[], dict] = daily_crawl_schedule_status,
     active_lock_blockers_fn: Callable[[], list[dict]] = active_radar_lock_blockers,
 ) -> dict:
+    from services.crawl_workflow import load_workflow_status
+
     schedule = schedule_status_fn()
     blockers = active_lock_blockers_fn()
     empty = {
         "schedule": schedule,
+        "workflows": {
+            source: load_workflow_status(source)
+            for source in ("facebook", "guland")
+        },
         "last_run": None,
         "last_24h": {"runs": 0, "fetched": 0, "new": 0, "updated": 0, "skipped": 0},
         "signal_count": 0,
@@ -1428,6 +1441,7 @@ def data_quality_summary(
     ops = crawl_ops_summary_fn()
     crawl_health = {
         "schedule": ops.get("schedule") or {},
+        "workflows": ops.get("workflows") or {},
         "last_run": ops.get("last_run"),
         "last_24h": ops.get("last_24h") or {},
         "source_errors": ops.get("source_errors") or [],

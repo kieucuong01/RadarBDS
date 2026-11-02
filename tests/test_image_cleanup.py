@@ -185,13 +185,14 @@ class BrokerImageCleanupCliTest(unittest.TestCase):
         args = SimpleNamespace(limit=25)
         with mock.patch.object(system, "init_schema"), \
              mock.patch("cleansing.download_images.download_images", return_value=3) as download, \
+             mock.patch("cli.crawlers._prune_local_s3_images_after_cleanup"), \
              mock.patch("cleansing.legal_image_classifier.classify_legal_images", return_value={"updated": 1}) as classify, \
              mock.patch("cleansing.image_cleanup.clean_broker_images", return_value={"deleted": 2}) as clean:
             system.cmd_download_images(args)
 
-        download.assert_called_once_with(limit=25)
+        download.assert_called_once_with(limit=25, max_seconds=None)
         classify.assert_not_called()
-        clean.assert_called_once_with(apply=True, limit=25, strong=True)
+        clean.assert_called_once_with(source=None, apply=True, limit=25, strong=True)
 
     def test_cmd_clean_broker_images_forwards_cli_options(self):
         import cli.system as system

@@ -309,6 +309,7 @@ def test_facebook_apify_splits_profile_group_by_token_capacity(tmp_path, monkeyp
         "actor_runs": 2,
         "attempted_profile_urls": [f"https://facebook.com/broker-{index}" for index in range(4)],
         "completed_profile_urls": [f"https://facebook.com/broker-{index}" for index in range(4)],
+        "unattempted_profile_urls": [],
     }
 
 

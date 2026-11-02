@@ -21,6 +21,7 @@ def _ops_chat_id() -> str:
 def send_ops_alert(text: str) -> bool:
     chat_id = _ops_chat_id()
     if not chat_id:
+        logger.error("OPS alert not delivered: OPS_ALERT_CHAT_ID is unset")
         return False
     from alerts.telegram import send_message_to
 

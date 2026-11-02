@@ -449,21 +449,16 @@ def cmd_schedule_setup(args):
         print(f"❌ Lỗi tạo task: {result.stderr}")
 
 def cmd_download_images(args):
-    with advisory_lock("download-images"):
-        return _cmd_download_images(args)
+    return _cmd_download_images(args)
 
 
 def _cmd_download_images(args):
     init_schema()
     from cleansing.download_images import download_images
-    from cleansing.image_cleanup import clean_broker_images
+    from cli.crawlers import _clean_broker_images_after_download
     limit = getattr(args, "limit", 1000)
-    download_images(limit=limit)
-    stats = clean_broker_images(apply=True, limit=limit, strong=True)
-    print(
-        f"Clean broker images: scanned={stats.get('scanned', 0)} | "
-        f"deleted={stats.get('deleted', 0)} | reasons={stats.get('reasons', {})}"
-    )
+    download_images(limit=limit, max_seconds=getattr(args, "max_seconds", None))
+    _clean_broker_images_after_download(limit=limit)
 
 def cmd_classify_legal_images(args):
     with advisory_lock("classify-legal-images"):

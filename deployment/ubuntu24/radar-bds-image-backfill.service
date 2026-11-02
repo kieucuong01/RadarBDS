@@ -1,0 +1,16 @@
+[Unit]
+Description=Radar BDS bounded image backlog
+Wants=network-online.target
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=radar
+Group=radar
+WorkingDirectory=/opt/radar-bds/current
+EnvironmentFile=/etc/radar-bds/radar.env
+Environment=PYTHONUNBUFFERED=1
+RuntimeDirectory=radar-bds
+ExecStart=/usr/bin/flock -n -E 75 /run/radar-bds/crawl.lock /opt/radar-bds/.venv/bin/python -X utf8 radar.py download-images --limit 500 --max-seconds 600
+SuccessExitStatus=75
+TimeoutStartSec=20m

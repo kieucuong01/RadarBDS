@@ -151,6 +151,7 @@ def download_images(
     listing_id: int | None = None,
     listing_ids: list[int] | None = None,
     progress_callback=None,
+    max_seconds: float | None = None,
 ):
     with advisory_lock("download-images"):
         return _download_images(
@@ -158,6 +159,7 @@ def download_images(
             listing_id=listing_id,
             listing_ids=listing_ids,
             progress_callback=progress_callback,
+            max_seconds=max_seconds,
         )
 
 
@@ -203,8 +205,12 @@ def _download_images(
     listing_id: int | None = None,
     listing_ids: list[int] | None = None,
     progress_callback=None,
+    max_seconds: float | None = None,
 ):
     """Download missing images, plus recent Facebook CDN images marked NOT_FOUND."""
+    if max_seconds is not None and max_seconds <= 0:
+        raise ValueError("max_seconds must be positive")
+    deadline = time.monotonic() + max_seconds if max_seconds is not None else None
     logger.info("Downloading listing images into: %s", DATA_DIR)
     if listing_id is None and listing_ids is not None and not listing_ids:
         logger.info("No listing ids supplied for targeted image download.")
@@ -223,6 +229,10 @@ def _download_images(
     if progress_callback:
         progress_callback(0, len(rows), success_count)
     for idx, row in enumerate(rows, start=1):
+        # shortcut: finish the current transfer before checking the time budget again.
+        if deadline is not None and time.monotonic() >= deadline:
+            logger.info("Image time budget reached; deferred=%s", len(rows) - idx + 1)
+            break
         local_file_path: Path | None = None
         partial_path: Path | None = None
         thumb_path: Path | None = None
