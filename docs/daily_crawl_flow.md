@@ -14,7 +14,7 @@ python radar.py crawl-daily
        ├─ capture crawl_start_ts                       # mốc "tin mới của run này"
        ├─ Facebook primary phase (profile daily_limit via Apify)
        │    ├─ run_full_reprocess()   → normalize → dedup → valuation
-       │    ├─ download_images(limit=500) + broker image cleanup
+       │    ├─ download_images(limit=500, max_seconds=180) + broker image cleanup
        │    ├─ notification:
        │    │     push_new_listings_to_vip(crawl_start_ts) # per-user VIP watchlists only
        │    └─ prewarm /api/dashboard
@@ -331,10 +331,12 @@ _push_vip_notifications(no_alert, crawl_start_ts)
   -> cli.notify.push_new_listings_to_vip(since=crawl_start_ts)
 ```
 
-Lưu ý: trong Facebook-first flow hiện tại có thể gọi VIP push một lần ngay sau
-postprocess batch, rồi gọi lại ở cuối run sau `export_raw()`. Đây không được
-gửi trùng nếu `notification_log` đã ghi thành công, vì anti-spam kiểm theo
-`user_id + listing_id + channel`.
+Facebook-first gọi VIP push một lần sau postprocess batch. Ops health được
+kiểm tra ngay sau crawl, trước reprocess/ảnh; exception toàn job có cảnh báo
+riêng. Trạng thái toàn workflow và thời gian từng bước nằm trong
+`logs/crawl-workflow-facebook.json`, không suy từ một row `crawl_runs=done`.
+Xem `docs/operations.md` phần Crawl workflow health để cài timer tải backlog
+và hook systemd cho timeout/OOM/SIGKILL.
 
 Trong `push_new_listings_to_vip()`:
 

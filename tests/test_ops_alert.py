@@ -49,7 +49,7 @@ class OpsAlertTest(unittest.TestCase):
              mock.patch.object(download_module, "download_images", fake_download):
             crawlers._cmd_crawl(args, mode="incremental")
 
-        fake_download.assert_called_once_with(limit=200)
+        fake_download.assert_called_once_with(limit=200, max_seconds=180)
         ops_alert.assert_called_once_with("2026-05-26T00:00:00", [])
         prewarm.assert_called_once_with()
 

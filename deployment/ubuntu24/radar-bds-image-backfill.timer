@@ -1,0 +1,11 @@
+[Unit]
+Description=Radar BDS hourly image backlog outside active crawls
+
+[Timer]
+OnCalendar=*-*-* *:35:00
+RandomizedDelaySec=5m
+Persistent=true
+Unit=radar-bds-image-backfill.service
+
+[Install]
+WantedBy=timers.target

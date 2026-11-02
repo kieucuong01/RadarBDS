@@ -1054,6 +1054,37 @@ systemctl list-timers radar-bds-crawl.timer radar-bds-guland-crawl.timer --no-pa
 
 Admin crawl health should surface the latest timer/service failure and point to `logs/crawl-daily.log`.
 
+### Crawl workflow health (2026-11-02)
+
+- `OPS_ALERT_CHAT_ID` routes infrastructure alerts separately from VIP listing
+  notifications. A missing recipient now logs an error. Set it in the canonical
+  production `/etc/radar-bds/radar.env`; ignored checkout `.env` is only a fallback.
+- Facebook checks the local worst-case Apify budget before calling the provider.
+  This is advisory: actual usage and provider credits may differ. Unattempted
+  profiles are recorded in `crawl_run_progress`; partial jobs exit with code 2.
+- `logs/crawl-workflow-facebook.json` and `logs/crawl-workflow-guland.json`
+  record the entire job, active/failing stage, warnings and elapsed stage times.
+  `crawl_runs` still records individual source/normalization phases only.
+- Stages include normalize, content hash, dedup, lifecycle, market trends,
+  valuation, map backfill, public publication and images. Public publication
+  failure does not become success; cache failure after DB commit is partial.
+- Daily image downloads are capped at 500 candidates and a 180-second budget.
+  The current transfer finishes before the next budget check; cleanup is timed
+  separately. Remaining candidates stay in the DB without being marked missing.
+- Install the hourly image backlog timer and `ExecStopPost` hooks as root:
+
+  ```bash
+  sudo bash /opt/radar-bds/current/scripts/install_crawl_workflow.sh
+  ```
+
+  This preserves the existing Facebook/Guland schedules. The backlog job uses
+  the same filesystem crawl lock, skips a busy lock with exit 75, and downloads
+  up to 500 candidates with a 600-second budget. Python handles SIGTERM; the
+  systemd hook additionally records timeout/OOM/SIGKILL. Without the root install,
+  the next run detects an unfinished previous status, but no immediate SIGKILL
+  alert is guaranteed. Roll back by disabling the image timer and removing only
+  the two `workflow.conf` service drop-ins, then `systemctl daemon-reload`.
+
 ## Local Production Sync
 
 Pull production DB to local:

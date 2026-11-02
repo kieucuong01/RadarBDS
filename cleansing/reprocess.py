@@ -35,6 +35,7 @@ from cleansing.feature_extractor import (
 from db.analytics import save_valuation_result
 from db.connection import advisory_lock, get_conn
 from services.public_data_publish import publish_public_data
+from services.crawl_workflow import timed_stage, mark_partial
 from db.crawl_runs import finish_crawl_run, start_crawl_run
 from db.guland_publishers import (
     recompute_publisher,
@@ -812,7 +813,8 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     logger.info("=" * 55)
     logger.info(f"{'FULL' if full else 'INCREMENTAL'} REPROCESS START")
 
-    listing_stats = reprocess_listings(source=source, since=since, full=full, raw_ids=raw_ids)
+    with timed_stage("normalize"):
+        listing_stats = reprocess_listings(source=source, since=since, full=full, raw_ids=raw_ids)
     processed_ids = listing_stats.get("processed_ids", [])
 
     legal_stats = {
@@ -829,15 +831,15 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     from cleansing.dedup import flag_duplicates_in_db
 
     # Content hash backfill (alert filter dùng để loại repost cùng nội dung khác URL)
-    with get_conn() as conn:
+    with timed_stage("content_hash"), get_conn() as conn:
         n_hashes = populate_content_hashes(conn)
 
     # Cross-source dedup must settle before valuation training reads listings.
-    with get_conn() as conn:
+    with timed_stage("dedup"), get_conn() as conn:
         dedup_stats = flag_duplicates_in_db(conn)
 
     # Logic giá trị: lifecycle feedback — listing biến mất nhanh = deal khớp
-    with get_conn() as conn:
+    with timed_stage("lifecycle"), get_conn() as conn:
         backfill_first_seen(conn)               # một lần cho DB cũ (idempotent)
         n_drops       = detect_price_drops(conn)
         delisted_list = sweep_delisted(conn)
@@ -845,7 +847,7 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     n_likely_sold   = sum(1 for d in delisted_list if d.get("likely_sold"))
 
     # Market weekly, monthly, daily
-    with get_conn() as conn:
+    with timed_stage("market_trends"), get_conn() as conn:
         conn.execute("DELETE FROM market_weekly")
         compute_weekly_trend(conn)
         compute_monthly_trend(conn)
@@ -853,19 +855,26 @@ def _run_full_reprocess(source: str = None, since: str = None, full: bool = Fals
     logger.info("Market trends (weekly, monthly, daily) updated")
 
     # Valuation: Nếu full=False, chỉ định giá các tin vừa mới xử lý
-    val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
-    map_location_stats = _run_listing_map_backfill(
-        processed_ids,
-        full=full,
-    )
+    with timed_stage("valuation"):
+        val_stats = reprocess_valuation(incremental_ids=None if full else processed_ids)
+    with timed_stage("map_locations"):
+        map_location_stats = _run_listing_map_backfill(processed_ids, full=full)
+    if map_location_stats.get("status") == "error":
+        mark_partial("Map location backfill failed; listing/valuation data committed")
 
-    public_read_model_stats = publish_public_data(
-        listing_ids=None if full else tuple(dict.fromkeys([
-            *processed_ids, *listing_stats.get("publisher_changed_ids", []),
-        ])),
-        market_changed=True,
-        strict=False,
-    )
+    with timed_stage("public_publish"):
+        public_read_model_stats = publish_public_data(
+            listing_ids=None if full else tuple(dict.fromkeys([
+                *processed_ids, *listing_stats.get("publisher_changed_ids", []),
+            ])),
+            market_changed=True,
+            strict=False,
+        )
+    if public_read_model_stats.get("status") == "error":
+        raise RuntimeError("Public read-model publication failed; previous public snapshot retained")
+    if any(part.get("status") in {"error", "partial"}
+           for part in public_read_model_stats.get("cache", {}).values()):
+        mark_partial("Public data committed; cache mirror/prewarm incomplete")
 
     logger.info("FULL REPROCESS DONE")
     logger.info(f"  Listings : {listing_stats}")

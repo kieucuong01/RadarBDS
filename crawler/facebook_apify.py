@@ -212,7 +212,30 @@ class FacebookApifyCrawler:
             "actor_runs": 0,
             "attempted_profile_urls": [],
             "completed_profile_urls": [],
+            "unattempted_profile_urls": [],
         }
+
+    def quota_preflight(self, profiles, mode="incremental", limit_override=None):
+        """Conservative local budget check; provider credits may differ."""
+        if not self._use_token_pool:
+            return None
+        from crawler.apify_token_pool import list_tokens_public
+
+        remaining = [int(t["remaining"]) for t in list_tokens_public() if t["active"]]
+        required = 0
+        uncovered = 0
+        for profile in profiles:
+            limit = int(limit_override or profile.get("tier") or _DEFAULT_TIER)
+            if mode == "full" and not limit_override:
+                limit = max(limit, MAX_POSTS_FULL)
+            required += limit
+            available = [i for i, budget in enumerate(remaining) if budget >= limit]
+            if available:
+                idx = max(available, key=lambda i: remaining[i])
+                remaining[idx] -= limit
+            else:
+                uncovered += 1
+        return {"required_posts": required, "uncovered_profiles": uncovered}
 
     # ------------------------------------------------------------------
     # Public API
@@ -275,6 +298,7 @@ class FacebookApifyCrawler:
                         )
                         self.last_run_report["partial"] = True
                         self.last_run_report["unattempted_profiles"] += unattempted
+                        self.last_run_report["unattempted_profile_urls"].extend(p["url"] for p in pending)
                         self.last_run_report["messages"].append(event)
                         print(f"[facebook-apify] {event}")
                         break

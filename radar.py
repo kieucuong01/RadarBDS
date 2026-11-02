@@ -456,6 +456,7 @@ def build_parser():
     # download-images
     p_di = sub.add_parser("download-images", help="Tải ảnh về máy cục bộ")
     p_di.add_argument("--limit", type=int, default=1000, help="Số lượng ảnh tối đa cần tải")
+    p_di.add_argument("--max-seconds", type=float, help="Ngừng nhận ảnh mới sau số giây này; ảnh còn lại giữ trong backlog")
 
     # clean-broker-images
     p_cbi = sub.add_parser("clean-broker-images", help="Xóa ảnh avatar/selfie/profile môi giới khỏi listing_images")
