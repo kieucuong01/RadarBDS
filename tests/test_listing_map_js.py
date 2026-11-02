@@ -266,9 +266,9 @@ def test_base_images_remain_visible_at_gis_zooms_without_requesting_missing_nati
     from services.planning_tiles import native_layers
 
     planning_max = max(layer['manifest']['max_zoom'] for layer in native_layers())
-    for layer in _run_node("mapApi.mapBaseLayers()").values():
+    for name, layer in _run_node("mapApi.mapBaseLayers()").items():
         assert layer['maxZoom'] >= planning_max
-        assert layer['maxNativeZoom'] == 19
+        assert layer['maxNativeZoom'] == (18 if name == 'satellite' else 19)
 
 
 def test_street_tile_failure_switches_provider_once_and_ignores_stale_errors():
