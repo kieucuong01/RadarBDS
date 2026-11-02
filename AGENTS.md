@@ -80,7 +80,7 @@ Marketing skills:
 ## Core Entry Points
 
 - Maps entry: `docs/maps-agent-guide.md` is the current module/contract/invariant map. Check HEAD versus dirty work and deployed SHA before treating a local pilot as released. Missing-province work follows the priority policy below; nationwide 2030/admin layers do not imply nationwide cadastral coverage.
-- Maps priority policy (2026-11-02): `docs/planning_sources/maps-priority-markets.md` records the user-approved provisional 10 historic markets, feature gaps, source evidence and continuation checklist. It is not a verified national transaction ranking. Prioritize thorough work there; defer expansion elsewhere while preserving existing layers and fixes. Do not start nationwide parcel crawling from this policy.
+- Maps priority policy (2026-11-02): `docs/planning_sources/maps-priority-markets.md` routes to `maps-priority-13-2026-11-02.md`. The user retained the 12 proposed historic markets and added old Lam Dong: 13 focus markets, not a verified national transaction/search ranking. The dossier combines sources, limits, local configuration matrix, per-market scope and acceptance checklist. Work order remains an agent recommendation. Preserve historical backlog and existing layers/fixes; defer expansion elsewhere. Do not start nationwide parcel crawling from this policy.
 - Current parcel scope (2026-11-02): priority 3–10, working public GIS first; Guland collection is deferred. `docs/planning_sources/priority-gis-parcels-2026-11-02.md` records each blocker. Khánh Hòa now has a verified local live adapter; this is not a production/whole-province completeness claim.
 
 - `radar.py`: CLI router.

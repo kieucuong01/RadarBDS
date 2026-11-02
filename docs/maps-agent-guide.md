@@ -18,9 +18,10 @@ Baseline là mốc bàn giao, không phải khẳng định VPS sẽ luôn giữ
    default hay số giới hạn ở một đoạn lịch sử làm hành vi hiện tại.
 
 **Ưu tiên địa bàn cập nhật 2026-11-02:** đọc
-[10 thị trường ưu tiên và sổ tiến độ](planning_sources/maps-priority-markets.md).
-Đây là danh sách tạm được người dùng chấp nhận, chưa phải top 10 giao dịch quốc
-gia có số liệu đồng nhất. Ngoài danh sách, hoãn mở rộng khi thiếu nguồn; giữ
+[định hướng 13 thị trường và sổ tiến độ](planning_sources/maps-priority-markets.md).
+Người dùng giữ 12 địa bàn đề xuất và thêm Lâm Đồng cũ. Hồ sơ 13 kết hợp mức
+quan tâm với top 10 trước, ma trận nguồn/tính năng và việc còn thiếu; thứ tự
+triển khai do agent đề xuất, không phải xếp hạng quốc gia có số liệu đồng nhất. Ngoài danh sách, hoãn mở rộng khi thiếu nguồn; giữ
 nguồn đã có hoạt động, không tự khởi động crawl địa chính toàn quốc.
 QH SDĐ 2030 toàn quốc và địa giới toàn quốc không đồng nghĩa ranh thửa toàn quốc.
 

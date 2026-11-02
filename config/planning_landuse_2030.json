@@ -196,7 +196,7 @@
         "max_native_zoom": 17,
         "tile_template": "https://s3.hn-1.cloud.cmctelecom.vn/guland9/qh-dong-nai/sdd/{z}/{x}/{y}.png",
         "attribution": "<a href=\"https://guland.vn/soi-quy-hoach\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn dữ liệu QH 2030</a>",
-        "notice": "QH SDĐ 2030 tham khảo · Bình Phước cũ. Chỉ tải ô trong vùng nhìn của tỉnh đang chọn. 11/11 điểm huyện có ảnh trong đợt kiểm tra 30/10/2026; không xác nhận phủ kín, hiệu lực pháp lý hay độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
+        "notice": "QH SDĐ 2030 tham khảo · Đồng Nai và Bình Phước cũ, dùng chung nguồn ảnh. Chỉ tải vùng nhìn của tỉnh cũ đang chọn. Mẫu tại 11/11 khung huyện Đồng Nai cũ có ảnh ở zoom 12 và 16 ngày 02/11/2026; không xác nhận phủ kín, hiệu lực hồ sơ hoặc độ chính xác thửa đất. Vùng trống cần đối chiếu hồ sơ nguồn.",
         "coverage_windows": [
           [
             [

@@ -163,3 +163,24 @@ measurements do not establish mobile rendering speed, unique cold keys, sustaine
 1,000 RPS, or full interactive Maps capacity. The bypass follow-up changes no
 anonymous warm key. To roll back edge changes, disable the two Maps-specific
 rules, leaving the existing private/public listing rules intact.
+# SDĐ 2030 bounded image loading — 2026-11-02
+
+User reported browser lag when enabling provincial SDĐ2030. Source inspection
+found this theme bypassed `RadarPlanningNativeTiles.createReference`, using
+Leaflet's direct image loader while partition/general references shared a
+four-job scheduler. `planning_overlay.js` now routes SDĐ2030 through that same
+existing scheduler: async image decoding, four active loads across participating
+layers, queued-job cancellation on unload/remove and stale-zoom cancellation.
+No source resolution, province windows, opacity or cache policy changed.
+
+Evidence: overlay runtime exercises all 63 province selectors and asserts each
+selected SDĐ2030 provider uses the bounded loader. Native tile runtime verifies
+four active images across layers, queued unload, stale zoom cancellation and late
+completion suppression. Both runtimes and 11 landuse Python regressions passed.
+Template asset version: `landuse-bounded-20261102`.
+
+This removes an unbounded loading path, not a measured FPS guarantee. Rendered
+browser/RUM and production were not checked in this change. Next measurement:
+same phone/browser/viewport, cold and warm enable + rapid zoom/pan; record long
+tasks, frame drops, image request peaks and total settle time. Remaining lag may
+include image composition and annotation overlays; profile before changing them.

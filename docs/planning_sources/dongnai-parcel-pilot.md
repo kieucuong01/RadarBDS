@@ -1,5 +1,11 @@
 # Dong Nai public cadastral pilot
 
+**2026-11-02 priority recheck:** [old Đồng Nai review](dongnai-priority-review-2026-11-02.md)
+reconfirmed maintenance at the historic land portal and count=0 for all eleven
+historic Đồng Nai district codes in this parcel service. The current provider
+remains former Bình Phước; existing 2030/construction raster samples were checked
+separately and the misleading shared-source notice was corrected.
+
 Verified 2026-10-31. Scope: former Binh Phuoc within new Dong Nai. **Former
 Dong Nai cadastre has not been integrated.** This is progress toward the national
 parcel goal, not nationwide or province-wide completeness certification.

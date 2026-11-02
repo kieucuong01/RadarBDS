@@ -1,4 +1,16 @@
-# 10 thị trường ưu tiên Maps — danh sách tạm và sổ tiến độ
+# Thị trường ưu tiên Maps — định hướng hiện hành và sổ tiến độ
+
+**Cập nhật định hướng 02/11/2026:** người dùng yêu cầu giữ 12 địa bàn vừa đề
+xuất và thêm Lâm Đồng cũ. Dùng [hồ sơ chi tiết 13 thị trường](maps-priority-13-2026-11-02.md)
+làm định hướng hiện hành: toàn bộ 10 nơi cũ + BRVT/Bắc Ninh cũ/Quảng Ninh.
+Lâm Đồng không còn dự phòng. Thứ tự thực hiện vẫn là đề xuất sản phẩm, không
+phải xếp hạng giao dịch/tìm kiếm quốc gia. Hồ sơ mới có nguồn, giới hạn, ma trận
+cấu hình, từng cụm triển khai và checklist; không chứng nhận đầy đủ/deployed.
+Các phần top 10 và tiến độ dưới là **hồ sơ lịch sử**, không xóa backlog.
+
+Nghiên cứu mới không tự khởi động thu thập ranh hàng loạt: GIS hoạt động trước,
+Guland tra thửa tiếp tục để sau. Ngoài 13 nơi, giữ dữ liệu và sửa lỗi; hoãn mở
+rộng khi thiếu nguồn. Không suy ranh phủ toàn quốc từ lớp 2030/địa giới.
 
 Ngày nghiên cứu/đối chiếu: **2026-11-02**. Code đối chiếu:
 `20246dfbf8ed489c12bc1fdb696bea9fbcff62db`.
@@ -143,7 +155,7 @@ ghi riêng điều kiện mở lại, không coi là đã hoàn tất hoặc kh�
 2. Mỗi lần làm tỉnh nào phải cập nhật trạng thái từng nhóm: chưa làm → đang xác
    minh → local → verified → deployed, kèm nguồn và phạm vi. `registered` khác
    `verified`, `verified` khác `deployed`, và `partial` không phải `complete`.
-3. Ngoài 10 địa bàn: **deferred expansion**. Giữ dữ liệu đã có và sửa lỗi/bảo mật,
+3. Ngoài 13 địa bàn của định hướng hiện hành: **deferred expansion**. Giữ dữ liệu đã có và sửa lỗi/bảo mật,
    không xóa/tắt các lớp toàn quốc hay triển khai lại cả nước. Xin chỉ đạo mới
    khi cần mở rộng một tỉnh ngoài danh sách.
 4. **Bình Phước cũ ngoài danh sách nhưng giữ công việc đã hoàn tất:** 618.053

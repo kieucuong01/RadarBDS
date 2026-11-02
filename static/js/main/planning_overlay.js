@@ -553,7 +553,7 @@
           ? (isAdministrative(item.theme) ? env.RadarAdministrativeBoundaries : env.RadarPlanningTransport).create(map,L,env,data,Object.assign({},layerOptions,{signal:controller.signal}))
           : tiled ? data.source_tiles && env.RadarPlanningNativeTiles
           ? env.RadarPlanningNativeTiles.create(L, env, data, tileOptions)
-          : ['partition','urban_general'].indexOf(item.theme)>=0 && item.source==='guland' && env.RadarPlanningNativeTiles && env.RadarPlanningNativeTiles.createReference
+          : ['partition','urban_general','land_use_2030'].indexOf(item.theme)>=0 && item.source==='guland' && env.RadarPlanningNativeTiles && env.RadarPlanningNativeTiles.createReference
           ? env.RadarPlanningNativeTiles.createReference(L,env,data,tileOptions)
           : L.tileLayer(data.tile_template, tileOptions)
           : L.imageOverlay(assetBase + item.id + '/overlay.webp', data.bounds, layerOptions);

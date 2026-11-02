@@ -311,9 +311,14 @@ const flush = () => new Promise(resolve=>setImmediate(resolve));
   assert.equal(api.validManifest({...dn.manifest,coverage_windows:[[[0,0],[90,180]]]}),false);
   const areaEnv={RADAR_LANDUSE_AREAS:require('../config/planning_landuse_areas.json').provinces,RadarPlanningArea:require('../static/js/main/planning_area.js')};
   for(const p of areaEnv.RADAR_LANDUSE_AREAS){
-    const national=harness(undefined,undefined,[[7,101],[24,118]],'land_use_2030',{initialRegion:p.region_id},areaEnv);
+    const queued=[];
+    const national=harness(undefined,undefined,[[7,101],[24,118]],'land_use_2030',{initialRegion:p.region_id},
+      {...areaEnv,RadarPlanningNativeTiles:{createReference(L,env,manifest,options){
+        queued.push(manifest.tile_template);return L.tileLayer(manifest.tile_template,options);
+      }}});
     national.deliver({layers:landuse});await flush();
     assert.equal(national.layers.size,p.layer_ids.length,p.name+' only loads selected province providers');
+    assert.equal(queued.length,p.layer_ids.length,p.name+' uses bounded cancellable image loading');
     assert([...national.layers].every(l=>p.layer_ids.some(id=>landuse.find(item=>item.id===id).manifest.tile_template===l.url)));
     if(p.id==='bac-giang'){
       const hint=national.nodes.find(n=>n.className==='planning-source-zoom-hint');assert.equal(hint.hidden,true);
