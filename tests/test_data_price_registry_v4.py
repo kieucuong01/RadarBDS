@@ -17,13 +17,14 @@ def test_v4_ward_uses_only_own_samples_and_exact_registered_name(slug, name):
     mod = engine()
     rows = [row(i, ward=name) for i in range(15)] + [row(100, ward='Phú Lợi')]
     snap = packet(mod, rows)
-    assert snap['scope_registry_version'] == 4
+    assert snap['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
     scope = snap['scopes'][slug]
     assert scope['wards'] == [name] and scope['parent'] == 'thu-dau-mot'
     assert scope['sample_count'] == 15
     assert all(f['scope'] == slug and f['sample_count'] == 15 for f in scope['facts'].values())
     assert snap['scopes']['thu-dau-mot']['sample_count'] == 16
-    assert set(snap['scopes']) == V3_SCOPES | set(NEW)
+    assert set(snap['scopes']) == mod.SCOPE_REGISTRIES[mod.SCOPE_REGISTRY_VERSION]
+    assert V3_SCOPES | set(NEW) <= set(snap['scopes'])
 
 
 def test_v4_preserves_real_frozen_v3_bytes_hash_facts_and_scope_registry(tmp_path):
@@ -39,7 +40,7 @@ def test_v4_preserves_real_frozen_v3_bytes_hash_facts_and_scope_registry(tmp_pat
     assert mod.load_latest(tmp_path) == old
     current = packet(mod, [row(i, ward='Hiệp An', last_seen_at='2026-10-28') for i in range(15)],
                      as_of=date(2026,10,28), previous=[old])
-    assert current['scope_registry_version'] == 4
+    assert current['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
     assert all(p['median'] is None and p['sample_count'] is None for p in current['scopes']['hiep-an']['history'][:-1])
     assert target.read_bytes() == content
 

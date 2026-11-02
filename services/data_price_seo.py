@@ -34,15 +34,17 @@ SCOPES = {
     'hiep-an': {'name':'Hiệp An', 'wards':('Hiệp An',), 'parent':'thu-dau-mot'},
     'tuong-binh-hiep': {'name':'Tương Bình Hiệp', 'wards':('Tương Bình Hiệp',), 'parent':'thu-dau-mot'},
     'chanh-nghia': {'name':'Chánh Nghĩa', 'wards':('Chánh Nghĩa',), 'parent':'thu-dau-mot'},
+    'chanh-my': {'name':'Chánh Mỹ', 'wards':('Chánh Mỹ',), 'parent':'thu-dau-mot'},
     'thu-dau-mot': {'name':'Thủ Dầu Một', 'wards':tuple(TDM_LIVE_WARDS.values()), 'parent':None},
 }
-SCOPE_REGISTRY_VERSION = 4
+SCOPE_REGISTRY_VERSION = 5
 # V1 has no version member. Never infer its coverage from the current registry.
 SCOPE_REGISTRIES = {
     1: frozenset(('phu-loi', 'thu-dau-mot')),
     2: frozenset(('phu-loi', 'hiep-thanh', 'phu-my', 'tan-an', 'thu-dau-mot')),
     3: frozenset(('phu-loi', 'hiep-thanh', 'phu-my', 'tan-an', 'phu-hoa', 'dinh-hoa', 'phu-tan', 'thu-dau-mot')),
-    4: frozenset(SCOPES),
+    4: frozenset(('phu-loi', 'hiep-thanh', 'phu-my', 'tan-an', 'phu-hoa', 'dinh-hoa', 'phu-tan', 'hiep-an', 'tuong-binh-hiep', 'chanh-nghia', 'thu-dau-mot')),
+    5: frozenset(SCOPES),
 }
 POLICY = {
     'sources':list(SOURCES), 'property_type':'dat_nen', 'tx_type':'ban',
