@@ -78,7 +78,7 @@ from config.settings import (
     SITE_TITLE,
     get_digital_product_commerce_settings,
 )
-from config.seo_articles import KNOWLEDGE_HUB, SEO_ARTICLES
+from config.seo_articles import ARTICLE_REDIRECTS, KNOWLEDGE_HUB, SEO_ARTICLES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from services.report_hub import report_archive
 from services.report_pdf import PDF_PUBLIC_ORIGIN, pdf_download_href, pdf_path, pdf_version
@@ -4055,7 +4055,7 @@ _LEGACY_KNOWLEDGE_REDIRECTS = {
 def seo_knowledge_legacy_redirect(article_slug: str | None = None):
     target = "/tin-tuc"
     if article_slug:
-        target = _LEGACY_KNOWLEDGE_REDIRECTS.get(str(article_slug or ""))
+        target = ARTICLE_REDIRECTS.get(article_slug) or _LEGACY_KNOWLEDGE_REDIRECTS.get(str(article_slug or ""))
         if not target:
             article = SEO_ARTICLES.get(article_slug)
             if not article:
@@ -4086,6 +4086,8 @@ def seo_report_pdf_download(report_slug: str):
 
 
 def seo_report_or_article_page(report_slug: str):
+    if report_slug in ARTICLE_REDIRECTS:
+        return seo_news_article_page(report_slug)
     report_key = f"bao-cao/{report_slug}"
     if report_key in SEO_PAGES:
         return seo_landing_page(report_key)
@@ -4115,7 +4117,7 @@ _LEGACY_NEWS_REDIRECTS = {
 
 
 def seo_news_article_page(slug: str):
-    target = _LEGACY_NEWS_REDIRECTS.get(str(slug or ""))
+    target = ARTICLE_REDIRECTS.get(slug) or _LEGACY_NEWS_REDIRECTS.get(str(slug or ""))
     if target:
         query = request.query_string.decode("ascii", errors="ignore")
         if query:

@@ -1,5 +1,10 @@
 # Radar BDS Traffic Marketing Workflow
 
+Content pruning on 2026-11-03 consolidated three duplicate answers and added
+planning/Săn Deal guides. Follow [the decisions and URL inventory](seo-content-review-2026-11-03.md)
+before creating another price or ward-comparison article. Performance remains
+unmeasured without a real Search Console export.
+
 ## Product discovery update — 2026-11-03
 
 The approved site architecture now exposes four entry tasks: **Bản đồ quy hoạch,

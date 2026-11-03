@@ -1,0 +1,222 @@
+﻿url,action,target,reason,traffic_evidence
+https://radarbds.vn/,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/dinh-gia-bds,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/bang-gia-dat-tphcm,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/chinh-sach-bao-mat,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/llms.txt,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/chu-de-nong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/du-lieu-radarbds,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/quyet-dinh-van-ban,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/ban-do-thu-dau-mot,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/ban-do-thuan-an,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/ban-do-di-an,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/ban-do-ben-cat,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/ban-do-binh-duong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong/tuyen-duong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/ban-dat-binh-duong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/san-deal-bds,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/bds-binh-duong-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tan-an-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-an-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tuong-binh-hiep-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/dinh-hoa-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-my-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-my-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-cuong-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-hoa-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-loi-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-thanh-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-nghia-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-tan-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hoa-phu-thang-06-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hoa-phu-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-tan-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-nghia-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-thanh-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-loi-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-hoa-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-cuong-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-my-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-my-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/dinh-hoa-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tuong-binh-hiep-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-an-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tan-an-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/bds-binh-duong-thang-10-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hoa-phu-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-tan-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-nghia-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-thanh-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-loi-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-hoa-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-cuong-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-my-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-my-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/dinh-hoa-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tuong-binh-hiep-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-an-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tan-an-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/bds-binh-duong-thang-09-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hoa-phu-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-tan-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-nghia-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-thanh-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-loi-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-hoa-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-cuong-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-my-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-my-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/dinh-hoa-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tuong-binh-hiep-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-an-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tan-an-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/bds-binh-duong-thang-08-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/bds-binh-duong-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hoa-phu-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-tan-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-nghia-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-thanh-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-loi-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-hoa-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-cuong-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/phu-my-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/chanh-my-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/dinh-hoa-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tuong-binh-hiep-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/hiep-an-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/bao-cao/tan-an-thang-07-2026,keep,,"Báo cáo tháng có kỳ dữ liệu riêng; giữ lịch sử và liên kết PDF, không đổi thành số liệu hiện tại.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/thu-dau-mot,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/ben-cat,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/my-phuoc,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/my-phuoc-1,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/my-phuoc-2,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/my-phuoc-3,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-phu-my,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-chanh-nghia,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-hiep-an,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-tan-an,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-thoi-hoa,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-tuong-binh-hiep,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-dinh-hoa,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-chanh-my,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-phu-cuong,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-phu-hoa,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-phu-loi,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-hiep-thanh,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-phu-tan,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-hoa-phu,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-phu-an,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-an-tay,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-an-dien,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-chanh-phu-hoa,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-tan-dinh,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/binh-duong/phuong-hoa-loi,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/gia-dat/chanh-my,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/chanh-nghia,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/dinh-hoa,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/hiep-an,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/hiep-thanh,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/phu-hoa,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/phu-loi,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/phu-my,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/phu-tan,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/tan-an,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/thu-dau-mot,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/gia-dat/tuong-binh-hiep,keep,,Trang giá đất nền từ snapshot có ngưỡng mẫu và kỳ dữ liệu; khác bảng giá Nhà nước và nhà xây sẵn.,unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong/vanh-dai-3,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong/duong-my-phuoc-tan-van,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong/vanh-dai-4,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong/quoc-lo-13,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dinh-hoa-hiep-an-tan-an-khu-nao-hop-ngan-sach-thap,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-loi-phu-hoa-chanh-nghia-khu-nao-nhieu-tin-dang-kiem-tra,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dat-nen-hay-nha-dat-thu-dau-mot-dang-de-so-gia-hon,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/cach-doc-gia-m2-dat-nen-binh-duong,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/vi-sao-khong-nen-so-nha-dat-chung-voi-dat-nen,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-trung-vi-la-gi-khi-xem-gia-dat,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phuong-nao-thu-dau-mot-gia-dat-con-de-mua,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-chanh-my-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-chanh-nghia-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-hoa-phu-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-cuong-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-tuong-binh-hiep-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-hoa-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-hiep-thanh-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026,merge_301,/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu,Trùng câu hỏi/khu vực với bài đích; giữ nội dung và kỳ dữ liệu phù hợp trong URL chính.,unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026,merge_301,/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu,Trùng câu hỏi/khu vực với bài đích; giữ nội dung và kỳ dữ liệu phù hợp trong URL chính.,unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-my-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-tan-phu-loi-khu-nao-dang-kiem-tra-hon,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-my-hay-dinh-hoa-ngan-sach-2-4-ty,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-hoa-hay-phu-my-khu-nao-de-so-gia-hon,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/nha-dat-thu-dau-mot-duoi-3-ty-phuong-nao-nhieu-lua-chon,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dat-nen-thu-dau-mot-duoi-20-trieu-m2-con-o-phuong-nao,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/tin-re-bat-thuong-binh-duong-can-kiem-tra-gi,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-tan-nhieu-dau-hieu-dang-kiem-tra-nen-loc-the-nao,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/duoi-4-ty-nen-mua-nha-dat-phu-loi-hay-tan-an,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-tan-hay-phu-my-loc-gia-theo-phuong,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/duoi-3-ty-nen-xem-hiep-thanh-hay-phu-tan-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dinh-hoa-hay-hiep-thanh-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/hiep-thanh-hay-tan-an-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/tan-an-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc,merge_301,/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc,Trùng câu hỏi/khu vực với bài đích; giữ nội dung và kỳ dữ liệu phù hợp trong URL chính.,unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/cach-dinh-gia-nha-dat-binh-duong-bang-gia-rao-theo-phuong,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/khi-nao-nen-dung-cong-cu-dinh-gia-truoc-khi-goi-moi-gioi,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/tan-an-hay-phu-hoa-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/bang-gia-dat-va-gia-rao-khac-nhau-the-nao,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dat-nen-duoi-3-ty-phu-tan-hay-phu-my-con-nhieu-lua-chon-hon,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-dinh-hoa-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-loi-hay-hiep-thanh-nen-loc-dat-nen-hay-nha-dat-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-my-vs-hiep-an-so-gia-dat,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/mos-la-gi-loc-tin-duoi-gia-co-so,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/tan-an-vs-tuong-binh-hiep-loc-dat-nen-hay-nha-dat-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/hiep-thanh-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/tuong-binh-hiep-hay-phu-hoa-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/duoi-3-ty-nen-xem-phu-tan-hay-tuong-binh-hiep-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/hiep-thanh-hay-phu-hoa-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dinh-hoa-hay-phu-hoa-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-loi-hay-phu-my-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/bao-cao-thang-07-2026-phuong-nao-nen-mo-truoc-o-thu-dau-mot,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dinh-hoa-hay-phu-loi-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-loi-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/duoi-4-ty-nen-xem-phu-tan-hay-phu-hoa-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/nha-dat-duoi-3-ty-phu-my-hay-phu-tan-nen-mo-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-my-hay-tuong-binh-hiep-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/nha-dat-duoi-30-trieu-m2-dinh-hoa-hay-tuong-binh-hiep-nen-loc-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/hiep-thanh-hay-chanh-nghia-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-my-phuoc-ben-cat-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/mua-dat-thu-dau-mot-hay-ben-cat-khac-nhau-diem-nao,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/hiep-thanh-hay-chanh-my-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-hoa-hay-chanh-my-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/mua-dat-ben-cat-my-phuoc-hoa-loi-hay-thoi-hoa,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/ben-cat-co-nhung-khu-nao-nen-theo-doi-khi-mua-dat,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/ty-le-cat-mau-nha-dat-thu-dau-mot-phuong-nao-can-kiem-tra,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-loi-hay-hiep-an-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/chanh-my-hay-phu-loi-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-phu-an-ben-cat-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-hoa-hay-hiep-an-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/hiep-an-hay-hiep-thanh-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dat-nen-binh-duong-bao-nhieu-m2-thi-de-ban,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/gia-dat-an-dien-ben-cat-hien-bao-nhieu,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dat-nen-thu-dau-mot-phuong-nao-nhieu-tin-giam-gia,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-my-hay-tan-an-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc,improve_period_context,,"Bổ sung cảnh báo kỳ dữ liệu, giá rao và đường sang công cụ; chưa có GSC để quyết định loại theo traffic.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/nha-o-xa-hoi-ba-diem-192-ha-chap-thuan-chua-mo-ban,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/vanh-dai-4-tay-ninh-2026-nguoi-mua-binh-duong-can-biet,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/chung-cu-binh-duong-duoi-45-trieu-m2-cach-doc-gia,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/chong-ngap-tphcm-thang-11-2026-doc-dung-pham-vi,keep,,"Trang công cụ, hub, địa bàn hoặc nội dung có mục đích riêng; chưa có bằng chứng hiệu suất để loại bỏ.",unknown_no_GSC_export
+https://radarbds.vn/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do,add_guide,,"Hướng dẫn thao tác công cụ và giới hạn nguồn, đáp ứng nhu cầu quy hoạch/Săn Deal.",new_not_measured
+https://radarbds.vn/tin-tuc/cach-san-deal-bds-kiem-tra-tin-duoi-gia,add_guide,,"Hướng dẫn thao tác công cụ và giới hạn nguồn, đáp ứng nhu cầu quy hoạch/Săn Deal.",new_not_measured

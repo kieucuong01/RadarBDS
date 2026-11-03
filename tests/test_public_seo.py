@@ -435,7 +435,7 @@ def test_legacy_report_article_urls_redirect_to_news_and_sitemap_uses_canonical_
 
     client = radar_app.app.test_client()
     legacy = "/bao-cao/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"
-    canonical = "/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026"
+    canonical = "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu"
     response = client.get(legacy + "?utm_source=facebook")
 
     with radar_app.app.test_request_context("/sitemap.xml"):

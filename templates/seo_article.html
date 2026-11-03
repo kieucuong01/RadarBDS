@@ -47,6 +47,14 @@
           {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
         </section>
 
+        {% if page.article.data_tables and not page.news %}
+        <aside class="seo-trust-panel" aria-label="Kỳ dữ liệu trong bài">
+          <strong>Số liệu theo kỳ, không phải bảng giá trực tiếp</strong>
+          <p>Bảng số liệu trong bài là ảnh chụp tại kỳ được nêu trong nội dung. Ngày biên tập không mặc định là ngày cập nhật giá. Giá rao và số tin có thể đã thay đổi; số tin không đồng nghĩa số bất động sản duy nhất hay thanh khoản.</p>
+          <p><a href="{{ '/gia-dat/thu-dau-mot' if 'Thủ Dầu Một' in page.scope_label else '/binh-duong' }}">Xem dữ liệu và phạm vi cập nhật</a> · <a href="/dinh-gia-bds">Định giá một bất động sản cụ thể</a></p>
+        </aside>
+        {% endif %}
+
 
 
         {% if page.article.summary_cards %}
@@ -162,7 +170,7 @@
           <p>Radar BDS hỗ trợ sàng lọc dữ liệu ban đầu, không thay thế thẩm định pháp lý, quy hoạch, định giá chính thức hoặc kiểm tra thực địa. Hãy xác minh độc lập trước khi giao dịch.</p>
         </aside>
 
-        {% if not page.news %}
+        {% if not page.news and not page.hide_lead_capture %}
           {% set lead_cta_context = "seo_article_lead" %}
           {% include "partials/seo_lead_capture.html" %}
         {% endif %}
@@ -190,9 +198,9 @@
 
         <section class="seo-final-cta">
           <div>
-            <p class="seo-eyebrow">{{ 'Bước kiểm tra tiếp theo' if page.news else 'Xem tin thực tế' }}</p>
-            <h2>{{ page.primary_cta if page.news else 'Mở Radar để lọc tin đáng kiểm tra' }}</h2>
-            <p>{{ 'Đối chiếu đúng nguồn, địa bàn và loại tài sản trước khi quyết định liên hệ hoặc đi xem.' if page.news else 'Mở Radar để lọc tin theo phường, xem giá theo loại nhà đất và chọn tin đáng kiểm tra trước khi liên hệ.' }}</p>
+            <p class="seo-eyebrow">{{ 'Bước kiểm tra tiếp theo' if page.news or page.next_step_text else 'Xem tin thực tế' }}</p>
+            <h2>{{ page.primary_cta if page.news or page.next_step_text else 'Mở Radar để lọc tin đáng kiểm tra' }}</h2>
+            <p>{{ page.next_step_text or ('Đối chiếu đúng nguồn, địa bàn và loại tài sản trước khi quyết định liên hệ hoặc đi xem.' if page.news else 'Mở Radar để lọc tin theo phường, xem giá theo loại nhà đất và chọn tin đáng kiểm tra trước khi liên hệ.') }}</p>
           </div>
           <a class="seo-primary-cta" href="{{ page.primary_href or '/?tab=signals' }}" data-track-cta="article_signals">{{ page.primary_cta or 'Mở Radar' }}</a>
         </section>

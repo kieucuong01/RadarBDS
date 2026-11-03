@@ -5510,9 +5510,9 @@ SEO_PAGES = {
                  {'label': 'Trang phường Phú Tân',
                   'href': '/binh-duong/phuong-phu-tan',
                   'description': 'Landing nhà đất Phú Tân để mở dashboard theo khu vực.'},
-                 {'label': 'Giá đất Phú Tân tháng 7/2026',
-                  'href': '/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026',
-                  'description': 'Bài phân tích data-driven: 708 tin active, 321 tín hiệu, đất nền trung vị 23,8 tr/m².'}],
+                 {'label': 'Giá đất Phú Tân theo kỳ dữ liệu',
+                  'href': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
+                  'description': 'Đọc riêng đất nền và nhà đất; đối chiếu kỳ dữ liệu trước khi dùng giá tham khảo.'}],
  'local_links_title': 'Đọc tiếp từ dữ liệu Radar'},
     "bao-cao/hoa-phu-thang-06-2026": {'variant': 'report',
  'path': '/bao-cao/hoa-phu-thang-06-2026',
@@ -20012,8 +20012,8 @@ SEO_PAGES['bao-cao/dinh-hoa-thang-07-2026'] = {'variant': 'report',
                        'từng tin.',
                'button': 'Mở dashboard',
                'button_href': '/?tab=signals&city=TH%E1%BB%A6+D%E1%BA%A6U+M%E1%BB%98T&date_range=all&mos_min=10&ward=%C4%90%E1%BB%8Bnh+H%C3%B2a'},
- 'local_links': [{'label': 'Giá đất Định Hòa tháng 7/2026',
-                  'href': '/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026',
+ 'local_links': [{'label': 'Giá đất Định Hòa theo kỳ dữ liệu',
+                  'href': '/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu',
                   'description': 'Bài mới có bảng giá, biểu đồ và cách đọc theo loại hình.'}]}
 # --- End generated monthly report: bao-cao/dinh-hoa-thang-07-2026 ---
 
@@ -21332,9 +21332,9 @@ def _rb_prepend_unique_page_link(page_slug, link):
         page["local_links_title"] = "Đọc tiếp từ dữ liệu Radar"
 
 _PHU_TAN_ARTICLE_LINK = {
-    "label": "Giá đất Phú Tân tháng 7/2026",
-    "href": "/tin-tuc/gia-dat-phu-tan-thu-dau-mot-cap-nhat-thang-7-2026",
-    "description": "Bài phân tích data-driven: 708 tin active, 321 tín hiệu, đất nền trung vị 23,8 tr/m².",
+    "label": "Giá đất Phú Tân theo kỳ dữ liệu",
+    "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu",
+    "description": "Đọc riêng đất nền và nhà đất; đối chiếu kỳ dữ liệu trước khi dùng giá tham khảo.",
 }
 _PHU_TAN_REPORT_LINK = {
     "label": "Báo cáo Phú Tân tháng 06/2026",
@@ -21369,6 +21369,6 @@ def _rb_prepend_unique_link_dinh_hoa_demo(page_key, link):
     if not any(item.get("href") == link.get("href") for item in links):
         links.insert(0, link)
 
-_dinh_hoa_article_link = {"label": "Giá đất Định Hòa tháng 7/2026", "href": "/tin-tuc/gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026", "description": "Bài mới có bảng giá, biểu đồ và cách đọc theo loại hình."}
+_dinh_hoa_article_link = {"label": "Giá đất Định Hòa theo kỳ dữ liệu", "href": "/tin-tuc/gia-dat-dinh-hoa-hien-bao-nhieu", "description": "Bài mới có bảng giá, biểu đồ và cách đọc theo loại hình."}
 for _key in ["bao-cao/dinh-hoa-thang-07-2026", "binh-duong/phuong-dinh-hoa", "binh-duong/thu-dau-mot", "bao-cao/bds-binh-duong-thang-07-2026"]:
     _rb_prepend_unique_link_dinh_hoa_demo(_key, _dinh_hoa_article_link)

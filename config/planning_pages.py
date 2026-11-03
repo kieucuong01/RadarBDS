@@ -73,6 +73,7 @@ PLANNING_HUB = {
         "dia-gioi-36-phuong-xa-binh-duong-cu",
     ],
     "local_links": [
+        {"label": "Cách tra quy hoạch theo tờ/thửa và tọa độ", "href": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do"},
         {"label": "Vành đai 3 Bình Dương", "href": "/quy-hoach-binh-duong/vanh-dai-3"},
         {"label": "Mỹ Phước - Tân Vạn", "href": "/quy-hoach-binh-duong/duong-my-phuoc-tan-van"},
         {"label": "Địa giới 36 phường xã", "href": "/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu"},

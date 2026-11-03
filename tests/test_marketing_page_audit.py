@@ -156,7 +156,7 @@ def test_selected_answer_first_intros_are_bounded():
         first = SEO_ARTICLES[slug]["article"]["intro"][0]
         assert 40 <= len(first.split()) <= 60
 LEAD_FIRST_INTRO_SLUGS = (
-    "gia-dat-dinh-hoa-thu-dau-mot-cap-nhat-thang-7-2026",
+    "gia-dat-dinh-hoa-hien-bao-nhieu",
     "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc",
     "phu-tan-hay-phu-my-loc-gia-theo-phuong",
 )
