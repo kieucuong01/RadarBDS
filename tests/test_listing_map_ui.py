@@ -413,7 +413,7 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/boot.js') }}?v=maps-compact-share-20261102c" in template
     assert "js/main/planning_parcels.js') }}?v=maps-defaults-20261103" in template
     assert "js/main/planning_corner_saved.js') }}?v=corner-saved-20261103" in template
-    assert "js/main/planning_overlay.js') }}?v=viewport-labels-20261103" in template
+    assert "js/main/planning_overlay.js') }}?v=maps-defaults-20261103" in template
     assert "js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template
