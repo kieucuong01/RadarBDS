@@ -29,7 +29,7 @@ test('fullscreen filter button opens desktop sidebar and delegates mobile sheet'
  ctx.root.innerWidth=390;ctx.toggleFilters();assert.ok(calls.includes('sheet'));
 });
 
-test('Maps defaults to land use 2030 on street while explicit planning entries retain their theme',async()=>{
+test('Maps defaults to land use 2030 while explicit planning entries retain their theme',async()=>{
  for(const theme of [null,'partition','urban_general','detailed','land_use_2030','urban_vision_100','transport','administrative','administrative_legacy','invalid']){
   let focus;
   const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
@@ -96,11 +96,11 @@ test('a listing response arriving after hiding cannot restore markers or cards',
  assert.equal(rendered,0);assert.equal(ctx.state.recentPayload,null);
 });
 
-test('all entries default to street',()=>{
+test('all entries default to satellite',()=>{
  const ctx={};ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('defaultBaseLayer'),ctx);
- assert.equal(ctx.defaultBaseLayer('administrative'),'street');
- assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'street');
- for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'street');
+ assert.equal(ctx.defaultBaseLayer('administrative'),'satellite');
+ assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'satellite');
+ for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'satellite');
 });
 test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters',async()=>{
  const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
@@ -139,4 +139,16 @@ test('single ward opening zooms closer without changing the selected center',()=
  vm.createContext(ctx);vm.runInContext(functions('frameOpeningArea'),ctx);
  ctx.frameOpeningArea({latLngBounds:()=>({getCenter:()=>center})});
  assert.equal(view[0],center);assert.equal(view[1],15);
+});
+
+test('planning-only opening zooms closer at the same center while listings retain the area frame',()=>{
+ const center={lat:11.02,lng:106.6};let view;
+ const ctx={URLSearchParams,state:{initialBounds:[[11,106.5],[11.1,106.7]],initialRegion:{max_zoom:13},
+ entrySnapshot:{query:'city=THỦ DẦU MỘT'},listingsVisible:false,
+ map:{getBoundsZoom:()=>13,setView:(...args)=>view=args}},root:{}};
+ vm.createContext(ctx);vm.runInContext(functions('frameOpeningArea'),ctx);
+ const L={latLngBounds:()=>({getCenter:()=>center})};
+ ctx.frameOpeningArea(L);assert.equal(view[0],center);assert.equal(view[1],15);
+ ctx.state.listingsVisible=true;ctx.frameOpeningArea(L);assert.equal(view[1],13);
+ ctx.state.listingsVisible=false;ctx.state.sharedView={zoom:12};ctx.frameOpeningArea(L);assert.equal(view[1],13,'Shared view must not receive extra opening zoom');
 });

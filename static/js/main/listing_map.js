@@ -119,7 +119,7 @@
   }
 
   function defaultBaseLayer(theme) {
-    return "street";
+    return "satellite";
   }
 
   function sharedMapView(href) {
@@ -479,13 +479,16 @@
   function frameOpeningArea(L) {
     if (!state.map || !state.initialBounds || !L) return;
     if (state.planningTheme === 'land_use_2030' && state.initialPlanningArea && !state.initialPlanningArea.district && root.RadarPlanningArea) {
-      root.RadarPlanningArea.focus(state.map,L,state.initialPlanningArea); return;
+      root.RadarPlanningArea.focus(state.map,L,state.initialPlanningArea);
+      if (state.listingsVisible === false && !state.sharedView) state.map.setZoom(Math.min(14,state.map.getZoom()+1),{animate:false});
+      return;
     }
     var bounds = L.latLngBounds(state.initialBounds);
     var zoom = Math.min(state.initialRegion ? state.initialRegion.max_zoom : 16, state.map.getBoundsZoom(bounds, false, [50,50]));
     // A portrait phone should open near a selected ward, rather than shrinking it to show a whole city.
     var wards = new URLSearchParams(state.entrySnapshot && state.entrySnapshot.query || '').getAll('ward').filter(Boolean);
     if (!state.initialRegion && wards.length === 1) zoom = Math.min(17,Math.max(15,zoom+1));
+    if (state.listingsVisible === false && !state.sharedView) zoom = Math.min(16,Math.max(14,zoom+2));
     state.map.setView(bounds.getCenter(),zoom,{animate:false});
   }
 

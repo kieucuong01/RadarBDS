@@ -1458,4 +1458,10 @@ body.listing-map-open .mobile-bottom-nav {
 .listing-map-workspace #listingMapFocusLabel{display:none}
 .listing-map-workspace .listing-map-status{position:absolute;z-index:610;left:12px;bottom:64px;max-width:calc(100% - 80px);padding:4px 8px;border-radius:8px;pointer-events:none}
 @media(min-width:761px){.listing-map-workspace.has-group-panel:not(.listings-hidden) .listing-map-workspace-head{left:calc((100% - 360px)/2)}}
-@media(max-width:760px){.listing-map-workspace .listing-map-workspace-head{top:calc(4px + env(safe-area-inset-top));width:calc(100% - 16px);padding:3px 7px}}
+@media(max-width:760px){
+ .listing-map-workspace{--map-header-height:calc(48px + env(safe-area-inset-top,0px));--map-controls-top:calc(var(--map-header-height) + 56px)}
+ .listing-map-workspace .listing-map-workspace-head{top:0;left:0;transform:none;width:100%;height:var(--map-header-height);padding:calc(4px + env(safe-area-inset-top,0px)) 8px 4px;background:#fff;border:0;border-bottom:1px solid #d7e1dc;border-radius:0}
+ .listing-map-workspace .listing-map-status{bottom:calc(60px + env(safe-area-inset-bottom,0px));min-height:0;max-width:calc(100% - 80px);background:#fff;color:#365950}
+ .listing-map-workspace .listing-map-status:empty{display:none}
+ .listing-map-workspace .listing-map-status[aria-busy=true]{top:var(--map-controls-top);bottom:auto;left:64px;max-width:calc(100% - 128px);max-height:48px;white-space:normal}
+}

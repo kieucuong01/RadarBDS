@@ -474,6 +474,54 @@ def test_mobile_map_workspace_uses_filter_button_and_newest_deal_bottom_sheet():
     )
 
 
+@pytest.mark.parametrize("width,height,safe_top,safe_bottom", [(327, 709, 44, 34), (390, 844, 47, 34), (320, 568, 0, 0)])
+def test_mobile_controls_do_not_overlap_header_loading_or_layer_dock(width, height, safe_top, safe_bottom):
+    playwright = pytest.importorskip("playwright.sync_api")
+    css = "\n".join(Path(path).read_text(encoding="utf-8") for path in (
+        "static/css/main/listing_map.css", "static/css/main/planning_overlay.css", "static/css/main/planning_mobile.css"))
+    html = f"""<style>{css}</style><style>
+    *{{box-sizing:border-box}} body{{margin:0}}
+    .leaflet-top{{position:absolute;z-index:1000;top:0}} .leaflet-left{{left:0}} .leaflet-right{{right:0}}
+    .leaflet-control{{clear:both;position:relative;float:left;margin-left:8px}}
+    .leaflet-control-zoom button,.leaflet-control-layers-toggle{{display:block;width:44px;height:44px}}
+    .listing-map-workspace{{--map-header-height:{48 + safe_top}px}}
+    .listing-map-workspace .listing-map-workspace-head{{padding-top:{4 + safe_top}px}}
+    .listing-map-workspace .listing-map-status{{bottom:{60 + safe_bottom}px}}
+    .listing-map-workspace.is-focus-mode .planning-layer-dock{{bottom:{4 + safe_bottom}px}}
+    </style><section class="listing-map-workspace is-focus-mode">
+    <header class="listing-map-workspace-head"><h2>Radar BĐS Maps</h2><button>×</button></header>
+    <div class="listing-map-status" aria-busy="false">28 tin trong vùng nhìn · 18 vị trí</div>
+    <div class="listing-map-workspace-body"><div class="listing-map-canvas leaflet-container" style="position:relative">
+    <div class="leaflet-top leaflet-left"><div class="leaflet-control leaflet-control-zoom"><button>+</button><button>−</button></div></div>
+    <div class="leaflet-top leaflet-right"><div class="leaflet-control leaflet-control-layers"><a class="leaflet-control-layers-toggle">Nền</a></div></div>
+    <div class="planning-map-ui"><div class="planning-map-toolbar">
+    <button class="planning-filter-button">Bộ lọc</button><details class="planning-map-popover"><summary>Khu vực</summary></details>
+    <details class="planning-map-popover"><summary>Tờ/thửa</summary></details><details class="planning-map-popover"><summary>Lớp bản đồ</summary></details>
+    <button class="planning-listings-toggle">Ẩn tin đăng</button></div>
+    <div class="planning-map-activity">Đang tải bản đồ…</div>
+    <div class="planning-opacity-control"><button>+</button><input type="range"><output>65%</output><button>−</button></div>
+    <div class="planning-layer-dock"><button class="planning-layer-chip">Ranh thửa</button><button class="planning-layer-chip">QH SDĐ 2030</button><button class="planning-layer-chip">QH Chung</button></div>
+    </div></div></div></section>"""
+    with playwright.sync_playwright() as driver:
+        browser = driver.chromium.launch(executable_path=_chrome_executable(), headless=True)
+        page = browser.new_page(viewport={"width": width, "height": height})
+        page.set_content(html)
+        boxes = {name: page.locator(selector).bounding_box() for name, selector in {
+            "header": ".listing-map-workspace-head", "toolbar": ".planning-map-toolbar",
+            "zoom": ".leaflet-control-zoom", "base": ".leaflet-control-layers", "loading": ".planning-map-activity",
+            "opacity": ".planning-opacity-control", "count": ".listing-map-status", "dock": ".planning-layer-dock",
+        }.items()}
+        assert boxes["header"]["x"] == boxes["header"]["y"] == 0
+        assert boxes["header"]["width"] == width
+        assert page.locator(".listing-map-workspace-head").evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(255, 255, 255)"
+        for top, below in (("header", "toolbar"), ("toolbar", "zoom"), ("toolbar", "base"), ("toolbar", "loading"), ("base", "opacity"), ("count", "dock")):
+            assert boxes[top]["y"] + boxes[top]["height"] <= boxes[below]["y"], (top, below, boxes)
+        assert boxes["loading"]["x"] > boxes["zoom"]["x"] + boxes["zoom"]["width"]
+        assert boxes["loading"]["x"] + boxes["loading"]["width"] < boxes["base"]["x"]
+        assert boxes["opacity"]["y"] + boxes["opacity"]["height"] < boxes["dock"]["y"]
+        browser.close()
+
+
 def test_mobile_leaflet_canvas_keeps_full_remaining_viewport_height():
     playwright = pytest.importorskip("playwright.sync_api")
     css = Path("static/css/main/listing_map.css").read_text(encoding="utf-8")
