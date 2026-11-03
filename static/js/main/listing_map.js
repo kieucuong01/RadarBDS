@@ -12,7 +12,7 @@
 
   var VALID_MODES = ["signals", "all"];
   var VALID_BASE_LAYERS = ["street", "satellite"];
-  var VALID_PLANNING_THEMES = ["construction", "partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative", "administrative_legacy"];
+  var VALID_PLANNING_THEMES = ["qhctp_1125", "construction", "partition", "urban_general", "detailed", "land_use_2030", "urban_vision_100", "transport", "administrative", "administrative_legacy"];
   var DIRECTORY_BATCH_SIZE = 100;
   var DIRECTORY_FRAME_CHUNK_SIZE = 25;
   var MARKER_BATCH_SIZE = 200;
@@ -37,7 +37,7 @@
   var SHARE_EXCLUDED_PARAMS = [
     "page", "limit", "include_total", "sort_by", "sort_dir",
     "location_key", "lat", "lng", "accuracy", "zoom", "center",
-    "marker", "selected"
+    "marker", "selected", "locate"
   ];
   var leafletPromise = null;
   var bound = false;
@@ -616,6 +616,7 @@
       url.searchParams.delete("map");
       url.searchParams.delete("planning");
       url.searchParams.delete("region");
+      url.searchParams.delete("locate");
       if (new URLSearchParams(url.hash.slice(1)).has('map')) url.hash = '';
       return url.toString();
     } catch (error) {
@@ -1410,6 +1411,8 @@
 
   function setLocationButtonLoading(loading) {
     setMapTask('location',Boolean(loading),'Đang xác định vị trí…');
+    var headerButton=root.document&&root.document.getElementById('listingMapLocateArea');
+    if(headerButton){headerButton.disabled=Boolean(loading);headerButton.setAttribute('aria-busy',String(Boolean(loading)));}
     if (!state.locationButton) return;
     state.locationButton.disabled = Boolean(loading);
     state.locationButton.setAttribute(
@@ -1435,6 +1438,7 @@
 
   function clearUserLocation() {
     state.locationRequestId += 1;
+    if(state.locationAreaRequest){state.locationAreaRequest.abort();state.locationAreaRequest=null;}
     if (state.map && state.userLocationMarker) {
       state.map.removeLayer(state.userLocationMarker);
     }
@@ -1454,13 +1458,14 @@
     state.mapActionControl = null;
   }
 
-  function requestUserLocation() {
+  function requestUserLocation(selectArea) {
     var geolocation = root.navigator && root.navigator.geolocation;
     if (!geolocation || typeof geolocation.getCurrentPosition !== "function") {
       showMapFeedback("Trình duyệt không hỗ trợ định vị.", "error");
       return;
     }
     state.locationRequestId += 1;
+    if(state.locationAreaRequest)state.locationAreaRequest.abort();
     var requestId = state.locationRequestId;
     setLocationButtonLoading(true);
     showMapFeedback("Hãy chọn Cho phép nếu trình duyệt hỏi quyền truy cập vị trí.", "info");
@@ -1512,6 +1517,26 @@
         [latitude, longitude],
         locationTargetZoom(state.map.getZoom())
       );
+      if(selectArea===true){
+        var request=new root.AbortController();state.locationAreaRequest=request;
+        root.fetch('/api/planning/locate-area.json',{method:'POST',credentials:'omit',cache:'no-store',signal:request.signal,
+          headers:{'Content-Type':'application/json'},body:JSON.stringify({latitude:latitude,longitude:longitude})})
+          .then(function(response){if(!response.ok)throw new Error('Area lookup unavailable');return response.json();})
+          .then(function(data){
+            if(!isCurrentLocationCallback(requestId,state.locationRequestId,state.open,Boolean(state.map)))return;
+            if(data.matched&&typeof data.province==='string'&&typeof data.district==='string'){
+              state.map.fire('planning:locate-area',{province:data.province,district:data.district,position:[latitude,longitude]});
+              showMapFeedback('Đã chọn khu vực theo vị trí của bạn.','success');
+            }else showMapFeedback('Đã tới vị trí của bạn; chưa xác định được khu vực. Anh/chị có thể chọn khu vực thủ công.','info');
+          }).catch(function(error){
+            if(error.name!=='AbortError'&&isCurrentLocationCallback(requestId,state.locationRequestId,state.open,Boolean(state.map)))
+              showMapFeedback('Đã tới vị trí; chưa tra được khu vực. Vui lòng chọn khu vực thủ công.','error');
+          }).finally(function(){
+            if(state.locationAreaRequest===request)state.locationAreaRequest=null;
+            if(isCurrentLocationCallback(requestId,state.locationRequestId,state.open,Boolean(state.map)))setLocationButtonLoading(false);
+          });
+        return;
+      }
       setLocationButtonLoading(false);
       showMapFeedback("Đã xác định vị trí của bạn.", "success");
     }, function (error) {
@@ -1761,6 +1786,7 @@
         onThemeEnabled: function (theme) { state.planningTheme=theme; syncMapUrl(); },
         onThemeDisabled: function (theme) { if(state.planningTheme===theme){state.planningTheme=null;syncMapUrl();} },
         onAreaChange: function (area) {
+          if(!area.location){state.locationRequestId++;if(state.locationAreaRequest)state.locationAreaRequest.abort();setLocationButtonLoading(false);}
           state.initialPlanningArea=area;
           if (area.province !== 'binh-duong') setListingsVisible(false);
           syncMapUrl();
@@ -1769,6 +1795,7 @@
       });
     }
     syncMapUrl();
+    if(state.locateOnOpen){state.locateOnOpen=false;requestUserLocation(true);}
     root.setTimeout(function () {
       if (state.map) state.map.invalidateSize({pan: false});
     }, 0);
@@ -3420,6 +3447,7 @@
     if (typeof root.hideSidebarMobile === "function") root.hideSidebarMobile();
     state.open = true;
     state.sharedView = options.initialSharedOpen ? sharedMapView(root.location.href) : null;
+    state.locateOnOpen = options.locateArea === true && !state.sharedView && VALID_PLANNING_THEMES.indexOf(options.planningTheme)>=0;
     if (state.sharedView && VALID_PLANNING_THEMES.indexOf(state.sharedView.theme)>=0) options.planningTheme=state.sharedView.theme;
     var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
     state.planningTheme = explicitPlanning ? options.planningTheme : "land_use_2030";
@@ -3760,6 +3788,7 @@
   }
 
   return {
+    locateArea: function(){requestUserLocation(true);},
     observeMapSize: observeMapSize,
     normalizeMode: normalizeMode,
     buildSummaryUrl: buildSummaryUrl,

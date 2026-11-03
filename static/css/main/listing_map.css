@@ -1477,3 +1477,9 @@ body.listing-map-open .mobile-bottom-nav {
 .listing-map-area-host .planning-map-form{left:50%;top:calc(100% + 6px);transform:translateX(-50%);text-align:left;max-width:calc(100vw - 24px);font:14px/1.45 Inter,system-ui,sans-serif}
 .listing-map-area-host :focus-visible{outline:3px solid #16846b;outline-offset:2px}
 @media(max-width:760px){.listing-map-workspace .listing-map-workspace-head h2{font-size:12px}}
+
+.listing-map-area-control{display:flex;align-items:center;gap:4px;min-width:0}
+.listing-map-area-control .listing-map-area-host{flex:1}
+.listing-map-locate-area{display:flex;align-items:center;justify-content:center;flex:none;width:32px;height:32px;padding:0;border:1px solid #d7e1dc;border-radius:6px;background:#fff;color:#11755b;cursor:pointer}
+.listing-map-locate-area[aria-busy=true]{opacity:.6;cursor:progress}
+.listing-map-locate-area:focus-visible{outline:3px solid #16846b;outline-offset:2px}

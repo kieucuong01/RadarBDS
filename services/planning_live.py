@@ -112,6 +112,18 @@ def install_live(app,site):
     @app.get('/api/planning/catalog.json')
     def planning_live_catalog():return jsonify(layers=layers)
 
+    @app.post('/api/planning/locate-area.json')
+    def planning_locate_area():
+        if request.content_length is None or request.content_length>1024:
+            return jsonify(error='Tọa độ không hợp lệ.'),400
+        data=request.get_json(silent=True)
+        if (not isinstance(data,dict) or set(data)!={'latitude','longitude'}
+            or any(type(data[k]) not in (int,float) or not -180<=data[k]<=180 for k in data)
+            or not -85<=data['latitude']<=85 or not -180<=data['longitude']<=180):
+            return jsonify(error='Tọa độ không hợp lệ.'),400
+        from services.planning_area_location import resolve_area
+        return jsonify(resolve_area(site,data['latitude'],data['longitude']))
+
     limiter=PlanningLimiter()
     @app.before_request
     def limit_planning():

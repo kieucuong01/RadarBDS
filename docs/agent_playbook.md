@@ -84,3 +84,13 @@ A targeted local pass does not establish that the full GitHub workflow passed.
 - Keep long history in `SUMMARY_HISTORY.md`.
 - Prefer linking to `docs/*.md` over duplicating details.
 - Remove stale dates/counts unless they are part of a historical note.
+
+
+## User release preference — 2026-11-03
+
+For a substantial completed task, the user authorizes agents to commit, push and
+deploy proactively after required checks and exact-SHA CI success. For small,
+low-impact UI changes, commit the scoped change and wait for the user's grouped
+deploy request. An explicit deploy instruction overrides that small-task default.
+Preserve unrelated local/VPS changes and distinguish local, CI, deployed and live
+browser evidence in the release report.

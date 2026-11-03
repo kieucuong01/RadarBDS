@@ -68,8 +68,8 @@
     var launchForm=hub.querySelector('[data-planning-launch-form]');
     if(launchForm) {
       var city=launchForm.querySelector('[name=city]'),theme=launchForm.querySelector('[name=planning]');
-      function updateMapLink() {
-        hub.querySelectorAll('[data-planning-open-map]').forEach(function(link){link.href=mapHref(city.value,theme.value);});
+      function updateMapLink(event) {
+        hub.querySelectorAll('[data-planning-open-map]').forEach(function(link){link.href=mapHref(city.value,theme.value)+(event?'':'&locate=1');});
       }
       launchForm.addEventListener('change',updateMapLink);updateMapLink();
     }

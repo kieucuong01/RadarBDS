@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=header-area-20261103"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=locate-area-20261103"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=header-area-20261103"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=locate-area-20261103"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -126,7 +126,7 @@
   <script>window.RADAR_PLANNING_PILOT = {{ (planning_pilot_enabled | default(false)) | tojson }}; window.RADAR_PLANNING_CONFIG = {{ (planning_overlay_config | default(none)) | tojson }}; window.RADAR_PLANNING_REGIONS = {{ (planning_navigation_regions | default([])) | tojson }};</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_overlay.css') }}?v=compact-dock-20261103">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_mobile.css') }}?v=compact-dock-20261103">
-  <script defer src="{{ url_for('static', filename='js/main/planning_area.js') }}?v=header-area-20261103"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_area.js') }}?v=locate-area-20261103"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_measure.js') }}?v=corner-saved-20261103"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_legend.js') }}?v=planning-tools-20261029"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101"></script>
@@ -135,7 +135,7 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_administrative.js') }}?v=parcel-ux-20261031b"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_reference_branding.js') }}?v=national-branding-20261031"></script>
   <script defer src="{{ url_for('static', filename='js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=landuse-no-brand-20261103"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_overlay.js') }}?v=locate-area-20261103"></script>
   {% if parcel_pilot_enabled | default(false) %}
   <script>window.RADAR_PARCEL_PILOT = true;</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main/planning_parcels.css') }}?v=parcel-label-compact-20261101">
@@ -393,7 +393,7 @@
         <strong id="mobileActiveTabTitle">{% if saved_page %}BDS đã lưu{% else %}Săn Deal{% endif %}</strong>
       </div>
       <nav class="header-nav" aria-label="Chức năng Radar BDS">
-        <a class="nav-link" href="/?tab=all&amp;map=1&amp;planning=land_use_2030" data-dashboard-tool="planning" data-tool-surface="desktop_navigation">Bản đồ quy hoạch</a>
+        <a class="nav-link" href="/?tab=all&amp;map=1&amp;planning=land_use_2030&amp;locate=1" data-dashboard-tool="planning" data-tool-surface="desktop_navigation">Bản đồ quy hoạch</a>
         <div class="deal-navigation">
           <button type="button" class="nav-link active" data-tab-target="signals" aria-controls="tab-signals" aria-pressed="true" onclick="switchTab('signals', this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -575,7 +575,7 @@
         <div class="product-discovery-body">
           <h2>Xem quy hoạch, so giá và tìm bất động sản đáng kiểm tra</h2>
           <div class="product-discovery-grid">
-            <a href="/?tab=all&amp;map=1&amp;planning=land_use_2030" data-dashboard-tool="planning" data-tool-surface="homepage_discovery"><strong>Bản đồ quy hoạch <span aria-hidden="true">↗</span></strong><p>Xem lớp quy hoạch, tra vị trí và tờ/thửa nơi có dữ liệu.</p><small>Độ phủ thay đổi theo khu vực và từng lớp bản đồ</small><b>Mở bản đồ</b></a>
+            <a href="/?tab=all&amp;map=1&amp;planning=land_use_2030&amp;locate=1" data-dashboard-tool="planning" data-tool-surface="homepage_discovery"><strong>Bản đồ quy hoạch <span aria-hidden="true">↗</span></strong><p>Xem lớp quy hoạch, tra vị trí và tờ/thửa nơi có dữ liệu.</p><small>Độ phủ thay đổi theo khu vực và từng lớp bản đồ</small><b>Mở bản đồ</b></a>
             <a href="/?tab=signals" data-dashboard-tool="signals" data-tool-surface="homepage_discovery"><strong>Săn Deal BĐS <span aria-hidden="true">↗</span></strong><p>Lọc giá rao thấp hơn mức ước tính, xem giảm giá và cảnh báo nguồn.</p><small>Dữ liệu tin rao tập trung tại Bình Dương cũ</small><b>Tìm deal theo khu vực</b></a>
             <a href="/dinh-gia-bds" data-dashboard-tool="valuation" data-tool-surface="homepage_discovery"><strong>Định giá đất <span aria-hidden="true">↗</span></strong><p>Nhập đặc điểm lô đất để xem giá tham khảo và mẫu so sánh.</p><small>Thủ Dầu Một, Bến Cát và các khu Mỹ Phước</small><b>Định giá lô đất</b></a>
             <a href="/bang-gia-dat-tphcm" data-dashboard-tool="land_price" data-tool-surface="homepage_discovery"><strong>Bảng giá đất Nhà nước <span aria-hidden="true">↗</span></strong><p>Tra theo tuyến đường, phường/xã và văn bản đang áp dụng.</p><small>Bảng giá TP.HCM · có nguồn và kỳ hiệu lực</small><b>Tra bảng giá đất</b></a>
@@ -1572,7 +1572,7 @@
           <strong>Bảng giá đất Nhà nước</strong>
           <span>Xem giá đất nhà nước theo tuyến đường/khu vực</span>
         </a>
-        <a class="tools-menu-item" href="/?tab=all&amp;map=1&amp;planning=land_use_2030" data-dashboard-tool="planning" data-tool-surface="mobile_tools_sheet">
+        <a class="tools-menu-item" href="/?tab=all&amp;map=1&amp;planning=land_use_2030&amp;locate=1" data-dashboard-tool="planning" data-tool-surface="mobile_tools_sheet">
           <strong>Quy hoạch trên Maps</strong>
           <span>Bật lớp bản đồ, tra tờ/thửa và đo ranh</span>
         </a>
@@ -1592,7 +1592,7 @@
   <div class="user-menu-backdrop" id="userMenuBackdrop" hidden aria-hidden="true" onclick="RadarAccountMenu.close()"></div>
   <script src="{{ url_for('static', filename='js/main/account_menu.js') }}?v=account-menu-20261020"></script>
   {% endif %}
-  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=maps-defaults-20261103"></script>
+  <script src="{{ url_for('static', filename='js/main/core.js') }}?v=locate-area-20261103"></script>
   <script src="{{ url_for('static', filename='js/main/filter_runtime.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=listings-perf-20261021"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
@@ -1602,7 +1602,7 @@
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-alerts-20261005"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=maps-controls-20261028"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=maps-compact-share-20261102c"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=locate-area-20261103"></script>
 </body>
 
 </html>

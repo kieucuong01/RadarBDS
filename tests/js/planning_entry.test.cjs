@@ -27,7 +27,7 @@ test('Tools opens Maps with existing filters and chosen layer, from either listi
   await vm.runInContext('openPlanningMapFromTools()',ctx);
   const params=new URLSearchParams(captured.snapshot.query);
   for(const [key,value] of new URLSearchParams(ctx.currentFilters))if(key!=='page')assert.equal(params.get(key),value);
-  assert.equal(params.has('page'),false);assert.equal(captured.options.planningTheme,'land_use_2030');
+  assert.equal(params.has('page'),false);assert.equal(captured.options.planningTheme,'land_use_2030');assert.equal(captured.options.locateArea,true);
   assert.equal(captured.snapshot.mode,initialTab==='signals'?'signals':'all');
   assert.equal(menu.open,false);assert.equal(closed,1);assert.equal(switched,initialTab==='market'?1:0);
  }

@@ -40,6 +40,7 @@ test('Maps defaults to land use 2030 while explicit planning entries retain thei
    DIRECTORY_BATCH_SIZE:100,startMapLoad:async()=>{}};
   ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('open'),ctx);
   await ctx.open({mode:'all',query:'price_max=3'},{planningTheme:theme,planningRegion:'dong-nai-expanded'});
+  assert.equal(ctx.state.locateOnOpen,false,'Listing/deal Maps never request location automatically');
   const planning=ctx.VALID_PLANNING_THEMES.includes(theme);
   assert.equal(ctx.state.listingsVisible,!planning);assert.equal(focus,true);
   assert.equal(ctx.state.planningTheme,planning?theme:'land_use_2030');

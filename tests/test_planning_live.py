@@ -77,7 +77,7 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert next(a for a in data['layers'] if a['id']=='old-gis')['inspection_only']
     assert next(a for a in data['layers'] if a['id']=='drawing')['source']=='document'
     native=[a for a in data['layers'] if a.get('manifest',{}).get('source_kind')=='official_gis']
-    assert len(native)==3
+    assert len(native)==4
     assert all(a['manifest']['tile_template'].startswith('/api/planning/gis-tiles/') for a in native)
     reference=[a for a in data['layers'] if a.get('theme')=='land_use_2030']
     partitions=[a for a in data['layers'] if a.get('theme')=='partition' and a.get('source')=='guland']

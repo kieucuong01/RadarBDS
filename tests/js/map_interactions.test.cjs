@@ -25,7 +25,7 @@ const locationContext={state:{locationRequestId:0,open:true,map:{}},
   setLocationButtonLoading:v=>{loading=v;},showMapFeedback:message=>{feedback=message;},
   isCurrentLocationCallback:mapApi.isCurrentLocationCallback,geolocationErrorMessage:mapApi.geolocationErrorMessage};
 vm.createContext(locationContext);
-vm.runInContext(source.slice(source.indexOf('  function requestUserLocation()'),source.indexOf('  function copyShareUrl('))+'\nrequestUserLocation();',locationContext);
+vm.runInContext(source.slice(source.indexOf('  function requestUserLocation('),source.indexOf('  function copyShareUrl('))+'\nrequestUserLocation();',locationContext);
 assert.equal(requested,1);assert.equal(loading,true);assert.match(feedback,/Cho phép/);
 denied({code:1});assert.equal(loading,false);assert.match(feedback,/cài đặt trang web/);
 

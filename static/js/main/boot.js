@@ -78,6 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
   searchParams.delete('map');
   const initialPlanningTheme = searchParams.get('planning');
   searchParams.delete('planning');
+  const initialLocateArea = searchParams.get('locate') === '1' && Boolean(initialPlanningTheme);
+  searchParams.delete('locate');
   const initialPlanningRegion = searchParams.get('region');
   searchParams.delete('region');
   const initialTab = searchParams.get('tab') || (shouldOpenListingMap ? 'signals' : window.location.hash.replace(/^#/, ''));
@@ -207,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (shouldOpenListingMap && ['signals', 'all'].includes(initialTab)) {
     window.setTimeout(async () => {
       if (initialTab !== 'signals') await switchTab(initialTab, null);
-      await window.openListingMap({ initialSharedOpen: true, planningTheme: initialPlanningTheme, planningRegion: initialPlanningRegion });
+      await window.openListingMap({ initialSharedOpen: true, planningTheme: initialPlanningTheme, planningRegion: initialPlanningRegion, locateArea: initialLocateArea });
     }, 0);
   }
   if (landingIntent === 'watchlist' && window.RadarAuth && typeof window.RadarAuth.openWatchlistModal === 'function') {

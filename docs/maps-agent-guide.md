@@ -74,15 +74,14 @@ dashboard; không có route công khai `/maps` ở baseline này.
 
 ## 4. Hành vi hiện hành phải giữ
 
-- Mở Maps thường: fullscreen/focus, nền **đường phố**, theme **QH sử dụng đất 2030 65%**, ranh thửa tắt mặc định.
+- Mở Maps thường: fullscreen/focus, nền **đường phố**, theme **QH sử dụng đất 2030 60%**, ranh thửa tắt mặc định.
   Entry chọn theme cụ thể giữ theme đó; liên kết chia sẻ giữ nền/zoom cụ thể.
   Entry quy hoạch ẩn tin đăng mở gần hơn quanh cùng tâm; chế độ hiện tin giữ khung địa bàn.
   Bố cục mobile theo [mốc safe-area dùng chung](maps-mobile-safe-layout-2026-11-03.md).
 - Mở quy hoạch từ Công cụ/hub: ẩn tin đăng. Maps thường hiện tin trong Bình Dương;
   chọn tỉnh khác ngoài vùng tin rao hiện có thì tự ẩn và hủy request tin. Nút Hiện tin đăng vẫn cho phép bật thủ công.
   Nút Ẩn/Hiện tin đăng độc lập với fullscreen; khi ẩn, dừng request listings.
-- Opacity độc lập theo theme và giữ khi tắt/bật trong phiên: phân khu 50%,
-  SDĐ 2030 65%, giao thông/địa giới 100%, các theme còn lại 35%.
+- Opacity độc lập theo theme và giữ khi tắt/bật trong phiên: tất cả lớp 100%, riêng SDĐ 2030 60%.
 - Khu vực quy hoạch dùng **tỉnh/quận/huyện cũ**; mặc định bộ chọn khu vực là
   Bình Dương / Thủ Dầu Một, nhưng vùng mở Maps ưu tiên bộ lọc/entry cụ thể.
   Không ép người đang lọc Tân An về một tỉnh khác hoặc toàn tỉnh.
@@ -145,7 +144,7 @@ QH chung bổ sung ngoài vùng GIS: [nguồn, phạm vi và kiểm chứng](pla
 6 nguồn Guland được kiểm riêng, dùng cùng theme urban_general; giữ GIS/PDF hiện có.
 
 QH xây dựng riêng: [nguồn, độ phủ và kiểm chứng](planning_sources/construction-reference.md).
-32 lớp tỉnh cũ có mẫu ảnh; không đồng nghĩa phủ kín tỉnh. Mặc định tắt, opacity35%;
+32 lớp tỉnh cũ có mẫu ảnh; không đồng nghĩa phủ kín tỉnh. Mặc định tắt, opacity100%;
 không ghép QH khác vào phân khu.
 
 - `planning_overlay.js` điều phối, kiểm manifest/catalogue, bật nguồn GIS hoặc
@@ -519,3 +518,13 @@ Bỏ slot Khu vực trong toolbar khi có header host. Popup vẫn dùng cùng f
 đóng ngoài theo cơ chế sẵn có; dispose xóa nội dung host để mở lại không
 nhân đôi listener/menu. Fallback khu vực của parcel vẫn ẩn khi đã có selector.
 Chrome1100px/390px kiểm đổi tỉnh, cập nhật header và click ngoài; không page error.
+
+
+2026-11-03: ẩn lựa chọn QH Chi tiết ở dock/menu/rail; giữ adapter và lookup để
+không phá link/API cũ. Mặc định mọi theme100%, SDĐ2030 60%, vẫn giữ opacity
+người dùng chỉnh trong phiên.
+[QHCTP (QĐ 1125)](planning_sources/qhctp-1125.md) đã chạy local với ảnh GIS thật:
+theme qhctp_1125, chỉ HCM cũ, nhóm SDD2–18 của TongHopChuyenDe_QHCTPHCM.
+Ảnh256px qua gateway, cùng cache/bounds/scheduler; không tải vector toàn thành phố.
+
+Định vị và phân biệt lối vào Quy hoạch/Tin rao/Săn Deal: [maps-location-entry.md](planning_sources/maps-location-entry.md).

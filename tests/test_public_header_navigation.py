@@ -106,7 +106,7 @@ def test_dashboard_tools_link_to_new_public_hubs_without_replacing_task_tabs():
     assert 'data-tab-target="signals"' in markup
     assert 'data-tab-target="all"' in markup
     for path in (
-        "/?tab=all&amp;map=1&amp;planning=land_use_2030",
+        "/?tab=all&amp;map=1&amp;planning=land_use_2030&amp;locate=1",
         "/tin-tuc",
         "/bao-cao",
     ):
@@ -238,7 +238,7 @@ def test_four_product_entries_render_on_every_public_surface(path):
     assert re.findall(r"<span>([^<]+)</span>", mobile) == [
         "Quy hoạch", "Săn Deal", "Định giá", "Bảng giá", "Thêm",
     ]
-    for href in ("/?tab=all&amp;map=1&amp;planning=land_use_2030", "/dinh-gia-bds", "/bang-gia-dat-tphcm"):
+    for href in ("/?tab=all&amp;map=1&amp;planning=land_use_2030&amp;locate=1", "/dinh-gia-bds", "/bang-gia-dat-tphcm"):
         assert f'href="{href}"' in mobile
 
     class IdCollector(HTMLParser):

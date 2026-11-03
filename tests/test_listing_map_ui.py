@@ -407,13 +407,13 @@ def test_listing_map_assets_share_cache_version():
     assert "listing-map-singleton-modal-20260814" not in template
     assert "listing-map-touch-target-20260814" not in template
     assert "listing-map-marker-hierarchy-20260814" not in template
-    assert "js/main/core.js') }}?v=maps-defaults-20261103" in template
+    assert "js/main/core.js') }}?v=locate-area-20261103" in template
     assert "js/main/filters.js') }}?v=listings-perf-20261021" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
-    assert "js/main/boot.js') }}?v=maps-compact-share-20261102c" in template
+    assert "js/main/boot.js') }}?v=locate-area-20261103" in template
     assert "js/main/planning_parcels.js') }}?v=maps-defaults-20261103" in template
     assert "js/main/planning_corner_saved.js') }}?v=corner-saved-20261103" in template
-    assert "js/main/planning_overlay.js') }}?v=landuse-no-brand-20261103" in template
+    assert "js/main/planning_overlay.js') }}?v=locate-area-20261103" in template
     assert "js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template

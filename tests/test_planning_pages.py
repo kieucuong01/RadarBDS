@@ -254,7 +254,7 @@ def test_planning_pages_use_shareable_og_image_and_current_cache_keys():
             '<meta property="og:image" '
             'content="https://radarbds.vn/static/images/seo/radarbds-og.png">'
         ) in html
-        assert "maps-defaults-20261103" in html or "planning-map-20260728-1" in html
+        assert "locate-area-20261103" in html or "planning-map-20260728-1" in html
 
 
 def test_planning_geojson_files_are_valid_feature_collections():

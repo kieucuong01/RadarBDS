@@ -39,6 +39,42 @@ def test_native_xyz_grid_aligns_neighbors_and_bounds_are_validated():
         with pytest.raises(ValueError): tile_bounds(*args)
 
 
+@pytest.mark.parametrize('wrong_extent',[False,True])
+def test_qd1125_exports_only_verified_landuse_group_and_exact_extent(tmp_path,wrong_extent):
+    from services.planning_tiles import NativeGISTiles,tile_bounds
+    cache=NativeGISTiles(tmp_path);cache.verified=True
+    z,x,y=tan_an_tile();bbox=tile_bounds(z,x,y);calls=[]
+    class Reply:
+        status_code=200
+        content=png()
+        def raise_for_status(self):pass
+        def json(self):
+            extent=dict(zip(('xmin','ymin','xmax','ymax'),bbox))
+            extent['spatialReference']={'wkid':102100,'latestWkid':3857}
+            if wrong_extent:extent['xmin']+=1
+            return dict(width=256,height=256,extent=extent)
+    class Session:
+        def get(self,url,params,timeout):calls.append((url,dict(params)));return Reply()
+    cache.qd1125.session=Session();cache.qd1125.expires=math.inf
+    if wrong_extent:
+        with pytest.raises(ValueError,match='extent'):cache.fetch('qhctp_1125',z,x,y)
+        assert len(calls)==1
+    else:
+        assert cache.fetch('qhctp_1125',z,x,y)==png()
+        assert len(calls)==2
+        assert calls[1][1]['f']=='image'
+    assert calls[0][0].endswith('/arcgis/rest/services/HCM/TongHopChuyenDe_QHCTPHCM/MapServer/export')
+    assert calls[0][1]['layers']=='show:'+','.join(map(str,range(2,19)))
+
+
+def test_qd1125_catalog_covers_old_hcm_only_and_rejects_outside_window(tmp_path):
+    from services.planning_tiles import NativeGISTiles,native_layers
+    layer=next(x for x in native_layers() if x['theme']=='qhctp_1125')
+    assert layer['coverage_provinces']==['hcm'] and layer['area_id']=='hcm-legacy'
+    assert 'source_tiles' not in layer['manifest']
+    with pytest.raises(LookupError):NativeGISTiles(tmp_path).get('qhctp_1125',12,3261,1000)
+
+
 def test_cached_gateway_keeps_exact_source_bytes_and_is_private(tmp_path, monkeypatch):
     from services.planning_tiles import NativeGISTiles, install_tiles
     from scripts.run_planning_pilot import install_pilot
@@ -64,7 +100,7 @@ def test_cached_gateway_keeps_exact_source_bytes_and_is_private(tmp_path, monkey
     assert client.get('/local-planning/gis-tiles/unknown/19/1/1.png').status_code == 400
     catalog=client.get('/local-planning/catalog.json').json
     native=[x for x in catalog['layers'] if x.get('manifest',{}).get('source_kind')=='official_gis']
-    assert {x['theme'] for x in native} == {'partition','urban_general','detailed'}
+    assert {x['theme'] for x in native} == {'partition','urban_general','detailed','qhctp_1125'}
     assert all(x['manifest']['tile_size']==256 and x['source']=='gis' for x in native)
 
 

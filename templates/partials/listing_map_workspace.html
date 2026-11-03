@@ -13,7 +13,17 @@
         <span class="listing-map-precision-ward">Theo phường</span>
       </div>
     </div>
-    <div id="listingMapAreaHost" class="listing-map-area-host" aria-label="Chọn khu vực bản đồ"></div>
+    <div class="listing-map-area-control">
+      <button id="listingMapLocateArea" class="listing-map-locate-area" type="button"
+        aria-label="Chọn khu vực theo vị trí của tôi" aria-busy="false"
+        title="Chọn khu vực theo vị trí của tôi" onclick="RadarListingMap.locateArea()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2.5"></circle>
+          <path d="M12 1v4m0 14v4M1 12h4m14 0h4"></path>
+        </svg>
+      </button>
+      <div id="listingMapAreaHost" class="listing-map-area-host" aria-label="Chọn khu vực bản đồ"></div>
+    </div>
     <div class="listing-map-head-actions">
       <button id="listingMapFocusButton" type="button"
         class="listing-map-focus-button" aria-pressed="false"

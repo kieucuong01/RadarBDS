@@ -52,9 +52,16 @@
     node('p',form,'QH SDĐ 2030 chỉ tải tỉnh đang chọn. Khung nhìn huyện là tham khảo; bộ lọc tin rao được giữ riêng.');
     var source=node('a',form,'Khung huyện: GIS TP.HCM · geoBoundaries / OCHA ROAP · CC BY 3.0 IGO');
     source.href='https://www.geoboundaries.org/api/current/gbOpen/VNM/ADM2/';source.target='_blank';source.rel='noopener noreferrer';
-    form.addEventListener('submit',function(e){e.preventDefault();var p=selected(),d=p.districts.find(function(item){return item.id===district.value;});
+    function apply(position){var p=selected(),d=p.districts.find(function(item){return item.id===district.value;});
       selection={province:p.id,district:d?d.id:''};title();
-      onChange(p,{province:p.id,district:d?d.id:'',bounds:d?d.bounds:(p.focus_bounds||p.bounds),max_zoom:13,min_zoom:p.min_zoom||8});panel.open=false;});
+      var area={province:p.id,district:d?d.id:'',bounds:d?d.bounds:(p.focus_bounds||p.bounds),max_zoom:13,min_zoom:p.min_zoom||8};
+      if(position)area.location=position;
+      onChange(p,area);panel.open=false;}
+    form.addEventListener('submit',function(e){e.preventDefault();apply();});
+    panel.locateArea=function(area){
+      if(!provinces.some(function(p){return p.id===area.province;}))return;
+      province.value=area.province;fillDistricts(area.district);apply(area.position);
+    };
     return panel;
   }
   return {initial:initial,mount:mount,focus:focus,coversProvince:coversProvince};

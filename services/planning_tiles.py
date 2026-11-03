@@ -19,18 +19,19 @@ from services.planning_parcels import API, SOURCE
 from config.planning_regions import PLANNING_BOUNDS, PLANNING_REGIONS
 
 SERVICES = {'partition':'SuDungDat_QHPK_HCM_V2','urban_general':'SuDungDat_QHC_HCM',
-            'detailed':'SuDungDat_QHCT_HCM'}
+            'detailed':'SuDungDat_QHCT_HCM','qhctp_1125':'TongHopChuyenDe_QHCTPHCM'}
 PARTITION_SUPPLEMENT = 'QHXD_SDD_2025_QHPK_V3'
 SUPPLEMENTS = {'partition':PARTITION_SUPPLEMENT,'urban_general':'QHXD_SDD_2025_QHCDT',
-               'detailed':'QHXD_SDD_2025_QHCT'}
-METADATA_SERVICES = {**{theme:service for theme,service in SERVICES.items() if theme!='detailed'},
-                     **{theme+'_supplement':service for theme,service in SUPPLEMENTS.items() if theme!='detailed'}}
+               'detailed':'QHXD_SDD_2025_QHCT','qhctp_1125':SERVICES['qhctp_1125']}
+METADATA_SERVICES = {**{theme:service for theme,service in SERVICES.items() if theme not in ('detailed','qhctp_1125')},
+                     **{theme+'_supplement':service for theme,service in SUPPLEMENTS.items() if theme not in ('detailed','qhctp_1125')}}
 DETAILED_METADATA_SERVICES = {'detailed':SERVICES['detailed'],
                               'detailed_supplement':SUPPLEMENTS['detailed']}
 PACKAGED_GRID_DIR = Path(__file__).resolve().parents[1]/'config/planning_gis_metadata'
 ORIGIN = math.pi*6378137
 RESOLUTION = 2*ORIGIN/256
 HEADERS = {'User-Agent':'Mozilla/5.0','Referer':SOURCE,'Origin':'https://gisxaydung.tphcm.gov.vn'}
+QD1125_BOUNDS = [[10.3,106.3],[11.2,107.05]]
 
 
 def tile_bounds(z,x,y):
@@ -75,6 +76,11 @@ class NativeGISTiles:
             session=requests.Session();session.trust_env=False;session.headers.update(HEADERS);self.sessions.put(session)
         self.flights = {}
         self.verified = False
+        from services.planning_parcels import PublicGIS
+        self.qd1125 = PublicGIS()
+        self.qd1125_sessions = queue.LifoQueue(maxsize=4)
+        for _ in range(3):self.qd1125_sessions.put(PublicGIS())
+        self.qd1125_sessions.put(self.qd1125)
         metadata_directory = Path(metadata_directory) if metadata_directory else self.directory/'metadata'
         try:
             for theme,service in {**METADATA_SERVICES,**DETAILED_METADATA_SERVICES}.items():
@@ -105,6 +111,8 @@ class NativeGISTiles:
     def fetch(self,theme,z,x,y):
         if not self.verified:
             raise ValueError('Native GIS metadata has not been verified')
+        if theme=='qhctp_1125':
+            return self.fetch_qd1125(z,x,y)
         session=self.sessions.get(timeout=3)
         try:
             primary = self._fetch_service(session,SERVICES[theme],z,x,y)
@@ -124,6 +132,33 @@ class NativeGISTiles:
             return output.getvalue()
         finally:
             self.sessions.put(session)
+
+    def fetch_qd1125(self,z,x,y):
+        try:client=self.qd1125_sessions.get(timeout=3)
+        except queue.Empty:
+            raise TimeoutError('QHCTP GIS is busy')
+        try:
+            if client.expires<=time.time():client.guest()
+            bbox=tile_bounds(z,x,y)
+            params=dict(bbox=','.join(map(str,bbox)),bboxSR=3857,imageSR=3857,
+                        size='256,256',format='png32',transparent='true',
+                        layers='show:'+','.join(map(str,range(2,19))),f='json')
+            url=API+'/arcgis/rest/services/HCM/'+SERVICES['qhctp_1125']+'/MapServer/export'
+            meta=client.session.get(url,params=params,timeout=(4,12))
+            if meta.status_code==401:client.expires=0
+            meta.raise_for_status();data=meta.json();extent=data.get('extent',{})
+            if data.get('error',{}).get('code') in (401,498,499):client.expires=0
+            if (data.get('width')!=256 or data.get('height')!=256
+                or extent.get('spatialReference',{}).get('latestWkid',extent.get('spatialReference',{}).get('wkid'))!=3857
+                or any(abs(extent.get(k,math.inf)-v)>.00001 for k,v in zip(('xmin','ymin','xmax','ymax'),bbox))):
+                raise ValueError('QHCTP export changed requested extent')
+            params['f']='image'
+            response=client.session.get(url,params=params,timeout=(4,12))
+            if response.status_code==401:client.expires=0
+            response.raise_for_status();validate_png(response.content)
+            return response.content
+        finally:
+            self.qd1125_sessions.put(client)
 
     @staticmethod
     def _public_get(session,url,params=None):
@@ -164,10 +199,11 @@ class NativeGISTiles:
         west,south,east,north = tile_bounds(z,x,y)
         lon1,lon2 = math.degrees(west/6378137),math.degrees(east/6378137)
         lat1,lat2 = math.degrees(math.atan(math.sinh(south/6378137))),math.degrees(math.atan(math.sinh(north/6378137)))
-        (min_lat,min_lon),(max_lat,max_lon) = PLANNING_BOUNDS[theme]
+        (min_lat,min_lon),(max_lat,max_lon) = QD1125_BOUNDS if theme=='qhctp_1125' else PLANNING_BOUNDS[theme]
         if lon2 < min_lon or lon1 > max_lon or lat2 < min_lat or lat1 > max_lat:
             raise LookupError('Tile outside supported area')
         source_key = SERVICES[theme]+'-'+SUPPLEMENTS[theme]
+        if theme=='qhctp_1125':source_key+='-sdd-2-18'
         path = self.directory/theme/source_key/str(z)/str(x)/f'{y}.png'
         def read():
             try:
@@ -202,8 +238,9 @@ class NativeGISTiles:
             path.parent.mkdir(parents=True,exist_ok=True)
             with self.write_lock():
                 temporary = path.with_name(path.name+f'.{os.getpid()}.{threading.get_ident()}.download');temporary.write_bytes(payload);temporary.replace(path)
-                audit=json.dumps({'source':API+'/arcm/rest/services/HCM/'+SERVICES[theme]+'/MapServer',
-                    'supplement_source':API+'/arcm/rest/services/HCM/'+SUPPLEMENTS[theme]+'/MapServer',
+                audit=json.dumps({'source':API+('/arcgis' if theme=='qhctp_1125' else '/arcm')+'/rest/services/HCM/'+SERVICES[theme]+'/MapServer',
+                    'supplement_source':None if theme=='qhctp_1125' else API+'/arcm/rest/services/HCM/'+SUPPLEMENTS[theme]+'/MapServer',
+                    'render_method':'export-sdd-2-18' if theme=='qhctp_1125' else 'native-tile',
                     'z':z,'x':x,'y':y,'size':[256,256],'bounds_3857':tile_bounds(z,x,y),
                     'sha256':sha256(payload).hexdigest(),'captured_at':time.time(),'resampled':False})
                 audit_temp=temporary.with_suffix('.json.download');audit_temp.write_text(audit,encoding='utf8');audit_temp.replace(path.with_suffix('.json'))
@@ -235,9 +272,9 @@ def native_layers(prefix='/local-planning/gis-tiles'):
         area_id = 'hcm-expanded'
         identifier='hcm-expanded-'+theme.replace('_','-')+'-native-gis'
         title = {'partition':'Phân khu và quy hoạch chung xã','urban_general':'Quy hoạch chung đô thị',
-                 'detailed':'Quy hoạch chi tiết'}[theme]
+                 'detailed':'Quy hoạch chi tiết','qhctp_1125':'QHCTP (QĐ 1125)'}[theme]
         manifest={'id':identifier,'status':'reference_overlay' if prefix.startswith('/api/') else 'local_experiment','title':title+' · '+region,
-                  'bounds':PLANNING_BOUNDS[theme],'source_kind':'official_gis',
+                  'bounds':QD1125_BOUNDS if theme=='qhctp_1125' else PLANNING_BOUNDS[theme],'source_kind':'official_gis',
                   'alignment_method':'official_coordinates','legend_available':False,'map_scale':None,
                   'render_mode':'xyz','tile_template':prefix+'/'+theme+'/{z}/{x}/{y}.png',
                   'gateway_first':prefix.startswith('/api/') and os.getenv('RADAR_PLANNING_GATEWAY_FIRST','0')=='1',
@@ -246,9 +283,16 @@ def native_layers(prefix='/local-planning/gis-tiles'):
                   'tile_size':256,'min_zoom':8,'max_zoom':23,
                   'notice':'Ô GIS gốc trên cùng lưới zoom; bổ sung vùng trống từ '+SUPPLEMENTS[theme]+' dưới lớp nền chính. '
                     +'Lưu đệm tối đa 24 giờ. Vùng trống không đồng nghĩa không có quy hoạch; chưa xác minh hiệu lực hoặc độ chính xác địa chính.'}
-        result.append({'id':identifier,'name':manifest['title'],'city':region,'scope':'region',
+        if theme=='qhctp_1125':
+            region='TP.HCM (cũ)';area_id='hcm-legacy'
+            manifest['title']=title+' · '+region
+            manifest.pop('source_tiles');manifest.pop('gateway_first')
+            manifest['notice']='Sử dụng đất QHCTP theo QĐ 1125 · nhóm lớp 2–18 của GIS. Ảnh xuất theo vùng nhìn, lưu đệm tối đa 24 giờ. Dữ liệu tham khảo; đối chiếu hồ sơ phê duyệt.'
+        item={'id':identifier,'name':manifest['title'],'city':region,'scope':'region',
                        'area_id':area_id,'theme':theme,'source':'gis','status':'overlay_ready',
-                       'decision':'Theo từng đồ án trên GIS','source_url':SOURCE,'manifest':manifest})
+                       'decision':'Theo từng đồ án trên GIS','source_url':SOURCE,'manifest':manifest}
+        if theme=='qhctp_1125':item['coverage_provinces']=['hcm']
+        result.append(item)
     return result
 
 
