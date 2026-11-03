@@ -5,7 +5,7 @@ function harness(featureTemplate,liveTemplate){
  let enabled=true,x=52177,y=30749;const pending=[],polygons=[],status=[],frames=[];
  const groups=[],listeners={},domEvents=[];let hit=null;const canvas={style:{},addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};const renderer={_container:canvas,on(n,f){if(n==='add')f();}};
  const L={layerGroup(){const members=new Set(),g={members,addTo(){return g;},addLayer(l){members.add(l);},removeLayer(l){members.delete(l);},clearLayers(){members.clear();}};groups.push(g);return g;},
- stamp:el=>el.id,canvas:()=>renderer,geoJSON(f,options){const layer={feature:f};polygons.push(layer);options.onEachFeature(f,{bindTooltip(text){layer.tooltip=text;},on(n,fn){layer[n]=fn;}});return layer;},DomEvent:{stopPropagation(){}}};
+ stamp:el=>el.id,canvas:()=>renderer,geoJSON(f,options){const layer={feature:f};polygons.push(layer);options.onEachFeature(f,{getTooltip(){return layer.tooltip;},openTooltip(){},bindTooltip(text){layer.tooltip=text;},on(n,fn){layer[n]=fn;}});return {getLayers:()=>[layer],removeLayer(child){assert.equal(child,layer);}};},DomEvent:{stopPropagation(){}}};
  const env={document:{elementsFromPoint:()=>hit?[canvas,hit]:[canvas]},MouseEvent:class {constructor(type,values){this.type=type;Object.assign(this,values);}},AbortController,setTimeout,clearTimeout,requestAnimationFrame(fn){frames.push(fn);return frames.length;},cancelAnimationFrame(){},fetch(url,options){return new Promise((resolve,reject)=>pending.push({url,options,resolve,reject}));}};
  function lng(a){return a/65536*360-180;}function lat(b){return Math.atan(Math.sinh(Math.PI*(1-2*b/65536)))*180/Math.PI;}
  const bounds=()=>({getWest:()=>lng(x+.1),getEast:()=>lng(x+.9),getNorth:()=>lat(y+.1),getSouth:()=>lat(y+.9)});
@@ -17,7 +17,7 @@ function harness(featureTemplate,liveTemplate){
 }
 test('fixed cells reuse warm data, keep existing geometry and avoid duplicate parcel objects',async()=>{
  const h=harness();h.controller.update();assert.equal(h.pending.length,1);assert.equal(h.pending[0].options.credentials,'omit');h.deliver(0,[1,2]);await flush();
- assert.equal(h.polygons.length,2);assert.equal(h.polygons[0].tooltip,'Tờ — · Thửa 1');h.polygons[0].click({});assert.equal(h.selected[0].id,1);
+ assert.equal(h.polygons.length,2);assert.equal(h.polygons[0].tooltip,undefined);h.polygons[0].mouseover({});assert.equal(h.polygons[0].tooltip,'Tờ — · Thửa 1');h.polygons[0].click({});assert.equal(h.selected[0].id,1);
  h.controller.update();assert.equal(h.pending.length,1,'Same cell makes no new requests');assert.equal(h.polygons.length,2);
  h.setX(52178);h.controller.update();h.deliver(1,[2,3]);await flush();
  h.setX(52177);h.controller.update();assert.equal(h.pending.length,2,'Returning to a warm cell never fetches');
@@ -63,7 +63,7 @@ test('snapshot geometry appears before a slow live supplement and survives live 
 test('canvas hover forwards only empty parcel space and cancels listener on disposal',()=>{
  const h=harness(),events=[];let closed=0;
  const path={id:9,dispatchEvent:event=>events.push(event.type)};
- h.map._targets[9]={closeTooltip(){closed++;}};h.setHit(path);
+ h.map._targets[9]={getTooltip(){return {};},closeTooltip(){closed++;}};h.setHit(path);
  h.listeners.mousemove({target:h.canvas,clientX:20,clientY:30});h.tick();
  assert.deepEqual(events,['mouseover','mousemove']);
  h.renderer._hoveredLayer={};h.listeners.mousemove({target:h.canvas,clientX:20,clientY:30});h.tick();
@@ -75,7 +75,7 @@ test('canvas hover forwards only empty parcel space and cancels listener on disp
 test('disabled or empty parcel canvas releases pointers and reenabling restores hover',async()=>{
  const h=harness();h.controller.update();h.deliver(0,[1]);await flush();
  assert.equal(h.canvas.style.pointerEvents,'auto');
- let closed=0;h.renderer._hoveredLayer={closeTooltip(){closed++;}};
+ let closed=0;h.renderer._hoveredLayer={getTooltip(){return {};},closeTooltip(){closed++;}};
  h.disable();h.controller.update();
  assert.equal(h.canvas.style.pointerEvents,'none');assert.equal(closed,1);assert.equal(h.renderer._hoveredLayer,null);
  h.enable();h.controller.update();assert.equal(h.canvas.style.pointerEvents,'auto');
@@ -83,4 +83,23 @@ test('disabled or empty parcel canvas releases pointers and reenabling restores 
  h.controller.dispose();
  const other=harness();other.controller.update();other.deliver(0,[]);await flush();
  assert.equal(other.canvas.style.pointerEvents,'none');other.controller.dispose();
+});
+
+
+test('live data for the first visible cell precedes remaining empty snapshot reads',async()=>{
+ const h=harness(undefined,'/live/{x}/{y}'),original=h.map.getBounds;
+ h.map.getBounds=()=>{const b=original();return Object.assign({},b,{getEast:()=>b.getEast()+.01});};
+ h.controller.update();assert.equal(h.pending.length,2);
+ h.deliver(0,[],false,true);await flush();
+ assert.ok(h.pending[2].url.startsWith('/live/'));
+ h.controller.dispose();
+});
+
+
+test('hovering empty canvas never calls map.closeTooltip without a tooltip',()=>{
+ const h=harness(),container={id:5,dispatchEvent(){}};
+ h.map._targets[5]={closeTooltip(){throw new Error('map closeTooltip requires an argument');}};
+ h.setHit(container);h.renderer._hoveredLayer={};
+ h.listeners.mousemove({target:h.canvas,clientX:10,clientY:10});assert.doesNotThrow(()=>h.tick());
+ h.controller.dispose();
 });

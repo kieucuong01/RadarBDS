@@ -502,3 +502,10 @@ khôi phục `auto`. Pause trong lúc pan cũng nhường tương tác. Unit tes
 Chrome harness kiểm bật → tắt → bật, zoom17 → 16 → 17 và vùng rỗng.
 Dock: nút cao 36 px, font-weight 800; desktop padding ngang 11 px, mobile 8 px.
 Mobile giữ một hàng cuộn ngang. Đợt phát hành gộp sửa hover inactive và dock gọn.
+
+
+Ranh desktop follow-up: [lỗi hover và đo heap](planning_sources/parcels-desktop-memory-2026-11-03.md).
+Chỉ gọi closeTooltip trên layer có getTooltip() trả tooltip; không gọi
+map.closeTooltip() thiếu đối số. Polygon hiển thị được tách khỏi wrapper
+GeoJSON; tooltip tạo lần hover đầu. Queue ưu tiên cell gần tâm và live cell
+vừa có snapshot. Giữ hình học gốc cho tra cứu/đo, không hạ độ chính xác để giảm RAM.

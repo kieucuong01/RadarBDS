@@ -19,10 +19,10 @@
       if(!interactive){
         cancel(hoverFrame);
         var hovered=renderer._hoveredLayer;
-        if(hovered&&hovered.closeTooltip)hovered.closeTooltip();
+        if(hovered&&hovered.getTooltip&&hovered.getTooltip())hovered.closeTooltip();
         renderer._hoveredLayer=null;
         var old=underneath&&map._targets&&map._targets[L.stamp(underneath)];
-        if(old&&old.closeTooltip)old.closeTooltip();
+        if(old&&old.getTooltip&&old.getTooltip())old.closeTooltip();
         underneath=null;
       }
     }
@@ -36,14 +36,14 @@
       var target=env.document.elementsFromPoint(original.clientX,original.clientY).find(function(el){return el!==canvas&&map._targets&&map._targets[L.stamp(el)];});
       if(renderer._hoveredLayer){
         var covered=target&&map._targets&&map._targets[L.stamp(target)];
-        if(covered&&covered.closeTooltip)covered.closeTooltip();
+        if(covered&&covered.getTooltip&&covered.getTooltip())covered.closeTooltip();
         target=null;
       }
       function send(el,type){if(el)el.dispatchEvent(new env.MouseEvent(type,{bubbles:true,clientX:original.clientX,clientY:original.clientY}));}
       if(underneath!==target){
         send(underneath,'mouseout');
         var oldLayer=underneath&&map._targets&&map._targets[L.stamp(underneath)];
-        if(oldLayer&&oldLayer.closeTooltip)oldLayer.closeTooltip();
+        if(oldLayer&&oldLayer.getTooltip&&oldLayer.getTooltip())oldLayer.closeTooltip();
         send(target,'mouseover');underneath=target;
       }
       send(target,'mousemove');
@@ -89,8 +89,12 @@
           var layer=L.geoJSON(f,{pane:'planningParcels',renderer:renderer,smoothFactor:2,
             style:{color:'#334155',weight:.7,opacity:.28,fillOpacity:0},
             onEachFeature:function(feature,polygon){
-              if(polygon.bindTooltip){var p=feature.properties||{};polygon.bindTooltip('Tờ '+(p.sheet==null?'—':p.sheet)+' · Thửa '+(p.parcel==null?'—':p.parcel),{sticky:true});}
+              polygon.on('mouseover',function(event){
+                if(!polygon.getTooltip()){var p=feature.properties||{};polygon.bindTooltip('Tờ '+(p.sheet==null?'—':p.sheet)+' · Thửa '+(p.parcel==null?'—':p.parcel),{sticky:true});}
+                polygon.openTooltip(event.latlng);
+              });
               polygon.on('click',function(event){L.DomEvent.stopPropagation(event);pick(feature);});}});
+          if(layer.getLayers){var polygon=layer.getLayers()[0];layer.removeLayer(polygon);layer=polygon;}
           group.addLayer(layer);features.set(f.id,layer);
         }
         syncInteraction();
@@ -128,7 +132,7 @@
                 data={type:'FeatureCollection',features:Array.from(merged.values()),truncated:old.data.truncated||data.truncated,needs_live:false};
               }
               put(base,data);if(relevant(cell))draw();
-              if(!live&&data.needs_live&&options.liveTemplate&&relevant(cell))queue.push(base+'/live');})
+              if(!live&&data.needs_live&&options.liveTemplate&&relevant(cell))queue.unshift(base+'/live');})
             .catch(function(error){if(!disposed&&error.name!=='AbortError'){
               if(error.status===503&&relevant(cell)&&!attempts.has(cell)){
                 attempts.set(cell,1);retries.set(cell,env.setTimeout(function(){retries.delete(cell);if(!disposed&&active&&relevant(cell)){queue.push(cell);pump();}},2000));
@@ -143,6 +147,11 @@
       active=options.enabled();
       failed=false;
       var cells=active?keys(map.getBounds(),options.zoom):[];
+      if(cells.length){
+        var first=cells[0].split('/').map(Number),last=cells[cells.length-1].split('/').map(Number);
+        function distance(key){var p=key.split('/');return Math.pow(p[0]-(first[0]+last[0])/2,2)+Math.pow(p[1]-(first[1]+last[1])/2,2);}
+        cells.sort(function(a,b){return distance(a)-distance(b);});
+      }
       wanted=new Set(cells);
       retries.forEach(function(timer,key){if(!relevant(key)){env.clearTimeout(timer);retries.delete(key);attempts.delete(key);}});
       attempts.forEach(function(value,key){if(!relevant(key))attempts.delete(key);});
