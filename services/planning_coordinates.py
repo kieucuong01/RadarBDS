@@ -3,8 +3,22 @@ from functools import lru_cache
 import math
 import re
 
-PROJECTIONS = {'tm3-10545': 9210, 'tm3-10615': 9212, 'tm3-10745': 5899,
-               'utm48': 3405, 'utm49': 3406}
+PROJECTIONS = {'tm3-10300':9205,'tm3-10400':9206,'tm3-10430':9207,'tm3-10445':9208,
+               'tm3-10500':None,'tm3-10530':9209,'tm3-10545':9210,'tm3-10600':9211,
+               'tm3-10615':9212,'tm3-10630':9213,'tm3-10700':9214,'tm3-10715':9215,
+               'tm3-10730':9216,'tm3-10745':5899,'tm3-10815':9217,'tm3-10830':9218,
+               'utm48':3405,'utm49':3406}
+
+
+def projection_crs(code):
+    if code != 'tm3-10500':
+        return PROJECTIONS[code]
+    from pyproj.crs import CRS, ProjectedCRS
+    from pyproj.crs.coordinate_operation import TransverseMercatorConversion
+    return ProjectedCRS(name='VN-2000 / TM-3 105-00', geodetic_crs=CRS.from_epsg(4756),
+                        conversion=TransverseMercatorConversion(latitude_natural_origin=0,
+                            longitude_natural_origin=105, scale_factor_natural_origin=.9999,
+                            false_easting=500000, false_northing=0))
 
 
 def _number(value):
@@ -13,10 +27,10 @@ def _number(value):
     return float(value.strip().replace(',', '.'))
 
 
-@lru_cache(maxsize=5)
+@lru_cache(maxsize=len(PROJECTIONS))
 def _transformer(code):
     from pyproj.transformer import TransformerGroup
-    group = TransformerGroup(PROJECTIONS[code], 4326, always_xy=True, allow_ballpark=False)
+    group = TransformerGroup(projection_crs(code), 4326, always_xy=True, allow_ballpark=False)
     if not group.transformers:
         raise ValueError('No accurate datum transformation available')
     return group.transformers[0]

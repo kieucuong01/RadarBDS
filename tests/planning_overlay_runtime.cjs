@@ -5,13 +5,28 @@ const ruleKeys=['tile_template','bounds','focus_bounds','overview','min_zoom','m
 const nationalRules=Object.fromEntries(nationalLanduse.map(l=>[l.id,Object.fromEntries(ruleKeys.filter(k=>l.manifest[k]!==undefined).map(k=>[k,l.manifest[k]]))]));
 const referenceTemplate = 'https://r4gmiynxmeobj.vcdn.cloud/binh-duong-2030/{z}/{x}/{y}.png';
 assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1630,y:960}),
-  'path(evenodd, "M0 0H256V256H0Z M39 228L170 368L146 391L15 251Z")');
+  'path(evenodd, "M0 0H256V256H0Z M39 228L65.2 256L19.679 256L15 251Z")');
 assert.equal(api.referenceClipPath(referenceTemplate, {z:12,x:3260,y:1921}),
-  'path(evenodd, "M0 0H256V256H0Z M78 200L340 480L292 526L30 246Z")');
+  'path(evenodd, "M0 0H256V256H0Z M78 200L130.4 256L39.357 256L30 246Z")');
 assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1631,y:960}), '');
 assert.equal(api.referenceClipPath(referenceTemplate, {z:11,x:1631,y:961}),
-  'path(evenodd, "M0 0H256V256H0Z M190 174L311 174L311 203L190 203Z")');
+  'path(evenodd, "M0 0H256V256H0Z M190 174L256 174L256 203L190 203Z")');
 assert.equal(api.referenceClipPath(referenceTemplate.replace('binh-duong','tp-ho-chi-minh'), {z:11,x:1630,y:960}), '');
+for(const coords of [{z:17,x:104354,y:61497},{z:17,x:104354,y:61498},{z:17,x:104353,y:61497}]){
+  assert.equal(api.referenceClipPath(referenceTemplate,coords),'','A diagonal footprint bounding box alone must not cause clipping');
+}
+const marks=require('../static/js/main/planning_reference_branding.js');
+marks['test-clip']=[[[-10,-10],[266,-10],[266,266],[-10,266]]];
+assert.equal(api.referenceClipPath('test-clip',{z:11,x:0,y:0}),
+ 'path(evenodd, "M0 0H256V256H0Z M0 256L0 0L256 0L256 256Z")','A fully covered tile retains a full-tile hole');
+marks['test-clip']=[[[256,10],[280,10],[280,40],[256,40]]];
+assert.equal(api.referenceClipPath('test-clip',{z:11,x:0,y:0}),'','Touching an edge with zero area needs no clip');
+marks['test-clip']=[[[-10,10],[10,-10],[-10,-10]]];
+assert.equal(api.referenceClipPath('test-clip',{z:11,x:0,y:0}),'','A bounding box overlap with only corner contact needs no clip');
+marks['test-clip']=[[[10,20],[30,20],[30,40],[10,40]]];
+assert.equal(api.referenceClipPath('test-clip',{z:11,x:0,y:0}),
+ 'path(evenodd, "M0 0H256V256H0Z M10 20L30 20L30 40L10 40Z")','An interior footprint is unchanged');
+delete marks['test-clip'];
 
 const manifest = {id: 'thoi-hoa-2909-qh01', status: 'local_experiment',
   bounds: [[11.07, 106.58], [11.14, 106.67]], title: 'Thoi Hoa', notice: 'Pilot',

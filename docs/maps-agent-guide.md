@@ -254,14 +254,18 @@ query/body schema cụ thể xem route/tests; đừng suy contract từ tên UI.
 
 - WGS84: latitude rồi longitude; GeoJSON vẫn `[longitude, latitude]`.
   VN-2000: X/northing rồi Y/easting, mét; bắt buộc chọn đúng CRS, không đoán theo tỉnh.
-  Whitelist: `tm3-10545`/EPSG 9210, `tm3-10615`/9212, `tm3-10745`/5899,
-  `utm48`/3405, `utm49`/3406. Không nhận PROJ/EPSG tùy ý; không dùng ballpark transform.
+  Whitelist: TM-3 theo16 KTT trong `services/planning_coordinates.py` (EPSG9205–9218,
+  5899 và custom105°00′ giữ geodetic CRS EPSG4756), UTM48/3405, UTM49/3406.
+  Không nhận PROJ/EPSG tùy ý; không dùng ballpark transform. Không suy hệ sổ cũ từ tên tỉnh mới.
 - Tra điểm phải nằm trong polygon thật, không lấy centroid/bbox gần nhất làm
   kết quả. Snapshot hit trả ngay; nhiều thửa giao điểm cho chọn. Không có nguồn
   thì di chuyển đến điểm kèm thông báo, không tạo ID thửa giả.
 - Góc ranh: 3–100 điểm theo thứ tự, hai cột, có thể có số thứ tự và dòng đóng.
   Validate duplicate, self-intersection, finite, extent và CRS; body tối đa 16 KB.
   Output có provenance `user_corners`, không có cadastral ID, không tự tra GIS.
+  [Lưu/mở góc ranh và các hệ chiếu](planning_sources/corner-lookup-saved-2026-11-03.md):
+  `planning_corner_saved.js` giữ tối đa20 bộ tọa độ+CRS trong localStorage cùng origin;
+  chỉ lưu input đã validate, mở lại gọi corners.json kiểm lại, không gọi GIS. Không lưu ảnh sổ.
 - Scan ảnh: browser crop/rotate, chỉ gửi crop JPEG cùng origin; không gửi ảnh
   sổ đầy đủ hay tên file gốc. Input local tối đa 12 MB/24 MP; crop server 4 MB/8 MP.
   Tesseract native + `eng`, một subprocess/worker, 20 giây, giới hạn output/OMP.

@@ -94,6 +94,26 @@
     return branding && branding[template] || [];
   }
 
+  function clipFootprint(points, bounds) {
+    [[0,bounds[0],1],[0,bounds[2],-1],[1,bounds[1],1],[1,bounds[3],-1]].forEach(function(edge){
+      var output=[],axis=edge[0],limit=edge[1],direction=edge[2];
+      points.forEach(function(b,i){
+        var a=points[(i+points.length-1)%points.length];
+        var aInside=(a[axis]-limit)*direction>=0,bInside=(b[axis]-limit)*direction>=0;
+        if(aInside!==bInside){
+          var t=(limit-a[axis])/(b[axis]-a[axis]);
+          var intersection=[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];intersection[axis]=limit;output.push(intersection);
+        }
+        if(bInside)output.push(b);
+      });
+      points=output;
+    });
+    if(points.length<3)return [];
+    var origin=points[0];
+    var area=points.reduce(function(sum,p,i){var q=points[(i+1)%points.length];return sum+(p[0]-origin[0])*(q[1]-origin[1])-(q[0]-origin[0])*(p[1]-origin[1]);},0);
+    return Math.abs(area)>1e-8?points:[];
+  }
+
   function referenceClipPath(template, coords) {
     var rings = referenceAnnotations(template);
     var scale = Math.pow(2, coords.z - 11);
@@ -104,7 +124,9 @@
         || Math.min.apply(null, points.map(function (p) { return p[0]; })) >= 256
         || Math.max.apply(null, points.map(function (p) { return p[1]; })) <= 0
         || Math.min.apply(null, points.map(function (p) { return p[1]; })) >= 256);
-    });
+    }).map(function(points){
+      return clipFootprint(points,[0,0,256,256]);
+    }).filter(function(points){return points.length;});
     if (!holes.length) return '';
     return 'path(evenodd, "M0 0H256V256H0Z ' + holes.map(function (points) {
       return 'M' + points.map(function (p) {
@@ -114,23 +136,34 @@
   }
 
   function referenceBranding(layer, map, L, template) {
-    var labels = referenceAnnotations(template).map(function (ring) {
+    var rings=referenceAnnotations(template),labels=[];
+    if(!rings.length)return;
+    function clear(){labels.forEach(function(label){map.removeLayer(label);});labels=[];}
+    function update(){
+      clear();
+      var pixels=map.getPixelBounds(),scale=Math.pow(2,map.getZoom()-11);
+      var viewport=[pixels.min.x/scale,pixels.min.y/scale,pixels.max.x/scale,pixels.max.y/scale];
+      rings.forEach(function (ring) {
+      if(!clipFootprint(ring,viewport).length)return;
       var xs=ring.map(function(p){return p[0];}), ys=ring.map(function(p){return p[1];});
       var w=Math.min.apply(null,xs), e=Math.max.apply(null,xs), n=Math.min.apply(null,ys), s=Math.max.apply(null,ys);
+      var padding=128/scale,left=Math.max(w,viewport[0]-padding),top=Math.max(n,viewport[1]-padding);
+      var right=Math.min(e,viewport[2]+padding),bottom=Math.min(s,viewport[3]+padding);
       var dx=ring[1][0]-ring[0][0], dy=ring[1][1]-ring[0][1];
       var hx=ring[3][0]-ring[0][0], hy=ring[3][1]-ring[0][1];
       var width=Math.hypot(dx,dy), height=Math.hypot(hx,hy);
-      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+(e-w)+' '+(s-n)+'">'
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(left-w)+' '+(top-n)+' '+(right-left)+' '+(bottom-top)+'">'
         +'<g transform="matrix('+[dx/width,dy/width,hx/height,hy/height,ring[0][0]-w,ring[0][1]-n].join(' ')+')">'
         +'<rect width="'+width+'" height="'+height+'" rx="'+height*.18+'" fill="white" fill-opacity=".94"/>'
         +'<text x="'+width*.04+'" y="'+height*.78+'" font-family="Arial,sans-serif" font-weight="700" font-size="'+height*.82+'" textLength="'+width*.92+'" lengthAdjust="spacingAndGlyphs" fill="#0f172a">Radar<tspan fill="#4f46e5">BDS</tspan></text></g></svg>';
       function lat(y) { return Math.atan(Math.sinh(Math.PI*(1-2*y/524288)))*180/Math.PI; }
-      return L.imageOverlay('data:image/svg+xml,'+encodeURIComponent(svg),[[lat(s),w/524288*360-180],[lat(n),e/524288*360-180]],
+      var label=L.imageOverlay('data:image/svg+xml,'+encodeURIComponent(svg),[[lat(bottom),left/524288*360-180],[lat(top),right/524288*360-180]],
         Object.assign({},layer.options,{interactive:false,attribution:''}));
-    });
-    if (!labels.length) return;
-    layer.on('add',function(){labels.forEach(function(label){label.addTo(map);});});
-    layer.on('remove',function(){labels.forEach(function(label){map.removeLayer(label);});});
+      labels.push(label);label.addTo(map);
+      });
+    }
+    layer.on('add',function(){update();map.on('moveend',update);});
+    layer.on('remove',function(){map.off('moveend',update);clear();});
     var setOpacity=layer.setOpacity;
     layer.setOpacity=function(value){
       setOpacity.call(this,value);

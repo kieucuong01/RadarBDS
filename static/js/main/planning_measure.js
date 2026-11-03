@@ -154,7 +154,7 @@
       if(outline.length>1000){result.hidden=false;note.textContent='Ranh có quá nhiều điểm. Dùng Vẽ ranh để đo vùng cần xem.';return;}
       setActive(false);map.fire('planning:drawing-start');
       points=outline.map(function(p){return {lat:p.lat,lng:p.lng};});closed=true;
-      redraw(event.origin==='user_corners'?'Ranh tọa độ tự nhập · Bật lớp quy hoạch để đối chiếu. Ranh và số đo chưa được xác minh địa chính.':'Số đo theo phần ranh được chọn, xấp xỉ từ bản đồ.');
+      redraw(event.origin==='user_corners'?'Ranh tọa độ tự nhập · Lưu/mở lại tại Tờ/thửa → Góc ranh. Ranh và số đo chưa được xác minh địa chính.':'Số đo theo phần ranh được chọn, xấp xỉ từ bản đồ.');
       ui.panels.forEach(function(panel){panel.open=false;});
     }
     function panelChanged() { if(ui.panels.some(function(p){return p.open;})) pause(); }

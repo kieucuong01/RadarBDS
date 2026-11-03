@@ -3,6 +3,18 @@ import pytest
 from services.planning_coordinates import coordinate_point
 
 
+@pytest.mark.parametrize('code,lon,lat', [('tm3-10500',105.8,21.02),
+    ('tm3-10530',106.05,20.65),('tm3-10815',109.18,12.24),
+    ('tm3-10745',108.44,11.94),('tm3-10630',108.2,16.06)])
+def test_local_tm3_roundtrip_preserves_datum_and_axis_order(code,lon,lat):
+    from services.planning_coordinates import projection_crs, _transformer
+    from pyproj import Transformer, Geod
+    easting,northing=Transformer.from_crs(4326,projection_crs(code),always_xy=True).transform(lon,lat)
+    actual=coordinate_point(dict(system='vn2000',crs=code,first=str(northing),second=str(easting)))
+    assert Geod(ellps='WGS84').inv(lon,lat,*actual[:2])[2]<1
+    assert _transformer(code).accuracy>=0
+
+
 def test_wgs84_uses_latitude_then_longitude_and_accepts_decimal_comma():
     assert coordinate_point({'system': 'wgs84', 'first': '11,02', 'second': '106.65'})[:2] == (106.65, 11.02)
     assert coordinate_point({'system':'wgs84','first':'11.019333467739227','second':'106.61686068570627'})[1] == 11.019333467739227

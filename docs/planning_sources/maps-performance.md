@@ -186,3 +186,17 @@ browser/RUM and production were not checked in this change. Next measurement:
 same phone/browser/viewport, cold and warm enable + rapid zoom/pan; record long
 tasks, frame drops, image request peaks and total settle time. Remaining lag may
 include image composition and annotation overlays; profile before changing them.
+
+## Bình Dương 2030 clipping and viewport labels — 2026-11-03
+
+[Investigation, implementation and repeatable comparison](binh-duong-2030-pan-investigation-2026-11-03.md).
+Reference footprints now require a positive polygon intersection and are clipped
+to each 256 px tile. Reference labels require intersection with the viewport;
+their SVG viewBox/bounds are cropped to viewport plus 128 CSS px padding per side.
+They rebuild on settled `moveend`, with opacity and remove/add cleanup preserved.
+No additional image cache or decode change was made.
+
+The same headless Chrome pan at zoom 14/16/18 remained about 16.8 ms p95 frame
+interval with no interval over 50 ms. The baseline also did not reproduce the
+reported lag; this proves removal of excess clipping/large offscreen overlays,
+not a measured FPS gain or real-phone performance. Changes are local, not deployed.

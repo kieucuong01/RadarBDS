@@ -77,7 +77,10 @@
     var projectionLabel=node('label',coordinateSection,'Hệ chiếu VN-2000');projectionLabel.hidden=true;
     var coordinateProjection=node('select',projectionLabel);coordinateProjection.setAttribute('aria-label','Hệ chiếu VN-2000');
     node('option',coordinateProjection,'Chọn hệ chiếu theo hồ sơ').value='';
-    [['tm3-10545','Múi 3° · KTT 105°45′ (Bình Dương, TP.HCM)'],['tm3-10615','Múi 3° · KTT 106°15′ (Bình Phước)'],['tm3-10745','Múi 3° · KTT 107°45′ (Đồng Nai, BRVT)'],['utm48','Múi 6° · UTM 48N'],['utm49','Múi 6° · UTM 49N']].forEach(function(item){node('option',coordinateProjection,item[1]).value=item[0];});coordinateProjection.value='';
+    ['10300','10400','10430','10445','10500','10530','10545','10600','10615','10630','10700','10715','10730','10745','10815','10830'].forEach(function(code){
+      node('option',coordinateProjection,'Múi 3° · KTT '+code.slice(0,3)+'°'+code.slice(3)+'′').value='tm3-'+code;
+    });
+    [['utm48','Múi 6° · UTM 48N'],['utm49','Múi 6° · UTM 49N']].forEach(function(item){node('option',coordinateProjection,item[1]).value=item[0];});coordinateProjection.value='';
     var firstLabel=node('label',coordinateSection),firstTitle=node('span',firstLabel,'Vĩ độ'),coordinateFirst=node('input',firstLabel);
     var secondLabel=node('label',coordinateSection),secondTitle=node('span',secondLabel,'Kinh độ'),coordinateSecond=node('input',secondLabel);
     [coordinateFirst,coordinateSecond].forEach(function(input){input.type='text';input.inputMode='decimal';input.maxLength=32;input.autocomplete='off';});
@@ -88,6 +91,19 @@
     node('p',cornerLabel,'Mỗi dòng một điểm theo thứ tự quanh ranh: vĩ độ kinh độ (WGS84) hoặc X Y (VN-2000). Có thể dán bảng 2 cột hoặc STT X Y; cách nhau bằng khoảng trắng hoặc dấu chấm phẩy. Tối đa 100 điểm.');
     var scanHost=node('div',coordinateSection);scanHost.hidden=true;
     var cornerScan=env.RadarCornerScan?env.RadarCornerScan.mount(env,scanHost,{url:apiBase+'/corners/scan.json',system:function(){return coordinateSystem.value;},onApply:function(text){cancelSearch();cornerInput.value=text;searchStatus.textContent='Đã nhận tọa độ từ ảnh. Kiểm tra hệ chiếu trước khi vẽ.';}}):null;
+    var validatedCornerInput=null;
+    function cornerValues(){return {system:coordinateSystem.value,crs:coordinateProjection.value,corners:cornerInput.value};}
+    var savedHost=node('div',cornerLabel);
+    if(env.RadarCornerSaved)env.RadarCornerSaved.mount(env,savedHost,{
+      validated:function(){var values=cornerValues();return JSON.stringify(values)===validatedCornerInput?values:null;},
+      open:function(row){
+        if(row.system==='vn2000'&&!Array.from(coordinateProjection.children).some(function(option){return option.value===row.crs;})){
+          searchStatus.textContent='Hệ chiếu trong bản lưu chưa được hỗ trợ.';return;
+        }
+        cancelSearch();if(cornerScan)cornerScan.reset();coordinateSystem.value=row.system;coordinateProjection.value=row.crs;cornerInput.value=row.corners;coordinateLabels();
+        searchSubmit.click();
+      }
+    });
     searchMenu.addEventListener('toggle',function(){if(!searchMenu.open&&cornerScan)cornerScan.reset();});
     function coordinateLabels(){
       var vn=coordinateSystem.value==='vn2000';projectionLabel.hidden=!vn;
@@ -411,6 +427,7 @@
     }
     searchMethod.addEventListener('change',changeSearchMethod);
     coordinateSystem.addEventListener('change',function(){cancelSearch();if(cornerScan)cornerScan.reset();coordinateLabels();});
+    coordinateProjection.addEventListener('change',function(){cancelSearch();if(cornerScan)cornerScan.reset();});
     [coordinateProjection,coordinateFirst,coordinateSecond,cornerInput].forEach(function(input){input.addEventListener('change',cancelSearch);input.addEventListener('input',cancelSearch);});
     function moveStart() {
       if (disposed) return;
@@ -459,7 +476,7 @@
       var query = new URLSearchParams({area: areaId, sheet: sheet, parcel: parcel});
       if(coordinates)query=new URLSearchParams({system:coordinateSystem.value,crs:coordinateProjection.value,first:coordinateFirst.value.trim(),second:coordinateSecond.value.trim()});
       var requestOptions={signal:searchRequest.signal,cache:'default',credentials:'omit'};
-      if(corners){requestOptions.method='POST';requestOptions.headers={'Content-Type':'application/json'};requestOptions.body=JSON.stringify({system:coordinateSystem.value,crs:coordinateProjection.value,corners:cornerInput.value});}
+      if(corners){requestOptions.method='POST';requestOptions.headers={'Content-Type':'application/json'};requestOptions.body=JSON.stringify(cornerValues());validatedCornerInput=null;}
       env.fetch(apiBase + (corners?'/corners.json':(coordinates?'/coordinates.json?':'/search.json?')+query.toString()),requestOptions)
         .then(function (response) { if (!response.ok) throw new Error('Parcel search failed'); return response.json(); })
         .then(function (data) {
@@ -467,6 +484,7 @@
           if(corners){
             var metrics=env.RadarParcelTools&&env.RadarParcelTools.metrics(data);
             if(!metrics||!data.properties||data.properties.origin!=='user_corners')throw new Error('Invalid corner outline');
+            validatedCornerInput=requestOptions.body;
             searchStatus.textContent='Đã dựng ranh tự nhập. Bật lớp quy hoạch để đối chiếu; đây không phải ranh thửa đã xác minh từ GIS.';
             searchMenu.open=false;remove(coordinateMarker);coordinateMarker=null;
             if(map.fire)map.fire('planning:measure-parcel',{points:metrics.outline,origin:'user_corners'});
