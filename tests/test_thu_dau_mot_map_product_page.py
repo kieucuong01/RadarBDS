@@ -459,7 +459,7 @@ def test_product_page_targets_free_lookup_intent_before_paid_bundle():
     visible_text = _visible_body_text(html)
 
     assert (
-        "<title>Bản đồ TP Thủ Dầu Một Bình Dương trước và sau sáp nhập | Radar BDS</title>"
+        "<title>Bản đồ Thủ Dầu Một: tra phường cũ, mới và mở Maps quy hoạch | Radar BDS</title>"
         in html
     )
     assert "<h1>Bản đồ TP Thủ Dầu Một trước và sau sáp nhập</h1>" in html
