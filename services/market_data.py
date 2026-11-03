@@ -2516,6 +2516,10 @@ def get_base_filters(req):
     wards = req.args.getlist("ward[]") or req.args.getlist("ward")
     sources = req.args.getlist("source[]") or req.args.getlist("source")
     prop_types = normalize_property_types(req.args.getlist("prop_type[]") or req.args.getlist("prop_type"))
+    # shortcut: the listing dataset covers old Binh Duong; add province identity
+    # to the read model before enabling listing feeds in another province.
+    if req.args.get("province", "binh-duong") != "binh-duong":
+        wards = ["__NO_WARD_SELECTED__"]
     if req.args.get("ward_mode") == "none":
         wards = ["__NO_WARD_SELECTED__"]
     only_drops = req.args.get("only_drops") == "1"

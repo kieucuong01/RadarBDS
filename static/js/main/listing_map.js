@@ -3452,6 +3452,8 @@
     var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
     state.planningTheme = explicitPlanning ? options.planningTheme : "land_use_2030";
     if (state.sharedView && state.sharedView.theme==='none') state.planningTheme=null;
+    var filterProvince=(root.RADAR_LANDUSE_AREAS||[]).find(function(p){return p.id===new URLSearchParams(safe.query).get('province');});
+    if(!options.planningRegion&&!state.sharedView&&filterProvince&&filterProvince.id!=='binh-duong')options.planningRegion=filterProvince.region_id;
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;
     state.initialPlanningArea = root.RadarPlanningArea && root.RadarPlanningArea.initial(root.RADAR_LANDUSE_AREAS, options.planningRegion);
@@ -3529,6 +3531,13 @@
     if (!state.open || !safe) return Promise.resolve();
     closePreview();
     state.initialRegion = null;
+    var province=(root.RADAR_LANDUSE_AREAS||[]).find(function(p){return p.id===new URLSearchParams(safe.query).get('province');});
+    var provinceChanged=province&&new URLSearchParams(state.snapshot.query).get('province')!==province.id;
+    if(provinceChanged&&state.initialPlanningArea&&province.id!==state.initialPlanningArea.province&&root.RadarPlanningArea){
+      state.initialPlanningArea=root.RadarPlanningArea.initial(root.RADAR_LANDUSE_AREAS,province.region_id);
+      if(state.map)state.map.fire('planning:locate-area',{province:province.id,district:''});
+    }
+    if(state.initialPlanningArea&&state.initialPlanningArea.province!=='binh-duong')state.initialRegion={id:state.initialPlanningArea.region_id,bounds:state.initialPlanningArea.bounds,max_zoom:13};
     state.entrySnapshot = safe;
     state.snapshot = safe;
     state.browseViewport = false;
@@ -3547,7 +3556,8 @@
     if (!state.map) return startMapLoad(safe);
     var controller = state.initialController = new AbortController();
     renderMapScopeControls();
-    return fetchJson(initialBoundsUrl(safe), controller).then(function (payload) {
+    var opening=state.initialRegion?Promise.resolve({bounds:state.initialRegion.bounds}):fetchJson(initialBoundsUrl(safe), controller);
+    return opening.then(function (payload) {
       if (!state.open || state.entrySnapshot !== safe) return;
       state.initialBounds = payload.bounds;
       if (state.browseViewport) return;

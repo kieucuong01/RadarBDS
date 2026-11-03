@@ -116,6 +116,9 @@ test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters
  assert.equal(ctx.state.initialRegion.id,'binh-duong-legacy');assert.equal(ctx.state.snapshot.query,snapshot.query);
  ctx.state.open=false;await ctx.open({...snapshot,query:snapshot.query+'&ward=Tân An'},{});
  assert.equal(ctx.state.initialRegion,null,'A selected ward must not use the default city/province frame');
+ ctx.state.open=false;await ctx.open({...snapshot,query:'province=ha-noi&ward_mode=none&price_max=3'},{});
+ assert.equal(ctx.state.initialPlanningArea.province,'ha-noi');assert.equal(ctx.state.initialRegion.id,'ha-noi-legacy');
+ assert.equal(ctx.state.listingsVisible,false);assert.equal(ctx.state.locateOnOpen,false);
 });
 
 test('multi-listing marker opens its rail and clears loading after items arrive',async()=>{

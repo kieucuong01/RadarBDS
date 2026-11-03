@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof syncKeywordSearchInputs === 'function') {
     syncKeywordSearchInputs(searchParams.get('q') || searchParams.get('keyword') || '');
   }
+  syncListingProvince(searchParams.get('province') || 'binh-duong');
   const initialCity = searchParams.get('city');
   if (initialCity) {
     const cityInput = document.getElementById('cityInput');

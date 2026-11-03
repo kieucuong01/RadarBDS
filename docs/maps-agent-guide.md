@@ -539,3 +539,15 @@ Mobile toolbar flex-wrap canh giữa; Tờ/thửa là form fixed dưới đáy, 
 cuộn nội bộ, nút đóng trả focus về summary và hỗ trợ reduced motion. Ẩn dòng
 đếm khi sheet mở để tránh chồng lên form. Kiểm Chrome320/390/1100 và UI test;
 commit UI này cần deploy riêng theo yêu cầu gom của người dùng.
+
+Sidebar tỉnh tin rao (2026-11-04): `#listingProvince` lấy danh sách tỉnh cũ từ
+registry quy hoạch đã có, mặc định Bình Dương. `filters.js` giữ các bộ lọc tiền/
+diện tích/loại/thời gian, ẩn nhóm phường Bình Dương ở tỉnh khác, dùng
+`ward_mode=none`; URL province được khôi phục khi reload. Bộ chọn Maps độc lập:
+open/refresh lấy province của snapshot để đặt vùng mở; share hash được ưu tiên.
+Dữ liệu listing hiện chỉ hỗ trợ Bình Dương cũ: `get_base_filters()` chặn province
+khác bằng sentinel ward trước cache/read model, không trả lẫn dữ liệu Bình Dương.
+Đây là giới hạn dữ liệu có chủ ý, không phải bộ lọc listing toàn quốc: muốn thêm
+tin tỉnh khác phải bổ sung province identity vào dữ liệu và read model trước;
+không suy tỉnh chỉ từ tên phường có thể trùng nhau. Kéo Maps vẫn theo hợp đồng
+viewport hiện có. Logo chung/index/detail bỏ khẩu hiệu giới hạn Bình Dương.

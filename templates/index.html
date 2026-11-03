@@ -69,7 +69,7 @@
 
   {% set css_base = url_for('static', filename='css/main/base.css') ~ '?v=mobile-scroll-lock-20260802' %}
   {% set css_layout = url_for('static', filename='css/main/layout.css') ~ '?v=product-navigation-20261103-2' %}
-  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=area-scope-manual-ranges-20261020' %}
+  {% set css_filters = url_for('static', filename='css/main/filters.css') ~ '?v=listing-province-20261104' %}
   {% set css_cards = url_for('static', filename='css/main/cards.css') ~ '?v=listing-mobile-prices-20261020-3' %}
   {% set css_modal = url_for('static', filename='css/main/modal.css') ~ '?v=signal-detail-regression-20260729' %}
   {% set css_market = url_for('static', filename='css/main/market.css') ~ '?v=market-analysis-p0-p2-20260807b' %}
@@ -97,14 +97,14 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=locate-area-20261103"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-province-20261104"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
       market: "{{ css_market }}",
       leads: "{{ css_leads }}",
       auth: "{{ css_auth }}",
-      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=locate-area-20261103"
+      listingMap: "{{ url_for('static', filename='css/main/listing_map.css') }}?v=listing-province-20261104"
     };
     window.RADAR_MAP_VENDOR = {
       leafletScript: {
@@ -179,7 +179,6 @@
       </span>
       <div class="logo-info">
         <span class="logo-text">Radar<span style="color:var(--primary)">BDS</span></span>
-        <span class="logo-subtitle">CHUYÊN SÂU BÌNH DƯƠNG</span>
       </div>
     </div>
 
@@ -250,6 +249,15 @@
           </svg>
         </button>
         <div class="filter-body">
+          <label class="listing-province-label" for="listingProvince">Tỉnh/TP (Cũ)</label>
+          <select id="listingProvince" name="province" class="listing-province-select" onchange="selectListingProvince(this.value)">
+            <option value="binh-duong" selected>Bình Dương</option>
+            {% for province in (planning_landuse_areas | default([])) if province.id != 'binh-duong' %}
+            <option value="{{ province.id }}">{{ province.name }}</option>
+            {% endfor %}
+          </select>
+          <p id="listingProvinceNotice" class="listing-province-notice" hidden>Tỉnh này chưa có dữ liệu tin rao. Anh/chị vẫn có thể xem các lớp bản đồ quy hoạch hiện có.</p>
+          <div id="listingProvinceDistricts">
           {% set dashboard_filter_cities = [('THỦ DẦU MỘT', 'Thủ Dầu Một'), ('BẾN CÁT', 'Bến Cát'), ('DĨ AN', 'Dĩ An'), ('THUẬN AN', 'Thuận An'), ('TÂN UYÊN', 'Tân Uyên')] %}
           <div class="city-pills">
             {% for city_value, city_label in dashboard_filter_cities %}
@@ -274,6 +282,7 @@
           </div>
           <div class="ward-scroll-area">
             <div id="wardFilters"></div>
+          </div>
           </div>
         </div>
       </div>
@@ -1594,7 +1603,7 @@
   {% endif %}
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=locate-area-20261103"></script>
   <script src="{{ url_for('static', filename='js/main/filter_runtime.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=listings-perf-20261021"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=listing-province-20261104"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
   {% include "partials/signal_card_script.html" %}
   <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>
@@ -1602,7 +1611,7 @@
   <script src="{{ url_for('static', filename='js/main/signals.js') }}?v=saved-alerts-20261005"></script>
   <script src="{{ url_for('static', filename='js/main/web_vitals.js') }}?v=homepage-perf-20260801"></script>
   <script src="{{ url_for('static', filename='js/main/area_scope.js') }}?v=maps-controls-20261028"></script>
-  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=locate-area-20261103"></script>
+  <script src="{{ url_for('static', filename='js/main/boot.js') }}?v=listing-province-20261104"></script>
 </body>
 
 </html>

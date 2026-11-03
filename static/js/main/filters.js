@@ -1,5 +1,29 @@
 // Sidebar filters, city/ward controls, sorting, and dashboard metadata refresh.
 let filterApplyRunSeq = 0;
+function syncListingProvince(value) {
+  const select = document.getElementById('listingProvince');
+  if (!select) return;
+  if (value !== undefined) select.value = value;
+  if (!select.value) select.value = 'binh-duong';
+  const available = select.value === 'binh-duong';
+  document.body.dataset.listingProvince = select.value;
+  const districts = document.getElementById('listingProvinceDistricts');
+  const notice = document.getElementById('listingProvinceNotice');
+  if (districts) districts.hidden = !available;
+  if (notice) notice.hidden = available;
+}
+
+function selectListingProvince(value) {
+  syncListingProvince(value);
+  const url = new URL(window.location.href);
+  url.searchParams.set('province', value);
+  if (value !== 'binh-duong') {
+    ['city', 'ward', 'ward[]', 'ward_mode'].forEach(key => url.searchParams.delete(key));
+  }
+  window.history.replaceState(window.history.state, '', url);
+  applyFilters();
+}
+
 function selectCity(btn) {
   document.querySelectorAll('.city-pill').forEach(p => {
     const active = p === btn;
@@ -110,6 +134,14 @@ function getFilterQuery() {
       window.RadarAreaScope.getCurrentScope(),
       globalWardsByCity
     );
+  }
+  const province = document.getElementById('listingProvince');
+  if (province) {
+    params.set('province', province.value);
+    if (province.value !== 'binh-duong') {
+      ['city', 'ward', 'ward[]'].forEach(key => params.delete(key));
+      params.set('ward_mode', 'none');
+    }
   }
   const hideGulandReposts = document.getElementById('hideGulandReposts');
   if (hideGulandReposts) {
@@ -267,6 +299,7 @@ function applyFilters() {
   } else if (window.RadarAreaScope && typeof window.RadarAreaScope.refreshCurrentScopeUi === 'function') {
     window.RadarAreaScope.refreshCurrentScopeUi();
   }
+  syncListingProvince();
   const filterSnapshot = currentFilters;
   const tab = activeTabId();
   const mapIsOpen = Boolean(

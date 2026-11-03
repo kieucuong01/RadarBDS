@@ -151,6 +151,7 @@ test('listings filter starts feed first and only the current completed run sched
   } });
   vm.runInContext(fs.readFileSync('static/js/main/filters.js', 'utf8'), c);
   c.getFilterQuery = () => c.currentFilters;
+  c.syncListingProvince = () => {};
   c.ensureDashboardScript = async () => {};
   c.initializeListingsUi = () => {};
   c.deferCountsRefresh = () => events.push(['counts']);

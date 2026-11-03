@@ -177,7 +177,7 @@ def test_homepage_mos_control_defaults_to_fifteen_and_locks_non_privileged_tiers
 
 def test_homepage_mos_asset_version_changes_with_boot_behavior():
     html = _read("templates/index.html")
-    assert "js/main/boot.js') }}?v=locate-area-20261103" in html
+    assert "js/main/boot.js') }}?v=listing-province-20261104" in html
 
 
 def test_homepage_area_scope_boot_uses_url_then_local_storage_then_chooser():
@@ -842,7 +842,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
-        "js/main/filters.js') }}?v=listings-perf-20261021",
+        "js/main/filters.js') }}?v=listing-province-20261104",
         "js/main/area_scope.js') }}?v=maps-controls-20261028",
         "toggleRangePreset",
         "selectedRangeTokens",
