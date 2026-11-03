@@ -23,9 +23,10 @@ def test_latest_data_queue_skips_news_and_explicit_draft_is_rejected(monkeypatch
         module._choose_article("draft")
 
 
-def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path):
+def test_data_status_includes_radar_domain_and_ward_filter_link(tmp_path, monkeypatch):
     social_queue = _load_queue_module()
     social_queue.ASSET_DIR = tmp_path
+    monkeypatch.setattr(social_queue, "_check_url", lambda url: 200)
     args = argparse.Namespace(
         slug="gia-dat-tan-an-thu-dau-mot-hien-nay",
         skip_verify=False,
@@ -70,10 +71,11 @@ def _queue_args(slug, style="data_post"):
     )
 
 
-def test_editorial_contract_replaces_legacy_ward_card_copy(tmp_path):
+def test_editorial_contract_replaces_legacy_ward_card_copy(tmp_path, monkeypatch):
     """Legacy ward-card assertions are obsolete: captions are editorial now."""
     social_queue = _load_queue_module()
     social_queue.ASSET_DIR = tmp_path
+    monkeypatch.setattr(social_queue, "_check_url", lambda url: 200)
 
     item = social_queue.create(_queue_args("gia-dat-phu-tan-hien-bao-nhieu"))
     content = item["content"]
