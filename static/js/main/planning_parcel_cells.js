@@ -12,6 +12,31 @@
   function mount(map,L,env,options){
     var cache=new Map(),bytes=0,requests=new Map(),wanted=new Set(),features=new Map(),active=true,disposed=false,retries=new Map(),attempts=new Map();
     var group=L.layerGroup().addTo(map),renderer=L.canvas({pane:'planningParcels',padding:.1}),frame,run=0,queue=[],incomplete=false,failed=false;
+    var underneath=null,hoverFrame;
+    function forwardHover(event){
+      if(!env.document||!renderer._container)return;
+      var original=event,canvas=renderer._container;
+      if(original.target!==canvas)return;
+      cancel(hoverFrame);
+      hoverFrame=raf(function(){
+      if(disposed||!active)return;
+      var target=env.document.elementsFromPoint(original.clientX,original.clientY).find(function(el){return el!==canvas&&map._targets&&map._targets[L.stamp(el)];});
+      if(renderer._hoveredLayer){
+        var covered=target&&map._targets&&map._targets[L.stamp(target)];
+        if(covered&&covered.closeTooltip)covered.closeTooltip();
+        target=null;
+      }
+      function send(el,type){if(el)el.dispatchEvent(new env.MouseEvent(type,{bubbles:true,clientX:original.clientX,clientY:original.clientY}));}
+      if(underneath!==target){
+        send(underneath,'mouseout');
+        var oldLayer=underneath&&map._targets&&map._targets[L.stamp(underneath)];
+        if(oldLayer&&oldLayer.closeTooltip)oldLayer.closeTooltip();
+        send(target,'mouseover');underneath=target;
+      }
+      send(target,'mousemove');
+      });
+    }
+    if(renderer.on)renderer.on('add',function(){renderer._container.addEventListener('mousemove',forwardHover);});
     var raf=env.requestAnimationFrame?env.requestAnimationFrame.bind(env):function(fn){return env.setTimeout(fn,0);};
     var cancel=env.cancelAnimationFrame?env.cancelAnimationFrame.bind(env):env.clearTimeout.bind(env);
     var selectionRequest,selectionSeq=0,originals=new Map();
@@ -50,7 +75,9 @@
           var f=additions[offset];
           var layer=L.geoJSON(f,{pane:'planningParcels',renderer:renderer,smoothFactor:2,
             style:{color:'#334155',weight:.7,opacity:.28,fillOpacity:0},
-            onEachFeature:function(feature,polygon){polygon.on('click',function(event){L.DomEvent.stopPropagation(event);pick(feature);});}});
+            onEachFeature:function(feature,polygon){
+              if(polygon.bindTooltip){var p=feature.properties||{};polygon.bindTooltip('Tờ '+(p.sheet==null?'—':p.sheet)+' · Thửa '+(p.parcel==null?'—':p.parcel),{sticky:true});}
+              polygon.on('click',function(event){L.DomEvent.stopPropagation(event);pick(feature);});}});
           group.addLayer(layer);features.set(f.id,layer);
         }
         if(offset<additions.length)frame=raf(chunk);
@@ -116,7 +143,7 @@
       draw();pump();
       if(!cells.length)status('Vùng xem quá rộng; phóng gần để xem ranh thửa.',false);
     }
-    return {update:update,pause:function(){active=false;++run;cancel(frame);},cancelSelection:cancelSelection,dispose:function(){disposed=true;active=false;++run;cancelSelection();originals.clear();cancel(frame);requests.forEach(function(r){r.abort();});retries.forEach(function(t){env.clearTimeout(t);});retries.clear();requests.clear();queue=[];cache.clear();features.clear();map.removeLayer(group);map.removeLayer(renderer);}};
+    return {update:update,pause:function(){active=false;++run;cancel(frame);},cancelSelection:cancelSelection,dispose:function(){disposed=true;active=false;if(renderer._container)renderer._container.removeEventListener('mousemove',forwardHover);cancel(hoverFrame);underneath=null;++run;cancelSelection();originals.clear();cancel(frame);requests.forEach(function(r){r.abort();});retries.forEach(function(t){env.clearTimeout(t);});retries.clear();requests.clear();queue=[];cache.clear();features.clear();map.removeLayer(group);map.removeLayer(renderer);}};
   }
   return {keys:keys,mount:mount};
 });

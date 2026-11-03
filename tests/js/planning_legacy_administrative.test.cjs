@@ -29,5 +29,5 @@ test('both boundary buttons have explicit old/new labels and links accept the le
  const vm=require('node:vm'),ctx={};vm.createContext(ctx);
  const start=sourceMap.indexOf('  function defaultBaseLayer(');
  vm.runInContext(sourceMap.slice(start,sourceMap.indexOf('\n  function ',start+1)),ctx);
- assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'satellite');
+ assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'street');
 });

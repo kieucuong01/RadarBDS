@@ -3,21 +3,21 @@ const api=require('../../static/js/main/planning_parcel_cells.js');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function harness(featureTemplate,liveTemplate){
  let enabled=true,x=52177,y=30749;const pending=[],polygons=[],status=[],frames=[];
- const groups=[];
+ const groups=[],listeners={},domEvents=[];let hit=null;const canvas={addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};const renderer={_container:canvas,on(n,f){if(n==='add')f();}};
  const L={layerGroup(){const members=new Set(),g={members,addTo(){return g;},addLayer(l){members.add(l);},removeLayer(l){members.delete(l);},clearLayers(){members.clear();}};groups.push(g);return g;},
- canvas:()=>({}),geoJSON(f,options){const layer={feature:f};polygons.push(layer);options.onEachFeature(f,{on(n,fn){layer[n]=fn;}});return layer;},DomEvent:{stopPropagation(){}}};
- const env={AbortController,setTimeout,clearTimeout,requestAnimationFrame(fn){frames.push(fn);return frames.length;},cancelAnimationFrame(){},fetch(url,options){return new Promise((resolve,reject)=>pending.push({url,options,resolve,reject}));}};
+ stamp:el=>el.id,canvas:()=>renderer,geoJSON(f,options){const layer={feature:f};polygons.push(layer);options.onEachFeature(f,{bindTooltip(text){layer.tooltip=text;},on(n,fn){layer[n]=fn;}});return layer;},DomEvent:{stopPropagation(){}}};
+ const env={document:{elementsFromPoint:()=>hit?[canvas,hit]:[canvas]},MouseEvent:class {constructor(type,values){this.type=type;Object.assign(this,values);}},AbortController,setTimeout,clearTimeout,requestAnimationFrame(fn){frames.push(fn);return frames.length;},cancelAnimationFrame(){},fetch(url,options){return new Promise((resolve,reject)=>pending.push({url,options,resolve,reject}));}};
  function lng(a){return a/65536*360-180;}function lat(b){return Math.atan(Math.sinh(Math.PI*(1-2*b/65536)))*180/Math.PI;}
  const bounds=()=>({getWest:()=>lng(x+.1),getEast:()=>lng(x+.9),getNorth:()=>lat(y+.1),getSouth:()=>lat(y+.9)});
- const map={getBounds:bounds,removeLayer(g){if(g.clearLayers)g.clearLayers();}};
+ const map={_targets:{},getBounds:bounds,removeLayer(g){if(g.clearLayers)g.clearLayers();}};
  const selected=[];
  const controller=api.mount(map,L,env,{featureTemplate,liveTemplate,zoom:16,template:'/api/planning/parcel-cells/version/{x}/{y}.json',enabled:()=>enabled,status:(...args)=>status.push(args),select:f=>selected.push(f)});
  function deliver(i,ids,display=false,needsLive=false){pending[i].resolve({ok:true,json:async()=>({type:'FeatureCollection',needs_live:needsLive,features:ids.map(id=>({type:'Feature',id,display_only:display,properties:{parcel:id},geometry:{type:'Polygon',coordinates:[[[lng(x+.5),lat(y+.5)],[lng(x+.6),lat(y+.6)],[lng(x+.5),lat(y+.5)]]]} }))})});}
- return {controller,pending,polygons,status,selected,frames,groups,deliver,setX(v){x=v;},disable(){enabled=false;},tick(){while(frames.length)frames.shift()();}};
+ return {renderer,listeners,canvas,domEvents,map,setHit(el){hit=el;},controller,pending,polygons,status,selected,frames,groups,deliver,setX(v){x=v;},disable(){enabled=false;},tick(){while(frames.length)frames.shift()();}};
 }
 test('fixed cells reuse warm data, keep existing geometry and avoid duplicate parcel objects',async()=>{
  const h=harness();h.controller.update();assert.equal(h.pending.length,1);assert.equal(h.pending[0].options.credentials,'omit');h.deliver(0,[1,2]);await flush();
- assert.equal(h.polygons.length,2);h.polygons[0].click({});assert.equal(h.selected[0].id,1);
+ assert.equal(h.polygons.length,2);assert.equal(h.polygons[0].tooltip,'Tờ — · Thửa 1');h.polygons[0].click({});assert.equal(h.selected[0].id,1);
  h.controller.update();assert.equal(h.pending.length,1,'Same cell makes no new requests');assert.equal(h.polygons.length,2);
  h.setX(52178);h.controller.update();h.deliver(1,[2,3]);await flush();
  h.setX(52177);h.controller.update();assert.equal(h.pending.length,2,'Returning to a warm cell never fetches');
@@ -57,4 +57,16 @@ test('snapshot geometry appears before a slow live supplement and survives live 
  assert.equal(h.polygons.length,1);assert.equal(h.pending.length,2);assert(h.pending[1].url.includes('/live/'));
  h.pending[1].resolve({ok:false,status:502});await flush();assert.equal(h.groups[0].members.size,1);
  h.controller.update();assert.equal(h.pending.length,2,'Busy sources cool down instead of repeating on every small pan');h.controller.dispose();
+});
+
+
+test('canvas hover forwards only empty parcel space and cancels listener on disposal',()=>{
+ const h=harness(),events=[];let closed=0;
+ const path={id:9,dispatchEvent:event=>events.push(event.type)};
+ h.map._targets[9]={closeTooltip(){closed++;}};h.setHit(path);
+ h.listeners.mousemove({target:h.canvas,clientX:20,clientY:30});h.tick();
+ assert.deepEqual(events,['mouseover','mousemove']);
+ h.renderer._hoveredLayer={};h.listeners.mousemove({target:h.canvas,clientX:20,clientY:30});h.tick();
+ assert.equal(events.at(-1),'mouseout');assert.ok(closed>0);
+ h.controller.dispose();assert.equal(h.listeners.mousemove,undefined);
 });

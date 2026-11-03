@@ -119,7 +119,7 @@
   }
 
   function defaultBaseLayer(theme) {
-    return "satellite";
+    return "street";
   }
 
   function sharedMapView(href) {

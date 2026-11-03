@@ -74,7 +74,7 @@ dashboard; không có route công khai `/maps` ở baseline này.
 
 ## 4. Hành vi hiện hành phải giữ
 
-- Mở Maps thường: fullscreen/focus, nền **vệ tinh**, theme **QH sử dụng đất 2030 65%**, ranh thửa tắt mặc định.
+- Mở Maps thường: fullscreen/focus, nền **đường phố**, theme **QH sử dụng đất 2030 65%**, ranh thửa tắt mặc định.
   Entry chọn theme cụ thể giữ theme đó; liên kết chia sẻ giữ nền/zoom cụ thể.
   Entry quy hoạch ẩn tin đăng mở gần hơn quanh cùng tâm; chế độ hiện tin giữ khung địa bàn.
   Bố cục mobile theo [mốc safe-area dùng chung](maps-mobile-safe-layout-2026-11-03.md).
@@ -482,3 +482,16 @@ vi kiểm chứng, không chồng các “current behavior” mâu thuẫn. Tài
 nguồn không thay thế kiểm lại source policy khi triển khai mới; ghi rõ lỗ hổng
 độ phủ thay vì tô đầy bằng nguồn khác. Không lưu token/cookie/ảnh giấy tờ vào docs
 hoặc memory. Các giới hạn hiện tại là lựa chọn có chủ đích, không là TODO tự bỏ.
+
+
+### Sửa hover ranh và nền đường phố — 2026-11-03
+
+Default base của `listing_map.js` là `street`; link chia sẻ vẫn giữ base được
+chọn rõ ràng. Ô ranh canvas gắn tooltip Tờ/Thửa. Khi canvas không hit thửa,
+`planning_parcel_cells.js` chuyển hover tới layer Leaflet bên dưới qua DOM
+hit-stack; khi hit thửa đóng tooltip bên dưới. Không đổi pointer-events trong
+lúc rê chuột và không quét toàn bộ polygon; kiểm sau Canvas hit-test bằng RAF.
+Listener/rAF được dọn khi dispose. Phụ thuộc nội bộ Leaflet 1.9.4
+`_hoveredLayer`, `_targets`; phải chạy lại browser check khi nâng Leaflet.
+Chrome harness đã kiểm đi vào/ra thửa nhiều lần, fallback địa giới và dispose,
+không page error. Evidence ignored `.local/test-parcel-hover-browser.py`.

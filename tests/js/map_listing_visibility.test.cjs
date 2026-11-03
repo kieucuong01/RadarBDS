@@ -96,11 +96,11 @@ test('a listing response arriving after hiding cannot restore markers or cards',
  assert.equal(rendered,0);assert.equal(ctx.state.recentPayload,null);
 });
 
-test('all entries default to satellite',()=>{
+test('all entries default to street',()=>{
  const ctx={};ctx.URLSearchParams=URLSearchParams;vm.createContext(ctx);vm.runInContext(functions('defaultBaseLayer'),ctx);
- assert.equal(ctx.defaultBaseLayer('administrative'),'satellite');
- assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'satellite');
- for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'satellite');
+ assert.equal(ctx.defaultBaseLayer('administrative'),'street');
+ assert.equal(ctx.defaultBaseLayer('administrative_legacy'),'street');
+ for(const theme of [null,'land_use_2030','transport','partition'])assert.equal(ctx.defaultBaseLayer(theme),'street');
 });
 test('ordinary Maps opens Thu Dau Mot while retaining the frozen listing filters',async()=>{
  const el={hidden:true,classList:{add(){},toggle(){}},setAttribute(){},focus(){}};
