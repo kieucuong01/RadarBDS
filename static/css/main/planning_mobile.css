@@ -3,9 +3,12 @@
 .planning-map-ui .planning-map-popover>summary,.planning-map-ui .planning-listings-toggle,.planning-map-ui .planning-filter-button{min-height:34px;padding:0 10px;font-size:12px;gap:5px}
 .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary{top:90px}
 @media(max-width:760px){
- .planning-map-ui .planning-map-toolbar{left:8px;right:8px;top:calc(var(--map-header-height) + 6px);transform:none;width:auto;max-width:none;display:grid;grid-template-columns:.85fr .85fr .9fr 1.1fr 1.2fr;gap:3px}
+ .planning-map-ui .planning-map-toolbar{left:8px;right:8px;top:calc(var(--map-header-height) + 6px);transform:none;width:auto;max-width:none;display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
  .planning-map-toolbar>div{min-width:0}
- .planning-map-ui .planning-map-popover>summary,.planning-map-ui .planning-map-toolbar>.planning-listings-toggle,.planning-map-ui .planning-filter-button{width:100%;min-height:40px;padding:0 4px;gap:4px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
+ .planning-map-ui .planning-map-toolbar{max-width:calc(100% - 16px)}
+ .planning-map-ui .planning-map-toolbar .planning-layer-chip{min-height:34px;padding:0 10px;font-size:11px}
+ .listing-map-workspace:has(.planning-map-toolbar){--map-controls-top:calc(var(--map-header-height) + 84px)}
+ .planning-map-ui .planning-map-popover>summary,.planning-map-ui .planning-map-toolbar>.planning-listings-toggle,.planning-map-ui .planning-filter-button{width:auto;min-height:34px;padding:0 4px;gap:4px;font-size:11px;justify-content:center;box-shadow:0 1px 5px #15382c18}
  .planning-map-ui .planning-map-form,.planning-map-ui .planning-overlay-body{top:48px;left:0;width:calc(100vw - 16px);max-width:420px;max-height:calc(100dvh - var(--map-header-height) - 116px)}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-top{top:var(--map-controls-top)}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-top.leaflet-left{top:var(--map-controls-top)}
@@ -33,7 +36,11 @@
  .planning-drawing-actions button[aria-pressed=true]{background:#11755b;color:#fff}
  .planning-layer-dock{left:4px;right:4px;transform:none;width:auto;max-width:none;flex-wrap:nowrap;justify-content:flex-start;gap:3px;padding:2px;border:0;background:transparent;box-shadow:none;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
  .planning-layer-dock::-webkit-scrollbar{display:none}
- .planning-map-ui .planning-layer-chip{flex:0 0 auto;min-height:36px;padding:0 8px;font-size:10px;font-weight:800;white-space:nowrap;background:#fff;box-shadow:0 1px 5px #15382c20}
+ .planning-map-ui .planning-layer-chip{flex:0 0 auto;min-height:36px;padding:0 8px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 1px 5px #15382c20}
+ .planning-map-ui .planning-layer-chip[aria-pressed=true]{background:#11755b;color:#fff;border-color:#11755b}
+ .planning-map-ui .planning-parcel-search .planning-map-form{position:fixed;left:0;right:0;top:auto;bottom:0;transform:none;margin:0;width:100%;max-width:none;max-height:75dvh;padding:20px 16px calc(16px + env(safe-area-inset-bottom,0px));border-radius:18px 18px 0 0;z-index:5;animation:planning-sheet-in .18s ease-out}
+ .planning-map-ui .planning-parcel-search-close{display:block;position:absolute;top:8px;right:10px;width:36px;height:36px;border:0;border-radius:50%;background:#edf5f1;color:#183b32;font-size:24px}
+ .listing-map-workspace:has(.planning-parcel-search[open]) .listing-map-status,.listing-map-workspace:has(.planning-parcel-search[open]) .listing-map-filter-summary{visibility:hidden}
  .planning-layer-chip[aria-pressed=true]:before{display:none}
  .listing-map-workspace.is-focus-mode .planning-layer-dock,.listing-map-workspace.listings-hidden .planning-layer-dock{bottom:calc(4px + env(safe-area-inset-bottom,0px))}
  .listing-map-workspace.is-focus-mode .leaflet-control-attribution{margin-bottom:54px}
@@ -57,3 +64,6 @@
  .planning-opacity-control select{top:96px}
  .listing-map-workspace:has(.planning-map-toolbar) .leaflet-control-layers{margin-right:8px}
 }
+
+@keyframes planning-sheet-in{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.planning-map-ui .planning-parcel-search .planning-map-form{animation:none}}

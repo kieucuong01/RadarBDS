@@ -283,9 +283,21 @@
     ui.areaSlot = options.areaSlot || node('div', toolbar); ui.parcelSlot = node('div', toolbar);
     if(options.areaSlot)ui.areaSlot.replaceChildren();
     if (typeof options.onToggleFilters === 'function') {
-      var filterButton = node('button', filterSlot, 'Bộ lọc');
+      var filterButton = node('button', filterSlot, 'Lọc tin');
       filterButton.type = 'button'; filterButton.className = 'planning-filter-button';
       filterButton.addEventListener('click', options.onToggleFilters);
+      function syncFilterButton(){
+        var sidebar=doc.getElementById('sidebar');
+        var desktopVisible=env.innerWidth>1024&&doc.body&&!doc.body.classList.contains('listing-map-focus-mode')&&sidebar&&!sidebar.classList.contains('collapsed');
+        filterButton.setAttribute('aria-pressed',String(Boolean(desktopVisible||doc.body&&doc.body.classList.contains('listing-map-filter-open')||sidebar&&sidebar.classList.contains('show'))));
+      }
+      syncFilterButton();
+      if(env.MutationObserver&&doc.body){
+        var filterObserver=new env.MutationObserver(syncFilterButton);
+        filterObserver.observe(doc.body,{attributes:true,attributeFilter:['class']});
+        var sidebar=doc.getElementById('sidebar');
+        if(sidebar)filterObserver.observe(sidebar,{attributes:true,attributeFilter:['class']});
+      }
     }
     var areaPanel;
     if (selectedArea && env.RadarPlanningArea) areaPanel=env.RadarPlanningArea.mount(env, ui, provinces, selectedArea, function(province, area){
@@ -315,7 +327,7 @@
     box.addEventListener('toggle', function () {
       if (box.open) ui.panels.forEach(function (p) { if (p !== box) p.open = false; });
     });
-    node('summary', box, 'Lớp bản đồ');
+    box.hidden = true;
     if (typeof options.onToggleListings === 'function') {
       var listingsToggle = node('button', toolbar);
       listingsToggle.type = 'button'; listingsToggle.className = 'planning-listings-toggle';
@@ -331,6 +343,7 @@
         syncListingsToggle(options.onToggleListings());
       });
     }
+    ui.boundarySlot = node('div', toolbar);
     var body = node('div', box);
     body.className = 'planning-overlay-body';
     node('span', body, published ? 'DỮ LIỆU QUY HOẠCH THAM KHẢO' : 'THỬ NGHIỆM LOCAL').className = 'planning-overlay-badge';
@@ -383,7 +396,7 @@
     increase.addEventListener('click', function () { setOpacity(activeTheme, Number(activeTheme.slider.value)+10); });
     decrease.addEventListener('click', function () { setOpacity(activeTheme, Number(activeTheme.slider.value)-10); });
     themes.forEach(function (theme) {
-      theme.quick = node('button', dock, theme.short);
+      theme.quick = node('button', isAdministrative(theme.id) ? toolbar : dock, theme.short);
       theme.quick.type = 'button'; theme.quick.className = 'planning-layer-chip'; theme.quick.disabled = true;
       theme.quick.setAttribute('aria-label', 'Bật/tắt ' + theme.name);
       theme.quick.setAttribute('aria-pressed', 'false');
@@ -795,6 +808,7 @@
       if (disposed) return;
       disposed = true;
       controller.abort();
+      if(filterObserver)filterObserver.disconnect();
       map.off('planning:busy',taskChanged);tasks.clear();
       map.off('planning:locate-area',locatedArea);
       if (syncListingsEvent) map.off('planning:listings-visibility',syncListingsEvent);

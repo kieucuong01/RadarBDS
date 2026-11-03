@@ -528,3 +528,14 @@ theme qhctp_1125, chỉ HCM cũ, nhóm SDD2–18 của TongHopChuyenDe_QHCTPHCM.
 Ảnh256px qua gateway, cùng cache/bounds/scheduler; không tải vector toàn thành phố.
 
 Định vị và phân biệt lối vào Quy hoạch/Tin rao/Săn Deal: [maps-location-entry.md](planning_sources/maps-location-entry.md).
+
+2026-11-04 UI: toolbar trên gồm Lọc tin, Tờ/thửa, Hiện/Ẩn tin đăng, Ranh thửa,
+Địa giới mới/cũ. Ranh dùng `ui.boundarySlot`; địa giới dùng cùng quick toggle
+nhưng đặt ở toolbar, không nhân bản dưới dock. Bỏ nút Lớp bản đồ; giữ settings
+nội bộ để controller/source/opacity hoạt động. Nền xanh + chữ trắng theo
+`aria-pressed=true` cho toolbar/dock, kể cả mobile. Filter observer chỉ theo dõi
+class của body/sidebar và ngắt khi dispose để đồng bộ nút với đóng ngoài.
+Mobile toolbar flex-wrap canh giữa; Tờ/thửa là form fixed dưới đáy, max75dvh,
+cuộn nội bộ, nút đóng trả focus về summary và hỗ trợ reduced motion. Ẩn dòng
+đếm khi sheet mở để tránh chồng lên form. Kiểm Chrome320/390/1100 và UI test;
+commit UI này cần deploy riêng theo yêu cầu gom của người dùng.

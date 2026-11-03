@@ -60,6 +60,9 @@
     var searchMenu = popover(ui.parcelSlot, 'Tờ/thửa', 'planning-parcel-search');
     var searchForm = node('form', searchMenu); searchForm.className = 'planning-map-form'; searchForm.setAttribute('aria-label', 'Tra tờ thửa');
     node('h3', searchForm, 'Tra thửa đất');
+    var closeSearch=node('button',searchForm,'×');closeSearch.type='button';closeSearch.className='planning-parcel-search-close';
+    closeSearch.setAttribute('aria-label','Đóng tra tờ thửa');
+    closeSearch.addEventListener('click',function(){searchMenu.open=false;searchMenu.querySelector('summary').focus();});
     var searchMethod = field('select', searchForm, 'Tra cứu theo');
     [['sheet','Tờ / thửa'],['coordinates','Tọa độ'],['corners','Góc ranh']].forEach(function(item){node('option',searchMethod,item[1]).value=item[0];});
     searchMethod.value='sheet';
@@ -122,9 +125,10 @@
     var toggle = node('input', label); toggle.type = 'checkbox'; toggle.checked = false;
     toggle.setAttribute('aria-label', 'Bật ranh thửa đất');
     node('span', label, 'Hiển thị ranh thửa đất');
-    var quickBoundaries = ui.dock ? node('button', ui.dock, 'Ranh thửa') : null;
+    var boundaryHost=ui.boundarySlot||ui.dock;
+    var quickBoundaries = boundaryHost ? node('button', boundaryHost, 'Ranh thửa') : null;
     if (quickBoundaries) {
-      ui.dock.prepend(quickBoundaries);
+      if(!ui.boundarySlot)ui.dock.prepend(quickBoundaries);
       quickBoundaries.type = 'button'; quickBoundaries.className = 'planning-layer-chip'; quickBoundaries.disabled = true;
       quickBoundaries.setAttribute('aria-label', 'Bật/tắt ranh thửa'); quickBoundaries.setAttribute('aria-pressed', 'false');
       quickBoundaries.title = 'Ranh thửa hiển thị khi phóng gần';

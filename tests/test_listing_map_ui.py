@@ -411,9 +411,9 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/filters.js') }}?v=listings-perf-20261021" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=locate-area-20261103" in template
-    assert "js/main/planning_parcels.js') }}?v=maps-defaults-20261103" in template
+    assert "js/main/planning_parcels.js') }}?v=map-toolbar-20261104" in template
     assert "js/main/planning_corner_saved.js') }}?v=corner-saved-20261103" in template
-    assert "js/main/planning_overlay.js') }}?v=locate-area-20261103" in template
+    assert "js/main/planning_overlay.js') }}?v=map-toolbar-20261104" in template
     assert "js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template
@@ -495,12 +495,14 @@ def test_mobile_controls_do_not_overlap_header_loading_or_layer_dock(width, heig
     <div class="leaflet-top leaflet-left"><div class="leaflet-control leaflet-control-zoom"><button>+</button><button>−</button></div></div>
     <div class="leaflet-top leaflet-right"><div class="leaflet-control leaflet-control-layers"><a class="leaflet-control-layers-toggle">Nền</a></div></div>
     <div class="planning-map-ui"><div class="planning-map-toolbar">
-    <button class="planning-filter-button">Bộ lọc</button><details class="planning-map-popover"><summary>Khu vực</summary></details>
-    <details class="planning-map-popover"><summary>Tờ/thửa</summary></details><details class="planning-map-popover"><summary>Lớp bản đồ</summary></details>
-    <button class="planning-listings-toggle">Ẩn tin đăng</button></div>
+    <div><button class="planning-filter-button" aria-pressed="false">Lọc tin</button></div>
+    <div><details class="planning-map-popover planning-parcel-search"><summary>Tờ/thửa</summary><form class="planning-map-form">Tra thửa đất</form></details></div>
+    <button class="planning-listings-toggle" aria-pressed="true">Ẩn tin đăng</button>
+    <div><button class="planning-layer-chip" aria-pressed="false">Ranh thửa</button></div>
+    <button class="planning-layer-chip" aria-pressed="false">Địa giới (mới)</button><button class="planning-layer-chip" aria-pressed="true">Địa giới (cũ)</button></div>
     <div class="planning-map-activity">Đang tải bản đồ…</div>
     <div class="planning-opacity-control"><button>+</button><input type="range"><output>65%</output><button>−</button></div>
-    <div class="planning-layer-dock"><button class="planning-layer-chip">Ranh thửa</button><button class="planning-layer-chip">QH SDĐ 2030</button><button class="planning-layer-chip">QH Chung</button></div>
+    <div class="planning-layer-dock"><button class="planning-layer-chip" aria-pressed="true">QH SDĐ 2030</button><button class="planning-layer-chip">QH Chung</button></div>
     </div></div></div></section>"""
     with playwright.sync_playwright() as driver:
         browser = driver.chromium.launch(executable_path=_chrome_executable(), headless=True)
@@ -519,6 +521,13 @@ def test_mobile_controls_do_not_overlap_header_loading_or_layer_dock(width, heig
         assert boxes["loading"]["x"] > boxes["zoom"]["x"] + boxes["zoom"]["width"]
         assert boxes["loading"]["x"] + boxes["loading"]["width"] < boxes["base"]["x"]
         assert boxes["opacity"]["y"] + boxes["opacity"]["height"] < boxes["dock"]["y"]
+        assert page.locator('.planning-layer-dock button').first.evaluate("el => getComputedStyle(el).backgroundColor") == "rgb(17, 117, 91)"
+        assert page.locator('.planning-layer-dock button').first.evaluate("el => getComputedStyle(el).color") == "rgb(255, 255, 255)"
+        page.emulate_media(reduced_motion='reduce')
+        page.locator('.planning-parcel-search summary').click()
+        sheet=page.locator('.planning-parcel-search form').bounding_box()
+        assert sheet['x'] == 0 and sheet['width'] == width
+        assert abs(sheet['y'] + sheet['height'] - height) <= 1
         browser.close()
 
 

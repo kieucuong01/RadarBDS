@@ -162,3 +162,8 @@
 .planning-map-activity:before,.planning-map-ui button[aria-busy=true]:before{content:'';display:inline-block;width:12px;height:12px;border:2px solid #c2dfd1;border-top-color:#11755b;border-radius:50%;animation:planning-loading .8s linear infinite;flex-shrink:0}
 @keyframes planning-loading{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.planning-map-activity:before,.planning-map-ui button[aria-busy=true]:before{animation:none}}
+
+/* Shared selected state for toolbar toggles and planning chips. */
+.planning-map-toolbar .planning-layer-chip{min-height:34px;padding:0 10px;font-size:12px;box-shadow:0 2px 8px #15382c18}
+.planning-map-ui .planning-map-toolbar button[aria-pressed=true],.planning-map-ui .planning-layer-chip[aria-pressed=true]{background:#11755b;color:#fff;border-color:#11755b}
+.planning-parcel-search-close{display:none}
