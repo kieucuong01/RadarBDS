@@ -15,8 +15,9 @@ for (const [name, count] of [['binh-duong',4],['tay-ninh',5],['long-an',4]]) {
 }
 assert.deepEqual(api.referenceAnnotations(template('unknown')),[]);
 assert.equal(api.referenceClipPath(template('long-an'),{z:11,x:0,y:0}),'');
-const events={},active=new Set(),labels=[];
-const map={removeLayer(l){active.delete(l);}};
+const events={},active=new Set(),labels=[],mapEvents=new Map();
+const map={removeLayer(l){active.delete(l);},getPixelBounds(){return {min:{x:0,y:0},max:{x:524288,y:524288}};},getZoom(){return 11;},
+  on(k,f){mapEvents.set(k,f);},off(k,f){assert.equal(mapEvents.get(k),f);mapEvents.delete(k);}};
 const layer={options:{opacity:.65,pane:'planningPilot',zIndex:301},
   on(k,f){events[k]=f;},setOpacity(v){this.options.opacity=v;return this;}};
 const L={imageOverlay(url,bounds,options){
@@ -29,11 +30,12 @@ const L={imageOverlay(url,bounds,options){
   labels.push(label);return label;
 }};
 api.referenceBranding(layer,map,L,template('tay-ninh'));
-assert.equal(labels.length,5);assert.equal(active.size,0);
+assert.equal(labels.length,0);assert.equal(active.size,0);
 events.add();assert.equal(active.size,5);
 assert.equal(layer.setOpacity(.35),layer);assert.ok(labels.every(l=>l.options.opacity===.35));
-events.remove();assert.equal(active.size,0);
+events.remove();assert.equal(active.size,0);assert.equal(mapEvents.size,0);
 events.add();assert.equal(active.size,5);
+assert.ok(Array.from(active).every(l=>l.options.opacity===.35));
 events.remove();assert.equal(active.size,0);
 assert.equal(layer.options.opacity,.35);
 console.log('Reference branding: 13 verified polygons, zoom coordinates, opacity and toggle cleanup passed');
