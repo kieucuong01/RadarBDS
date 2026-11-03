@@ -14,7 +14,7 @@
         <div class="seo-nav-menu seo-nav-mega" id="seoNavPlanningMenu" aria-labelledby="seoNavPlanning">
           <section aria-labelledby="seoNavPlanningTitle">
             <h2 id="seoNavPlanningTitle">Bản đồ quy hoạch</h2>
-            <a href="/?tab=all&amp;map=1&amp;planning=partition" data-track-cta="header_planning"><span><strong>Mở bản đồ quy hoạch</strong><small>Xem lớp bản đồ, tra tờ/thửa nơi có dữ liệu</small></span></a>
+            <a href="/?tab=all&amp;map=1&amp;planning=land_use_2030" data-track-cta="header_planning"><span><strong>Mở bản đồ quy hoạch</strong><small>Xem lớp bản đồ, tra tờ/thửa nơi có dữ liệu</small></span></a>
             {% for category_page in planning_category_pages %}
             <a href="{{ category_page.path }}"><span><strong>{{ category_page.nav_label }}</strong><small>{{ category_page.nav_description if category_page.has_content else 'Đang cập nhật · xem các chuyên đề đã có trong thư viện' }}</small></span></a>
             {% endfor %}

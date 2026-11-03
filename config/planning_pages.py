@@ -48,10 +48,10 @@ PLANNING_HUB = {
         {"value": "TÂN UYÊN", "label": "Tân Uyên"},
     ],
     "map_themes": [
+        {"value": "land_use_2030", "label": "Sử dụng đất 2030 · tham khảo"},
         {"value": "partition", "label": "Quy hoạch phân khu · GIS"},
         {"value": "urban_general", "label": "Quy hoạch chung đô thị · GIS"},
         {"value": "detailed", "label": "Quy hoạch chi tiết · GIS"},
-        {"value": "land_use_2030", "label": "Sử dụng đất 2030 · tham khảo"},
     ],
     "map_label": "Bình Dương cũ",
     "source_links": [
@@ -245,19 +245,21 @@ PLANNING_PAGES = {
         "sort_order": 20,
         "slug": "duong-my-phuoc-tan-van",
         "path": "/quy-hoach-binh-duong/duong-my-phuoc-tan-van",
-        "title": "Bản đồ đường Mỹ Phước - Tân Vạn Bình Dương cũ | Radar BDS",
-        "description": "Bản đồ tương tác đường Mỹ Phước - Tân Vạn, vùng kết nối KCN Mỹ Phước, Bến Cát, Thuận An, Dĩ An và Tân Vạn.",
+        "title": "Đường Mỹ Phước - Tân Vạn: bản đồ tuyến và cách tra quy hoạch | Radar BDS",
+        "description": "Xem bản đồ đường Mỹ Phước - Tân Vạn, các điểm kết nối Mỹ Phước, Bến Cát, Thuận An, Dĩ An; mở Maps đối chiếu quy hoạch theo vị trí, có nguồn tham khảo.",
         "keywords": "Mỹ Phước Tân Vạn, đường Mỹ Phước Tân Vạn Bình Dương, bản đồ quy hoạch Bến Cát, KCN Mỹ Phước",
         "category": "transport",
         "category_label": "Tuyến giao thông",
         "breadcrumb_label": "Mỹ Phước - Tân Vạn",
         "hero_badge": "Trục logistics - công nghiệp",
-        "hero_title": "Bản đồ đường Mỹ Phước - Tân Vạn",
+        "hero_title": "Bản đồ đường Mỹ Phước - Tân Vạn và cách tra quy hoạch",
         "hero_text": (
-            "Mỹ Phước - Tân Vạn là trục đọc bản đồ quan trọng khi xem đất Bến Cát, "
-            "Mỹ Phước, Thuận An và cửa ngõ Tân Vạn. Trang này giúp thấy tuyến, "
-            "điểm kết nối KCN và khu dân cư để tránh chỉ đọc tin rao theo tên đường."
+            "Dùng bản đồ bên dưới để xem hướng tuyến Mỹ Phước - Tân Vạn và các điểm "
+            "kết nối tại Mỹ Phước, Bến Cát, Thuận An, Dĩ An. Đây là sơ đồ minh họa tuyến, "
+            "không phải ranh lộ giới hoặc bản trích quy hoạch từng thửa. Muốn kiểm tra "
+            "một bất động sản, mở Maps quy hoạch và đối chiếu đúng vị trí, lớp và nguồn dữ liệu."
         ),
+        "planning_href": "/?tab=all&map=1&planning=land_use_2030&city=B%E1%BA%BEN%20C%C3%81T",
         "summary": "Trục công nghiệp - logistics từ Bàu Bàng/Mỹ Phước về Tân Vạn, kèm lớp KCN và vùng đọc tin rao.",
         "thumbnail_label": "MPTV",
         "thumbnail_path": "/static/maps/planning/previews/duong-my-phuoc-tan-van.svg",

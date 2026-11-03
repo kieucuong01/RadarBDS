@@ -83,7 +83,7 @@ def test_planning_hub_has_lightweight_maps_entry_with_supported_choices():
     parser.feed(html)
     assert parser.hidden == {"tab": "all", "map": "1"}
     assert parser.values["city"] == ["THỦ DẦU MỘT", "BẾN CÁT", "THUẬN AN", "DĨ AN", "TÂN UYÊN"]
-    assert parser.values["planning"] == ["partition", "urban_general", "detailed", "land_use_2030"]
+    assert parser.values["planning"] == ["land_use_2030", "partition", "urban_general", "detailed"]
     assert "Mức độ phủ và thông tin thửa tùy nguồn GIS" in html
     assert "planning-mini-map" not in html
     assert "leaflet.js" not in html
@@ -254,7 +254,7 @@ def test_planning_pages_use_shareable_og_image_and_current_cache_keys():
             '<meta property="og:image" '
             'content="https://radarbds.vn/static/images/seo/radarbds-og.png">'
         ) in html
-        assert "planning-entry-20261029" in html or "planning-map-20260728-1" in html
+        assert "maps-defaults-20261103" in html or "planning-map-20260728-1" in html
 
 
 def test_planning_geojson_files_are_valid_feature_collections():

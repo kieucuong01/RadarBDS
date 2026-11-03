@@ -2,8 +2,10 @@
 
 Content pruning on 2026-11-03 consolidated three duplicate answers and added
 planning/Săn Deal guides. Follow [the decisions and URL inventory](seo-content-review-2026-11-03.md)
-before creating another price or ward-comparison article. Performance remains
-unmeasured without a real Search Console export.
+before creating another price or ward-comparison article. A subsequent read-only
+GSC review prioritized existing Maps and land-price pages over more templated
+ward comparisons. See [the GA4/GSC/Maps release](ga4-gsc-maps-release-2026-11-03.md).
+Search gains after these changes remain unmeasured.
 
 ## Product discovery update — 2026-11-03
 

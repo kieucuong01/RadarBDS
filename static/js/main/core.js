@@ -537,7 +537,7 @@ async function openPlanningMapFromTools() {
   closeToolsSheet();
   try {
     if (!['signals', 'all'].includes(activeTabId())) await switchTab('all', null);
-    await window.openListingMap({ planningTheme: 'partition' });
+    await window.openListingMap({ planningTheme: 'land_use_2030' });
   } catch (error) {
     window.location.assign('/quy-hoach-binh-duong');
   }

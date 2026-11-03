@@ -46,6 +46,8 @@ SUPPORTED_DASHBOARD_QUERY_KEYS = frozenset(
         "q",
         "keyword",
         "signal",
+        "map",
+        "planning",
         "utm_source",
         "utm_medium",
         "utm_campaign",
@@ -237,6 +239,10 @@ def _validate_dashboard_url(path: str, value: str) -> list[AuditFinding]:
             findings.append(
                 AuditFinding("error", "invalid_dashboard_tab", path, "Dashboard tab must be one of signals, all, market, insights."),
             )
+        if key == "map" and values != ["1"]:
+            findings.append(AuditFinding("error", "invalid_map_flag", path, "Maps entry requires map=1."))
+        if key == "planning" and any(value not in {item["value"] for item in PLANNING_HUB["map_themes"]} for value in values):
+            findings.append(AuditFinding("error", "invalid_planning_theme", path, "Planning entry requires a supported layer."))
         if key.startswith("utm_") and any(len(value) > 80 for value in values):
             findings.append(
                 AuditFinding("error", "utm_value_too_long", path, f"Dashboard {key} values must be at most 80 characters."),

@@ -324,7 +324,7 @@
     var fit = node('button', body, 'Xem vùng có quy hoạch');
     fit.type = 'button'; fit.disabled = true;
     var activeTheme = themes.find(function (theme) { return theme.id === options.initialTheme; })
-      || themes.find(function (theme) { return theme.id === 'partition'; });
+      || themes.find(function (theme) { return theme.id === 'land_use_2030'; });
     var dock = node('div', ui.root); dock.className = 'planning-layer-dock';
     ui.dock = dock;
     dock.setAttribute('aria-label', 'Bật tắt nhanh quy hoạch');

@@ -27,7 +27,7 @@ test('Tools opens Maps with existing filters and chosen layer, from either listi
   await vm.runInContext('openPlanningMapFromTools()',ctx);
   const params=new URLSearchParams(captured.snapshot.query);
   for(const [key,value] of new URLSearchParams(ctx.currentFilters))if(key!=='page')assert.equal(params.get(key),value);
-  assert.equal(params.has('page'),false);assert.equal(captured.options.planningTheme,'partition');
+  assert.equal(params.has('page'),false);assert.equal(captured.options.planningTheme,'land_use_2030');
   assert.equal(captured.snapshot.mode,initialTab==='signals'?'signals':'all');
   assert.equal(menu.open,false);assert.equal(closed,1);assert.equal(switched,initialTab==='market'?1:0);
  }
@@ -39,8 +39,8 @@ test('closing a planning deep link removes presentation flags while retaining li
  assert.equal(url.searchParams.has('region'),false);
  assert.equal(url.searchParams.get('city'),'BẾN CÁT');assert.equal(url.searchParams.get('price_max'),'3');
 });
-test('invalid planning choices use a supported city and partition rather than arbitrary URL input',()=>{
+test('invalid planning choices use a supported city and land use 2030 rather than arbitrary URL input',()=>{
  const url=new URL(hub.mapHref('https://evil.invalid','district_landuse'),'https://radarbds.vn');
- assert.equal(url.searchParams.get('city'),'THỦ DẦU MỘT');assert.equal(url.searchParams.get('planning'),'partition');
+ assert.equal(url.searchParams.get('city'),'THỦ DẦU MỘT');assert.equal(url.searchParams.get('planning'),'land_use_2030');
  assert.equal(url.origin,'https://radarbds.vn');
 });

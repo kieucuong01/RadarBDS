@@ -19,7 +19,7 @@
 
   function mapHref(city, theme) {
     var cities=['THỦ DẦU MỘT','BẾN CÁT','THUẬN AN','DĨ AN','TÂN UYÊN'];
-    var themes=['partition','urban_general','detailed','land_use_2030'];
+    var themes=['land_use_2030','partition','urban_general','detailed'];
     var params=new URLSearchParams({tab:'all',map:'1',
       city:cities.includes(city)?city:cities[0],planning:themes.includes(theme)?theme:themes[0]});
     return '/?'+params.toString();

@@ -51,6 +51,9 @@
             <span>{{ page.read_time }}</span>
           </div>
           <p class="planning-quick-answer">{{ page.hero_text }}</p>
+          {% if page.planning_href %}
+          <p><a class="seo-button seo-button-primary" href="{{ page.planning_href }}" data-track-cta="planning_detail_open_maps">Đối chiếu quy hoạch trên Maps</a> · <a href="/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do">Cách tra tờ/thửa và tọa độ</a></p>
+          {% endif %}
         </div>
       </header>
 

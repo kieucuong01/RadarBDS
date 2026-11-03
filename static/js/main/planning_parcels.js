@@ -119,14 +119,14 @@
     var results = node('div', searchForm); results.className = 'planning-parcel-results';
     var settings = node('div', ui.layerBody); settings.className = 'planning-parcel-settings';
     var label = node('label', settings); label.className = 'planning-parcel-toggle';
-    var toggle = node('input', label); toggle.type = 'checkbox'; toggle.checked = true;
+    var toggle = node('input', label); toggle.type = 'checkbox'; toggle.checked = false;
     toggle.setAttribute('aria-label', 'Bật ranh thửa đất');
     node('span', label, 'Hiển thị ranh thửa đất');
     var quickBoundaries = ui.dock ? node('button', ui.dock, 'Ranh thửa') : null;
     if (quickBoundaries) {
       ui.dock.prepend(quickBoundaries);
       quickBoundaries.type = 'button'; quickBoundaries.className = 'planning-layer-chip'; quickBoundaries.disabled = true;
-      quickBoundaries.setAttribute('aria-label', 'Bật/tắt ranh thửa'); quickBoundaries.setAttribute('aria-pressed', 'true');
+      quickBoundaries.setAttribute('aria-label', 'Bật/tắt ranh thửa'); quickBoundaries.setAttribute('aria-pressed', 'false');
       quickBoundaries.title = 'Ranh thửa hiển thị khi phóng gần';
     }
     var buttons = node('div', settings); buttons.className = 'planning-parcel-actions';

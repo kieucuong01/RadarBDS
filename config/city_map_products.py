@@ -51,6 +51,15 @@ def _faq(
     )
     return (
         {
+            "question": "Xem bản đồ quy hoạch khác bản đồ hành chính thế nào?",
+            "answer": (
+                "Bản đồ hành chính trên trang này giúp đối chiếu phường cũ và mới. "
+                "Để xem QH sử dụng đất 2030 và các lớp quy hoạch đang có, mở Maps "
+                "quy hoạch theo khu vực. Độ phủ và nguồn thay đổi theo từng lớp; "
+                "kết quả không thay thế xác minh quy hoạch tại cơ quan có thẩm quyền."
+            ),
+        },
+        {
             "question": f"Bản trước năm 2025 của {city_name} có bao nhiêu đơn vị?",
             "answer": (
                 f"Bản trước sắp xếp hiển thị {legacy_count} đơn vị hành chính "
@@ -135,12 +144,12 @@ def _page(
         "price_vnd": 99_000,
         "tracking_prefix": city_slug.replace("-", "_") + "_map",
         "title": (
-            f"Bản đồ TP {city_name} Bình Dương trước và sau sáp nhập | Radar BDS"
+            f"Bản đồ {city_name}: tra phường cũ, mới và mở Maps quy hoạch | Radar BDS"
         ),
         "description": (
-            f"Tra cứu miễn phí bản đồ TP {city_name} Bình Dương trước và sau "
-            f"sáp nhập: {legacy_count} đơn vị cũ, {current_count} phường hiện "
-            "tại và bộ file PDF, SVG, KML hoàn thiện."
+            f"Tra bản đồ hành chính {city_name}: {legacy_count} đơn vị cũ, "
+            f"{current_count} phường sau sắp xếp. Mở Maps xem QH sử dụng đất 2030 "
+            "nơi có dữ liệu; có bộ file PDF, SVG, KML riêng."
         ),
         "keywords": (
             f"bản đồ {city_name}, bản đồ TP {city_name}, bản đồ vector "
@@ -151,8 +160,8 @@ def _page(
         "hero_title": f"Bản đồ TP {city_name} trước và sau sáp nhập",
         "hero_text": (
             f"Tra cứu miễn phí {legacy_count} đơn vị cũ và {current_count} "
-            f"phường hiện tại của {city_name}. Chọn khu vực trên bản đồ để đối "
-            "chiếu tên địa bàn, sau đó mở dashboard Radar BDS xem tin nhà đất."
+            f"phường sau sắp xếp của {city_name}. Đối chiếu tên địa bàn trên bản đồ "
+            "hành chính bên dưới, hoặc mở Maps để xem lớp quy hoạch đang có cho khu vực."
         ),
         "answer_block": (
             f"TP {city_name} hiện có 2 lớp tra cứu trên Radar BDS: bản trước năm "
@@ -202,6 +211,7 @@ def _page(
             else f"Tìm khu vực {city_name}"
         ),
         "dashboard_signal_href": dashboard_href,
+        "planning_href": f"/?tab=all&map=1&planning=land_use_2030&city={quote(city_name.upper())}",
         "dashboard_label": dashboard_label,
         "dashboard_heading": f"Xem dữ liệu tin đang bán liên quan {city_name}",
         "dashboard_text": (

@@ -74,7 +74,7 @@ dashboard; không có route công khai `/maps` ở baseline này.
 
 ## 4. Hành vi hiện hành phải giữ
 
-- Mở Maps thường: fullscreen/focus, nền **đường phố**, theme **QH Phân khu 50%**.
+- Mở Maps thường: fullscreen/focus, nền **đường phố**, theme **QH sử dụng đất 2030 65%**, ranh thửa tắt mặc định.
   Entry chọn theme cụ thể giữ theme đó; entry địa giới dùng nền đường phố.
 - Mở quy hoạch từ Công cụ/hub: ẩn tin đăng. Maps thường hiện tin trong Bình Dương;
   chọn tỉnh khác ngoài vùng tin rao hiện có thì tự ẩn và hủy request tin. Nút Hiện tin đăng vẫn cho phép bật thủ công.

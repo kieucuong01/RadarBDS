@@ -3418,7 +3418,7 @@
     state.sharedView = options.initialSharedOpen ? sharedMapView(root.location.href) : null;
     if (state.sharedView && VALID_PLANNING_THEMES.indexOf(state.sharedView.theme)>=0) options.planningTheme=state.sharedView.theme;
     var explicitPlanning = VALID_PLANNING_THEMES.indexOf(options.planningTheme) >= 0;
-    state.planningTheme = explicitPlanning ? options.planningTheme : "partition";
+    state.planningTheme = explicitPlanning ? options.planningTheme : "land_use_2030";
     if (state.sharedView && state.sharedView.theme==='none') state.planningTheme=null;
     var regions = Array.isArray(root.RADAR_PLANNING_REGIONS) ? root.RADAR_PLANNING_REGIONS : [];
     state.initialRegion = state.planningTheme && regions.find(function (r) { return r.id === options.planningRegion; }) || null;

@@ -32,6 +32,13 @@ def test_canonical_ward_registry_has_all_thirteen_wards():
     assert TDM_LIVE_WARDS["hiep-thanh"] == "Hiệp Thành"
 
 
+def test_dashboard_map_entries_allow_supported_layers_and_reject_invalid_values():
+    for theme in ("land_use_2030", "partition", "urban_general", "detailed"):
+        assert not marketing_page_audit._validate_dashboard_url("/x", f"/?tab=all&map=1&planning={theme}")
+    for url, code in (("/?map=https://example.com", "invalid_map_flag"), ("/?planning=unknown", "invalid_planning_theme")):
+        assert code in {item.code for item in marketing_page_audit._validate_dashboard_url("/x", url)}
+
+
 def test_strict_audit_requires_all_machine_discovery_surfaces(monkeypatch):
     monkeypatch.setattr(
         marketing_page_audit,

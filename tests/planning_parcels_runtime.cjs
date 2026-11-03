@@ -39,6 +39,10 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
     {area_id:'25765',ward:'Tân An',city:'Thủ Dầu Một',bounds:[[11.02,106.61],[11.03,106.62]],sample_id:33013},
     {area_id:'25813',ward:'Mỹ Phước',city:'Bến Cát',bounds:[[11.02,106.65],[11.03,106.66]],sample_id:900}]});
   await flush();
+  const initialToggle=nodes.find(n=>n.attributes['aria-label']==='Bật ranh thửa đất');
+  assert.equal(initialToggle.checked,false,'Parcel boundaries start off');
+  assert.equal(pending.length,1,'Loading config must not fetch viewport boundaries until enabled');
+  initialToggle.checked=true;initialToggle.events.change();
   assert(pending[1].url.includes('viewport.json?bbox='),'All-ward config must load the visible area');
   deliver(1,{type:'FeatureCollection',features:[feature],matched:1});await flush();
   const old=[...layers][0];
@@ -97,6 +101,10 @@ const feature={type:'Feature',id:900,geometry:{type:'Polygon',coordinates:[]},
     {area_id:'bp-689-25201',ward:'Phường Tân Bình',city:'Thành phố Đồng Xoài',district:'689',province:'binh-phuoc',bounds:[[11.5,106.8],[11.6,106.9]]},
     {area_id:'kh-570-22465',ward:'Cam An Bắc',city:'Huyện Cam Lâm',district:'570',province:'khanh-hoa',bounds:[[11.9,108.9],[12.2,109.3]]}]});
   await flush();
+  const productionToggle=nodes.filter(n=>n.attributes['aria-label']==='Bật ranh thửa đất').at(-1);
+  assert.equal(productionToggle.checked,false);
+  assert.equal(pending.length,beforeProduction+1);
+  productionToggle.checked=true;productionToggle.events.change();
   assert(pending[beforeProduction+1].url.startsWith('/api/planning/parcels/viewport.json?bbox='));
   const province=nodes.filter(n=>n.attributes['aria-label']==='Tỉnh/TP').at(-1);
   const district=nodes.filter(n=>n.attributes['aria-label']==='Quận / Huyện (Cũ)').at(-1);

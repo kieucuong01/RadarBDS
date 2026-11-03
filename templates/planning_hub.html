@@ -24,9 +24,9 @@
   <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}?v=app-icon-20260608">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=product-navigation-20261103-2">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/planning_entry.css') }}?v=planning-entry-20261029">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/planning_entry.css') }}?v=maps-defaults-20261103">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
-  <script src="{{ url_for('static', filename='js/planning_hub.js') }}?v=planning-entry-20261029" defer></script>
+  <script src="{{ url_for('static', filename='js/planning_hub.js') }}?v=maps-defaults-20261103" defer></script>
   {% include "partials/public_brand_assets.html" %}
 </head>
 
@@ -41,7 +41,7 @@
           <h1>{{ page.hero_title }}</h1>
           <p class="planning-hero-text">{{ page.hero_text }}</p>
           <div class="planning-hero-actions">
-            <a class="seo-button seo-button-primary" href="/?tab=all&amp;map=1&amp;planning=partition" data-planning-open-map data-track-cta="planning_hub_open_map">Xem quy hoạch trên Maps</a>
+            <a class="seo-button seo-button-primary" href="/?tab=all&amp;map=1&amp;planning=land_use_2030" data-planning-open-map data-track-cta="planning_hub_open_map">Xem quy hoạch trên Maps</a>
             <a class="planning-text-link" href="#planning-list" data-track-cta="planning_hub_hero_list">Đọc chuyên đề quy hoạch ↓</a>
           </div>
           <ul class="planning-entry-features" aria-label="Công cụ trên Maps">
@@ -162,7 +162,7 @@
         <h2>Xem quy hoạch cùng tin đang bán</h2>
         <p>Mở Maps, bật lớp cần xem và chọn tin rao ngay tại vị trí trên bản đồ. Bộ lọc giá, diện tích và loại hình vẫn có thể sử dụng cùng lúc.</p>
       </div>
-      <a class="seo-button seo-button-primary" href="/?tab=all&amp;map=1&amp;planning=partition" data-planning-open-map data-track-cta="planning_hub_bottom_map">Mở quy hoạch trên Maps</a>
+      <a class="seo-button seo-button-primary" href="/?tab=all&amp;map=1&amp;planning=land_use_2030" data-planning-open-map data-track-cta="planning_hub_bottom_map">Mở quy hoạch trên Maps</a>
     </section>
 
     {% set lead_cta_context = "seo_planning_hub_lead" %}
