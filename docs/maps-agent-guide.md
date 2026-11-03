@@ -495,3 +495,10 @@ Listener/rAF được dọn khi dispose. Phụ thuộc nội bộ Leaflet 1.9.4
 `_hoveredLayer`, `_targets`; phải chạy lại browser check khi nâng Leaflet.
 Chrome harness đã kiểm đi vào/ra thửa nhiều lần, fallback địa giới và dispose,
 không page error. Evidence ignored `.local/test-parcel-hover-browser.py`.
+
+Follow-up: khi tắt ranh/zoom dưới ngưỡng/vùng không có thửa, canvas đặt
+`pointer-events:none`, đóng tooltip thửa và reset hover cũ; khi có thửa lại
+khôi phục `auto`. Pause trong lúc pan cũng nhường tương tác. Unit test và
+Chrome harness kiểm bật → tắt → bật, zoom17 → 16 → 17 và vùng rỗng.
+Dock: nút cao 36 px, font-weight 800; desktop padding ngang 11 px, mobile 8 px.
+Mobile giữ một hàng cuộn ngang. Đợt phát hành gộp sửa hover inactive và dock gọn.

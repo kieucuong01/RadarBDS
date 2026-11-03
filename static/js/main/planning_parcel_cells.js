@@ -13,6 +13,19 @@
     var cache=new Map(),bytes=0,requests=new Map(),wanted=new Set(),features=new Map(),active=true,disposed=false,retries=new Map(),attempts=new Map();
     var group=L.layerGroup().addTo(map),renderer=L.canvas({pane:'planningParcels',padding:.1}),frame,run=0,queue=[],incomplete=false,failed=false;
     var underneath=null,hoverFrame;
+    function syncInteraction(){
+      var canvas=renderer._container,interactive=active&&features.size>0;
+      if(canvas)canvas.style.pointerEvents=interactive?'auto':'none';
+      if(!interactive){
+        cancel(hoverFrame);
+        var hovered=renderer._hoveredLayer;
+        if(hovered&&hovered.closeTooltip)hovered.closeTooltip();
+        renderer._hoveredLayer=null;
+        var old=underneath&&map._targets&&map._targets[L.stamp(underneath)];
+        if(old&&old.closeTooltip)old.closeTooltip();
+        underneath=null;
+      }
+    }
     function forwardHover(event){
       if(!env.document||!renderer._container)return;
       var original=event,canvas=renderer._container;
@@ -80,6 +93,7 @@
               polygon.on('click',function(event){L.DomEvent.stopPropagation(event);pick(feature);});}});
           group.addLayer(layer);features.set(f.id,layer);
         }
+        syncInteraction();
         if(offset<additions.length)frame=raf(chunk);
         else status(features.size+' ranh trong vùng xem'+(failed?' · Một phần ranh chưa tải được.':truncated?' · Phóng gần để xem đủ ranh.':''),requests.size>0||queue.length>0);
       }
@@ -134,7 +148,7 @@
       attempts.forEach(function(value,key){if(!relevant(key))attempts.delete(key);});
       requests.forEach(function(request,key){if(!relevant(key)){request.abort();requests.delete(key);}});
       queue=[];
-      if(!active){cancel(frame);++run;features.clear();group.clearLayers();status('Phóng to hoặc bật ranh thửa để xem.',false);return;}
+      if(!active){cancel(frame);++run;features.clear();group.clearLayers();syncInteraction();status('Phóng to hoặc bật ranh thửa để xem.',false);return;}
       cells.forEach(function(key){var entry=cache.get(key);if(entry&&entry.expires>Date.now()){
         cache.delete(key);cache.set(key,entry);
         if(entry.retryAt>Date.now())failed=true;
@@ -143,7 +157,7 @@
       draw();pump();
       if(!cells.length)status('Vùng xem quá rộng; phóng gần để xem ranh thửa.',false);
     }
-    return {update:update,pause:function(){active=false;++run;cancel(frame);},cancelSelection:cancelSelection,dispose:function(){disposed=true;active=false;if(renderer._container)renderer._container.removeEventListener('mousemove',forwardHover);cancel(hoverFrame);underneath=null;++run;cancelSelection();originals.clear();cancel(frame);requests.forEach(function(r){r.abort();});retries.forEach(function(t){env.clearTimeout(t);});retries.clear();requests.clear();queue=[];cache.clear();features.clear();map.removeLayer(group);map.removeLayer(renderer);}};
+    return {update:update,pause:function(){active=false;++run;cancel(frame);syncInteraction();},cancelSelection:cancelSelection,dispose:function(){disposed=true;active=false;if(renderer._container)renderer._container.removeEventListener('mousemove',forwardHover);cancel(hoverFrame);underneath=null;++run;cancelSelection();originals.clear();cancel(frame);requests.forEach(function(r){r.abort();});retries.forEach(function(t){env.clearTimeout(t);});retries.clear();requests.clear();queue=[];cache.clear();features.clear();map.removeLayer(group);map.removeLayer(renderer);}};
   }
   return {keys:keys,mount:mount};
 });

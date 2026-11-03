@@ -3,7 +3,7 @@ const api=require('../../static/js/main/planning_parcel_cells.js');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 function harness(featureTemplate,liveTemplate){
  let enabled=true,x=52177,y=30749;const pending=[],polygons=[],status=[],frames=[];
- const groups=[],listeners={},domEvents=[];let hit=null;const canvas={addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};const renderer={_container:canvas,on(n,f){if(n==='add')f();}};
+ const groups=[],listeners={},domEvents=[];let hit=null;const canvas={style:{},addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};const renderer={_container:canvas,on(n,f){if(n==='add')f();}};
  const L={layerGroup(){const members=new Set(),g={members,addTo(){return g;},addLayer(l){members.add(l);},removeLayer(l){members.delete(l);},clearLayers(){members.clear();}};groups.push(g);return g;},
  stamp:el=>el.id,canvas:()=>renderer,geoJSON(f,options){const layer={feature:f};polygons.push(layer);options.onEachFeature(f,{bindTooltip(text){layer.tooltip=text;},on(n,fn){layer[n]=fn;}});return layer;},DomEvent:{stopPropagation(){}}};
  const env={document:{elementsFromPoint:()=>hit?[canvas,hit]:[canvas]},MouseEvent:class {constructor(type,values){this.type=type;Object.assign(this,values);}},AbortController,setTimeout,clearTimeout,requestAnimationFrame(fn){frames.push(fn);return frames.length;},cancelAnimationFrame(){},fetch(url,options){return new Promise((resolve,reject)=>pending.push({url,options,resolve,reject}));}};
@@ -13,7 +13,7 @@ function harness(featureTemplate,liveTemplate){
  const selected=[];
  const controller=api.mount(map,L,env,{featureTemplate,liveTemplate,zoom:16,template:'/api/planning/parcel-cells/version/{x}/{y}.json',enabled:()=>enabled,status:(...args)=>status.push(args),select:f=>selected.push(f)});
  function deliver(i,ids,display=false,needsLive=false){pending[i].resolve({ok:true,json:async()=>({type:'FeatureCollection',needs_live:needsLive,features:ids.map(id=>({type:'Feature',id,display_only:display,properties:{parcel:id},geometry:{type:'Polygon',coordinates:[[[lng(x+.5),lat(y+.5)],[lng(x+.6),lat(y+.6)],[lng(x+.5),lat(y+.5)]]]} }))})});}
- return {renderer,listeners,canvas,domEvents,map,setHit(el){hit=el;},controller,pending,polygons,status,selected,frames,groups,deliver,setX(v){x=v;},disable(){enabled=false;},tick(){while(frames.length)frames.shift()();}};
+ return {renderer,listeners,canvas,domEvents,map,setHit(el){hit=el;},controller,pending,polygons,status,selected,frames,groups,deliver,setX(v){x=v;},disable(){enabled=false;},enable(){enabled=true;},tick(){while(frames.length)frames.shift()();}};
 }
 test('fixed cells reuse warm data, keep existing geometry and avoid duplicate parcel objects',async()=>{
  const h=harness();h.controller.update();assert.equal(h.pending.length,1);assert.equal(h.pending[0].options.credentials,'omit');h.deliver(0,[1,2]);await flush();
@@ -69,4 +69,18 @@ test('canvas hover forwards only empty parcel space and cancels listener on disp
  h.renderer._hoveredLayer={};h.listeners.mousemove({target:h.canvas,clientX:20,clientY:30});h.tick();
  assert.equal(events.at(-1),'mouseout');assert.ok(closed>0);
  h.controller.dispose();assert.equal(h.listeners.mousemove,undefined);
+});
+
+
+test('disabled or empty parcel canvas releases pointers and reenabling restores hover',async()=>{
+ const h=harness();h.controller.update();h.deliver(0,[1]);await flush();
+ assert.equal(h.canvas.style.pointerEvents,'auto');
+ let closed=0;h.renderer._hoveredLayer={closeTooltip(){closed++;}};
+ h.disable();h.controller.update();
+ assert.equal(h.canvas.style.pointerEvents,'none');assert.equal(closed,1);assert.equal(h.renderer._hoveredLayer,null);
+ h.enable();h.controller.update();assert.equal(h.canvas.style.pointerEvents,'auto');
+ h.controller.pause();assert.equal(h.canvas.style.pointerEvents,'none');h.controller.update();assert.equal(h.canvas.style.pointerEvents,'auto');
+ h.controller.dispose();
+ const other=harness();other.controller.update();other.deliver(0,[]);await flush();
+ assert.equal(other.canvas.style.pointerEvents,'none');other.controller.dispose();
 });

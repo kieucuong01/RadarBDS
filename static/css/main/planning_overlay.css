@@ -36,8 +36,8 @@
 .planning-overlay-body a{display:block;color:#0c7054;margin:8px 0;text-decoration:underline}
 .planning-overlay-body img{width:100%;height:auto}
 .planning-overlay-body img:not([src]){display:none}
-.planning-layer-dock{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);bottom:14px;display:flex;flex-wrap:wrap;gap:6px;padding:2px;background:transparent;border:0;box-shadow:none;pointer-events:auto}
-.planning-layer-chip{min-height:44px;padding:0 18px;border:0;border-radius:23px;background:#f1f5f2;color:#3e574b;font-weight:700}
+.planning-layer-dock{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);bottom:14px;display:flex;flex-wrap:wrap;gap:4px;padding:2px;background:transparent;border:0;box-shadow:none;pointer-events:auto}
+.planning-map-ui .planning-layer-chip{min-height:36px;padding:0 11px;border:0;border-radius:18px;background:#f1f5f2;color:#3e574b;font-size:12px;font-weight:800}
 .planning-layer-chip[aria-pressed=true]{background:#11755b;color:#fff}
 .planning-layer-chip[aria-pressed=true]:before{content:'✓';margin-right:6px}
 .planning-opacity-control{position:absolute;right:10px;top:104px;display:flex;flex-direction:column;align-items:center;width:94px;padding:4px;border:1px solid #d5e2da;border-radius:15px;background:#fff;box-shadow:0 3px 14px #15382c20;pointer-events:auto}
@@ -66,7 +66,7 @@
  .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary select,.listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary button{min-width:0;max-width:100%;width:auto;min-height:34px}
  .listing-map-workspace:has(.planning-map-toolbar) .listing-map-filter-summary span{display:none}
   .planning-layer-dock{left:50%;max-width:calc(100% - 20px);flex-wrap:wrap;justify-content:center}
- .planning-layer-chip{padding:0 14px;font-size:12px;white-space:nowrap}
+ .planning-map-ui .planning-layer-chip{padding:0 10px;font-size:11px;white-space:nowrap}
   .planning-opacity-control{top:128px;width:94px}
  .planning-opacity-control input[type=range]{height:72px}
  .listing-map-workspace:has(.listing-map-mobile-sheet.is-expanded) .planning-layer-dock,.listing-map-workspace:has(.listing-map-mobile-sheet.is-expanded) .planning-opacity-control{display:none}
@@ -81,7 +81,7 @@
  .planning-opacity-control input[type=range]{writing-mode:horizontal-tb;direction:ltr;width:0;min-width:24px;flex:1;height:38px;margin:0 4px}
 }
 @media(max-width:1100px) and (max-height:740px){.planning-opacity-control{top:120px}.planning-opacity-control input[type=range]{height:48px}}
-@media(max-width:360px){.planning-map-popover>summary{font-size:11px;padding:0 8px;gap:5px}.planning-layer-chip{font-size:11px;padding:0 8px}}
+@media(max-width:360px){.planning-map-popover>summary{font-size:11px;padding:0 8px;gap:5px}.planning-map-ui .planning-layer-chip{font-size:11px;padding:0 8px}}
 .planning-drawing-actions{display:flex;flex-direction:column;gap:4px;width:100%;margin-top:5px;padding-top:5px;border-top:1px solid #dce7e0}
 .planning-opacity-control .planning-drawing-actions button{font-size:11px;font-weight:700;min-height:44px;padding:4px;line-height:1.25}
 .planning-drawing-actions button[aria-pressed=true]{background:#11755b;color:#fff}

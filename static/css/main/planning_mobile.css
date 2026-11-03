@@ -33,7 +33,7 @@
  .planning-drawing-actions button[aria-pressed=true]{background:#11755b;color:#fff}
  .planning-layer-dock{left:4px;right:4px;transform:none;width:auto;max-width:none;flex-wrap:nowrap;justify-content:flex-start;gap:3px;padding:2px;border:0;background:transparent;box-shadow:none;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
  .planning-layer-dock::-webkit-scrollbar{display:none}
- .planning-layer-chip{flex:0 0 auto;min-height:44px;padding:0 9px;font-size:10px;white-space:nowrap;background:#fff;box-shadow:0 1px 5px #15382c20}
+ .planning-map-ui .planning-layer-chip{flex:0 0 auto;min-height:36px;padding:0 8px;font-size:10px;font-weight:800;white-space:nowrap;background:#fff;box-shadow:0 1px 5px #15382c20}
  .planning-layer-chip[aria-pressed=true]:before{display:none}
  .listing-map-workspace.is-focus-mode .planning-layer-dock,.listing-map-workspace.listings-hidden .planning-layer-dock{bottom:calc(4px + env(safe-area-inset-bottom,0px))}
  .listing-map-workspace.is-focus-mode .leaflet-control-attribution{margin-bottom:54px}
