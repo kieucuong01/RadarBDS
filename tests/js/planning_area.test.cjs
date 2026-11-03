@@ -52,9 +52,9 @@ test('area menu applies only after submit, resets districts across provinces, an
  const province=nodes.find(e=>e.attributes['aria-label']==='Tỉnh/TP (Cũ)'),district=nodes.find(e=>e.attributes['aria-label']==='Quận/Huyện (Cũ)');
  assert.equal(province.children.length,63);
  assert.deepEqual(province.children.slice(0,7).map(e=>e.textContent),['Bình Dương','TP.HCM','Bà Rịa–Vũng Tàu','Đồng Nai','Bình Phước','Tây Ninh','Long An']);
- assert.equal(district.value,'718');province.value='binh-phuoc';province.events.change();
+ assert.ok(nodes.find(e=>e.tagName==='summary').textContent.includes('Thủ Dầu Một'));assert.equal(district.value,'718');province.value='binh-phuoc';province.events.change();
  assert.equal(district.value,'');assert(district.children.some(e=>e.textContent==='Phú Riềng'));assert.equal(changes.length,0);
  district.value='dong-xoai';nodes.find(e=>e.tagName==='form').events.submit({preventDefault(){}});
- assert.equal(changes[0].p.id,'binh-phuoc');assert.equal(changes[0].s.district,'dong-xoai');assert.equal(panel.open,false);
+ assert.equal(changes[0].p.id,'binh-phuoc');assert.equal(changes[0].s.district,'dong-xoai');assert.equal(panel.open,false);assert.ok(nodes.find(e=>e.tagName==='summary').textContent.includes('Bình Phước'));
  panel.open=true;panel.events.toggle();assert.equal(other.open,false);
 });

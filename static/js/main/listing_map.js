@@ -1755,6 +1755,7 @@
         initialTheme: state.planningTheme,
         initialRegion: state.initialRegion && state.initialRegion.id,
         initialArea: state.initialPlanningArea,
+        areaSlot: root.document.getElementById('listingMapAreaHost'),
         listingsVisible: state.listingsVisible,
         onToggleListings: function () { return setListingsVisible(!state.listingsVisible); },
         onThemeEnabled: function (theme) { state.planningTheme=theme; syncMapUrl(); },

@@ -509,3 +509,13 @@ Chỉ gọi closeTooltip trên layer có getTooltip() trả tooltip; không gọ
 map.closeTooltip() thiếu đối số. Polygon hiển thị được tách khỏi wrapper
 GeoJSON; tooltip tạo lần hover đầu. Queue ưu tiên cell gần tâm và live cell
 vừa có snapshot. Giữ hình học gốc cho tra cứu/đo, không hạ độ chính xác để giảm RAM.
+
+SDĐ2030: không chèn nhãn SVG RadarBDS trên bản đồ. Giữ footprint mask đã review
+và nguồn/attribution; vùng mask trong suốt để thấy bản đồ nền, không tô trắng.
+
+Khu vực Maps: bộ chọn tỉnh/huyện dùng `#listingMapAreaHost` giữa header,
+truyền qua `areaSlot` của overlay; summary hiển thị huyện · tỉnh đã áp dụng.
+Bỏ slot Khu vực trong toolbar khi có header host. Popup vẫn dùng cùng form,
+đóng ngoài theo cơ chế sẵn có; dispose xóa nội dung host để mở lại không
+nhân đôi listener/menu. Fallback khu vực của parcel vẫn ẩn khi đã có selector.
+Chrome1100px/390px kiểm đổi tỉnh, cập nhật header và click ngoài; không page error.

@@ -272,7 +272,8 @@
     var toolbar = node('div', ui.root); toolbar.className = 'planning-map-toolbar';
     toolbar.setAttribute('aria-label', 'Công cụ quy hoạch');
     var filterSlot = node('div', toolbar);
-    ui.areaSlot = node('div', toolbar); ui.parcelSlot = node('div', toolbar);
+    ui.areaSlot = options.areaSlot || node('div', toolbar); ui.parcelSlot = node('div', toolbar);
+    if(options.areaSlot)ui.areaSlot.replaceChildren();
     if (typeof options.onToggleFilters === 'function') {
       var filterButton = node('button', filterSlot, 'Bộ lọc');
       filterButton.type = 'button'; filterButton.className = 'planning-filter-button';
@@ -601,7 +602,7 @@
             if (clip) tile.style.clipPath = clip;
             return tile;
           };
-          referenceBranding(layer,map,L,data.tile_template);
+          if(item.theme!=='land_use_2030')referenceBranding(layer,map,L,data.tile_template);
         }
         if (tiled && (data.coverage_windows || item.theme === 'land_use_2030') && typeof layer._isValidTile === 'function') {
           var validTile = layer._isValidTile;
@@ -792,6 +793,7 @@
       map.off('unload', dispose);
       Array.from(overlays.keys()).forEach(removeOverlay);
       ui.root.remove();
+      if(options.areaSlot)ui.areaSlot.replaceChildren();
     }
     map.on('unload', dispose);
     return dispose;

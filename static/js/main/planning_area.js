@@ -33,7 +33,10 @@
     var doc=env.document;
     function node(tag,parent,text){var e=doc.createElement(tag);if(text)e.textContent=text;if(parent)parent.appendChild(e);return e;}
     var panel=node('details',ui.areaSlot);panel.className='planning-map-popover planning-area-menu';
-    node('summary',panel,'Khu vực');ui.panels.push(panel);
+    var summary=node('summary',panel);summary.setAttribute('aria-label','Chọn khu vực bản đồ');ui.panels.push(panel);
+    function title(){var p=provinces.find(function(item){return item.id===selection.province;}),d=p&&p.districts.find(function(item){return item.id===selection.district;});
+      summary.textContent=p?(d?d.name+' · ':'')+p.name:'Chọn khu vực';summary.title=summary.textContent;}
+    title();
     panel.addEventListener('toggle',function(){if(panel.open)ui.panels.forEach(function(p){if(p!==panel)p.open=false;});});
     var form=node('form',panel);form.className='planning-map-form';
     node('h3',form,'Khu vực quy hoạch · địa danh cũ');
@@ -50,6 +53,7 @@
     var source=node('a',form,'Khung huyện: GIS TP.HCM · geoBoundaries / OCHA ROAP · CC BY 3.0 IGO');
     source.href='https://www.geoboundaries.org/api/current/gbOpen/VNM/ADM2/';source.target='_blank';source.rel='noopener noreferrer';
     form.addEventListener('submit',function(e){e.preventDefault();var p=selected(),d=p.districts.find(function(item){return item.id===district.value;});
+      selection={province:p.id,district:d?d.id:''};title();
       onChange(p,{province:p.id,district:d?d.id:'',bounds:d?d.bounds:(p.focus_bounds||p.bounds),max_zoom:13,min_zoom:p.min_zoom||8});panel.open=false;});
     return panel;
   }

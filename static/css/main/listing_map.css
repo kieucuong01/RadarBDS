@@ -1465,3 +1465,15 @@ body.listing-map-open .mobile-bottom-nav {
  .listing-map-workspace .listing-map-status:empty{display:none}
  .listing-map-workspace .listing-map-status[aria-busy=true]{top:var(--map-controls-top);bottom:auto;left:64px;max-width:calc(100% - 128px);max-height:48px;white-space:normal}
 }
+
+/* Area picker shares the header, with no duplicate toolbar button. */
+.listing-map-workspace .listing-map-workspace-head{z-index:1200}
+.listing-map-workspace .listing-map-workspace-head{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr)}
+.listing-map-head-actions{justify-content:flex-end}
+.listing-map-area-host{min-width:0;text-align:center}
+.listing-map-area-host .planning-area-menu>summary{min-height:32px;max-width:100%;padding:0 8px;border-radius:6px;font:700 12px/1.3 Inter,system-ui,sans-serif;box-shadow:none;cursor:pointer}
+.listing-map-area-host .planning-area-menu>summary{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:30px}
+.listing-map-area-host .planning-area-menu>summary:after{display:inline-block;margin-left:8px;vertical-align:middle}
+.listing-map-area-host .planning-map-form{left:50%;top:calc(100% + 6px);transform:translateX(-50%);text-align:left;max-width:calc(100vw - 24px);font:14px/1.45 Inter,system-ui,sans-serif}
+.listing-map-area-host :focus-visible{outline:3px solid #16846b;outline-offset:2px}
+@media(max-width:760px){.listing-map-workspace .listing-map-workspace-head h2{font-size:12px}}
