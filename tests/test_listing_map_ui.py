@@ -226,6 +226,10 @@ def test_dashboard_badges_do_not_render_a_false_zero_before_counts_load():
     root = Path(__file__).resolve().parent.parent
     html = (root / "templates/index.html").read_text(encoding="utf-8")
     core = (root / "static/js/main/core.js").read_text(encoding="utf-8")
+    html = html.replace(
+        '{% include "partials/product_mobile_nav.html" %}',
+        (root / "templates/partials/product_mobile_nav.html").read_text(encoding="utf-8"),
+    )
     placeholder = chr(0x2026)
 
     for badge_id in (
@@ -403,7 +407,7 @@ def test_listing_map_assets_share_cache_version():
     assert "listing-map-singleton-modal-20260814" not in template
     assert "listing-map-touch-target-20260814" not in template
     assert "listing-map-marker-hierarchy-20260814" not in template
-    assert "js/main/core.js') }}?v=planning-entry-20261029" in template
+    assert "js/main/core.js') }}?v=product-navigation-20261103-2" in template
     assert "js/main/filters.js') }}?v=listings-perf-20261021" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=maps-compact-share-20261102c" in template
