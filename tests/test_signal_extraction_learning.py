@@ -691,3 +691,53 @@ def test_review_nov01_area_suffix_controls(text, expected):
     record = normalize_record({"source": "facebook", "url": "https://example.invalid/area-suffix-control",
                                "title": "Bán đất", "description": text})
     assert record is not None and record["area_m2"] == expected
+
+
+# Two independent reviewed phrases, not duplicated repost evidence.
+REVIEW_NOV02_FUTURE_ASPHALT = [
+    (85676, "Đường 7m thông chuẩn bị rải nhựa"),
+    (85725, "Đường sắp đổ nhựa nhựa 6m, dân cư đông"),
+]
+
+
+@pytest.mark.parametrize("listing_id,text", REVIEW_NOV02_FUTURE_ASPHALT)
+def test_review_nov02_future_asphalt_is_not_existing_surface(listing_id, text):
+    from cleansing.feature_extractor import extract_road_type
+
+    assert extract_road_type(text) == "unknown"
+
+
+@pytest.mark.parametrize("listing_id,text", REVIEW_NOV02_FUTURE_ASPHALT)
+@pytest.mark.parametrize("text_field", ["title", "description"])
+def test_review_nov02_future_asphalt_full_normalization(listing_id, text, text_field):
+    record = normalize_record({"source": "facebook", "url": "https://example.invalid/road-control",
+                               "title": "Bán đất", "area_m2": 100.0, "price_ty": 2.0,
+                               text_field: text})
+    assert record is not None
+    assert record["road_type"] == "unknown"
+    assert record["area_m2"] == 100.0
+    assert record["price_ty"] == 2.0
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Duong 7m thong chuan bi rai nhua", "unknown"),
+    ("Đường chuẩn bị đổ nhựa", "unknown"),
+    ("Đường sắp rải nhựa 6m", "unknown"),
+    ("Đường SẮP ĐỔ NHỰA NHỰA 6m", "unknown"),
+    ("Đường sắp đổ asphalt", "unknown"),
+    ("Đường đã rải nhựa 7m", "duong_nhua"),
+    ("Đường vừa đổ nhựa 6m", "duong_nhua"),
+    ("Đường nhựa 6m, sắp xây nhà", "duong_nhua"),
+    ("Đường nhựa hiện hữu; đường khác sắp đổ nhựa", "duong_nhua"),
+    ("Đường sắp đổ nhựa; đường nhựa hiện hữu", "duong_nhua"),
+    ("Đường bê tông 7m thông chuẩn bị rải nhựa", "be_tong"),
+    ("Đường đất 7m chuẩn bị rải nhựa", "duong_dat"),
+    ("Đường sắp mở; đường nhựa thông 6m", "duong_nhua"),
+    ("Đường 7m thông; chuẩn bị xây nhà. Đường nhựa", "duong_nhua"),
+    ("Đường nhựa 6m gần chợ", "duong_nhua"),
+    ("Cách đường nhựa 100m", "unknown"),
+])
+def test_review_nov02_future_asphalt_controls(text, expected):
+    from cleansing.feature_extractor import extract_road_type
+
+    assert extract_road_type(text) == expected

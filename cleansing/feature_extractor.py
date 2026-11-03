@@ -1037,7 +1037,13 @@ def extract_road_type(text: str) -> str:
         return 'be_tong'
     if re.search(r'\b(?:cach|gan)\s+(?:duong\s+)?nhua\b', folded):
         return 'unknown'
-    if 'nhựa' in t or 'nhua' in folded or 'asphalt' in folded:
+    # Planned surfacing is not an existing asphalt surface. Mask only the
+    # prospective phrase, retaining any separate current-surface evidence.
+    surface_text = re.sub(
+        r'\b(?:chuan\s+bi|sap)\s+(?:rai|do)\s+(?:(?:nhua|asphalt)\b\s*)+',
+        ' ', folded,
+    )
+    if 'nhua' in surface_text or 'asphalt' in surface_text:
         return 'duong_nhua'
     if re.search(r'\b(?:mat\s*tien|\bmt\b)\s+(?:duong\s+)?d?x\b', folded):
         return 'duong_nhua'
