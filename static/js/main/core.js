@@ -533,8 +533,7 @@ function closeToolsSheet(event) {
 }
 
 async function openPlanningMapFromTools() {
-  const menu = document.getElementById('toolsMenu');
-  if (menu) menu.open = false;
+  document.querySelectorAll('.header-nav details').forEach(menu => { menu.open = false; });
   closeToolsSheet();
   try {
     if (!['signals', 'all'].includes(activeTabId())) await switchTab('all', null);
@@ -557,18 +556,35 @@ document.addEventListener('click', function (event) {
       event.preventDefault();
       openPlanningMapFromTools();
     }
+    if (toolLink.dataset.dashboardTool === 'signals' && event.button === 0
+        && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+      event.preventDefault();
+      const discovery = document.getElementById('radarFunctions');
+      if (discovery) discovery.open = false;
+      switchTab('signals', null);
+    }
   }
-  const menu = document.getElementById('toolsMenu');
-  if (menu && menu.open && !menu.contains(event.target)) {
-    menu.open = false;
-  }
+  document.querySelectorAll('.header-nav details[open]').forEach(menu => {
+    if (!menu.contains(event.target)) menu.open = false;
+  });
 });
 
 document.addEventListener('keydown', function (event) {
+  const sheet = document.getElementById('toolsSheet');
+  if (event.key === 'Tab' && sheet && !sheet.hidden) {
+    const controls = Array.from(sheet.querySelectorAll('button, a[href]')).filter(node => node.getClientRects().length);
+    const first = controls[0], last = controls[controls.length - 1];
+    if (first && ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last))) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    }
+  }
   if (event.key === 'Escape') {
     closeToolsSheet();
-    const menu = document.getElementById('toolsMenu');
-    if (menu) menu.open = false;
+    document.querySelectorAll('.header-nav details[open]').forEach(menu => {
+      menu.open = false;
+      menu.querySelector('summary').focus();
+    });
   }
 });
 
@@ -590,6 +606,7 @@ async function switchTab(tabId, btn) {
   }
   const sheet = document.getElementById('toolsSheet');
   if (sheet) sheet.hidden = true;
+  document.querySelectorAll('.header-nav details').forEach(menu => { menu.open = false; });
   document.body.classList.remove('tools-sheet-open');
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));

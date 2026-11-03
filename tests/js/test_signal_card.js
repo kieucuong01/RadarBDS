@@ -44,6 +44,8 @@ assert.match(comparable, /href="\/listing\/42"/);
 assert.match(comparable, /mos-badge/);
 assert.match(comparable, /price-actual/);
 assert.match(comparable, /price-fair/);
+assert.match(comparable, />GIÁ RAO<\/span>/);
+assert.doesNotMatch(comparable, /THỰC TẾ/);
 assert.match(comparable, /meta-chip-ward/);
 assert.match(comparable, /meta-chip-area/);
 assert.doesNotMatch(comparable, /favorite-btn/);

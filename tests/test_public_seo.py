@@ -117,9 +117,9 @@ def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
     assert 'href="/bang-gia-dat-tphcm"' in home_html
     assert 'href="/tin-tuc"' in home_html
     assert 'href="/bao-cao"' in home_html
-    tools_block = home_html.split('aria-label="Công cụ Radar"', 1)[1].split("</details>", 1)[0]
-    assert 'href="/binh-duong"' not in tools_block
-    assert 'href="/san-deal-bds"' not in tools_block
+    tools_block = home_html.split('aria-label="Kiến thức và dữ liệu"', 1)[1].split("</details>", 1)[0]
+    assert 'href="/binh-duong"' in tools_block
+    assert 'href="/quy-hoach-binh-duong"' in tools_block
 
     assert dashboard.status_code == 301
     assert dashboard.headers["Location"] == "/"
@@ -129,7 +129,7 @@ def test_homepage_is_dashboard_and_binh_duong_is_seo_landing():
     assert re.search(r'<body class="[^"]*\bseo-page-market\b', binh_duong_html)
     assert "Nhà đất Bình Dương: radar săn deal giá tốt theo dữ liệu thị trường" in binh_duong_html
     assert 'href="/dashboard"' not in binh_duong_html
-    assert '<a href="/">Dashboard</a>' in binh_duong_html
+    assert '<a href="/?tab=signals">Săn Deal BĐS</a>' in binh_duong_html
 
 
 def test_google_site_tags_are_env_driven(monkeypatch):

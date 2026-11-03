@@ -46,7 +46,7 @@ def test_mobile_dashboard_has_one_header_map_button_and_collapsible_context():
     header=re.search(r'<header class="header">.*?</header>',html,re.S).group(0)
     assert html.count('id="listingMapLauncher"')==1
     assert 'id="listingMapLauncher"' in header
-    assert '<details class="dashboard-context">' in html
+    assert '<details class="product-discovery" id="radarFunctions">' in html
     assert 'id="areaScopeLabel"' in html and 'id="keywordSearchSignals"' in html
     assert 'onclick="openListingMap()"' in html
     assert 'dashboard_mobile_discovery.css' in html

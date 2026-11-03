@@ -7,6 +7,7 @@
 
     const mobileToggle = header.querySelector("#seoNavToggle");
     const primaryNav = header.querySelector("#seoPrimaryNav");
+    const bottomToggle = document.querySelector("[data-public-menu-toggle]");
     const groups = Array.from(header.querySelectorAll(".seo-nav-group"));
     const emitTrack = function (action, context) {
       if (typeof window.CustomEvent !== "function") return;
@@ -24,6 +25,7 @@
     const closeMobileNav = function (returnFocus) {
       if (!mobileToggle) return;
       mobileToggle.setAttribute("aria-expanded", "false");
+      if (bottomToggle) bottomToggle.setAttribute("aria-expanded", "false");
       closeAll(null);
       if (returnFocus) mobileToggle.focus();
     };
@@ -36,9 +38,20 @@
           "aria-expanded",
           willOpen ? "true" : "false"
         );
+        if (bottomToggle) bottomToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
         if (!willOpen) closeAll(null);
         if (willOpen) {
           emitTrack("public_header_menu_opened", { group: "mobile_navigation" });
+        }
+      });
+    }
+
+    if (bottomToggle && mobileToggle) {
+      bottomToggle.addEventListener("click", function () {
+        mobileToggle.click();
+        if (mobileToggle.getAttribute("aria-expanded") === "true") {
+          header.scrollIntoView({ block: "start" });
+          mobileToggle.focus();
         }
       });
     }
@@ -72,7 +85,7 @@
     });
 
     document.addEventListener("click", function (event) {
-      if (!header.contains(event.target)) closeMobileNav(false);
+      if (!header.contains(event.target) && !(bottomToggle && bottomToggle.contains(event.target))) closeMobileNav(false);
     });
 
     document.addEventListener("keydown", function (event) {

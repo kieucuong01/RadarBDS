@@ -513,6 +513,7 @@
     font-weight: 800;
     cursor: pointer;
     touch-action: manipulation;
+    text-decoration: none;
   }
 
   .bottom-nav-item svg {

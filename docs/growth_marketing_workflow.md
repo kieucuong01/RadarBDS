@@ -1,5 +1,24 @@
 # Radar BDS Traffic Marketing Workflow
 
+## Product discovery update — 2026-11-03
+
+The approved site architecture now exposes four entry tasks: **Bản đồ quy hoạch,
+Săn Deal BĐS, Định giá đất, Bảng giá đất**. Navigation keeps that order across the
+dashboard and public pages; mobile uses Quy hoạch / Săn Deal / Định giá / Bảng giá /
+Thêm. News, reports and market pages remain accessible under Kiến thức & dữ liệu.
+See `site-architecture-research-2026-11-03.md` for the research and migration scope.
+
+Users entering a planning tool may complete that task without being forced into
+the signal funnel. Offer the next relevant tool only where its geographic data
+exists. Keep Maps coverage, listing coverage, valuation coverage and official
+land-price coverage distinct. Valuation uses asking-price data, not completed
+transactions or the official land-price table.
+
+The homepage retains its working feed, old query URLs and Maps deep links.
+Its four-task explanation is a collapsed native disclosure; it makes no extra
+API requests and does not automatically cover the results. Existing daily SEO
+cadence and source requirements below remain unchanged.
+
 Use this doc for SEO, AI SEO, social distribution, analytics, and Hermes daily
 marketing work. The goal is deliberately narrow: bring qualified users into
 `radarbds.vn`, let them filter the dashboard by area, then contact on matching

@@ -19,6 +19,13 @@ pricing, VIP strategy, Telegram push, or broad product refactors.
 
 ## Funnel
 
+Site navigation was updated on 2026-11-03 to surface planning Maps, Săn Deal,
+valuation and official land prices separately. Use the existing destination URLs
+and preserve the user's area when supported; planning visitors need not be sent
+through the deal feed to finish a lookup. This product-discovery update does not
+authorize new publishing quotas or nationwide data/SEO expansion. See
+`growth_marketing_workflow.md` for the four-task discovery contract.
+
 ```text
 Google / Facebook / AI assistant
   -> exact SEO page or filtered URL

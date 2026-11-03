@@ -17,7 +17,7 @@ test('Tools opens Maps with existing filters and chosen layer, from either listi
   let tab=initialTab,captured,closed=0,switched=0;
   const menu={open:true};
   const ctx={URLSearchParams,currentFilters:'city=BẾN CÁT&ward=Mỹ Phước&date_range=7&price_max=3&area_min=90&property_type=dat_nen&page=2',
-   document:{getElementById:()=>menu},activeTabId:()=>tab,closeToolsSheet:()=>closed++,
+   document:{getElementById:()=>menu,querySelectorAll:()=>[menu]},activeTabId:()=>tab,closeToolsSheet:()=>closed++,
    switchTab:async value=>{tab=value;switched++;},warmListingMapAssets:async()=>{},
    window:{RadarListingMap:{open:async(snapshot,options)=>{captured={snapshot,options};}},location:{assign(){throw Error('Unexpected fallback');}}}};
   vm.createContext(ctx);

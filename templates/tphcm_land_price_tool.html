@@ -13,7 +13,7 @@
   <meta property="og:image" content="{{ site_meta.og_image }}">
   {% include "partials/google_site_tags.html" %}
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=public-navigation-20260729">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=product-navigation-20261103-2">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tphcm_land_price_tool.css') }}?v=tphcm-land-mixed-20260728-2">
   <script type="application/ld+json">
   {
@@ -40,6 +40,7 @@
         <div>
           <h1>Tra cứu bảng giá đất TP.HCM mới 2026</h1>
           <p>Nhập tên đường, đoạn đường hoặc chọn phường/xã để tra nhanh giá đất theo Nghị quyết 87/2025/NQ-HĐND, áp dụng từ ngày 01/01/2026.</p>
+          <p>Đây là bảng giá đất Nhà nước. Để so giá theo dữ liệu tin rao tại Thủ Dầu Một và Bến Cát, dùng <a href="/dinh-gia-bds">công cụ định giá đất</a>.</p>
           <div class="land-price-provenance">
             <strong>Dữ liệu áp dụng từ 01/01/2026</strong>
             <span>{{ "{:,}".format(row_count).replace(",", ".") }} dòng đã kiểm tra · đơn vị gốc: 1.000 đồng/m²</span>

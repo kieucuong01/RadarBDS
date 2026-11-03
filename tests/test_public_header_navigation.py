@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import re
+from html import unescape
+from html.parser import HTMLParser
 from pathlib import Path
+
+import pytest
 
 
 HEADER = Path("templates/partials/seo_header.html")
@@ -12,6 +16,13 @@ DASHBOARD_JS = Path("static/js/main/core.js")
 DASHBOARD_CSS = Path("static/css/main/layout.css")
 
 
+def dashboard_markup():
+    return DASHBOARD.read_text(encoding="utf-8").replace(
+        '{% include "partials/product_mobile_nav.html" %}',
+        Path("templates/partials/product_mobile_nav.html").read_text(encoding="utf-8"),
+    )
+
+
 def test_public_header_has_required_top_level_order():
     markup = HEADER.read_text(encoding="utf-8")
     labels = re.findall(
@@ -20,12 +31,12 @@ def test_public_header_has_required_top_level_order():
         markup,
     )
 
-    assert labels == [
-        "Thị trường",
-        "Quy hoạch",
-        "Công cụ",
-        "Báo cáo",
-        "Tin tức",
+    assert [unescape(label) for label in labels] == [
+        "Bản đồ quy hoạch",
+        "Săn Deal BĐS",
+        "Định giá đất",
+        "Bảng giá đất",
+        "Kiến thức & dữ liệu",
     ]
 
 
@@ -73,8 +84,8 @@ def test_header_disclosures_have_accessible_state_and_interaction_guards():
     script = HEADER_JS.read_text(encoding="utf-8")
     css = SEO_CSS.read_text(encoding="utf-8")
 
-    assert markup.count('aria-expanded="false"') == 5
-    assert markup.count('aria-controls="seoNav') == 4
+    assert markup.count('aria-expanded="false"') == 4
+    assert markup.count('aria-controls="seoNav') == 3
     assert 'aria-controls="seoPrimaryNav"' in markup
     assert 'id="seoNavToggle"' in markup
     assert 'id="seoPrimaryNav"' in markup
@@ -88,7 +99,7 @@ def test_header_disclosures_have_accessible_state_and_interaction_guards():
 
 
 def test_dashboard_tools_link_to_new_public_hubs_without_replacing_task_tabs():
-    markup = DASHBOARD.read_text(encoding="utf-8")
+    markup = dashboard_markup()
     script = DASHBOARD_JS.read_text(encoding="utf-8")
     css = DASHBOARD_CSS.read_text(encoding="utf-8")
 
@@ -115,7 +126,7 @@ def test_dashboard_tools_link_to_new_public_hubs_without_replacing_task_tabs():
 
 
 def test_dashboard_task_tabs_and_signal_results_expose_agent_readable_state():
-    markup = DASHBOARD.read_text(encoding="utf-8")
+    markup = dashboard_markup()
     core_script = DASHBOARD_JS.read_text(encoding="utf-8")
     signal_script = Path("static/js/main/signals.js").read_text(
         encoding="utf-8"
@@ -214,3 +225,37 @@ def test_news_article_path_marks_news_navigation_active():
     import app as radar_app
 
     assert radar_app._active_public_nav("/tin-tuc/bai-phan-tich") == "tin-tuc"
+
+
+@pytest.mark.parametrize("path", ["/", "/dinh-gia-bds", "/bang-gia-dat-tphcm", "/quy-hoach-binh-duong", "/tin-tuc", "/bao-cao"])
+def test_four_product_entries_render_on_every_public_surface(path):
+    import app as radar_app
+
+    response = radar_app.app.test_client().get(path)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    mobile = html.split('<nav class="mobile-bottom-nav product-mobile-nav"', 1)[1].split("</nav>", 1)[0]
+    assert re.findall(r"<span>([^<]+)</span>", mobile) == [
+        "Quy hoạch", "Săn Deal", "Định giá", "Bảng giá", "Thêm",
+    ]
+    for href in ("/?tab=all&amp;map=1&amp;planning=partition", "/dinh-gia-bds", "/bang-gia-dat-tphcm"):
+        assert f'href="{href}"' in mobile
+
+    class IdCollector(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.ids = []
+
+        def handle_starttag(self, tag, attrs):
+            self.ids.extend(value for key, value in attrs if key == "id")
+
+    parser = IdCollector()
+    parser.feed(html)
+    assert len(parser.ids) == len(set(parser.ids))
+    if path == "/":
+        assert '<details class="product-discovery" id="radarFunctions">' in html
+        discovery_grid = html.split('class="product-discovery-grid"', 1)[1].split("</div>", 1)[0]
+        assert discovery_grid.count("<a ") == 4
+        assert '<button class="bottom-nav-item active" type="button" data-tab-target="signals"' in mobile
+    else:
+        assert 'href="/?tab=signals"' in mobile
