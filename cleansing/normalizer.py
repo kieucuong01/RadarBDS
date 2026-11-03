@@ -64,7 +64,8 @@ _HEM_BARE_NAMED_ROAD_PAT = re.compile(
     re.IGNORECASE,
 )
 _NAMED_ROAD_PAT = re.compile(
-    r"\b(?:mat\s*tien|mtkd|mt|duong|nhanh|1/\s*duong)\s+(?:duong\s+)?([a-z][a-z \t]{3,60})(?=$|[_,;()\.\n\r\-–—])",
+    r"\b(?:(?:mat\s*tien|mtkd|mt|nhanh|1/\s*duong)\s+(?:duong\s+)?|duong\s+)"
+    r"([a-z][a-z \t]{3,60})(?=$|[_,;()\.\n\r\-–—])",
     re.IGNORECASE,
 )
 
@@ -127,7 +128,18 @@ def extract_road_name(text: str) -> str | None:
         name = _clean_named_road(m.group(1))
         if name:
             return name
-    for m in _NAMED_ROAD_PAT.finditer(folded):
+    # ASCII folding conflates Dương/dưỡng/đường and nhanh/nhánh. Mask
+    # non-road collocations only for generic names; keep offsets/proximity
+    # and explicit names such as "đường Bình Dương" intact.
+    named_text = folded
+    for phrase in re.finditer(
+        r"\b(?:(?:binh|nghi|den)\s+duong|ban\s+nhanh(?=\s+(?:lo\s+dat|nhanh)\b))\b",
+        folded,
+    ):
+        if re.search(r"\b(?:duong|hem|nhanh|mat\s*tien|mt|mtkd)\s+$", folded[:phrase.start()]):
+            continue
+        named_text = named_text[:phrase.start()] + " " * len(phrase.group()) + named_text[phrase.end():]
+    for m in _NAMED_ROAD_PAT.finditer(named_text):
         if _has_road_proximity_prefix(folded, m.start()):
             continue
         name = _clean_named_road(m.group(1))
@@ -183,9 +195,12 @@ def _clean_named_road(value: str) -> str | None:
         " khu ", " kdc ", " ngay ",
     ):
         idx = f" {name} ".find(stop)
+        if stop == " duong " and (idx == 0 or name == "binh duong"):
+            continue  # Dương can be part of an explicitly labeled street name.
         if idx >= 0:
             name = name[:idx].strip()
-    name = re.sub(r"\b(?:p|tp|tphcm|bd|binh duong)$", "", name).strip()
+    if name != "binh duong":
+        name = re.sub(r"\b(?:p|tp|tphcm|bd|binh duong)$", "", name).strip()
     if not name:
         return None
     folded = _ascii_fold(name)
@@ -196,6 +211,8 @@ def _clean_named_road(value: str) -> str | None:
     ):
         return None
     if re.match(r'^(?:theo|truoc)\b', folded):
+        return None
+    if re.match(r"^(?:toi\s+dat|dat\s+xe|xe\s+(?:ba|3)\s+gac)\b", folded):
         return None
     if re.match(r"^dx\s+(?:nhua|be\s*tong|thong|rong|duong)\b", folded):
         return None
@@ -900,6 +917,17 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
         if not road_tier and _st_tier is not None:
             road_tier = _st_tier
         road_name = extract_road_name(full_text_for_street)
+        # A source address can name the nearby main road, not the lot's
+        # unnamed access road. Do not promote it against explicit proximity
+        # in the listing; a direct named-road claim in the listing still wins.
+        if road_name and raw_addr and extract_road_name(full_text) is None:
+            folded_content = _ascii_fold(full_text)
+            mentions = list(re.finditer(
+                r"(?<![a-z0-9])" + re.escape(_ascii_fold(road_name)) + r"(?![a-z0-9])",
+                folded_content,
+            ))
+            if mentions and all(_has_road_proximity_prefix(folded_content, m.start()) for m in mentions):
+                road_name = None
 
         # Pháp lý: default = có sổ. Flip về 0 chỉ khi text rõ ràng nói "vi bằng / giấy tay / chưa sổ"
         # (extract_legal regex: chưa có sổ|chưa sổ|không có sổ|không sổ|vi bằng|giấy tay|đang làm sổ)

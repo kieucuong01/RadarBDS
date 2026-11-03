@@ -741,3 +741,107 @@ def test_review_nov02_future_asphalt_controls(text, expected):
     from cleansing.feature_extractor import extract_road_type
 
     assert extract_road_type(text) == expected
+
+
+# Source-backed non-road usages: Bình Dương, nghỉ dưỡng, bán nhanh,
+# đèn đường and accessibility descriptions are not street names.
+# 85898/85711/85705 share a repost pattern, not independent evidence.
+REVIEW_NOV03_NON_ROAD_NAMES = [
+    (85813, "An Tây Bến Cát Bình Dương giáp ranh KCN Rạch Bắp", "", None),
+    (85840, "đường bê tông ô tô tới đất, điện nước đèn đường tới đất", "", None),
+    (85898, "nhà vườn nghỉ dưỡng hoặc đầu tư lâu dài", "", None),
+    (85841, "Nhà cấp 4 Chánh Mỹ Thủ Dầu Một Bình Dương Vị trí gần trường Nguyễn Văn Cừ , Cầu Phú Cường , đường bê tông 4m", "", None),
+    (85711, "nhà vườn nghỉ dưỡng hoặc đầu tư lâu dài", "", None),
+    (85705, "nhà vườn nghỉ dưỡng hoặc đầu tư lâu dài", "", None),
+    (85788, "Thủ Dầu Một Bình Dương Đất Chánh Mỹ cũ", "", None),
+    (85792, "Đất Phú Cường sát bên Huỳnh Văn Cù gần cầu Phú Cường; đường xe ba gác", "", None),
+    (85666, "Thủ Dầu Một Bình Dương Vị trí\n\nNhà nằm trong khu dân cư", "Đường Hồ Văn Cống, Phường Tương Bình Hiệp", "Ho Van Cong"),
+    (85667, "Thủ Dầu Một Bình Dương Ngân hàng VIB thanh lý bán đấu giá", "", None),
+    (85573, "GIẢM GIÁ BÁN NHANH LÔ ĐẤT; Đường bê tông 4,5m ô tô", "", None),
+    (85527, "Vườn nghỉ dưỡng Phú An, P. Phú An; Đất mặt tiền đường đất xe ô tô", "", None),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,address,expected", REVIEW_NOV03_NON_ROAD_NAMES)
+def test_review_nov03_non_road_phrases_do_not_name_a_street(listing_id, text, address, expected):
+    assert extract_road_name(" ".join(filter(None, [text, address]))) == expected
+
+
+@pytest.mark.parametrize("listing_id,text,address,expected", REVIEW_NOV03_NON_ROAD_NAMES)
+def test_review_nov03_non_road_phrases_full_normalization(listing_id, text, address, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/non-road-phrase-control",
+        "title": text, "address": address, "area_m2": 100.0, "price_ty": 2.0,
+    })
+    assert record is not None
+    assert record["road_name"] == expected
+    assert record["area_m2"] == 100.0
+    assert record["price_ty"] == 2.0
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Binh   Duong Vi tri gan cho; Duong be tong", None),
+    ("NHA VUON NGHI DUONG HOAC DAU TU LAU DAI", None),
+    ("Dien nuoc den duong toi dat", None),
+    ("Ban nhanh lo dat gia re", None),
+    ("Đường xe ba gác", None),
+    ("Đường xe 3 gác", None),
+    ("Đường đất xe ô tô", None),
+    ("Đường tới đất", None),
+    ("Đường Dương Quảng Hàm", "Duong Quang Ham"),
+    ("Đường Bình Dương", "Binh Duong"),
+    ("Mặt tiền đường Bình Dương", "Binh Duong"),
+    ("Đường Đất Đỏ", "Dat Do"),
+    ("Đường Lò Đất", "Lo Dat"),
+    ("Nhánh Hồ Văn Cống", "Ho Van Cong"),
+    ("Bình Dương Đường Hồ Văn Cống", "Ho Van Cong"),
+    ("Bán nhanh nhánh Hồ Văn Cống", "Ho Van Cong"),
+    ("Bán nhanh; Đường Nguyễn Văn Trỗi", "Nguyen Van Troi"),
+    ("Nghỉ dưỡng; Mặt tiền đường Hồ Văn Cống", "Ho Van Cong"),
+    ("Đèn đường; Hẻm 232 Nguyễn Đức Thuận", "Hem 232 Nguyen Duc Thuan"),
+    ("Bình Dương; cách đường Hồ Văn Cống 100m", None),
+    ("Bình Dương; mặt tiền DX072, gần QL13", "DX72"),
+])
+def test_review_nov03_non_road_phrase_controls(text, expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("description,expected", [
+    ("Đất Phú Cường sát bên Huỳnh Văn Cù gần cầu Phú Cường; đường xe ba gác", None),
+    ("Mặt tiền đường Huỳnh Văn Cù", "Huynh Van Cu"),
+    ("Bán đất thổ cư", "Huynh Van Cu"),
+    ("Gần đường Huỳnh Văn Cù; mặt tiền đường Huỳnh Văn Cù", "Huynh Van Cu"),
+])
+def test_review_nov03_nearby_road_is_not_promoted_from_source_address(description, expected):
+    # Full 85792 replay exposes a structured address naming the nearby road.
+    record = normalize_record({
+        "source": "guland", "url": "https://example.invalid/nearby-address-control",
+        "title": "Bán đất", "description": description,
+        "address": "Đường Huỳnh Văn Cù, Phường Thủ Dầu Một, TP. HCM\nĐường Huỳnh Văn Cù, Phường Phú Cường, Thành phố Thủ Dầu Một",
+    })
+    assert record is not None
+    assert record["road_name"] == expected
+
+
+@pytest.mark.parametrize("listing_id,text", [
+    (83427, "Vị trí đẹp có đèn đường ban đêm"),
+    (84620, "biệt thự sân vườn nghỉ dưỡng bao đẹp Khu biệt thự"),
+    (84711, "GIẢM GIÁ BÁN NHANH LÔ ĐẤT"),
+    (84911, "An Tây Bến Cát Bình Dương giáp ranh KCN Rạch Bắp"),
+    (84913, "GIẢM GIÁ BÁN NHANH LÔ ĐẤT"),
+    (86003, "Đất Phú Cường sát bên Huỳnh Văn Cù gần cầu Phú Cường; đường xe ba gác"),
+    (85432, "Vườn nghỉ dưỡng Phú An, P. Phú An; Đất mặt tiền đường đất xe ô tô"),
+])
+def test_review_nov03_offline_collateral_non_road_phrases(listing_id, text):
+    assert extract_road_name(text) is None
+
+
+def test_review_nov03_85786_source_address_does_not_promote_a_road_30m_away():
+    record = normalize_record({
+        "source": "guland", "url": "https://example.invalid/nearby-85786-control",
+        "title": "đường oto sát bên Hồ Văn Cống cách chỉ 30m",
+        "description": "giá 2ty550 TL cách hồ văn cống 30m",
+        "address": "Đường Hồ Văn Cống, Phường Chánh Hiệp, TP. HCM\nĐường Hồ Văn Cống, Phường Tương Bình Hiệp, Thành phố Thủ Dầu Một",
+    })
+    assert record is not None
+    assert record["road_name"] is None
