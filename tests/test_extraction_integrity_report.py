@@ -338,3 +338,43 @@ class SimpleNamespaceRow(dict):
     """Dict row with the keys()/indexing contract returned by the DB adapter."""
 
     pass
+
+
+def test_integrity_report_detects_cleared_roads_and_category_changes(monkeypatch):
+    monkeypatch.setattr(report_service, "normalize_record", lambda raw: {
+        "price_ty": 2.0, "area_m2": 100.0, "price_per_m2": 20.0,
+        "road_name": None, "road_type": "unknown", "ward": "Phú An",
+        "property_type": "dat_nen", "frontage_m": 5.0, "depth_m": 20.0,
+    })
+    comparison = _compare_row(SimpleNamespaceRow({
+        "listing_id": 86003, "raw_id": 1, "source": "facebook",
+        "price_ty": 2.0, "area_m2": 100.0, "price_per_m2": 20.0,
+        "road_name": "Xe Ba Gac", "road_type": "duong_nhua",
+        "ward": "Tân An", "property_type": "nha_dat",
+        "frontage_m": None, "depth_m": None,
+    }))
+    assert comparison["changes"]["road_name"] == ["Xe Ba Gac", None]
+    assert comparison["changes"]["road_type"] == ["duong_nhua", "unknown"]
+    assert comparison["changes"]["ward"] == ["Tân An", "Phú An"]
+    assert comparison["changes"]["property_type"] == ["nha_dat", "dat_nen"]
+    assert comparison["changes"]["frontage_m"] == [None, 5.0]
+
+
+def test_integrity_report_preserves_reviewed_overrides_and_recalculates_ppm(monkeypatch):
+    monkeypatch.setattr(report_service, "normalize_record", lambda raw: {
+        "price_ty": 2.0, "area_m2": 100.0, "price_per_m2": 20.0,
+        "road_name": "Ho Van Cong", "ward": "Tân An",
+    })
+    row = SimpleNamespaceRow({
+        "listing_id": 7, "raw_id": 1, "source": "facebook",
+        "price_ty": 3.0, "area_m2": 100.0, "price_per_m2": 30.0,
+        "road_name": None, "ward": "Phú An",
+        "road_type": "unknown",
+        "llm_notes": json.dumps({"extraction_override": {
+            "active": True,
+            "fields": {"price_ty": 3.0, "road_name": None, "ward": "Phú An"},
+        }}),
+    })
+    assert _compare_row(row)["changes"] == {}
+    row["llm_notes"] = {"extraction_override": {"active": False, "fields": {"price_ty": 3.0}}}
+    assert _compare_row(row)["changes"]["price_ty"] == [3.0, 2.0]

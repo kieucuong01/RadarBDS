@@ -42,10 +42,10 @@ _CAP_TRO_RE = re.compile(
 _NHA_TRO_CAP_PRICE_THRESHOLD = 2.5  # tỷ
 
 _ROAD_PREFIX_PAT = re.compile(
-    r"\b(?:dx|dj|dh|dl|db|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*0*(\d{1,4})\b",
+    r"\b(?:dx|dj|dh|dl|db|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*[-–]?\s*0*(\d{1,4})\b",
     re.IGNORECASE,
 )
-_PROVINCIAL_ROAD_PAT = re.compile(r"\bdt\s*0*(\d{1,4})([a-d]?)\b", re.IGNORECASE)
+_PROVINCIAL_ROAD_PAT = re.compile(r"\bdt\s*[-–]?\s*0*(\d{1,4})([a-d]?)\b", re.IGNORECASE)
 _NUMBERED_ROAD_PAT = re.compile(
     r"\b(?:duong|mat\s*tien|mt|goc|hem|hẻm|duong\s+so|đường|đường\s+số)\s*"
     r"0*(\d{1,4}\s*[a-d])\b",
@@ -138,6 +138,8 @@ def extract_road_name(text: str) -> str | None:
     ):
         if re.search(r"\b(?:duong|hem|nhanh|mat\s*tien|mt|mtkd)\s+$", folded[:phrase.start()]):
             continue
+        if phrase.group().startswith("binh") and re.match(r"\s+(?:nhua|be\s+tong|rong|thong)\b", folded[phrase.end():]):
+            continue  # Nguyễn Bình + đường nhựa is a street followed by surface text.
         named_text = named_text[:phrase.start()] + " " * len(phrase.group()) + named_text[phrase.end():]
     for m in _NAMED_ROAD_PAT.finditer(named_text):
         if _has_road_proximity_prefix(folded, m.start()):
@@ -193,6 +195,7 @@ def _clean_named_road(value: str) -> str | None:
         " gia ", " dt ", " dien tich ", " tho cu ", " tp ",
         " ben cat", " thu dau mot", " duong ", " hem ", " gan ", " cach ",
         " khu ", " kdc ", " ngay ",
+        " thong ra ", " thong toi ", " noi ra ", " thong tu ",
     ):
         idx = f" {name} ".find(stop)
         if stop == " duong " and (idx == 0 or name == "binh duong"):
@@ -216,7 +219,7 @@ def _clean_named_road(value: str) -> str | None:
         return None
     if re.match(r"^dx\s+(?:nhua|be\s*tong|thong|rong|duong)\b", folded):
         return None
-    if re.match(r"^(?:nhua|be tong|o to|oto|xe hoi|xe\s+(?:oto|o\s+to)|thong|rong|lon|nho|so)\b", name):
+    if re.match(r"^(?:duong\s+)?(?:nhua|be tong|o to|oto|xe hoi|xe\s+(?:oto|o\s+to)|thong|rong|lon|nho|so)\b", name):
         return None
     if len(name.split()) < 2 and not re.search(r"\d", name):
         return None

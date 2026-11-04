@@ -20,6 +20,7 @@ from analytics.valuation import (
 from cleansing.normalizer import normalize_record
 from cleansing.reprocess import _source_quality_flags
 from db.connection import get_conn
+from db.listings import _apply_explicit_llm_extraction_override
 from services.signal_quality import (
     ACTIONABLE_SUPPRESS_FLAGS,
     is_actionable_signal,
@@ -27,7 +28,11 @@ from services.signal_quality import (
 )
 
 
-_MEASUREMENT_FIELDS = ("price_ty", "area_m2", "tho_cu_m2", "price_per_m2")
+_MEASUREMENT_FIELDS = (
+    "price_ty", "area_m2", "tho_cu_m2", "price_per_m2", "frontage_m",
+    "depth_m", "road_width_m", "road_tier", "tho_cu_ratio", "has_so",
+)
+_CATEGORY_FIELDS = ("ward", "property_type", "road_name", "road_type")
 
 
 def build_integrity_report(limit: int | None = None) -> dict[str, Any]:
@@ -69,6 +74,12 @@ def build_integrity_report(limit: int | None = None) -> dict[str, Any]:
             l.frontage_m,
             l.depth_m,
             l.road_tier,
+            l.road_name,
+            l.road_type,
+            l.road_width_m,
+            l.tho_cu_ratio,
+            l.has_so,
+            l.llm_notes,
             l.crawled_at,
             l.posted_at,
             l.suspicious_bait,
@@ -131,7 +142,11 @@ def _compare_row(row) -> dict[str, Any]:
         "url": current.get("raw_url") or current.get("url") or "",
         "crawled_at": current.get("raw_crawled_at") or "",
     })
+    raw_data["area_name"] = raw_data.get("area_name") or raw_data.get("area", "")
     normalized = normalize_record(raw_data)
+    if normalized is not None:
+        normalized = _apply_explicit_llm_extraction_override(normalized, current)
+        normalized["road_type"] = normalized.get("road_type") or "unknown"
 
     current_quality_flags = set(_source_quality_flags(current))
     main_flags = split_quality_flags(current.get("main_flags"))
@@ -139,7 +154,7 @@ def _compare_row(row) -> dict[str, Any]:
 
     normalization_failed = current.get("raw_id") is not None and normalized is None
     normalized = normalized or {
-        field: current.get(field) for field in _MEASUREMENT_FIELDS
+        field: current.get(field) for field in (*_MEASUREMENT_FIELDS, *_CATEGORY_FIELDS)
     }
     new_record = _SafeRow(dict(current))
     new_record.update(normalized)
@@ -164,6 +179,11 @@ def _compare_row(row) -> dict[str, Any]:
         old_value = _number(current.get(field))
         new_value = _number(normalized.get(field))
         if _values_differ(old_value, new_value):
+            changes[field] = [old_value, new_value]
+    for field in _CATEGORY_FIELDS:
+        old_value = current.get(field) or None
+        new_value = normalized.get(field) or None
+        if old_value != new_value:
             changes[field] = [old_value, new_value]
 
     training_before = _training_eligible(current, old_flags)
