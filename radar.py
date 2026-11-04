@@ -160,6 +160,7 @@ def build_parser():
     p_re.add_argument("--source", help="Filter theo source")
     p_re.add_argument("--since",  help="Từ ngày (YYYY-MM-DD)")
     p_re.add_argument("--full",   action="store_true", help="Chạy toàn bộ dữ liệu (mặc định là incremental)")
+    p_re.add_argument("--raw-ids", nargs="+", type=int, help="Chạy đủ pipeline cho đúng các raw ID sau khi sửa parser")
     p_re.add_argument("--valuation-only", action="store_true")
     p_re.add_argument("--listings-only",  action="store_true")
 

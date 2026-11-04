@@ -344,12 +344,25 @@ def cmd_signal_read_model(args):
 
 
 def _cmd_reprocess(args):
+    raw_ids = getattr(args, "raw_ids", None)
+    if raw_ids is not None:
+        if not raw_ids or any(raw_id <= 0 for raw_id in raw_ids):
+            raise SystemExit("--raw-ids requires positive raw IDs")
+        if any(getattr(args, name, None) for name in (
+            "full", "source", "since", "valuation_only", "listings_only",
+        )):
+            raise SystemExit("--raw-ids cannot be combined with other reprocess filters/modes")
     init_schema()
     from cleansing.reprocess import (
-        run_full_reprocess, reprocess_listings, reprocess_valuation,
+        run_full_reprocess, run_targeted_reprocess, reprocess_listings, reprocess_valuation,
     )
 
     full = getattr(args, "full", False)
+
+    if raw_ids is not None:
+        result = run_targeted_reprocess(raw_ids)
+        print(f"Targeted reprocess: {result}")
+        return
 
     if getattr(args, "valuation_only", False):
         # valuation_only mặc định chạy full trừ khi có logic khác

@@ -468,6 +468,24 @@ outside the built-in allowlist, deploy must still stop and report the exact file
 
 Deploy does not automatically run a full production reprocess for every code change. For parser, dedup, valuation, schema, or quality-gate changes, run an explicit reprocess after deploy.
 
+For review-driven parser maintenance, a passing regression suite and deployed
+commit are not completion evidence for stored listings. Run `radar.py
+integrity-report --json` before and after repair. It compares measurements,
+ward, property type, road name and road type against deterministic normalization,
+including values cleared to null, and preserves active extraction overrides.
+Differences are replay candidates, not independently verified extraction errors.
+The report does not refit valuation or prove the resulting MOS is correct.
+
+For a reviewed, bounded set, resolve listing IDs to `listings.raw_id`, then run
+`radar.py reprocess --raw-ids 123 456` (example raw IDs). This uses the existing
+complete pipeline: scoped normalization and valuation, shared dedup/lifecycle/
+market prerequisites, map backfill, and committed public read-model/cache publish.
+It rejects other reprocess filters/modes to avoid accidentally broadening scope.
+Verify the repaired fields in PostgreSQL and the public projection afterward;
+report any remaining drift or cache publication failure separately. Do not run
+`--listings-only` as the final repair, or turn parser replay into a new source
+observation. Keep parser maintenance separate from daily manual extraction QC.
+
 Map registry/browser-evidence releases use the dedicated sequence in
 `docs/listing_map_registry_automation.md`, including deterministic double-build,
 production `map-locations --full --dry-run`, apply, and browser smoke. Browser

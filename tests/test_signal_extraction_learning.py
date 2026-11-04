@@ -845,3 +845,29 @@ def test_review_nov03_85786_source_address_does_not_promote_a_road_30m_away():
     })
     assert record is not None
     assert record["road_name"] is None
+
+
+@pytest.mark.parametrize("text,expected", [
+    # Redacted source clauses from 85782/85649, 85511, 85450 and 85023.
+    ("Mặt tiền Nguyễn Văn Trỗi thông ra Đại Lộ Bình Dương", "Nguyen Van Troi"),
+    ("Đất Mặt Tiền Đường lớn.", None),
+    ("Phú Lợi nhánh Nguyễn Bình đường nhựa thông", "Nguyen Binh"),
+    ("ĐẤT MẶT TIỀN ĐƯỜNG ĐX-008, PHƯỜNG PHÚ MỸ", "DX8"),
+    ("Đường Nguyễn Văn Trỗi thông tới chợ", "Nguyen Van Troi"),
+    ("Đường Nguyễn Văn Trỗi nối ra đại lộ", "Nguyen Van Troi"),
+    ("Đường Dương Quảng Hàm", "Duong Quang Ham"),
+    ("Đường Bình Dương", "Binh Duong"),
+    ("Đường Nguyễn Bình", "Nguyen Binh"),
+    ("Bình Dương Đường Hồ Văn Cống", "Ho Van Cong"),
+    ("Gần đường ĐX-008", None),
+    ("Mặt tiền ĐT-7A", "DT7A"),
+    ("Đường DT-160m2", None),
+    ("Đường Lớn Nguyễn Văn Trỗi", None),
+])
+def test_review_nov04_road_names_preserve_boundaries_and_hyphenated_codes(text, expected):
+    assert extract_road_name(text) == expected
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/road-nov04",
+        "title": text, "price_ty": 2.0, "area_m2": 100.0,
+    })
+    assert record is not None and record["road_name"] == expected
