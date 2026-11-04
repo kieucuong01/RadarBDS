@@ -1028,10 +1028,21 @@ def extract_road_type(text: str) -> str:
     if re.search(r'xe\s*may|hem\s*nho|duong\s*nho\s*hep', folded):
         return 'hem_xe_may'
     if re.search(r'(?:duong|hem)\s*(?:oto|o\s*to|xe\s*hoi)|(?:oto|o\s*to|xe\s*hoi)\s*(?:vao|toi|den|thong)', folded):
+        # Explicit concrete-road evidence beats generic car access, not an
+        # explicit car alley or a nearby road / concrete building material.
+        concrete_roads = re.finditer(r'\bduong\s+be\s*tong\b', folded)
+        if not re.search(r'\bhem\s+(?:oto|o\s*to|xe\s*hoi)\b', folded) and any(
+            not re.search(r'\b(?:gan|cach)\s*$', folded[:m.start()])
+            for m in concrete_roads
+        ):
+            return 'be_tong'
         return 'hem_xe_hoi'
     if re.search(r'\b(?:mtkd|mt\s*kd|mat\s*tien\s*kinh\s*doanh)\b', folded):
         return 'mat_tien_kinh_doanh'
-    if 'đường đất' in t or 'duong dat' in folded or 'dat hien huu' in folded:
+    # ASCII folding must not turn the locality "Bình Dương Đất ..." into
+    # an earth-road label. A separate real "đường đất" remains evidence.
+    surface_folded = re.sub(r'\bbinh\s+duong\b', ' ', folded)
+    if 'đường đất' in t or 'duong dat' in surface_folded or 'dat hien huu' in folded:
         return 'duong_dat'
     if 'bê tông' in t or 'be tong' in folded or 'betong' in folded:
         return 'be_tong'

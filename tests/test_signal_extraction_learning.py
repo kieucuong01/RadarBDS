@@ -871,3 +871,69 @@ def test_review_nov04_road_names_preserve_boundaries_and_hyphenated_codes(text, 
         "title": text, "price_ty": 2.0, "area_m2": 100.0,
     })
     assert record is not None and record["road_name"] == expected
+
+
+# 2026-11-04 road_type: independent source patterns 85840 and 85788.
+# The latter needs the exact locality/title boundary absent from its issue excerpt.
+NOV04_ROAD_SURFACE_CASES = [
+    (85840, "đường bê tông ô tô tới đất", "be_tong"),
+    (85788, "Chánh Mỹ Thành phố Thủ Dầu Một Bình Dương Đất Chánh Mỹ cũ; Đường nhựa thông; Cách chợ Chánh Mỹ 300m", "duong_nhua"),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,expected", NOV04_ROAD_SURFACE_CASES)
+def test_review_nov04_explicit_road_surface_wins_false_access_or_locality(listing_id, text, expected):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == expected
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/road-surface-nov04",
+        "title": text, "description": "", "price_ty": 2.0, "area_m2": 100.0,
+    })
+    assert record is not None and record["road_type"] == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Bình Dương đất Chánh Mỹ", "unknown"),
+    ("BINH DUONG DAT CHANH MY; duong nhua thong", "duong_nhua"),
+    ("Bình Dương Đất mặt tiền đường đất 4m", "duong_dat"),
+    ("đường đất 4m chuẩn bị rải nhựa", "duong_dat"),
+    ("Đường bê tông 4m ô tô vào tận đất", "be_tong"),
+    ("Đường bê tông, xe hơi vào tận đất", "be_tong"),
+    ("duong betong o to toi dat", "be_tong"),
+    ("Đường ô tô tới đất", "hem_xe_hoi"),
+    ("Hẻm xe hơi; đường bê tông", "hem_xe_hoi"),
+    ("Tường bê tông; ô tô tới đất", "hem_xe_hoi"),
+    ("Gần đường bê tông; ô tô tới đất", "hem_xe_hoi"),
+    ("Cách đường bê tông 30m; ô tô tới đất", "hem_xe_hoi"),
+    ("Đường bê tông, hẻm xe máy", "hem_xe_may"),
+    ("Đường bê tông xe ba gác", "hem_ba_gac"),
+    ("Đường nhựa thông", "duong_nhua"),
+    ("Đường bê tông", "be_tong"),
+    ("Mặt tiền kinh doanh đường nhựa", "mat_tien_kinh_doanh"),
+])
+def test_review_nov04_road_surface_negative_near_miss_and_positive_controls(text, expected):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == expected
+
+
+# Differential cohort: every additional changed record has explicit concrete
+# access-road evidence. 83941/84229, 84075/84347 and 85898/85711/85705
+# are repost families, not independent confirmations.
+@pytest.mark.parametrize("listing_id,text", [
+    (83701, "duong be tong 4m, o to vao tan noi"),
+    (83941, "duong be tong 5m o to toi dat"),
+    (84229, "duong be tong 5m o to toi dat"),
+    (84075, "duong be tong 4,5m o to toi nha"),
+    (84347, "duong be tong 4,5m o to toi nha"),
+    (85898, "duong be tong, xe hoi vao tan dat, di lai vi vu thoai mai"),
+    (85711, "duong be tong, xe hoi vao tan dat, di lai vi vu thoai mai"),
+    (85705, "duong be tong, xe hoi vao tan dat, di lai vi vu thoai mai"),
+])
+def test_review_nov04_road_surface_differential_source_controls(listing_id, text):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == "be_tong"
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/concrete-surface-cohort",
+        "title": text, "description": "", "price_ty": 2.0, "area_m2": 100.0,
+    })
+    assert record is not None and record["road_type"] == "be_tong"
