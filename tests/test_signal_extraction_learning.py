@@ -937,3 +937,114 @@ def test_review_nov04_road_surface_differential_source_controls(listing_id, text
         "title": text, "description": "", "price_ty": 2.0, "area_m2": 100.0,
     })
     assert record is not None and record["road_type"] == "be_tong"
+
+
+# 2026-11-05: exact PII-free measurement fragments from 86216, 85902, 86003.
+@pytest.mark.parametrize("text,expected", [
+    ("Diện tích: 20m x 60m tổng 1.275m²_ thổ cư 460m2", 1275.0),
+    ("Diện tích 4.5x 26.5. thổ cư 70m. Tổng diện tích sổ hồng  118m2", 118.0),
+    ("DT 132m2; tổng diện tích 132.3m2 , thổ cư 90m2", 132.3),
+])
+def test_review_nov05_explicit_land_total_beats_dimensions_or_rounded_label(text, expected):
+    from cleansing.feature_extractor import extract_area
+    assert extract_area(text) == expected
+    assert parse_facebook_post(text)["area_m2"] == expected
+
+
+@pytest.mark.parametrize("title,description,structured,expected", [
+    ("BÁN BIỆT THỰ 1.275M²_ HIỆP THÀNH",
+     "Diện tích: 20m x 60m tổng 1.275m²_ thổ cư 460m2. Giá 9,4triệu/m.",
+     {}, 1275.0),
+    ("Diện tích 4.5x 26.5. thổ cư 70m. Tổng",
+     "Diện tích 4.5x 26.5. thổ cư 70m. Tổng diện tích sổ hồng  118m2",
+     {}, 118.0),
+    ("DT 132m2", "tổng diện tích 132.3m2 , thổ cư 90m2; Giá chủ cần bán giảm còn 1,6tỷ",
+     {"area_m2": 132.0, "price_ty": 1.6, "price_per_m2": 12.12}, 132.3),
+])
+def test_review_nov05_normalizer_uses_explicit_land_total(title, description, structured, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/declared-land-total",
+        "title": title, "description": description, **structured,
+    })
+    assert record is not None
+    assert record["area_m2"] == expected
+    assert record["measurement_provenance"]["area_m2"] == "declared_text"
+
+
+def test_review_nov05_unit_asking_price_uses_final_land_total_86216():
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/declared-total-unit-price",
+        "title": "BÁN BIỆT THỰ 1.275M²_ HIỆP THÀNH",
+        "description": "Diện tích: 20m x 60m tổng 1.275m²_ thổ cư 460m2. Giá 9,4triệu/m.",
+    })
+    assert record is not None
+    assert record["price_ty"] == pytest.approx(11.985)
+    assert record["price_per_m2"] == 9.4
+    assert record["frontage_m"] == 20.0
+    assert record["depth_m"] == 60.0
+    assert record["tho_cu_m2"] == 460.0
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("DT 5x20; tổng diện tích sổ hồng 98m2", 98.0),
+    ("DT 5x20; TỔNG DIỆN TÍCH SỔ HỒNG: 98M²", 98.0),
+    ("DT 5x20; tong dien tich so hong 98m2", 98.0),
+    ("DT 5x20; tổng 98m2_ thổ cư 60m2", 98.0),
+    ("DT 5x20; tổng diện tích sàn 240m2", 100.0),
+    ("DT 5x20; tổng diện tích xây dựng 80m2", 100.0),
+    ("DT 5x20; tổng diện tích sử dụng 240m2", 100.0),
+    ("DT 5x20; tổng thổ cư 60m2", 100.0),
+    ("DT 5x20; đường bê tông 6m", 100.0),
+    ("DT 5x20; tổng diện tích sổ hồng 5m x 20m", 100.0),
+    ("DT 5x20; tổng diện tích sổ hồng 98m2abc", 100.0),
+    ("DT 5x20; tổng diện tích sổ hồng 0m2", 100.0),
+    ("DT 5x20; tổng diện tích sổ hồng 100000m2", 100.0),
+    ("DT 5x20; tổng 98m2 thổ cư", 100.0),
+    ("DT 5x20; tổng 98m2 sàn", 100.0),
+    ("DT 5x20; tổng dt 98m2", 98.0),
+    ("DT 5x20; tổng diện tích 98,5m2", 98.5),
+])
+def test_review_nov05_total_land_area_positive_negative_near_miss_controls(text, expected):
+    from cleansing.feature_extractor import extract_explicit_land_total
+    # This gate recognizes only an explicit LAND total, not every old fallback.
+    # Missing title made the original normalization fixture invalid; the new
+    # helper's near-miss contract must not test unrelated pre-existing fallbacks.
+    assert extract_explicit_land_total(text) == (None if expected == 100.0 else expected)
+
+
+@pytest.mark.parametrize("title,description,structured,area,price,ppm,ratio", [
+    ("BÁN BIỆT THỰ 1.275M²_ HIỆP THÀNH",
+     "Diện tích: 20m x 60m tổng 1.275m²_ thổ cư 460m2. Giá 9,4triệu/m.",
+     {}, 1275.0, 11.985, 9.4, 0.361),
+    ("Diện tích 4.5x 26.5. thổ cư 70m. Tổng",
+     "Diện tích 4.5x 26.5. thổ cư 70m. Tổng diện tích sổ hồng  118m2",
+     {"price_ty": 2.45}, 118.0, 2.45, 20.763, 0.593),
+    ("DT 132m2", "tổng diện tích 132.3m2 , thổ cư 90m2; Giá chủ cần bán giảm còn 1,6tỷ",
+     {"area_m2": 132.0, "price_ty": 1.6, "price_per_m2": 12.12}, 132.3, 1.6, 12.094, 0.680),
+])
+def test_review_nov05_land_total_dependent_values_stay_consistent(title, description, structured, area, price, ppm, ratio):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/land-total-dependent-values",
+        "title": title, "description": description, **structured,
+    })
+    assert record is not None
+    assert record["area_m2"] == area
+    assert record["price_ty"] == pytest.approx(price)
+    assert record["price_per_m2"] == pytest.approx(ppm)
+    assert record["tho_cu_ratio"] == pytest.approx(ratio)
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("DT 5x20; tổng diện tích sổ hồng 98m2", 98.0),
+    ("DT 5x20; tổng diện tích sàn 240m2", 100.0),
+    ("DT 5x20; tổng diện tích xây dựng 80m2", 100.0),
+    ("DT 5x20; tổng diện tích sử dụng 240m2", 100.0),
+    ("DT 5x20; tổng thổ cư 60m2", 100.0),
+    ("DT 5x20; đường bê tông 6m", 100.0),
+])
+def test_review_nov05_land_total_full_normalization_controls(text, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/land-total-full-controls",
+        "title": "Bán đất", "description": text,
+    })
+    assert record is not None and record["area_m2"] == expected

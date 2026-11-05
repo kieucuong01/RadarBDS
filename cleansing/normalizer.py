@@ -22,6 +22,7 @@ from cleansing.feature_extractor import (
     classify_property_type, extract_tho_cu, extract_road_tier,
     extract_legal, extract_phone, extract_road_type, parse_facebook_post,
     extract_url_hint, has_ambiguous_masked_price,
+    extract_explicit_land_total,
     is_multi_lot_listing,
 )  # extract_legal đã có sẵn — dùng cho has_so detection
 
@@ -809,7 +810,7 @@ def normalize_record(raw: Dict) -> Optional[Dict]:
             for part in (title, description)
             if part
         ]
-        _declared_area = next(
+        _declared_area = extract_explicit_land_total(_parse_text) or next(
             (candidate for candidate in _declared_area_candidates if candidate),
             None,
         )

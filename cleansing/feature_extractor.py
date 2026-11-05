@@ -366,6 +366,23 @@ def _first_valid_dimension_area(text: str) -> Optional[float]:
 # 2. DIỆN TÍCH TỔNG
 # ═══════════════════════════════════════════════════════════════════
 
+def extract_explicit_land_total(text: str) -> Optional[float]:
+    """Read an explicit land total, including titled area and broker separators."""
+    folded = _ascii_fold(text)
+    for match in re.finditer(
+        r"\b(?<!be )(?<!be-)tong(?:\s+(?:dt|dien\s+tich))?"
+        r"(?:\s+so\s+hong)?\s*[:=\-]?\s*"
+        r"(\d+(?:[,.]\d+)?)\s*(?:m[²2]|mv|met\s+vuong)(?![a-z0-9])"
+        r"(?!\s*(?:[x×*]\s*\d|tho\s*cu\b|tc\b|san\b|"
+        r"su\s*dung\b|xay\s*dung\b))",
+        folded,
+    ):
+        area = parse_area_number(match.group(1))
+        if area is not None and 5 < area < 100000:
+            return area
+    return None
+
+
 def extract_area(text: str) -> Optional[float]:
     """
     Trả về m².
@@ -380,6 +397,9 @@ def extract_area(text: str) -> Optional[float]:
     t = _normalize_compact_dimension_text(
         unicodedata.normalize("NFKC", text or "").replace('\n', ' ')
     )
+    explicit_total = extract_explicit_land_total(t)
+    if explicit_total is not None:
+        return explicit_total
 
     # Bước 0: Loại bỏ phần "thổ cư Xm²" / "TC Xm²" khỏi text trước khi parse
     # để tránh nhầm thổ cư với tổng DT
@@ -2211,7 +2231,7 @@ def extract_all(title: str, description: str, source_price_str: str = '',
     if badge_area_m2 is not None:
         area_m2 = badge_area_m2
     else:
-        area_m2 = declared_total_area(full_text) or extract_area(full_text)
+        area_m2 = extract_explicit_land_total(full_text) or declared_total_area(full_text) or extract_area(full_text)
 
     # Giá/m² — badge ưu tiên tuyệt đối
     if badge_ppm2 is not None:
