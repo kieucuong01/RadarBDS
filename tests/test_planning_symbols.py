@@ -34,4 +34,4 @@ def test_measure_and_legend_scripts_load_before_overlay():
     template = (ROOT / 'templates/index.html').read_text(encoding='utf8')
     for helper in ['planning_measure.js', 'planning_legend.js']:
         assert template.index(helper) < template.index("filename='js/main/planning_overlay.js'")
-    assert 'planning-tools-20261029' in template
+    assert "js/main/planning_legend.js') }}?v=maps-pilot-20261110" in template

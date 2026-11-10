@@ -411,9 +411,9 @@ def test_listing_map_assets_share_cache_version():
     assert "js/main/filters.js') }}?v=listing-province-20261104" in template
     assert "js/main/area_scope.js') }}?v=maps-controls-20261028" in template
     assert "js/main/boot.js') }}?v=listing-province-20261104" in template
-    assert "js/main/planning_parcels.js') }}?v=map-toolbar-20261104" in template
+    assert "js/main/planning_parcels.js') }}?v=maps-pilot-20261110" in template
     assert "js/main/planning_corner_saved.js') }}?v=corner-saved-20261103" in template
-    assert "js/main/planning_overlay.js') }}?v=map-toolbar-20261104" in template
+    assert "js/main/planning_overlay.js') }}?v=maps-pilot-20261110" in template
     assert "js/main/planning_native_tiles.js') }}?v=partition-summary-overview-20261101" in template
     assert "js/main/satellite_osm_labels.js') }}?v=public-geometry-20261101" in template
     assert "js/main/planning_administrative.js') }}?v=parcel-ux-20261031b" in template

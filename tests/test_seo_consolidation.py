@@ -1,4 +1,5 @@
 import json
+from html import escape
 
 import pytest
 
@@ -51,7 +52,7 @@ def test_guides_render_index_and_link_to_working_tools():
         assert response.status_code == 200
         assert f'<h1>{page["hero_title"]}</h1>' in html
         assert f'https://radarbds.vn{page["path"]}' in html
-        assert f'href="{page["primary_href"]}"' in html
+        assert f'href="{escape(page["primary_href"])}"' in html
         assert "Số liệu theo kỳ" not in html
         if page.get("hide_lead_capture"):
             assert '<section class="seo-lead-capture"' not in html
