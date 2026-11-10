@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=tdm-product-map-20260729-4" defer></script>
+  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=maps-pilot-20261110" defer></script>
   <script src="{{ url_for('static', filename='js/thu_dau_mot_map_product.js') }}?v=tdm-product-20260729-6" defer></script>
   {% include "partials/research_assets.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/public_discovery.css') }}?v=identity-20261019-1">
@@ -70,7 +70,7 @@
             <p class="discovery-map-scope">Ranh cũ ở mức tham khảo; ranh hiện tại đã xác minh. Bản đồ không thay thế hồ sơ thửa đất.</p>
             <div class="bd-map-hero-actions tdm-product-hero-actions">
               <a class="seo-button seo-button-primary" href="#ban-do-tuong-tac" data-track-cta="{{ page.tracking_prefix }}_hero_map">Mở bản đồ miễn phí</a>
-              <a class="seo-button seo-button-secondary" href="{{ page.planning_href }}" data-track-cta="{{ page.tracking_prefix }}_planning_map">Xem QH sử dụng đất 2030</a>
+              <a class="seo-button seo-button-secondary" href="{{ page.planning_selection_href or page.planning_href }}" data-track-cta="{{ page.tracking_prefix }}_planning_map">Xem QH sử dụng đất 2030</a>
               <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="{{ page.tracking_prefix }}_hero_dashboard">{{ page.dashboard_label }}</a>
             </div>
           </div>
@@ -173,6 +173,9 @@
             </div>
           </dl>
           <div class="bd-map-selection-actions">
+            {% if page.planning_selection_href %}
+            <a class="seo-button seo-button-secondary" href="{{ page.planning_selection_href }}" data-map-selection-planning="{{ page.planning_selection_href }}" data-track-cta="{{ page.tracking_prefix }}_selection_planning">Xem quy hoạch {{ page.city_name }}</a>
+            {% endif %}
             <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-map-selection-cta data-track-cta="{{ page.tracking_prefix }}_dashboard">{{ page.dashboard_label }}</a>
             <button type="button" class="bd-map-copy-link" data-map-copy-link>Sao chép liên kết khu vực</button>
             <p class="bd-map-attribution">Nền bản đồ © OpenStreetMap/Esri. Ranh cũ là dữ liệu tham khảo, không thay thế hồ sơ địa chính.</p>
@@ -184,6 +187,14 @@
           <span>{{ page.derived_note }}</span>
         </div>
       </div>
+      {% if page.city_slug == "ben-cat" %}
+        <div class="planning-source-strip bd-map-map-note">
+          <strong>Mỹ Phước cũ nay thuộc phường nào?</strong>
+          <p>Một phần phường Mỹ Phước cũ thuộc phường Long Nguyên, phần còn lại thuộc phường Bến Cát. Nếu tin rao chỉ ghi Mỹ Phước, hãy hỏi vị trí cụ thể rồi đối chiếu ranh cũ và ranh hiện tại.</p>
+          <a href="#layer-legacy/area-my-phuoc" data-track-cta="ben_cat_map_my_phuoc_legacy">Hiện ranh Mỹ Phước cũ</a> ·
+          <a href="https://congbao.chinhphu.vn/tai-ve-van-ban-so-1685-nq-ubtvqh15-45141-56880?format=pdf">Nghị quyết 1685/NQ-UBTVQH15, khoản 94–95</a>
+        </div>
+      {% endif %}
     </section>
 
     <details class="seo-shell discovery-map-details"><summary>Phạm vi và cách dùng hai phiên bản bản đồ</summary>

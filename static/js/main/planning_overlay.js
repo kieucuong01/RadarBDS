@@ -487,6 +487,9 @@
     legendImage.alt = 'Chú giải nguyên bản tờ QH01 Thới Hòa';
     legendImage.loading = 'lazy';
     legend.addEventListener('toggle', function () {
+      if (legend.open && typeof env.track === 'function') {
+        env.track('planning_lookup', {context:{method:'source',outcome:'opened'}});
+      }
       if (legend.open && manifest && manifest.legend_available !== false && !legendImage.getAttribute('src')) {
         legendImage.src = assetBase + manifest.id + '/legend.webp';
       }

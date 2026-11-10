@@ -92,6 +92,7 @@
       type.value=current.active&&['partition','urban_general','detailed'].indexOf(current.theme)>=0?current.theme:'land_codes';
       if(current.source==='document'&&current.selectedDocument) type.value='doc:'+current.selectedDocument;
       search.value='';panel.hidden=false;button.setAttribute('aria-expanded','true');render();load();search.focus({preventScroll:true});
+      if (typeof env.track === 'function') env.track('planning_lookup', {context:{method:'legend',outcome:'opened'}});
     });
     close.addEventListener('click',function(){hide(true);});retry.addEventListener('click',load);
     type.addEventListener('change',render);search.addEventListener('input',render);

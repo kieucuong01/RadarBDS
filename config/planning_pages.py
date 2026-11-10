@@ -5,6 +5,21 @@ approximate planning illustrations for public SEO pages. They are not parcel
 boundary or legal planning extracts.
 """
 
+from urllib.parse import urlencode
+
+
+def planning_demo_href(city, layer="land_use_2030"):
+    center, district = {
+        "THỦ DẦU MỘT": ("10.9797,106.6534", "718"),
+        "BẾN CÁT": ("11.1466,106.5951", "721"),
+    }[city]
+    query = urlencode({"tab": "all", "map": "1", "planning": layer, "city": city})
+    return (
+        f"/?{query}#map={center},16&base=satellite&province=binh-duong"
+        f"&district={district}&planning={layer}&listings=0"
+    )
+
+
 PLANNING_UPDATED_AT = "2026-07-23"
 PLANNING_UPDATED_LABEL = "23/07/2026"
 

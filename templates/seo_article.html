@@ -46,6 +46,16 @@
         <section class="article-intro" aria-label="Mở đầu">
           {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
         </section>
+        {% if page.map_demos %}
+        <section class="article-related" aria-label="Thử trực tiếp trên Maps">
+          <h2>Thử trực tiếp trên Maps</h2>
+          <div class="related-link-grid">
+            {% for demo in page.map_demos %}
+            <a href="{{ demo.href }}" data-track-cta="{{ demo.id }}"><strong>{{ demo.label }}</strong></a>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
 
         {% if page.article.data_tables and not page.news %}
         <aside class="seo-trust-panel" aria-label="Kỳ dữ liệu trong bài">

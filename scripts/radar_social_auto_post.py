@@ -143,6 +143,8 @@ def article_candidates() -> list[tuple[str, str]]:
     for slug, page in SEO_ARTICLES.items():
         if not isinstance(page, dict) or "news" in page or not str(page.get("path", "")).startswith("/tin-tuc/"):
             continue
+        if page.get("social_review_only"):
+            continue
         article = page.get("article") or {}
         article_date = str(article.get("modified_at") or article.get("published_at") or "unknown-date")
         candidates.append((article_date, str(slug)))

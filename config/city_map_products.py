@@ -6,6 +6,8 @@ from copy import deepcopy
 from types import MappingProxyType
 from urllib.parse import quote
 
+from config.planning_pages import planning_demo_href
+
 
 def _unit(name: str, unit_type: str = "Phường cũ", **extra) -> dict:
     return {"name": name, "unit_type": unit_type, **extra}
@@ -212,6 +214,9 @@ def _page(
         ),
         "dashboard_signal_href": dashboard_href,
         "planning_href": f"/?tab=all&map=1&planning=land_use_2030&city={quote(city_name.upper())}",
+        "planning_selection_href": (
+            planning_demo_href(city_name.upper()) if city_name in ("Thủ Dầu Một", "Bến Cát") else ""
+        ),
         "dashboard_label": dashboard_label,
         "dashboard_heading": f"Xem dữ liệu tin đang bán liên quan {city_name}",
         "dashboard_text": (

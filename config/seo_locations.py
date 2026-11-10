@@ -8,6 +8,8 @@ from __future__ import annotations
 from types import MappingProxyType
 from urllib.parse import urlencode
 
+from config.planning_pages import planning_demo_href
+
 
 TDM_LIVE_WARDS = MappingProxyType({
     "tan-an": "Tân An",
@@ -441,8 +443,11 @@ def _page(item: dict) -> dict:
         "hero_text": hero_text,
         "hero_checks": [watch_text, "Fair value theo khu", "Cảnh báo tin nhiễu"],
         "primary_cta": f"Xem tin {name}",
-        "secondary_cta": "Cách lọc deal",
-        "secondary_href": "/san-deal-bds",
+        "secondary_cta": "Mở quy hoạch khu vực" if item["slug"] in {"ben-cat", "my-phuoc"} else "Cách lọc deal",
+        "secondary_href": (
+            planning_demo_href("BẾN CÁT")
+            if item["slug"] in {"ben-cat", "my-phuoc"} else "/san-deal-bds"
+        ),
         "map_label": f"Bình Dương / {name}",
         "hero_metric": {
             "label": "Bộ lọc dữ liệu",

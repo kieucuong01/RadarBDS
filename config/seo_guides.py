@@ -1,6 +1,73 @@
-"""Practical guides for the two primary product workflows."""
+"""Practical guides for the Radar BDS tools."""
+
+from config.planning_pages import planning_demo_href
+
+_TDM_LAND_USE = planning_demo_href("THỦ DẦU MỘT")
+_BEN_CAT_LAND_USE = planning_demo_href("BẾN CÁT")
+_BEN_CAT_PARTITION = planning_demo_href("BẾN CÁT", "partition")
 
 PRODUCT_GUIDES = {
+    "cach-doc-ban-do-su-dung-dat-2030-va-quy-hoach-phan-khu": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/cach-doc-ban-do-su-dung-dat-2030-va-quy-hoach-phan-khu",
+        "category": {"key": "huong-dan-doc-du-lieu", "label": "Hướng dẫn đọc dữ liệu"},
+        "title": "Cách đọc bản đồ sử dụng đất 2030 và quy hoạch phân khu | Radar BDS",
+        "description": "Thực hành xem lớp sử dụng đất 2030 tại Thủ Dầu Một, đổi sang lớp phân khu ở Bến Cát và tìm nguồn bản đồ trước khi đi xem đất.",
+        "keywords": "cách đọc bản đồ sử dụng đất 2030, bản đồ quy hoạch phân khu Bến Cát, quy hoạch Thủ Dầu Một",
+        "breadcrumb_label": "Đọc bản đồ sử dụng đất 2030 và phân khu",
+        "hero_title": "Cách đọc bản đồ sử dụng đất 2030 và quy hoạch phân khu",
+        "hero_text": "Thử hai góc nhìn ở Bình Dương cũ để tập đối chiếu vị trí, lớp bản đồ và nguồn dữ liệu.",
+        "scope_label": "Thủ Dầu Một · Bến Cát",
+        "social_review_only": True,
+        "primary_cta": "Thử lớp sử dụng đất 2030 ở Thủ Dầu Một",
+        "primary_href": _TDM_LAND_USE,
+        "map_demos": [
+            {"label": "Thử lớp sử dụng đất 2030 ở Thủ Dầu Một", "href": _TDM_LAND_USE, "id": "maps_demo_tdm_2030"},
+            {"label": "Mở sử dụng đất 2030 ở Bến Cát", "href": _BEN_CAT_LAND_USE, "id": "maps_demo_ben_cat_2030"},
+            {"label": "Mở phân khu ở cùng điểm Bến Cát", "href": _BEN_CAT_PARTITION, "id": "maps_demo_ben_cat_partition"},
+        ],
+        "next_step_text": "Mở từng góc nhìn, đọc tên lớp đang bật và kiểm tra nguồn trước khi diễn giải màu trên bản đồ.",
+        "local_links": [
+            {"label": "Bản đồ địa giới Bến Cát", "href": "/ban-do-ben-cat#layer-legacy/area-my-phuoc", "description": "Hiện ranh Mỹ Phước cũ và đối chiếu các phường hiện tại."},
+            {"label": "Tra tờ/thửa và tọa độ", "href": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do", "description": "Xác định vị trí từ thông tin trên giấy tờ."},
+            {"label": "Cổng công khai dữ liệu quy hoạch TP.HCM", "href": "https://gisxaydung.tphcm.gov.vn/tracuuttqh", "description": "Đối chiếu dữ liệu quy hoạch do cơ quan quản lý công bố."},
+        ],
+        "faq": [
+            {"q": "Nên mở lớp sử dụng đất 2030 hay phân khu trước?", "a": "Mở lớp 2030 để nhìn tổng quan, sau đó mở phân khu nếu cần xem ô chức năng và khu vực có dữ liệu GIS. Giữ nguyên vị trí khi chuyển lớp."},
+            {"q": "Có thể dùng một bảng màu để đọc cả hai lớp không?", "a": "Hãy đọc chú giải của nguồn đang mở. Lớp sử dụng đất 2030 trên Radar là lớp tham khảo từ Guland, chưa đối chiếu hồ sơ phê duyệt. Với phân khu, dùng chú giải GIS hoặc chú giải của bản vẽ gốc nếu có."},
+            {"q": "Vùng không lên màu thì xử lý thế nào?", "a": "Kiểm tra độ phóng, lớp đang bật, trạng thái tải và phạm vi nguồn. Nếu cần kiểm tra một thửa trước giao dịch, hãy đối chiếu đúng vị trí với hồ sơ và cơ quan có thẩm quyền."},
+        ],
+        "article": {
+            "published_at": "2026-11-10",
+            "modified_at": "2026-11-10",
+            "illustration": {
+                "src": "/static/images/seo/maps-phan-khu-ben-cat-20261110.png",
+                "alt": "Lớp quy hoạch phân khu trên Radar BDS ở khu vực đường Ngô Quyền và Quốc lộ 13, Bến Cát",
+                "width": 1280,
+                "height": 800,
+                "caption": "Lớp phân khu tại Bến Cát trên Radar BDS, nguồn GIS TP.HCM. Ảnh chụp ngày 10/11/2026 để minh họa cách đọc bản đồ.",
+            },
+            "intro": [
+                "Để đọc quy hoạch của một khu vực, hãy xác định đúng vị trí, mở từng lớp rồi xem chú giải đi kèm. Thử lớp sử dụng đất 2030 ở Thủ Dầu Một để nhìn tổng quan. Sau đó mở hai góc nhìn Bến Cát bên dưới để so lớp sử dụng đất và phân khu tại cùng một điểm.",
+                "Các góc nhìn trong bài dùng để tập thao tác. Nếu đang xem một tin rao, hãy lấy vị trí từ giấy tờ hoặc mốc thực địa trước khi áp dụng các bước này cho lô đất.",
+            ],
+            "sections": [
+                {"id": "thu-dau-mot-2030", "heading": "1. Thử đọc lớp sử dụng đất 2030 ở Thủ Dầu Một", "paragraphs": [
+                    "Mở góc nhìn Thủ Dầu Một ở đầu bài. Dùng thanh độ hiển thị để nhìn đường và công trình trên nền vệ tinh qua lớp màu. Tắt lớp rồi bật lại để kiểm tra xem mình đang nhìn đúng điểm.",
+                    "Trong phần thông tin lớp, kiểm tra tên nguồn và nhãn tham khảo. Lớp 2030 của Bình Dương cũ trên Radar dùng ảnh bản đồ từ Guland. Khi lớp đang xem thiếu chú giải riêng, hãy ghi lại vị trí để đối chiếu hồ sơ thay vì suy ra chức năng đất từ màu.",
+                ]},
+                {"id": "ben-cat-phan-khu", "heading": "2. So hai lớp tại cùng vị trí ở Bến Cát", "paragraphs": [
+                    "Mở hai liên kết Bến Cát trong mục Thử trực tiếp. Hai góc nhìn có cùng vị trí và độ phóng. Nếu đang ở ngay trên Maps, có thể tắt lớp 2030 rồi bật Quy hoạch phân khu để đọc từng lớp.",
+                    "Với phân khu, mở Ký hiệu các loại đất, chọn đúng nhóm Quy hoạch phân khu và đối chiếu với nguồn GIS TP.HCM. Nếu đã chọn bản vẽ có chú giải riêng, hãy dùng chú giải của bản vẽ đó. Ghi lại tên lớp và nguồn khi gửi ảnh hoặc link cho người đi xem cùng.",
+                ]},
+                {"id": "dia-gioi", "heading": "3. Đối chiếu địa giới khi tên trong tin khác tên trên bản đồ", "paragraphs": [
+                    "Ví dụ tin rao ghi Mỹ Phước, Bến Cát theo tên cũ. Mở bản đồ Bến Cát, xem ranh Mỹ Phước trước sắp xếp rồi chuyển sang bản sau sắp xếp. Dùng vị trí cụ thể để đối chiếu phường Long Nguyên hoặc phường Bến Cát.",
+                    "Sau khi tra xong, nếu muốn xem thị trường quanh đó, bật Hiện tin đăng ngay trên Maps hoặc mở danh sách tin từ trang địa giới.",
+                ]},
+            ],
+            "checklist": ["Xác định đúng khu vực và mốc vị trí.", "Bật từng lớp và đọc chú giải của đúng nguồn.", "Đối chiếu hồ sơ gốc trước khi đặt cọc."],
+        },
+    },
     "cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do": {
         "variant": "knowledge",
         "path": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do",

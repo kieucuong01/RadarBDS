@@ -52,7 +52,7 @@ def _choose_article(slug: str) -> tuple[str, dict[str, Any]]:
         k: v
         for k, v in articles.items()
         if is_public_article(v) and str(v.get("path", "")).startswith("/tin-tuc/")
-        and (slug != "latest" or "news" not in v)
+        and (slug != "latest" or ("news" not in v and not v.get("social_review_only")))
     }
     if not candidates:
         raise SystemExit("No /tin-tuc articles found in config/seo_articles.py")

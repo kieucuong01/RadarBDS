@@ -1605,6 +1605,7 @@ ALLOWED_TRACK_ACTIONS = {
     "map_area_cta_clicked",
     "planning_hub_filter_selected",
     "planning_hub_card_clicked",
+    "planning_lookup",
     "binh_duong_map_layer_selected",
     "binh_duong_map_base_layer_selected",
     "binh_duong_map_area_selected",
@@ -1766,6 +1767,22 @@ def _safe_listing_share_tracking_context(context) -> dict:
     return safe
 
 
+def _safe_planning_lookup_context(context):
+    if not isinstance(context, dict):
+        return {}
+    method = context.get("method")
+    outcome = context.get("outcome")
+    valid_outcomes = {
+        "legend": ("opened",),
+        "source": ("opened",),
+        "coordinates": ("located", "matched", "multiple", "error"),
+        "parcel": ("matched", "multiple", "no_match", "error"),
+    }
+    if isinstance(method, str) and outcome in valid_outcomes.get(method, ()):
+        return {"method": method, "outcome": outcome}
+    return {}
+
+
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
@@ -1777,7 +1794,7 @@ def api_track():
     is_listing_map_action = action in _LISTING_MAP_TRACK_ACTIONS
     listing_id = (
         None
-        if is_product_action or is_checkout_action or is_listing_map_action
+        if is_product_action or is_checkout_action or is_listing_map_action or action == "planning_lookup"
         else payload.get("listing_id")
     )
     try:
@@ -1793,6 +1810,8 @@ def api_track():
         ctx = _safe_listing_map_tracking_context(ctx)
     elif action == "listing_share":
         ctx = _safe_listing_share_tracking_context(ctx)
+    elif action == "planning_lookup":
+        ctx = _safe_planning_lookup_context(ctx)
     elif action.startswith("public_"):
         ctx = _safe_public_content_tracking_context(action, ctx)
     elif action in MARKETING_TRACK_ACTIONS:

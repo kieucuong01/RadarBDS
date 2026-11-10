@@ -471,6 +471,11 @@
       event.preventDefault(); if (disposed || !config) return;
       var sheet = String(sheetInput.value || '').trim(), parcel = String(parcelInput.value || '').trim(), areaId = searchArea.value;
       var coordinates=searchMethod.value==='coordinates',corners=searchMethod.value==='corners';
+      function trackLookup(outcome) {
+        if (!corners && typeof env.track === 'function') {
+          env.track('planning_lookup', {context:{method:coordinates ? 'coordinates' : 'parcel',outcome:outcome}});
+        }
+      }
       cancelSearch();
       if (!coordinates&&!corners&&(!areaId || !sheet || !parcel)) { searchStatus.textContent = 'Chọn địa bàn và nhập đủ số tờ, số thửa.'; return; }
       if(coordinates&&(!coordinateFirst.value.trim()||!coordinateSecond.value.trim())){searchStatus.textContent='Nhập đủ hai tọa độ.';return;}
@@ -503,20 +508,29 @@
               if(L.circleMarker)coordinateMarker=L.circleMarker(data.point,{pane:'planningParcelSelected',interactive:false,radius:7,color:'#7c3aed',fillOpacity:.65}).addTo(map);
               searchStatus.textContent='Đã đến tọa độ. Nguồn hiện chưa trả ranh tại điểm này; hãy kiểm tra hệ chiếu và vùng có dữ liệu.';
             }else searchStatus.textContent = 'Không tìm thấy thửa khớp. Kiểm tra số tờ, số thửa và phường theo dữ liệu cũ.';
+            trackLookup(coordinates ? 'located' : 'no_match');
             return;
           }
           if (data.matched === 1 && data.features.length === 1) {
             searchStatus.textContent = 'Đã tìm thấy thửa. Bấm xem đầy đủ nếu cần tra cứu quy hoạch.';
-            focusFeature(data.features[0]); return;
+            focusFeature(data.features[0]); trackLookup('matched'); return;
           }
           searchStatus.textContent = 'Nguồn có ' + (data.truncated ? 'ít nhất ' : '') + data.matched + ' bản ghi trùng tờ/thửa. Chọn để kiểm tra vị trí.'
             + (data.truncated ? ' Đang hiện 20 kết quả đầu.' : '');
           data.features.forEach(function (feature, index) {
             var button = node('button', results, 'Kết quả ' + (index+1) + ' · ' + area(feature.properties.area)); button.type = 'button';
-            button.addEventListener('click', function () { if (!disposed) focusFeature(feature); });
+            button.addEventListener('click', function () {
+              if (disposed) return;
+              focusFeature(feature);
+              trackLookup('matched');
+            });
           });
+          trackLookup('multiple');
         }).catch(function (error) {
-          if (!disposed && seq === searchSeq && error.name !== 'AbortError') searchStatus.textContent = corners?'Chưa dựng được ranh. Kiểm tra 3–100 điểm theo thứ tự, hệ chiếu và các cạnh giao nhau.':coordinates?'Chưa tra được tọa độ. Kiểm tra thứ tự hai giá trị, hệ chiếu và thử lại.':'Chưa tìm được thửa. Vui lòng thử lại.';
+          if (!disposed && seq === searchSeq && error.name !== 'AbortError') {
+            searchStatus.textContent = corners?'Chưa dựng được ranh. Kiểm tra 3–100 điểm theo thứ tự, hệ chiếu và các cạnh giao nhau.':coordinates?'Chưa tra được tọa độ. Kiểm tra thứ tự hai giá trị, hệ chiếu và thử lại.':'Chưa tìm được thửa. Vui lòng thử lại.';
+            trackLookup('error');
+          }
         }).finally(function () { if (!disposed && seq === searchSeq){searchSubmit.disabled = false;busy('parcel-search',false);} });
     });
     function changeBoundaries() {

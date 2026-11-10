@@ -533,6 +533,21 @@
       drawLayer(layer, areaSlug);
       updateDirectorySelection(layer, areaSlug);
       updateSelectionPanel(layer, feature);
+      var planning = root.querySelector("[data-map-selection-planning]");
+      if (planning) {
+        var href = planning.dataset.mapSelectionPlanning;
+        var shape = areaSlug && featureLayers[areaSlug];
+        if (shape && shape.getBounds().isValid()) {
+          var center = shape.getBounds().getCenter();
+          var url = new URL(href, win.location.href);
+          var params = new URLSearchParams(url.hash.slice(1));
+          params.set("map", [center.lat.toFixed(5), center.lng.toFixed(5), 14].join(","));
+          url.hash = params.toString();
+          planning.href = url.toString();
+        } else {
+          planning.href = href;
+        }
+      }
       setStatus(
         feature
           ? "Đang xem " + (feature.properties.unit_type || "khu vực") + " " + feature.properties.name + "."
