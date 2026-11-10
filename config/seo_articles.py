@@ -4867,20 +4867,20 @@ SEO_ARTICLES = {
     "gia-dat-phu-my-hien-bao-nhieu": {'variant': 'knowledge',
  'path': '/tin-tuc/gia-dat-phu-my-hien-bao-nhieu',
  'title': 'Giá đất Phú Mỹ hiện bao nhiêu? So đất nền và nhà đất | Radar BDS',
- 'description': 'Giá rao Phú Mỹ (22/09–05/10/2026): 194 tin Facebook mọi loại hình; đất nền 25,6 tr/m² '
-                'từ 26 tin có giá/m², nhà đất 44,9 tr/m² từ 80 tin.',
+ 'description': 'Giá rao Phú Mỹ (27/10–10/11/2026): 179 tin Facebook mọi loại hình; đất nền 21,9 tr/m² '
+                'từ 40 tin có giá/m², nhà đất 37,3 tr/m² từ 79 tin.',
  'keywords': 'giá đất Phú Mỹ, giá đất Phú Mỹ Thủ Dầu Một, đất nền Phú Mỹ, nhà đất Phú Mỹ, Radar BDS',
  'breadcrumb_label': 'Giá đất Phú Mỹ hiện bao nhiêu',
  'hero_badge': 'Tin tức BĐS Bình Dương',
  'hero_title': 'Giá đất Phú Mỹ hiện bao nhiêu? So đất nền và nhà đất',
- 'hero_text': 'Trong mẫu tin Facebook Phú Mỹ đang theo dõi, crawl từ 22/09 đến 05/10/2026: 194 tin mọi '
-              'loại hình. Giá rao trung vị đất nền là 25,6 tr/m² (26 tin có giá/m²), nhà đất 44,9 tr/m² '
-              '(80 tin có giá/m²). Đừng gộp hai loại hình thành một mức giá.',
+ 'hero_text': 'Trong mẫu tin Facebook Phú Mỹ đang theo dõi, crawl từ 27/10 đến 10/11/2026: 179 tin mọi '
+              'loại hình. Giá rao trung vị đất nền là 21,9 tr/m² (40 tin có giá/m²), nhà đất 37,3 tr/m² '
+              '(79 tin có giá/m²). Đừng gộp hai loại hình thành một mức giá.',
  'scope_label': 'Thủ Dầu Một · Phú Mỹ',
- 'hero_checks': ['194 tin Facebook mọi loại hình đang theo dõi trong cửa sổ crawl 14 ngày',
-                 'Đất nền: 72 tin; 26 tin có giá/m²; giá rao trung vị 25,6 tr/m²',
-                 'Nhà đất: 120 tin; 80 tin có giá/m²; giá rao trung vị 44,9 tr/m²',
-                 '40 tin có cờ hot hoặc giảm giá (36 hot; 5 giảm giá; có thể chồng lấp)'],
+ 'hero_checks': ['179 tin Facebook mọi loại hình đang theo dõi trong cửa sổ crawl 14 ngày',
+                 'Đất nền: 66 tin; 40 tin có giá/m²; giá rao trung vị 21,9 tr/m²',
+                 'Nhà đất: 108 tin; 79 tin có giá/m²; giá rao trung vị 37,3 tr/m²',
+                 '35 tin có cờ hot hoặc giảm giá (25 hot; 11 giảm giá; có thể chồng lấp)'],
  'primary_cta': 'Mở dashboard lọc Phú Mỹ',
  'primary_href': '/?tab=signals&ward=Ph%C3%BA%20M%E1%BB%B9',
  'secondary_cta': 'Xem báo cáo Phú Mỹ tháng 09/2026',
@@ -4891,12 +4891,12 @@ SEO_ARTICLES = {
                  'delta': 'tr/m²',
                  'note': '26 tin đất nền Phú Mỹ có giá/m² hợp lệ'},
  'property_card': {'status': 'Phú Mỹ — dữ liệu tin đang theo dõi',
-                   'title': 'Đất nền: tổng giá rao trung vị 3,45 tỷ',
-                   'price': '25,6 tr/m² · 3,45 tỷ (giá rao trung vị đất nền)',
+                   'title': 'Đất nền: tổng giá rao trung vị 2,89 tỷ',
+                   'price': '21,9 tr/m² · 2,89 tỷ (giá rao trung vị đất nền)',
                    'metric_a': 'Tin đang theo dõi',
-                   'metric_a_value': '194',
+                   'metric_a_value': '179',
                    'metric_b': 'Tin có cờ hot hoặc giảm giá',
-                   'metric_b_value': '40'},
+                   'metric_b_value': '35'},
  'local_links_title': 'Đọc tiếp về Phú Mỹ và khu lân cận',
  'local_links': [{'label': 'Báo cáo Phú Mỹ tháng 09/2026',
                   'href': '/bao-cao/phu-my-thang-09-2026',
@@ -4915,46 +4915,46 @@ SEO_ARTICLES = {
                   'description': 'Cách Radar lọc tin đáng kiểm tra bằng giá, lịch sử và dấu hiệu dữ '
                                  'liệu.'}],
  'faq': [{'q': 'Giá rao đất nền Phú Mỹ hiện khoảng bao nhiêu?',
-          'a': 'Trong mẫu Facebook Phú Mỹ crawl 22/09–05/10/2026, 26/72 tin đất nền có giá/m² hợp lệ: '
-               'giá rao trung vị 25,6 tr/m². Đây không phải giá giao dịch hay giá của mọi thửa đất.'},
+          'a': 'Trong mẫu Facebook Phú Mỹ crawl 27/10–10/11/2026, 40/66 tin đất nền có giá/m² hợp lệ: '
+               'giá rao trung vị 21,9 tr/m². Đây không phải giá giao dịch hay giá của mọi thửa đất.'},
          {'q': 'Nhà đất Phú Mỹ có nên so giá/m² chung với đất nền?',
-          'a': 'Không. Trong cùng mẫu, 80/120 tin nhà đất có giá/m² hợp lệ, giá rao trung vị 44,9 '
-               'tr/m²; đất nền là 25,6 tr/m² từ 26 tin. Hiện trạng nhà và pháp lý có thể khác nhau, nên '
+          'a': 'Không. Trong cùng mẫu, 79/108 tin nhà đất có giá/m² hợp lệ, giá rao trung vị 37,3 '
+               'tr/m²; đất nền là 21,9 tr/m² từ 40 tin. Hiện trạng nhà và pháp lý có thể khác nhau, nên '
                'đối chiếu đúng loại hình.'},
-         {'q': '40 tin có cờ hot hoặc giảm giá có phải là tin nên mua?',
-          'a': 'Không. 40 là số tin trong 194 tin mọi loại hình có ít nhất một trong hai cờ dữ liệu: 36 '
-               'tin hot, 5 tin giảm giá (có chồng lấp). Cờ chỉ giúp ưu tiên kiểm tra, không phải tín '
+         {'q': '35 tin có cờ hot hoặc giảm giá có phải là tin nên mua?',
+          'a': 'Không. 35 là số tin trong 179 tin mọi loại hình có ít nhất một trong hai cờ dữ liệu: 25 '
+               'tin hot, 11 tin giảm giá (có chồng lấp). Cờ chỉ giúp ưu tiên kiểm tra, không phải tín '
                'hiệu mua hay chứng cứ đã giao dịch.'},
          {'q': 'Nên so Phú Mỹ với phường nào?',
-          'a': 'Trong cùng cửa sổ Facebook, giá rao trung vị đất nền Phú Mỹ 25,6 tr/m² (26 tin có '
-               'giá/m²), Phú Hòa 21,6 (29 tin) và Phú Lợi 24,0 (45 tin). Với nhà đất, Phú Mỹ 44,9 (80 '
-               'tin), Phú Hòa 40,4 (100 tin) và Phú Lợi 53,1 (38 tin). Mỗi mẫu cần đối chiếu vị trí và '
+          'a': 'Trong cùng cửa sổ Facebook, giá rao trung vị đất nền Phú Mỹ 21,9 tr/m² (40 tin có '
+               'giá/m²), Phú Hòa 24,9 (28 tin) và Phú Lợi 26,7 (34 tin). Với nhà đất, Phú Mỹ 37,3 (79 '
+               'tin), Phú Hòa 36,1 (32 tin) và Phú Lợi 40,3 (24 tin). Mỗi mẫu cần đối chiếu vị trí và '
                'hiện trạng trước khi hẹn xem.'}],
  'article': {'published_at': '2026-07-24',
-             'modified_at': '2026-10-05',
-             'intro': ['Giá rao đất nền Phú Mỹ hiện có trung vị 25,6 tr/m² từ 26 tin có giá/m² hợp lệ; '
-                       'nhà đất là 44,9 tr/m² từ 80 tin. Đó là hai mẫu riêng trong 194 tin Facebook mọi '
+             'modified_at': '2026-11-10',
+             'intro': ['Giá rao đất nền Phú Mỹ hiện có trung vị 21,9 tr/m² từ 40 tin có giá/m² hợp lệ; '
+                       'nhà đất là 37,3 tr/m² từ 79 tin. Đó là hai mẫu riêng trong 179 tin Facebook mọi '
                        'loại hình còn theo dõi, không phải giá bán đã chốt.',
                        'Nguồn: tin Facebook đang theo dõi, không bị blacklist/ẩn, có ngày crawl từ '
-                       '22/09 đến 05/10/2026. Mỗi dòng là tin rao, có thể gồm tin đăng lại, không phải '
-                       'số lô độc lập. Mốc 05/10 là ngày crawl mới nhất trong mẫu; người mua cần kiểm '
+                       '27/10 đến 10/11/2026. Mỗi dòng là tin rao, có thể gồm tin đăng lại, không phải '
+                       'số lô độc lập. Mốc 10/11 là ngày crawl mới nhất trong mẫu; người mua cần kiểm '
                        'tra giá và giấy tờ tại thời điểm xem.'],
              'summary_cards': [{'label': 'Tin Phú Mỹ 14 ngày (mọi loại hình)',
-                                'value': '194',
+                                'value': '179',
                                 'note': 'Tin Facebook đang theo dõi sau lọc cơ bản; không phải số lô '
                                         'duy nhất'},
                                {'label': 'Đất nền Phú Mỹ',
-                                'value': '25,6 tr/m²',
-                                'note': 'Giá rao trung vị từ 26/72 tin đất nền có giá/m² hợp lệ'},
+                                'value': '21,9 tr/m²',
+                                'note': 'Giá rao trung vị từ 40/66 tin đất nền có giá/m² hợp lệ'},
                                {'label': 'Nhà đất Phú Mỹ',
-                                'value': '44,9 tr/m²',
-                                'note': 'Giá rao trung vị từ 80/120 tin nhà đất có giá/m² hợp lệ'},
+                                'value': '37,3 tr/m²',
+                                'note': 'Giá rao trung vị từ 79/108 tin nhà đất có giá/m² hợp lệ'},
                                {'label': 'Tin có cờ hot hoặc giảm giá',
-                                'value': '40',
-                                'note': 'Mọi loại hình: 36 cờ hot, 5 giảm giá; có chồng lấp'}],
+                                'value': '35',
+                                'note': 'Mọi loại hình: 25 cờ hot, 11 giảm giá; có chồng lấp'}],
              'data_tables': [{'eyebrow': 'Dữ liệu Radar BDS · Facebook · 14 ngày',
                               'title': 'Giá Phú Mỹ theo loại hình BĐS',
-                              'note': 'Crawl 22/09–05/10/2026; giá rao trung vị theo đúng loại hình. '
+                              'note': 'Crawl 27/10–10/11/2026; giá rao trung vị theo đúng loại hình. '
                                       'Tổng giá lấy từ tất cả tin cùng loại có giá tổng hợp lệ, không '
                                       'chỉ nhóm có giá/m².',
                               'columns': [{'key': 'type', 'label': 'Loại hình'},
@@ -4965,22 +4965,22 @@ SEO_ARTICLES = {
                                           {'key': 'range', 'label': 'Vùng 25-75%'},
                                           {'key': 'signals', 'label': 'Tin có cờ hot/giảm'}],
                               'rows': [{'type': 'Đất nền',
-                                        'tracked': '72',
-                                        'priced': '26',
-                                        'median_m2': '25,6 tr/m²',
-                                        'median_total': '3,45 tỷ',
-                                        'range': '23,8–27,8 tr/m²',
-                                        'signals': '22'},
+                                        'tracked': '66',
+                                        'priced': '40',
+                                        'median_m2': '21,9 tr/m²',
+                                        'median_total': '2,89 tỷ',
+                                        'range': '18,5–28,3 tr/m²',
+                                        'signals': '18'},
                                        {'type': 'Nhà đất',
-                                        'tracked': '120',
-                                        'priced': '80',
-                                        'median_m2': '44,9 tr/m²',
-                                        'median_total': '3,68 tỷ',
-                                        'range': '26,0–45,9 tr/m²',
-                                        'signals': '17'}]},
+                                        'tracked': '108',
+                                        'priced': '79',
+                                        'median_m2': '37,3 tr/m²',
+                                        'median_total': '3,40 tỷ',
+                                        'range': '27,8–43,5 tr/m²',
+                                        'signals': '16'}]},
                              {'eyebrow': 'So sánh phường lân cận',
                               'title': 'Phú Mỹ nên so với phường nào?',
-                              'note': 'Cùng mẫu crawl 22/09–05/10/2026; cột Tin và cờ gồm mọi loại '
+                              'note': 'Cùng mẫu crawl 27/10–10/11/2026; cột Tin và cờ gồm mọi loại '
                                       'hình, hai cột giá rao trung vị chỉ gồm đúng loại hình và tin có '
                                       'giá/m² hợp lệ.',
                               'columns': [{'key': 'ward', 'label': 'Phường'},
@@ -4989,110 +4989,110 @@ SEO_ARTICLES = {
                                           {'key': 'dat_nen', 'label': 'Đất nền'},
                                           {'key': 'nha_dat', 'label': 'Nhà đất'}],
                               'rows': [{'ward': 'Phú Mỹ',
-                                        'tracked': '194',
-                                        'signals': '40',
-                                        'dat_nen': '25,6 tr/m²',
-                                        'nha_dat': '44,9 tr/m²'},
+                                        'tracked': '179',
+                                        'signals': '35',
+                                        'dat_nen': '21,9 tr/m²',
+                                        'nha_dat': '37,3 tr/m²'},
                                        {'ward': 'Phú Hòa',
-                                        'tracked': '193',
-                                        'signals': '31',
-                                        'dat_nen': '21,6 tr/m²',
-                                        'nha_dat': '40,4 tr/m²'},
+                                        'tracked': '136',
+                                        'signals': '25',
+                                        'dat_nen': '24,9 tr/m²',
+                                        'nha_dat': '36,1 tr/m²'},
                                        {'ward': 'Tân An',
-                                        'tracked': '105',
-                                        'signals': '21',
-                                        'dat_nen': '11,7 tr/m²',
-                                        'nha_dat': '19,8 tr/m²'},
+                                        'tracked': '75',
+                                        'signals': '8',
+                                        'dat_nen': '13,0 tr/m²',
+                                        'nha_dat': '24,8 tr/m²'},
                                        {'ward': 'Định Hòa',
-                                        'tracked': '79',
-                                        'signals': '19',
-                                        'dat_nen': '14,5 tr/m²',
-                                        'nha_dat': '26,5 tr/m²'},
+                                        'tracked': '88',
+                                        'signals': '10',
+                                        'dat_nen': '20,2 tr/m²',
+                                        'nha_dat': '22,5 tr/m²'},
                                        {'ward': 'Hiệp An',
-                                        'tracked': '94',
-                                        'signals': '23',
-                                        'dat_nen': '12,3 tr/m²',
-                                        'nha_dat': '21,5 tr/m²'},
+                                        'tracked': '71',
+                                        'signals': '3',
+                                        'dat_nen': '16,7 tr/m²',
+                                        'nha_dat': '21,1 tr/m²'},
                                        {'ward': 'Phú Lợi',
-                                        'tracked': '139',
-                                        'signals': '13',
-                                        'dat_nen': '24,0 tr/m²',
-                                        'nha_dat': '53,1 tr/m²'},
+                                        'tracked': '97',
+                                        'signals': '32',
+                                        'dat_nen': '26,7 tr/m²',
+                                        'nha_dat': '40,3 tr/m²'},
                                        {'ward': 'Phú Tân',
-                                        'tracked': '185',
-                                        'signals': '107',
-                                        'dat_nen': '23,0 tr/m²',
-                                        'nha_dat': '31,0 tr/m²'}]}],
+                                        'tracked': '107',
+                                        'signals': '54',
+                                        'dat_nen': '23,8 tr/m²',
+                                        'nha_dat': '—'}]}],
              'charts': [{'eyebrow': 'Visual nhanh',
                          'title': 'Giá rao trung vị/m²: nhà đất và đất nền Phú Mỹ',
                          'note': 'Bar chart dùng giá trung vị/m², không gộp hai loại hình thành một giá '
                                  'chung.',
                          'alt': 'Biểu đồ so giá trung vị đất nền và nhà đất Phú Mỹ',
                          'rows': [{'label': 'Đất nền',
-                                   'value_label': '25,6 tr/m²',
-                                   'width': 57,
+                                   'value_label': '21,9 tr/m²',
+                                   'width': 59,
                                    'color': '#2563eb'},
                                   {'label': 'Nhà đất',
-                                   'value_label': '44,9 tr/m²',
+                                   'value_label': '37,3 tr/m²',
                                    'width': 100,
                                    'color': '#16a34a'}]}],
              'sections': [{'id': 'gia-dat-nen-phu-my',
-                           'heading': 'Đất nền Phú Mỹ: 25,6 tr/m² từ 26 tin có giá/m²',
-                           'paragraphs': ['Trong 72 tin đất nền Phú Mỹ đang theo dõi, 26 tin có giá/m² '
-                                          'hợp lệ để tính giá rao trung vị 25,6 tr/m². Có 36 tin đất '
+                           'heading': 'Đất nền Phú Mỹ: 21,9 tr/m² từ 40 tin có giá/m²',
+                           'paragraphs': ['Trong 66 tin đất nền Phú Mỹ đang theo dõi, 40 tin có giá/m² '
+                                          'hợp lệ để tính giá rao trung vị 21,9 tr/m². Có 41 tin đất '
                                           'nền ghi tổng giá hợp lệ; giá rao tổng trung vị của nhóm này '
-                                          'là 3,45 tỷ. Không cộng trộn hai mẫu để suy giá một lô cụ '
+                                          'là 2,89 tỷ. Không cộng trộn hai mẫu để suy giá một lô cụ '
                                           'thể.',
-                                          'Nửa giữa của 26 tin có giá/m² nằm trong khoảng 23,8–27,8 '
+                                          'Nửa giữa của 40 tin có giá/m² nằm trong khoảng 18,5–28,3 '
                                           'tr/m². Nếu tin chênh xa, hỏi rõ diện tích, phần thổ cư, '
                                           'đường vào, vị trí và giấy tờ thay vì mặc định đó là giá '
                                           'hời.'],
-                           'bullets': ['Đất nền đang theo dõi: 72 tin',
-                                       'Có giá/m² hợp lệ: 26 tin',
-                                       'Giá rao trung vị đất nền: 25,6 tr/m²',
-                                       'Giá rao tổng trung vị: 3,45 tỷ từ 36 tin có tổng giá hợp lệ']},
+                           'bullets': ['Đất nền đang theo dõi: 66 tin',
+                                       'Có giá/m² hợp lệ: 40 tin',
+                                       'Giá rao trung vị đất nền: 21,9 tr/m²',
+                                       'Giá rao tổng trung vị: 2,89 tỷ từ 41 tin có tổng giá hợp lệ']},
                           {'id': 'nha-dat-phu-my',
-                           'heading': 'Nhà đất Phú Mỹ: 44,9 tr/m² từ 80 tin có giá/m²',
-                           'paragraphs': ['Nhóm nhà đất có 120 tin đang theo dõi; 80 tin có giá/m² hợp '
-                                          'lệ, giá rao trung vị 44,9 tr/m². Trong 103 tin nhà đất có '
-                                          'tổng giá hợp lệ, tổng giá rao trung vị là 3,68 tỷ.',
-                                          'Nửa giữa nhóm có giá/m² nằm trong khoảng 26,0–45,9 tr/m². '
+                           'heading': 'Nhà đất Phú Mỹ: 37,3 tr/m² từ 79 tin có giá/m²',
+                           'paragraphs': ['Nhóm nhà đất có 108 tin đang theo dõi; 79 tin có giá/m² hợp '
+                                          'lệ, giá rao trung vị 37,3 tr/m². Trong 96 tin nhà đất có '
+                                          'tổng giá hợp lệ, tổng giá rao trung vị là 3,40 tỷ.',
+                                          'Nửa giữa nhóm có giá/m² nằm trong khoảng 27,8–43,5 tr/m². '
                                           'Khi so giá, kiểm tra tình trạng nhà, diện tích, đường, giấy '
                                           'tờ và vị trí; không dùng một giá đất nền để suy giá nhà xây '
                                           'sẵn.'],
-                           'bullets': ['Nhà đất đang theo dõi: 120 tin',
-                                       'Có giá/m² hợp lệ: 80 tin',
-                                       'Giá rao trung vị nhà đất: 44,9 tr/m²',
-                                       'Giá rao tổng trung vị: 3,68 tỷ từ 103 tin có tổng giá hợp lệ']},
+                           'bullets': ['Nhà đất đang theo dõi: 108 tin',
+                                       'Có giá/m² hợp lệ: 79 tin',
+                                       'Giá rao trung vị nhà đất: 37,3 tr/m²',
+                                       'Giá rao tổng trung vị: 3,40 tỷ từ 96 tin có tổng giá hợp lệ']},
                           {'id': 'tin-hieu-phu-my',
-                           'heading': '40 tin có cờ hot hoặc giảm giá: cần tự kiểm tra',
-                           'paragraphs': ['Trong 194 tin Phú Mỹ mọi loại hình đang theo dõi, 40 tin có '
-                                          'ít nhất một cờ hot hoặc giảm giá. Có 36 tin mang cờ hot và 5 '
+                           'heading': '35 tin có cờ hot hoặc giảm giá: cần tự kiểm tra',
+                           'paragraphs': ['Trong 179 tin Phú Mỹ mọi loại hình đang theo dõi, 35 tin có '
+                                          'ít nhất một cờ hot hoặc giảm giá. Có 25 tin mang cờ hot và 11 '
                                           'tin mang cờ giảm giá; hai nhóm có thể chồng lấp. Cờ dữ liệu '
                                           'không chứng minh đã bán hay là khuyến nghị mua.',
-                                          'Riêng đất nền có 22/72 tin mang ít nhất một cờ, nhà đất '
-                                          '17/120; một tin chung cư cũng có cờ. Trước khi liên hệ, kiểm '
-                                          'tra lại lịch sử rao, diện tích, pháp lý, quy hoạch, vị trí '
+                                          'Riêng đất nền có 18/66 tin mang ít nhất một cờ, nhà đất '
+                                          '16/108; một số tin loại hình khác cũng có cờ. Trước khi liên hệ, '
+                                          'kiểm tra lại lịch sử rao, diện tích, pháp lý, quy hoạch, vị trí '
                                           'và thực địa.'],
-                           'bullets': ['Tin Phú Mỹ mọi loại hình: 194',
-                                       'Cờ hot: 36 tin',
-                                       'Cờ giảm giá: 5 tin (có chồng lấp)',
-                                       'Crawl mới nhất trong mẫu: 05/10/2026']},
+                           'bullets': ['Tin Phú Mỹ mọi loại hình: 179',
+                                       'Cờ hot: 25 tin',
+                                       'Cờ giảm giá: 11 tin (có chồng lấp)',
+                                       'Crawl mới nhất trong mẫu: 10/11/2026']},
                           {'id': 'so-sanh-phu-my',
                            'heading': 'So Phú Mỹ với Phú Hòa, Phú Lợi và phường lân cận',
-                           'paragraphs': ['Trong cùng mẫu, giá rao trung vị đất nền Phú Mỹ 25,6 tr/m² '
-                                          '(26 tin có giá/m²), Phú Hòa 21,6 (29 tin), Phú Lợi 24,0 (45 '
-                                          'tin), Tân An 11,7 (25 tin). Sự khác biệt về đường, vị trí, '
+                           'paragraphs': ['Trong cùng mẫu, giá rao trung vị đất nền Phú Mỹ 21,9 tr/m² '
+                                          '(40 tin có giá/m²), Phú Hòa 24,9 (28 tin), Phú Lợi 26,7 (34 '
+                                          'tin), Tân An 13,0 (30 tin). Sự khác biệt về đường, vị trí, '
                                           'thổ cư và diện tích có thể lớn; không suy một mức giá chung '
                                           'cho phường.',
-                                          'Với nhà đất, Phú Mỹ 44,9 tr/m² (80 tin có giá/m²), Phú Hòa '
-                                          '40,4 (100 tin), Phú Lợi 53,1 (38 tin), Hiệp An 21,5 (60 '
+                                          'Với nhà đất, Phú Mỹ 37,3 tr/m² (79 tin có giá/m²), Phú Hòa '
+                                          '36,1 (32 tin), Phú Lợi 40,3 (24 tin), Hiệp An 21,1 (32 '
                                           'tin). Đây là giá rao, không chứng minh giá giao dịch hoặc '
                                           'thanh khoản.'],
-                           'bullets': ['Đất nền Phú Mỹ: 25,6 tr/m² từ 26 tin có giá/m²',
-                                       'Đất nền Phú Hòa: 21,6 tr/m² từ 29 tin có giá/m²',
-                                       'Nhà đất Phú Mỹ: 44,9 tr/m² từ 80 tin có giá/m²',
-                                       'Nhà đất Phú Lợi: 53,1 tr/m² từ 38 tin có giá/m²']},
+                           'bullets': ['Đất nền Phú Mỹ: 21,9 tr/m² từ 40 tin có giá/m²',
+                                       'Đất nền Phú Hòa: 24,9 tr/m² từ 28 tin có giá/m²',
+                                       'Nhà đất Phú Mỹ: 37,3 tr/m² từ 79 tin có giá/m²',
+                                       'Nhà đất Phú Lợi: 40,3 tr/m² từ 24 tin có giá/m²']},
                           {'id': 'cach-loc-dashboard-phu-my',
                            'heading': 'Cách dùng dashboard Radar cho Phú Mỹ',
                            'paragraphs': ['Cách đọc an toàn là mở dashboard, chọn phường Phú Mỹ, sau đó '
