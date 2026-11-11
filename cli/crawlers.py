@@ -7,7 +7,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from cli.data_import import cmd_export_raw
-from db.connection import advisory_lock, get_conn
+from db.connection import AdvisoryLockBusy, advisory_lock, get_conn
 from db.moderation import normalize_phone
 from db.raw_listings import insert_raw_result, update_raw_listing_payload
 from db.schema import init_schema
@@ -403,6 +403,19 @@ def _print_facebook_import_stats(fb_stats: dict) -> None:
     )
 
 
+def _download_and_clean_crawl_images(source=None, *, cleanup_limit=None, **kwargs):
+    from cleansing.download_images import download_images
+
+    try:
+        with timed_stage("images"):
+            download_images(**kwargs)
+    except AdvisoryLockBusy as exc:
+        print(f"[download-images] deferred to image backfill: {exc}")
+        return
+    with timed_stage("image_cleanup"):
+        _clean_broker_images_after_download(source=source, limit=cleanup_limit)
+
+
 def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_limit: int | None = None) -> bool:
     if total_new <= 0 or getattr(args, "no_reprocess", False):
         return False
@@ -416,23 +429,13 @@ def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_lim
     print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
 
     print(f"\nĐang tải ảnh về local...")
-    from cleansing.download_images import download_images
     processed_ids = result.get("listings", {}).get("processed_ids") or []
-    try:
-        if image_limit is None:
-            download_images()
-        elif processed_ids:
-            with timed_stage("images"):
-                download_images(limit=image_limit, listing_ids=processed_ids, max_seconds=180)
-        else:
-            with timed_stage("images"):
-                download_images(limit=image_limit, max_seconds=180)
-        with timed_stage("image_cleanup"):
-            _clean_broker_images_after_download(source=source_filter, limit=image_limit)
-    except RuntimeError as e:
-        if "download-images" not in str(e):
-            raise
-        print(f"[download-images] skipped: {e}")
+    image_args = {}
+    if image_limit is not None:
+        image_args = {"limit": image_limit, "max_seconds": 180}
+        if processed_ids:
+            image_args["listing_ids"] = processed_ids
+    _download_and_clean_crawl_images(source_filter, cleanup_limit=image_limit, **image_args)
     return True
 
 
@@ -477,14 +480,10 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
             image_limit=500,
         ):
             _push_vip_notifications(no_alert, crawl_start_ts)
-            _prewarm_dashboard_cache()
 
     if total_new == 0:
         print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
-        from cleansing.download_images import download_images
-        with timed_stage("images"):
-            download_images(limit=200, max_seconds=180)
-        _clean_broker_images_after_download(source=None, limit=200)
+        _download_and_clean_crawl_images(cleanup_limit=200, limit=200, max_seconds=180)
         _prewarm_dashboard_cache()
         print(f"\nKhông có tin mới. DB không thay đổi.")
         return
@@ -560,10 +559,7 @@ def _cmd_crawl(args, mode: str = "full"):
 
     if total_new == 0:
         print("\nKhong co tin moi. Kiem tra backlog anh can tai...")
-        from cleansing.download_images import download_images
-        with timed_stage("images"):
-            download_images(limit=200, max_seconds=180)
-        _clean_broker_images_after_download(source=source_filter, limit=200)
+        _download_and_clean_crawl_images(source_filter, cleanup_limit=200, limit=200, max_seconds=180)
         _prewarm_dashboard_cache()
         print(f"\nKhông có tin mới. DB không thay đổi.")
         return
@@ -583,17 +579,15 @@ def _cmd_crawl(args, mode: str = "full"):
         print(f"Valuation: {v['total']} valuated | {v['signals']} signals | {v['outliers']} outliers")
 
         print(f"\nĐang tải ảnh về local...")
-        from cleansing.download_images import download_images
         image_limit = 500 if source_filter else 1000
         processed_ids = result.get("listings", {}).get("processed_ids") or []
-        if source_filter and processed_ids:
-            with timed_stage("images"):
-                download_images(limit=image_limit, listing_ids=processed_ids, max_seconds=180)
-        else:
-            with timed_stage("images"):
-                download_images(limit=image_limit, max_seconds=180)
-        with timed_stage("image_cleanup"):
-            _clean_broker_images_after_download(source=source_filter, limit=image_limit)
+        _download_and_clean_crawl_images(
+            source_filter,
+            cleanup_limit=image_limit,
+            limit=image_limit,
+            listing_ids=processed_ids or None if source_filter else None,
+            max_seconds=180,
+        )
 
     class _FakeArgs:
         out = None

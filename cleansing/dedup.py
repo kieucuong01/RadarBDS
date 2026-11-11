@@ -5,6 +5,7 @@ import re
 import unicodedata
 from datetime import datetime
 from difflib import SequenceMatcher
+from functools import lru_cache
 from typing import Any, Iterable, Optional, Sequence
 
 logger = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ _NAMED_LOCATION_PAT = re.compile(
 )
 
 
+@lru_cache(maxsize=8192)
 def _strip_noise(text: str) -> str:
     text = _PRICE_PAT.sub(" ", text)
     text = _PHONE_PAT.sub(" ", text)
@@ -54,6 +56,7 @@ def _strip_noise(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+@lru_cache(maxsize=8192)
 def _ascii_fold(text: str) -> str:
     text = (text or "").translate(str.maketrans({
         "đ": "d",
@@ -68,14 +71,18 @@ def _ascii_fold(text: str) -> str:
     return folded.replace("đ", "d").replace("Đ", "D").lower()
 
 
-def _text_similarity(t1: Optional[str], t2: Optional[str]) -> float:
+def _text_similarity(t1: Optional[str], t2: Optional[str], *, minimum: float = 0.0) -> float:
     if not t1 or not t2:
         return 0.0
     s1 = _strip_noise(t1)
     s2 = _strip_noise(t2)
     if not s1 or not s2:
         return 0.0
-    return SequenceMatcher(None, s1[:500], s2[:500]).ratio()
+    matcher = SequenceMatcher(None, s1[:500], s2[:500])
+    # Both quick ratios are upper bounds. Skip exact work only below the caller's cutoff.
+    if minimum and (matcher.real_quick_ratio() < minimum or matcher.quick_ratio() < minimum):
+        return 0.0
+    return matcher.ratio()
 
 
 def _combined_text(listing: dict) -> str:
@@ -100,9 +107,10 @@ def _normalize_road_token(raw: str, number: str | None = None) -> str | None:
     return None
 
 
-def _road_tokens(text: Optional[str]) -> set[str]:
+@lru_cache(maxsize=8192)
+def _road_tokens(text: Optional[str]) -> frozenset[str]:
     if not text:
-        return set()
+        return frozenset()
     text = _ascii_fold(text)
     tokens = set()
     for m in re.finditer(r"\bquoc\s*lo\s*0*(\d{1,4})\b", text, re.IGNORECASE):
@@ -119,17 +127,18 @@ def _road_tokens(text: Optional[str]) -> set[str]:
         token = _normalize_road_token(m.group(0), m.group(1))
         if token:
             tokens.add(token)
-    return tokens
+    return frozenset(tokens)
 
 
-def _tdc_phu_chanh_subdivision_tokens(text: Optional[str]) -> set[str]:
+@lru_cache(maxsize=8192)
+def _tdc_phu_chanh_subdivision_tokens(text: Optional[str]) -> frozenset[str]:
     if not text:
-        return set()
+        return frozenset()
     text = _ascii_fold(text)
-    return {
+    return frozenset(
         f"tdcphuchanh{match.group(1).lower()}"
         for match in _TDC_PHU_CHANH_SUBDIVISION_PAT.finditer(text)
-    }
+    )
 
 
 def _road_token_conflict(text1: Optional[str], text2: Optional[str]) -> bool:
@@ -138,29 +147,32 @@ def _road_token_conflict(text1: Optional[str], text2: Optional[str]) -> bool:
     return bool(roads1 and roads2 and not roads1.intersection(roads2))
 
 
-def _block_tokens(text: Optional[str]) -> set[str]:
+@lru_cache(maxsize=8192)
+def _block_tokens(text: Optional[str]) -> frozenset[str]:
     if not text:
-        return set()
+        return frozenset()
     tokens = set()
     for m in _BLOCK_TOKEN_PAT.finditer(text.lower()):
         raw = re.sub(r"\s+", "", m.group(0).lower())
         prefix = re.match(r"[a-z]+", raw).group(0)
         tokens.add(f"{prefix}{int(m.group(1))}")
-    return tokens
+    return frozenset(tokens)
 
 
-def _location_words(text: Optional[str]) -> set[str]:
+@lru_cache(maxsize=8192)
+def _location_words(text: Optional[str]) -> frozenset[str]:
     if not text:
-        return set()
+        return frozenset()
     text = _ascii_fold(_strip_noise(text))
-    return {m.group(0).lower() for m in _LOCATION_WORD_PAT.finditer(text)}
+    return frozenset(m.group(0).lower() for m in _LOCATION_WORD_PAT.finditer(text))
 
 
-def _named_location_tokens(text: Optional[str]) -> set[str]:
+@lru_cache(maxsize=8192)
+def _named_location_tokens(text: Optional[str]) -> frozenset[str]:
     if not text:
-        return set()
+        return frozenset()
     text = _ascii_fold(_strip_noise(text))
-    return {re.sub(r"\s+", " ", m.group(0).lower()) for m in _NAMED_LOCATION_PAT.finditer(text)}
+    return frozenset(re.sub(r"\s+", " ", m.group(0).lower()) for m in _NAMED_LOCATION_PAT.finditer(text))
 
 
 def _house_text_signal(listing: dict) -> bool:
@@ -372,7 +384,7 @@ def _house_price_change_lacks_identity(l1: dict, l2: dict) -> bool:
         and l2.get("property_type") == "nha_dat"
         and not _same_price_for_dedup(l1.get("price_ty"), l2.get("price_ty"))
         and not _same_phone(l1, l2)
-        and _text_similarity(_combined_text(l1), _combined_text(l2)) < 0.72
+        and _text_similarity(_combined_text(l1), _combined_text(l2), minimum=0.72) < 0.72
     )
 
 
@@ -413,7 +425,10 @@ def _location_signal(l1: dict, l2: dict) -> bool:
 
     desc1 = l1.get("description") or text1
     desc2 = l2.get("description") or text2
-    return max(_text_similarity(text1, text2), _text_similarity(desc1, desc2)) >= 0.80
+    return (
+        _text_similarity(text1, text2, minimum=0.80) >= 0.80
+        or _text_similarity(desc1, desc2, minimum=0.80) >= 0.80
+    )
 
 
 def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price: bool = False) -> bool:
@@ -451,7 +466,7 @@ def _has_reliable_lot_signature(l1: dict, l2: dict, *, allow_facebook_same_price
     if front_depth_match:
         return True
 
-    text_sim = _text_similarity(_combined_text(l1), _combined_text(l2))
+    text_sim = _text_similarity(_combined_text(l1), _combined_text(l2), minimum=0.70)
 
     if (
         area_match
@@ -676,7 +691,11 @@ def _repost_score(l1: dict, l2: dict) -> int:
     if area_match:
         score += 2
 
-    sim = _text_similarity(l1.get("description"), l2.get("description"))
+    if not _location_signal(l1, l2):
+        return 0
+
+    minimum = 0.30 if front_match and depth_match else 0.70 if area_match else 0.85
+    sim = _text_similarity(l1.get("description"), l2.get("description"), minimum=minimum)
     if sim >= 0.85:
         score += 6
     elif sim >= 0.70:
@@ -685,9 +704,6 @@ def _repost_score(l1: dict, l2: dict) -> int:
         score += 2
     elif sim >= 0.30:
         score += 1
-
-    if not _location_signal(l1, l2):
-        return 0
 
     if front_match and depth_match:
         return score if sim >= 0.30 else 0

@@ -70,7 +70,7 @@ def _validated_routes(routes) -> tuple[str, ...]:
 def prewarm_public_routes(
     base_url: str,
     routes,
-    timeout_seconds: float = 5.0,
+    timeout_seconds: float | None = None,
 ) -> dict:
     base = _validated_base_url(base_url)
     validated = _validated_routes(routes)
@@ -81,13 +81,17 @@ def prewarm_public_routes(
         "routes": [],
     }
     for route in validated:
+        # Dashboard's cold summary includes aggregate queries beyond the card feeds.
+        timeout = timeout_seconds if timeout_seconds is not None else (
+            15.0 if urlsplit(route).path == "/api/dashboard" else 5.0
+        )
         request = Request(
             urljoin(f"{base}/", route.lstrip("/")),
             headers={"User-Agent": "RadarBDS-Prewarm/1.0"},
         )
         route_status: int | str
         try:
-            with urlopen(request, timeout=float(timeout_seconds)) as response:
+            with urlopen(request, timeout=float(timeout)) as response:
                 status = int(
                     getattr(response, "status", None)
                     or response.getcode()

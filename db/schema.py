@@ -1512,6 +1512,13 @@ def _migrate_guland_publishers(conn: Any) -> None:
         ON listing_publishers(publisher_id)
         """
     )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_publisher_observations_bumped_listing
+        ON publisher_listing_observations(listing_id, activity_date)
+        WHERE was_bumped
+        """
+    )
 
 
 def _migrate_radar_ask_usage(conn: Any) -> None:

@@ -34,6 +34,22 @@ from cleansing.normalizer import normalize_record
 from cleansing.normalizer import extract_road_name
 
 
+def test_similarity_upper_bound_preserves_threshold_decisions():
+    pairs = (
+        ("đất Tân An đường DX 01, 100m2", "đất Tân An đường DX 01, 110m2"),
+        ("bán lô đất góc đường D8", "nhà ba tầng có sân ô tô"),
+        ("abcd " * 80, "dcba " * 80),
+        ("1 tỷ", "2 tỷ"),
+    )
+    for left, right in pairs:
+        exact = dedup_module._text_similarity(left, right)
+        for minimum in (0.30, 0.70, 0.72, 0.80, 0.85):
+            bounded = dedup_module._text_similarity(left, right, minimum=minimum)
+            assert (bounded >= minimum) == (exact >= minimum)
+            if exact >= minimum:
+                assert bounded == exact
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _listing(**kw):

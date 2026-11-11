@@ -372,7 +372,7 @@ def test_postprocess_skips_busy_image_lock_without_failing_crawl():
          }), \
          mock.patch(
              "cleansing.download_images.download_images",
-             side_effect=RuntimeError("Another Radar BDS job is already running: download-images"),
+             side_effect=crawlers.AdvisoryLockBusy("Another Radar BDS job is already running: download-images"),
          ), \
          mock.patch.object(crawlers, "_clean_broker_images_after_download") as clean:
         assert crawlers._postprocess_crawl_batch(args, 1, source_filter="facebook", image_limit=500)
