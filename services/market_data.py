@@ -56,9 +56,9 @@ related_price_drops AS MATERIALIZED (
     FROM listings drop_child
     JOIN listings drop_parent ON drop_parent.id = drop_child.duplicate_of_id
     WHERE drop_child.duplicate_of_id IS NOT NULL
-      AND COALESCE(drop_child.probably_sold,0)=0
-      AND COALESCE(drop_child.is_blacklisted,0)=0
-      AND COALESCE(drop_child.review_hidden,0)=0
+      AND (drop_child.probably_sold=0 OR drop_child.probably_sold IS NULL)
+      AND (drop_child.is_blacklisted=0 OR drop_child.is_blacklisted IS NULL)
+      AND (drop_child.review_hidden=0 OR drop_child.review_hidden IS NULL)
       AND drop_child.price_ty IS NOT NULL
       AND drop_parent.price_ty IS NOT NULL
       AND drop_child.price_ty > drop_parent.price_ty * 1.01

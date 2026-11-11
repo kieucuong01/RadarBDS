@@ -250,10 +250,10 @@ def _select_sql(listing_ids: tuple[int, ...] | None) -> tuple[str, tuple[int, ..
         FROM listing_images li
         WHERE li.listing_id=l.id
     ) img_count ON TRUE
-    WHERE COALESCE(l.probably_sold, 0)=0
-      AND COALESCE(l.is_blacklisted, 0)=0
-      AND COALESCE(l.review_hidden, 0)=0
-      AND COALESCE(l.source_status, 'unknown') <> 'inactive'
+    WHERE (l.probably_sold=0 OR l.probably_sold IS NULL)
+      AND (l.is_blacklisted=0 OR l.is_blacklisted IS NULL)
+      AND (l.review_hidden=0 OR l.review_hidden IS NULL)
+      AND (l.source_status <> 'inactive' OR l.source_status IS NULL)
       {listing_id_clause}
     """
     return sql, ids

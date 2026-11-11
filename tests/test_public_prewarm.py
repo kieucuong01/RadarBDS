@@ -34,7 +34,7 @@ def test_prewarm_never_sends_cookies_or_authorization(monkeypatch):
 
     result = public_prewarm.prewarm_public_routes(
         "http://127.0.0.1:5000",
-        ["/api/signals?include_total=0"],
+        ["/api/signals?include_total=0", "/api/dashboard"],
     )
 
     headers = dict(captured[0][0].header_items())
@@ -42,7 +42,8 @@ def test_prewarm_never_sends_cookies_or_authorization(monkeypatch):
     assert "Authorization" not in headers
     assert headers["User-agent"] == "RadarBDS-Prewarm/1.0"
     assert captured[0][1] == 5.0
-    assert result["attempted"] == result["succeeded"] == 1
+    assert captured[1][1] == 15.0
+    assert result["attempted"] == result["succeeded"] == 2
     assert result["failed"] == 0
 
 
