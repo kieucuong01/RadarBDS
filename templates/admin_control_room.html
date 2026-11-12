@@ -1004,6 +1004,27 @@
       <div id="growthEmpty" class="growth-state" hidden>Chưa có dữ liệu nguồn đã chọn trong kỳ này.</div>
       <div class="growth-kpis" id="growthKpis" aria-live="polite"></div>
       <div class="growth-ratios" id="growthRatios"></div>
+      <section class="surface growth-marketing" aria-labelledby="growthBehaviorTitle">
+        <h2 id="growthBehaviorTitle">Hành vi, quay lại và thanh toán</h2>
+        <p>Số liệu toàn Radar BDS theo kỳ đã chọn. Kỳ đang diễn ra có thể chưa đủ dữ liệu. <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Mở GA4 để xem phiên và người dùng theo kênh</a>.</p>
+        <div id="growthRetention" class="growth-chart-grid" aria-live="polite"></div>
+        <div class="growth-chart-grid">
+          <section class="growth-marketing-panel">
+            <h3>Người dùng làm gì</h3>
+            <p>Một tài khoản có thể thực hiện nhiều lượt. Cột tài khoản chỉ đếm người đăng nhập trong kỳ.</p>
+            <div class="growth-marketing-table-wrap">
+              <table><thead><tr><th scope="col">Hành động</th><th scope="col">Lượt kỳ này</th><th scope="col">Lượt kỳ trước</th><th scope="col">Tài khoản</th></tr></thead><tbody id="growthBehaviorActions"></tbody></table>
+            </div>
+          </section>
+          <section class="growth-marketing-panel">
+            <h3>Đơn mua sản phẩm số</h3>
+            <p>Tỷ lệ thanh toán tính trên đơn tạo trong kỳ và cập nhật khi các đơn đó được thanh toán. Cột tiền thu tính theo ngày xác nhận thanh toán.</p>
+            <div class="growth-marketing-table-wrap">
+              <table><thead><tr><th scope="col">Sản phẩm</th><th scope="col">Đơn tạo</th><th scope="col">Đã trả trong nhóm</th><th scope="col">Đang chờ</th><th scope="col">Hết hạn hoặc hủy</th><th scope="col">Tiền thu trong kỳ</th></tr></thead><tbody id="growthBehaviorOrders"></tbody></table>
+            </div>
+          </section>
+        </div>
+      </section>
       <section id="growthMarketing" class="surface growth-marketing" aria-labelledby="growthMarketingTitle">
         <div class="growth-marketing-head">
           <div>
@@ -1119,7 +1140,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-brokers-v4-history-samples"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v54-marketing-tools"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v55-growth-behavior"></script>
   {% endif %}
 </body>
 </html>

@@ -279,6 +279,61 @@ class AdminGrowthTest(unittest.TestCase):
                 ),
             )
 
+    def test_behavior_counts_real_return_days_and_excludes_admin(self):
+        from datetime import datetime
+        from db.connection import get_conn
+        from services.admin_behavior import build_behavior
+        from services.admin_growth import LOCAL_TZ
+
+        self.current_at = "2097-08-14T02:00:00"
+        returning = self._insert_user("returning", active=False)
+        self._insert_user("inactive", active=False)
+        staff = self._insert_user("staff", tier="admin", active=False)
+        with get_conn() as conn:
+            for user, tier, at in (
+                (returning, "free", "2097-08-14T02:00:00"),
+                (returning, "free", "2097-08-14 17:00:00+00"),
+                (returning, "free", "2097-08-21T02:00:00"),
+                (staff, "admin", "2097-08-15T02:00:00"),
+            ):
+                conn.execute(
+                    "INSERT INTO user_audit_log (user_id, tier, action, created_at) VALUES (?, ?, 'listing_map_opened', ?)",
+                    (user, tier, at),
+                )
+            start = datetime(2097, 8, 14, tzinfo=LOCAL_TZ)
+            end = datetime(2097, 8, 16, tzinfo=LOCAL_TZ)
+            result = build_behavior(conn, start, end, start, today=datetime(2097, 8, 22).date())
+            assert result["features"]["listing_map_opened"]["current"] == 2
+            assert result["retention"]["d1"] == {"eligible": 2, "returned": 1}
+            assert result["retention"]["d7"] == {"eligible": 2, "returned": 1}
+            partial = build_behavior(conn, start, end, start, today=datetime(2097, 8, 15).date())
+            assert partial["retention"]["d1"] == {"eligible": 0, "returned": 0}
+
+    def test_payment_cohort_and_cash_received_use_different_dates(self):
+        from datetime import datetime
+        from db.connection import get_conn
+        from services.admin_behavior import build_behavior
+        from services.admin_growth import LOCAL_TZ
+
+        start = datetime(2097, 9, 14, tzinfo=LOCAL_TZ)
+        end = datetime(2097, 9, 15, tzinfo=LOCAL_TZ)
+        with get_conn() as conn:
+            conn.execute("""CREATE TEMP TABLE digital_product_orders (
+                id bigint GENERATED ALWAYS AS IDENTITY,
+                product_slug text, currency text, status text, created_at timestamptz,
+                paid_at timestamptz, paid_amount integer
+            ) ON COMMIT DROP""")
+            conn.execute("""INSERT INTO digital_product_orders
+                (product_slug, currency, status, created_at, paid_at, paid_amount) VALUES
+                ('map', 'VND', 'paid', '2097-09-13 09:00+07', '2097-09-14 10:00+07', 99),
+                ('map', 'VND', 'paid', '2097-09-14 09:00+07', '2097-09-15 10:00+07', 99),
+                ('map', 'VND', 'pending', '2097-09-14 11:00+07', NULL, NULL),
+                ('map', 'VND', 'expired', '2097-09-14 12:00+07', NULL, NULL)""")
+            assert build_behavior(conn, start, end, start)["orders"] == [{
+                "product_slug": "map", "currency": "VND", "created": 3,
+                "converted": 1, "pending": 1, "unpaid_closed": 1, "paid": 1, "revenue": 99,
+            }]
+
     def test_growth_endpoint_requires_admin(self):
         client = self.client.application.test_client()
 

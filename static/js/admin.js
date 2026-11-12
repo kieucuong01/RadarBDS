@@ -2753,6 +2753,37 @@ function renderGrowthMarketing(marketing) {
   );
 }
 
+function renderGrowthBehavior(behavior = {}) {
+  const labels = {
+    listing_map_opened: 'Mở bản đồ',
+    planning_lookup: 'Mở chú giải, nguồn hoặc tra quy hoạch',
+    tool_used: 'Thao tác định giá và bảng giá đất',
+    modal_open: 'Mở chi tiết tin',
+    watchlist_create: 'Tạo danh sách theo dõi',
+    signup_completed: 'Hoàn tất đăng ký'
+  };
+  const rate = (n, total) => total ? growthFmt(Math.round(n * 1000 / total) / 10) + '%' : '—';
+  document.getElementById('growthRetention').innerHTML = ['d1', 'd7'].map((key, index) => {
+    const { returned = 0, eligible = 0 } = (behavior.retention || {})[key] || {};
+    return '<article class="growth-marketing-channel"><span>Quay lại ngày ' + (index ? '7' : '1') + '</span>' +
+      '<strong>' + rate(returned, eligible) + '</strong><small>' + growthFmt(returned) + '/' +
+      growthFmt(eligible) + ' tài khoản đăng ký trong kỳ, đã đủ thời gian theo dõi</small></article>';
+  }).join('');
+  document.getElementById('growthBehaviorActions').innerHTML = Object.entries(labels).map(([key, label]) => {
+    const row = (behavior.features || {})[key] || {};
+    return '<tr><th scope="row">' + esc(label) + '</th>' +
+      ['current', 'previous', 'accounts'].map(field => '<td>' + growthFmt(row[field] || 0) + '</td>').join('') + '</tr>';
+  }).join('');
+  const orders = behavior.orders || [];
+  document.getElementById('growthBehaviorOrders').innerHTML = orders.length ? orders.map(row =>
+    '<tr><th scope="row">' + esc(row.product_slug) + '</th><td>' + growthFmt(row.created) +
+    '</td><td>' + growthFmt(row.converted) + ' · ' + rate(row.converted, row.created) +
+    '</td><td>' + growthFmt(row.pending) + '</td><td>' + growthFmt(row.unpaid_closed) +
+    '</td><td>' + growthFmt(row.revenue) + ' ' + esc(row.currency) +
+    ' · ' + growthFmt(row.paid) + ' đơn</td></tr>'
+  ).join('') : '<tr><td colspan="6">Chưa có đơn tạo hoặc thanh toán trong kỳ này.</td></tr>';
+}
+
 function renderGrowth(data) {
   const metrics = [['crawled','Tin cào','Nguồn đã chọn'],['signals','Signal','Actionable hiện tại'],['price_drops','Tin giảm giá','Lần giảm tin cậy đầu tiên'],['unique_lots','BĐS unique','Không tính repost'],['signups','Người dùng đăng ký','Toàn hệ thống · không phụ thuộc nguồn'],['leads','Lead hỏi đất','Nguồn đã chọn']];
   growthKpis.innerHTML = metrics.map(([key,label,note]) => {
@@ -2764,6 +2795,7 @@ function renderGrowth(data) {
   const ratios = [['Signal yield',data.ratios.signal_yield_pct,'%','Nguồn đã chọn'],['Unique-lot yield',data.ratios.unique_lot_yield_pct,'%','Nguồn đã chọn'],['Active users',data.ratios.active_users,'','Toàn hệ thống · không phụ thuộc nguồn'],['Lead → đặt cọc',data.ratios.lead_to_deposit_pct,'%','Lead gắn nguồn đã chọn']];
   growthRatios.innerHTML = ratios.map(([label,value,suffix,note]) => '<article class="surface growth-ratio"><span>' + esc(label) + '</span><strong>' + (value == null ? '?' : growthFmt(value) + suffix) + '</strong><small>' + esc(note) + '</small></article>').join('');
   renderGrowthMarketing(data.marketing);
+  renderGrowthBehavior(data.behavior);
   growthTableBody.innerHTML = data.series.map(row => '<tr><td>' + esc(row.label) + '</td><td>' + growthFmt(row.crawled) + '</td><td>' + growthFmt(row.signals) + '</td><td>' + growthFmt(row.unique_lots) + '</td><td>' + growthFmt(row.price_drops) + '</td><td>' + growthFmt(row.signups) + '</td><td>' + growthFmt(row.leads) + '</td></tr>').join('');
   growthEmpty.hidden = !data.series.every(row => !row.crawled && !row.signals && !row.unique_lots && !row.price_drops && !row.leads);
   ensureGrowthChartLibrary()

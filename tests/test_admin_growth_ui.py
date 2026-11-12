@@ -20,6 +20,9 @@ def test_growth_admin_ui_contract():
         'id="growthDropChart"',
         'id="growthUserChart"',
         'id="growthTableBody"',
+        'id="growthRetention"',
+        'id="growthBehaviorActions"',
+        'id="growthBehaviorOrders"',
     ):
         assert marker in template
     assert "growth: 'tang-truong'" in script
@@ -32,6 +35,7 @@ def test_growth_admin_ui_contract():
     assert "chart.js@4.4.4" not in user_select
     assert re.search(r"filename=['\"]js/admin\.js['\"]\)\s*}}\?v=admin-v\d+-[a-z0-9-]+", template)
     assert "/admin/api/growth?period=" in script
+    assert "renderGrowthBehavior(data.behavior)" in script
     assert "include_guland=" in script
     assert "prefers-reduced-motion" in script
     assert "Đăng ký · toàn hệ thống" in script

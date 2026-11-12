@@ -167,6 +167,21 @@ is independent of the Facebook/Guland listing-source toggle and contains:
 - `unattributed`: explicit current/previous counts for evidence that cannot be
   assigned without inference.
 
+The **Hành vi, quay lại và thanh toán** section adds three views to the same
+admin-only API and follows the selected Vietnam calendar period.
+
+- **Behavior** counts instrumented actions and distinct signed-in accounts
+  per action. Guest actions contribute to event totals. Do not sum the account
+  column across actions. Use the existing tool table to distinguish attempts,
+  results, and failures. Use GA4 for sitewide sessions and anonymous visitors.
+- **D1 and D7** use the accounts registered during the selected period. A
+  return is a tracked product action on the exact Vietnam calendar day after
+  signup. The denominator excludes accounts whose return day has yet to end.
+- **Commerce** counts created digital-product orders, confirmed paid orders
+  from that cohort, and pending or closed unpaid orders. Cash received and
+  its order count are independently grouped by payment date. This report does
+  not attribute a purchase to an anonymous session or traffic channel.
+
 ### Measurement definitions
 
 These are **event counts**, not unique visitors or people. The same person may
