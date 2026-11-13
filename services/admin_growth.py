@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from config import database_sqlite as db_mod
 from services.admin_behavior import build_behavior
+from services.page_engagement import summarize_engagement
 from services.admin_marketing import build_marketing_source_view
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
@@ -291,6 +292,7 @@ def get_growth_dashboard(period: str, anchor: date, include_guland: bool = False
             previous=previous,
         )
         behavior = build_behavior(conn, start, end, previous)
+        page_engagement = summarize_engagement(conn, start_iso, end_iso)
 
     raw_events = [_event(row) for row in raw]
     listing_events = [_event(row) for row in listings]
@@ -358,5 +360,6 @@ def get_growth_dashboard(period: str, anchor: date, include_guland: bool = False
         "series": series,
         "marketing": marketing,
         "behavior": behavior,
+        "page_engagement": page_engagement,
     }
 

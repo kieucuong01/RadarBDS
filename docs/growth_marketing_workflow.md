@@ -182,6 +182,18 @@ admin-only API and follows the selected Vietnam calendar period.
   its order count are independently grouped by payment date. This report does
   not attribute a purchase to an anonymous session or traffic channel.
 
+The page engagement table uses first-party measurements from instrumented public
+pages. Each document load has a random ID with no cross-page identity. One
+initial measurement and periodic updates use cumulative visible time, stopping
+after 60 seconds of inactivity and capped at 30 minutes per load. Tabs restored
+from browser history may continue the same measurement. A departure under 10
+seconds is measured only where the browser delivered a departure event.
+Scroll milestones apply to long article content and show the share reaching each
+depth. They indicate scroll position, not whether the reader read each paragraph.
+Time and depth are deduplicated per page load within the reporting period.
+Coverage begins with this release and excludes admin and browsers that opt out
+via Global Privacy Control or Do Not Track.
+
 ### Measurement definitions
 
 These are **event counts**, not unique visitors or people. The same person may

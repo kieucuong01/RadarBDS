@@ -2784,6 +2784,16 @@ function renderGrowthBehavior(behavior = {}) {
   ).join('') : '<tr><td colspan="6">Chưa có đơn tạo hoặc thanh toán trong kỳ này.</td></tr>';
 }
 
+function renderPageEngagement(rows = []) {
+  const ratio = (n, total) => total ? growthFmt(Math.round(n * 100 / total)) + '% (' + growthFmt(n) + ')' : '—';
+  document.getElementById('growthPageEngagement').innerHTML = rows.length ? rows.map(row =>
+    '<tr><th scope="row">' + esc(row.path) + '</th><td>' + growthFmt(row.views) + '</td><td>' +
+    growthFmt(row.avg_seconds) + ' giây</td><td>' + ratio(row.short, row.completed) +
+    ' / ' + growthFmt(row.completed) + ' lượt có tín hiệu rời</td><td>' + growthFmt(row.scroll_views) + '</td>' +
+    [25, 50, 75, 90].map(mark => '<td>' + ratio(row['reached_' + mark], row.scroll_views) + '</td>').join('') + '</tr>'
+  ).join('') : '<tr><td colspan="9">Chưa có lượt đo trang trong kỳ này.</td></tr>';
+}
+
 function renderGrowth(data) {
   const metrics = [['crawled','Tin cào','Nguồn đã chọn'],['signals','Signal','Actionable hiện tại'],['price_drops','Tin giảm giá','Lần giảm tin cậy đầu tiên'],['unique_lots','BĐS unique','Không tính repost'],['signups','Người dùng đăng ký','Toàn hệ thống · không phụ thuộc nguồn'],['leads','Lead hỏi đất','Nguồn đã chọn']];
   growthKpis.innerHTML = metrics.map(([key,label,note]) => {
@@ -2796,6 +2806,7 @@ function renderGrowth(data) {
   growthRatios.innerHTML = ratios.map(([label,value,suffix,note]) => '<article class="surface growth-ratio"><span>' + esc(label) + '</span><strong>' + (value == null ? '?' : growthFmt(value) + suffix) + '</strong><small>' + esc(note) + '</small></article>').join('');
   renderGrowthMarketing(data.marketing);
   renderGrowthBehavior(data.behavior);
+  renderPageEngagement(data.page_engagement);
   growthTableBody.innerHTML = data.series.map(row => '<tr><td>' + esc(row.label) + '</td><td>' + growthFmt(row.crawled) + '</td><td>' + growthFmt(row.signals) + '</td><td>' + growthFmt(row.unique_lots) + '</td><td>' + growthFmt(row.price_drops) + '</td><td>' + growthFmt(row.signups) + '</td><td>' + growthFmt(row.leads) + '</td></tr>').join('');
   growthEmpty.hidden = !data.series.every(row => !row.crawled && !row.signals && !row.unique_lots && !row.price_drops && !row.leads);
   ensureGrowthChartLibrary()

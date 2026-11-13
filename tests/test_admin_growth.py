@@ -334,6 +334,33 @@ class AdminGrowthTest(unittest.TestCase):
                 "converted": 1, "pending": 1, "unpaid_closed": 1, "paid": 1, "revenue": 99,
             }]
 
+    def test_page_measurements_count_each_load_once_and_keep_scroll_denominator(self):
+        from db.connection import get_conn
+        from services.page_engagement import summarize_engagement
+
+        with get_conn() as conn:
+            conn.execute("""CREATE TEMP TABLE user_audit_log (
+                id bigint GENERATED ALWAYS AS IDENTITY,
+                action text, context text, created_at text
+            ) ON COMMIT DROP""")
+            for view, seconds, depth, closed, at in (
+                ("a", 0, 0, False, "2097-09-14 03:00:00+00"),
+                ("a", 42, 75, True, "2097-09-14 03:01:00+00"),
+                ("b", 8, 25, True, "2097-09-14 04:00:00+00"),
+                ("c", 0, -1, False, "2097-09-14 05:00:00+00"),
+                ("d", 40, 90, True, "2097-09-13T16:59:59"),
+            ):
+                conn.execute(
+                    "INSERT INTO user_audit_log (action, context, created_at) VALUES ('page_engagement', ?, ?)",
+                    (json.dumps({"path": "/tin-tuc/maps", "view": view * 32,
+                                 "seconds": seconds, "depth": depth, "closed": closed}), at),
+                )
+            assert summarize_engagement(conn, "2097-09-13T17:00:00", "2097-09-14T17:00:00") == [{
+                "path": "/tin-tuc/maps", "views": 3, "avg_seconds": 17,
+                "completed": 2, "short": 1, "scroll_views": 2,
+                "reached_25": 2, "reached_50": 1, "reached_75": 1, "reached_90": 0,
+            }]
+
     def test_growth_endpoint_requires_admin(self):
         client = self.client.application.test_client()
 

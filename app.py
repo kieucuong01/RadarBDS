@@ -1786,7 +1786,22 @@ def _safe_planning_lookup_context(context):
 @rate_limit("track", limits={"guest": 120, "free": 600, "vip": None, "admin": None})
 def api_track():
     payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict) or not isinstance(payload.get("action"), str):
+        return jsonify({"ok": False, "error": "invalid_action"}), 400
     action = (payload.get("action") or "").strip()[:60]
+    if action == "page_engagement":
+        from services.page_engagement import sanitize_engagement
+
+        sample = sanitize_engagement(payload.get("context"))
+        if sample is None:
+            return jsonify({"ok": False, "error": "invalid_engagement"}), 400
+        if current_tier() != "admin":
+            with db_mod.get_conn() as conn:
+                conn.execute(
+                    "INSERT INTO user_audit_log (action, context) VALUES (?, ?)",
+                    (action, json.dumps(sample)),
+                )
+        return "", 204
     if action not in ALLOWED_TRACK_ACTIONS:
         return jsonify({"ok": False, "error": "invalid_action"}), 400
     is_product_action = action in _PRODUCT_TRACK_ACTIONS

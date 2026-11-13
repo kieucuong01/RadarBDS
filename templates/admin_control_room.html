@@ -1004,6 +1004,13 @@
       <div id="growthEmpty" class="growth-state" hidden>Chưa có dữ liệu nguồn đã chọn trong kỳ này.</div>
       <div class="growth-kpis" id="growthKpis" aria-live="polite"></div>
       <div class="growth-ratios" id="growthRatios"></div>
+      <section class="surface growth-marketing" aria-labelledby="growthPageEngagementTitle">
+        <h2 id="growthPageEngagementTitle">Người dùng đọc trang nào?</h2>
+        <p>30 trang có nhiều lượt đo nhất trong kỳ. Thời gian chỉ cộng khi tab đang hiển thị và còn trong vòng 60 giây kể từ tương tác gần nhất. Tỷ lệ rời sớm tính trên lượt có tín hiệu rời trang.</p>
+        <div class="growth-marketing-table-wrap">
+          <table><thead><tr><th scope="col">Trang</th><th scope="col">Lượt mở</th><th scope="col">Thời gian TB</th><th scope="col">Rời dưới 10 giây</th><th scope="col">Mẫu có đo cuộn</th><th scope="col">Đến 25%</th><th scope="col">Đến 50%</th><th scope="col">Đến 75%</th><th scope="col">Đến 90%</th></tr></thead><tbody id="growthPageEngagement"></tbody></table>
+        </div>
+      </section>
       <section class="surface growth-marketing" aria-labelledby="growthBehaviorTitle">
         <h2 id="growthBehaviorTitle">Hành vi, quay lại và thanh toán</h2>
         <p>Số liệu toàn Radar BDS theo kỳ đã chọn. Kỳ đang diễn ra có thể chưa đủ dữ liệu. <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">Mở GA4 để xem phiên và người dùng theo kênh</a>.</p>
@@ -1140,7 +1147,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-brokers-v4-history-samples"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v55-growth-behavior"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v56-page-engagement"></script>
   {% endif %}
 </body>
 </html>
