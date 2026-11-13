@@ -79,6 +79,7 @@ from config.settings import (
     get_digital_product_commerce_settings,
 )
 from config.seo_articles import ARTICLE_REDIRECTS, KNOWLEDGE_HUB, SEO_ARTICLES
+from config.seo_guides import PRODUCT_GUIDES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from services.report_hub import report_archive
 from services.report_pdf import PDF_PUBLIC_ORIGIN, pdf_download_href, pdf_path, pdf_version
@@ -3908,6 +3909,7 @@ def seo_news_hub_page():
         "news_portal.html",
         page=page,
         sections=sections,
+        product_guides=PRODUCT_GUIDES.values(),
         site_meta=_site_meta(
             page["path"],
             title=page["title"],

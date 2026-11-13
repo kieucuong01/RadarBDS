@@ -16,11 +16,16 @@
       <h1>{{ page.heading }}</h1>
       <p>{{ page.description }}</p>
 
-      <p><a href="/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do">Hướng dẫn tra quy hoạch</a> · <a href="/tin-tuc/cach-san-deal-bds-kiem-tra-tin-duoi-gia">Hướng dẫn Săn Deal BĐS</a></p>
-
     </section>
 
-
+    <section aria-labelledby="news-guides">
+      <h2 id="news-guides">Hướng dẫn tra cứu nhà đất và quy hoạch</h2>
+      <ul class="news-portal-list">
+        {% for guide in product_guides %}
+        <li><a href="{{ guide.path }}">{{ guide.breadcrumb_label }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
 
     <div class="news-portal-grid">
       {% for section in sections %}
