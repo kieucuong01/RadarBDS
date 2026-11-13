@@ -175,8 +175,8 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://radarbds.vn").strip().rs
 DASHBOARD_BASE_URL = os.getenv("DASHBOARD_BASE_URL", PUBLIC_BASE_URL).strip().rstrip("/")
 DEFAULT_SITE_TITLE = "Radar BDS - Săn deal nhà đất Bình Dương bằng dữ liệu"
 DEFAULT_SITE_DESCRIPTION = (
-    "Radar BDS giúp săn deal nhà đất Bình Dương bằng dữ liệu: lọc tin rao, định giá, "
-    "so sánh thị trường và phát hiện bất động sản có biên an toàn tốt."
+    "Tra bản đồ quy hoạch và địa giới Bình Dương, xem tin rao theo khu vực, "
+    "so giá đất và định giá lô đất tại Thủ Dầu Một, Bến Cát."
 )
 DEFAULT_SITE_KEYWORDS = (
     "radar bds, săn deal bất động sản, nhà đất Bình Dương, bất động sản Bình Dương, "

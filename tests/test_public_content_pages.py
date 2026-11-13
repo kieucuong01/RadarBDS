@@ -260,6 +260,7 @@ def test_planning_category_pages_have_canonical_and_non_dead_empty_state(
     assert (
         "Đang cập nhật chuyên đề" in html
         or "data-planning-category-card" in html
+        or 'data-track-cta="planning_category_open_map"' in html
     )
     assert "Nguồn đang theo dõi" in html
 

@@ -42,3 +42,20 @@ def test_planning_lookup_tracking_discards_location_and_identifiers():
         "method": "coordinates", "outcome": "located", "coordinates": [11, 106], "parcel": "17",
     }) == {"method": "coordinates", "outcome": "located"}
     assert radar_app._safe_planning_lookup_context({"method": "11.123", "outcome": "17"}) == {}
+
+
+def test_new_planning_guides_have_canonical_and_links_from_relevant_pages():
+    client = radar_app.app.test_client()
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    for slug, referring_path, expected_cta in (
+        ("my-phuoc-thuoc-phuong-nao-sau-sap-nhap", "/ban-do-ben-cat", "#layer-legacy/area-my-phuoc"),
+        ("ranh-thua-chong-lop-quy-hoach-can-kiem-tra-gi", "/quy-hoach-binh-duong/quy-hoach-phan-khu", "planning=partition"),
+    ):
+        path = f"/tin-tuc/{slug}"
+        response = client.get(path)
+        html = response.get_data(as_text=True)
+        assert response.status_code == 200
+        assert f'rel="canonical" href="https://radarbds.vn{path}"' in html
+        assert expected_cta in html
+        assert f'href="{path}"' in client.get(referring_path).get_data(as_text=True)
+        assert f"https://radarbds.vn{path}</loc>" in sitemap

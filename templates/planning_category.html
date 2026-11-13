@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   {% include "partials/seo_head.html" %}
-  {% if not items %}<meta name="robots" content="noindex, follow">{% endif %}
+  {% if not items and not page.map_examples %}<meta name="robots" content="noindex, follow">{% endif %}
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   {% include "partials/public_brand_assets.html" %}
 </head>
@@ -23,6 +23,28 @@
       </dl>
     </section>
 
+    {% if page.map_examples %}
+    <section class="planning-category-grid" aria-label="Tra cứu trên Maps">
+      <article>
+        <h2>Thử trên bản đồ</h2>
+        {% for example in page.map_examples %}
+        <p><a class="seo-primary-cta" href="{{ example.href }}" data-track-cta="planning_category_open_map">{{ example.label }}</a></p>
+        {% endfor %}
+        <h2>Cách kiểm tra tại vị trí của bạn</h2>
+        <ol>
+          {% for note in page.map_notes %}<li>{{ note }}</li>{% endfor %}
+        </ol>
+      </article>
+      <article>
+        <h2>Hướng dẫn và nguồn đối chiếu</h2>
+        <ul>
+          {% for guide in page.guide_links %}<li><a href="{{ guide.href }}">{{ guide.label }}</a></li>{% endfor %}
+        </ul>
+        <p><a href="/quy-hoach-binh-duong">Chọn khu vực khác trên bản đồ quy hoạch Bình Dương</a></p>
+      </article>
+    </section>
+    {% endif %}
+
     {% if items %}
     <section class="planning-category-grid" aria-label="{{ page.heading }}">
       {% for item in items %}
@@ -34,7 +56,7 @@
       </article>
       {% endfor %}
     </section>
-    {% else %}
+    {% elif not page.map_examples %}
     <section class="planning-category-empty">
       <h2>Đang cập nhật chuyên đề</h2>
       <p>Radar BDS đang đối chiếu phạm vi và nguồn công bố. Trong lúc chờ, bạn có thể xem thư viện quy hoạch hiện có.</p>

@@ -7,11 +7,121 @@ _BEN_CAT_LAND_USE = planning_demo_href("BẾN CÁT")
 _BEN_CAT_PARTITION = planning_demo_href("BẾN CÁT", "partition")
 
 PRODUCT_GUIDES = {
+    "my-phuoc-thuoc-phuong-nao-sau-sap-nhap": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/my-phuoc-thuoc-phuong-nao-sau-sap-nhap",
+        "category": {"key": "huong-dan-doc-du-lieu", "label": "Hướng dẫn đọc dữ liệu"},
+        "title": "Mỹ Phước thuộc phường nào sau sáp nhập? | Radar BDS",
+        "description": "Phường Mỹ Phước cũ được chia vào phường Long Nguyên và Bến Cát. Xem cách đối chiếu hai lớp địa giới khi tin rao hoặc giấy tờ còn dùng tên cũ.",
+        "keywords": "Mỹ Phước thuộc phường nào, Mỹ Phước Bến Cát sau sáp nhập, phường Long Nguyên",
+        "breadcrumb_label": "Mỹ Phước thuộc phường nào?",
+        "hero_title": "Mỹ Phước, Bến Cát thuộc phường nào sau sáp nhập?",
+        "hero_text": "Mở hai phiên bản bản đồ để đối chiếu một vị trí được ghi theo địa chỉ cũ.",
+        "scope_label": "Mỹ Phước · Bến Cát · Long Nguyên",
+        "primary_cta": "Hiện ranh phường Mỹ Phước cũ",
+        "primary_href": "/ban-do-ben-cat#layer-legacy/area-my-phuoc",
+        "next_step_text": "Ghi lại mốc đường hoặc giao lộ của vị trí cần tìm, rồi bật lớp Sau sáp nhập để so ranh.",
+        "hide_lead_capture": True,
+        "social_review_only": True,
+        "local_links": [
+            {"label": "Nghị quyết 1685/NQ-UBTVQH15", "href": "https://vanban.chinhphu.vn/?classid=0&docid=214007&pageid=27160", "description": "Mở văn bản ngày 16/06/2025, xem khoản 94 và 95 Điều 1."},
+            {"label": "Bản đồ địa giới Bến Cát", "href": "/ban-do-ben-cat", "description": "Đối chiếu bản trước và sau sắp xếp trên cùng nền bản đồ."},
+            {"label": "Tra quy hoạch theo số tờ, số thửa và tọa độ", "href": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do", "description": "Xác định thửa khi đã có thông tin trên giấy tờ."},
+        ],
+        "faq": [
+            {"q": "Phường Mỹ Phước cũ có đổi tên thành một phường mới duy nhất không?", "a": "Một phần vào phường Long Nguyên, phần còn lại vào phường Bến Cát theo khoản 94–95 Điều 1 Nghị quyết 1685/NQ-UBTVQH15."},
+            {"q": "Chỉ biết tên Mỹ Phước 1, 2 hoặc 3 thì tra thế nào?", "a": "Xin thêm tên đường, vị trí ghim hoặc số tờ/thửa kèm địa bàn trên giấy. Tên khu quen dùng giúp khoanh vùng nhưng chưa đủ để gắn phường hiện tại cho một lô cụ thể."},
+        ],
+        "article": {
+            "published_at": "2026-11-13",
+            "modified_at": "2026-11-13",
+            "illustration": {
+                "src": "/static/images/seo/ben-cat-map-after.webp",
+                "alt": "Bản đồ địa giới các phường trên địa bàn Bến Cát cũ sau sắp xếp",
+                "width": 1600,
+                "height": 1132,
+                "caption": "Bản đồ địa giới tham khảo của Radar BDS. Dùng bản tương tác để đối chiếu cùng một vị trí trên lớp cũ và lớp hiện tại.",
+            },
+            "intro": [
+                "Một phần phường Mỹ Phước cũ thuộc phường Long Nguyên, phần còn lại thuộc phường Bến Cát. Căn cứ là khoản 94 và 95 Điều 1 Nghị quyết 1685/NQ-UBTVQH15. Nếu tin chỉ ghi “Mỹ Phước, Bến Cát”, hãy xin vị trí rồi đối chiếu hai lớp địa giới trước và sau sắp xếp.",
+            ],
+            "sections": [
+                {"id": "doc-nghi-quyet", "heading": "Mỹ Phước cũ được chia thế nào?", "paragraphs": [
+                    "Khoản 94 nêu phường Long Nguyên hình thành từ phường An Điền, xã Long Nguyên và một phần phường Mỹ Phước. Khoản 95 nêu phường Bến Cát hình thành từ các xã Tân Hưng, Lai Hưng và phần còn lại của phường Mỹ Phước.",
+                    "Khi người bán nói “Bến Cát”, hãy hỏi họ đang chỉ địa bàn thành phố cũ hay phường Bến Cát hiện nay. Ghi riêng hai tên để lần sau tìm lại hồ sơ theo đúng địa bàn.",
+                ]},
+                {"id": "thuc-hanh-ban-do", "heading": "Cách xem cùng một vị trí trên hai lớp địa giới", "paragraphs": [
+                    "Mở liên kết Hiện ranh phường Mỹ Phước cũ ở đầu bài. Phóng tới đường hoặc giao lộ gần lô đất và ghi lại mốc nhận diện. Chuyển sang Sau sáp nhập, tìm lại mốc đó và đọc tên phường chứa điểm cần kiểm tra.",
+                    "Ví dụ giả định: người bán gửi một ghim cạnh giao lộ thay vì ngay trên lô đất. Nếu ghim và lô đất ở hai phía đường gần ranh, hãy xin lại ghim tại mặt tiền hoặc sơ đồ vị trí trước khi ghi tên phường mới.",
+                ]},
+                {"id": "tra-thua-sau-khi-doi-chieu", "heading": "Khi giấy tờ vẫn ghi địa danh cũ", "paragraphs": [
+                    "Giữ địa chỉ ghi trên giấy và ghi riêng phường hiện tại đã đối chiếu. Khi dùng công cụ Tờ/thửa, chọn khu vực theo cách nguồn dữ liệu đang tổ chức và so lại hình thửa, đường vào cùng mốc thực địa.",
+                    "Với vị trí sát ranh hoặc chưa xác định rõ, mang thông tin thửa đến cơ quan có thẩm quyền để xác nhận. Địa giới trả lời thửa nằm ở địa bàn nào. Sau bước này, mở lớp quy hoạch phù hợp nếu cần kiểm tra mục đích sử dụng dự kiến.",
+                ]},
+            ],
+            "checklist": ["Có mốc nhận diện hoặc ghim tại lô đất.", "Đã so cùng vị trí trên hai lớp địa giới.", "Ghi riêng địa danh trên giấy và địa danh hiện tại."],
+        },
+    },
+    "ranh-thua-chong-lop-quy-hoach-can-kiem-tra-gi": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/ranh-thua-chong-lop-quy-hoach-can-kiem-tra-gi",
+        "category": {"key": "huong-dan-doc-du-lieu", "label": "Hướng dẫn đọc dữ liệu"},
+        "title": "Ranh thửa chồng lên quy hoạch: cách kiểm tra | Radar BDS",
+        "description": "Cách kiểm tra khi chỉ một góc thửa đất chạm vùng quy hoạch: so ranh, chú giải, nguồn GIS và chuẩn bị thông tin để xác minh hồ sơ.",
+        "keywords": "ranh thửa chồng quy hoạch, một phần thửa đất chạm quy hoạch, quy hoạch phân khu",
+        "breadcrumb_label": "Kiểm tra ranh thửa chạm quy hoạch",
+        "hero_title": "Một góc thửa đất chạm vùng quy hoạch, kiểm tra thế nào?",
+        "hero_text": "Cách đối chiếu khi lớp màu chỉ phủ một phần thửa hoặc chạy sát cạnh lô đất.",
+        "scope_label": "Ranh thửa · Quy hoạch phân khu",
+        "primary_cta": "Thử lớp quy hoạch phân khu ở Bến Cát",
+        "primary_href": _BEN_CAT_PARTITION,
+        "next_step_text": "Góc nhìn mở sẵn là điểm tập đọc lớp phân khu. Hãy chuyển đến đúng thửa trước khi kiểm tra tài sản.",
+        "hide_lead_capture": True,
+        "social_review_only": True,
+        "local_links": [
+            {"label": "Cách tra tờ/thửa và tọa độ", "href": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do", "description": "Tìm đúng vị trí từ thông tin trên giấy."},
+            {"label": "Bản đồ quy hoạch phân khu Bình Dương", "href": "/quy-hoach-binh-duong/quy-hoach-phan-khu", "description": "Chọn điểm xem và kiểm tra chú giải lớp GIS."},
+            {"label": "Cổng tra cứu quy hoạch TP.HCM", "href": "https://gisxaydung.tphcm.gov.vn/tracuuttqh", "description": "Đối chiếu nguồn và đồ án được công bố."},
+        ],
+        "faq": [
+            {"q": "Tự vẽ vùng chồng lấn để tính diện tích có được không?", "a": "Có thể đo gần đúng để chuẩn bị câu hỏi. Diện tích cần xác minh phải dựa trên ranh thửa và hồ sơ quy hoạch có thẩm quyền."},
+            {"q": "Ảnh chỉ thấy lớp màu chạm mép thửa thì nên hỏi gì?", "a": "Gửi vị trí, số tờ/thửa, tên đồ án nếu có, và hỏi ranh chức năng theo hồ sơ có cắt qua thửa không. Nếu có, xin xác định phần nào bị ảnh hưởng."},
+        ],
+        "article": {
+            "published_at": "2026-11-13",
+            "modified_at": "2026-11-13",
+            "illustration": {
+                "src": "/static/images/seo/maps-phan-khu-ben-cat-20261110.png",
+                "alt": "Lớp phân khu GIS trên Radar BDS tại khu vực đường Ngô Quyền và Quốc lộ 13",
+                "width": 1280,
+                "height": 800,
+                "caption": "Lớp phân khu ở Bến Cát từ GIS TP.HCM. Ảnh minh họa thao tác đọc lớp, chụp ngày 10/11/2026.",
+            },
+            "intro": [
+                "Khi thấy một góc thửa chạm vùng quy hoạch, trước hết hãy kiểm tra ranh thửa và tên lớp đang bật. Sau đó so cùng vị trí với chú giải, bản vẽ và nguồn công bố. Nếu vẫn thấy giao nhau, lưu vị trí và tên đồ án để hỏi phần nào của thửa nằm trong ranh trên hồ sơ.",
+            ],
+            "sections": [
+                {"id": "xac-nhan-ranh", "heading": "Xác nhận ranh đang dùng", "paragraphs": [
+                    "Mở công cụ Tờ/thửa nếu khu vực có dữ liệu. So đường tiếp giáp, hình thửa và mốc góc với giấy tờ. Nếu chỉ có ghim, đánh dấu điểm đó là vị trí cần xác minh và xin thêm sơ đồ trước khi ước lượng phần bị phủ.",
+                    "Tắt lớp quy hoạch để nhìn ranh riêng. Khi bật lại, giảm độ hiển thị để thấy đồng thời ranh và nền. Giữ nguyên vị trí giữa hai lần xem để tránh đọc nhầm sang thửa kế bên.",
+                ]},
+                {"id": "doi-chieu-vung-mau", "heading": "Đọc cạnh giáp và chú giải của đúng lớp", "paragraphs": [
+                    "Ví dụ giả định: cạnh trước lô đất sát một dải màu chạy dọc đường, nhưng cạnh sau nằm trong ô màu khác. Hãy ghi vị trí cạnh trước và kiểm tra dải màu đó thuộc lớp nào. Với phân khu, đọc ký hiệu theo nguồn GIS hoặc bản vẽ gốc nếu có.",
+                    "Kiểm tra ở thêm một mức phóng và ghi tên nguồn. Nếu ảnh mờ, ranh không rõ hoặc hai nguồn thể hiện khác nhau, lưu cả hai góc nhìn kèm tên lớp để hỏi hồ sơ nào áp dụng cho vị trí đó.",
+                ]},
+                {"id": "chuan-bi-ho-so", "heading": "Chuẩn bị gì khi cần hỏi lại trước khi đặt cọc?", "paragraphs": [
+                    "Chuẩn bị số tờ, số thửa, địa bàn, mốc đường, ảnh vị trí, tên lớp và tên đồ án hoặc văn bản nếu tìm được. Hỏi ranh theo bản vẽ áp dụng có đi qua thửa không, đi qua cạnh nào và cần tài liệu gì để xác định diện tích liên quan.",
+                    "Công cụ Vẽ ranh trên Radar giúp đo sơ bộ cạnh hoặc diện tích vùng tự vẽ. Dùng kết quả để mô tả vị trí cần hỏi và để cơ quan có thẩm quyền xác minh theo hồ sơ.",
+                ]},
+            ],
+            "checklist": ["Đã đối chiếu vị trí và ranh thửa.", "Ghi tên lớp, nguồn, chú giải và mốc đường.", "Đã xác minh phần thửa liên quan theo hồ sơ trước khi quyết định giao dịch."],
+        },
+    },
     "cach-doc-ban-do-su-dung-dat-2030-va-quy-hoach-phan-khu": {
         "variant": "knowledge",
         "path": "/tin-tuc/cach-doc-ban-do-su-dung-dat-2030-va-quy-hoach-phan-khu",
         "category": {"key": "huong-dan-doc-du-lieu", "label": "Hướng dẫn đọc dữ liệu"},
-        "title": "Cách đọc bản đồ sử dụng đất 2030 và quy hoạch phân khu | Radar BDS",
+        "title": "Cách đọc bản đồ sử dụng đất 2030 và phân khu | Radar BDS",
         "description": "Thực hành xem lớp sử dụng đất 2030 tại Thủ Dầu Một, đổi sang lớp phân khu ở Bến Cát và tìm nguồn bản đồ trước khi đi xem đất.",
         "keywords": "cách đọc bản đồ sử dụng đất 2030, bản đồ quy hoạch phân khu Bến Cát, quy hoạch Thủ Dầu Một",
         "breadcrumb_label": "Đọc bản đồ sử dụng đất 2030 và phân khu",
@@ -29,6 +139,7 @@ PRODUCT_GUIDES = {
         "next_step_text": "Mở từng góc nhìn, đọc tên lớp đang bật và kiểm tra nguồn trước khi diễn giải màu trên bản đồ.",
         "local_links": [
             {"label": "Bản đồ địa giới Bến Cát", "href": "/ban-do-ben-cat#layer-legacy/area-my-phuoc", "description": "Hiện ranh Mỹ Phước cũ và đối chiếu các phường hiện tại."},
+            {"label": "Mỹ Phước thuộc phường nào sau sáp nhập?", "href": "/tin-tuc/my-phuoc-thuoc-phuong-nao-sau-sap-nhap", "description": "Tìm phường hiện tại theo vị trí cụ thể."},
             {"label": "Tra tờ/thửa và tọa độ", "href": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do", "description": "Xác định vị trí từ thông tin trên giấy tờ."},
             {"label": "Cổng công khai dữ liệu quy hoạch TP.HCM", "href": "https://gisxaydung.tphcm.gov.vn/tracuuttqh", "description": "Đối chiếu dữ liệu quy hoạch do cơ quan quản lý công bố."},
         ],
@@ -72,7 +183,7 @@ PRODUCT_GUIDES = {
         "variant": "knowledge",
         "path": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do",
         "category": {"key": "huong-dan-doc-du-lieu", "label": "Hướng dẫn đọc dữ liệu"},
-        "title": "Cách tra quy hoạch theo số tờ, số thửa và tọa độ trên bản đồ | Radar BDS",
+        "title": "Cách tra quy hoạch theo số tờ, số thửa và tọa độ | Radar BDS",
         "description": "Hướng dẫn chọn khu vực, tìm tờ/thửa hoặc tọa độ, bật lớp quy hoạch và kiểm tra nguồn trên Radar BDS; xử lý khi bản đồ không có kết quả.",
         "keywords": "tra cứu quy hoạch theo số tờ số thửa, xem quy hoạch tọa độ, bản đồ quy hoạch",
         "breadcrumb_label": "Tra quy hoạch theo tờ/thửa và tọa độ",
@@ -85,6 +196,7 @@ PRODUCT_GUIDES = {
         "next_step_text": "Chọn khu vực, định vị thửa và đối chiếu nguồn quy hoạch đang có trên bản đồ.",
         "local_links": [
             {"label": "Bản đồ quy hoạch", "href": "/quy-hoach-binh-duong", "description": "Chọn khu vực và lớp bản đồ có dữ liệu."},
+            {"label": "Kiểm tra khi ranh thửa chạm vùng quy hoạch", "href": "/tin-tuc/ranh-thua-chong-lop-quy-hoach-can-kiem-tra-gi", "description": "Đối chiếu nguồn khi chỉ một phần lô đất nằm trong vùng màu."},
             {"label": "Cách dùng Săn Deal BĐS", "href": "/tin-tuc/cach-san-deal-bds-kiem-tra-tin-duoi-gia", "description": "Đối chiếu vị trí với tin đang xem."},
             {"label": "Định giá đất", "href": "/dinh-gia-bds", "description": "Tham khảo giá sau khi xác định đúng vị trí."},
         ],

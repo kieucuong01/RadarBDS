@@ -260,7 +260,7 @@ PLANNING_PAGES = {
         "sort_order": 20,
         "slug": "duong-my-phuoc-tan-van",
         "path": "/quy-hoach-binh-duong/duong-my-phuoc-tan-van",
-        "title": "Đường Mỹ Phước - Tân Vạn: bản đồ tuyến và cách tra quy hoạch | Radar BDS",
+        "title": "Bản đồ đường Mỹ Phước – Tân Vạn và quy hoạch | Radar BDS",
         "description": "Xem bản đồ đường Mỹ Phước - Tân Vạn, các điểm kết nối Mỹ Phước, Bến Cát, Thuận An, Dĩ An; mở Maps đối chiếu quy hoạch theo vị trí, có nguồn tham khảo.",
         "keywords": "Mỹ Phước Tân Vạn, đường Mỹ Phước Tân Vạn Bình Dương, bản đồ quy hoạch Bến Cát, KCN Mỹ Phước",
         "category": "transport",

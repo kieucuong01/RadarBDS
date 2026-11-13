@@ -316,7 +316,7 @@ def inject_city_map_products():
         ),
         "readable_report_copy": readable_report_copy,
         "planning_category_pages": tuple(
-            {**page, "has_content": any(item.get("category") in page["categories"] for item in PLANNING_PAGE_LIST)}
+            {**page, "has_content": _planning_category_has_content(page)}
             for page in PLANNING_CATEGORY_PAGES.values()
         ),
         "news_hub_pages": tuple(dict(page) for page in NEWS_HUBS.values()),
@@ -2895,12 +2895,17 @@ def thu_dau_mot_map_product_page():
 
 
 def _planning_category_items(page: dict) -> list[dict]:
-    """Use the same content readiness for rendering and search discovery."""
     return [
         deepcopy(item)
         for item in PLANNING_PAGE_LIST
         if item.get("category") in page["categories"]
     ]
+
+
+def _planning_category_has_content(page: dict) -> bool:
+    return bool(page.get("map_examples")) or any(
+        item.get("category") in page["categories"] for item in PLANNING_PAGE_LIST
+    )
 
 
 def planning_detail_page(slug: str):
@@ -2927,7 +2932,7 @@ def planning_detail_page(slug: str):
                     "url": _public_url(page["path"]),
                     "description": page["description"],
                 },
-                {"@type": "ItemList", "itemListElement": item_list},
+                *([{"@type": "ItemList", "itemListElement": item_list}] if item_list else []),
                 _breadcrumb_schema(page["breadcrumbs"]),
             ],
         }
@@ -2944,7 +2949,7 @@ def planning_detail_page(slug: str):
             schema_graph=_public_schema_graph(schema_graph),
             active_nav="quy-hoach",
         ))
-        if not items:
+        if not items and not page.get("map_examples"):
             response.headers["X-Robots-Tag"] = "noindex, follow"
         return response
 
@@ -4431,7 +4436,7 @@ def sitemap_xml():
         *CITY_MAP_PRODUCTS.values(),
         BINH_DUONG_MAP_PAGE,
         PLANNING_HUB,
-        *(page for page in PLANNING_CATEGORY_PAGES.values() if _planning_category_items(page)),
+        *(page for page in PLANNING_CATEGORY_PAGES.values() if _planning_category_has_content(page)),
         *SEO_PAGES.values(),
         *data_price_sitemap_entries(),
         *PLANNING_PAGE_LIST,

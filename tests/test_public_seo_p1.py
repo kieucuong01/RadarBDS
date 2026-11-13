@@ -4,11 +4,10 @@ import re
 import pytest
 
 
-@pytest.mark.parametrize('slug', ['quy-hoach-su-dung-dat', 'quy-hoach-chi-tiet', 'quy-hoach-phan-khu'])
-def test_empty_planning_category_stays_usable_but_not_indexable(slug):
+def test_empty_planning_category_stays_usable_but_not_indexable():
     import app as radar_app
     client = radar_app.app.test_client()
-    path = '/quy-hoach-binh-duong/' + slug
+    path = '/quy-hoach-binh-duong/quy-hoach-chi-tiet'
     response = client.get(path)
     html = response.get_data(as_text=True)
     assert response.status_code == 200
@@ -18,10 +17,29 @@ def test_empty_planning_category_stays_usable_but_not_indexable(slug):
     assert f'https://radarbds.vn{path}</loc>' not in client.get('/sitemap.xml').get_data(as_text=True)
 
 
-def test_category_becomes_indexable_when_content_is_added(monkeypatch):
+@pytest.mark.parametrize(('slug', 'layer'), [
+    ('quy-hoach-su-dung-dat', 'land_use_2030'),
+    ('quy-hoach-phan-khu', 'partition'),
+])
+def test_planning_category_with_map_guide_is_discoverable(slug, layer):
     import app as radar_app
-    path = '/quy-hoach-binh-duong/quy-hoach-su-dung-dat'
-    source = dict(radar_app.PLANNING_PAGE_LIST[0], category='landuse')
+    client = radar_app.app.test_client()
+    path = '/quy-hoach-binh-duong/' + slug
+    response = client.get(path)
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert 'noindex' not in response.headers.get('X-Robots-Tag', '')
+    assert 'content="noindex, follow"' not in html
+    assert f'planning={layer}' in html
+    assert f'https://radarbds.vn{path}</loc>' in client.get('/sitemap.xml').get_data(as_text=True)
+    assert f'href="{path}"' in client.get('/quy-hoach-binh-duong').get_data(as_text=True)
+
+
+def test_category_becomes_indexable_when_specialty_article_is_added(monkeypatch):
+    import app as radar_app
+    path = '/quy-hoach-binh-duong/quy-hoach-chi-tiet'
+    monkeypatch.setitem(radar_app.PLANNING_CATEGORY_PAGES['quy-hoach-chi-tiet'], 'categories', ('detailed',))
+    source = dict(radar_app.PLANNING_PAGE_LIST[0], category='detailed')
     monkeypatch.setattr(radar_app, 'PLANNING_PAGE_LIST', [*radar_app.PLANNING_PAGE_LIST, source])
     client = radar_app.app.test_client()
     response = client.get(path)
