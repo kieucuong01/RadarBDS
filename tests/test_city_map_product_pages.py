@@ -48,6 +48,17 @@ def _graph(response) -> list[dict]:
     return json.loads(blocks[-1])["@graph"]
 
 
+def test_ben_cat_search_snippet_and_boundary_links():
+    import app as radar_app
+
+    html = radar_app.app.test_client().get("/ban-do-ben-cat").get_data(as_text=True)
+    assert "<title>Bản đồ Bến Cát trước và sau sáp nhập 2025 | Radar BDS</title>" in html
+    assert 'rel="canonical" href="https://radarbds.vn/ban-do-ben-cat"' in html
+    assert 'name="description" content="Xem miễn phí bản đồ 8 xã, phường cũ và 6 phường hiện tại của Bến Cát.' in html
+    for boundary in ("legacy/area-my-phuoc", "current/area-ben-cat", "current/area-long-nguyen"):
+        assert f'href="#layer-{boundary}"' in html
+
+
 @pytest.mark.parametrize(
     (
         "path",

@@ -380,6 +380,18 @@ _BEN_CAT = _page(
         "trục vành đai của Bình Dương cũ."
     ),
 )
+_BEN_CAT.update(
+    title="Bản đồ Bến Cát trước và sau sáp nhập 2025 | Radar BDS",
+    description=(
+        "Xem miễn phí bản đồ 8 xã, phường cũ và 6 phường hiện tại của Bến Cát. "
+        "Đối chiếu ranh Mỹ Phước cũ với phường Bến Cát và Long Nguyên."
+    ),
+    hero_text=(
+        "Chọn bản trước sáp nhập để xem 8 xã, phường cũ hoặc bản sau sáp nhập "
+        "để xem 6 phường hiện tại. Nếu địa chỉ ghi Mỹ Phước, mở ranh cũ rồi "
+        "so cùng vị trí trên bản mới để xác định phường Bến Cát hay Long Nguyên."
+    ),
+)
 
 
 def _with_local_links(page: dict, siblings: tuple[dict, ...]) -> dict:
