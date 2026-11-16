@@ -3887,30 +3887,23 @@ SEO_ARTICLES = {
                    'body': 'Mở Radar để lọc theo phường Hiệp Thành, tách đất nền/nhà đất và xem các tin có dấu '
                            'hiệu cần kiểm tra trước khi liên hệ.',
                    'button': 'Mở dashboard lọc Hiệp Thành'}},
-    "gia-dat-phu-tan-hien-bao-nhieu": {'variant': 'knowledge',
+    'gia-dat-phu-tan-hien-bao-nhieu': {'variant': 'knowledge',
  'path': '/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu',
  'category': {'key': 'du-lieu-gia-dat', 'label': 'Giá đất theo phường'},
  'title': 'Giá đất Phú Tân hiện bao nhiêu? Đọc riêng đất nền và nhà đất | Radar BDS',
- 'description': 'Giá đất Phú Tân cập nhật 05/11/2026: 124 tin Facebook trong truy vấn 14 ngày; đất '
-                'nền 23,8 tr/m² từ 15 tin có giá/m², nhà đất chưa đủ dữ liệu và 68 tin có cờ đáng '
-                'kiểm tra.',
- 'keywords': 'giá đất Phú Tân, giá đất Phú Tân Thủ Dầu Một, nhà đất Phú Tân, đất nền Phú Tân, '
-             'Radar BDS',
+ 'description': 'Giá đất Phú Tân cập nhật 16/11/2026: 74 tin Facebook trong truy vấn 14 ngày; đất nền 23,8 tr/m² từ 3 '
+                'tin có giá/m², nhà đất chưa đủ dữ liệu và 39 tin có cờ hot hoặc giảm giá.',
+ 'keywords': 'giá đất Phú Tân, giá đất Phú Tân Thủ Dầu Một, nhà đất Phú Tân, đất nền Phú Tân, Radar BDS',
  'breadcrumb_label': 'Giá đất Phú Tân hiện bao nhiêu',
  'hero_badge': 'Cập nhật 05/11/2026 · Facebook 14 ngày',
  'hero_title': 'Giá đất Phú Tân hiện bao nhiêu? Đọc riêng đất nền và nhà đất',
- 'hero_text': 'Câu trả lời nhanh: trong truy vấn Facebook 14 ngày từ 22/10 đến 05/11/2026, đất nền '
-              'Phú Tân có giá rao trung vị 23,8 tr/m² từ 15 tin đủ giá/m². Nhóm nhà đất có 10 tin '
-              'nhưng chưa có tin đủ giá/m² để tính trung vị. Tổng mẫu mọi loại hình là 124 tin, '
-              'trong đó 68 tin có ít nhất một cờ hot hoặc giảm giá.',
+ 'hero_text': 'Giá đất Phú Tân trong cửa sổ 02/11–16/11/2026: 74 tin Facebook đang theo dõi; đất nền 23,8 tr/m² từ 3 '
+              'tin có giá/m², còn nhà đất chưa đủ mẫu để tính trung vị. Có 39 tin mang cờ hot hoặc giảm giá.',
  'scope_label': 'Thủ Dầu Một · Phú Tân',
- 'hero_checks': ['124 tin Facebook mọi loại hình đang được theo dõi tại Phú Tân trong truy vấn 14 '
-                 'ngày',
-                 'Đất nền: 97 tin, 15 tin có giá/m² hợp lệ, giá rao trung vị 23,8 tr/m²',
-                 'Nhà đất: 10 tin, chưa có tin đủ giá/m² để tính trung vị; tổng mẫu còn có 14 '
-                 'chung cư và 3 kho/xưởng',
-                 '68 tin có ít nhất một cờ hot hoặc giảm giá; đây là bộ lọc ban đầu, không phải '
-                 'khuyến nghị mua'],
+ 'hero_checks': ['74 tin Facebook đang theo dõi tại Phú Tân trong cửa sổ 02/11–16/11/2026',
+                 'Đất nền: 62 tin; 3 tin có giá/m²; giá rao trung vị 23,8 tr/m²',
+                 'Nhà đất: 6 tin; chưa có tin đủ giá/m² để tính trung vị',
+                 '39 tin có cờ: 38 tin hot và 1 tin giảm giá'],
  'primary_cta': 'Mở dashboard lọc Phú Tân',
  'primary_href': '/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n',
  'secondary_cta': 'Xem trang phường Phú Tân',
@@ -3919,79 +3912,69 @@ SEO_ARTICLES = {
  'hero_metric': {'label': 'Đất nền Phú Tân',
                  'value': '23,8',
                  'delta': 'tr/m²',
-                 'note': 'Giá rao trung vị từ 15 tin đất nền có giá/m²'},
- 'property_card': {'status': 'Phú Tân — dữ liệu đến 05/11/2026',
+                 'note': 'Giá rao trung vị từ 3 tin đất nền có giá/m²'},
+ 'property_card': {'status': 'Phú Tân — cửa sổ 02/11–16/11/2026',
                    'title': 'Đất nền Phú Tân: giá rao trung vị 23,8 tr/m²',
-                   'price': '23,8 tr/m² · 2,90 tỷ giá rao trung vị đất nền',
-                   'metric_a': 'Tin mọi loại hình',
-                   'metric_a_value': '124',
-                   'metric_b': 'Tin có cờ hot/giảm giá',
-                   'metric_b_value': '68'},
+                   'price': '23,8 tr/m² · 4,10 tỷ giá rao trung vị đất nền',
+                   'metric_a': 'Tin đang theo dõi',
+                   'metric_a_value': '74',
+                   'metric_b': 'Tin có cờ',
+                   'metric_b_value': '39'},
  'local_links_title': 'Đọc tiếp về Phú Tân',
  'local_links': [{'label': 'Trang khu vực Phú Tân',
                   'href': '/binh-duong/phuong-phu-tan',
                   'description': 'Trang địa phương để xem giá, vị trí và tin theo phường Phú Tân.'},
                  {'label': 'Báo cáo Phú Tân tháng 10/2026',
                   'href': '/bao-cao/phu-tan-thang-10-2026',
-                  'description': 'Báo cáo tháng đã chốt dữ liệu, có phương pháp tính và bối cảnh '
-                                 'dài hơn.'},
+                  'description': 'Báo cáo tháng đã chốt dữ liệu, có phương pháp tính và bối cảnh dài hơn.'},
                  {'label': '5 bước kiểm tra giá rao trước khi đi xem đất',
                   'href': '/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong',
-                  'description': 'Checklist hỏi lại giá rao, diện tích, đường vào và giấy tờ trước '
-                                 'khi đi xem.'},
+                  'description': 'Checklist hỏi lại giá rao, diện tích, đường vào và giấy tờ trước khi đi xem.'},
                  {'label': 'Giá đất Phú Mỹ hiện bao nhiêu',
                   'href': '/tin-tuc/gia-dat-phu-my-hien-bao-nhieu',
-                  'description': 'Đối chiếu một phường có nhiều tin đang theo dõi trong cùng cửa '
-                                 'sổ.'}],
+                  'description': 'Đối chiếu một phường có nhiều tin đang theo dõi trong cùng cửa sổ.'}],
  'faq': [{'q': 'Giá đất nền Phú Tân hiện khoảng bao nhiêu?',
-          'a': 'Trong truy vấn Facebook 14 ngày từ 22/10 đến 05/11/2026, đất nền Phú Tân có giá '
-               'rao trung vị 23,8 tr/m² từ 15 tin có giá/m² hợp lệ. Đây là giá rao tham khảo, '
-               'không phải giá giao dịch đã chốt.'},
+          'a': 'Trong truy vấn Facebook 14 ngày từ 02/11 đến 16/11/2026, đất nền Phú Tân có giá rao trung vị 23,8 '
+               'tr/m² từ 3 tin có giá/m² hợp lệ. Đây là giá rao tham khảo, không phải giá giao dịch đã chốt.'},
          {'q': 'Vì sao bài chưa đưa ra giá trung vị nhà đất Phú Tân?',
-          'a': 'Mẫu hiện có 10 tin nhà đất nhưng không có tin nào đủ giá/m² hợp lệ để tính trung '
-               'vị. Vì vậy không nên lấy số của đất nền hoặc của phường khác thay cho nhà đất Phú '
-               'Tân.'},
-         {'q': '68 tin có cờ hot hoặc giảm giá ở Phú Tân có nghĩa là gì?',
-          'a': 'Đó là 68 tin trong mẫu mọi loại hình có ít nhất một cờ dữ liệu hot hoặc giảm giá. '
-               'Cờ chỉ giúp ưu tiên mở từng tin kiểm tra thêm; không phải khuyến nghị mua và không '
-               'chứng minh đã giao dịch.'},
+          'a': 'Mẫu hiện có 6 tin nhà đất nhưng không có tin nào đủ giá/m² hợp lệ để tính trung vị. Vì vậy không nên '
+               'lấy số của đất nền hoặc của phường khác thay cho nhà đất Phú Tân.'},
+         {'q': '39 tin có cờ hot hoặc giảm giá ở Phú Tân có nghĩa là gì?',
+          'a': 'Đó là 39 tin trong mẫu mọi loại hình có ít nhất một cờ dữ liệu, gồm 38 tin hot và 1 tin có giảm giá. '
+               'Cờ chỉ giúp ưu tiên mở từng tin kiểm tra thêm; không phải khuyến nghị mua và không chứng minh đã giao '
+               'dịch.'},
          {'q': 'Nên so Phú Tân với phường nào?',
-          'a': 'Có thể đặt cạnh Phú Mỹ, Định Hòa và Phú Lợi trong cùng cửa sổ, nhưng phải tách đất '
-               'nền và nhà đất. Nếu một nhóm thiếu mẫu giá/m² như nhà đất Phú Tân, hãy ghi nhận là '
-               'chưa đủ dữ liệu thay vì suy ra từ nhóm khác.'}],
+          'a': 'Có thể đặt cạnh Phú Mỹ, Định Hòa và Phú Lợi trong cùng cửa sổ, nhưng phải tách đất nền và nhà đất. Nếu '
+               'một nhóm thiếu mẫu giá/m² như nhà đất Phú Tân, hãy ghi nhận là chưa đủ dữ liệu thay vì suy ra từ nhóm '
+               'khác.'}],
  'article': {'published_at': '2026-07-25',
-             'modified_at': '2026-11-05',
-             'intro': ['Nếu hỏi giá đất Phú Tân hiện bao nhiêu, câu trả lời ngắn là: trong truy '
-                       'vấn Facebook 14 ngày đến 05/11/2026, đất nền có giá rao trung vị 23,8 '
-                       'tr/m² từ 15 tin có giá/m² hợp lệ. Nhóm nhà đất có 10 tin nhưng chưa đủ dữ '
-                       'liệu để tính trung vị. Mẫu mọi loại hình có 124 tin và 68 tin có cờ hot '
-                       'hoặc giảm giá.',
-                       'Dữ liệu được lọc từ tin Facebook đang hoạt động, không blacklist và không '
-                       'ẩn, với cửa sổ truy vấn 22/10–05/11/2026. Tổng mẫu còn có 14 tin chung cư '
-                       'và 3 tin kho/xưởng; bảng chính chỉ tách đất nền và nhà đất. Các con số là '
-                       'giá rao tham khảo, không phải giá giao dịch đã chốt và không thay thế thẩm '
-                       'định pháp lý, quy hoạch hoặc thực địa.'],
+             'modified_at': '2026-11-16',
+             'intro': ['Nếu hỏi giá đất Phú Tân hiện bao nhiêu, câu trả lời ngắn là: trong truy vấn Facebook 14 ngày '
+                       'đến 16/11/2026, đất nền có giá rao trung vị 23,8 tr/m² từ 3 tin có giá/m² hợp lệ. Nhóm nhà đất '
+                       'có 6 tin nhưng chưa có tin đủ dữ liệu để tính trung vị. Mẫu mọi loại hình có 74 tin và 39 tin '
+                       'có cờ hot hoặc giảm giá.',
+                       'Dữ liệu được lọc từ tin Facebook đang hoạt động, không blacklist và không ẩn, với cửa sổ truy '
+                       'vấn 02/11–16/11/2026. Các con số là giá rao tham khảo, không phải giá giao dịch đã chốt và '
+                       'không thay thế thẩm định pháp lý, quy hoạch hoặc thực địa. Mẫu giá/m² của đất nền hiện nhỏ nên '
+                       'cần đọc từng tin trước khi so sánh.'],
              'summary_cards': [{'label': 'Tin Phú Tân 14 ngày',
-                                'value': '124',
-                                'note': 'Tin Facebook mọi loại hình sau lọc active, không '
-                                        'blacklist và không ẩn'},
+                                'value': '74',
+                                'note': 'Tin Facebook mọi loại hình sau lọc active, không blacklist và không ẩn'},
                                {'label': 'Đất nền Phú Tân',
                                 'value': '23,8 tr/m²',
-                                'note': 'Giá rao trung vị từ 15 tin có giá/m² hợp lệ'},
+                                'note': 'Giá rao trung vị từ 3 tin đất nền có giá/m² hợp lệ'},
                                {'label': 'Nhà đất Phú Tân',
                                 'value': 'Chưa đủ dữ liệu',
-                                'note': '10 tin đang theo dõi nhưng 0 tin đủ giá/m² để tính trung '
-                                        'vị'},
+                                'note': '6 tin đang theo dõi nhưng 0 tin đủ giá/m² để tính trung vị'},
                                {'label': 'Tin có cờ hot/giảm giá',
-                                'value': '68',
-                                'note': 'Mọi loại hình; dùng để ưu tiên kiểm tra, không phải kết '
-                                        'luận mua'}],
-             'data_tables': [{'eyebrow': 'Dữ liệu Radar BDS · Facebook · 22/10–05/11/2026',
+                                'value': '39',
+                                'note': '38 tin hot và 1 tin giảm giá; dùng để ưu tiên kiểm tra, không phải kết luận '
+                                        'mua'}],
+             'data_tables': [{'eyebrow': 'Dữ liệu Radar BDS · Facebook · 02/11–16/11/2026',
                               'title': 'Giá Phú Tân theo loại hình BĐS',
-                              'note': 'Tổng 124 tin gồm đất nền, nhà đất, chung cư và kho/xưởng. '
-                                      'Hai hàng dưới đây chỉ tách đất nền và nhà đất, không cộng '
-                                      'thành tổng. Giá/m² là giá rao trung vị trên các tin đủ điều '
-                                      'kiện.',
+                              'note': 'Tổng 74 tin gồm đất nền, nhà đất và các loại hình khác. Hai hàng dưới đây chỉ '
+                                      'tách đất nền và nhà đất, không cộng thành tổng. Giá/m² là giá rao trung vị trên '
+                                      'các tin đủ điều kiện.',
                               'columns': [{'key': 'type', 'label': 'Loại hình'},
                                           {'key': 'tracked', 'label': 'Tin đang theo dõi'},
                                           {'key': 'priced', 'label': 'Tin có giá/m²'},
@@ -3999,159 +3982,132 @@ SEO_ARTICLES = {
                                           {'key': 'median_total', 'label': 'Tổng giá trung vị'},
                                           {'key': 'signals', 'label': 'Tin có cờ'}],
                               'rows': [{'type': 'Đất nền',
-                                        'tracked': '97',
-                                        'priced': '15',
+                                        'tracked': '62',
+                                        'priced': '3',
                                         'median_m2': '23,8 tr/m²',
-                                        'median_total': '2,90 tỷ',
-                                        'signals': '55'},
+                                        'median_total': '4,10 tỷ',
+                                        'signals': '35'},
                                        {'type': 'Nhà đất',
-                                        'tracked': '10',
+                                        'tracked': '6',
                                         'priced': '0',
                                         'median_m2': 'Chưa đủ dữ liệu',
                                         'median_total': 'Chưa đủ dữ liệu',
-                                        'signals': '5'}]},
-                             {'eyebrow': 'So nhanh phường lân cận · cùng cửa sổ truy vấn',
+                                        'signals': '2'}]},
+                             {'eyebrow': 'So nhanh phường lân cận · cùng cửa sổ 02/11–16/11/2026',
                               'title': 'Phú Tân nên so với phường nào?',
-                              'note': 'Số tin và cờ là mọi loại hình; giá/m² luôn tách đất nền và '
-                                      'nhà đất. Đây là phân bố tin rao, không phải số giao dịch.',
+                              'note': 'Số tin và cờ là mọi loại hình; giá/m² luôn tách đất nền và nhà đất. Đây là phân '
+                                      'bố tin rao, không phải số giao dịch.',
                               'columns': [{'key': 'ward', 'label': 'Phường'},
                                           {'key': 'tracked', 'label': 'Tin mọi loại hình'},
                                           {'key': 'signals', 'label': 'Tin có cờ'},
                                           {'key': 'land', 'label': 'Đất nền'},
                                           {'key': 'house', 'label': 'Nhà đất'}],
                               'rows': [{'ward': 'Phú Tân',
-                                        'tracked': '124',
-                                        'signals': '68',
+                                        'tracked': '74',
+                                        'signals': '39',
                                         'land': '23,8 tr/m²',
                                         'house': 'Chưa đủ dữ liệu'},
                                        {'ward': 'Phú Mỹ',
-                                        'tracked': '187',
-                                        'signals': '37',
-                                        'land': '19,6 tr/m²',
-                                        'house': '40,1 tr/m²'},
+                                        'tracked': '126',
+                                        'signals': '30',
+                                        'land': '21,9 tr/m²',
+                                        'house': '36,3 tr/m²'},
                                        {'ward': 'Định Hòa',
-                                        'tracked': '65',
-                                        'signals': '5',
-                                        'land': '18,7 tr/m²',
-                                        'house': '25,0 tr/m²'},
+                                        'tracked': '70',
+                                        'signals': '10',
+                                        'land': '18,9 tr/m²',
+                                        'house': '21,3 tr/m²'},
                                        {'ward': 'Phú Lợi',
-                                        'tracked': '97',
-                                        'signals': '27',
-                                        'land': '20,3 tr/m²',
-                                        'house': '42,4 tr/m²'}]}],
+                                        'tracked': '60',
+                                        'signals': '19',
+                                        'land': '26,7 tr/m²',
+                                        'house': '48,1 tr/m²'}]}],
              'charts': [{'eyebrow': 'Visual nhanh',
                          'title': 'Đất nền Phú Tân có đủ mẫu hơn nhà đất',
-                         'note': 'Biểu đồ chỉ vẽ giá rao trung vị/m² khi có dữ liệu hợp lệ; nhóm '
-                                 'nhà đất hiện chưa đủ mẫu.',
+                         'note': 'Biểu đồ chỉ vẽ giá rao trung vị/m² khi có dữ liệu hợp lệ; nhóm nhà đất hiện chưa đủ '
+                                 'mẫu.',
                          'alt': 'Biểu đồ giá rao trung vị đất nền và nhà đất Phú Tân',
-                         'rows': [{'label': 'Đất nền',
-                                   'value_label': '23,8 tr/m²',
-                                   'width': 100,
-                                   'color': '#2563eb'},
+                         'rows': [{'label': 'Đất nền', 'value_label': '23,8 tr/m²', 'width': 100, 'color': '#2563eb'},
                                   {'label': 'Nhà đất',
                                    'value_label': 'Chưa đủ dữ liệu',
                                    'width': 0,
                                    'color': '#94a3b8'}]},
                         {'eyebrow': 'Tin có cờ dữ liệu',
-                         'title': 'Phú Tân có 68 tin có cờ hot hoặc giảm giá',
-                         'note': 'Cờ giúp ưu tiên mở tin để kiểm tra thêm; không phải cam kết tin '
-                                 'tốt hay bằng chứng giao dịch.',
+                         'title': 'Phú Tân có 39 tin có cờ hot hoặc giảm giá',
+                         'note': 'Cờ giúp ưu tiên mở tin để kiểm tra thêm; không phải cam kết tin tốt hay bằng chứng '
+                                 'giao dịch.',
                          'alt': 'Biểu đồ số tin có cờ hot hoặc giảm giá theo phường',
-                         'rows': [{'label': 'Phú Tân',
-                                   'value_label': '68 tin',
-                                   'width': 100,
-                                   'color': '#dc2626'},
-                                  {'label': 'Phú Mỹ',
-                                   'value_label': '37 tin',
-                                   'width': 54,
-                                   'color': '#2563eb'},
-                                  {'label': 'Phú Lợi',
-                                   'value_label': '27 tin',
-                                   'width': 40,
-                                   'color': '#64748b'},
-                                  {'label': 'Định Hòa',
-                                   'value_label': '5 tin',
-                                   'width': 7,
-                                   'color': '#f59e0b'}]}],
+                         'rows': [{'label': 'Phú Tân', 'value_label': '39 tin', 'width': 100, 'color': '#dc2626'},
+                                  {'label': 'Phú Mỹ', 'value_label': '30 tin', 'width': 77, 'color': '#2563eb'},
+                                  {'label': 'Phú Lợi', 'value_label': '19 tin', 'width': 49, 'color': '#64748b'},
+                                  {'label': 'Định Hòa', 'value_label': '10 tin', 'width': 26, 'color': '#f59e0b'}]}],
              'sections': [{'id': 'gia-dat-nen-phu-tan',
-                           'heading': 'Đất nền Phú Tân: giá rao trung vị 23,8 tr/m² từ 15 tin có '
-                                      'giá/m²',
-                           'paragraphs': ['Trong 124 tin Phú Tân mọi loại hình đang theo dõi, nhóm '
-                                          'đất nền có 97 tin; 15 tin có giá/m² hợp lệ để tính giá '
-                                          'rao trung vị 23,8 tr/m². Tổng giá rao trung vị của 15 '
-                                          'tin này là 2,90 tỷ.',
-                                          'Nếu một tin thấp hơn mức tham chiếu, hãy kiểm tra vị '
-                                          'trí, thổ cư, diện tích, hẻm/đường và quy hoạch. Tin cao '
-                                          'hơn cần có lý do thể hiện trong chính tin rao và vẫn '
-                                          'phải được xác minh thực tế.'],
-                           'bullets': ['Đất nền đang theo dõi: 97 tin',
-                                       'Đất nền có giá/m² hợp lệ: 15 tin',
+                           'heading': 'Đất nền Phú Tân: giá rao trung vị 23,8 tr/m² từ 3 tin có giá/m²',
+                           'paragraphs': ['Trong 74 tin Phú Tân mọi loại hình đang theo dõi, nhóm đất nền có 62 tin; 3 '
+                                          'tin có giá/m² hợp lệ để tính giá rao trung vị 23,8 tr/m². Tổng giá rao '
+                                          'trung vị của 3 tin này là 4,10 tỷ.',
+                                          'Với mẫu giá/m² còn nhỏ, không nên xem 23,8 tr/m² là mặt bằng chung cho cả '
+                                          'phường. Nếu một tin thấp hơn mức tham chiếu, hãy kiểm tra vị trí, thổ cư, '
+                                          'diện tích, hẻm/đường và quy hoạch. Tin cao hơn cần có lý do thể hiện trong '
+                                          'chính tin rao và vẫn phải được xác minh thực tế.'],
+                           'bullets': ['Đất nền đang theo dõi: 62 tin',
+                                       'Đất nền có giá/m² hợp lệ: 3 tin',
                                        'Giá rao trung vị: 23,8 tr/m²',
-                                       'Tổng giá rao trung vị: 2,90 tỷ']},
+                                       'Tổng giá rao trung vị: 4,10 tỷ']},
                           {'id': 'nha-dat-phu-tan',
-                           'heading': 'Nhà đất Phú Tân: 10 tin nhưng chưa đủ dữ liệu tính giá/m²',
-                           'paragraphs': ['Nhóm nhà đất có 10 tin đang theo dõi, nhưng không có '
-                                          'tin nào có giá/m² hợp lệ trong cửa sổ này. Vì vậy bài '
-                                          'không đưa ra một mức giá trung vị nhà đất Phú Tân.',
-                                          'Không nên lấy giá đất nền Phú Tân hoặc giá nhà đất ở '
-                                          'phường khác để thay thế. Khi xem từng tin, cần hỏi lại '
-                                          'tổng giá, diện tích, hiện trạng nhà, đường vào và giấy '
-                                          'tờ.'],
-                           'bullets': ['Nhà đất đang theo dõi: 10 tin',
+                           'heading': 'Nhà đất Phú Tân: 6 tin nhưng chưa đủ dữ liệu tính giá/m²',
+                           'paragraphs': ['Nhóm nhà đất có 6 tin đang theo dõi, nhưng không có tin nào có giá/m² hợp '
+                                          'lệ trong cửa sổ này. Vì vậy bài không đưa ra một mức giá trung vị nhà đất '
+                                          'Phú Tân.',
+                                          'Không nên lấy giá đất nền Phú Tân hoặc giá nhà đất ở phường khác để thay '
+                                          'thế. Khi xem từng tin, cần hỏi lại tổng giá, diện tích, hiện trạng nhà, '
+                                          'đường vào và giấy tờ.'],
+                           'bullets': ['Nhà đất đang theo dõi: 6 tin',
                                        'Nhà đất có giá/m² hợp lệ: 0 tin',
                                        'Giá rao trung vị/m²: Chưa đủ dữ liệu',
                                        'Tổng giá rao trung vị: Chưa đủ dữ liệu']},
                           {'id': 'tin-hieu-phu-tan',
-                           'heading': '68 tin có cờ hot hoặc giảm giá ở Phú Tân là bộ lọc, không '
-                                      'phải kết luận mua',
-                           'paragraphs': ['Radar BDS ghi nhận 68 tin có ít nhất một cờ hot hoặc '
-                                          'giảm giá trong mẫu 124 tin mọi loại hình. Các cờ giúp '
-                                          'ưu tiên mở từng tin; chúng không cho biết tin đã bán, '
-                                          'giá đã chốt hay tài sản chắc chắn phù hợp.',
-                                          'Cách dùng an toàn là lọc Phú Tân theo loại hình và ngân '
-                                          'sách, sau đó đọc mô tả, ảnh, nguồn tin và lịch sử giá '
-                                          'trước khi gọi môi giới hoặc đi xem thực địa.'],
-                           'bullets': ['Tin có cờ hot/giảm giá: 68',
-                                       'Tin mọi loại hình: 124',
-                                       'Cửa sổ truy vấn: 22/10–05/11/2026',
-                                       'Đây là bộ lọc dữ liệu ban đầu, không phải khuyến nghị '
-                                       'mua']},
+                           'heading': '39 tin có cờ hot hoặc giảm giá ở Phú Tân là bộ lọc, không phải kết luận mua',
+                           'paragraphs': ['Radar BDS ghi nhận 39 tin có ít nhất một cờ hot hoặc giảm giá trong mẫu 74 '
+                                          'tin mọi loại hình, gồm 38 tin hot và 1 tin có giảm giá. Các cờ giúp ưu tiên '
+                                          'mở từng tin; chúng không cho biết tin đã bán, giá đã chốt hay tài sản chắc '
+                                          'chắn phù hợp.',
+                                          'Cách dùng an toàn là lọc Phú Tân theo loại hình và ngân sách, sau đó đọc mô '
+                                          'tả, ảnh, nguồn tin và lịch sử giá trước khi gọi môi giới hoặc đi xem thực '
+                                          'địa.'],
+                           'bullets': ['Tin có cờ hot/giảm giá: 39',
+                                       'Tin hot: 38',
+                                       'Tin giảm giá: 1',
+                                       'Cửa sổ truy vấn: 02/11–16/11/2026']},
                           {'id': 'so-sanh-phu-tan',
                            'heading': 'So Phú Tân với Phú Mỹ, Định Hòa và Phú Lợi',
-                           'paragraphs': ['Trong cùng cửa sổ, giá rao trung vị đất nền là 23,8 '
-                                          'tr/m² ở Phú Tân, 19,6 ở Phú Mỹ, 18,7 ở Định Hòa và 20,3 '
-                                          'ở Phú Lợi. Đây là các mức giá rao của những tin có '
-                                          'giá/m² hợp lệ, không phải một mức giá chung cho cả '
-                                          'phường.',
-                                          'Nhà đất Phú Tân chưa đủ dữ liệu để tính trung vị; các '
-                                          'phường đối chiếu lần lượt là 40,1 tr/m² ở Phú Mỹ, 25,0 '
-                                          'ở Định Hòa và 42,4 ở Phú Lợi. So sánh chỉ có ý nghĩa '
-                                          'khi giữ đúng loại hình, diện tích, vị trí và tình trạng '
-                                          'tài sản.'],
+                           'paragraphs': ['Trong cùng cửa sổ, giá rao trung vị đất nền là 23,8 tr/m² ở Phú Tân, 21,9 ở '
+                                          'Phú Mỹ, 18,9 ở Định Hòa và 26,7 ở Phú Lợi. Đây là các mức giá rao của những '
+                                          'tin có giá/m² hợp lệ, không phải một mức giá chung cho cả phường.',
+                                          'Nhà đất Phú Tân chưa đủ dữ liệu để tính trung vị; các phường đối chiếu lần '
+                                          'lượt là 36,3 tr/m² ở Phú Mỹ, 21,3 ở Định Hòa và 48,1 ở Phú Lợi. So sánh chỉ '
+                                          'có ý nghĩa khi giữ đúng loại hình, diện tích, vị trí và tình trạng tài '
+                                          'sản.'],
                            'bullets': ['Đất nền Phú Tân: 23,8 tr/m²',
-                                       'Đất nền Phú Mỹ: 19,6 tr/m²',
+                                       'Đất nền Phú Mỹ: 21,9 tr/m²',
                                        'Nhà đất Phú Tân: Chưa đủ dữ liệu',
                                        'So riêng từng loại hình trước khi quyết định']},
                           {'id': 'cach-dung-dashboard-phu-tan',
                            'heading': 'Cách dùng dashboard Radar cho Phú Tân',
-                           'paragraphs': ['Mở dashboard, chọn phường Phú Tân, sau đó chọn loại '
-                                          'hình trước: đất nền hoặc nhà đất. Tiếp theo, so giá/m² '
-                                          'của từng tin với mức tham chiếu cùng loại hình và kiểm '
-                                          'tra tổng giá có phù hợp ngân sách không.',
-                                          'Trong nhóm đất nền, 97/97 tin có diện tích nhưng chỉ 3 '
-                                          'tin có ghi độ rộng đường; nhóm nhà đất có 10/10 tin có '
-                                          'diện tích nhưng không có tin nào ghi độ rộng đường. Vì '
-                                          'vậy, độ rộng đường là câu hỏi cần hỏi lại người đăng, '
-                                          'không nên suy ra từ trường dữ liệu đang trống.',
-                                          'Tổng mẫu còn có 14 tin chung cư và 3 tin kho/xưởng. Sau '
-                                          'bước lọc, người mua vẫn cần xác minh sổ, quy hoạch, '
-                                          'hẻm/đường, hiện trạng, tranh chấp và chi phí phát '
-                                          'sinh.'],
+                           'paragraphs': ['Mở dashboard, chọn phường Phú Tân, sau đó chọn loại hình trước: đất nền '
+                                          'hoặc nhà đất. Tiếp theo, so giá/m² của từng tin với mức tham chiếu cùng '
+                                          'loại hình và kiểm tra tổng giá có phù hợp ngân sách không.',
+                                          'Trong mẫu hiện tại, 62 tin đất nền nhưng chỉ 3 tin có giá/m²; nhóm nhà đất '
+                                          'có 6 tin và chưa có tin đủ dữ liệu. Vì vậy, hãy mở từng tin để kiểm tra '
+                                          'diện tích, tổng giá, độ rộng đường và thông tin giấy tờ thay vì suy ra từ '
+                                          'số trung vị.',
+                                          'Sau bước lọc, người mua vẫn cần xác minh sổ, quy hoạch, hẻm/đường, hiện '
+                                          'trạng, tranh chấp và chi phí phát sinh. Radar BDS là bộ lọc ban đầu, không '
+                                          'thay thẩm định pháp lý hoặc định giá chính thức.'],
                            'bullets': ['Chọn phường Phú Tân trước',
                                        'Tách đất nền và nhà đất',
                                        'So giá/m² cùng loại hình khi đủ mẫu',
-                                       'Hỏi lại độ rộng đường vì chỉ 3/97 tin đất nền có trường '
-                                       'này',
+                                       'Mở từng tin để kiểm tra trường dữ liệu còn thiếu',
                                        'Xác minh pháp lý và thực địa trước khi đặt cọc']}],
              'checklist': ['Đã xác định tin thuộc đất nền, nhà đất hay loại hình khác.',
                            'Đã so giá/m² với đúng loại hình BĐS tại Phú Tân khi mẫu đủ lớn.',
@@ -4159,8 +4115,8 @@ SEO_ARTICLES = {
                            'Đã hỏi lại các trường còn thiếu như độ rộng đường.',
                            'Đã kiểm tra pháp lý, quy hoạch và thực địa trước khi đặt cọc.']},
  'final_cta': {'title': 'Mở Radar để lọc tin Phú Tân đáng kiểm tra',
-               'body': 'Mở Radar để lọc theo phường Phú Tân, tách đất nền/nhà đất và xem các tin '
-                       'có cờ cần kiểm tra trước khi liên hệ.',
+               'body': 'Mở Radar để lọc theo phường Phú Tân, tách đất nền/nhà đất và xem các tin có cờ cần kiểm tra '
+                       'trước khi liên hệ.',
                'button': 'Mở dashboard lọc Phú Tân',
                'button_href': '/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n'}},
  'cach-xem-gia-dat-binh-duong-khong-bi-so-sai': {'variant': 'knowledge',
