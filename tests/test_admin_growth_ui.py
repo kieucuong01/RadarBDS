@@ -14,6 +14,8 @@ def test_growth_admin_ui_contract():
         'id="panel-growth"',
         'data-panel-slug="tang-truong"',
         'id="growthAnchor"',
+        'id="growthTrafficMetrics"',
+        'id="growthFunnelInsight"',
         'id="growthIncludeGuland"',
         'id="growthSourceChart"',
         'id="growthUniqueChart"',
@@ -238,7 +240,7 @@ def test_facebook_crawl_admin_is_task_first_and_loads_focused_module():
     assert "Tác vụ nâng cao" in template
     assert "js/admin/facebook-crawl.js" in template
     assert "?v=admin-facebook-crawl-brokers-v4-history-samples" in template
-    assert "css/admin.css') }}?v=admin-v59-facebook-crawl-broker-align-fix" in template
+    assert re.search(r"css/admin\.css'\) }}\?v=admin-v\d+-[a-z0-9-]+", template)
     assert "RadarFacebookCrawlAdmin" in script
     assert "RadarFacebookCrawlAdmin?.canLeave()" in script
     assert "/admin/api/facebook-crawl/config" not in (
@@ -452,7 +454,6 @@ def test_facebook_broker_roster_has_compact_ordinal_area_and_safe_name_link():
 
     assert '<th scope="col">Vận hành</th>' in template
     assert '<th scope="col">Kế hoạch</th>' in template
-    assert "admin-v59-facebook-crawl-broker-align-fix" in template
     assert "brokerCell('Vận hành', 'crawl-broker-ops')" in source
     assert "brokerCell('Kế hoạch', 'crawl-broker-plan')" in source
     assert "urlNode.className = 'crawl-broker-url'" in source

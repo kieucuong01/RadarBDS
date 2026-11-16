@@ -3308,11 +3308,59 @@ p { margin: 6px 0 0; color: var(--muted); }
 .growth-table-details { margin-top: 12px; padding: 14px; }
 .growth-table-details summary { cursor: pointer; font-weight: 800; }
 .growth-table-details .table-wrap { margin-top: 12px; }
+#panel-growth { font-variant-numeric: tabular-nums; }
+#panel-growth .growth-head { margin-bottom: 22px; }
+#panel-growth .growth-head h1 { font-size: clamp(26px, 3vw, 38px); letter-spacing: -.045em; line-height: 1.12; }
+#panel-growth .growth-head p, #panel-growth .growth-footnote,
+#growthTrafficSummary, #growthPlanningOutcomes { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+#panel-growth .growth-head p { margin-top: 7px; }
+#panel-growth .growth-marketing { min-width: 0; align-content: start; padding: clamp(14px, 2vw, 24px); }
+#panel-growth .growth-marketing h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
+.growth-metrics, .growth-overview-grid { display: grid; gap: 14px; margin-bottom: 14px; }
+.growth-metrics { grid-template-columns: 1.1fr 1fr 1fr; }
+.growth-overview-grid { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); }
+.growth-overview-grid > .growth-marketing { margin-bottom: 0; }
+.growth-metric { display: grid; gap: 7px; min-width: 0; padding: 16px 20px; }
+.growth-metric:first-child { border-top: 3px solid var(--blue); padding-top: 14px; }
+.growth-metric span { font-weight: 700; }
+.growth-metric strong { color: var(--ink); font-size: clamp(22px, 3vw, 34px); line-height: 1.1; letter-spacing: -.04em; }
+.growth-metric small, .growth-funnel small { color: var(--muted); font-size: 12px; }
+.growth-traffic-plot { height: 240px; position: relative; min-width: 0; }
+.growth-disclosure { border-top: 1px solid var(--line); padding-top: 10px; }
+.growth-disclosure summary, .growth-scroll summary { color: var(--blue); cursor: pointer; }
+.growth-day-table table { min-width: 0; }
+.growth-day-table td { text-align: right; }
+.growth-day-table button { border: 0; background: transparent; color: var(--blue); cursor: pointer; text-decoration: underline; min-height: 32px; }
+.growth-funnel-insight { margin: 0; padding: 10px 12px; border-inline-start: 3px solid var(--blue); background: var(--soft); line-height: 1.45; font-size: 13px; }
+.growth-funnel { display: grid; gap: 11px; list-style: none; margin: 0; padding: 0; }
+.growth-funnel li { display: grid; gap: 4px; }
+.growth-funnel li div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.growth-funnel progress { appearance: none; border: 0; width: 100%; height: 7px; border-radius: 8px; background: var(--soft); color: var(--blue); }
+.growth-funnel progress::-webkit-progress-bar { background: var(--soft); border-radius: 8px; }
+.growth-funnel progress::-webkit-progress-value { background: var(--blue); border-radius: 8px; }
+.growth-funnel progress::-moz-progress-bar { background: var(--blue); border-radius: 8px; }
+.growth-page-tools label { display: grid; gap: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.growth-page-tools :is(input, select) { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; min-height: 40px; padding: 6px 10px; }
+.growth-page-tools input { width: min(100%, 300px); }
+.growth-page-tools button { margin-inline-start: auto; }
+.growth-page-table table { min-width: 760px; }
+.growth-page-table thead { background: var(--soft); }
+.growth-page-table th[scope="row"] { max-width: 270px; overflow-wrap: anywhere; }
+.growth-page-table th[scope="row"] a { color: var(--blue); }
+.growth-page-table td { vertical-align: top; }
+.growth-page-table small { display: block; color: var(--muted); font-weight: 400; margin-top: 3px; }
+.growth-scroll dl { display: grid; grid-template-columns: auto auto; gap: 3px 8px; margin: 8px 0 0; }
+.growth-scroll dd { margin: 0; }
+.growth-pagination { justify-content: flex-end; align-items: center; color: var(--muted); font-size: 12px; }
+.growth-pagination button:disabled, .growth-page-tools button:disabled { opacity: .48; cursor: default; }
+.growth-operations > .growth-source { margin: 12px 0; }
+#panel-growth :is(a, button, summary, input, select, [tabindex="0"]):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 @media (max-width: 1000px) {
   .growth-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .growth-ratios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .growth-marketing-channels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .growth-marketing-grid { grid-template-columns: 1fr; }
+  .growth-overview-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 600px) {
   .growth-head, .growth-controls { align-items: stretch; }
@@ -3323,6 +3371,12 @@ p { margin: 6px 0 0; color: var(--muted); }
   .growth-chart-wide { grid-column: auto; }
   .growth-chart { height: 300px; }
   .growth-chart canvas { height: 240px !important; }
+  .growth-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .growth-metric { padding: 12px; }
+  .growth-metric:first-child { grid-column: 1 / -1; padding-top: 10px; }
+  .growth-page-tools label:first-child { flex-basis: 100%; }
+  .growth-page-tools input { width: 100%; }
+  .growth-traffic-plot { height: 190px; }
 }
 
 /* Facebook Crawl task-first workspace */
