@@ -2625,7 +2625,7 @@ async function saveTraining(id) {
   card.remove();
 }
 
-let growthPeriod = 'day', growthCharts = {};
+let growthPeriod = 'week', growthCharts = {}, growthLoadSequence = 0;
 let growthChartLibraryPromise = null;
 const GROWTH_CHART_SRC = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
 const growthFmt = value => Number(value || 0).toLocaleString('vi-VN');
@@ -2670,6 +2670,14 @@ function renderGrowthCharts(data) {
   const one = (id, label, key, color) => new Chart(id, { type: 'line', data: { labels, datasets: [{ label, data: data.series.map(row => row[key]), borderColor: color, backgroundColor: color + '22', fill: true, tension: .25 }] }, options: growthOptions() });
   growthCharts.unique = one('growthUniqueChart', 'BĐS unique · nguồn đã chọn', 'unique_lots', '#7c3aed');
   growthCharts.drop = one('growthDropChart', 'Giảm giá · nguồn đã chọn', 'price_drops', '#dc2626');
+  const trafficDays = (data.traffic?.days || []).filter(row => row.day <= growthVietnamToday());
+  growthCharts.traffic = new Chart('growthTrafficChart', { type: 'line', data: {
+    labels: trafficDays.map(row => row.day),
+    datasets: [
+      { label: 'Lượt xem', data: trafficDays.map(row => data.traffic.first_measured_day && row.day >= data.traffic.first_measured_day ? row.views : null), borderColor: '#2563eb' },
+      { label: 'Phiên bắt đầu', data: trafficDays.map(row => row.sessions || null), borderColor: '#16a34a' }
+    ]
+  }, options: growthOptions() });
   growthCharts.users = new Chart('growthUserChart', { type: 'line', data: { labels, datasets: [
     { label: 'Đăng ký · toàn hệ thống', data: data.series.map(row => row.signups), borderColor: '#7c3aed', tension: .25 },
     { label: 'Lead · nguồn đã chọn', data: data.series.map(row => row.leads), borderColor: '#16a34a', borderDash: [6, 4], pointStyle: 'rectRot', tension: .25 }
@@ -2784,14 +2792,82 @@ function renderGrowthBehavior(behavior = {}) {
   ).join('') : '<tr><td colspan="6">Chưa có đơn tạo hoặc thanh toán trong kỳ này.</td></tr>';
 }
 
-function renderPageEngagement(rows = []) {
-  const ratio = (n, total) => total ? growthFmt(Math.round(n * 100 / total)) + '% (' + growthFmt(n) + ')' : '—';
-  document.getElementById('growthPageEngagement').innerHTML = rows.length ? rows.map(row =>
-    '<tr><th scope="row">' + esc(row.path) + '</th><td>' + growthFmt(row.views) + '</td><td>' +
-    growthFmt(row.avg_seconds) + ' giây</td><td>' + ratio(row.short, row.completed) +
-    ' / ' + growthFmt(row.completed) + ' lượt có tín hiệu rời</td><td>' + growthFmt(row.scroll_views) + '</td>' +
-    [25, 50, 75, 90].map(mark => '<td>' + ratio(row['reached_' + mark], row.scroll_views) + '</td>').join('') + '</tr>'
-  ).join('') : '<tr><td colspan="9">Chưa có lượt đo trang trong kỳ này.</td></tr>';
+let growthTraffic = {}, growthTrafficPageIndex = 0;
+const trafficEl = id => document.getElementById(id);
+const trafficRatio = (n, total) => total ? growthFmt(n) + '/' + growthFmt(total) + ' · ' + growthFmt(Math.round(n * 100 / total)) + '%' : '—';
+
+function filteredTrafficPages() {
+  const query = trafficEl('growthTrafficSearch').value.trim().toLowerCase();
+  const sort = trafficEl('growthTrafficSort').value;
+  const rows = (growthTraffic.pages || []).filter(row => row.path.includes(query));
+  if (sort === 'short') rows.sort((a, b) => b.short - a.short);
+  if (sort === 'reading') rows.sort((a, b) => b.reached_75 - a.reached_75);
+  return rows;
+}
+
+function renderTrafficPages() {
+  const rows = filteredTrafficPages();
+  const size = 25;
+  const totalPages = Math.max(1, Math.ceil(rows.length / size));
+  trafficEl('growthTrafficPage').textContent = (growthTrafficPageIndex + 1) + '/' + totalPages;
+  trafficEl('growthTrafficPrev').disabled = growthTrafficPageIndex === 0;
+  trafficEl('growthTrafficNext').disabled = growthTrafficPageIndex + 1 >= totalPages;
+  trafficEl('growthTrafficCsv').disabled = !rows.length;
+  trafficEl('growthPageEngagement').innerHTML = rows.length ? rows.slice(growthTrafficPageIndex * size, (growthTrafficPageIndex + 1) * size).map(row =>
+    '<tr><th scope="row">' + esc(row.path) + (row.views < 30 ? ' <small>· Mẫu thấp</small>' : '') +
+    '</th><td>' + growthFmt(row.views) + '</td><td>' + growthFmt(row.previous_views) +
+    '</td><td>' + growthFmt(row.page_sessions) + '</td><td>' +
+    (row.timed ? growthFmt(row.median_seconds) + ' giây · ' + growthFmt(row.timed) + ' lượt' : '—') +
+    '</td><td>' + trafficRatio(row.short, row.completed) + '</td>' +
+    [25, 50, 75, 90].map(mark => '<td>' + trafficRatio(row['reached_' + mark], row.scroll_views) + '</td>').join('') +
+    '<td>' + growthFmt(row.map_click_views) + '</td></tr>'
+  ).join('') : '<tr><td colspan="11">Chưa có lượt đo phù hợp.</td></tr>';
+}
+
+function growthVietnamToday() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+}
+
+function renderTraffic(traffic = {}) {
+  growthTraffic = traffic;
+  growthTrafficPageIndex = 0;
+  const days = (traffic.days || []).filter(row => row.day <= growthVietnamToday());
+  trafficEl('growthTrafficSummary').textContent = growthFmt(days.reduce((sum, row) => sum + row.views, 0)) +
+    ' lượt xem đo được · ' + growthFmt(traffic.previous_total) + ' kỳ trước.' +
+    (traffic.truncated ? ' Bảng URL đã chạm giới hạn hiển thị. Chọn kỳ ngắn hơn để xem thêm.' : '');
+  trafficEl('growthTrafficDays').innerHTML = days.slice().reverse().map(row => {
+    const measured = traffic.first_measured_day && row.day >= traffic.first_measured_day;
+    return '<tr><th scope="row"><button type="button" data-traffic-day="' + esc(row.day) + '">' + esc(row.day) +
+      '</button>' + (row.day === growthVietnamToday() ? ' · Chưa hết ngày' : '') + '</th><td>' +
+      (measured ? growthFmt(row.views) : 'Chưa có dữ liệu') + '</td><td>' +
+      (row.sessions ? growthFmt(row.sessions) : '—') + '</td></tr>';
+  }).join('');
+  renderTrafficPages();
+  const funnel = traffic.planning || {};
+  let previous;
+  trafficEl('growthPlanningFunnel').innerHTML = [
+    ['entered', 'Mở trang có nút tra quy hoạch'], ['clicked', 'Bấm mở Maps'], ['ready', 'Bản đồ khởi tạo'],
+    ['searched', 'Gửi tra tờ/thửa hoặc tọa độ'], ['result', 'Nhận kết quả hoặc định vị được']
+  ].map(([key, label]) => {
+    const count = funnel[key] || 0;
+    const lost = previous ? trafficRatio(previous - count, previous) : '—';
+    previous = count;
+    return '<tr><th scope="row">' + label + '</th><td>' + growthFmt(count) + '</td><td>' + lost + '</td></tr>';
+  }).join('');
+  trafficEl('growthPlanningOutcomes').textContent = 'Phiên gặp lỗi mở Maps: ' + growthFmt(funnel.map_error) +
+    ' · Không tìm thấy thửa: ' + growthFmt(funnel.empty) + ' · Lỗi tra cứu: ' + growthFmt(funnel.lookup_error);
+}
+
+function exportTrafficCsv() {
+  const columns = ['path', 'views', 'previous_views', 'page_sessions', 'median_seconds', 'timed',
+    'completed', 'short', 'scroll_views', 'reached_25', 'reached_50', 'reached_75', 'reached_90', 'map_click_views'];
+  const lines = [columns.join(','), ...filteredTrafficPages().map(row => columns.map(key => row[key] ?? '').join(','))];
+  const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'radar-traffic-' + growthPeriod + '-' + growthAnchor.value + '.csv';
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function renderGrowth(data) {
@@ -2806,7 +2882,7 @@ function renderGrowth(data) {
   growthRatios.innerHTML = ratios.map(([label,value,suffix,note]) => '<article class="surface growth-ratio"><span>' + esc(label) + '</span><strong>' + (value == null ? '?' : growthFmt(value) + suffix) + '</strong><small>' + esc(note) + '</small></article>').join('');
   renderGrowthMarketing(data.marketing);
   renderGrowthBehavior(data.behavior);
-  renderPageEngagement(data.page_engagement);
+  renderTraffic(data.traffic);
   growthTableBody.innerHTML = data.series.map(row => '<tr><td>' + esc(row.label) + '</td><td>' + growthFmt(row.crawled) + '</td><td>' + growthFmt(row.signals) + '</td><td>' + growthFmt(row.unique_lots) + '</td><td>' + growthFmt(row.price_drops) + '</td><td>' + growthFmt(row.signups) + '</td><td>' + growthFmt(row.leads) + '</td></tr>').join('');
   growthEmpty.hidden = !data.series.every(row => !row.crawled && !row.signals && !row.unique_lots && !row.price_drops && !row.leads);
   ensureGrowthChartLibrary()
@@ -2818,16 +2894,40 @@ function renderGrowth(data) {
 }
 
 async function loadGrowth() {
+  const sequence = ++growthLoadSequence;
   growthError.hidden = true;
   const include = growthIncludeGuland.checked ? 1 : 0;
   try {
     const url = '/admin/api/growth?period=' + growthPeriod + '&anchor=' + encodeURIComponent(growthAnchor.value) + '&include_guland=' + include;
-    renderGrowth(await fetchJSON(url, { silent: true }));
-  } catch (error) { growthError.hidden = false; throw error; }
+    const data = await fetchJSON(url, { silent: true });
+    if (sequence === growthLoadSequence) renderGrowth(data);
+  } catch (error) {
+    if (sequence === growthLoadSequence) {
+      growthError.hidden = false;
+      throw error;
+    }
+  }
 }
 
 function initGrowth() {
-  growthAnchor.value = new Date().toLocaleDateString('en-CA');
+  const lastWeek = new Date(growthVietnamToday() + 'T00:00:00Z');
+  lastWeek.setUTCDate(lastWeek.getUTCDate() - 7);
+  growthAnchor.value = lastWeek.toISOString().slice(0, 10);
+  trafficEl('growthTrafficDays').addEventListener('click', event => {
+    const button = event.target.closest('[data-traffic-day]');
+    if (!button) return;
+    growthAnchor.value = button.dataset.trafficDay;
+    document.querySelector('[data-growth-period="day"]').click();
+  });
+  for (const id of ['growthTrafficSearch', 'growthTrafficSort']) {
+    trafficEl(id).addEventListener('input', () => {
+      growthTrafficPageIndex = 0;
+      renderTrafficPages();
+    });
+  }
+  trafficEl('growthTrafficPrev').addEventListener('click', () => { growthTrafficPageIndex--; renderTrafficPages(); });
+  trafficEl('growthTrafficNext').addEventListener('click', () => { growthTrafficPageIndex++; renderTrafficPages(); });
+  trafficEl('growthTrafficCsv').addEventListener('click', exportTrafficCsv);
   document.querySelectorAll('[data-growth-period]').forEach(button => button.addEventListener('click', () => {
     growthPeriod = button.dataset.growthPeriod;
     document.querySelectorAll('[data-growth-period]').forEach(item => item.classList.toggle('active', item === button));

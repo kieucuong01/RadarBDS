@@ -3416,6 +3416,7 @@
 
   function startMapLoad(safe) {
     var loadSequence = ++mapLoadSequence;
+    var mapReady = false;
     state.initialController = new AbortController();
     var opening = state.initialRegion ? Promise.resolve({bounds: state.initialRegion.bounds})
       : fetchJson(initialBoundsUrl(safe), state.initialController).catch(function () {return {};});
@@ -3424,11 +3425,14 @@
       state.initialBounds = result[1].bounds || null;
       initMap(result[0], state.initialBounds);
       renderMapScopeControls();
+      mapReady = true;
+      if (state.planningTheme) root.RadarUsageStep?.('map_ready');
       return requestSummary();
     }).catch(function () {
       if (!state.open || loadSequence !== mapLoadSequence) return;
       setStatus("Không thể tải thư viện bản đồ.", false);
       setPanelView("library-error");
+      if (!mapReady && state.planningTheme) root.RadarUsageStep?.('map_error');
       return undefined;
     });
   }

@@ -368,6 +368,38 @@ class AdminGrowthTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_daily_traffic_and_ordered_planning_funnel(self):
+        from db.connection import get_conn
+        from services.page_engagement import summarize_planning_funnel, summarize_traffic
+
+        with get_conn() as conn:
+            conn.execute("""CREATE TEMP TABLE user_audit_log (
+                id bigint GENERATED ALWAYS AS IDENTITY, action text, context text, created_at text
+            ) ON COMMIT DROP""")
+            def sample(at, view, step=None, **extra):
+                conn.execute(
+                    "INSERT INTO user_audit_log (action, context, created_at) VALUES ('page_engagement', ?, ?)",
+                    (json.dumps({"path": "/tin-tuc/maps" if view != "b" else "/", "view": view * 32,
+                                 "seconds": 0, "depth": -1, "closed": False, "session": "a" * 32,
+                                 "step": step, **extra}), at),
+                )
+            sample("2020-01-01T16:59:55", "z")
+            sample("2020-01-01T17:00:10", "z", seconds=15, closed=True)
+            sample("2020-01-01T18:00:00", "a", "planning_entry", session_start=True)
+            sample("2020-01-01T18:00:01", "b", "lookup_result")
+            sample("2020-01-01T18:00:03", "a", "map_click")
+            sample("2020-01-01T18:00:04", "b", "map_ready")
+            sample("2020-01-01T18:00:05", "b", "lookup_start")
+            sample("2020-01-01T18:00:06", "b", "lookup_empty")
+            previous, start, end = "2019-12-31T17:00:00", "2020-01-01T17:00:00", "2020-01-02T17:00:00"
+            traffic = summarize_traffic(conn, previous, start, end)
+            assert traffic["days"] == [{"day": "2020-01-02", "views": 2, "sessions": 1}]
+            page = next(row for row in traffic["pages"] if row["path"] == "/tin-tuc/maps")
+            assert (page["views"], page["previous_views"], page["completed"]) == (1, 1, 0)
+            funnel = summarize_planning_funnel(conn, start, end)
+            assert (funnel["entered"], funnel["clicked"], funnel["ready"], funnel["searched"]) == (1, 1, 1, 1)
+            assert (funnel["result"], funnel["empty"]) == (0, 1)
+
     def test_growth_endpoint_rejects_authenticated_non_admin(self):
         from auth.core import SESSION_COOKIE_NAME
         from db.connection import get_conn

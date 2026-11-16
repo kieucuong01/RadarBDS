@@ -150,6 +150,9 @@ success metrics for this phase.
 
 ## Existing Admin Tracking Screen
 
+For the design of daily traffic, page-level drop-off, and the weekly product review,
+see [Product usage measurement](product_usage_measurement.md).
+
 There is an admin growth panel at `/admin/tang-truong` backed by
 `/admin/api/growth`. It tracks crawl volume, signal count, unique lots, price
 drops, users, leads, and a bounded marketing-source view. The marketing object
@@ -183,15 +186,19 @@ admin-only API and follows the selected Vietnam calendar period.
   not attribute a purchase to an anonymous session or traffic channel.
 
 The page engagement table uses first-party measurements from instrumented public
-pages. Each document load has a random ID with no cross-page identity. One
+pages. Each document load has a random ID. The browser uses a separate random
+session ID for the traffic and planning funnel, rotated after 30 minutes without
+measured activity. One
 initial measurement and periodic updates use cumulative visible time, stopping
 after 60 seconds of inactivity and capped at 30 minutes per load. Tabs restored
 from browser history may continue the same measurement. A departure under 10
 seconds is measured only where the browser delivered a departure event.
 Scroll milestones apply to long article content and show the share reaching each
 depth. They indicate scroll position, not whether the reader read each paragraph.
-Time and depth are deduplicated per page load within the reporting period.
-Coverage begins with this release and excludes admin and browsers that opt out
+Traffic assigns a page view to the Vietnam date of its first received measurement.
+The URL table shows a 3,500-row combined query cap with a truncation notice.
+Session and planning counts are available only for events carrying the new ID.
+Coverage excludes admin and browsers that opt out
 via Global Privacy Control or Do Not Track.
 
 ### Measurement definitions

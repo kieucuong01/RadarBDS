@@ -97,7 +97,7 @@
       auth: "{{ url_for('static', filename='js/auth.js') }}?v=account-menu-20261020",
       authCta: "{{ url_for('static', filename='js/main/auth_cta.js') }}?v=radar-ask-launcher-20260805",
       radarAsk: "{{ url_for('static', filename='js/radar_ask.js') }}?v=radar-ask-workspace-v3",
-      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=listing-province-20261104"
+      listingMap: "{{ url_for('static', filename='js/main/listing_map.js') }}?v=20261116-traffic"
     };
     window.RADAR_STYLES = {
       modal: "{{ css_modal }}",
@@ -143,7 +143,7 @@
   <script defer src="{{ url_for('static', filename='js/main/planning_corner_scan.js') }}?v=corner-scan-20261101"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_corner_saved.js') }}?v=corner-saved-20261103"></script>
   <script defer src="{{ url_for('static', filename='js/main/planning_parcel_cells.js') }}?v=parcel-memory-20261103"></script>
-  <script defer src="{{ url_for('static', filename='js/main/planning_parcels.js') }}?v=maps-pilot-20261110"></script>
+  <script defer src="{{ url_for('static', filename='js/main/planning_parcels.js') }}?v=20261116-traffic"></script>
   {% endif %}
   {% endif %}
 </head>

@@ -9,3 +9,11 @@ def test_engagement_accepts_only_bounded_public_page_metrics():
                    {"path": "/?lat=10"}, {"seconds": 1801}, {"seconds": True},
                    {"depth": 53}, {"view": "user@example.com"}):
         assert sanitize_engagement({**sample, **change}) is None
+
+
+def test_session_context_accepts_only_known_steps_and_opaque_ids():
+    sample = {"path": "/", "view": "a" * 32, "seconds": 0, "depth": -1, "closed": False}
+    assert sanitize_engagement({**sample, "session": "name@example.com", "step": "map_ready"}) == sample
+    valid = {**sample, "session": "b" * 32, "step": "map_ready", "session_start": True}
+    assert sanitize_engagement({**valid, "address": "private"}) == valid
+    assert "step" not in sanitize_engagement({**valid, "step": "private"})

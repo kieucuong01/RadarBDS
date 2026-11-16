@@ -472,6 +472,8 @@
       var sheet = String(sheetInput.value || '').trim(), parcel = String(parcelInput.value || '').trim(), areaId = searchArea.value;
       var coordinates=searchMethod.value==='coordinates',corners=searchMethod.value==='corners';
       function trackLookup(outcome) {
+        if (!corners) env.RadarUsageStep?.(outcome === 'error' ? 'lookup_error'
+          : outcome === 'no_match' ? 'lookup_empty' : 'lookup_result');
         if (!corners && typeof env.track === 'function') {
           env.track('planning_lookup', {context:{method:coordinates ? 'coordinates' : 'parcel',outcome:outcome}});
         }
@@ -480,6 +482,7 @@
       if (!coordinates&&!corners&&(!areaId || !sheet || !parcel)) { searchStatus.textContent = 'Chọn địa bàn và nhập đủ số tờ, số thửa.'; return; }
       if(coordinates&&(!coordinateFirst.value.trim()||!coordinateSecond.value.trim())){searchStatus.textContent='Nhập đủ hai tọa độ.';return;}
       if(corners&&!String(cornerInput.value||'').trim()){searchStatus.textContent='Nhập ít nhất 3 góc ranh.';return;}
+      if (!corners) env.RadarUsageStep?.('lookup_start');
       var seq = searchSeq; searchRequest = new env.AbortController(); searchSubmit.disabled = true;
       searchStatus.textContent = corners?'Đang chuyển tọa độ và dựng ranh…':'Đang tìm thửa trong dữ liệu GIS…';busy('parcel-search',true,searchStatus.textContent);
       var query = new URLSearchParams({area: areaId, sheet: sheet, parcel: parcel});

@@ -991,8 +991,8 @@
         <div><h1>Tăng trưởng Radar BDS</h1><p>Facebook mặc định · kỳ lịch Việt Nam · so sánh kỳ trước.</p></div>
         <div class="growth-controls" aria-label="Bộ lọc tăng trưởng">
           <div class="growth-period" role="group" aria-label="Chọn kỳ">
-            <button type="button" class="segment active" data-growth-period="day">Ngày</button>
-            <button type="button" class="segment" data-growth-period="week">Tuần</button>
+            <button type="button" class="segment" data-growth-period="day">Ngày</button>
+            <button type="button" class="segment active" data-growth-period="week">Tuần</button>
             <button type="button" class="segment" data-growth-period="month">Tháng</button>
             <button type="button" class="segment" data-growth-period="year">Năm</button>
           </div>
@@ -1005,11 +1005,31 @@
       <div class="growth-kpis" id="growthKpis" aria-live="polite"></div>
       <div class="growth-ratios" id="growthRatios"></div>
       <section class="surface growth-marketing" aria-labelledby="growthPageEngagementTitle">
-        <h2 id="growthPageEngagementTitle">Người dùng đọc trang nào?</h2>
-        <p>30 trang có nhiều lượt đo nhất trong kỳ. Thời gian chỉ cộng khi tab đang hiển thị và còn trong vòng 60 giây kể từ tương tác gần nhất. Tỷ lệ rời sớm tính trên lượt có tín hiệu rời trang.</p>
+        <h2 id="growthPageEngagementTitle">Lượt truy cập và mức độ tương tác</h2>
+        <p id="growthTrafficSummary" aria-live="polite"></p>
+        <div class="growth-chart"><canvas id="growthTrafficChart" role="img" aria-label="Biểu đồ lượt xem và phiên theo ngày"></canvas></div>
         <div class="growth-marketing-table-wrap">
-          <table><thead><tr><th scope="col">Trang</th><th scope="col">Lượt mở</th><th scope="col">Thời gian TB</th><th scope="col">Rời dưới 10 giây</th><th scope="col">Mẫu có đo cuộn</th><th scope="col">Đến 25%</th><th scope="col">Đến 50%</th><th scope="col">Đến 75%</th><th scope="col">Đến 90%</th></tr></thead><tbody id="growthPageEngagement"></tbody></table>
+          <table><thead><tr><th scope="col">Ngày (giờ Việt Nam)</th><th scope="col">Lượt xem</th><th scope="col">Phiên bắt đầu</th></tr></thead><tbody id="growthTrafficDays"></tbody></table>
         </div>
+        <h3>Người dùng đọc trang nào?</h3>
+        <p>Thời gian trung vị chỉ tính lượt đủ tín hiệu. Tỷ lệ rời sớm dựa trên lượt có tín hiệu rời trang. Các mốc cuộn tính trên lượt đo được nội dung dài.</p>
+        <div class="growth-controls">
+          <label>Tìm URL <input type="search" id="growthTrafficSearch" placeholder="/tin-tuc/…"></label>
+          <label>Sắp xếp <select id="growthTrafficSort"><option value="views">Nhiều lượt xem</option><option value="short">Rời sớm nhiều</option><option value="reading">Đọc sâu nhiều</option></select></label>
+          <button type="button" id="growthTrafficCsv">Xuất CSV</button>
+        </div>
+        <div class="growth-marketing-table-wrap">
+          <table><thead><tr><th scope="col">Trang</th><th scope="col">Lượt xem</th><th scope="col">Kỳ trước</th><th scope="col">Phiên có xem</th><th scope="col">Thời gian trung vị</th><th scope="col">Rời dưới 10 giây</th><th scope="col">Đến 25%</th><th scope="col">Đến 50%</th><th scope="col">Đến 75%</th><th scope="col">Đến 90%</th><th scope="col">Lượt có bấm Maps</th></tr></thead><tbody id="growthPageEngagement"></tbody></table>
+        </div>
+        <div class="growth-controls">
+          <button type="button" id="growthTrafficPrev">Trang trước</button><span id="growthTrafficPage" aria-live="polite"></span><button type="button" id="growthTrafficNext">Trang sau</button>
+        </div>
+        <h3>Phễu bài quy hoạch đến kết quả tra cứu</h3>
+        <p>Tính phiên đã kết thúc, có bước theo đúng thứ tự. Một phiên có thể thử lại và xuất hiện ở nhiều nhóm kết quả.</p>
+        <div class="growth-marketing-table-wrap">
+          <table><thead><tr><th scope="col">Bước</th><th scope="col">Phiên tới bước</th><th scope="col">Chưa tới từ bước trước</th></tr></thead><tbody id="growthPlanningFunnel"></tbody></table>
+        </div>
+        <p id="growthPlanningOutcomes"></p>
       </section>
       <section class="surface growth-marketing" aria-labelledby="growthBehaviorTitle">
         <h2 id="growthBehaviorTitle">Hành vi, quay lại và thanh toán</h2>
@@ -1147,7 +1167,7 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/admin/facebook-crawl.js') }}?v=admin-facebook-crawl-brokers-v4-history-samples"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v56-page-engagement"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=admin-v57-traffic"></script>
   {% endif %}
 </body>
 </html>
