@@ -59,3 +59,7 @@ def test_new_planning_guides_have_canonical_and_links_from_relevant_pages():
         assert expected_cta in html
         assert f'href="{path}"' in client.get(referring_path).get_data(as_text=True)
         assert f"https://radarbds.vn{path}</loc>" in sitemap
+        if slug == "my-phuoc-thuoc-phuong-nao-sau-sap-nhap":
+            closing_section = html.split('id="tra-thua-sau-khi-doi-chieu"', 1)[1].split("</section>", 1)[0]
+            for category in ("quy-hoach-su-dung-dat", "quy-hoach-phan-khu"):
+                assert f'href="/quy-hoach-binh-duong/{category}"' in closing_section

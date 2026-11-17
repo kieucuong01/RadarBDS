@@ -26,7 +26,7 @@
     {% if page.map_examples %}
     <section class="planning-category-grid" aria-label="Tra cứu trên Maps">
       <article>
-        <h2>Thử trên bản đồ</h2>
+        <h2>{{ page.map_heading or "Thử trên bản đồ" }}</h2>
         {% for example in page.map_examples %}
         <p><a class="seo-primary-cta" href="{{ example.href }}" data-track-cta="planning_category_open_map">{{ example.label }}</a></p>
         {% endfor %}

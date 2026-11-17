@@ -34,7 +34,7 @@ PRODUCT_GUIDES = {
         ],
         "article": {
             "published_at": "2026-11-13",
-            "modified_at": "2026-11-13",
+            "modified_at": "2026-11-17",
             "illustration": {
                 "src": "/static/images/seo/ben-cat-map-after.webp",
                 "alt": "Bản đồ địa giới các phường trên địa bàn Bến Cát cũ sau sắp xếp",
@@ -56,7 +56,10 @@ PRODUCT_GUIDES = {
                 ]},
                 {"id": "tra-thua-sau-khi-doi-chieu", "heading": "Khi giấy tờ vẫn ghi địa danh cũ", "paragraphs": [
                     "Giữ địa chỉ ghi trên giấy và ghi riêng phường hiện tại đã đối chiếu. Khi dùng công cụ Tờ/thửa, chọn khu vực theo cách nguồn dữ liệu đang tổ chức và so lại hình thửa, đường vào cùng mốc thực địa.",
-                    "Với vị trí sát ranh hoặc chưa xác định rõ, mang thông tin thửa đến cơ quan có thẩm quyền để xác nhận. Địa giới trả lời thửa nằm ở địa bàn nào. Sau bước này, mở lớp quy hoạch phù hợp nếu cần kiểm tra mục đích sử dụng dự kiến.",
+                    "Với vị trí sát ranh hoặc chưa xác định rõ, mang thông tin thửa đến cơ quan có thẩm quyền để xác nhận. Sau khi xác định địa bàn, đối chiếu định hướng sử dụng đất 2030 và ô chức năng trên lớp phân khu nếu GIS có dữ liệu ở vị trí đó.",
+                ], "links": [
+                    {"label": "Tra lớp sử dụng đất 2030 ở Bến Cát–Mỹ Phước", "href": "/quy-hoach-binh-duong/quy-hoach-su-dung-dat"},
+                    {"label": "Xem lớp phân khu GIS ở Bến Cát–Mỹ Phước", "href": "/quy-hoach-binh-duong/quy-hoach-phan-khu"},
                 ]},
             ],
             "checklist": ["Có mốc nhận diện hoặc ghim tại lô đất.", "Đã so cùng vị trí trên hai lớp địa giới.", "Ghi riêng địa danh trên giấy và địa danh hiện tại."],

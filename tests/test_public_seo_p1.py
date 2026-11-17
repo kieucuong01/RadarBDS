@@ -31,6 +31,9 @@ def test_planning_category_with_map_guide_is_discoverable(slug, layer):
     assert 'noindex' not in response.headers.get('X-Robots-Tag', '')
     assert 'content="noindex, follow"' not in html
     assert f'planning={layer}' in html
+    assert 'Bến Cát–Mỹ Phước' in html
+    assert 'district=721&amp;planning=' + layer + '&amp;listings=0' in html
+    assert 'href="/tin-tuc/my-phuoc-thuoc-phuong-nao-sau-sap-nhap"' in html
     assert f'https://radarbds.vn{path}</loc>' in client.get('/sitemap.xml').get_data(as_text=True)
     assert f'href="{path}"' in client.get('/quy-hoach-binh-duong').get_data(as_text=True)
 

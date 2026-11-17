@@ -823,6 +823,21 @@ body.listing-detail-page {
           </div>
         </div>
 
+        {% if nearby_deals_href %}
+        <nav class="listing-evidence" aria-labelledby="listing-area-tools-title">
+          <h2 id="listing-area-tools-title">Kiểm tra thêm tại {{ l.get('ward') }}</h2>
+          <ul>
+            {% if planning_area_href %}
+            <li><a href="{{ planning_area_href }}">Mở quy hoạch sử dụng đất 2030 của khu vực</a> · Bản đồ mở ở điểm mẫu. Dùng ghim hoặc giấy tờ của lô để tìm đúng vị trí.</li>
+            {% endif %}
+            {% if can_compare_land_price %}
+            <li><a href="/dinh-gia-bds">So giá bằng công cụ định giá đất</a></li>
+            {% endif %}
+            <li><a href="{{ nearby_deals_href }}">Xem deal cùng khu vực {{ l.get('ward') }}</a></li>
+          </ul>
+        </nav>
+        {% endif %}
+
         {% if evidence is defined %}
         <section class="listing-evidence" aria-labelledby="listing-evidence-title">
           <h2 id="listing-evidence-title">Bằng chứng định giá</h2>

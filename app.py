@@ -92,6 +92,7 @@ from config.planning_pages import (
     PLANNING_HUB,
     PLANNING_PAGES,
     PLANNING_PAGE_LIST,
+    planning_demo_href,
 )
 from config.binh_duong_map import (
     BINH_DUONG_CURRENT_AREAS,
@@ -5737,6 +5738,12 @@ def listing_detail(listing_id):
         return "Listing not found", 404
     
     l = data["listing"]
+    ward = l.get("ward")
+    city = get_city_for_ward(ward)
+    nearby_deals_href = (
+        "/?" + urllib.parse.urlencode({"tab": "signals", "city": city, "ward": ward})
+        if city in CITY_MAP else None
+    )
     imgs = data["images"]
     history_json = json.dumps(data["history"], ensure_ascii=False)
     desc_html = l.get('description', '').replace('\n', '<br>') if l.get('description') else 'Không có mô tả.'
@@ -5753,6 +5760,9 @@ def listing_detail(listing_id):
         memo=memo,
         map_location=data.get("map_location"),
         evidence=build_listing_evidence(l, data.get("map_location")),
+        nearby_deals_href=nearby_deals_href,
+        planning_area_href=planning_demo_href(city) if city in {"THỦ DẦU MỘT", "BẾN CÁT"} else None,
+        can_compare_land_price=city in VALUATION_TOOL_CITY_MAP and l.get("property_type") == "dat_nen",
     )
 
 def api_listing_detail(listing_id):

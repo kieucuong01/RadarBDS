@@ -55,9 +55,9 @@ PLANNING_CATEGORY_PAGES = {
     "quy-hoach-su-dung-dat": {
         "path": "/quy-hoach-binh-duong/quy-hoach-su-dung-dat",
         "heading": "Bản đồ quy hoạch sử dụng đất",
-        "title": "Bản đồ quy hoạch sử dụng đất Bình Dương | Radar BDS",
+        "title": "Bản đồ quy hoạch sử dụng đất 2030 Bình Dương | Radar BDS",
         "description": (
-            "Mở lớp quy hoạch sử dụng đất 2030 ở Thủ Dầu Một và Bến Cát, "
+            "Mở lớp quy hoạch sử dụng đất 2030 ở Bến Cát–Mỹ Phước và Thủ Dầu Một, "
             "kiểm tra nguồn bản đồ và cách đối chiếu khi tra một thửa đất."
         ),
         "categories": ("landuse",),
@@ -65,17 +65,20 @@ PLANNING_CATEGORY_PAGES = {
         "sources": ("Lớp tham khảo từ Guland", "Hồ sơ công bố để đối chiếu"),
         "nav_label": "QHSDĐ",
         "nav_description": "Quy hoạch sử dụng đất",
-        "updated_at": "2026-11-13",
+        "updated_at": "2026-11-17",
+        "map_heading": "Tra quy hoạch sử dụng đất 2030 tại Bến Cát–Mỹ Phước",
         "map_examples": (
-            {"label": "Mở sử dụng đất 2030 ở Thủ Dầu Một", "href": planning_demo_href("THỦ DẦU MỘT")},
             {"label": "Mở sử dụng đất 2030 ở Bến Cát", "href": planning_demo_href("BẾN CÁT")},
+            {"label": "Mở sử dụng đất 2030 ở Thủ Dầu Một", "href": planning_demo_href("THỦ DẦU MỘT")},
         ),
         "map_notes": (
-            "Lớp sử dụng đất 2030 trên Radar dùng ảnh bản đồ tham khảo từ Guland. Bắt đầu bằng việc tìm đúng vị trí và giảm độ hiển thị để nhìn đường, công trình và mốc trên nền vệ tinh.",
+            "Dùng lớp sử dụng đất 2030 để đọc định hướng sử dụng đất tại vị trí đang xem. Bản đồ mở ở điểm mẫu tại Bến Cát. Nếu đang xem một lô tại Mỹ Phước, hãy tìm lại ghim của lô và giảm độ hiển thị lớp phủ để so với nền vệ tinh.",
             "Nếu chỉ thấy mảng màu mà thiếu chú giải của đúng bản đồ, hãy ghi lại vị trí để tra nguồn gốc. Khi đã có số tờ/thửa, kiểm tra địa bàn và hình thửa rồi mới đọc lớp phủ.",
             "Khi vùng cần xem trống, kiểm tra lớp đã bật, độ phóng và phạm vi nguồn. Để xác minh một thửa, đối chiếu hồ sơ công bố áp dụng cho chính vị trí đó.",
         ),
         "guide_links": (
+            {"label": "Mỹ Phước thuộc phường nào sau sáp nhập?", "href": "/tin-tuc/my-phuoc-thuoc-phuong-nao-sau-sap-nhap"},
+            {"label": "Đọc lớp phân khu GIS tại cùng điểm mẫu Bến Cát", "href": "/quy-hoach-binh-duong/quy-hoach-phan-khu"},
             {"label": "Cách so lớp sử dụng đất 2030 và phân khu tại cùng vị trí", "href": "/tin-tuc/cach-doc-ban-do-su-dung-dat-2030-va-quy-hoach-phan-khu"},
             {"label": "Tra quy hoạch theo số tờ, số thửa hoặc tọa độ", "href": "/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do"},
         ),
@@ -114,7 +117,7 @@ PLANNING_CATEGORY_PAGES = {
         "heading": "Bản đồ quy hoạch phân khu",
         "title": "Bản đồ quy hoạch phân khu Bình Dương | Radar BDS",
         "description": (
-            "Mở bản đồ quy hoạch phân khu GIS ở Bến Cát, đọc chú giải ô chức năng "
+            "Mở bản đồ quy hoạch phân khu GIS tại Bến Cát, đối chiếu vị trí ở Mỹ Phước, đọc chú giải ô chức năng "
             "và biết cách kiểm tra khi ranh quy hoạch chạy sát thửa đất."
         ),
         "categories": ("industrial",),
@@ -122,16 +125,19 @@ PLANNING_CATEGORY_PAGES = {
         "sources": ("GIS quy hoạch TP.HCM", "Chú giải và bản vẽ theo từng nguồn"),
         "nav_label": "Quy hoạch phân khu",
         "nav_description": "Phân khu đô thị và chức năng",
-        "updated_at": "2026-11-13",
+        "updated_at": "2026-11-17",
+        "map_heading": "Xem quy hoạch phân khu tại Bến Cát–Mỹ Phước",
         "map_examples": (
             {"label": "Mở lớp phân khu GIS ở Bến Cát", "href": planning_demo_href("BẾN CÁT", "partition")},
         ),
         "map_notes": (
-            "Mở điểm mẫu gần đường Ngô Quyền và Quốc lộ 13 ở Bến Cát. Giữ nguyên vị trí khi tắt lớp sử dụng đất và bật lớp Quy hoạch phân khu để đọc từng lớp.",
+            "Dùng lớp phân khu để xem vị trí nằm trong ô chức năng nào theo bản vẽ GIS đang hiển thị. Nút bên trên mở điểm mẫu gần đường Ngô Quyền và Quốc lộ 13 ở Bến Cát. Hãy tìm ghim của lô tại Mỹ Phước rồi kiểm tra lớp GIS có dữ liệu ngay tại ghim đó.",
             "Dùng Ký hiệu các loại đất và chọn nhóm Quy hoạch phân khu. Nếu đã chọn nguồn bản vẽ riêng, đọc chú giải của bản vẽ đó. Ghi lại tên lớp, nguồn và vị trí trước khi chia sẻ ảnh.",
             "Khi ranh ô chức năng chạy sát thửa, kiểm tra lại ranh thửa và đối chiếu hồ sơ áp dụng. Phạm vi dữ liệu GIS thay đổi theo địa bàn và từng lớp.",
         ),
         "guide_links": (
+            {"label": "Mỹ Phước thuộc phường nào sau sáp nhập?", "href": "/tin-tuc/my-phuoc-thuoc-phuong-nao-sau-sap-nhap"},
+            {"label": "Đối chiếu lớp sử dụng đất 2030 tại Bến Cát", "href": "/quy-hoach-binh-duong/quy-hoach-su-dung-dat"},
             {"label": "Cách kiểm tra khi một góc thửa chạm vùng quy hoạch", "href": "/tin-tuc/ranh-thua-chong-lop-quy-hoach-can-kiem-tra-gi"},
             {"label": "Cổng tra cứu quy hoạch TP.HCM", "href": "https://gisxaydung.tphcm.gov.vn/tracuuttqh"},
         ),

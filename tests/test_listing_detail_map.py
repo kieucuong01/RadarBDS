@@ -1,4 +1,7 @@
 from unittest import mock
+from urllib.parse import parse_qs, urlsplit
+from html import unescape
+import re
 
 
 class _Result:
@@ -177,3 +180,23 @@ def test_listing_detail_api_serializes_map_location():
 
     assert response.status_code == 200
     assert response.get_json()["map_location"] == location
+
+
+def test_listing_detail_links_to_matching_area_tools_without_requiring_coordinates(monkeypatch):
+    import app as app_module
+
+    listing = _listing_row(ward="Mỹ Phước")
+    monkeypatch.setattr(app_module, "load_listing_detail", lambda *args, **kwargs: {
+        "listing": listing, "images": [], "history": [], "map_location": None,
+    })
+    client = app_module.app.test_client()
+    html = client.get("/listing/42").get_data(as_text=True)
+    section = html.split('aria-labelledby="listing-area-tools-title"', 1)[1].split("</nav>", 1)[0]
+    planning, valuation, deals = [urlsplit(unescape(href)) for href in re.findall(r'href="([^"]+)"', section)]
+    assert parse_qs(planning.fragment)["district"] == ["721"]
+    assert parse_qs(planning.fragment)["listings"] == ["0"]
+    assert valuation.path == "/dinh-gia-bds"
+    assert parse_qs(deals.query) == {"tab": ["signals"], "city": ["BẾN CÁT"], "ward": ["Mỹ Phước"]}
+
+    listing["ward"] = "Chưa rõ"
+    assert 'aria-labelledby="listing-area-tools-title"' not in client.get("/listing/42").get_data(as_text=True)
