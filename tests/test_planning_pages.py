@@ -120,7 +120,8 @@ def test_planning_hub_cards_use_unique_previews_and_explicit_dashboard_labels():
     assert 'width="480"' in html
     assert 'height="300"' in html
     assert html.count("Xem tin Thủ Dầu Một") == 2
-    assert html.count("Xem tin Bến Cát") == 2
+    assert html.count("Xem tin Bến Cát") == 1
+    assert html.count("Xem deal tại Bến Cát") == 1
     assert html.count("Xem toàn bộ tin") == 1
     for page in PLANNING_PAGE_LIST:
         assert f'data-planning-slug="{page["slug"]}"' in html
