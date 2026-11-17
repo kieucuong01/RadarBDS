@@ -71,7 +71,7 @@
             <div class="bd-map-hero-actions tdm-product-hero-actions">
               <a class="seo-button seo-button-primary" href="#ban-do-tuong-tac" data-track-cta="{{ page.tracking_prefix }}_hero_map">Mở bản đồ miễn phí</a>
               <a class="seo-button seo-button-secondary" href="{{ page.planning_selection_href or page.planning_href }}" data-track-cta="{{ page.tracking_prefix }}_planning_map">Xem QH sử dụng đất 2030</a>
-              <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="{{ page.tracking_prefix }}_hero_dashboard">{{ page.dashboard_label }}</a>
+              <a class="seo-button seo-button-secondary" href="{{ dashboard_signal_href }}" data-track-cta="{{ page.tracking_prefix }}_hero_dashboard">{% if page.planning_selection_href %}Xem deal tại {{ page.city_name }}{% else %}{{ page.dashboard_label }}{% endif %}</a>
             </div>
           </div>
         </div>

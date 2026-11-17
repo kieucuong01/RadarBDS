@@ -3383,6 +3383,8 @@ def _with_public_trust(page: dict, page_type: str) -> dict:
 
 
 def _render_public_page(page: dict):
+    from services.data_price_seo import published_price_href
+
     page = dict(page)
     if page.get("variant") == "report":
         page.update({"report_pdf_href": pdf_download_href(page),
@@ -3432,6 +3434,9 @@ def _render_public_page(page: dict):
         }
     if page.get("variant") == "report":
         page = prepare_buyer_report(page, pages=SEO_PAGES)
+    if not page.get("report_pdf_export"):
+        price_scope = page.get("scope_label") if page.get("variant") == "report" else page.get("lead_scope_label")
+        page["asking_price_href"] = published_price_href(price_scope)
     page = _with_public_trust(
         page,
         "report" if page.get("variant") == "report" else "location" if page.get("live_ward") else "landing",
@@ -4200,6 +4205,8 @@ def seo_tdm_ward_redirect(ward_slug: str):
 
 
 def seo_article_page(slug):
+    from services.data_price_seo import published_price_href
+
     page = SEO_ARTICLES.get(slug)
     if not page or not is_public_article(page):
         abort(404)
@@ -4211,6 +4218,9 @@ def seo_article_page(slug):
             target = f"{target}?{query}"
         return redirect(target, code=301)
     page = dict(page)
+    if slug.startswith("gia-dat-"):
+        scope = page.get("scope_label") or ""
+        page["asking_price_href"] = published_price_href(scope.removeprefix("Thủ Dầu Một · "))
     if page.get("news"):
         page["news"] = news_metadata(page)
     page["breadcrumbs"] = _page_breadcrumbs(page)

@@ -118,6 +118,9 @@
         </div>
         {% endif %}
 
+        {% if page.asking_price_href %}
+        <p><a href="{{ page.asking_price_href }}" data-track-cta="report_open_asking_prices">Xem bảng giá rao đất nền {{ page.scope_label }}</a> · Đối chiếu ngày chốt mẫu với kỳ báo cáo này.</p>
+        {% endif %}
         {% if page.report.trend_intro or page.report.trend_rows %}
         <div class="section-heading report-table-heading">
           <p class="seo-eyebrow">Xu hướng giá</p>

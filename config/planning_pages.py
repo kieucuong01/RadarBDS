@@ -274,17 +274,19 @@ PLANNING_PAGES = {
             "không phải ranh lộ giới hoặc bản trích quy hoạch từng thửa. Muốn kiểm tra "
             "một bất động sản, mở Maps quy hoạch và đối chiếu đúng vị trí, lớp và nguồn dữ liệu."
         ),
-        "planning_href": "/?tab=all&map=1&planning=land_use_2030&city=B%E1%BA%BEN%20C%C3%81T",
+        "planning_href": planning_demo_href("BẾN CÁT"),
+        "planning_link_label": "Mở QHSDĐ 2030 tại Bến Cát",
+        "map_jump_label": "Xem hướng tuyến Mỹ Phước – Tân Vạn",
         "summary": "Trục công nghiệp - logistics từ Bàu Bàng/Mỹ Phước về Tân Vạn, kèm lớp KCN và vùng đọc tin rao.",
         "thumbnail_label": "MPTV",
         "thumbnail_path": "/static/maps/planning/previews/duong-my-phuoc-tan-van.svg",
         "map_label": "Bàu Bàng - Mỹ Phước - Tân Vạn",
         "read_time": "6 phút đọc",
-        "updated_at": PLANNING_UPDATED_AT,
-        "updated_label": PLANNING_UPDATED_LABEL,
+        "updated_at": "2026-11-17",
+        "updated_label": "17/11/2026",
         "geojson_path": "/static/maps/planning/duong-my-phuoc-tan-van.geojson",
         "dashboard_href": "/?tab=signals&city=Bến%20Cát",
-        "dashboard_label": "Xem tin Bến Cát",
+        "dashboard_label": "Xem deal tại Bến Cát",
         "areas": ["Bàu Bàng", "Mỹ Phước", "Bến Cát", "Tân Vạn"],
         "source_badge": "Nguồn: Quyết định 790/QĐ-TTg",
         "source_links": [

@@ -59,3 +59,21 @@ def test_new_planning_guides_have_canonical_and_links_from_relevant_pages():
         assert expected_cta in html
         assert f'href="{path}"' in client.get(referring_path).get_data(as_text=True)
         assert f"https://radarbds.vn{path}</loc>" in sitemap
+
+
+def test_my_phuoc_tan_van_distinguishes_route_preview_from_land_use_map():
+    from config.planning_pages import PLANNING_PAGES
+
+    page = PLANNING_PAGES["duong-my-phuoc-tan-van"]
+    response = radar_app.app.test_client().get(page["path"])
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert 'href="#ban-do-tuyen"' in html
+    assert html.index('id="ban-do-tuyen"') < html.index('planning-priority-proof')
+    assert "Mở QHSDĐ 2030 tại Bến Cát" in html
+    query = parse_qs(urlsplit(page["planning_href"]).query)
+    state = parse_qs(urlsplit(page["planning_href"]).fragment)
+    assert query["city"] == ["BẾN CÁT"]
+    assert state["planning"] == ["land_use_2030"]
+    assert state["district"] == ["721"]
+    assert state["listings"] == ["0"]

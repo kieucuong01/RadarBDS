@@ -51,18 +51,20 @@
             <span>{{ page.read_time }}</span>
           </div>
           <p class="planning-quick-answer">{{ page.hero_text }}</p>
+          {% if page.map_jump_label %}
+          <p><a class="seo-button seo-button-primary" href="#ban-do-tuyen">{{ page.map_jump_label }}</a></p>
+          {% endif %}
           {% if page.planning_href %}
-          <p><a class="seo-button seo-button-primary" href="{{ page.planning_href }}" data-track-cta="planning_detail_open_maps">Đối chiếu quy hoạch trên Maps</a> · <a href="/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do">Cách tra tờ/thửa và tọa độ</a></p>
+          <p><a class="seo-button {{ 'seo-button-secondary' if page.map_jump_label else 'seo-button-primary' }}" href="{{ page.planning_href }}" data-track-cta="planning_detail_open_maps">{{ page.planning_link_label or "Đối chiếu quy hoạch trên Maps" }}</a> · <a href="/tin-tuc/cach-tra-cuu-quy-hoach-theo-so-to-so-thua-toa-do">Cách tra tờ/thửa và tọa độ</a></p>
           {% endif %}
         </div>
       </header>
 
-      <div class="seo-shell planning-priority-proof">{% include "partials/traffic_priority_proof.html" %}</div>
-
-      <section class="seo-shell planning-map-section" aria-label="Bản đồ tương tác">
+      <section id="ban-do-tuyen" class="seo-shell planning-map-section" aria-label="Bản đồ tương tác">
         <div class="planning-source-strip">
           <strong>Thông tin tham khảo.</strong>
           <span>Không thay thế tra cứu pháp lý thửa đất, bản đồ quy hoạch chi tiết hoặc văn bản thu hồi đất.</span>
+          {% if page.map_jump_label and page.source_links %}<a href="{{ page.source_links[0].href }}">{{ page.source_links[0].label }}</a>{% endif %}
         </div>
         <div class="planning-map-panel" data-planning-map-panel>
           <div class="planning-map-topbar">
@@ -94,6 +96,8 @@
           </div>
         </div>
       </section>
+
+      <div class="seo-shell planning-priority-proof">{% include "partials/traffic_priority_proof.html" %}</div>
 
       <section class="seo-shell planning-impact-grid" aria-label="Tóm tắt tác động">
         {% for card in page.impact_cards %}

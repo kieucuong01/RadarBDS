@@ -45,6 +45,9 @@
         {% endif %}
         <section class="article-intro" aria-label="Mở đầu">
           {% for paragraph in page.article.intro %}<p>{{ paragraph }}</p>{% endfor %}
+          {% if page.asking_price_href %}
+          <p><a href="{{ page.asking_price_href }}" data-track-cta="article_open_asking_prices">Xem bảng giá rao đất nền theo tháng</a> để đối chiếu kỳ dữ liệu và số mẫu của khu vực.</p>
+          {% endif %}
         </section>
         {% if page.map_demos %}
         <section class="article-related" aria-label="Thử trực tiếp trên Maps">

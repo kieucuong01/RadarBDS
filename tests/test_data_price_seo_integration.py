@@ -69,3 +69,27 @@ def test_actual_sitemap_includes_only_validated_price_entries(monkeypatch):
     assert xml.count('<loc>https://radarbds.vn/gia-dat/phu-loi</loc>')==1
     assert '<lastmod>2026-10-21</lastmod>' in xml
     assert '/gia-dat/Other' not in xml
+
+
+def test_public_editorial_and_market_links_require_an_eligible_exact_price_scope(monkeypatch):
+    import app as radar_app
+    from services import data_price_seo
+
+    eligible = {"thu-dau-mot", "phu-loi"}
+    monkeypatch.setattr(data_price_seo, "sitemap_entries", lambda: [
+        {"path": f"/gia-dat/{slug}"} for slug in eligible
+    ])
+    client = radar_app.app.test_client()
+    pages = {
+        "/binh-duong/thu-dau-mot": "thu-dau-mot",
+        "/binh-duong/phuong-phu-loi": "phu-loi",
+        "/tin-tuc/gia-dat-phu-loi-hien-bao-nhieu": "phu-loi",
+        "/bao-cao/phu-loi-thang-06-2026": "phu-loi",
+    }
+    for path, slug in pages.items():
+        assert f'href="/gia-dat/{slug}"' in client.get(path).get_data(as_text=True)
+    assert 'href="/gia-dat/hoa-phu"' not in client.get("/binh-duong/phuong-hoa-phu").get_data(as_text=True)
+    eligible.remove("phu-loi")
+    for path, slug in pages.items():
+        if slug == "phu-loi":
+            assert 'href="/gia-dat/phu-loi"' not in client.get(path).get_data(as_text=True)

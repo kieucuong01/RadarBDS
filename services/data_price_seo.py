@@ -306,6 +306,15 @@ def sitemap_entries(root=None):
             for slug,snapshot in selected.items() if snapshot['scopes'][slug]['eligible']]
 
 
+def published_price_href(scope_name):
+    """Link only to the exact scope served by an eligible snapshot."""
+    slug = next((slug for slug, scope in SCOPES.items() if scope['name'] == scope_name), None)
+    if slug is None:
+        return None
+    path = f'/gia-dat/{slug}'
+    return next((entry['path'] for entry in sitemap_entries() if entry['path'] == path), None)
+
+
 def load_public_cards(slug):
     from services.market_data import load_signals
     from db.connection import get_conn

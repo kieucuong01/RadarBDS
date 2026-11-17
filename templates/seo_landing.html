@@ -234,6 +234,9 @@
             </div>
             <p>Dữ liệu tổng hợp từ tin rao công khai; có ngày truy vấn và phương pháp trên từng trang.</p>
           </div>
+          {% if page.asking_price_href %}
+          <p><a href="{{ page.asking_price_href }}" data-track-cta="market_open_asking_prices">Xem giá rao đất nền {{ page.lead_scope_label }}</a> · Trung vị, khoảng giá và số mẫu trong kỳ.</p>
+          {% endif %}
         </div>
       </div>
     </section>
@@ -755,7 +758,8 @@
         if (!link) return;
         const isCta = link.classList.contains('seo-button') ||
           link.classList.contains('seo-nav-cta') ||
-          link.classList.contains('dashboard-preview-frame');
+          link.classList.contains('dashboard-preview-frame') ||
+          link.hasAttribute('data-track-cta');
         if (!isCta) return;
         const section = link.closest('section, header, footer');
         sendRadarEvent('cta_clicked', {

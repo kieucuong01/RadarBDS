@@ -381,6 +381,8 @@ _BEN_CAT = _page(
     ),
 )
 _BEN_CAT.update(
+    updated_at="2026-11-14",
+    updated_label="14/11/2026",
     title="Bản đồ Bến Cát trước và sau sáp nhập 2025 | Radar BDS",
     description=(
         "Xem miễn phí bản đồ 8 xã, phường cũ và 6 phường hiện tại của Bến Cát. "
