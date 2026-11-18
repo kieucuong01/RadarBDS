@@ -4084,6 +4084,13 @@ def legal_document_pdf(slug: str):
 
 
 _LEGACY_KNOWLEDGE_REDIRECTS = {
+    "ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra": "/ban-dat-binh-duong",
+    "dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia": (
+        "/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat"
+    ),
+    "gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026": (
+        "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay"
+    ),
     "dat-binh-duong-vi-sao-khong-nen-so-gia-toan-tinh-truoc-khi-loc-tin": (
         "/tin-tuc/cach-xem-gia-dat-binh-duong-khong-bi-so-sai"
     ),
@@ -4157,6 +4164,9 @@ def seo_report_or_article_page(report_slug: str):
 
 
 _LEGACY_NEWS_REDIRECTS = {
+    "5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duongV": (
+        "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong"
+    ),
     "gia-dat-phu-my-thu-dau-mot-cap-nhat-thang-7-2026": "/tin-tuc/gia-dat-phu-my-hien-bao-nhieu",
     "gia-dat-hiep-an-thu-dau-mot-cap-nhat-thang-7-2026": "/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu",
     "gia-rao-k": "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao",

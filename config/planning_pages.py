@@ -250,6 +250,7 @@ PLANNING_PAGES = {
             {"label": "Mỹ Phước - Tân Vạn", "href": "/quy-hoach-binh-duong/duong-my-phuoc-tan-van"},
             {"label": "Quốc lộ 13", "href": "/quy-hoach-binh-duong/quoc-lo-13"},
             {"label": "Giá nhà đất Thủ Dầu Một", "href": "/binh-duong/thu-dau-mot"},
+            {"label": "Tra phường cũ và mới tại Dĩ An", "href": "/ban-do-di-an"},
         ],
         "faq": [
             _faq("Bản đồ Vành đai 3 trên Radar BDS có phải bản đồ pháp lý không?", "Không. Đây là lớp minh họa tham khảo để đọc tin rao và định hướng kiểm tra. Người dùng cần tra cứu hồ sơ quy hoạch, ranh thu hồi và pháp lý thửa đất tại cơ quan có thẩm quyền."),

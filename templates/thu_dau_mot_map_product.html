@@ -197,6 +197,15 @@
           <a href="/tin-tuc/my-phuoc-thuoc-phuong-nao-sau-sap-nhap">Cách xác định phường hiện tại theo vị trí lô đất</a> ·
           <a href="https://congbao.chinhphu.vn/tai-ve-van-ban-so-1685-nq-ubtvqh15-45141-56880?format=pdf">Nghị quyết 1685/NQ-UBTVQH15, khoản 94–95</a>
         </div>
+      {% elif page.city_slug == "di-an" %}
+        <div class="planning-source-strip bd-map-map-note">
+          <strong>Tân Đông Hiệp cũ nay thuộc phường nào?</strong>
+          <p>Một phần phường Tân Đông Hiệp cũ thuộc phường Dĩ An. Phần còn lại thuộc phường Tân Đông Hiệp hiện nay. Nếu địa chỉ chỉ ghi tên phường cũ, hãy dùng mốc đường hoặc vị trí cụ thể để đối chiếu hai lớp ranh.</p>
+          <a href="#layer-legacy/area-tan-dong-hiep">Hiện ranh Tân Đông Hiệp cũ</a> ·
+          <a href="#layer-current/area-di-an">Hiện ranh phường Dĩ An</a> ·
+          <a href="#layer-current/area-tan-dong-hiep">Hiện ranh Tân Đông Hiệp hiện nay</a> ·
+          <a href="https://congbao.chinhphu.vn/van-ban/nghi-quyet-so-1685-nq-ubtvqh15-45141/56880.htm">Nghị quyết 1685/NQ-UBTVQH15, Điều 1 khoản 80–81</a>
+        </div>
       {% endif %}
     </section>
 
@@ -462,6 +471,9 @@
       <div>
         <h2>{{ page.dashboard_heading }}</h2>
         <p>{{ page.dashboard_text }}</p>
+        {% if page.city_slug == "thu-dau-mot" %}
+        <p><a href="/bao-cao" data-track-cta="thu_dau_mot_map_monthly_reports">Báo cáo giá rao và nguồn cung nhà đất theo tháng</a></p>
+        {% endif %}
       </div>
       <a class="seo-button seo-button-primary" href="{{ dashboard_signal_href }}" data-product-dashboard data-track-cta="{{ page.tracking_prefix }}_dashboard">{{ page.dashboard_label }}</a>
     </section>

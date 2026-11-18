@@ -406,6 +406,31 @@ def test_truncated_gia_rao_news_url_redirects_to_canonical_article():
     assert response.headers["Location"] == "/tin-tuc/gia-rao-khac-gia-giao-dich-the-nao"
 
 
+def test_search_console_old_article_urls_redirect_to_matching_public_content():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    for old, current in (
+        ("/kien-thuc/ban-dat-binh-duong-cach-loc-tin-dang-kiem-tra", "/ban-dat-binh-duong"),
+        (
+            "/kien-thuc/dat-my-phuoc-binh-duong-cach-tach-my-phuoc-1-2-3-de-khong-so-sai-gia",
+            "/tin-tuc/my-phuoc-1-2-3-khac-nhau-the-nao-khi-xem-gia-dat",
+        ),
+        (
+            "/kien-thuc/gia-dat-tan-an-thu-dau-mot-cap-nhat-thang-7-2026",
+            "/tin-tuc/gia-dat-tan-an-thu-dau-mot-hien-nay",
+        ),
+        (
+            "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duongV",
+            "/tin-tuc/5-buoc-kiem-tra-gia-rao-truoc-khi-di-xem-dat-binh-duong",
+        ),
+    ):
+        response = client.get(f"{old}?utm_source=google")
+        assert response.status_code == 301
+        assert response.headers["Location"] == f"{current}?utm_source=google"
+        assert client.get(current).status_code == 200
+
+
 def test_legacy_knowledge_phu_my_url_redirects_to_current_news_article():
     import app as radar_app
 

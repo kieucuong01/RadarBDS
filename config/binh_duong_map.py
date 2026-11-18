@@ -239,6 +239,7 @@ BINH_DUONG_MAP_PAGE = {
     "related_links": [
         {"label": "Thư viện bản đồ quy hoạch Bình Dương", "href": "/quy-hoach-binh-duong"},
         {"label": "Bản đồ địa giới 36 phường xã", "href": "/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu"},
+        {"label": "Đối chiếu ranh phường Dĩ An trước và sau sáp nhập", "href": "/ban-do-di-an"},
         {"label": "Nhà đất Bình Dương", "href": "/binh-duong"},
     ],
     "faq": [

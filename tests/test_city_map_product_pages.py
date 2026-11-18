@@ -59,6 +59,18 @@ def test_ben_cat_search_snippet_and_boundary_links():
         assert f'href="#layer-{boundary}"' in html
 
 
+def test_di_an_lookup_example_links_both_present_day_boundaries():
+    import app as radar_app
+
+    client = radar_app.app.test_client()
+    html = client.get("/ban-do-di-an").get_data(as_text=True)
+    assert "Tân Đông Hiệp cũ nay thuộc phường nào?" in html
+    for boundary in ("legacy/area-tan-dong-hiep", "current/area-di-an", "current/area-tan-dong-hiep"):
+        assert f'href="#layer-{boundary}"' in html
+    province = client.get("/ban-do-binh-duong").get_data(as_text=True)
+    assert 'Đối chiếu ranh phường Dĩ An trước và sau sáp nhập' in province
+
+
 @pytest.mark.parametrize(
     (
         "path",

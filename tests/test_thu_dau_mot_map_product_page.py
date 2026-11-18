@@ -459,7 +459,7 @@ def test_product_page_targets_free_lookup_intent_before_paid_bundle():
     visible_text = _visible_body_text(html)
 
     assert (
-        "<title>Bản đồ Thủ Dầu Một: tra phường cũ, mới và mở Maps quy hoạch | Radar BDS</title>"
+        "<title>Bản đồ Thủ Dầu Một trước và sau sáp nhập 2025 | Radar BDS</title>"
         in html
     )
     assert "<h1>Bản đồ TP Thủ Dầu Một trước và sau sáp nhập</h1>" in html
@@ -469,6 +469,7 @@ def test_product_page_targets_free_lookup_intent_before_paid_bundle():
     assert "TP Thủ Dầu Một hiện có 2 lớp tra cứu" in visible_text
     assert "14 phường cũ" in visible_text
     assert "5 phường hiện tại" in visible_text
+    assert 'href="/bao-cao" data-track-cta="thu_dau_mot_map_monthly_reports"' in html
     assert "Radar BDS chỉ mở bán" not in visible_text
     assert "Trong khi bộ bản đồ chưa mở bán" not in visible_text
 

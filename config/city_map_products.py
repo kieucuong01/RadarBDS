@@ -278,6 +278,14 @@ _THU_DAU_MOT = _page(
         "Khu vực trung tâm hành chính và thị trường nhà đất lõi của Bình Dương cũ."
     ),
 )
+_THU_DAU_MOT.update(
+    title="Bản đồ Thủ Dầu Một trước và sau sáp nhập 2025 | Radar BDS",
+    description=(
+        "Xem bản đồ 14 phường cũ và 5 phường hiện tại của Thủ Dầu Một. "
+        "Chuyển giữa hai lớp để đối chiếu địa chỉ cũ, ví dụ Hiệp Thành với "
+        "phường Thủ Dầu Một và Phú Lợi."
+    ),
+)
 
 _THUAN_AN = _page(
     city_slug="thuan-an",
@@ -346,6 +354,13 @@ _DI_AN = _page(
     city_context=(
         "Cửa ngõ phía nam của Bình Dương cũ, kết nối trực tiếp Thủ Đức, Đồng "
         "Nai, ga Sóng Thần và các khu công nghiệp lâu năm."
+    ),
+)
+_DI_AN.update(
+    title="Bản đồ Dĩ An trước và sau sáp nhập 2025 | Radar BDS",
+    description=(
+        "Xem ranh 7 phường cũ và 3 phường hiện tại của Dĩ An. "
+        "Đối chiếu Tân Đông Hiệp cũ với phường Dĩ An và Tân Đông Hiệp sau sắp xếp."
     ),
 )
 
