@@ -106,7 +106,8 @@ def verify_live(month: int, year: int) -> int:
     print("\n### Verify live URLs + report structure")
     for path in paths:
         status, html = http_html(path)
-        cards = html.count('class="buyer-example"') if 'data-buyer-report="v1"' in html else html.count("report-signal-card")
+        buyer_report = 'data-buyer-report="v1"' in html
+        cards = html.count('class="buyer-example"') if buyer_report else html.count("report-signal-card")
         canvases = html.count("<canvas")
         filtered = "/?tab=signals" in html and "city=TH" in html
         inline_links = html.count("report-inline-links")
@@ -123,11 +124,19 @@ def verify_live(month: int, year: int) -> int:
             )
             child_links = [href for href in child_links if "bds-binh-duong" not in href]
             has_child_section = "Tổng hợp 13 báo cáo phường Thủ Dầu Một" in html
+            # Buyer v1 renders up to six saved comparison examples on BOTH
+            # master and ward pages (prepare_buyer_report: examples[:6]).
+            # Legacy masters still must not contain ward signal cards.
+            master_cards_ok = cards == 0 or (
+                buyer_report
+                and 0 <= cards <= 6
+                and 'data-track-cta="report_buyer_current"' in html
+            )
             ok = (
                 status == "200"
                 and has_pdf
                 and charts_match
-                and cards == 0
+                and master_cards_ok
                 and filtered
                 and seo_links >= 1
                 and has_child_section
@@ -135,7 +144,8 @@ def verify_live(month: int, year: int) -> int:
             )
             print(
                 f"- {path}: {status} canvas={canvases} child_links={len(child_links)} "
-                f"seo={seo_links} filtered_cta={filtered} ok={ok}"
+                f"seo={seo_links} filtered_cta={filtered} cards={cards} "
+                f"cards_ok={master_cards_ok} pdf={has_pdf} charts_match={charts_match} ok={ok}"
             )
             if not ok:
                 bad.append((path, status, canvases, cards, filtered, seo_links, len(child_links)))
@@ -156,7 +166,7 @@ def verify_live(month: int, year: int) -> int:
             )
             print(
                 f"- {path}: {status} canvas={canvases} cards={cards}/6 inline={inline_links} "
-                f"seo={seo_links} filtered_cta={filtered} ok={ok}"
+                f"seo={seo_links} filtered_cta={filtered} pdf={has_pdf} charts_match={charts_match} ok={ok}"
             )
             if not ok:
                 bad.append((path, status, canvases, cards, filtered, inline_links, seo_links))
