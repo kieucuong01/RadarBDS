@@ -1041,7 +1041,25 @@ def extract_road_type(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", text or "")
     t = normalized.lower()
     folded = _ascii_fold(normalized)
-    if re.search(r'(?:^|\b)(?:dat|nha|ban)?\s*\d+\s*/\s*[a-z]', folded[:500]):
+    # Existing asphalt frontage can override only weak slash/car-access guesses.
+    # Keep concrete/earth, explicit alleys and nearby/planned main roads intact.
+    explicit_asphalt = not re.search(
+        r'be\s*tong|duong\s+dat|dat\s+hien\s+huu|(?:ba|3)\s*gac|'
+        r'xe\s*may|hem\s*nho|duong\s*nho\s*hep|'
+        r'\bhem\s*(?:oto|o\s*to|xe\s*hoi)\b|'
+        r'\b(?:mtkd|mt\s*kd|mat\s*tien\s*kinh\s*doanh)\b', folded,
+    ) and any(
+        not re.search(
+            r'(?:\b(?:gan|cach|sat|ke|tu|ra|nhanh|hem|ngo|loi|du\s+kien|quy\s+hoach)'
+            r'(?:\s+ben)?(?:\s+(?:mat\s+tien|truc))?|\d+\s*/)\s*$', folded[:m.start()],
+        ) and not re.match(
+            r'\s*(?:lon\s*|\d+(?:[,.]\d+)?\s*m\s*)?cach\b|'
+            r'[^.;\n]{0,30}\b(?:du\s+kien|quy\s+hoach|ben\s+ngoai)\b',
+            folded[m.end():],
+        )
+        for m in re.finditer(r'\bduong\s+nhua\b', folded)
+    )
+    if not explicit_asphalt and re.search(r'(?:^|\b)(?:dat|nha|ban)?\s*\d+\s*/\s*[a-z]', folded[:500]):
         return 'be_tong'
     if re.search(r'(?:duong|hem|ngo|loi)\s*(?:ba|3)\s*gac|(?:ba|3)\s*gac', folded):
         return 'hem_ba_gac'
@@ -1056,6 +1074,8 @@ def extract_road_type(text: str) -> str:
             for m in concrete_roads
         ):
             return 'be_tong'
+        if explicit_asphalt:
+            return 'duong_nhua'
         return 'hem_xe_hoi'
     if re.search(r'\b(?:mtkd|mt\s*kd|mat\s*tien\s*kinh\s*doanh)\b', folded):
         return 'mat_tien_kinh_doanh'

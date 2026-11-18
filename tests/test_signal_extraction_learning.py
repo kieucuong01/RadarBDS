@@ -1048,3 +1048,145 @@ def test_review_nov05_land_total_full_normalization_controls(text, expected):
         "title": "Bán đất", "description": text,
     })
     assert record is not None and record["area_m2"] == expected
+
+
+# 2026-11-06: two distinct source patterns, not duplicate repost evidence.
+NOV06_EXPLICIT_ASPHALT_CASES = [
+    (86035, "Đất Tân Định gần Trường Thỏ Ngọc. 1/đường Babanxi Cầu Mắm; Đường nhựa 6m", "be_tong"),
+    (86343, "Bán đất Chánh Mỹ. Thủ Dầu Một. Đường nhựa xe oto thông", "hem_xe_hoi"),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,before", NOV06_EXPLICIT_ASPHALT_CASES)
+def test_review_nov06_explicit_asphalt_beats_weak_access_in_parser(listing_id, text, before):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == "duong_nhua"
+    assert parse_facebook_post(text)["road_type"] == "duong_nhua"
+
+
+@pytest.mark.parametrize("listing_id,text,before", NOV06_EXPLICIT_ASPHALT_CASES)
+@pytest.mark.parametrize("placement", ["title", "description", "repeated"])
+def test_review_nov06_explicit_asphalt_full_normalization(listing_id, text, before, placement):
+    raw = {
+        "source": "facebook", "url": "https://example.invalid/asphalt-evidence-control",
+        "title": "Bán đất", "description": "", "default_area": "Thủ Dầu Một",
+        "price_ty": 2.0, "area_m2": 100.0,
+    }
+    if placement == "repeated":
+        raw.update(title=text, description=text)
+    else:
+        raw[placement] = text
+    record = normalize_record(raw)
+    assert record is not None
+    assert record["road_type"] == "duong_nhua"
+    assert record["area_m2"] == 100.0
+    assert record["price_ty"] == 2.0
+    assert record["price_per_m2"] == 20.0
+    assert record["road_tier"] == 3  # Surface evidence does not promote road tier.
+    assert record["ward"] == ("Tân Định" if listing_id == 86035 else "Chánh Mỹ")
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("1/đường Babanxi; đường nhựa 6m", "duong_nhua"),
+    ("1/DX072; DUONG NHUA 6M", "duong_nhua"),
+    ("Đường nhựa 6m ô tô vào tận đất", "duong_nhua"),
+    ("DUONG NHUA XE HOI THONG", "duong_nhua"),
+    ("Đường ô tô tới đất; đường nhựa 6m", "duong_nhua"),
+    ("Đường bê tông ô tô tới đất", "be_tong"),
+    ("1/DX072 đường oto", "be_tong"),
+    ("1/đường Babanxi; gần đường nhựa 6m", "be_tong"),
+    ("1/đường Babanxi; cách đường nhựa 30m", "be_tong"),
+    ("1/đường Babanxi; sát đường nhựa 6m", "be_tong"),
+    ("1/đường Babanxi; đường sắp đổ nhựa", "be_tong"),
+    ("1/đường Babanxi; mái nhựa", "be_tong"),
+    ("Đường ô tô tới đất", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; gần đường nhựa 6m", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; cách đường nhựa 30m", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; sát đường nhựa 6m", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; đường sắp đổ nhựa", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; mái nhựa", "hem_xe_hoi"),
+    ("Hẻm xe hơi; đường nhựa 6m", "hem_xe_hoi"),
+    ("Đường nhựa; hẻm ô tô", "hem_xe_hoi"),
+    ("Đường nhựa; hẻm xe máy", "hem_xe_may"),
+    ("Đường nhựa xe ba gác", "hem_ba_gac"),
+    ("Mặt tiền kinh doanh đường nhựa", "mat_tien_kinh_doanh"),
+    ("Đường nhựa thông", "duong_nhua"),
+    ("Đường đất 4m chuẩn bị lên nhựa", "duong_dat"),
+    ("Đường bê tông 6m", "be_tong"),
+])
+def test_review_nov06_explicit_asphalt_controls(text, expected):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == expected
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/asphalt-near-miss-control",
+        "title": "Bán đất", "description": text, "price_ty": 2.0, "area_m2": 100.0,
+    })
+    assert record is not None and record["road_type"] == expected
+    assert record["area_m2"] == 100.0 and record["price_ty"] == 2.0
+
+
+# Synthetic frontage/access-road scope controls; no contact/source identifiers.
+@pytest.mark.parametrize("text,expected", [
+    ("1/DX072; đường nhựa 6m xe ô tô thông", "duong_nhua"),
+    ("ĐƯỜNG NHỰA 6M, Ô TÔ VÀO TẬN ĐẤT", "duong_nhua"),
+    ("1/DX072; đường bê tông 4m; đường nhựa lớn bên ngoài", "be_tong"),
+    ("Đường bê tông ô tô tới đất; đường nhựa lớn bên ngoài", "be_tong"),
+    ("Đường ô tô tới đất; từ đường nhựa đi vào 30m", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; ra đường nhựa 30m", "hem_xe_hoi"),
+    ("1/DX072; nhánh đường nhựa", "be_tong"),
+    ("1/DX072; đường vào gần đường nhựa", "be_tong"),
+    ("1/DX072; kế bên đường nhựa", "be_tong"),
+    ("Đường ô tô tới đất; sát bên đường nhựa", "hem_xe_hoi"),
+    ("1/đường nhựa 6m", "be_tong"),
+    ("Đường ô tô tới đất; đường nhựa cách 30m", "hem_xe_hoi"),
+    ("1/DX072; dự kiến đường nhựa 6m", "be_tong"),
+    ("Đường ô tô tới đất; đường nhựa dự kiến 6m", "hem_xe_hoi"),
+    ("1/DX072; đường nhựa; hẻm xe máy", "be_tong"),
+    ("1/DX072; đường nhựa; hẻm ô tô", "be_tong"),
+    ("1/DX072; đường đất hiện hữu, đường nhựa quy hoạch", "be_tong"),
+    ("Đường ô tô tới đất; đường nhựa quy hoạch", "hem_xe_hoi"),
+])
+def test_review_nov18_asphalt_frontage_scope_controls(text, expected):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == expected
+    assert parse_facebook_post(text)["road_type"] == expected
+    record = normalize_record({
+        "url": "synthetic-asphalt-frontage-control",
+        "source": "facebook", "title": "Bán đất", "description": text,
+        "price_ty": 2.0, "area_m2": 100.0,
+    })
+    assert record is not None and record["road_type"] == expected
+    assert record["price_ty"] == 2.0 and record["area_m2"] == 100.0
+
+
+@pytest.mark.parametrize("placement", ["title", "description", "repeated"])
+def test_review_nov18_clean_85405_explicit_frontage_replay(placement):
+    # Offline differential: historical "ok" review missed this surface/access mix.
+    text = "ĐƯỜNG NHỰA 4M. Trước đất nhựa 4m, xe hơi vào tận nơi."
+    raw = {
+        "source": "facebook", "url": "synthetic-clean-frontage-control",
+        "title": "Bán đất", "description": "", "price_ty": 2.0, "area_m2": 100.0,
+    }
+    if placement == "repeated":
+        raw.update(title=text, description=text)
+    else:
+        raw[placement] = text
+    record = normalize_record(raw)
+    assert record is not None and record["road_type"] == "duong_nhua"
+    assert record["price_ty"] == 2.0 and record["area_m2"] == 100.0
+    assert record["price_per_m2"] == 20.0
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("1/DX072; cách mặt tiền đường nhựa 30m", "be_tong"),
+    ("Đường ô tô tới đất; gần trục đường nhựa 6m", "hem_xe_hoi"),
+    ("Đường ô tô tới đất; đường nhựa lớn cách đất 30m", "hem_xe_hoi"),
+])
+def test_review_nov18_asphalt_main_road_distance_controls(text, expected):
+    from cleansing.feature_extractor import extract_road_type
+    assert extract_road_type(text) == expected
+    record = normalize_record({
+        "source": "facebook", "url": "synthetic-main-road-distance-control",
+        "title": "Bán đất", "description": text, "price_ty": 2.0, "area_m2": 100.0,
+    })
+    assert record is not None and record["road_type"] == expected
