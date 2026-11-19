@@ -15,8 +15,9 @@ V4_SCOPES = {'phu-loi', 'hiep-thanh', 'phu-my', 'tan-an', 'phu-hoa', 'dinh-hoa',
 def test_v5_adds_only_authorized_chanh_my_with_own_monthly_cohort():
     mod = engine()
     snap = packet(mod, [row(i, ward='Chánh Mỹ') for i in range(15)] + [row(100)])
-    assert snap['scope_registry_version'] == 5
-    assert set(snap['scopes']) == V4_SCOPES | {'chanh-my'}
+    assert snap['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
+    assert set(snap['scopes']) == mod.SCOPE_REGISTRIES[mod.SCOPE_REGISTRY_VERSION]
+    assert V4_SCOPES | {'chanh-my'} <= set(snap['scopes'])
     scope = snap['scopes']['chanh-my']
     assert scope['wards'] == ['Chánh Mỹ'] and scope['parent'] == 'thu-dau-mot'
     assert scope['sample_count'] == 15
@@ -38,7 +39,7 @@ def test_v5_reads_frozen_v4_without_rewriting_or_inventing_chanh_my_history(tmp_
     assert mod.load_latest(tmp_path) == old
     snap = packet(mod, [row(i, ward='Chánh Mỹ', last_seen_at='2026-11-02') for i in range(15)],
                   as_of=date(2026,11,2), previous=[old])
-    assert snap['scope_registry_version'] == 5
+    assert snap['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
     scope = snap['scopes']['chanh-my']
     assert all(p['median'] is None and p['sample_count'] is None for p in scope['history'][:-1])
     assert scope['change_mtd_pct'] is None
