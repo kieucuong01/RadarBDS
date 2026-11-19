@@ -70,6 +70,30 @@ lead evidence.
 
 ## Monthly review output
 
+Run the same 20 Vietnamese prompts in fresh conversations in ChatGPT Search,
+Gemini and Perplexity. Keep the wording unchanged, including ambiguous place
+names. For each answer record the date, platform, exact query, cited Radar URL,
+competing source, whether the landing answers the question, and whether the
+quoted statistic, property type, sample size and period match that landing.
+Distinguish a brand mention from a clickable source. Mark missing access or
+unfinished answers unmeasured, and facts absent from an answer not applicable.
+Publish three counts per platform with their denominators: answers citing Radar
+out of completed probes, correct landings out of citations, and correct figures
+out of citations making checkable numerical claims. Separate the branded prompt.
+
+In Search Console compare the asking-price pages under `/gia-dat/`, monthly
+reports under `/bao-cao/` and boundary maps under `/ban-do-` for the same
+completed 28-day window. Record clicks, impressions and query/page pairs per
+group; inspect the Google-selected canonical for a representative URL. Record
+Google generative-AI impressions separately from referral events and the
+manual assistant probes.
+
+The pre-release domain baseline read on 19 November 2026 covers 20 October
+through 16 November: 22 web clicks, 646 web impressions, 3.4% CTR and average
+position 9.4. The separate Google generative-AI report showed 58 impressions,
+including 9 for the Thủ Dầu Một map, 3 for the Bến Cát map and 3 for the
+official land-price tool. Keep the two impression totals separate.
+
 Report these fields without claiming causation:
 
 | Measure | Evidence | Decision it informs |

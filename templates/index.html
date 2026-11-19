@@ -461,8 +461,8 @@
           LIVE
         </div>
         <div class="header-stats" id="topStats">
-          <span id="statTotal">0</span> Tin bán - <span id="statNewRecent" class="stat-highlight">0</span> Tin Mới (1
-          tuần)
+          <span id="statsLoading">Đang tải số liệu…</span>
+          <span id="statsReady" hidden><span id="statTotal"></span> Tin bán - <span id="statNewRecent" class="stat-highlight"></span> Tin mới (1 tuần)</span>
           <span hidden id="statSignals" class="stat-highlight-green"> </span>
         </div>
 
@@ -1603,7 +1603,7 @@
   {% endif %}
   <script src="{{ url_for('static', filename='js/main/core.js') }}?v=locate-area-20261103"></script>
   <script src="{{ url_for('static', filename='js/main/filter_runtime.js') }}?v=homepage-perf-20260801"></script>
-  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=listing-province-20261104"></script>
+  <script src="{{ url_for('static', filename='js/main/filters.js') }}?v=stats-loading-20261119"></script>
   <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
   {% include "partials/signal_card_script.html" %}
   <script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>

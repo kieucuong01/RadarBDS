@@ -87,6 +87,18 @@ def _saved_segments(page):
     return facts['segments'] if facts else _legacy_segments(page.get('report') or {})
 
 
+def _segment_summary(segment):
+    price = (f'Giá rao trung vị {segment["median_display"]}.' if segment['median_value'] is not None else
+             'Chưa đủ mẫu để kết luận mặt bằng giá hoặc mức thay đổi toàn phân khúc.')
+    return f'{segment["label"]}: {segment["n"]} mẫu đủ giá/m². {price}'
+
+
+def agent_report_summary(page):
+    parts = [f'{_scope(page)} · {page["report"]["period"]}.']
+    parts.extend(_segment_summary(_segment_view(segment)) for segment in _saved_segments(page))
+    return ' '.join(parts)
+
+
 def _comparisons(page, pages, snapshot):
     saved = snapshot.get('comparisons', []) if snapshot else []
     result = []
@@ -199,10 +211,7 @@ def prepare_buyer_report(raw_page, *, pages=None):
                                  reason=item.get('selection_note') or note))
     summary = [f'{raw_count:,} tin thu thập, {basis:,} mẫu sau điều kiện lọc của bản báo cáo. Tin thu thập có thể gồm đăng lại.',
                f'{signals} tín hiệu đã lưu để kiểm tra thêm; số lượng này không phải giao dịch đã chốt.']
-    for s in segments:
-        summary.append(f'{s["label"]}: {s["n"]} mẫu đủ giá/m². ' +
-                       (f'Giá rao trung vị {s["median_display"]}.' if s['median_value'] is not None else
-                        'Chưa đủ mẫu để kết luận mặt bằng giá hoặc mức thay đổi toàn phân khúc.'))
+    summary.extend(_segment_summary(s) for s in segments)
     if not segments:
         summary.append(f'So sánh {len(comparisons)} phường theo đúng loại hình và cỡ mẫu; không gộp các trung vị thành giá đại diện toàn khu.')
     buyer = dict(scope=scope, summary=summary, warnings=warnings, segments=segments,

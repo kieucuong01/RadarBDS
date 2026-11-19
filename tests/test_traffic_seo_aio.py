@@ -200,6 +200,25 @@ def test_llms_txt_is_stable_and_links_priority_ward_sources():
     assert body == radar_app.app.test_client().get("/llms.txt").get_data(as_text=True)
 
 
+def test_agent_sources_match_public_pages_and_report_segment_counts(monkeypatch):
+    import app as radar_app
+
+    keys = ["bao-cao/phu-my-thang-06-2026", "bao-cao/phu-cuong-thang-06-2026"]
+    monkeypatch.setattr(radar_app, "_llms_priority_reports", lambda: [radar_app.SEO_PAGES[k] for k in keys])
+    client = radar_app.app.test_client()
+    body = client.get("/llms.txt").get_data(as_text=True)
+    for item in client.get("/agent/site.json").json["public_sources"]:
+        assert item["question"] in body and item["url"] in body
+    for key, fact in zip(keys, ("Đất nền: 64 mẫu đủ giá/m². Giá rao trung vị 22,2 tr/m².",
+                               "Đất nền: 6 mẫu đủ giá/m². Chưa đủ mẫu")):
+        line = next(line for line in body.splitlines() if line.endswith("/" + key))
+        assert fact in line
+        assert fact in client.get("/" + key).get_data(as_text=True)
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="statsLoading">Đang tải số liệu' in html
+    assert 'id="statsReady" hidden' in html and 'id="statTotal">0' not in html
+
+
 def test_sitemap_has_unique_hub_and_only_canonical_priority_ward_urls():
     import app as radar_app
 

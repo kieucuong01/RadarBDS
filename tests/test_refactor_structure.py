@@ -842,7 +842,7 @@ def test_price_and_area_filters_support_multi_select_range_chips():
     for expected in [
         'data-range-name="price_range"',
         'data-range-name="area_range"',
-        "js/main/filters.js') }}?v=listing-province-20261104",
+        "js/main/filters.js') }}?v=stats-loading-20261119",
         "js/main/area_scope.js') }}?v=maps-controls-20261028",
         "toggleRangePreset",
         "selectedRangeTokens",

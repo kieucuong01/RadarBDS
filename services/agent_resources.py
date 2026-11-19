@@ -69,6 +69,20 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
             "robots": f"{base}/robots.txt",
             "sitemap": f"{base}/sitemap.xml",
         },
+        "public_sources": [
+            {"question": "Giá rao đất nền Thủ Dầu Một hiện tại là bao nhiêu?",
+             "guidance": "Chọn đúng phường và đọc ngày chốt mẫu của kỳ đang chạy.",
+             "url": f"{base}/gia-dat/thu-dau-mot"},
+            {"question": "Giá rao tại một phường trong tháng cụ thể là bao nhiêu?",
+             "guidance": "Mở báo cáo đúng địa bàn và tháng, dẫn trang báo cáo cùng cỡ mẫu của loại tài sản.",
+             "url": f"{base}/bao-cao"},
+            {"question": "Giá đất Nhà nước trên tuyến đường này là bao nhiêu?",
+             "guidance": "Tra đúng đoạn đường, vị trí và văn bản có hiệu lực.",
+             "url": f"{base}/bang-gia-dat-tphcm"},
+            {"question": "Phường cũ ở Bình Dương nay thuộc phường nào?",
+             "guidance": "Đối chiếu ranh cũ và mới tại vị trí cần tra.",
+             "url": f"{base}/quy-hoach-binh-duong/dia-gioi-36-phuong-xa-binh-duong-cu"},
+        ],
         "usage": {
             "recommended_flow": [
                 "Translate the user's need into public filters.",

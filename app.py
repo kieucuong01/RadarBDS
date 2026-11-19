@@ -83,7 +83,7 @@ from config.seo_guides import PRODUCT_GUIDES
 from services.news_editorial import is_public_article, merge_hot_topic_items, news_metadata
 from services.report_hub import report_archive
 from services.report_pdf import PDF_PUBLIC_ORIGIN, pdf_download_href, pdf_path, pdf_version
-from services.report_buyer import prepare_buyer_report
+from services.report_buyer import agent_report_summary, prepare_buyer_report
 from services.news_archive import news_archive
 from config.seo_locations import TDM_LIVE_WARDS
 from config.seo_pages import REPORT_HUB, SEO_PAGES
@@ -4325,8 +4325,12 @@ def llms_txt():
         for page in PLANNING_CATEGORY_PAGES.values()
     )
     priority_report_lines = "\n".join(
-        f"- {page['hero_title']}: {_public_url(page['path'])}"
+        f"- {agent_report_summary(page)} {_public_url(page['path'])}"
         for page in _llms_priority_reports()
+    )
+    source_lines = "\n".join(
+        f"- {item['question']} {item['guidance']} {item['url']}"
+        for item in build_agent_site_manifest(base_url=PUBLIC_BASE_URL)["public_sources"]
     )
     priority_article_lines = "\n".join(
         f"- {page['hero_title']}: {_public_url(page['path'])}"
@@ -4337,11 +4341,14 @@ def llms_txt():
 > Radar BDS tổng hợp và chuẩn hóa dữ liệu tin rao bất động sản Bình Dương để người dùng tham khảo trước khi kiểm tra từng tài sản.
 
 ## Dành cho AI agent
-- Phạm vi: chỉ đọc, tìm, lọc, so sánh signal công khai và dẫn người dùng đến trang chi tiết phù hợp.
+- API chỉ đọc hỗ trợ tìm, lọc và so sánh tín hiệu công khai.
 - Hướng dẫn máy đọc: {_public_url('/agent/site.json')}
 - OpenAPI chỉ đọc: {_public_url('/agent/openapi.json')}
 - Tìm signal: GET {_public_url('/api/signals')}?include_total=0&limit=30
 - Khi dẫn nguồn, dùng detail_href của signal; không suy đoán số điện thoại hoặc URL tin gốc.
+
+## Chọn nguồn theo câu hỏi
+{source_lines}
 
 ## Phạm vi ưu tiên
 - Thủ Dầu Một: {_public_url('/binh-duong/thu-dau-mot')}

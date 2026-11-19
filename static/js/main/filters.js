@@ -388,8 +388,8 @@ function applyStatsCounts(stats = {}) {
   const badgeSignals = document.getElementById('badgeSignals');
   const badgeTotal = document.getElementById('badgeTotal');
 
-  if (Object.prototype.hasOwnProperty.call(stats, 'total')) {
-    const total = Number(stats.total || 0);
+  if (Number.isInteger(stats.total)) {
+    const total = stats.total;
     if (statTotal) statTotal.innerText = total;
     if (badgeTotal) badgeTotal.innerText = total;
   }
@@ -398,9 +398,12 @@ function applyStatsCounts(stats = {}) {
     if (statSignals) statSignals.innerText = signals;
     if (badgeSignals) badgeSignals.innerText = signals;
   }
-  if (Object.prototype.hasOwnProperty.call(stats, 'new_recent_days_7')) {
-    const newRecent = Number(stats.new_recent_days_7 || 0);
-    if (statNewRecent) statNewRecent.innerText = newRecent;
+  if (Number.isInteger(stats.new_recent_days_7) && statNewRecent) {
+    statNewRecent.innerText = stats.new_recent_days_7;
+  }
+  if (Number.isInteger(stats.total) && Number.isInteger(stats.new_recent_days_7)) {
+    document.getElementById('statsLoading').hidden = true;
+    document.getElementById('statsReady').hidden = false;
   }
   if (typeof syncMobileBadges === 'function') syncMobileBadges();
 }
@@ -427,19 +430,7 @@ async function refreshDashboardMeta(useCache = false) {
     const data = await fetchJSONCached('dashboard', `/api/dashboard?${currentFilters}`, useCache);
     if (runId !== dashboardRunSeq || currentFilters !== dashboardKey) return;
 
-    // Update Stats
-    document.getElementById('statTotal').innerText = data.stats.total;
-    document.getElementById('statSignals').innerText = data.stats.signals;
-    // Tin mới (3 ngày) dựa trên posted/crawled_at <= 3 ngày (thống nhất với badge trên card)
-    const el = document.getElementById('statNewRecent');
-    if (el) el.innerText = data.stats.new_recent_days_7 || 0;
-
-
-    const bSig = document.getElementById('badgeSignals');
-    const bTot = document.getElementById('badgeTotal');
-    if (bSig) bSig.innerText = data.stats.signals;
-    if (bTot) bTot.innerText = data.stats.total;
-    if (typeof syncMobileBadges === 'function') syncMobileBadges();
+    applyStatsCounts(data.stats || {});
 
     // Update Wards based on City
     globalWardsByCity = data.wards_by_city;

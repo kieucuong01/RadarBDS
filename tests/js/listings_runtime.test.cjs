@@ -144,6 +144,19 @@ test('append removes repeated IDs while advancing page only after success', asyn
   assert.equal(c.currentPageNo, 2);
 });
 
+test('header waits for actual counts and displays a measured zero', () => {
+  const { context: c, element } = harness();
+  vm.runInContext(fs.readFileSync('static/js/main/filters.js', 'utf8'), c);
+  element('statsReady').hidden = true;
+  c.applyStatsCounts({ total: 4, new_recent_days_7: null });
+  assert.equal(element('statsReady').hidden, true);
+  c.applyStatsCounts({ total: 0, new_recent_days_7: 0 });
+  assert.equal(element('statsReady').hidden, false);
+  assert.equal(element('statsLoading').hidden, true);
+  assert.equal(element('statTotal').innerText, 0);
+  assert.equal(element('statNewRecent').innerText, 0);
+});
+
 test('listings filter starts feed first and only the current completed run schedules metadata', async () => {
   const requests = [];
   const { context: c, events } = harness({ fetcher: () => {
