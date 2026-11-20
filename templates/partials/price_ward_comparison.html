@@ -3,7 +3,7 @@
   <h2 id="so-sanh-phuong">So sánh giá rao đất nền theo {{ 'khu vực' if slug == 'ben-cat' else 'phường' }}</h2>
   <table class="price-table">
     <caption>{{ scope.name }}, từ {{ snapshot.period_start }} đến {{ snapshot.period_end }}. Chọn tên khu vực để mở đúng bản số liệu của kỳ này.</caption>
-    <thead><tr><th scope="col">Phường</th><th scope="col">Trung vị (triệu đồng/m²)</th><th scope="col">Số mẫu</th></tr></thead>
+    <thead><tr><th scope="col">{{ 'Khu vực' if slug == 'ben-cat' else 'Phường' }}</th><th scope="col">Trung vị (triệu đồng/m²)</th><th scope="col">Số mẫu</th></tr></thead>
     <tbody>{% for ward_slug, ward in snapshot.scopes|dictsort if ward.parent == slug %}
       <tr><th scope="row">{% if ward.eligible %}<a href="{{ url_for('data_price_seo.archived_price', slug=ward_slug, packet_id=snapshot.snapshot_id) }}">{{ ward.name }}</a>{% else %}{{ ward.name }}{% endif %}</th><td>{{ ward.facts.median.display if ward.eligible else 'Chưa đủ mẫu' }}</td><td>{{ ward.sample_count }}</td></tr>
     {% endfor %}</tbody>

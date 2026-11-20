@@ -82,6 +82,7 @@ def test_ben_cat_parent_does_not_borrow_tdm_caption_or_closed_month_report(monke
     app,mod=make_app(monkeypatch,tmp_path,[row(i,ward='Mỹ Phước 3') for i in range(15)])
     body=app.test_client().get('/gia-dat/ben-cat').get_data(as_text=True)
     assert '<caption>Bến Cát, từ ' in body
+    assert '<th scope="col">Khu vực</th>' in body
     assert '<caption>Thủ Dầu Một, từ ' not in body
     assert calls==[]
     qs=parse_qs(urlsplit(html.unescape(re.search(r'<a[^>]+href="([^"]+)"[^>]+data-track-cta="asking_prices_open_deals"',body)[1])).query)
