@@ -224,6 +224,20 @@ def test_small_local_sample_uses_named_parent_without_local_prices_or_sitemap(mo
     assert '/gia-dat/thu-dau-mot' in paths
 
 
+def test_comparison_cites_same_packet_after_refresh(monkeypatch, tmp_path):
+    app, mod = make_app(monkeypatch, tmp_path)
+    client = app.test_client()
+    old = mod.load_latest(tmp_path)
+    href = '/gia-dat/phu-loi/ban-luu/' + old['snapshot_id']
+    comparison = client.get('/gia-dat/thu-dau-mot').get_data(as_text=True)
+    assert f'href="{href}"' in comparison and 'So sánh giá rao đất nền theo phường' in comparison
+    mod.freeze_snapshot(packet(mod, [row(42)], as_of=date(2026, 10, 22)), tmp_path)
+    archive = client.get(href)
+    assert archive.status_code == 200 and archive.headers['X-Radar-Price-Snapshot'] == old['sha256']
+    assert '15 mẫu' in archive.get_data(as_text=True) and '20,00 triệu đồng/m²' in archive.get_data(as_text=True)
+    assert client.get('/gia-dat/phu-loi/ban-luu/latest').status_code == 404
+
+
 def test_corrupted_snapshot_fails_closed_not_empty_success(monkeypatch,tmp_path):
     app, mod = make_app(monkeypatch,tmp_path)
     (tmp_path/'latest.json').write_text('{broken')

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giá rao đất nền {{ scope.name }} · Bản lưu ngày {{ snapshot.period_end }} | Radar BDS</title>
+  <link rel="canonical" href="https://radarbds.vn{{ url_for('data_price_seo.archived_price', slug=slug, packet_id=snapshot.snapshot_id) }}">
+  <meta name="robots" content="noindex,follow">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}">
+</head>
+<body>
+{% include 'partials/seo_header.html' %}
+<main id="main-content" class="seo-shell">
+  <h1>Giá rao đất nền {{ scope.name }}{% if scope.parent %}, {{ snapshot.scopes[scope.parent].name }}{% endif %} (Bình Dương cũ)</h1>
+  <p>Bản lưu ngày <time datetime="{{ snapshot.period_end }}">{{ snapshot.period_end }}</time>.</p>
+  <p>Từ {{ snapshot.period_start }} đến {{ snapshot.period_end }}, Radar BDS ghi nhận {{ scope.sample_count }} mẫu tin bán đất nền tại {{ scope.name }}. {% if scope.eligible %}Trung vị giá rao là <strong>{{ scope.facts.median.display }} triệu đồng/m²</strong>. Giá rao trung bình là {{ scope.facts.mean.display }} triệu đồng/m².{% else %}Chưa đủ 15 mẫu để công bố giá.{% endif %}</p>
+  <p>Nguồn gồm {{ scope.source_counts.facebook }} mẫu Facebook và {{ scope.source_counts.guland }} mẫu Guland. Số liệu dựa trên giá rao của tin có lần ghi nhận gần nhất trong kỳ.</p>
+  {% include 'partials/price_ward_comparison.html' %}
+  <p><a href="/gia-dat/{{ slug }}">Xem kỳ mới nhất tại {{ scope.name }}</a></p>
+</main>
+</body></html>

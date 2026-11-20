@@ -1,10 +1,32 @@
 """SSR price facts from a frozen packet; cards remain a fresh guest-only feed."""
 from datetime import date
+import json
+import re
 
 from flask import Blueprint, abort, current_app, make_response, render_template
-from services.data_price_seo import SCOPES, page_snapshots, load_public_cards, snapshot_root
+from services.data_price_seo import SCOPES, page_snapshots, load_public_cards, snapshot_root, validate_snapshot
 
 bp = Blueprint('data_price_seo', __name__)
+
+
+@bp.get('/gia-dat/<slug>/ban-luu/<packet_id>')
+def archived_price(slug, packet_id):
+    if slug not in SCOPES or not re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9a-f]{16}', packet_id):
+        abort(404)
+    try:
+        snapshot = validate_snapshot(json.loads((snapshot_root() / (packet_id + '.json')).read_text(encoding='utf-8')))
+        if snapshot['snapshot_id'] != packet_id:
+            raise ValueError('snapshot identity mismatch')
+    except FileNotFoundError:
+        abort(404)
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        abort(503)
+    if slug not in snapshot['scopes']:
+        abort(404)
+    scope = snapshot['scopes'][slug]
+    response = make_response(render_template('data_price_archive.html', snapshot=snapshot, scope=scope, slug=slug))
+    response.headers['X-Radar-Price-Snapshot'] = snapshot['sha256']
+    return response
 
 
 @bp.get('/gia-dat/<slug>')

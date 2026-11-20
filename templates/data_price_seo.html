@@ -28,6 +28,8 @@
   {% if scope.eligible %}
   <p>Từ <time datetime="{{ snapshot.period_start }}">{{ snapshot.period_start }}</time> đến <time datetime="{{ snapshot.period_end }}">{{ snapshot.period_end }}</time>, trung vị giá rao đất nền tại {{ location }} (Bình Dương cũ) là <strong>{{ scope.facts.median.display }} triệu đồng/m²</strong>, tính từ {{ scope.facts.median.sample_count }} mẫu tin bán do Radar BDS ghi nhận.</p>
   {% endif %}
+  <p><a href="{{ url_for('data_price_seo.archived_price', slug=slug, packet_id=snapshot.snapshot_id) }}">Bản số liệu ngày {{ snapshot.period_end }} để trích dẫn</a></p>
+  {% include 'partials/price_ward_comparison.html' %}
   <p>Mẫu gồm các tin có lần ghi nhận gần nhất từ {{ snapshot.period_start }} đến {{ snapshot.period_end }}, đã qua kiểm tra giá, diện tích và trùng tin đã biết. {% if retained %}Đây là bản dữ liệu đã lưu vào ngày cuối của tháng đã kết thúc{% else %}Đây là dữ liệu lũy kế từ đầu tháng (MTD){% endif %}, không phải giá giao dịch hay bảng giá đất Nhà nước.</p>
   <p class="price-muted">Cập nhật dữ liệu: {{ snapshot.generated_at }} · Múi giờ: {{ snapshot.timezone }}. Phạm vi địa danh theo phân khu dữ liệu Radar, không phải xác nhận địa giới hành chính hiện hành.</p>
   <h2>Mẫu giá và tin còn hoạt động</h2>
