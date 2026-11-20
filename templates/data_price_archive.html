@@ -6,6 +6,7 @@
   <link rel="canonical" href="https://radarbds.vn{{ url_for('data_price_seo.archived_price', slug=slug, packet_id=snapshot.snapshot_id) }}">
   <meta name="robots" content="noindex,follow">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}">
+  {% include "partials/public_brand_assets.html" %}
 </head>
 <body>
 {% include 'partials/seo_header.html' %}
