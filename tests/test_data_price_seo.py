@@ -205,6 +205,10 @@ def test_ssr_has_mean_median_sample_period_histogram_history_canonical_and_no_pr
     assert '<link rel="canonical" href="https://radarbds.vn/gia-dat/phu-loi">' in html
     for text in ['Trung bình','Trung vị','Thấp nhất','Cao nhất','n = 15','2026-10-01','2026-10-21','Phân bố','6 tháng','Giá rao','Chưa có dữ liệu lịch sử','sha256']:
         assert text in html
+    assert 'seo-lead-capture-form' in html
+    assert 'data-source-context="data_price_lead"' in html
+    assert 'name="listing_url" value="/gia-dat/phu-loi"' in html
+    assert 'fetch(form.action || \'/api/leads\'' in html
     assert 'noindex' not in html
     assert response.headers['Cache-Control'] == 'private, no-store'
     assert 'X-Radar-Public-Cache' not in response.headers
