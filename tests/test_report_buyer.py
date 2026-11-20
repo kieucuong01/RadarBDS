@@ -53,6 +53,7 @@ def test_new_snapshot_has_budget_facts_and_correct_price_distribution():
     page = prepare_buyer_report(raw, pages=SEO_PAGES)
     assert page['buyer']['budget_snapshot_available'] is True
     assert page['buyer']['segments'][0]['n'] == 20
+    assert any('Tân An · Tháng 09/2026 · 20 mẫu đủ giá/m²' in metric['note'] for metric in page['report']['metrics'])
     assert page['buyer']['segments'][0]['median_display'] != 'Chưa đủ mẫu'
 
 

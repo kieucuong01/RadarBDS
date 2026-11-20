@@ -1571,9 +1571,8 @@ def load_dashboard_summary(db_path, sources=None, wards=None, prop_types=None, o
     summary_rows = conn.execute(f"""
         SELECT property_type, AVG(price_per_m2) as mean_ppm2, COUNT(*) as n_samples
         FROM listings
-        WHERE is_outlier = 0 AND {where_sql}
+        WHERE is_outlier = 0 AND price_per_m2 > 0 AND {where_sql}
         GROUP BY property_type
-        HAVING COUNT(*) >= 1
     """, params).fetchall()
     for row in summary_rows:
         mean_ppm2 = _row_get(row, "mean_ppm2")

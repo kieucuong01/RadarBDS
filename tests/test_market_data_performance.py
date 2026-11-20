@@ -436,6 +436,7 @@ def test_load_dashboard_summary_uses_compact_read_model(monkeypatch):
             if "JOIN latest_valuation" in sql:
                 return _FakeCursor(row={"signals": 7})
             if "GROUP BY property_type" in sql:
+                assert "price_per_m2 > 0" in sql
                 return _FakeCursor(rows=[
                     {"property_type": "dat_nen", "mean_ppm2": 25.5, "n_samples": 12},
                     {"property_type": "nha_dat", "mean_ppm2": 30.0, "n_samples": 8},

@@ -54,6 +54,9 @@
         <div class="report-context">
           <div><span>Phạm vi dữ liệu</span><strong>{{ page.scope_label }}</strong></div>
           <div><span>Kỳ dữ liệu</span><strong>{{ page.report.period }}</strong></div>
+          {% if page.report.published_at %}
+          <div><span>Ngày xuất bản</span><strong><time datetime="{{ page.report.published_at }}">{{ page.report.published_at }}</time></strong></div>
+          {% endif %}
           <div><span>Nguồn và trạng thái</span><strong>Dữ liệu Radar BDS đã sàng lọc</strong></div>
           {% if page.report_data_as_of %}
           <div class="report-data-as-of"><span>Kỳ dữ liệu kết thúc</span><strong><time datetime="{{ page.report_data_as_of }}">{{ page.report_data_as_of }}</time></strong></div>

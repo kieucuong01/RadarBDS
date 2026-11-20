@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }}</title>
-  <meta name="description" content="Giá rao đất nền {{ scope.name }} theo mẫu Radar BDS: trung bình, trung vị, khoảng giá, số mẫu và phạm vi dữ liệu. Không phải giá giao dịch.">
+  <meta name="description" content="Giá rao đất nền {{ location }} (Bình Dương cũ) theo mẫu Radar BDS từ {{ snapshot.period_start }} đến {{ snapshot.period_end }}. Xem trung vị, số mẫu và nguồn tin.">
   <link rel="canonical" href="https://radarbds.vn/gia-dat/{{ slug }}">
   {% if not scope.eligible %}<meta name="robots" content="noindex,follow">{% endif %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=product-navigation-20261103-2">
@@ -18,14 +18,17 @@
 {% include 'partials/seo_header.html' %}
 <main id="main-content" class="price-wrap" data-snapshot-id="{{ snapshot.snapshot_id }}" data-snapshot-sha256="{{ snapshot.sha256 }}">
   <nav aria-label="Đường dẫn"><a href="/">Radar BDS</a> / <a href="/binh-duong">Nhà đất Bình Dương</a> / Giá rao đất {{ scope.name }}</nav>
-  <h1>Giá rao đất nền {{ scope.name }}</h1>
+  <h1>Giá rao đất nền {{ location }}</h1>
   {% if retained %}
   <aside class="price-metric" aria-label="Kỳ dữ liệu đang hiển thị" data-current-snapshot-sha256="{{ current_snapshot.sha256 }}">
     <h2>Tháng mới chưa đủ 15 mẫu</h2>
     <p>Kỳ {{ current_snapshot.period_start }} – {{ current_snapshot.period_end }} tại {{ scope.name }} mới có n = {{ current_snapshot.scopes[slug].sample_count }} bản ghi hợp lệ; chưa hiển thị giá hoặc tỷ lệ thay đổi cho kỳ này. Trang giữ số liệu của tháng đã kết thúc, ghi nhận thực tế đến {{ snapshot.period_end }}. Không dùng số tháng trước làm giá tháng mới.</p>
   </aside>
   {% endif %}
-  <p>Giá rao đất nền {{ scope.name }} dưới đây được tính từ tin bán có lần ghi nhận gần nhất trong khoảng {{ snapshot.period_start }} đến {{ snapshot.period_end }}. Chỉ dùng mẫu đã qua kiểm tra giá, diện tích và trùng tin đã biết. {% if retained %}Đây là bản dữ liệu đã lưu vào ngày cuối của tháng đã kết thúc{% else %}Đây là dữ liệu tháng đang chạy (MTD){% endif %}, không phải giá giao dịch hay bảng giá đất Nhà nước.</p>
+  {% if scope.eligible %}
+  <p>Từ <time datetime="{{ snapshot.period_start }}">{{ snapshot.period_start }}</time> đến <time datetime="{{ snapshot.period_end }}">{{ snapshot.period_end }}</time>, trung vị giá rao đất nền tại {{ location }} (Bình Dương cũ) là <strong>{{ scope.facts.median.display }} triệu đồng/m²</strong>, tính từ {{ scope.facts.median.sample_count }} mẫu tin bán do Radar BDS ghi nhận.</p>
+  {% endif %}
+  <p>Mẫu gồm các tin có lần ghi nhận gần nhất từ {{ snapshot.period_start }} đến {{ snapshot.period_end }}, đã qua kiểm tra giá, diện tích và trùng tin đã biết. {% if retained %}Đây là bản dữ liệu đã lưu vào ngày cuối của tháng đã kết thúc{% else %}Đây là dữ liệu lũy kế từ đầu tháng (MTD){% endif %}, không phải giá giao dịch hay bảng giá đất Nhà nước.</p>
   <p class="price-muted">Cập nhật dữ liệu: {{ snapshot.generated_at }} · Múi giờ: {{ snapshot.timezone }}. Phạm vi địa danh theo phân khu dữ liệu Radar, không phải xác nhận địa giới hành chính hiện hành.</p>
   <h2>Mẫu giá và tin còn hoạt động</h2>
   <p><strong>{{ scope.sample_count }} bản ghi đủ điều kiện trong tháng</strong> sau loại trùng đã biết; không cam kết mỗi bản ghi là một bất động sản khác nhau giữa các nguồn.</p>
@@ -51,6 +54,7 @@
   <table class="price-table"><caption>Trung vị giá rao đất nền {{ scope.name }} — triệu đồng/m²</caption><thead><tr><th scope="col">Tháng</th><th scope="col">Trung vị</th><th scope="col">Số mẫu</th><th scope="col">Đến ngày</th></tr></thead><tbody>
   {% for point in scope.history %}<tr><th scope="row">{{ point.month }}</th><td>{% if point.median is not none %}{{ '%.2f'|format(point.median)|replace('.',',') }}{% else %}Chưa có dữ liệu lịch sử đủ mẫu{% endif %}</td><td>{{ point.sample_count if point.sample_count is not none else 'Chưa có' }}</td><td>{{ point.period_end or 'Chưa có' }}</td></tr>{% endfor %}
   </tbody></table>
+  {% if report %}<p>Đối chiếu với kỳ đã chốt trong <a href="{{ report.path }}">báo cáo {{ scope.name }} {{ report.report.period|lower }}</a>. Báo cáo ghi rõ nguồn và cỡ mẫu riêng cho từng loại tài sản.</p>{% endif %}
   {% if scope.change_mtd_pct is not none %}<p>Thay đổi trung vị so với cùng số ngày tháng trước: {{ scope.change_mtd_pct }}%. Hai kỳ có ít nhất 15 mẫu; thay đổi cơ cấu mẫu giá rao không chứng minh giá giao dịch tăng hay giảm.</p>{% else %}<p>Chưa tính thay đổi so tháng trước: chưa có hai bản dữ liệu đủ mẫu và cùng số ngày MTD. Lịch sử đổi giá của từng tin không thay cho tập quan sát đầy đủ.</p>{% endif %}
   <h2>Tin công khai đáng kiểm tra tại {{ scope.name }}</h2>
   <p>Tối đa 5 tin đất nền theo bộ lọc Săn Deal dành cho khách, xếp theo mức chênh so giá tham chiếu của mô hình hiện tại. Giá từng tin là dữ liệu mới khi mở trang, tách khỏi thống kê đã lưu phía trên.</p>
@@ -58,7 +62,7 @@
   <p><a class="price-cta" href="/?tab=signals&amp;city={{ 'THỦ DẦU MỘT'|urlencode }}&amp;prop_type=dat_nen{% if slug != 'thu-dau-mot' %}&amp;ward={{ scope.name|urlencode }}{% endif %}" data-track-cta="asking_prices_open_deals">Xem deal đất nền {{ scope.name }}</a></p>
   {% if scope.parent and snapshot.scopes[scope.parent].eligible %}<p>Xem phạm vi cha: <a href="/gia-dat/{{ scope.parent }}">Giá rao đất nền {{ snapshot.scopes[scope.parent].name }}</a>. Đây không phải số liệu riêng của {{ scope.name }}.</p>{% endif %}
   <nav aria-label="Giá rao theo khu vực"><ul>{% for related_slug,related in snapshot.scopes.items() %}{% if related_slug != slug and related.eligible and related.parent == (scope.parent or slug) %}<li><a href="/gia-dat/{{ related_slug }}">Giá rao đất nền {{ related.name }}</a></li>{% endif %}{% endfor %}</ul></nav>
-  {% if slug == 'phu-loi' %}<p><a href="/binh-duong/phuong-phu-loi">Thông tin khu vực Phú Lợi</a>.</p>{% endif %}
+  {% if scope.parent %}<p><a href="/binh-duong/phuong-{{ slug }}#gia-rao-theo-loai">So sánh giá rao theo loại tài sản tại {{ scope.name }}</a>.</p>{% endif %}
   <h2>Cách lấy mẫu và giới hạn</h2>
   <p>Chỉ lấy đất nền bán tại địa bàn trong danh sách cho phép: {{ scope.wards|join(', ') }}. Loại tin đã ẩn, blacklist, tin trùng đã biết, nghi trùng, ngoại lệ, nghi mồi, sai hoặc mâu thuẫn giá/diện tích và nguồn không còn hoạt động. Giá dùng là giá gần nhất còn lưu ở thời điểm trích xuất, không phải toàn bộ những mức giá từng xuất hiện trong tháng. Một tin chưa được ghi nhận lại trong tháng không được tự đưa vào mẫu tháng đó.</p>
   <p>Không gộp nhà xây sẵn hoặc dãy trọ vào giá đất nền. Dữ liệu không đại diện toàn bộ thị trường; không suy thanh khoản, lợi nhuận hay pháp lý từ mẫu giá rao.</p>

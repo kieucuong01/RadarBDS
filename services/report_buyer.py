@@ -236,7 +236,7 @@ def prepare_buyer_report(raw_page, *, pages=None):
                          dict(label='Mẫu hợp lệ', value=str(basis), note='Theo hợp đồng và điều kiện lọc của bản đã lưu'),
                          dict(label='Tin đáng kiểm tra', value=str(signals), note='Tín hiệu đã lưu, không phải số giao dịch')]
     report['metrics'] += [dict(label=f'Giá rao trung vị {s["label"].lower()}', value=s['median_display'],
-                               note=f'{s["n"]} mẫu đủ giá/m²; ngưỡng trình bày 15 mẫu') for s in segments]
+                               note=f'{scope} · {period} · {s["n"]} mẫu đủ giá/m². Ngưỡng trình bày 15 mẫu.') for s in segments]
     report['indicators'] = []
     report['trend_intro'] = ['Giá trên đồ thị là trung vị của mẫu quan sát từng kỳ. Thay đổi cơ cấu diện tích, vị trí và loại đường có thể làm giá trung vị thay đổi.',
                             'Kỳ hoặc phân khúc dưới 15 mẫu được để trống; không nội suy hoặc thay dữ liệu thiếu bằng số 0.'] if report.get('trend_rows') else []

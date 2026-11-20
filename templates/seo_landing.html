@@ -158,9 +158,6 @@
         {% if page.live_snapshot.available %}
         <div class="price-tag tag-one">{{ page.live_snapshot.total }} tin</div>
         <div class="price-tag tag-two">{{ page.live_snapshot.signal_count }} tín hiệu</div>
-        {% for market in page.live_snapshot.market_rows[:3] %}
-        <div class="price-tag tag-{{ ['three', 'four', 'five'][loop.index0] }}">{{ market.average_label }}</div>
-        {% endfor %}
         <div class="signal-counter">
           <span>Truy vấn {{ page.live_snapshot.updated_label }}</span>
           <strong>{{ page.live_snapshot.signal_count }} <small>tín hiệu</small></strong>
@@ -191,7 +188,8 @@
           <span>Giá tham khảo trung bình theo loại tài sản</span>
           <p>
             {% if page.live_snapshot.market_rows %}
-            {{ page.live_snapshot.market_rows[0].label }}: {{ page.live_snapshot.market_rows[0].average_label }}
+            {% set market = page.live_snapshot.market_rows[0] %}
+            {{ market.label }} · {{ market.average_label }} từ {{ market.sample_count }} mẫu trong một tháng tính đến {{ page.live_snapshot.updated_label }}.
             {% else %}
             Chưa đủ mẫu giá hợp lệ để hiển thị.
             {% endif %}
@@ -251,12 +249,11 @@
       <div class="seo-shell report-shell">
         <div class="report-head">
           <span>Ảnh chụp truy vấn ngày {{ page.live_snapshot.updated_label }}</span>
-          <h2>Dữ liệu giá nhà đất {{ page.live_ward }}</h2>
+          <h2 id="gia-rao-theo-loai">Dữ liệu giá nhà đất {{ page.live_ward }}</h2>
           {% if page.live_snapshot.available %}
           <p>
             Radar BDS đang theo dõi {{ page.live_snapshot.total }} tin và ghi nhận
             {{ page.live_snapshot.signal_count }} tín hiệu tại {{ page.live_ward }}.
-            Các số liệu dưới đây được dựng trực tiếp trong HTML để người đọc và công cụ tìm kiếm có thể kiểm chứng phạm vi.
           </p>
           {% else %}
           <p>Dữ liệu trực tiếp tạm thời chưa khả dụng. Trang vẫn giữ nguồn, phương pháp và phạm vi để người đọc biết cách diễn giải khi dữ liệu trở lại.</p>
@@ -279,6 +276,7 @@
 
         <div class="report-table-wrap">
           <table class="report-table">
+            <caption>Giá rao trung bình tại {{ page.live_ward }}, Thủ Dầu Một (Bình Dương cũ), theo tin Facebook trong một tháng tính đến <time datetime="{{ page.live_snapshot.updated_iso }}">{{ page.live_snapshot.updated_label }}</time>.</caption>
             <thead>
               <tr>
                 <th scope="col">Loại tài sản</th>
@@ -297,13 +295,18 @@
               <tr>
                 <th scope="row">Chưa đủ dữ liệu</th>
                 <td>—</td>
-                <td>0</td>
+                <td>—</td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
 
+        {% endif %}
+        {% if page.latest_report_href %}
+        <p>Đối chiếu với kỳ đã chốt tại <a href="{{ page.latest_report_href }}">{{ page.latest_report_label }}</a>.</p>
+        {% endif %}
+        {% if page.live_snapshot.available %}
         <div class="report-head">
           <span>Tối đa 5 tin mới</span>
           <h2>Tín hiệu mới đáng xem trước</h2>
@@ -351,9 +354,6 @@
             <li>{{ item }}</li>
             {% endfor %}
           </ul>
-          {% if page.latest_report_href %}
-          <p><a href="{{ page.latest_report_href }}">{{ page.latest_report_label or "Xem báo cáo tháng gần nhất" }}</a></p>
-          {% endif %}
         </div>
       </div>
     </section>

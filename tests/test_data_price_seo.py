@@ -200,6 +200,8 @@ def test_ssr_has_mean_median_sample_period_histogram_history_canonical_and_no_pr
     response = app.test_client().get('/gia-dat/phu-loi')
     html = response.get_data(as_text=True)
     assert response.status_code == 200
+    assert 'trung vị giá rao đất nền tại Phú Lợi, Thủ Dầu Một (Bình Dương cũ) là <strong>20,00 triệu đồng/m²</strong>, tính từ 15 mẫu' in html
+    assert 'href="/bao-cao/phu-loi-thang-09-2026"' in html
     assert '<link rel="canonical" href="https://radarbds.vn/gia-dat/phu-loi">' in html
     for text in ['Trung bình','Trung vị','Thấp nhất','Cao nhất','n = 15','2026-10-01','2026-10-21','Phân bố','6 tháng','Giá rao','Chưa có dữ liệu lịch sử','sha256']:
         assert text in html

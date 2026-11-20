@@ -61,11 +61,13 @@ def test_priority_ward_page_renders_live_search_and_aio_snapshot(monkeypatch):
     calls = _patch_live_snapshot(monkeypatch, radar_app)
     response = radar_app.app.test_client().get("/binh-duong/phuong-hiep-thanh")
     html = response.get_data(as_text=True)
-    period = datetime.now(timezone(timedelta(hours=7))).strftime("%m/%Y")
+    queried_on = datetime.now(timezone(timedelta(hours=7))).date()
 
     assert response.status_code == 200
-    assert f"<title>Giá nhà đất Hiệp Thành, Thủ Dầu Một tháng {period}" in html
-    assert f"<h1>Giá nhà đất Hiệp Thành, Thủ Dầu Một tháng {period}</h1>" in html
+    assert "<title>Giá nhà đất Hiệp Thành, Thủ Dầu Một trong một tháng gần nhất" in html
+    assert "<h1>Giá nhà đất Hiệp Thành, Thủ Dầu Một trong một tháng gần nhất</h1>" in html
+    assert f'22,5 tr/m² từ 120 mẫu trong một tháng tính đến {queried_on:%d/%m/%Y}' in html
+    assert 'Giá rao trung bình tại Hiệp Thành, Thủ Dầu Một (Bình Dương cũ)' in html
     assert "Thủ Dầu Một – Bình Dương cũ" in html
     assert "204 tin" in html
     assert "36 tín hiệu" in html

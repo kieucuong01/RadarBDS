@@ -3182,7 +3182,7 @@ def _report_sort_key(page: dict) -> tuple[int, int, int, str, str]:
     return (year, month, master_rank, (page.get("report") or {}).get("published_at", ""), path)
 
 
-def _latest_ward_report(ward_slug: str) -> dict | None:
+def _latest_ward_report(ward_slug: str, *, through=None) -> dict | None:
     prefix = f"/bao-cao/{ward_slug}-thang-"
     candidates = [
         page
@@ -3190,6 +3190,7 @@ def _latest_ward_report(ward_slug: str) -> dict | None:
         if page.get("path", "").startswith(prefix)
         and page.get("report")
         and _is_publishable_monthly_report(page)
+        and (through is None or _report_month_end(page) <= through)
     ]
     if not candidates:
         return None
@@ -3332,7 +3333,7 @@ def _hydrate_live_location_page(page: dict) -> dict:
     snapshot = _build_live_location_snapshot(page)
     ward = page["live_ward"]
     period = snapshot["period_label"]
-    title = f"Giá nhà đất {ward}, Thủ Dầu Một tháng {period}"
+    title = f"Giá nhà đất {ward}, Thủ Dầu Một trong một tháng gần nhất"
     page["title"] = f"{title} | Radar BDS"
     page["hero_title"] = title
     page["hero_badge"] = f"Thủ Dầu Một – Bình Dương cũ · truy vấn {snapshot['updated_label']}"
@@ -3348,7 +3349,7 @@ def _hydrate_live_location_page(page: dict) -> dict:
             f"{snapshot['updated_label']}. Đây là dữ liệu tin rao; cần xác minh thực địa và pháp lý."
         )
         page["description"] = (
-            f"Giá nhà đất {ward}, Thủ Dầu Một tháng {period}: "
+            f"Giá rao tại {ward}, Thủ Dầu Một trong một tháng tính đến {snapshot['updated_label']}. "
             f"{snapshot['total']} tin đang theo dõi, {snapshot['signal_count']} tín hiệu, "
             "giá tham khảo, nguồn dữ liệu và ngày cập nhật."
         )
@@ -3366,9 +3367,9 @@ def _hydrate_live_location_page(page: dict) -> dict:
         page["latest_report_href"] = report["path"]
         report_period = (report.get("report") or {}).get("period", period)
         page["latest_report_label"] = (
-            f"Báo cáo {report_period}"
+            f"Báo cáo {ward} {str(report_period).lower()}"
             if str(report_period).lower().startswith("tháng")
-            else f"Báo cáo tháng {report_period}"
+            else f"Báo cáo {ward} tháng {report_period}"
         )
     page["live_snapshot"] = snapshot
     return page
@@ -3418,7 +3419,7 @@ def _render_public_page(page: dict):
         report_body = page.get("report") or {}
         page["report_data_as_of"] = str(
             report_body.get("data_as_of")
-            or report_body.get("published_at")
+            or _report_month_end(page)
             or ""
         )
         year, month = _report_period_key(page)
