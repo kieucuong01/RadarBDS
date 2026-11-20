@@ -15,8 +15,9 @@ V5_SCOPES = {'phu-loi', 'hiep-thanh', 'phu-my', 'tan-an', 'phu-hoa', 'dinh-hoa',
 def test_v6_adds_only_phu_cuong_with_own_qualified_monthly_cohort():
     mod = engine()
     snap = packet(mod, [row(i, ward='Phú Cường') for i in range(15)] + [row(100)])
-    assert snap['scope_registry_version'] == 6
-    assert set(snap['scopes']) == V5_SCOPES | {'phu-cuong'}
+    assert snap['scope_registry_version'] == mod.SCOPE_REGISTRY_VERSION
+    assert set(snap['scopes']) == mod.SCOPE_REGISTRIES[mod.SCOPE_REGISTRY_VERSION]
+    assert V5_SCOPES | {'phu-cuong'} <= set(snap['scopes'])
     scope = snap['scopes']['phu-cuong']
     assert scope['wards'] == ['Phú Cường'] and scope['parent'] == 'thu-dau-mot'
     assert scope['sample_count'] == 15

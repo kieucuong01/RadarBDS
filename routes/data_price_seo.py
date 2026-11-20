@@ -46,7 +46,8 @@ def price_page(slug):
     location = f"{scope['name']}, {snapshot['scopes'][parent]['name']}" if parent else scope['name']
     from app import _latest_ward_report
 
-    report = _latest_ward_report(slug if parent else 'bds-binh-duong',
+    ben_cat = slug in ('my-phuoc', 'ben-cat')
+    report = None if ben_cat else _latest_ward_report(slug if parent else 'bds-binh-duong',
                                  through=date.fromisoformat(snapshot['period_end']))
     fallback = parent if parent and snapshot['scopes'].get(parent,{}).get('eligible') else None
     cards_error = False
@@ -57,6 +58,7 @@ def price_page(slug):
         cards, cards_error = [], True
     response = make_response(render_template('data_price_seo.html', snapshot=snapshot,
         current_snapshot=current_snapshot, retained=snapshot['sha256'] != current_snapshot['sha256'],
+        city='BẾN CÁT' if ben_cat else 'THỦ DẦU MỘT',
         scope=scope, location=location, report=report, slug=slug, fallback=fallback, cards=cards, cards_error=cards_error,
         title=f"Giá rao đất nền {location} đến {snapshot['period_end']} | Radar BDS"))
     response.headers['Cache-Control'] = 'private, no-store'
