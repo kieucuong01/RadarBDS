@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Chi tiết lô đất - {{ l['title'] }}</title>
+<title>{{ preview.title }}</title>
 <link rel="canonical" href="https://radarbds.vn/listing/{{ l['id'] }}">
-<meta name="description" content="Tin rao #{{ l['id'] }}{% if l.get('ward') %} tại {{ l['ward'] }}{% endif %}: xem giá rao, diện tích, nguồn và thời điểm thu thập. Chưa xác nhận còn bán hoặc giá giao dịch.">
+<meta name="description" content="{{ preview.description }}">
+<meta property="og:title" content="{{ preview.title }}">
+<meta property="og:description" content="{{ preview.description }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://radarbds.vn/listing/{{ l['id'] }}">
+<meta property="og:site_name" content="Radar BDS">
+<meta property="og:image" content="https://radarbds.vn/static/images/seo/radarbds-og.png">
 {% include "partials/google_site_tags.html" %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -827,13 +833,16 @@ body.listing-detail-page {
         <nav class="listing-evidence" aria-labelledby="listing-area-tools-title">
           <h2 id="listing-area-tools-title">Kiểm tra thêm tại {{ l.get('ward') }}</h2>
           <ul>
+            {% if ward_market_href %}
+            <li><a href="{{ ward_market_href }}" data-track-cta="listing_ward_market">So sánh giá rao theo loại tài sản tại {{ l.get('ward') }}</a></li>
+            {% endif %}
             {% if planning_area_href %}
             <li><a href="{{ planning_area_href }}">Mở quy hoạch sử dụng đất 2030 của khu vực</a> · Bản đồ mở ở điểm mẫu. Dùng ghim hoặc giấy tờ của lô để tìm đúng vị trí.</li>
             {% endif %}
             {% if can_compare_land_price %}
             <li><a href="/dinh-gia-bds">So giá bằng công cụ định giá đất</a></li>
             {% endif %}
-            <li><a href="{{ nearby_deals_href }}">Xem deal cùng khu vực {{ l.get('ward') }}</a></li>
+            <li><a href="{{ nearby_deals_href }}" data-track-cta="listing_area_deals">Xem deal cùng khu vực {{ l.get('ward') }}</a></li>
           </ul>
         </nav>
         {% endif %}

@@ -312,6 +312,21 @@ def test_foundational_seo_pages_render_canonical_content():
         assert "127.0.0.1" not in html
 
 
+def test_report_sitemap_uses_publication_dates():
+    import xml.etree.ElementTree as ET
+    import app as radar_app
+
+    with radar_app.app.test_request_context("/sitemap.xml"):
+        root = ET.fromstring(radar_app.sitemap_xml().get_data())
+    dates = {entry.findtext("{*}loc"): entry.findtext("{*}lastmod") for entry in root}
+    reports = radar_app._published_report_pages()
+    for report in reports:
+        assert dates[radar_app._public_url(report["path"])] == (
+            report.get("sitemap_lastmod") or report.get("updated_at") or report["report"]["published_at"]
+        )
+    assert dates[radar_app._public_url("/bao-cao")] == max(p["report"]["published_at"] for p in reports)
+
+
 def test_ban_dat_binh_duong_is_distinct_land_landing():
     import app as radar_app
 

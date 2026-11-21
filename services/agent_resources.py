@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from services.market_data import date_range_options_for_tier, normalize_sources_for_tier
 
 AGENT_SCHEMA_VERSION = "1.0"
 AGENT_CACHE_CONTROL = (
@@ -40,6 +41,7 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
             "province": "Bình Dương",
             "primary": ["Thủ Dầu Một", "Bến Cát"],
             "sources": ["facebook", "guland"],
+            "guest_signal_sources": normalize_sources_for_tier(),
         },
         "capabilities": [
             {
@@ -71,7 +73,13 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
         },
         "public_sources": [
             {"question": "Giá rao đất nền Thủ Dầu Một hiện tại là bao nhiêu?",
-             "guidance": "Chọn đúng phường và đọc ngày chốt mẫu của kỳ đang chạy.",
+             "guidance": (
+                 "Chọn đúng phường ở Thủ Dầu Một (Bình Dương cũ). Để trích số, mở liên kết "
+                 "“Bản số liệu ngày…” trên trang giá hoặc tên phường trong bảng so sánh. "
+                 "Dẫn URL bản lưu đã mở, ghi loại tài sản, đơn vị, trung vị hay trung bình, "
+                 "số mẫu và ngày đầu–cuối kỳ. Khi trang giữ kỳ cũ vì tháng mới ít mẫu, "
+                 "dùng đúng kỳ của bản lưu. Dưới 15 mẫu chỉ nêu số mẫu."
+             ),
              "url": f"{base}/gia-dat/thu-dau-mot"},
             {"question": "Giá rao tại một phường trong tháng cụ thể là bao nhiêu?",
              "guidance": "Mở báo cáo đúng địa bàn và tháng, dẫn trang báo cáo cùng cỡ mẫu của loại tài sản.",
@@ -85,7 +93,7 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
         ],
         "usage": {
             "recommended_flow": [
-                "Translate the user's need into public filters.",
+                "Choose a public source for market statistics. For individual signals, translate the user's need into public filters.",
                 (
                     "Call /api/signals with include_total=0 and limit no "
                     "greater than 30."
@@ -131,6 +139,11 @@ def build_agent_site_manifest(*, base_url: str) -> dict[str, Any]:
             "record_dates": ["card_date_reason", "days_ago"],
         },
         "citation": {
+            "asking_prices": {
+                "source": f"{base}/gia-dat/thu-dau-mot",
+                "permalink": "Follow the dated snapshot link on the price page or the ward link in the comparison table.",
+                "include": ["location", "property_type", "statistic", "unit", "sample_count", "period_start", "period_end"],
+            },
             "canonical_link_field": "detail_href",
             "recommended_fields": [
                 "title",
@@ -195,7 +208,7 @@ def _filter_parameters() -> list[dict[str, Any]]:
                 "type": "array",
                 "items": {
                     "type": "string",
-                    "enum": ["facebook", "guland"],
+                    "enum": normalize_sources_for_tier(),
                 },
             },
             "Repeat to select public sources.",
@@ -247,7 +260,7 @@ def _filter_parameters() -> list[dict[str, Any]]:
             "date_range",
             {
                 "type": "string",
-                "enum": ["1w", "1m", "3m", "6m", "1y", "all"],
+                "enum": list(date_range_options_for_tier()),
             },
             "Listing activity window.",
         ),

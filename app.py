@@ -133,7 +133,7 @@ from services.listing_map_overrides import (
     save_listing_override as save_listing_map_location_override,
 )
 from services.listing_comparables import load_listing_comparables
-from services.listing_evidence import build_listing_evidence
+from services.listing_evidence import build_listing_evidence, listing_search_preview
 from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed, listing_read_model_enabled
 from services.listing_reports import (
     ListingReportError,
@@ -4346,7 +4346,7 @@ def llms_txt():
 - Hướng dẫn máy đọc: {_public_url('/agent/site.json')}
 - OpenAPI chỉ đọc: {_public_url('/agent/openapi.json')}
 - Tìm signal: GET {_public_url('/api/signals')}?include_total=0&limit=30
-- Khi dẫn nguồn, dùng detail_href của signal; không suy đoán số điện thoại hoặc URL tin gốc.
+- Với một tin cụ thể, dẫn trường detail_href của signal. Với thống kê giá rao, chọn nguồn theo câu hỏi bên dưới. Không suy đoán số điện thoại hoặc URL tin gốc.
 
 ## Chọn nguồn theo câu hỏi
 {source_lines}
@@ -4460,7 +4460,9 @@ def sitemap_xml():
     ]
     for page in [
         {"path": "/chinh-sach-bao-mat", "updated_at": "2026-10-22"},
-        REPORT_HUB,
+        dict(REPORT_HUB, sitemap_lastmod=max(
+            (p["report"]["published_at"] for p in _published_report_pages()), default=""
+        )),
         news_hub,
         {"path": "/llms.txt", "updated_at": max(news_lastmod, content_lastmod.get("radar_article", ""))},
         *sitemap_news_hubs,
@@ -4485,7 +4487,7 @@ def sitemap_xml():
             page,
             changefreq="daily",
             priority="0.8",
-            lastmod=page.get("sitemap_lastmod") or page.get("updated_at") or "",
+            lastmod=page.get("sitemap_lastmod") or page.get("updated_at") or (page.get("report") or {}).get("published_at", ""),
         )
         for page in unique_pages
     )
@@ -5772,6 +5774,7 @@ def listing_detail(listing_id):
     return render_template(
         'listing_detail.html',
         l=l,
+        preview=listing_search_preview(l, city.title() if city in CITY_MAP else None),
         imgs=imgs,
         history_json=history_json,
         desc_html=desc_html,
@@ -5779,6 +5782,8 @@ def listing_detail(listing_id):
         map_location=data.get("map_location"),
         evidence=build_listing_evidence(l, data.get("map_location")),
         nearby_deals_href=nearby_deals_href,
+        ward_market_href=next((f"/binh-duong/phuong-{slug}#gia-rao-theo-loai"
+                               for slug, name in TDM_LIVE_WARDS.items() if name == ward), None),
         planning_area_href=planning_demo_href(city) if city in {"THỦ DẦU MỘT", "BẾN CÁT"} else None,
         can_compare_land_price=city in VALUATION_TOOL_CITY_MAP and l.get("property_type") == "dat_nen",
     )

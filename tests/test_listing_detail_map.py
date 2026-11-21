@@ -198,5 +198,12 @@ def test_listing_detail_links_to_matching_area_tools_without_requiring_coordinat
     assert valuation.path == "/dinh-gia-bds"
     assert parse_qs(deals.query) == {"tab": ["signals"], "city": ["BẾN CÁT"], "ward": ["Mỹ Phước"]}
 
+    listing.update(ward="Phú Lợi", property_type="chung_cu")
+    detail = client.get("/listing/42").get_data(as_text=True)
+    assert "<title>Chung cư tại Phú Lợi, Thủ Dầu Một · 100 m² · giá rao 2 tỷ đồng" in detail
+    assert 'href="/binh-duong/phuong-phu-loi#gia-rao-theo-loai"' in detail
+    head = detail.split("</head>", 1)[0]
+    assert 'property="og:title"' in head and listing['url'] not in head
+
     listing["ward"] = "Chưa rõ"
     assert 'aria-labelledby="listing-area-tools-title"' not in client.get("/listing/42").get_data(as_text=True)

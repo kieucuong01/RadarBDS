@@ -1,6 +1,7 @@
 """Public explanation of existing detail data; no verification inferred."""
 from datetime import datetime, timedelta, timezone
 import math
+from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_type
 
 from analytics.valuation import MIN_RELIABLE_N_FOR_SIGNAL
 
@@ -26,6 +27,23 @@ def _date_label(value):
         return parsed.astimezone(local_zone).strftime('%d/%m/%Y %H:%M')
     except (ValueError, TypeError, OverflowError):
         return None
+
+
+def listing_search_preview(listing, city):
+    kind = PROPERTY_TYPE_LABELS.get(normalize_property_type(listing.get('property_type')), 'Bất động sản')
+    location = ', '.join(filter(None, (listing.get('ward'), city)))
+    subject = f'{kind} tại {location}' if location else kind
+    facts = []
+    for field, unit in [('area_m2', 'm²'), ('price_ty', 'tỷ đồng')]:
+        number = _positive(listing.get(field))
+        if number is not None and round(number, 2) > 0:
+            label = f'{number:.2f}'.rstrip('0').rstrip('.').replace('.', ',')
+            facts.append(('giá rao ' if field == 'price_ty' else '') + f'{label} {unit}')
+    headline = ' · '.join([subject, *facts])
+    return {
+        'title': f'{headline} | Tin #{listing["id"]} · Radar BDS',
+        'description': f'{headline}. Xem nguồn tin, thời điểm ghi nhận và các thông tin cần kiểm tra trước khi đi xem.',
+    }
 
 
 def build_listing_evidence(listing, map_location):

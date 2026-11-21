@@ -15,6 +15,9 @@ def test_site_manifest_is_read_only_and_points_to_canonical_resources():
 
     assert manifest["schema_version"] == AGENT_SCHEMA_VERSION
     assert manifest["site"]["url"] == BASE_URL
+    assert manifest["markets"]["guest_signal_sources"] == ["facebook"]
+    assert manifest["citation"]["asking_prices"]["source"] == BASE_URL + "/gia-dat/thu-dau-mot"
+    assert "Bản số liệu ngày" in manifest["public_sources"][0]["guidance"]
     assert manifest["markets"]["primary"] == ["Thủ Dầu Một", "Bến Cát"]
     assert manifest["capabilities"] == [
         {
@@ -85,6 +88,10 @@ def test_openapi_exposes_only_guest_safe_get_operations():
     assert "securitySchemes" not in document.get("components", {})
 
     signals_get = document["paths"]["/api/signals"]["get"]
+    for operation in document["paths"].values():
+        filters = {p["name"]: p["schema"] for p in operation["get"]["parameters"]}
+        assert filters["date_range"]["enum"] == ["1w", "1m", "3m"]
+        assert filters["source"]["items"]["enum"] == ["facebook"]
     parameter_names = {
         parameter["name"] for parameter in signals_get["parameters"]
     }
