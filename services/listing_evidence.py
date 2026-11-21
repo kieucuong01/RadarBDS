@@ -42,7 +42,7 @@ def listing_search_preview(listing, city):
     headline = ' · '.join([subject, *facts])
     return {
         'title': f'{headline} | Tin #{listing["id"]} · Radar BDS',
-        'description': f'{headline}. Xem nguồn tin, thời điểm ghi nhận và các thông tin cần kiểm tra trước khi đi xem.',
+        'description': f'{headline}. Xem nguồn và thời điểm ghi nhận của tin #{listing["id"]}. Cần xác nhận còn bán trước khi đi xem.',
     }
 
 
