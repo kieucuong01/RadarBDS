@@ -208,6 +208,15 @@ def _clean_named_road(value: str) -> str | None:
     if not name:
         return None
     folded = _ascii_fold(name)
+    # Descriptions/CTAs are not street names. ASCII folding also turns nhanh
+    # into the branch-road prefix nhánh; reject the complete collocations, not
+    # their individual words, so real branch names and later candidates survive.
+    if re.match(
+        r"^(?:tay\s+con\s+kip|thi\s+con|gon\s+co\s+bot|sap\s+len\s+nhua|"
+        r"rach\s+phu\s+hop\s+lam|xe\s+tai\s+vao\s+tan\s+noi)\b",
+        folded,
+    ):
+        return None
     if re.search(
         r'\b(?:sieu\s+pham|cuc\s+(?:re|dep)|gia\s+re|tuyet\s+dep|mat\s+me|'
         r'thong\s+thoang|rong\s+rai|can\s+ban|moi\s+kip|bot\s+loc)\b',

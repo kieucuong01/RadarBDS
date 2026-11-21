@@ -1190,3 +1190,63 @@ def test_review_nov18_asphalt_main_road_distance_controls(text, expected):
         "title": "Bán đất", "description": text, "price_ty": 2.0, "area_m2": 100.0,
     })
     assert record is not None and record["road_type"] == expected
+
+
+# Reviewed 20261120/21: 88811/88661 repeat one CTA pattern, not independent
+# evidence. 88737 includes the whole short candidate chain from its offline
+# snapshot: rejecting only the first false name exposes the later candidates.
+NOV21_NON_NAME_CASES = [
+    (88811, "Nhanh tay còn kịp .\nBán nhà 1ty8 tại trung tâm Thành Phố mới Bình Dương"),
+    (88661, "Nhanh tay còn kịp .\nBán nhà 1ty8 tại trung tâm Thành Phố mới Bình Dương"),
+    (88737, "Bán lỗ luôn nhanh thì còn\nDT 7x13=81 m2 tc fun\n"
+     "Đường xe tải vào tận nơi, đèn đường điên nước đầy đủ\n"
+     "Giá 1 tỷ 100 triệu (nhanh gọn có bớt)"),
+    (88676, "đường đất rộng 8m, đường thông vô kho lúa\n"
+     "Gần nhiều công ty, đường sắp lên nhựa."),
+    (88442, "Đường đất xe oto 4m cách ngã tư Phú Thứ chỉ hơn 400m.\n"
+     "Đất mặt tiền rạch phù hợp làm nhà vườn nghỉ dưỡng."),
+]
+
+
+@pytest.mark.parametrize("listing_id,text", NOV21_NON_NAME_CASES)
+def test_review_nov21_descriptions_are_not_road_names(listing_id, text):
+    assert extract_road_name(text) is None
+
+
+@pytest.mark.parametrize("placement", ["title", "description", "repeated"])
+@pytest.mark.parametrize("listing_id,text", NOV21_NON_NAME_CASES)
+def test_review_nov21_non_name_chain_through_normalization(listing_id, text, placement):
+    raw = {
+        "source": "facebook", "url": "synthetic-nov21-road-non-name",
+        "title": "Bán đất", "description": "", "price_ty": 2.0, "area_m2": 100.0,
+    }
+    if placement == "repeated":
+        raw.update(title=text, description=text)
+    else:
+        raw[placement] = text
+    record = normalize_record(raw)
+    assert record is not None and record["road_name"] is None
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Nhanh tay còn kịp", None),
+    ("Bán lỗ nhanh thì còn", None),
+    ("Giá 1 tỷ 100 triệu (nhanh gọn có bớt)", None),
+    ("Đường xe tải vào tận nơi", None),
+    ("Đường sắp lên nhựa", None),
+    ("Mặt tiền rạch phù hợp làm nhà vườn", None),
+    # Near misses: branch-road labels and real street names must survive.
+    ("Nhánh Tây Côn", "Tay Con"),
+    ("Nhánh Thi Sách", "Thi Sach"),
+    ("Đường Rạch Bùng Binh", "Rach Bung Binh"),
+    ("Đường Xe Tải", "Xe Tai"),
+    ("Đường Bình Dương", "Binh Duong"),
+    ("Nhánh đường Hồng Hà", "Hong Ha"),
+    ("Đường Nguyễn Bình đường nhựa", "Nguyen Binh"),
+    ("Nhanh tay còn kịp. Mặt tiền đường Hồng Hà", "Hong Ha"),
+    ("Đường sắp lên nhựa. Mặt tiền DX072", "DX72"),
+    ("Mặt tiền rạch phù hợp làm nhà vườn. Đường Hồng Hà", "Hong Ha"),
+    ("Đường Hồng Hà. Nhanh gọn có bớt", "Hong Ha"),
+])
+def test_review_nov21_non_name_boundaries_preserve_named_roads(text, expected):
+    assert extract_road_name(text) == expected
