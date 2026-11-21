@@ -46,7 +46,7 @@ def price_page(slug):
     location = f"{scope['name']}, {snapshot['scopes'][parent]['name']}" if parent else scope['name']
     from app import _latest_ward_report
 
-    ben_cat = slug in ('my-phuoc', 'ben-cat')
+    ben_cat = slug == 'ben-cat' or parent == 'ben-cat'
     report = None if ben_cat else _latest_ward_report(slug if parent else 'bds-binh-duong',
                                  through=date.fromisoformat(snapshot['period_end']))
     fallback = parent if parent and snapshot['scopes'].get(parent,{}).get('eligible') else None

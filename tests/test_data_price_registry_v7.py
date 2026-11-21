@@ -23,7 +23,9 @@ def test_v7_groups_only_existing_my_phuoc_subwards_and_explicit_ben_cat_whitelis
     rows=[row(i,ward='Mỹ Phước '+str(i%4+1)) for i in range(15)]
     rows += [row(50,ward='Phú An'),row(51,ward='Phú Lợi'),row(52,ward='Bến Cát'),row(53,ward='Other')]
     snap=packet(mod,rows)
-    assert snap['scope_registry_version']==7 and set(snap['scopes'])==V6|NEW
+    assert snap['scope_registry_version']==mod.SCOPE_REGISTRY_VERSION
+    assert set(snap['scopes'])==mod.SCOPE_REGISTRIES[mod.SCOPE_REGISTRY_VERSION]
+    assert V6|NEW <= set(snap['scopes'])
     scope=snap['scopes']['my-phuoc']
     assert scope['parent']=='ben-cat' and scope['sample_count']==15
     assert snap['scopes']['ben-cat']['sample_count']==16

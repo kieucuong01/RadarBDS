@@ -10,7 +10,8 @@ The foundation added `/gia-dat/phu-loi` plus its named parent
 `/gia-dat/tuong-binh-hiep` and `/gia-dat/chanh-nghia`. Registry v5 adds
 `/gia-dat/chanh-my`. Registry v6 adds `/gia-dat/phu-cuong`.
 Registry v7 adds `/gia-dat/my-phuoc` and its named parent `/gia-dat/ben-cat`:
-thirteen candidate localities plus two named parents, not 20
+Registry v8 adds the exact `/gia-dat/an-dien` locality under Bến Cát:
+fourteen candidate localities plus two named parents, not 20
 ward pages or 12 buyer intents. Each still requires
 >=15 valid monthly samples. The existing
 indexed directory/article owners are unchanged. Parent pages do not count as
@@ -43,12 +44,13 @@ Runtime root: `reports/data-seo/` (ignored by Git, not a web route).
   Unneeded seller/contact/title fields are excluded even from this provenance.
 
 Snapshot `source_commit` is the exact checkout SHA used to generate it.
-New packets explicitly declare `scope_registry_version=7`. Frozen v1 packets
+New packets explicitly declare `scope_registry_version=8`. Frozen v1 packets
 (without that member) retain exactly their original two-scope registry; frozen
 v2 retains its original five scopes; v3 retains its original eight; v4 retains
-its original eleven; v5 retains its original twelve; v6 retains its original thirteen. All retain their bytes, hashes and fact
+its original eleven; v5 retains its original twelve; v6 retains its original thirteen;
+v7 retains its original fifteen. All retain their bytes, hashes and fact
 bindings. Unknown versions and missing/extra scopes fail closed.
-The daily engine can read v1/v2/v3/v4/v5/v6 history while generating v7; a new route returns
+The daily engine can read v1/v2/v3/v4/v5/v6/v7 history while generating v8; a new route returns
 503/noindex until a packet containing that registered scope exists. No old
 packet is rewritten or expanded with invented history. The parent and ward
 pages link only to eligible scopes present in the validated packet.
@@ -62,6 +64,10 @@ Mỹ Phước is a grouped data locality, not an administrative ward: exactly
 Mỹ Phước and Mỹ Phước 1/2/3/4, following `MY_PHUOC_PROFILE`. The named Bến Cát
 parent uses exactly the existing guest `CITY_MAP['BẾN CÁT']` ward whitelist.
 Broad/new Bến Cát labels are not silently included as old-area evidence.
+An Điền matches only normalized `An Điền`, not the broader/new `Long Nguyên`
+or generic `Bến Cát` labels. Its directory link retains the existing
+`/binh-duong/phuong-an-dien` owner; its dashboard CTA selects BẾN CÁT and
+the exact An Điền ward. It does not borrow the TDM-only monthly report.
 One listing ID counts once within each scope; a parent and child are not
 independent extra ward targets. No new dedup or geographic normalization is added.
 The dashboard link supplies every grouped ward through its existing repeated
