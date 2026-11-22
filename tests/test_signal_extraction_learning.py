@@ -1250,3 +1250,74 @@ def test_review_nov21_non_name_chain_through_normalization(listing_id, text, pla
 ])
 def test_review_nov21_non_name_boundaries_preserve_named_roads(text, expected):
     assert extract_road_name(text) == expected
+
+
+# 20261122 non-asking-price batch: duplicate 89043/88874 is one pattern.
+NON_ASKING_NOV22_CASES = [
+    (89043, "Rồi lô 750 triệu đã bay màu\n còn lại 850 triệu . Chỉ cần sẵn 250 triệu mua được", 0.85),
+    (88874, "Rồi lô 750 triệu đã bay màu\n còn lại 850 triệu . Chỉ cần sẵn 250 triệu mua được", 0.85),
+    (89023, "Mua 2ty bán 950tr để sửa lý công việc\nBạn nhờ bán lô đất bằng giá đang vay gan hàng", 0.95),
+    (88737, "Chủ vừa mua 1.2 tỉ cần mua lô lớn hơn\nGiá 1 tỷ 100 triệu (nhanh gọn có bớt)", 1.1),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,expected", NON_ASKING_NOV22_CASES)
+def test_nov22_non_asking_amounts_before_current_price(listing_id, text, expected):
+    from cleansing.feature_extractor import extract_price
+    assert extract_price(text) == expected
+
+
+@pytest.mark.parametrize("listing_id,text,expected", NON_ASKING_NOV22_CASES)
+def test_nov22_non_asking_amounts_through_facebook_title(listing_id, text, expected):
+    # Facebook's visible title may duplicate the full post or end at first line.
+    assert parse_facebook_post(text)["price_total"] == expected
+
+
+@pytest.mark.parametrize("listing_id,text,expected", NON_ASKING_NOV22_CASES)
+def test_nov22_non_asking_amounts_through_normalization(listing_id, text, expected):
+    title = text.split("\n", 1)[0]
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/non-asking-price",
+        "title": title, "description": text,
+    })
+    assert record is not None and record["price_ty"] == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Chủ đã mua 2 tỷ, nay bán 950 triệu", 0.95),
+    ("Chu vua mua 1.2 ty\nGia 1 ty 100 trieu", 1.1),
+    ("MUA 2TỶ BÁN 950TR", 0.95),
+    ("Mua 2 tỷ 500 triệu bán 950 triệu", 0.95),
+    ("Mua 850 triệu bán 950 triệu", 0.95),
+    ("Lo 750 trieu da bay mau\ncon lai 850 trieu", 0.85),
+    ("Lô 750 triệu đã bán, lô còn lại giá 850 triệu", 0.85),
+    ("Nền 750 triệu bán rồi; còn lại 850 triệu", 0.85),
+    ("Căn 2 tỷ 500 triệu đã bán; căn còn lại 950 triệu", 0.95),
+    ("Lô 750 triệu đã bán", None),
+    ("Chủ vừa mua 1.2 tỷ", None),
+    ("Mua 2 tỷ bán 950 triệu; trả trước 250 triệu", 0.95),
+])
+def test_nov22_explicit_historical_and_sold_price_variants(text, expected):
+    from cleansing.feature_extractor import extract_price
+    assert extract_price(text) == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Lô 750 triệu đang bán, còn lại 850 triệu", 0.75),
+    ("Lô 750 triệu chưa bán; còn lại 850 triệu", 0.75),
+    ("Lô 750 triệu bán nhanh", 0.75),
+    ("Mua 2 tỷ", 2.0),
+    ("Cần mua 2 tỷ, bán kính 950m", 2.0),
+    ("Mua 2 tỷ, bán hàng thuận tiện", 2.0),
+    ("Giá 2 tỷ; chủ vừa mua xe 950 triệu", 2.0),
+    ("Giá 750 triệu, lô bên cạnh đã bán 850 triệu", 0.75),
+    ("Giá 750 triệu, đã bán nhiều lô", 0.75),
+    ("Giá 7 tỷ 2", 7.2),
+    ("Giá 1 tỷ 100 triệu", 1.1),
+    ("Giá 850 triệu, trả trước 250 triệu", 0.85),
+    ("Giảm còn 1 tỷ 100 triệu", 1.1),
+    ("Lô 750 triệu sắp bay màu", 0.75),
+])
+def test_nov22_non_asking_price_near_misses_keep_current_offer(text, expected):
+    from cleansing.feature_extractor import extract_price
+    assert extract_price(text) == expected

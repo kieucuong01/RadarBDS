@@ -59,7 +59,19 @@ def has_ambiguous_masked_price(text: str) -> bool:
     )
 
 
+_HISTORICAL_PRICE_AMOUNT = (
+    r'\d+(?:[,.]\d+)?\s*(?:'
+    r'(?:tỷ|ty|tỉ|ti)(?:\s*\d{1,3}(?:\s*(?:triệu|trieu|tr))?)?'
+    r'|(?:triệu|trieu|tr))\b'
+)
+
 _NON_ASKING_PRICE_PATTERNS = [
+    # Completed purchases and sold lots are not the current asking price.
+    rf'\b(?:đã|da|vừa|vua)\s+mua\s+{_HISTORICAL_PRICE_AMOUNT}',
+    rf'\bmua\s+{_HISTORICAL_PRICE_AMOUNT}'
+    rf'(?=\s+(?:bán|ban)\s+{_HISTORICAL_PRICE_AMOUNT})',
+    rf'\b(?:lô|lo|nền|nen|căn|can)\s+{_HISTORICAL_PRICE_AMOUNT}\s+'
+    r'(?:(?:đã|da)\s+(?:bán|ban|bay\s+(?:màu|mau))|(?:bán|ban)\s+(?:rồi|roi))\b',
     # Compound discount amounts must be removed before compact-price priority.
     # Keep "giảm còn X tỷ Y" intact: that names the new asking price.
     r'\b(?:giảm|giam|hạ|ha|bớt|bot)\s*(?:giá|gia)?\s*[:：\-]?\s*'
