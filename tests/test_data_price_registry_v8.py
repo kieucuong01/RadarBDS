@@ -16,9 +16,10 @@ V7 = set(json.loads(LEGACY.read_bytes())['scopes'])
 
 def test_v8_adds_only_exact_an_dien_without_expanding_parent_geography():
     mod = engine()
-    assert mod.SCOPE_REGISTRY_VERSION == 8
+    assert mod.SCOPE_REGISTRY_VERSION >= 8
     assert mod.SCOPE_REGISTRIES[7] == V7
-    assert set(mod.SCOPES) == V7 | {'an-dien'}
+    assert mod.SCOPE_REGISTRIES[8] == V7 | {'an-dien'}
+    assert set(mod.SCOPES) == mod.SCOPE_REGISTRIES[mod.SCOPE_REGISTRY_VERSION]
     assert mod.SCOPES['an-dien'] == {'name':'An Điền', 'wards':('An Điền',), 'parent':'ben-cat'}
     rows = [row(i, ward='An Điền') for i in range(15)]
     rows += [row(100, ward='Long Nguyên'), row(101, ward='Bến Cát'), row(102, ward='Phú An')]
