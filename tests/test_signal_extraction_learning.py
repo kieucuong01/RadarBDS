@@ -1321,3 +1321,64 @@ def test_nov22_explicit_historical_and_sold_price_variants(text, expected):
 def test_nov22_non_asking_price_near_misses_keep_current_offer(text, expected):
     from cleansing.feature_extractor import extract_price
     assert extract_price(text) == expected
+
+
+# Two independent reviewed road-name patterns, not repost evidence.
+ROAD_NOV23_CASES = [
+    (89167, "từ 3ty6 giảm còn 2ty8 nhanh mới còn ạ\nNgộp Bank - Rẻ Nhất Khu\n"
+     "Bán Đất Tặng Nhà C4 Mặt Tiền Phan Bội Châu P Thủ Dầu Một Tp HCM", "Phan Boi Chau"),
+    (88781, "Bán Đất 150m2 có sẵn 150 m2 thổ cư giá 2.9 tỷ tại Đường DC 82 "
+     "Phường Phú Tân Thành phố Thủ Dầu Một Bình Dương", "DC82"),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,expected", ROAD_NOV23_CASES)
+def test_nov23_reviewed_street_not_sale_cta_or_missing_code(listing_id, text, expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("listing_id,text,expected", ROAD_NOV23_CASES)
+def test_nov23_reviewed_street_through_full_normalization(listing_id, text, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/road-nov23",
+        "title": text.split("\n", 1)[0], "description": text,
+    })
+    assert record is not None and record["road_name"] == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("nhanh mới còn ạ", None),
+    ("nhanh moi con a\nMặt tiền Phan Bội Châu", "Phan Boi Chau"),
+    ("NHANH MỚI CÒN Ạ\nĐường Lê Hồng Phong", "Le Hong Phong"),
+    ("Nhanh mới còn ạ\nGần đường Phan Bội Châu", None),
+    ("Nhánh Hồng Hà", "Hong Ha"),
+    ("Nhánh Mới Phú Lợi", "Moi Phu Loi"),
+    ("Đường Mới Phú Lợi", "Moi Phu Loi"),
+    ("Mặt tiền Phan Bội Châu P Thủ Dầu Một Tp HCM", "Phan Boi Chau"),
+    ("Nhánh Phan Bội Châu", "Phan Boi Chau"),
+])
+def test_nov23_sale_cta_boundary_preserves_real_branch_names(text, expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Đường DC82", "DC82"),
+    ("Mặt tiền DC 82", "DC82"),
+    ("MT đường dc-0082", "DC82"),
+    ("Nhánh DC 82", "DC82"),
+    ("Gần đường DC82", None),
+    ("Cách DC 82 50m", None),
+    ("Đường thông từ DC82 xuống ĐH609", None),
+    ("DC82: 400m", None),
+    ("DC82", None),
+    ("Lô DC82 diện tích 150m2", None),
+    ("DC 82m2", None),
+    ("Mặt tiền DC82abc", None),
+    ("Đường DC 82m2", None),
+    ("Đường Hồng Hà; gần DC82", "Hong Ha"),
+    ("Mặt tiền D12; gần đường DC82", "D12"),
+    ("Đường ĐT7A", "DT7A"),
+    ("Nhánh DH609", "DH609"),
+])
+def test_nov23_dc_code_requires_road_label_not_proximity_or_lot_code(text, expected):
+    assert extract_road_name(text) == expected

@@ -43,7 +43,7 @@ _CAP_TRO_RE = re.compile(
 _NHA_TRO_CAP_PRICE_THRESHOLD = 2.5  # tỷ
 
 _ROAD_PREFIX_PAT = re.compile(
-    r"\b(?:dx|dj|dh|dl|db|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*[-–]?\s*0*(\d{1,4})\b",
+    r"\b(?:dx|dj|dh|dl|db|dc|ql|tl|ni|nj|dk|nk|nl|nh|d|n)\s*[-–]?\s*0*(\d{1,4})\b",
     re.IGNORECASE,
 )
 _PROVINCIAL_ROAD_PAT = re.compile(r"\bdt\s*[-–]?\s*0*(\d{1,4})([a-d]?)\b", re.IGNORECASE)
@@ -115,6 +115,12 @@ def extract_road_name(text: str) -> str | None:
         raw = re.sub(r"\s+", "", m.group(0).lower())
         prefix_match = re.match(r"[a-z]+", raw)
         if not prefix_match:
+            continue
+        # DC may also identify a lot/block: accept it only with a road label.
+        if prefix_match.group(0) == "dc" and not re.search(
+            r"\b(?:mat\s*tien|mt|duong|nhanh)\s*$",
+            folded[max(0, m.start() - 32):m.start()],
+        ):
             continue
         return f"{prefix_match.group(0).upper()}{int(m.group(1))}"
     for m in _HEM_NAMED_ROAD_PAT.finditer(folded):
@@ -213,7 +219,7 @@ def _clean_named_road(value: str) -> str | None:
     # their individual words, so real branch names and later candidates survive.
     if re.match(
         r"^(?:tay\s+con\s+kip|thi\s+con|gon\s+co\s+bot|sap\s+len\s+nhua|"
-        r"rach\s+phu\s+hop\s+lam|xe\s+tai\s+vao\s+tan\s+noi)\b",
+        r"rach\s+phu\s+hop\s+lam|xe\s+tai\s+vao\s+tan\s+noi|moi\s+con\s+a)\b",
         folded,
     ):
         return None
