@@ -16,9 +16,9 @@ V8 = set(json.loads(LEGACY.read_bytes())['scopes'])
 
 def test_v9_adds_only_exact_phu_an_and_preserves_frozen_v8_geography():
     mod = engine()
-    assert mod.SCOPE_REGISTRY_VERSION == 9
+    assert mod.SCOPE_REGISTRIES[9] == V8 | {'phu-an'}
     assert mod.SCOPE_REGISTRIES[8] == V8
-    assert set(mod.SCOPES) == V8 | {'phu-an'}
+    assert mod.SCOPE_REGISTRIES[9] == V8 | {'phu-an'}
     assert mod.SCOPES['phu-an'] == {'name':'Phú An', 'wards':('Phú An',), 'parent':'ben-cat'}
     rows = [row(i, ward='Phú An') for i in range(15)]
     rows += [row(100, ward='Tân An'), row(101, ward='Hiệp An'), row(102, ward='Bến Cát')]
