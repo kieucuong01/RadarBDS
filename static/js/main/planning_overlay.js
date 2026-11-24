@@ -22,14 +22,13 @@
   }
 
   function transportTemplate(template) {
-    return template === 'https://s3.hn-1.cloud.cmctelecom.vn/guland7/metro-hcm-3/{z}/{x}/{y}.png' ? 19 : 0;
+    return template === 'https://datacdn2.guland.vn/qh-hcm-100nam/giao_thong/{z}/{x}/{y}.png' ? 17 : 0;
   }
 
   function displayMinZoom(data) { return data.overview ? data.overview.min_zoom : data.min_zoom || 8; }
 
   function visionNativeZoom(template) {
     if (template === 'https://datacdn2.guland.vn/qh-hcm-100nam/sdd/{z}/{x}/{y}.png') return 19;
-    if (template === 'https://datacdn2.guland.vn/qh-hcm-100nam/giao_thong/{z}/{x}/{y}.png') return 17;
     return 0;
   }
 
@@ -82,11 +81,10 @@
     }
     var b = data.bounds;
     var expanded = data.render_mode === 'xyz';
-    var limits = tayNinh2030 ? [10.25,105.45,11.85,106.85] : transport ? [10.35,106.35,11.2,107.05] : vision100 ? [10.3,106.25,11.65,107.65] : dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
+    var limits = tayNinh2030 ? [10.25,105.45,11.85,106.85] : (transport || vision100) ? [10.3,106.25,11.65,107.65] : dongNai2030 ? [10.49,106.39,12.33,107.60] : expanded ? [8.5,106.25,11.65,107.65] : [10.75,106.25,11.65,107.10];
     if (!validBounds(b, limits)) return false;
-    if (data.min_native_zoom !== undefined && (!(dongNai2030 || vision100 || transport) || data.min_native_zoom !== (transport ? 12 : vision100 ? 10 : 9))) return false;
-    if (transport && data.min_native_zoom !== 12) return false;
-    if (vision100 && data.min_native_zoom !== 10) return false;
+    if (data.min_native_zoom !== undefined && (!(dongNai2030 || vision100 || transport) || data.min_native_zoom !== (transport || vision100 ? 10 : 9))) return false;
+    if ((transport || vision100) && data.min_native_zoom !== 10) return false;
     if (dongNai2030 && data.min_native_zoom !== 9) return false;
     if (data.coverage_windows !== undefined && (!dongNai2030 || !Array.isArray(data.coverage_windows)
         || data.coverage_windows.length !== 2 || !data.coverage_windows.every(function (w) {
@@ -215,7 +213,7 @@
           && !(item.source === 'guland' && (['land_use_2030', 'urban_vision_100', 'transport'].indexOf(item.theme) >= 0 || ['partition','construction','urban_general'].indexOf(item.theme)>=0 && partitionRule) && item.manifest && item.manifest.source_kind === 'guland_reference')) return false;
       if (isAdministrative(item.theme) && (!administrative || !administrative.validCatalogItem(item))) return false;
       if ((isAdministrative(item.theme)) !== Boolean(item.manifest && ['official_gis_administrative','open_administrative_reference'].indexOf(item.manifest.source_kind) >= 0)) return false;
-      if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template) || item.manifest.source_kind === 'official_gis_transport'))) return false;
+      if ((item.theme === 'transport') !== Boolean(item.manifest && (transportTemplate(item.manifest.tile_template)))) return false;
       if ((item.theme === 'urban_vision_100') !== Boolean(item.manifest && visionNativeZoom(item.manifest.tile_template))) return false;
       if (item.theme === 'land_use_2030' && item.manifest && item.manifest.planning_status === 'draft') return false;
       if (item.scope !== undefined && ['area', 'city', 'region'].indexOf(item.scope) < 0) return false;
@@ -250,7 +248,7 @@
       {id: 'detailed', name: 'quy hoạch chi tiết', title: 'Quy hoạch chi tiết', short: 'QH Chi tiết'},
       {id: 'construction', name: 'quy hoạch xây dựng', title: 'Quy hoạch xây dựng', short: 'QH Xây dựng'},
       {id: 'urban_vision_100', name: 'quy hoạch chung 100 năm (Đã phê duyệt)', title: 'QH chung 100 năm (Đã phê duyệt)', short: 'QH 100 năm (Đã phê duyệt)'},
-      {id: 'transport', name: 'quy hoạch giao thông', title: 'Quy hoạch giao thông · Metro và đường chính', short: 'QH Giao thông'},
+      {id: 'transport', name: 'quy hoạch giao thông', title: 'Quy hoạch giao thông TP.HCM mới', short: 'QH Giao thông'},
       {id: 'administrative', name: 'địa giới hành chính mới', title: 'Địa giới (mới)', short: 'Địa giới (mới)'},
       {id: 'administrative_legacy', name: 'địa giới hành chính cũ', title: 'Địa giới (cũ)', short: 'Địa giới (cũ)'}
     ];
@@ -422,9 +420,6 @@
       if (isAdministrative(theme.id)) {
         node('option', theme.source, theme.title).value = 'gis';
         theme.source.value = 'gis';
-      } else if (theme.id === 'transport') {
-        node('option', theme.source, 'Metro + GIS giao thông').value = 'combined';
-        theme.source.value = 'combined';
       } else if (theme.id === 'construction' || theme.id === 'land_use_2030' || theme.id === 'urban_vision_100' || theme.id === 'transport') {
         node('option', theme.source, 'Bản đồ tham khảo').value = 'guland';
         theme.source.value = 'guland';
@@ -692,7 +687,7 @@
         theme.status.textContent = isAdministrative(theme.id)
           ? (ready.length ? ready.map(function(item){return item.name;}).join(' · ') + '. Tải chi tiết theo vùng nhìn; bản hiển thị tham khảo.' : 'Chưa có dữ liệu địa giới cho khu vực này.')
           : native ? (theme.id === 'transport'
-          ? 'Metro tham khảo + GIS đường hành lang / vành đai. VĐ1 gồm các đoạn đã đối chiếu, chưa xác minh khép kín. Giữ trạng thái từng đoạn GIS; xem hồ sơ nguồn.'
+          ? 'Lớp giao thông TP.HCM mới từ bản đồ QH 2030 trên Guland.'
           : theme.id === 'urban_vision_100'
           ? 'TP.HCM phê duyệt quy hoạch tổng thể 2025–2050, tầm nhìn 100 năm theo Quyết định 7308/QĐ-UBND ngày 31/10/2026.'
           : theme.id === 'construction'

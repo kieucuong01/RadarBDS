@@ -153,7 +153,7 @@ def test_catalog_isolates_each_layer_and_scopes_assets(tmp_path):
     assert catalog.status_code == 200
     assert catalog.headers['Cache-Control'] == 'private, no-store'
     layers = {row['id']: row for row in catalog.json['layers']}
-    assert len(layers) == 195
+    assert len(layers) == 193
     legacy=[row for row in layers.values() if row.get('theme')=='administrative_legacy']
     assert len(legacy)==63 and sum(row['manifest']['unit_count'] for row in legacy)==10038
     assert layers['dongnai-administrative-2025']['manifest']['unit_count'] == 95
