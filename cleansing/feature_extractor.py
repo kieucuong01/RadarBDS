@@ -2258,6 +2258,22 @@ def extract_all(title: str, description: str, source_price_str: str = '',
             price_total = description_price
         elif description_price and description_price > price_total * 1.15:
             price_total = description_price
+        elif description_price and description_price > price_total:
+            # A generated title can end inside #7tỷ2 at #7tỷ. Only recover
+            # the suffix when the description repeats that exact title prefix;
+            # unrelated prices still use the existing selection threshold.
+            title_folded = _ascii_fold(title).lower().strip()
+            description_folded = _ascii_fold(description).lower().strip()
+            amount = re.search(r'(?<![\w,.])(\d+)\s*(?:ty|ti)$', title_folded)
+            if amount and description_folded.startswith(title_folded):
+                rest = re.match(
+                    r'\d{1,3}(?:\s*(?:trieu|tr))?\b'
+                    r'(?!\s*(?:m[2²]|m\s*vuong|met\s*vuong)\b)',
+                    description_folded[len(title_folded):],
+                )
+                if (rest and title_price == float(amount.group(1))
+                        and extract_price(amount.group() + rest.group()) == description_price):
+                    price_total = description_price
 
     # Diện tích — badge ưu tiên tuyệt đối, chỉ parse text nếu không có badge
     if badge_area_m2 is not None:

@@ -1382,3 +1382,71 @@ def test_nov23_sale_cta_boundary_preserves_real_branch_names(text, expected):
 ])
 def test_nov23_dc_code_requires_road_label_not_proximity_or_lot_code(text, expected):
     assert extract_road_name(text) == expected
+
+
+# 20261122-150048:89070:price_ty; #88625 is the same repost pattern,
+# not independent evidence. The source title is a prefix cut at #7tỷ.
+NOV24_PRICE_DESCRIPTION = (
+    "600m2 đất trung tâm Hiệp Thành ( Phú Lợi , Tp HCM mới ) "
+    "đường nhựa 6m thông luôn mà giá chỉ có  #7tỷ2 . Chỉ có #7tỷ2 thôi\n"
+    "Tính ra chỉ #12tr/m2"
+)
+NOV24_PRICE_TITLE = NOV24_PRICE_DESCRIPTION.split("2 . Chỉ có", 1)[0]
+
+
+def test_nov24_reviewed_89070_truncated_title_preserves_complete_price():
+    from cleansing.feature_extractor import extract_all
+
+    assert NOV24_PRICE_TITLE.endswith("#7tỷ")
+    assert extract_all(NOV24_PRICE_TITLE, NOV24_PRICE_DESCRIPTION)["price_total"] == 7.2
+
+
+def test_nov24_reviewed_89070_full_normalization_repairs_dependent_unit_price():
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/nov24-price",
+        "title": NOV24_PRICE_TITLE, "description": NOV24_PRICE_DESCRIPTION,
+    })
+    assert record is not None
+    assert record["price_ty"] == 7.2
+    assert record["area_m2"] == 600
+    assert record["price_per_m2"] == 12
+
+
+@pytest.mark.parametrize("title,description,expected", [
+    ("Đất giá #7tỷ", "Đất giá #7tỷ2 . Chỉ có #7tỷ2 thôi", 7.2),
+    ("DAT GIA #7TY", "DAT GIA #7TY2 . CHI CO #7TY2 THOI", 7.2),
+    ("Đất giá 7tỉ", "Đất giá 7tỉ2 chốt", 7.2),
+    ("Đất giá 7ty", "Đất giá 7ty25 chốt", 7.25),
+    ("Đất giá 7ty", "Đất giá 7ty250tr chốt", 7.25),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ05 chốt", 7.05),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ0 chốt", 7.0),
+    ("  Đất giá #7tỷ  ", " Đất giá #7tỷ2 chốt", 7.2),
+    # Different surrounding content or a distinct amount is not truncation.
+    ("Đất giá 7 tỷ", "Giá 7 tỷ 2", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ. Nay giá 7 tỷ 2", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ 2 phòng ngủ. Giá 7 tỷ 2", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ2m2. Giá 7 tỷ 2", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ2 m2. Giá 7 tỷ 2", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ2xx", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ2abc. Giá 7 tỷ 2", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ2500 chốt", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ. Chỉ có 8 tỷ", 7.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ. Chỉ có 9 tỷ", 7.0),
+    ("Đất giá 7 tỷ", "Giá 9 tỷ", 9.0),
+    ("Đất giá 7 tỷ", "Đất giá 7 tỷ", 7.0),
+    ("Đất giá 7.2 tỷ", "Đất giá 7.2 tỷ5 chốt", 7.2),
+    ("Đất giá 7 tỷ", "", 7.0),
+    ("", "Đất giá 7 tỷ 2", 7.2),
+])
+def test_nov24_compact_price_continuation_requires_exact_prefix(title, description, expected):
+    from cleansing.feature_extractor import extract_all
+
+    assert extract_all(title, description)["price_total"] == expected
+
+
+def test_nov24_complete_price_does_not_override_explicit_source_badge():
+    from cleansing.feature_extractor import extract_all
+
+    assert extract_all(
+        NOV24_PRICE_TITLE, NOV24_PRICE_DESCRIPTION, source_price_str="7 tỷ",
+    )["price_total"] == 7.0
