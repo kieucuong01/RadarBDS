@@ -13,7 +13,8 @@ Registry v7 adds `/gia-dat/my-phuoc` and its named parent `/gia-dat/ben-cat`:
 Registry v8 adds the exact `/gia-dat/an-dien` locality under Bến Cát:
 Registry v9 adds the exact `/gia-dat/phu-an` data locality under Bến Cát:
 Registry v10 adds the exact `/gia-dat/tan-dinh` data locality under Bến Cát:
-sixteen candidate localities plus two named parents, not 20
+Registry v11 adds the exact `/gia-dat/hoa-loi` data locality under Bến Cát:
+seventeen candidate localities plus two named parents, not 20
 ward pages or 12 buyer intents. Each still requires
 >=15 valid monthly samples. The existing
 indexed directory/article owners are unchanged. Parent pages do not count as
@@ -46,13 +47,13 @@ Runtime root: `reports/data-seo/` (ignored by Git, not a web route).
   Unneeded seller/contact/title fields are excluded even from this provenance.
 
 Snapshot `source_commit` is the exact checkout SHA used to generate it.
-New packets explicitly declare `scope_registry_version=10`. Frozen v1 packets
+New packets explicitly declare `scope_registry_version=11`. Frozen v1 packets
 (without that member) retain exactly their original two-scope registry; frozen
 v2 retains its original five scopes; v3 retains its original eight; v4 retains
 its original eleven; v5 retains its original twelve; v6 retains its original thirteen;
-v7 retains its original fifteen; v8 retains its original sixteen; v9 retains its original seventeen. All retain their bytes, hashes and fact
+v7 retains its original fifteen; v8 retains its original sixteen; v9 retains its original seventeen; v10 retains its original eighteen. All retain their bytes, hashes and fact
 bindings. Unknown versions and missing/extra scopes fail closed.
-The daily engine can read v1/v2/v3/v4/v5/v6/v7/v8/v9 history while generating v10; a new route returns
+The daily engine can read v1/v2/v3/v4/v5/v6/v7/v8/v9/v10 history while generating v11; a new route returns
 503/noindex until a packet containing that registered scope exists. No old
 packet is rewritten or expanded with invented history. The parent and ward
 pages link only to eligible scopes present in the validated packet.
@@ -83,6 +84,11 @@ not Tân An, Tân Uyên or a generic Bến Cát label. Read-only source checks
 confirmed explicit Tân Định mentions for its initial qualified cohort; this is
 not proof of current administrative boundaries. Its directory owner remains
 `/binh-duong/phuong-tan-dinh` and CTA selects exactly Tân Định in BẾN CÁT.
+Hòa Lợi matches only the existing normalized `Hòa Lợi` data locality,
+not Hòa Phú, Phú Hòa or a generic Bến Cát label. Read-only source checks
+confirmed explicit Hòa Lợi/Hoà Lợi mentions for its initial qualified cohort;
+this is not proof of current administrative boundaries. Its directory owner
+remains `/binh-duong/phuong-hoa-loi` and CTA selects exactly Hòa Lợi in BẾN CÁT.
 The dashboard link supplies every grouped ward through its existing repeated
 `ward` filter, and selects BẾN CÁT rather than the TDM default. New parent pages
 do not link the existing TDM-only closed-month master as a Bến Cát report.
