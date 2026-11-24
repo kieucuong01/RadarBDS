@@ -1,22 +1,22 @@
 {
-  "source_checked_on": "2026-10-29",
+  "source_checked_on": "2026-11-24",
   "layers": [
     {
-      "id": "hcm-vision-100-draft",
-      "name": "TP.HCM · Tầm nhìn 100 năm (Dự thảo)",
+      "id": "hcm-vision-100-land",
+      "name": "TP.HCM · Sử dụng đất",
       "city": "TP.HCM mới (phần đất liền)",
       "scope": "region",
       "area_id": "hcm-expanded",
       "theme": "urban_vision_100",
       "source": "guland",
       "status": "overlay_ready",
-      "decision": "Dự thảo định hướng 2025–2050, tầm nhìn 100 năm; chưa xác minh phê duyệt",
-      "source_url": "https://guland.vn/xem-quy-hoach/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam",
+      "decision": "Quyết định 7308/QĐ-UBND ngày 31/10/2026",
+      "source_url": "https://guland.vn/soi-quy-hoach?lat=10.847771443414&lng=106.646657911",
       "manifest": {
-        "id": "hcm-vision-100-draft",
+        "id": "hcm-vision-100-land",
         "status": "reference_overlay",
-        "title": "QH chung TP.HCM tầm nhìn 100 năm (Dự thảo)",
-        "planning_status": "draft",
+        "title": "Quy hoạch tổng thể TP.HCM · Sử dụng đất",
+        "planning_status": "approved",
         "bounds": [
           [
             10.3,
@@ -37,9 +37,50 @@
         "max_zoom": 23,
         "min_native_zoom": 10,
         "max_native_zoom": 19,
-        "tile_template": "https://r4gmiynxmeobj.vcdn.cloud/hcm-100-nam-2/sdd/{z}/{x}/{y}.png",
-        "attribution": "<a href=\"https://guland.vn/xem-quy-hoach/quy-hoach-chung-tp-ho-chi-minh-2025-2050-tam-nhin-100-nam\" target=\"_blank\" rel=\"noopener noreferrer\">Nguồn QH 100 năm · Dự thảo</a>",
-        "notice": "Bản đồ định hướng 2025–2050, tầm nhìn 100 năm (Dự thảo) theo nhãn nguồn. Chưa xác minh phê duyệt hoặc hiệu lực; không thay thế quy hoạch chung, phân khu và xác nhận quy hoạch. Côn Đảo chưa có tile được xác minh."
+        "tile_template": "https://datacdn2.guland.vn/qh-hcm-100nam/sdd/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://qhkt.hochiminhcity.gov.vn/Uploads/Document/Legislation/7308_QD_UBND_Pheduyet_QHTT_TPHCM.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">QĐ 7308/QĐ-UBND</a>",
+        "notice": "Quy hoạch tổng thể TP.HCM thời kỳ 2025–2050, tầm nhìn 100 năm. Tra cứu theo thửa cần đối chiếu hồ sơ quy hoạch chi tiết."
+      }
+    },
+    {
+      "id": "hcm-vision-100-roads",
+      "name": "TP.HCM · Giao thông",
+      "city": "TP.HCM mới (phần đất liền)",
+      "scope": "region",
+      "area_id": "hcm-expanded",
+      "theme": "urban_vision_100",
+      "source": "guland",
+      "status": "overlay_ready",
+      "decision": "Quyết định 7308/QĐ-UBND ngày 31/10/2026",
+      "source_url": "https://guland.vn/soi-quy-hoach?lat=10.847771443414&lng=106.646657911",
+      "manifest": {
+        "id": "hcm-vision-100-roads",
+        "status": "reference_overlay",
+        "title": "Quy hoạch tổng thể TP.HCM · Giao thông",
+        "planning_status": "approved",
+        "bounds": [
+          [
+            10.3,
+            106.25
+          ],
+          [
+            11.65,
+            107.65
+          ]
+        ],
+        "source_kind": "guland_reference",
+        "alignment_method": "source_xyz",
+        "legend_available": false,
+        "map_scale": null,
+        "render_mode": "xyz",
+        "tile_size": 256,
+        "min_zoom": 8,
+        "max_zoom": 23,
+        "min_native_zoom": 10,
+        "max_native_zoom": 17,
+        "tile_template": "https://datacdn2.guland.vn/qh-hcm-100nam/giao_thong/{z}/{x}/{y}.png",
+        "attribution": "<a href=\"https://qhkt.hochiminhcity.gov.vn/Uploads/Document/Legislation/7308_QD_UBND_Pheduyet_QHTT_TPHCM.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">QĐ 7308/QĐ-UBND</a>",
+        "notice": "Quy hoạch tổng thể TP.HCM thời kỳ 2025–2050, tầm nhìn 100 năm. Tra cứu theo thửa cần đối chiếu hồ sơ quy hoạch chi tiết."
       }
     }
   ]
