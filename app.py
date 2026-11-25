@@ -4230,6 +4230,10 @@ def seo_article_page(slug):
             target = f"{target}?{query}"
         return redirect(target, code=301)
     page = dict(page)
+    from services.buyer_intent_seo import OWNER_SLUG, load_results, prepare_page
+    if slug == OWNER_SLUG:
+        page = prepare_page(page)
+        page["buyer_intent"] = load_results()
     if slug.startswith("gia-dat-"):
         scope = page.get("scope_label") or ""
         page["asking_price_href"] = published_price_href(scope.removeprefix("Thủ Dầu Một · "))
@@ -4246,7 +4250,14 @@ def seo_article_page(slug):
     illustration = (page.get("article") or {}).get("illustration") or {}
     if str(illustration.get("src") or "").startswith("/static/images/seo/"):
         site_meta["og_image"] = _public_url(illustration["src"])
-    return render_template("seo_article.html", page=page, site_meta=site_meta, active_nav=_active_public_nav(page["path"]))
+    body = render_template("seo_article.html", page=page, site_meta=site_meta, active_nav=_active_public_nav(page["path"]))
+    if slug == OWNER_SLUG:
+        response = make_response(body)
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["X-Radar-Buyer-Intent"] = "dat-duoi-2-ty-ben-cat"
+        response.headers["X-Radar-Buyer-Intent-Eligible"] = str(int(page["buyer_intent"]["eligible"]))
+        return response
+    return body
 
 
 def robots_txt():
@@ -4491,12 +4502,13 @@ def sitemap_xml():
         )
         for page in unique_pages
     )
+    from services.buyer_intent_seo import OWNER_PATH as buyer_owner_path, UPDATED_AT as buyer_updated_at
     article_urls = "\n".join(
         render_sitemap_entry(
             page,
             changefreq="weekly",
             priority="0.7",
-            lastmod=(page.get("article") or {}).get("modified_at") or "",
+            lastmod=buyer_updated_at if page.get("path") == buyer_owner_path else (page.get("article") or {}).get("modified_at") or "",
         )
         for slug, page in SEO_ARTICLES.items()
         if is_public_article(page)

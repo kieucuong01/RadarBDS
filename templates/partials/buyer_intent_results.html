@@ -1,0 +1,29 @@
+<section id="tin-dat-duoi-2-ty" class="article-section" aria-labelledby="buyer-intent-heading" data-buyer-intent="dat-duoi-2-ty-ben-cat" data-buyer-eligible="{{ '1' if page.buyer_intent.eligible else '0' }}">
+  <h2 id="buyer-intent-heading">Tin bán đất nền Bến Cát có giá rao dưới 2 tỷ</h2>
+  <p>Ngân sách dưới 2 tỷ thì nên lọc tổng giá trước, rồi mới so diện tích từng lô.</p>
+  <p>Danh sách này chỉ giữ tin bán đất nền ở các địa bàn Bến Cát đang được Radar theo dõi; không gồm tin đúng 2 tỷ, nhà xây sẵn hoặc tin cho thuê.</p>
+  <p>Mỗi thẻ ghi tổng giá rao và diện tích từ dữ liệu hiện có. Thời điểm kiểm tra danh sách: <time datetime="{{ page.buyer_intent.generated_at }}">{{ page.buyer_intent.generated_at }}</time>.</p>
+  <p>Đối chiếu thêm <a href="/gia-dat/ben-cat">mẫu giá rao đất nền Bến Cát</a>, có ghi rõ kỳ dữ liệu và cỡ mẫu; số liệu đó không phải thống kê riêng nhóm dưới 2 tỷ.</p>
+  <p>Giá và tình trạng còn bán cần được hỏi lại với người đăng trước khi đi xem. Giá rao không phải giá giao dịch.</p>
+  <p>Trang lấy tối đa 30 ứng viên mới nhất từ bộ lọc Tin rao công khai một tháng, rồi kiểm tra lại giá dưới 2 tỷ, loại đất bán và vị trí. Hiển thị tối đa 20 tin đạt điều kiện; số thẻ không phải tổng số tin của Bến Cát hay số lô đất độc lập.</p>
+  {% if not page.buyer_intent.available %}
+  <p role="status">Chưa tải được danh sách hiện tại; chưa xác minh số tin, không kết luận thị trường không có lựa chọn.</p>
+  {% elif not page.buyer_intent.cards %}
+  <p>Chưa có tin đạt điều kiện trong nhóm ứng viên vừa kiểm tra. Đây không phải kết luận toàn Bến Cát không có đất dưới 2 tỷ.</p>
+  {% else %}
+  <p>Đang hiển thị {{ page.buyer_intent.count }} tin đạt điều kiện trong nhóm vừa kiểm tra.</p>
+  <div class="buyer-intent-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px">
+  {% for card in page.buyer_intent.cards %}
+    <article data-buyer-listing-id="{{ card.id }}" style="border:1px solid #cbd5e1;border-radius:12px;padding:16px;min-width:0;overflow-wrap:anywhere">
+      <h3><a href="/listing/{{ card.id }}">Đất nền {{ card.ward }}</a></h3>
+      <p>{{ card.area_m2 }} m² · Giá rao {{ card.price_ty }} tỷ đồng</p>
+    </article>
+  {% endfor %}
+  </div>
+  {% endif %}
+  <p><a href="/binh-duong/ben-cat">Xem thêm thông tin khu vực Bến Cát</a>. Các trang khu vực có phạm vi rộng hơn bộ lọc dưới 2 tỷ này.</p>
+</section>
+<aside class="seo-trust-panel" aria-label="Phân biệt dữ liệu hiện tại và bản đã lưu">
+  <h2>Bản phân tích theo kỳ đã lưu</h2>
+  <p>Phần bên dưới giữ nguyên bản phân tích dữ liệu Facebook 08–21/09/2026 với ngưỡng không quá 2 tỷ (≤ 2 tỷ). Các số của kỳ cũ không mô tả danh sách dưới 2 tỷ hiện tại phía trên; ngày cập nhật trang không biến số liệu tháng 9 thành số liệu hôm nay.</p>
+</aside>

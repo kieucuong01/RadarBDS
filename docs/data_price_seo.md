@@ -216,3 +216,29 @@ retain the 20 manifest candidates and 12 intent copy/filter specs. Historical
 packets are frozen. Future registry/contract migrations must not silently
 invalidate or rewrite old snapshots. Google Inspection receipts belong in
 the owner manifest; HTTP/sitemap success is not index proof.
+
+
+## Maintained buyer intent on the existing Bến Cát owner (25 November 2026)
+
+`/tin-tuc/dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin` keeps its exact
+canonical and dated September analysis; no competing URL or redirect is added.
+A clearly separated SSR section at `#tin-dat-duoi-2-ty` uses the existing guest
+Tin rao dispatcher, Facebook only, the registered Bến Cát whitelist, land type,
+one-month filter and at most 30 newest candidates. It does not claim to scan
+all matches. A bounded READ ONLY primary-key lookup rechecks current sale/type,
+source, locality, state, finite positive area and **strict price <2 billion**;
+exactly 2 billion is excluded even though the shared candidate filter is <=2.
+Only ID, ward, area and asking price reach the template, at most 20 cards.
+
+The section is one maintained intent, not another ward price page. Its displayed
+card count is not a warehouse total or unique-lot count. At least three current
+safe cards are required for the owner's intent-eligibility receipt, not for a
+price statistic; no price summary is computed. If the feed/version/DB fails,
+count is null and the page says unavailable. The useful dated original analysis
+remains available at its existing canonical; it is never relabeled as current.
+The September analysis used <=2 billion and is explicitly separated from the
+new strict <2 result population. Editorial metadata/sitemap lastmod advance
+only to the actual feature update date, not every request. The result page is
+private/no-store even for an authenticated visitor and always uses guest data.
+`services/buyer_intent_seo.py` owns this maintained metadata override; the static
+historical `SEO_ARTICLES` object and its statistics are not mutated.
