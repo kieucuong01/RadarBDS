@@ -177,6 +177,36 @@ def test_lead_first_intro_priorities_are_answer_first():
         assert 40 <= len(first_intro.split()) <= 60
 
 
+def test_phu_my_hiep_thanh_article_exposes_comparable_sources_and_filtered_ctas():
+    from app import app
+    from html.parser import HTMLParser
+    from urllib.parse import parse_qs, urlsplit
+
+    class Links(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "a" and "data-track-cta" in attrs:
+                targets[attrs["data-track-cta"]] = attrs["href"]
+
+    slug = "phu-my-hay-hiep-thanh-nen-xem-khu-nao-truoc"
+    page = SEO_ARTICLES[slug]
+    response = app.test_client().get(page["path"])
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    targets = {}
+    Links().feed(html)
+    for ward, name, price, count in (
+        ("phu_my", "Phú Mỹ", "22,31", 363),
+        ("hiep_thanh", "Hiệp Thành", "23,38", 63),
+    ):
+        assert f"{price} triệu đồng/m² từ {count} mẫu" in html
+        assert targets[f"article_price_source_{ward}"] == f"/gia-dat/{ward.replace('_', '-')}/ban-luu/2026-11-24-7e74999f478394ff"
+        query = parse_qs(urlsplit(targets[f"article_open_listings_{ward}"]).query)
+        assert query == {"tab": ["signals"], "city": ["THỦ DẦU MỘT"], "ward": [name], "prop_type": ["dat_nen"]}
+    assert page["article"]["published_at"] == "2026-08-17"
+    assert page["article"]["modified_at"] == "2026-11-24"
+
+
 def test_social_caption_line_breaks_are_valid_but_other_controls_stay_blocked():
     base = {"path": "/tin-tuc/fixture", "title": "Fixture title", "description": "Fixture description"}
     def codes(payload):

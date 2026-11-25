@@ -643,3 +643,17 @@ def test_seo_and_home_screen_icon_assets_are_wired_and_sized():
             if path in {"static/images/favicon-32.png", "static/images/favicon-16.png"}:
                 assert img.mode == "RGBA"
                 assert img.getpixel((0, 0))[3] == 0
+
+
+def test_unavailable_listing_returns_real_404_with_public_navigation(monkeypatch):
+    import app as radar_app
+
+    monkeypatch.setattr(radar_app, "load_listing_detail", lambda *args, **kwargs: None)
+    response = radar_app.app.test_client().get("/listing/39454")
+    assert response.status_code == 404
+    html = response.get_data(as_text=True)
+    assert "<h1>Không tìm thấy tin rao</h1>" in html
+    assert '<a href="/?tab=all">Tìm tin rao khác</a>' in html
+    assert 'href="/gia-dat/thu-dau-mot"' in html
+    assert "đã bán" not in html
+    assert "noindex,follow" in html

@@ -5755,7 +5755,7 @@ def listing_detail(listing_id):
     tier = current_tier()
     data = load_listing_detail(db_path, listing_id, tier=tier)
     if not data:
-        return "Listing not found", 404
+        return render_template("listing_unavailable.html"), 404
     
     l = data["listing"]
     ward = l.get("ward")

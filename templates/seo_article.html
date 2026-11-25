@@ -146,7 +146,7 @@
             <h2>{{ section.heading }}</h2>
             {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
             {% if section.links %}
-            <ul>{% for link in section.links %}<li><a href="{{ link.href }}" data-track-cta="article_open_planning_guide">{{ link.label }}</a></li>{% endfor %}</ul>
+            <ul>{% for link in section.links %}<li><a href="{{ link.href }}" data-track-cta="{{ link.track|default('article_open_planning_guide') }}">{{ link.label }}</a></li>{% endfor %}</ul>
             {% endif %}
             {% if section.bullets %}
             <ul>{% for bullet in section.bullets %}<li>{{ bullet }}</li>{% endfor %}</ul>
