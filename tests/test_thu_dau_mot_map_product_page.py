@@ -689,6 +689,20 @@ def test_product_map_has_search_copy_link_and_agent_readable_data_links():
     map_js = Path("static/js/binh_duong_map.js").read_text(encoding="utf-8")
 
     assert 'data-map-area-search' in html
+    assert html.index("data-map-area-search") < html.index("data-binh-duong-map")
+    records = [json.loads(html_lib.unescape(value)) for value in re.findall(r"data-ward-record='([^']+)'", html)]
+    assert len(records) == 19
+    from urllib.parse import parse_qs, urlsplit
+    split_wards = {r["name"]: r["successors"] for r in records if len(r.get("successors", [])) > 1}
+    assert split_wards == {"Chánh Mỹ": ["Thủ Dầu Một", "Chánh Hiệp"], "Hiệp An": ["Chánh Hiệp", "Phú An"],
+                           "Hiệp Thành": ["Thủ Dầu Một", "Phú Lợi"]}
+    for record in records:
+        filters = parse_qs(urlsplit(record["dashboard_href"]).query)
+        assert filters["tab"] == ["all"] and filters["city"] == ["THỦ DẦU MỘT"]
+        if "successors" in record:
+            assert record["successors"] and filters["ward"] == [record["name"]]
+        else:
+            assert "ward" not in filters and "toàn Thủ Dầu Một" in record["dashboard_label"]
     assert 'aria-label="Tìm phường Thủ Dầu Một"' in html
     assert 'data-map-search-status' in html
     assert 'data-map-copy-link' in html

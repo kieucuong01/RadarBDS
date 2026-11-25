@@ -12,6 +12,7 @@ _PUBLIC_PATH = re.compile(
 _ID = re.compile(r"[0-9a-f]{32}")
 _STEPS = {"planning_entry", "map_click", "map_ready", "map_error",
           "lookup_start", "lookup_result", "lookup_empty", "lookup_error"}
+_WARD_STEPS = {"ward_start", "ward_result", "ward_planning_click", "ward_listings_click"}
 
 
 def sanitize_engagement(context):
@@ -36,7 +37,8 @@ def sanitize_engagement(context):
         if context.get("session_start") is True:
             sample["session_start"] = True
         step = context.get("step")
-        if isinstance(step, str) and step in _STEPS:
+        if isinstance(step, str) and (step in _STEPS or
+                (path == "/ban-do-thu-dau-mot" and step in _WARD_STEPS)):
             sample["step"] = step
     return sample
 
@@ -142,6 +144,25 @@ def summarize_planning_funnel(conn, start, end):
         (start[:10], (datetime.fromisoformat(end) + timedelta(days=1)).date().isoformat() + "Z", end, start),
     ).fetchone()
     return dict(row)
+
+
+def summarize_ward_lookup(conn, start, end):
+    return dict(conn.execute(
+        """WITH sessions AS (
+               SELECT context::jsonb->>'session' AS session,
+                      BOOL_OR(context::jsonb->>'step' = 'ward_result') AS result,
+                      BOOL_OR(context::jsonb->>'step' = 'ward_planning_click') AS planning,
+                      BOOL_OR(context::jsonb->>'step' = 'ward_listings_click') AS listings,
+                      BOOL_OR(context::jsonb->>'step' IN ('ward_start','ward_result')) AS started
+               FROM user_audit_log
+               WHERE created_at >= ? AND created_at < ? AND action = 'page_engagement'
+                 AND context::jsonb->>'path' = '/ban-do-thu-dau-mot'
+                 AND context::jsonb->>'session' IS NOT NULL AND context::jsonb->>'step' LIKE 'ward_%'
+               GROUP BY 1
+           ) SELECT COUNT(*) FILTER (WHERE started) AS started, COUNT(*) FILTER (WHERE result) AS result,
+                    COUNT(*) FILTER (WHERE planning) AS planning, COUNT(*) FILTER (WHERE listings) AS listings
+             FROM sessions""", (start, end),
+    ).fetchone())
 
 
 def summarize_engagement(conn, start, end):

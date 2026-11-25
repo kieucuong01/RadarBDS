@@ -1005,3 +1005,16 @@
     animation: none;
   }
 }
+.ward-lookup { max-width: 40rem; }
+.ward-lookup ul { margin: 0; padding: 0; list-style: none; }
+.ward-lookup li + li { margin-top: .35rem; }
+.ward-lookup li button { width: 100%; text-align: left; }
+.ward-lookup [hidden], .ward-lookup [role="status"]:empty { display: none; }
+.ward-crosswalk { width: 100%; border-collapse: collapse; margin-block: 1rem; }
+.ward-crosswalk th, .ward-crosswalk td { text-align: left; padding: .65rem; border-bottom: 1px solid #dce5ec; }
+.ward-crosswalk small { display: block; font-weight: normal; }
+.ward-crosswalk a, .ward-relation a { text-decoration: underline; text-underline-offset: .15em; }
+.ward-source, .ward-relation { grid-column: 1 / -1; margin: 0; }
+.ward-source { overflow-wrap: anywhere; font-size: .9rem; }
+.tdm-product-page .bd-map-selection:has(.ward-relation) { scroll-margin-top: 5rem; }
+.tdm-product-page .bd-map-selection:has(.ward-relation) .bd-map-selection-summary { display: block; overflow: visible; }

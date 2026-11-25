@@ -466,6 +466,16 @@
     });
     var status = node('p', body, 'Đang tải thông tin lớp bản đồ…');
     status.className = 'planning-overlay-status';
+    var retryLayers = node('button', body, 'Thử tải lại lớp bị lỗi');
+    retryLayers.type = 'button';
+    retryLayers.hidden = true;
+    retryLayers.addEventListener('click', function () {
+      wantedItems(true).filter(nearSource).forEach(function (item) {
+        failedIds.delete(item.id);
+        if (overlays.get(item.id)?.tileError) removeOverlay(item.id);
+      });
+      syncOverlays();
+    });
     var zoomHint = node('button',ui.root,'Phóng to để xem quy hoạch');
     zoomHint.type='button';zoomHint.className='planning-source-zoom-hint';zoomHint.hidden=true;
     zoomHint.addEventListener('click',function(){if(!disposed && selectedProvince)focusProvince();});
@@ -529,6 +539,7 @@
     function reportCoverage() {
       if (disposed) return;
       zoomHint.hidden=true;
+      retryLayers.hidden=true;
       if (!themes.some(function (theme) { return theme.toggle.checked; })) {
         taskChanged({key:'layers',busy:false});
         status.textContent = 'Đang tắt các lớp quy hoạch.'; return;
@@ -551,8 +562,9 @@
         status.textContent = 'Phóng to để xem lớp quy hoạch; nguồn này chưa có ảnh tổng quan ở mức thu nhỏ hiện tại.';
         zoomHint.hidden=!selectedProvince;
       }
-      if (errors.length) status.textContent += ' Không tải được: ' + errors.map(function (item) { return item.name; }).join(', ')
-        + '. Tắt/bật loại bản đồ để thử lại; Maps vẫn hoạt động.';
+      if (errors.length && !entries.length) status.textContent = '';
+      if (errors.length) status.textContent += ' Chưa tải được lớp ' + errors.map(function (item) { return item.name; }).join(', ') + '.';
+      retryLayers.hidden = !errors.length && !entries.some(function (entry) { return entry.tileError; });
       if (entries.some(function (entry) { return entry.tileError; })) status.textContent += ' Một số ô bản đồ chưa tải được; thử thu phóng hoặc chuyển vùng để tải lại.';
       if (typeof map.getZoom === 'function' && entries.some(function(entry){
         return Number.isInteger(entry.item.manifest.max_native_zoom) && map.getZoom()>entry.item.manifest.max_native_zoom;

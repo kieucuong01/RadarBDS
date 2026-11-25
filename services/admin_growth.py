@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from config import database_sqlite as db_mod
 from services.admin_behavior import build_behavior
-from services.page_engagement import summarize_planning_funnel, summarize_traffic
+from services.page_engagement import summarize_planning_funnel, summarize_traffic, summarize_ward_lookup
 from services.admin_marketing import build_marketing_source_view
 from services.signal_quality import (
     LATEST_VALUATION_CTE,
@@ -294,6 +294,7 @@ def get_growth_dashboard(period: str, anchor: date, include_guland: bool = False
         behavior = build_behavior(conn, start, end, previous)
         traffic = summarize_traffic(conn, previous_iso, start_iso, end_iso)
         traffic["planning"] = summarize_planning_funnel(conn, start_iso, end_iso)
+        traffic["ward_lookup"] = summarize_ward_lookup(conn, start_iso, end_iso)
 
     raw_events = [_event(row) for row in raw]
     listing_events = [_event(row) for row in listings]

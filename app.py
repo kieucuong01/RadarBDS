@@ -18,7 +18,7 @@ import unicodedata
 from copy import deepcopy
 from contextlib import contextmanager
 from decimal import Decimal
-from functools import wraps
+from functools import lru_cache, wraps
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -2766,6 +2766,7 @@ def binh_duong_map_page():
     )
 
 
+@lru_cache(maxsize=16)
 def _map_areas_from_static_geojson(static_url: str) -> list[dict]:
     static_path = Path(__file__).parent / static_url.lstrip("/")
     payload = json.loads(static_path.read_text(encoding="utf-8"))
@@ -2801,6 +2802,21 @@ def _map_areas_from_static_geojson(static_url: str) -> list[dict]:
                 ),
             }
         )
+        if static_path.parent.name == "thu-dau-mot":
+            from shapely.geometry import shape
+
+            area = areas[-1]
+            point = shape(feature["geometry"]).representative_point()
+            area["map_point"] = f"{point.y:.5f},{point.x:.5f},14"
+            area["source"] = properties.get("source", "")
+            legacy = properties["layer"] == "legacy"
+            filters = {"tab": "all", "city": "THỦ DẦU MỘT"}
+            area["dashboard_label"] = "Xem tin toàn Thủ Dầu Một"
+            if legacy:
+                filters["ward"] = area["name"]
+                area["dashboard_label"] = f"Xem tin tại {area['name']} cũ"
+                area["successors"] = area["current_ward_after_2025"].split(" / ")
+            area["dashboard_href"] = "/?" + urllib.parse.urlencode(filters)
     return areas
 
 

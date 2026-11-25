@@ -125,3 +125,12 @@ kết hiệu quả cho một thay đổi UI.
 3. **Đợt 3.** Bổ sung H2 cho mẫu bài chính và phễu định giá, bảng giá, checkout
    sau khi phễu Maps ổn định. Dùng một báo cáo tuần thật để tạo việc cải thiện
    đầu tiên và một báo cáo tháng để đánh giá.
+### Tra phường Thủ Dầu Một
+
+Trong màn hình tăng trưởng, chọn kỳ rồi đọc ô **Tra phường Thủ Dầu Một**. Mẫu số là số phiên đo được có tìm hoặc chọn phường trong kỳ. Tử số là số phiên đã hiện thông tin của một phường được chọn trên bản đồ hoặc từ danh mục dự phòng. Chỉ mở trang, nhận liên kết hay hiển thị gợi ý chưa tính là hoàn tất. Mỗi phiên chỉ tính một lần trong kỳ. Hai số bấm quy hoạch và tin rao thể hiện lượt chuyển tiếp theo phiên, chưa xác nhận trang đích đã tải. Số liệu bắt đầu từ lúc triển khai; trước đó chưa đo được tỷ lệ này.
+
+**Nghiệm thu với 5 người mới.** Dùng điện thoại của người tham gia, mở trang từ đầu và bấm giờ khi giao đề. Nhờ họ tìm Hiệp Thành cũ, kể tên các phường hiện tại có liên quan rồi gửi liên kết để người nhận mở lại đúng ranh. Dừng ở 60 giây. Ghi thời gian, lựa chọn đúng/sai, nơi bị kẹt và loại điện thoại, không ghi thông tin liên hệ. Mục tiêu 4/5 người tự hoàn thành. Kiểm tra riêng Phú Lợi trùng tên, Hòa Phú có ranh suy luận và trường hợp mạng yếu.
+
+**Mẫu bài Facebook/Zalo.** “Tin rao ghi Hiệp Thành cũ, giờ tìm ở phường nào? Tùy vị trí, địa chỉ có thể thuộc phường Thủ Dầu Một hoặc Phú Lợi. Mở ranh Hiệp Thành, chọn một trong hai phường hiện tại để đối chiếu rồi gửi đúng góc tra cứu cho người đang đi xem đất cùng bạn.” [Tra Hiệp Thành trên Radar BDS](https://radarbds.vn/ban-do-thu-dau-mot#layer-legacy/area-hiep-thanh).
+
+Sau 28 ngày đầy đủ kể từ phát hành, so sánh lượt nhấp và truy vấn Google của chính URL này với 28 ngày trước phát hành. Báo số phiên tra đạt/tổng trong cùng kỳ và ghi riêng các phiên bấm chuyển tiếp. Chọn câu hỏi tiếp theo từ các truy vấn thực tế. Quyết định mở rộng Bến Cát sau khi đã xem mẫu thực địa và số liệu.

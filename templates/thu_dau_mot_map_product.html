@@ -25,11 +25,11 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=product-navigation-20261103-2">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/binh_duong_map.css') }}?v=tdm-product-map-20260729-4">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=tdm-product-20260729-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/thu_dau_mot_map_product.css') }}?v=ward-lookup-1">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <script type="application/ld+json">{{ schema_graph | tojson }}</script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
-  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=maps-pilot-20261110" defer></script>
+  <script src="{{ url_for('static', filename='js/binh_duong_map.js') }}?v=ward-lookup-1" defer></script>
   <script src="{{ url_for('static', filename='js/thu_dau_mot_map_product.js') }}?v=tdm-product-20260729-6" defer></script>
   {% include "partials/research_assets.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/public_discovery.css') }}?v=identity-20261019-1">
@@ -50,6 +50,7 @@
     data-tracking-prefix="{{ page.tracking_prefix }}"
   >
     {% set legacy_unit_label = page.legacy_unit_label %}
+    {% set ward_lookup = page.city_slug == "thu-dau-mot" %}
     <header class="tdm-product-hero">
       <div class="seo-shell">
         <nav class="planning-breadcrumbs" aria-label="Breadcrumb">
@@ -66,6 +67,22 @@
           <div class="tdm-product-hero-copy">
             <p class="tdm-product-hero-kicker">Bản đồ hành chính + dữ liệu nhà đất</p>
             <h1>{{ page.hero_title }}</h1>
+            {% if ward_lookup %}
+            <div class="tdm-product-directory-tools ward-lookup" role="search">
+              <label for="ward-query">Tìm phường cũ hoặc mới</label>
+              <div><input id="ward-query" type="search" autocomplete="off" placeholder="Ví dụ: Phú Cường, Hiệp Thành" aria-label="{{ page.search_aria_label }}" data-map-area-search aria-controls="ward-matches">
+                <button type="button" data-map-search-reset>Xóa</button></div>
+              <p data-map-search-status role="status"></p>
+              <ul id="ward-matches" data-ward-matches hidden>
+                {% for edition, areas in [('legacy', legacy_areas), ('current', current_areas)] %}
+                {% for area in areas %}
+                <li><button type="button" data-map-area-button data-layer="{{ edition }}" data-area-slug="{{ area.slug }}">{{ area.name }} · {{ 'Phường cũ' if edition == 'legacy' else 'Phường hiện tại' }}</button></li>
+                {% endfor %}
+                {% endfor %}
+              </ul>
+              <a href="#danh-sach-phuong-cu">Xem bảng đối chiếu 14 phường cũ</a>
+            </div>
+            {% endif %}
             <p class="tdm-product-lead">{{ page.hero_text }}</p>
             <p class="discovery-map-scope">Ranh cũ ở mức tham khảo; ranh hiện tại đã xác minh. Bản đồ không thay thế hồ sơ thửa đất.</p>
             <div class="bd-map-hero-actions tdm-product-hero-actions">
@@ -155,13 +172,17 @@
           </div>
         </div>
 
-        <aside class="bd-map-selection" data-binh-duong-map-selection aria-live="polite">
+        <aside class="bd-map-selection" data-binh-duong-map-selection tabindex="-1" aria-live="polite">
           <div class="bd-map-selection-heading">
             <p class="planning-kicker">Khu vực đang chọn</p>
             <h3 data-map-selection-name>TP {{ page.city_name }}</h3>
             <p class="bd-map-selection-type" data-map-selection-type>{{ page.legacy_count }} {{ legacy_unit_label }} trước sáp nhập</p>
           </div>
           <p class="bd-map-selection-summary" data-map-selection-summary>Chọn một ranh trên bản đồ hoặc trong danh sách để xem nhanh khu vực.</p>
+          {% if ward_lookup %}
+          <div class="ward-relation" data-ward-relation hidden></div>
+          <p class="ward-source" data-ward-source hidden></p>
+          {% endif %}
           <dl>
             <div>
               <dt>Nhóm địa bàn</dt>
@@ -173,6 +194,7 @@
             </div>
           </dl>
           <div class="bd-map-selection-actions">
+            {% if ward_lookup %}<button type="button" class="bd-map-copy-link" data-ward-show-map hidden>Xem ranh trên bản đồ</button>{% endif %}
             {% if page.planning_selection_href %}
             <a class="seo-button seo-button-secondary" href="{{ page.planning_selection_href }}" data-map-selection-planning="{{ page.planning_selection_href }}" data-track-cta="{{ page.tracking_prefix }}_selection_planning">Xem quy hoạch {{ page.city_name }}</a>
             {% endif %}
@@ -243,8 +265,19 @@
           <p class="planning-kicker">Trước sáp nhập</p>
           <h2 id="danh-sach-phuong-cu">{{ page.legacy_count }} {{ legacy_unit_label }} của TP {{ page.city_name }}</h2>
         </div>
-        <p>Bấm “Hiện trên bản đồ” để định vị nhanh ranh phường cũ.</p>
+        <p>{{ "Chọn tên phường để xem ranh trên bản đồ." if ward_lookup else "Bấm “Hiện trên bản đồ” để định vị nhanh ranh phường cũ." }}</p>
       </div>
+      {% if ward_lookup %}
+      <p>Địa bàn chia sang hai phường cần đối chiếu thêm vị trí. <a href="https://vanban.chinhphu.vn/?pageid=27160&amp;docid=214007">Nghị quyết 1685/NQ-UBTVQH15, Điều 1 khoản 87–90, 92 và 101</a>.</p>
+      <table class="ward-crosswalk"><thead><tr><th scope="col">Phường cũ</th><th scope="col">Phường hiện tại</th></tr></thead><tbody>
+        {% for area in legacy_areas %}
+        <tr data-map-directory-item="legacy" data-area-slug="{{ area.slug }}" data-ward-record='{{ area|tojson }}'>
+          <th scope="row"><a href="#layer-legacy/area-{{ area.slug }}">{{ area.name }}</a>{% if area.is_derived_boundary %}<small>Ranh suy luận</small>{% endif %}</th>
+          <td>{% for successor in area.successors %}{% set target = current_areas|selectattr('name', 'equalto', successor)|first %}<a href="#layer-current/area-{{ target.slug }}">{{ target.name }}</a>{% if not loop.last %} và {% endif %}{% endfor %}{% if area.successors|length > 1 %}<small>Tùy vị trí</small>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody></table>
+      {% else %}
       <div class="tdm-product-directory-tools" role="search">
         <label for="{{ page.city_slug }}-map-area-search">Tìm phường hoặc khu vực</label>
         <div>
@@ -272,6 +305,7 @@
         {% endfor %}
       </div>
       <p class="tdm-product-search-empty" data-map-search-empty hidden>Không tìm thấy khu vực phù hợp. Hãy thử tên phường khác hoặc bấm “Đặt lại”.</p>
+      {% endif %}
     </section>
 
     <section class="seo-shell bd-map-directory-section tdm-product-directory" aria-labelledby="danh-sach-phuong-moi">
@@ -284,7 +318,7 @@
       </div>
       <div class="bd-map-current-list">
         {% for area in current_areas %}
-        <article class="bd-map-current-row" data-map-directory-item="current" data-area-slug="{{ area.slug }}">
+        <article class="bd-map-current-row" data-map-directory-item="current" data-area-slug="{{ area.slug }}" {% if ward_lookup %}data-ward-record='{{ area|tojson }}'{% endif %}>
           <div>
             <span>{{ area.unit_type }}</span>
             <strong>{{ area.name }}</strong>
@@ -292,7 +326,7 @@
           </div>
           <div class="bd-map-area-actions">
             <button type="button" data-map-area-button data-layer="current" data-area-slug="{{ area.slug }}">Hiện trên bản đồ</button>
-            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="{{ page.tracking_prefix }}_dashboard">Lọc tin</a>
+            <a href="{{ area.dashboard_href }}" aria-label="{{ area.dashboard_label }}" data-track-cta="{{ page.tracking_prefix }}_dashboard">{{ area.dashboard_label if ward_lookup else "Lọc tin" }}</a>
           </div>
         </article>
         {% endfor %}

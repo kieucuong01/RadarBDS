@@ -2846,10 +2846,15 @@ function renderTraffic(traffic = {}) {
   const precount = traffic.previous_total || 0;
   const delta = precount ? growthDelta(Math.round((views - precount) * 1000 / precount) / 10) + ' so với kỳ trước' : 'Kỳ trước: ' + growthFmt(precount) + ' lượt';
   const funnel = traffic.planning || {};
+  const ward = traffic.ward_lookup || {};
   trafficEl('growthTrafficMetrics').innerHTML = [
     ['Lượt xem đo được', growthFmt(views), delta],
     ['Phiên bắt đầu', sessions ? growthFmt(sessions) : '—', sessions ? 'Trong kỳ đang xem' : 'Chưa ghi nhận phiên bắt đầu'],
-    ['Tra quy hoạch có kết quả', funnel.searched ? trafficRatio(funnel.result, funnel.searched) : '—', 'Trên các phiên đã gửi tra cứu trong phễu']
+    ['Tra quy hoạch có kết quả', funnel.searched ? trafficRatio(funnel.result, funnel.searched) : '—', 'Trên các phiên đã gửi tra cứu trong phễu'],
+    ['Tra phường Thủ Dầu Một', trafficRatio(ward.result || 0, ward.started), ward.started
+      ? 'Phiên hiện kết quả / phiên tìm hoặc chọn phường' : 'Chưa có phiên tra phường trong kỳ'],
+    ['Bấm từ phường đã chọn', growthFmt(ward.planning || 0) + ' / ' + growthFmt(ward.listings || 0),
+      'Số phiên bấm xem quy hoạch / xem tin rao']
   ].map(([label, value, note]) => '<article class="surface growth-metric"><span>' + label +
       '</span><strong>' + value + '</strong><small>' + note + '</small></article>').join('');
   trafficEl('growthTrafficSummary').textContent = traffic.truncated

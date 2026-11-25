@@ -259,7 +259,7 @@ _THU_DAU_MOT = _page(
     current_units=(
         _current(
             "Thủ Dầu Một",
-            "Phú Cường, Phú Thọ, Chánh Nghĩa, Chánh Mỹ và một phần Hiệp Thành",
+            "Phú Cường, Phú Thọ, Chánh Nghĩa và một phần của mỗi phường Hiệp Thành, Chánh Mỹ",
         ),
         _current("Phú Lợi", "Phú Hòa, Phú Lợi và phần còn lại của Hiệp Thành"),
         _current(
@@ -267,7 +267,7 @@ _THU_DAU_MOT = _page(
             "Định Hòa, Tương Bình Hiệp, một phần Hiệp An và phần còn lại của Chánh Mỹ",
         ),
         _current("Bình Dương", "Phú Mỹ, Hòa Phú, Phú Tân và Phú Chánh"),
-        _current("Phú An", "Tân An, Phú An và phần còn lại của Hiệp An"),
+        _current("Phú An", "Tân An, xã Phú An và phần còn lại của Hiệp An, Thanh Tuyền"),
     ),
     derived_legacy_units=("Hòa Phú", "Phú Tân"),
     legacy_filename="legacy-14-wards.geojson",

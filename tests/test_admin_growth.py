@@ -370,7 +370,7 @@ class AdminGrowthTest(unittest.TestCase):
 
     def test_daily_traffic_and_ordered_planning_funnel(self):
         from db.connection import get_conn
-        from services.page_engagement import summarize_planning_funnel, summarize_traffic
+        from services.page_engagement import summarize_planning_funnel, summarize_traffic, summarize_ward_lookup
 
         with get_conn() as conn:
             conn.execute("""CREATE TEMP TABLE user_audit_log (
@@ -399,6 +399,13 @@ class AdminGrowthTest(unittest.TestCase):
             funnel = summarize_planning_funnel(conn, start, end)
             assert (funnel["entered"], funnel["clicked"], funnel["ready"], funnel["searched"]) == (1, 1, 1, 1)
             assert (funnel["result"], funnel["empty"]) == (0, 1)
+            for step in ("ward_start", "ward_result", "ward_result", "ward_listings_click"):
+                sample("2020-01-01T19:00:00", "w", step, path="/ban-do-thu-dau-mot")
+            sample("2020-01-01T19:00:01", "v", "ward_start", path="/ban-do-thu-dau-mot", session="b" * 32)
+            sample("2020-01-01T19:00:02", "b", "ward_result", session="b" * 32)
+            assert summarize_ward_lookup(conn, start, end) == {
+                "started": 2, "result": 1, "listings": 1, "planning": 0,
+            }
 
     def test_growth_endpoint_rejects_authenticated_non_admin(self):
         from auth.core import SESSION_COOKIE_NAME

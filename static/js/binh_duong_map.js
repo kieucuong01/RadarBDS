@@ -250,18 +250,38 @@
     var activeState = { layer: "legacy", areaSlug: null };
     var searchTimer = null;
     var copyResetTimer = null;
+    var matches = doc.querySelector("[data-ward-matches]");
+    var records = { legacy: {}, current: {} };
+    var panel = root.querySelector("[data-binh-duong-map-selection]");
+    var pendingLookup = null;
+    var searchStarted = false;
+    if (matches) directoryItems.forEach(function (item) {
+      var record = JSON.parse(item.dataset.wardRecord);
+      records[item.dataset.mapDirectoryItem][record.slug] = record;
+    });
 
     function normalizeSearchValue(value) {
       var text = String(value || "").toLowerCase();
       if (typeof text.normalize === "function") {
         text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       }
-      return text.replace(/\s+/g, " ").trim();
+      return text.replace(/đ/g, "d").replace(/\s+/g, " ").trim();
     }
 
     function filterDirectoryItems() {
       var query = normalizeSearchValue(searchInput && searchInput.value);
       var visibleCount = 0;
+      if (matches) {
+        matches.querySelectorAll("button").forEach(function (button) {
+          var visible = !!query && normalizeSearchValue(button.textContent).includes(query);
+          button.parentElement.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+        matches.hidden = !visibleCount;
+        searchStatus.textContent = !query ? "" : visibleCount
+          ? visibleCount + " kết quả. Chọn phường để xem." : "Chưa tìm thấy phường. Hãy thử tên khác.";
+        return;
+      }
       directoryItems.forEach(function (item) {
         var haystack = normalizeSearchValue(item.textContent || "");
         var matched = !query || haystack.indexOf(query) !== -1;
@@ -278,7 +298,7 @@
 
     function copySelectionLink() {
       if (!copyButton) return;
-      var hash = win.location.hash || formatMapHash(activeState.layer, activeState.areaSlug);
+      var hash = formatMapHash(activeState.layer, activeState.areaSlug);
       var url = win.location.origin + win.location.pathname + hash;
       var done = function () {
         copyButton.textContent = "Đã sao chép";
@@ -378,6 +398,7 @@
     }
 
     function featureFor(layer, slug) {
+      if (records[layer][slug]) return { properties: records[layer][slug] };
       var collection = datasets[layer];
       if (!collection || !slug) return null;
       return collection.features.find(function (feature) {
@@ -429,6 +450,27 @@
       var formerRow = root.querySelector("[data-map-selection-former-row]");
       var former = root.querySelector("[data-map-selection-former]");
       var cta = root.querySelector("[data-map-selection-cta]");
+      if (matches) {
+        var relation = root.querySelector("[data-ward-relation]");
+        root.querySelector("[data-ward-show-map]").hidden = !feature || !map || !datasets[layer];
+        relation.replaceChildren();
+        var successors = properties.successors || [];
+        relation.hidden = !successors.length;
+        if (successors.length) {
+          relation.append(successors.length > 1 ? "Tùy vị trí, nay thuộc " : "Nay thuộc ");
+          successors.forEach(function (successor, index) {
+            var record = Object.values(records.current).find(function (area) { return area.name === successor; });
+            var link = doc.createElement("a");
+            link.href = formatMapHash("current", record.slug);
+            link.textContent = "phường " + successor;
+            if (index) relation.append(" hoặc ");
+            relation.append(link);
+          });
+        }
+        var source = root.querySelector("[data-ward-source]");
+        source.hidden = !feature;
+        source.textContent = properties.source ? "Nguồn ranh: " + properties.source : "";
+      }
 
       if (!feature) {
         if (name) name.textContent = layer === "current"
@@ -451,7 +493,7 @@
       }
 
       if (name) name.textContent = properties.name || "Khu vực đã chọn";
-      if (type) type.textContent = properties.unit_type || "";
+      if (type) type.textContent = matches && layer === "current" ? "Phường hiện tại" : properties.unit_type || "";
       if (summary) summary.textContent = properties.summary || "";
       if (group) group.textContent = properties.group || properties.name || "";
       if (formerRow) formerRow.hidden = !properties.former_units;
@@ -537,16 +579,25 @@
       if (planning) {
         var href = planning.dataset.mapSelectionPlanning;
         var shape = areaSlug && featureLayers[areaSlug];
-        if (shape && shape.getBounds().isValid()) {
-          var center = shape.getBounds().getCenter();
+        var point = feature && feature.properties.map_point;
+        if (point || (shape && shape.getBounds().isValid())) {
           var url = new URL(href, win.location.href);
           var params = new URLSearchParams(url.hash.slice(1));
-          params.set("map", [center.lat.toFixed(5), center.lng.toFixed(5), 14].join(","));
+          if (!point) {
+            var center = shape.getBounds().getCenter();
+            point = [center.lat.toFixed(5), center.lng.toFixed(5), 14].join(",");
+          }
+          params.set("map", point);
           url.hash = params.toString();
           planning.href = url.toString();
         } else {
           planning.href = href;
         }
+        if (matches) planning.textContent = "Xem quy hoạch " + (feature ? feature.properties.name : "Thủ Dầu Một");
+      }
+      if (matches && feature && pendingLookup === formatMapHash(layer, areaSlug)) {
+        pendingLookup = null;
+        win.RadarUsageStep?.("ward_result");
       }
       setStatus(
         feature
@@ -558,7 +609,10 @@
     }
 
     function setHash(nextHash) {
-      if (win.location.hash === nextHash) {
+      if (matches && win.location.hash !== nextHash) {
+        win.history.pushState(null, "", nextHash);
+        renderState(parseMapHash(nextHash, validSlugs));
+      } else if (win.location.hash === nextHash) {
         renderState(parseMapHash(nextHash, validSlugs));
       } else {
         win.location.hash = nextHash;
@@ -569,6 +623,11 @@
       var feature = featureFor(layer, slug);
       if (!feature) return;
       var nextHash = formatMapHash(layer, slug);
+      if (matches && options && options.track) {
+        if (!searchStarted) win.RadarUsageStep?.("ward_start");
+        searchStarted = false;
+        pendingLookup = nextHash;
+      }
       if (options && options.updateHash) {
         setHash(nextHash);
       } else {
@@ -579,7 +638,9 @@
           win.matchMedia
           && win.matchMedia("(prefers-reduced-motion: reduce)").matches
         );
-        root.scrollIntoView({
+        var target = matches ? panel : root;
+        if (matches) target.focus({preventScroll: true});
+        target.scrollIntoView({
           behavior: reduceMotion ? "auto" : "smooth",
           block: "start"
         });
@@ -630,6 +691,7 @@
         }
         initializeMap();
       }).catch(function () {
+        if (matches) renderState(parseMapHash(win.location.hash, validSlugs));
         setStatus("Chưa tải được bản đồ tương tác. Danh sách khu vực bên dưới vẫn dùng được.");
         setFallback(true);
       });
@@ -678,10 +740,41 @@
 
     if (searchInput) {
       searchInput.addEventListener("input", function () {
+        if (matches && searchInput.value.trim() && !searchStarted) {
+          win.RadarUsageStep?.("ward_start");
+          searchStarted = true;
+        }
+        if (matches) {
+          filterDirectoryItems();
+          return;
+        }
         if (searchTimer) win.clearTimeout(searchTimer);
         searchTimer = win.setTimeout(filterDirectoryItems, 120);
       });
       filterDirectoryItems();
+    }
+    if (matches) {
+      root.querySelector("[data-ward-show-map]").addEventListener("click", function () {
+        canvas.focus({preventScroll: true});
+        canvas.scrollIntoView({block: "center"});
+      });
+      panel.addEventListener("click", function (event) {
+        if (!activeState.areaSlug) return;
+        if (event.target.closest("[data-map-selection-planning]")) win.RadarUsageStep?.("ward_planning_click");
+        if (event.target.closest("[data-map-selection-cta]")) win.RadarUsageStep?.("ward_listings_click");
+      });
+      doc.addEventListener("click", function (event) {
+        var link = event.target.closest("a[href^='#layer-']");
+        if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        var state = parseMapHash(link.hash, validSlugs);
+        if (!state.areaSlug) return;
+        event.preventDefault();
+        selectArea(state.layer, state.areaSlug, {updateHash: true, track: true, scroll: true});
+      });
+      if (win.location.hash.startsWith("#layer-")) {
+        renderState(parseMapHash(win.location.hash, validSlugs));
+        if (activeState.areaSlug) panel.scrollIntoView({block: "start"});
+      }
     }
 
     if (searchReset) {
@@ -707,7 +800,10 @@
       });
     });
 
-    if (retryButton) retryButton.addEventListener("click", loadMap);
+    if (retryButton) retryButton.addEventListener("click", function () {
+      if (!win.L) win.location.reload();
+      else loadMap();
+    });
     if (fullscreenButton && fullscreenTarget) {
       var supportsFullscreen = (
         typeof fullscreenTarget.requestFullscreen === "function"
