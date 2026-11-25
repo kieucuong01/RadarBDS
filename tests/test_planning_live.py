@@ -87,14 +87,15 @@ def test_live_routes_keep_source_scope_and_pdf_assets(tmp_path,monkeypatch):
     assert any(a['area_id']=='dong-nai-expanded' for a in reference)
     assert {'tay-ninh-legacy','long-an-legacy'} <= {a['area_id'] for a in reference}
     vision=[a for a in data['layers'] if a.get('theme')=='urban_vision_100']
-    assert len(vision)==1 and vision[0]['manifest']['planning_status']=='draft'
+    assert [a['id'] for a in vision]==['hcm-vision-100-land']
+    assert vision[0]['manifest']['planning_status']=='approved'
     assert vision[0]['manifest']['min_native_zoom']==10
     assert vision[0]['manifest']['max_native_zoom']==19
     transport=[a for a in data['layers'] if a.get('theme')=='transport']
-    assert len(transport)==2
-    assert {a['source'] for a in transport}=={'gis','guland'}
-    assert next(a for a in transport if a['source']=='gis')['manifest']['render_mode']=='geojson'
-    assert next(a for a in transport if a['source']=='guland')['manifest']['max_native_zoom']==19
+    assert [a['id'] for a in transport]==['hcm-expanded-transport']
+    assert transport[0]['source']=='guland'
+    assert transport[0]['manifest']['render_mode']=='xyz'
+    assert transport[0]['manifest']['max_native_zoom']==17
     administrative=[a for a in data['layers'] if a.get('theme')=='administrative']
     assert len(administrative)==34
     assert sum(a['manifest']['unit_count'] for a in administrative)==3321
