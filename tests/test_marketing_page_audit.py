@@ -202,7 +202,7 @@ def test_phu_my_hiep_thanh_article_exposes_comparable_sources_and_filtered_ctas(
         assert f"{price} triệu đồng/m² từ {count} mẫu" in html
         assert targets[f"article_price_source_{ward}"] == f"/gia-dat/{ward.replace('_', '-')}/ban-luu/2026-11-24-7e74999f478394ff"
         query = parse_qs(urlsplit(targets[f"article_open_listings_{ward}"]).query)
-        assert query == {"tab": ["signals"], "city": ["THỦ DẦU MỘT"], "ward": [name], "prop_type": ["dat_nen"]}
+        assert query == {"tab": ["all"], "city": ["THỦ DẦU MỘT"], "ward": [name], "prop_type": ["dat_nen"]}
     assert page["article"]["published_at"] == "2026-08-17"
     assert page["article"]["modified_at"] == "2026-11-24"
 

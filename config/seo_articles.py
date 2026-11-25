@@ -13414,9 +13414,9 @@ SEO_ARTICLES = {
         "hero_text": "Nếu muốn có nhiều mẫu đất nền để đối chiếu, bạn có thể bắt đầu ở Phú Mỹ. Từ 01 đến 24/11/2026, trung vị giá rao tại Phú Mỹ là 22,31 triệu đồng/m² từ 363 mẫu, còn Hiệp Thành là 23,38 triệu đồng/m² từ 63 mẫu. Hai phường thuộc Thủ Dầu Một, Bình Dương cũ.",
         "scope_label": "Thủ Dầu Một · Phú Mỹ / Hiệp Thành",
         "primary_cta": "Xem tin đất nền Phú Mỹ",
-        "primary_href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=dat_nen",
+        "primary_href": "/?tab=all&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=dat_nen",
         "secondary_cta": "Xem tin đất nền Hiệp Thành",
-        "secondary_href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Hi%E1%BB%87p%20Th%C3%A0nh&prop_type=dat_nen",
+        "secondary_href": "/?tab=all&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Hi%E1%BB%87p%20Th%C3%A0nh&prop_type=dat_nen",
         "local_links_title": "Đối chiếu khu vực",
         "local_links": [
             {
@@ -13544,12 +13544,12 @@ SEO_ARTICLES = {
                     "links": [
                         {
                             "label": "Xem tin đất nền Phú Mỹ",
-                            "href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=dat_nen",
+                            "href": "/?tab=all&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Ph%C3%BA%20M%E1%BB%B9&prop_type=dat_nen",
                             "track": "article_open_listings_phu_my"
                         },
                         {
                             "label": "Xem tin đất nền Hiệp Thành",
-                            "href": "/?tab=signals&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Hi%E1%BB%87p%20Th%C3%A0nh&prop_type=dat_nen",
+                            "href": "/?tab=all&city=TH%E1%BB%A6%20D%E1%BA%A6U%20M%E1%BB%98T&ward=Hi%E1%BB%87p%20Th%C3%A0nh&prop_type=dat_nen",
                             "track": "article_open_listings_hiep_thanh"
                         }
                     ]
