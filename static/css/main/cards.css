@@ -1035,6 +1035,14 @@
   gap: 8px;
 }
 
+.sc-evidence {
+  display: grid;
+  gap: .3rem;
+  padding: .45rem 0;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+.sc-evidence strong { margin-right: .25rem; }
 .sc-meta-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1522,6 +1530,9 @@
   :is(#tab-all, #tab-signals) .signal-shared-card .sc-title { grid-column: 1 / -1; grid-row: 2; margin: 0 10px; min-width: 0; }
   :is(#tab-all, #tab-signals) .signal-shared-card .sc-meta-chips { grid-column: 1 / -1; grid-row: 3; margin: 0 10px; }
   :is(#tab-all, #tab-signals) .signal-shared-card .sc-actions { grid-column: 1 / -1; grid-row: 4; margin: 0 10px; }
+  #tab-signals .signal-shared-card .sc-evidence { grid-column: 1 / -1; grid-row: 3; margin: 0 10px; padding: 0; }
+  #tab-signals .signal-shared-card .sc-meta-chips { grid-row: 4; }
+  #tab-signals .signal-shared-card .sc-actions { grid-row: 5; }
   :is(#tab-all, #tab-signals) .signal-shared-card .mos-badge { top: 6px; left: 6px; max-width: calc(100% - 86px); min-height: 24px; padding: 4px 6px; font-size: .65rem; }
   :is(#tab-all, #tab-signals) .signal-shared-card .new-badge { top: 6px; right: 6px; padding: 4px 6px; font-size: .6rem; }
   :is(#tab-all, #tab-signals) .signal-shared-card .price-update-badge { font-size: .53rem; }

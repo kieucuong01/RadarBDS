@@ -157,7 +157,20 @@ const legacyFeed = api.render({
   showContact: true,
 });
 assert.match(legacyFeed, /sc-time-tag/);
-assert.match(legacyFeed, /sc-drop-tag/);
+assert.doesNotMatch(legacyFeed, /sc-drop-tag|Chủ hạ|Rẻ hơn/);
+assert.match(legacyFeed, /Chưa đủ lịch sử để so giá/);
+assert.match(legacyFeed, /Giá rao thấp hơn 33,3% so với định giá của Radar/);
+const historyCard = (history) => api.render(
+  { ...item, price_history_summary: history }, { context: 'signal' },
+);
+assert.match(historyCard({ kind: 'repost', previous_price_ty: 2, date: '2026-11-18' }),
+  /Cùng lô đăng lại, giữ giá \(18\/11\/2026\)/);
+assert.match(historyCard({ kind: 'same_post', previous_price_ty: 2.5 }),
+  /Cùng tin rao, giảm 20% từ 2,5 tỷ/);
+assert.match(historyCard({ kind: 'repost', previous_price_ty: 1.6 }),
+  /Cùng lô đăng lại, tăng 25% từ 1,6 tỷ/);
+assert.match(historyCard({ kind: 'same_price' }), /trên tin này cùng giá/);
+assert.match(historyCard({ kind: 'uncertain' }), /cần xác minh/);
 assert.match(legacyFeed, /valuation-sep/);
 assert.match(legacyFeed, /valuation-total-row/);
 assert.match(legacyFeed, /valuation-ppm2-row/);

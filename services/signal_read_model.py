@@ -46,6 +46,7 @@ from services.signal_quality import (
     actionable_signal_sql,
     effective_signal_mos_min,
 )
+from services.signal_price_history import load_card_price_history
 
 
 READ_MODEL_COLUMNS = (
@@ -619,6 +620,7 @@ def load_signals_from_read_model(
             """,
             params + [query_limit, offset],
         ).fetchall()
+        history = load_card_price_history(conn, rows[:limit], tier)
     finally:
         conn.close()
 
@@ -636,6 +638,7 @@ def load_signals_from_read_model(
             ),
             tier=tier,
         )
+        | {"price_history_summary": history.get(row["id"])}
         for row in rows
     ]
     payload = {
