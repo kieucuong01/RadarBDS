@@ -199,8 +199,10 @@ class PgConnection:
             with self._raw.cursor() as cur:
                 cur.execute(sql)
 
-    def cursor(self) -> PgCursor:
-        return PgCursor(self._raw.cursor())
+    def cursor(self, name: str | None = None) -> PgCursor:
+        if name is None:
+            return PgCursor(self._raw.cursor())
+        return PgCursor(self._raw.cursor(name=name))
 
     def commit(self) -> None:
         self._raw.commit()
