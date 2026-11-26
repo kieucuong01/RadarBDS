@@ -36,10 +36,17 @@
     return delta > 0 ? 1 : -1;
   }
 
+  const mounted = new WeakMap();
+
+  function unmount(root) {
+    if (mounted.has(root)) mounted.get(root).destroy();
+  }
+
   function mount(rootElement, items, options) {
     const root = rootElement;
     const config = options || {};
     if (!root) return { destroy() {} };
+    unmount(root);
 
     const track = root.querySelector('[data-comparable-track]');
     const previous = root.querySelector('[data-comparable-prev]');
@@ -47,6 +54,8 @@
     const status = root.querySelector('[data-comparable-status]');
     const dots = root.querySelector('[data-comparable-dots]');
     const controls = root.querySelector('[data-comparable-controls]');
+    const summary = root.querySelector('[data-comparison-summary]');
+    if (summary) summary.textContent = config.summary || '';
     const view = root.ownerDocument && root.ownerDocument.defaultView;
     if (!track) return { destroy() {} };
 
@@ -148,7 +157,7 @@
     if (view) view.addEventListener('resize', onResize);
     render();
 
-    return {
+    const controller = {
       destroy() {
         if (previous) previous.removeEventListener('click', onPrevious);
         if (next) next.removeEventListener('click', onNext);
@@ -158,10 +167,13 @@
         root.removeEventListener('touchend', onTouchEnd);
         if (view) view.removeEventListener('resize', onResize);
         if (resizeTimer && view) view.clearTimeout(resizeTimer);
+        mounted.delete(root);
       },
       goTo,
     };
+    mounted.set(root, controller);
+    return controller;
   }
 
-  return { paginate, pageSize, clampPage, statusLabel, swipeDirection, mount };
+  return { paginate, pageSize, clampPage, statusLabel, swipeDirection, mount, unmount };
 }));

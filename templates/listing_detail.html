@@ -17,8 +17,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main/base.css') }}?v=mobile-scroll-lock-20260802">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=signal-detail-regression-20260729">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=agent-readonly-20260810">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main/modal.css') }}?v=comparison-20261126">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-history-20261126">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"></noscript>
 <script>
@@ -990,7 +990,8 @@ body.listing-detail-page {
         <div class="sm-comparable-head">
           <div>
             <div class="sm-section-label">SO SÁNH LÔ TƯƠNG TỰ</div>
-            <p>Các signal có đặc điểm gần với lô đang xem</p>
+            <p>Đơn giá rao trên mỗi m² của các tin cùng phường, cùng loại bất động sản và gần diện tích. Giá chốt cần xác nhận riêng.</p>
+            <p data-comparison-summary aria-live="polite"></p>
           </div>
           <div class="sm-comparable-controls" data-comparable-controls hidden>
             <button type="button" data-comparable-prev aria-label="Nhóm lô tương tự trước">‹</button>
@@ -1021,7 +1022,7 @@ body.listing-detail-page {
 
 <script src="{{ url_for('static', filename='js/main/detail_location_map.js') }}?v=signal-detail-regression-20260729"></script>
 {% include "partials/signal_card_script.html" %}
-<script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=signal-detail-regression-20260729"></script>
+<script src="{{ url_for('static', filename='js/main/comparable_carousel.js') }}?v=comparison-20261126"></script>
 <script src="{{ url_for('static', filename='js/main/listing_detail_actions.js') }}?v=signal-detail-regression-20260729"></script>
 <script>
 const listingImages = {{ imgs|tojson }};
@@ -1463,7 +1464,16 @@ async function renderHistoryChart(rows) {
   }
   canvas.hidden = false;
   if (empty) empty.hidden = true;
-  await ensureDetailChartJs();
+  try {
+    await ensureDetailChartJs();
+  } catch {
+    canvas.hidden = true;
+    if (empty) {
+      empty.textContent = 'Không tải được biểu đồ.';
+      empty.hidden = false;
+    }
+    return;
+  }
 
   const ctx = canvas.getContext('2d');
   const isDark = document.documentElement.dataset.theme === 'dark';
@@ -1667,7 +1677,7 @@ function toggleModalComps(button) {
   button.textContent = expanded ? 'Thu gọn' : `Xem thêm ${count} lô`;
 }
 
-function renderComps(comps = []) {
+function renderComps(comps = [], summary = '') {
   const evidenceList = document.getElementById('evidence-comparables');
   if (evidenceList) {
     const rows = comps.filter(c => Number.isSafeInteger(Number(c.id)) && Number(c.id) > 0 && Number(c.id) !== {{ l['id'] }}).slice(0, 4);
@@ -1681,14 +1691,14 @@ function renderComps(comps = []) {
       const item = document.createElement('li');
       const link = document.createElement('a');
       link.href = `/listing/${Number(c.id)}`;
-      link.textContent = `#${Number(c.id)} · ${c.ward || 'Chưa rõ khu vực'} · ${priceLabel(c.price_ty || c.price)} · ${formatPpm2(c.price_per_m2 || c.actual_ppm2 || c.ppm2)}`;
+      link.textContent = `#${Number(c.id)} · ${c.ward || 'Chưa rõ khu vực'} · ${priceLabel(c.price_ty || c.price)} · ${formatPpm2(c.asking_ppm2)}`;
       item.appendChild(link);
       evidenceList.appendChild(item);
     });
   }
   const root = document.querySelector('[data-comparable-carousel]');
   if (!root || !window.RadarComparableCarousel) return;
-  window.RadarComparableCarousel.mount(root, comps, { openMode: 'link' });
+  window.RadarComparableCarousel.mount(root, comps, { openMode: 'link', summary });
 }
 
 async function renderHistoryAndComps() {
@@ -1698,6 +1708,7 @@ async function renderHistoryAndComps() {
     const res = await fetch(`/api/history/{{ l['id'] }}`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const data = await res.json();
+    renderComps(Array.isArray(data.comps) ? data.comps : [], data.comparison_summary);
     const rows = decorateHistoryTimeline(combinedHistory(data));
     if (!rows.length) {
       target.innerHTML = '<div class="sm-empty-state">Chưa có lịch sử giá cho lô này.</div>';
@@ -1708,7 +1719,6 @@ async function renderHistoryAndComps() {
       await renderHistoryChart(rows);
       target.innerHTML = `<div class="sm-history-timeline">${renderHistoryRows(rows)}</div>`;
     }
-    renderComps(Array.isArray(data.comps) ? data.comps : []);
   } catch (err) {
     const rows = decorateHistoryTimeline(combinedHistory(null));
     if (!rows.length) {
@@ -1719,7 +1729,9 @@ async function renderHistoryAndComps() {
       await renderHistoryChart(rows);
       target.innerHTML = `<div class="sm-history-timeline">${renderHistoryRows(rows)}</div>`;
     }
-    renderComps([]);
+    const list = document.getElementById('evidence-comparables');
+    if (list) list.textContent = 'Không tải được tin rao đối chiếu.';
+    document.getElementById('detail-comps-body').textContent = 'Không tải được tin rao đối chiếu.';
   }
 }
 

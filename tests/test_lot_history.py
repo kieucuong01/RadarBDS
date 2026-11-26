@@ -173,6 +173,26 @@ class LotHistoryApiTest(unittest.TestCase):
             card["price_ty"] = 1.9
             self.assertIsNone(summary())  # A stale projection cannot describe a new price.
 
+    def test_guest_comparison_counts_only_distinct_visible_sales_in_the_segment(self):
+        from db.connection import get_conn
+
+        with get_conn() as conn:
+            eligible = self._insert_listing(conn, url=self.url_prefix + "/sale", source_id="sale-" + self.token,
+                                            price_per_m2=45)
+            self._insert_listing(conn, url=self.url_prefix + "/same-post", source_id="fb-old-" + self.token)
+            for column, value in [
+                ("tx_type", "thue"), ("area_m2", 200), ("property_type", "nha_dat"),
+                ("review_hidden", 1), ("suspicious_bait", 1), ("is_blacklisted", 1),
+                ("duplicate_of_id", self.canonical_id),
+            ]:
+                listing = self._insert_listing(conn, url=self.url_prefix + "/" + column,
+                                               source_id=column + self.token)
+                conn.execute(f"UPDATE listings SET {column}=? WHERE id=?", (value, listing))
+        data = self.client.get(f"/api/history/{self.canonical_id}").get_json()
+        self.assertEqual([r["id"] for r in data["comps"]], [eligible])
+        self.assertEqual(data["comps"][0]["asking_ppm2"], 45)
+        self.assertIn("Chỉ có 1 tin rao", data["comparison_summary"])
+
     def test_lot_history_includes_facebook_same_price_and_non_facebook_drop_only(self):
         response = self.client.get(f"/api/history/{self.canonical_id}")
         self.assertEqual(response.status_code, 200)

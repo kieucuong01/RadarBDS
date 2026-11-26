@@ -1230,7 +1230,10 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
   const chartEl = document.getElementById('sm-history-chart');
   const compsBody = document.getElementById('sm-comps-body');
   if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Đang tải lịch sử...</div>';
-  if (compsBody) compsBody.innerHTML = '<div class="sm-empty-state">Đang tải giao dịch tương tự...</div>';
+  const comparisonSummary = modal && modal.querySelector('[data-comparison-summary]');
+  window.RadarComparableCarousel?.unmount?.(document.getElementById('sm-panel-comps'));
+  if (comparisonSummary) comparisonSummary.textContent = '';
+  if (compsBody) compsBody.innerHTML = '<div class="sm-empty-state">Đang tải tin rao đối chiếu…</div>';
   if (smHistoryChart) { smHistoryChart.destroy(); smHistoryChart = null; }
   smHistoryChartTimeline = [];
 
@@ -1240,6 +1243,12 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
     const data = await res.json();
     if (modal && modal.dataset.listingId !== String(listingId)) return;
     const sameListingHistory = Array.isArray(data.history) ? data.history : [];
+    if (compsBody && window.RadarComparableCarousel) {
+      window.RadarComparableCarousel.mount(
+        document.getElementById('sm-panel-comps'), Array.isArray(data.comps) ? data.comps : [],
+        { openMode: 'modal', openHandler: 'openSignal', summary: data.comparison_summary },
+      );
+    }
     const lotHistory = Array.isArray(data.lot_history) ? data.lot_history : [];
 
     const timelineByKey = new Map();
@@ -1277,7 +1286,12 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
     const labels = chartTimeline.map((h) => _historyShortDate(h.date));
 
     if (labels.length > 0 && chartEl) {
-      await ensureChartJs();
+      try {
+        await ensureChartJs();
+      } catch {
+        return;
+      }
+      if (modal && modal.dataset.listingId !== String(listingId)) return;
       const ctx = chartEl.getContext('2d');
       smHistoryChart = new Chart(ctx, {
         type: 'line',
@@ -1327,14 +1341,8 @@ async function loadSignalHistory(listingId, currentPrice, area, ward, currentMet
       });
     }
 
-    if (compsBody && window.RadarComparableCarousel) {
-      window.RadarComparableCarousel.mount(
-        document.getElementById('sm-panel-comps'),
-        Array.isArray(data.comps) ? data.comps : [],
-        { openMode: 'modal', openHandler: 'openSignal' },
-      );
-    }
   } catch (err) {
+    if (modal && modal.dataset.listingId !== String(listingId)) return;
     console.error('History load error:', err);
     if (historyEl) historyEl.innerHTML = '<div style="opacity:0.5;padding:8px 0;">Không tải được dữ liệu.</div>';
     if (compsBody) compsBody.innerHTML = '<div class="sm-empty-state">Lỗi tải dữ liệu.</div>';
