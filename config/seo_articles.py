@@ -23715,7 +23715,7 @@ SEO_ARTICLES = {
         ],
         "article": {
             "published_at": "2026-09-21",
-            "modified_at": "2026-09-21",
+            "modified_at": "2026-11-25",
             "intro": [
                 "Trong cửa sổ dữ liệu Facebook 08–21/09/2026, Radar BDS ghi nhận 99 tin đất nền Bến Cát có tổng giá rao không quá 2 tỷ. Phú An có 50 tin, An Điền 18, Tân Định 11 và An Tây 10. Giá rao trung vị của nhóm là khoảng 1,50 tỷ tổng giá và 9,4 tr/m² từ 98 tin có giá/m² hợp lệ.",
                 "Các con số này là số dòng tin đang được theo dõi, có thể gồm bài đăng lại của cùng một bất động sản. Bài chỉ dùng nguồn Facebook và tách đất nền khỏi nhà đất để tránh so sai loại hình."

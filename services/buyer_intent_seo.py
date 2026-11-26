@@ -10,7 +10,6 @@ from services.public_cache import get_durable_dataset_versions
 OWNER_SLUG = 'dat-nen-ben-cat-duoi-2-ty-khu-nao-con-nhieu-tin'
 OWNER_PATH = '/tin-tuc/' + OWNER_SLUG
 INTENT_ID = 'dat-duoi-2-ty-ben-cat'
-UPDATED_AT = '2026-11-25'
 WARDS = SCOPES['ben-cat']['wards']
 CANDIDATE_LIMIT = 30
 RESULT_LIMIT = 20
@@ -80,7 +79,6 @@ def load_results():
 def prepare_page(page):
     """Preserve the exact canonical and dated analysis; update only maintained metadata."""
     updated = dict(page)
-    updated['article'] = dict(page['article'], modified_at=UPDATED_AT)
     updated.update(
         title='Đất nền Bến Cát dưới 2 tỷ: tin rao đang công khai | Radar BDS',
         hero_title='Đất nền Bến Cát dưới 2 tỷ: tin rao đang công khai',

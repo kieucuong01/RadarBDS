@@ -4518,13 +4518,12 @@ def sitemap_xml():
         )
         for page in unique_pages
     )
-    from services.buyer_intent_seo import OWNER_PATH as buyer_owner_path, UPDATED_AT as buyer_updated_at
     article_urls = "\n".join(
         render_sitemap_entry(
             page,
             changefreq="weekly",
             priority="0.7",
-            lastmod=buyer_updated_at if page.get("path") == buyer_owner_path else (page.get("article") or {}).get("modified_at") or "",
+            lastmod=(page.get("article") or {}).get("modified_at") or "",
         )
         for slug, page in SEO_ARTICLES.items()
         if is_public_article(page)
