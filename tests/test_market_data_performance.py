@@ -289,6 +289,8 @@ def test_load_signals_fast_page_skips_total_count_and_uses_limit_plus_one(monkey
 
         def execute(self, sql, params=None):
             self.queries.append((sql, params))
+            if "FROM price_history" in sql:
+                return _FakeCursor(rows=[])
             return _FakeCursor(rows=[_signal_row(i) for i in range(1, 4)])
 
         def close(self):
@@ -315,6 +317,10 @@ def test_load_signals_fast_page_skips_total_count_and_uses_limit_plus_one(monkey
     sql, params = conn.queries[0]
     assert "COUNT(*) OVER()" not in sql
     assert params[-2:] == [3, 0]
+    assert len(conn.queries) == 2
+    history_sql, history_params = conn.queries[1]
+    assert "WHERE l.id = ANY(?)" in history_sql
+    assert history_params == ([1, 2], True)
     assert len(result["signals"]) == 2
     assert result["has_more"] is True
     assert "total" not in result
