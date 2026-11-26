@@ -1,4 +1,5 @@
 import json
+import errno
 import os
 import time
 import logging
@@ -416,6 +417,17 @@ def _download_and_clean_crawl_images(source=None, *, cleanup_limit=None, **kwarg
         _clean_broker_images_after_download(source=source, limit=cleanup_limit)
 
 
+def _export_crawl_backup(args):
+    try:
+        with timed_stage("raw_export"):
+            cmd_export_raw(args)
+    except OSError as exc:
+        if exc.errno != errno.ENOSPC:
+            raise
+        mark_partial("Raw backup deferred: disk full; previous backup retained. Listing publication already committed.")
+        print("[raw-export] disk full; previous backup retained; free disk space and retry export-raw")
+
+
 def _postprocess_crawl_batch(args, total_new: int, source_filter=None, image_limit: int | None = None) -> bool:
     if total_new <= 0 or getattr(args, "no_reprocess", False):
         return False
@@ -490,8 +502,7 @@ def _cmd_crawl_daily_facebook_first(args, crawlers, headless: bool, crawl_start_
 
     class _FakeArgs:
         out = None
-    with timed_stage("raw_export"):
-        cmd_export_raw(_FakeArgs())
+    _export_crawl_backup(_FakeArgs())
 
     _prewarm_dashboard_cache()
 
@@ -591,8 +602,7 @@ def _cmd_crawl(args, mode: str = "full"):
 
     class _FakeArgs:
         out = None
-    with timed_stage("raw_export"):
-        cmd_export_raw(_FakeArgs())
+    _export_crawl_backup(_FakeArgs())
 
     if not no_alert:
         try:

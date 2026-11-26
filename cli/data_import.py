@@ -1,6 +1,10 @@
-import sys
 import json
 import logging
+import os
+import re
+import stat
+import sys
+import tempfile
 from pathlib import Path
 from cli.utils import _parse_price, _parse_area, _detect_prop, _map_road_type, _map_has_so, _parse_road_width
 from db.connection import get_conn
@@ -228,25 +232,61 @@ def cmd_delete_guland(args):
 
 def cmd_export_raw(args):
     init_schema()
-    out = getattr(args, "out", None) or str(Path(__file__).parent.parent / "data" / "raw_backup.json")
-    with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT source, source_id, url, raw_json, crawled_at FROM raw_listings ORDER BY id"
-        ).fetchall()
-    records = []
-    for r in rows:
-        records.append({
-            "source":     r["source"],
-            "source_id":  r["source_id"],
-            "url":        r["url"],
-            "raw_json":   json.loads(r["raw_json"]),
-            "crawled_at": r["crawled_at"],
-        })
-    out_path = Path(out)
+    out_path = Path(
+        getattr(args, "out", None)
+        or Path(__file__).parent.parent / "data" / "raw_backup.json"
+    ).resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(records, f, ensure_ascii=False, indent=2)
-    print(f"Exported {len(records)} raw records → {out_path}")
+    try:
+        output_mode = stat.S_IMODE(out_path.stat().st_mode)
+    except FileNotFoundError:
+        output_mode = None
+
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=out_path.parent,
+            prefix=f".{out_path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as f:
+            temp_path = Path(f.name)
+            f.write("[")
+            count = 0
+            with get_conn() as conn:
+                with conn.cursor(name="raw_backup_export") as cursor:
+                    cursor.execute(
+                        "SELECT source, source_id, url, raw_json, crawled_at "
+                        "FROM raw_listings ORDER BY id"
+                    )
+                    for row in cursor:
+                        record = {
+                            "source": row["source"],
+                            "source_id": row["source_id"],
+                            "url": row["url"],
+                            "raw_json": json.loads(row["raw_json"]),
+                            "crawled_at": row["crawled_at"],
+                        }
+                        f.write("\n" if count == 0 else ",\n")
+                        json.dump(record, f, ensure_ascii=False, separators=(",", ":"))
+                        count += 1
+            if count:
+                f.write("\n")
+            f.write("]")
+            f.flush()
+            os.fsync(f.fileno())
+
+        if output_mode is not None:
+            os.chmod(temp_path, output_mode)
+        os.replace(temp_path, out_path)
+    except BaseException:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+        raise
+
+    print(f"Exported {count} raw records → {out_path}")
 
 def cmd_import_raw_backup(args):
     init_schema()
