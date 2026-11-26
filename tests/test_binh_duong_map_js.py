@@ -119,6 +119,19 @@ def test_map_options_enable_scroll_wheel_zoom():
     }
 
 
+def test_a_selected_ward_receives_one_camera_fit_without_a_city_zoom_animation():
+    assert _run_node(
+        """(() => {
+          const calls = [];
+          const map = {fitBounds: (b, options) => calls.push([b.name, options.maxZoom, options.animate])};
+          const layer = name => ({getBounds: () => ({name, isValid: () => true})});
+          mapPage.fitBoundarySelection(map, layer('city'), layer('ward'), 15);
+          mapPage.fitBoundarySelection(map, layer('city'), null, 15);
+          return calls;
+        })()"""
+    ) == [["ward", 15, False], ["city", 11, False]]
+
+
 def test_map_base_layers_include_street_and_satellite_tiles():
     assert _run_node("mapPage.normalizeBaseLayer('satellite')") == "satellite"
     assert _run_node("mapPage.normalizeBaseLayer('broken')") == "street"

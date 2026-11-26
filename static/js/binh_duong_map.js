@@ -154,6 +154,13 @@
     };
   }
 
+  function fitBoundarySelection(map, boundary, selected, wardMaxZoom) {
+    var bounds = (selected || boundary).getBounds();
+    if (!bounds.isValid()) return;
+    var padding = selected ? 38 : 28;
+    map.fitBounds(bounds, { padding: [padding, padding], maxZoom: selected ? wardMaxZoom : 11, animate: false });
+  }
+
   function fullscreenElement(doc) {
     if (!doc) return null;
     return doc.fullscreenElement || doc.webkitFullscreenElement || null;
@@ -525,13 +532,6 @@
       };
     }
 
-    function fitBounds(layer, options) {
-      if (!map || !layer || typeof layer.getBounds !== "function") return;
-      var bounds = layer.getBounds();
-      if (!bounds || !bounds.isValid || !bounds.isValid()) return;
-      map.fitBounds(bounds, options || { padding: [24, 24], maxZoom: 12 });
-    }
-
     function drawLayer(layer, areaSlug) {
       if (!map || !datasets[layer]) return;
       if (boundaryLayer) map.removeLayer(boundaryLayer);
@@ -557,11 +557,9 @@
         }
       }).addTo(map);
 
-      fitBounds(boundaryLayer, { padding: [28, 28], maxZoom: 11 });
-      if (areaSlug && featureLayers[areaSlug]) {
-        featureLayers[areaSlug].setStyle(selectedStyle());
-        fitBounds(featureLayers[areaSlug], { padding: [38, 38], maxZoom: 13 });
-      }
+      var selected = areaSlug && featureLayers[areaSlug];
+      if (selected) selected.setStyle(selectedStyle());
+      fitBoundarySelection(map, boundaryLayer, selected, matches ? 15 : 13);
     }
 
     function renderState(state) {
@@ -840,6 +838,7 @@
     filterFeatureCollection: filterFeatureCollection,
     matchesExpectedSlugs: matchesExpectedSlugs,
     mapOptions: mapOptions,
+    fitBoundarySelection: fitBoundarySelection,
     toggleMapFullscreen: toggleMapFullscreen,
     handleFullscreenEscape: handleFullscreenEscape,
     init: init
