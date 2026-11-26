@@ -168,6 +168,38 @@
     return 'price-neutral';
   }
 
+  function priceHistoryText(item) {
+    var history = item.price_history_summary || {};
+    if (history.kind === 'uncertain') return 'Chênh lệch giá bất thường, cần xác minh.';
+    if (history.kind === 'same_price') return 'Các lần ghi nhận gần nhất trên tin này cùng giá.';
+    var before = positive(history.previous_price_ty);
+    var current = positive(item.price_ty);
+    if (!before || !current || ['same_post', 'repost'].indexOf(history.kind) === -1) {
+      return 'Chưa đủ lịch sử để so giá.';
+    }
+    var dateParts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(history.date);
+    var when = dateParts ? ' (' + dateParts[3] + '/' + dateParts[2] + '/' + dateParts[1] + ')' : '';
+    if (history.kind === 'repost' && Math.abs(before - current) < 0.000001) {
+      return 'Cùng lô đăng lại, giữ giá' + when + '.';
+    }
+    var subject = history.kind === 'repost' ? 'Cùng lô đăng lại' : 'Cùng tin rao';
+    var delta = Math.abs((current - before) / before * 100);
+    if (history.kind === 'repost' && delta < 1) {
+      return 'Cùng lô đăng lại, giá chênh dưới 1% so với lần rao trước' + when + '.';
+    }
+    return subject + ', ' + (current < before ? 'giảm ' : 'tăng ')
+      + (delta < 0.1 ? 'dưới 0,1' : format(delta)) + '% từ '
+      + format(before, 3) + ' tỷ' + when + '.';
+  }
+
+  function signalEvidence(item, mos) {
+    var reason = mos ? 'Giá rao thấp hơn ' + format(mos) + '% so với định giá của Radar.'
+      : 'Cần đối chiếu đơn giá với các tin tương tự trong phần chi tiết.';
+    return '<div class="sc-evidence"><div><strong>Lịch sử giá</strong> '
+      + esc(priceHistoryText(item)) + '</div><div><strong>Đáng kiểm tra</strong> '
+      + esc(reason) + '</div></div>';
+  }
+
   function qualityBadges(item) {
     var flags = String(item.source_quality_flags || '')
       .split(',')
@@ -251,7 +283,8 @@
     var timeText = cardDateText(item);
     var computedFair = fairPrice(item);
     var actualClass = actualPriceClass(item);
-    var dropBadge = item.price_dropped
+    var isSignal = options.context === 'signal';
+    var dropBadge = !isSignal && item.price_dropped
       ? '<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: '
         + (item.drop_pct ? esc(item.drop_pct) + '%' : 'N/A') + '</span>'
       : '';
@@ -285,7 +318,7 @@
       + '" data-original-image="' + esc(item.imgs && item.imgs[0] !== imageSource ? item.imgs[0] || '' : '')
       + '" onerror="RadarSignalCard.useFallbackImage(this)">'
       + '<div class="sc-empty-media"><div class="sc-empty-media-copy"><strong>Chưa có ảnh</strong><span>Xem giá và vị trí</span></div></div>'
-      + (mos ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')
+      + (mos && !isSignal ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')
       + (priceUpdated
         ? '<div class="new-badge price-update-badge">CẬP NHẬT GIÁ</div>'
         : (newListing ? '<div class="new-badge">MỚI</div>' : ''))
@@ -298,10 +331,11 @@
       + '</div>'
       + '<div class="sc-body">' + titleHtml
       + '<div class="price-container"><div class="price-actual"><span class="price-label price-label-actual ' + actualClass + '">GIÁ RAO</span>'
-      + '<div class="price-val ' + actualClass + '">' + (price ? esc(format(price, 2)) + ' tỷ' : '-') + '</div>'
+      + '<div class="price-val ' + actualClass + '">' + (price ? esc(format(price, isSignal ? 3 : 2)) + ' tỷ' : '-') + '</div>'
       + '<div class="price-m2">' + (actual ? esc(format(actual)) + ' tr/m²' : '-') + '</div></div>'
       + '<div class="price-fair"><span class="price-label price-label-fair">ĐỊNH GIÁ</span>'
       + valuationHtml(item) + '</div></div>'
+      + (isSignal ? signalEvidence(item, mos) : '')
       + '<div class="sc-meta-chips">'
       + chip(item.ward || 'Chưa rõ', 'meta-chip-ward')
       + chip(areaLabel(item), 'meta-chip-area')

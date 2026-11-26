@@ -136,6 +136,43 @@ class LotHistoryApiTest(unittest.TestCase):
                 posted_at="2026-05-05",
             )
 
+    def test_signal_card_compares_last_reliable_repost_and_then_same_post_edits(self):
+        from db.connection import get_conn
+        from services.signal_price_history import load_card_price_history
+
+        with get_conn() as conn:
+            card = {"id": self.canonical_id, "source": "facebook", "price_ty": 2.0}
+
+            def summary():
+                return load_card_price_history(conn, [card], "guest").get(self.canonical_id)
+
+            # Newer linked posts cannot prove that the displayed price fell.
+            self.assertIsNone(summary())
+            conn.execute("""
+                UPDATE listings SET title='Đất nền đường DX43', frontage_m=5, depth_m=20
+                WHERE id IN (?, ?)
+            """, (self.canonical_id, self.facebook_same_price_id))
+            conn.execute("UPDATE listings SET posted_at='2026-05-10' WHERE id=?", (self.canonical_id,))
+            self._insert_listing(
+                conn, source_id="old-" + self.token, url=self.url_prefix + "/older",
+                title="Đất nền đường DX43", price_ty=2.5, frontage_m=5, depth_m=20,
+                possibly_duplicate=1, duplicate_of_id=self.canonical_id, posted_at="2026-05-01",
+            )
+            self.assertEqual(summary(), {"kind": "repost", "previous_price_ty": 2.0,
+                                         "change_pct": 0, "date": "2026-05-10"})
+            conn.execute("UPDATE listings SET price_ty=2.4 WHERE id=?", (self.facebook_same_price_id,))
+            self.assertEqual(summary()["change_pct"], -16.67)
+            conn.execute("UPDATE listings SET review_hidden=1 WHERE id=?", (self.facebook_same_price_id,))
+            self.assertEqual(summary()["previous_price_ty"], 2.5)
+            conn.executemany("""
+                INSERT INTO price_history(listing_id, price_ty, recorded_at) VALUES (?, ?, ?)
+            """, [(self.canonical_id, 2.2, "2026-05-11"), (self.canonical_id, 2, "2026-05-12"),
+                  (self.canonical_id, 2, "2026-05-13")])
+            self.assertEqual(summary(), {"kind": "same_post", "previous_price_ty": 2.2,
+                                         "change_pct": -9.09, "date": "2026-05-12"})
+            card["price_ty"] = 1.9
+            self.assertIsNone(summary())  # A stale projection cannot describe a new price.
+
     def test_lot_history_includes_facebook_same_price_and_non_facebook_drop_only(self):
         response = self.client.get(f"/api/history/{self.canonical_id}")
         self.assertEqual(response.status_code, 200)

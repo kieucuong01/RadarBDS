@@ -22,6 +22,7 @@ from db.guland_publishers import (
     publisher_signal_eligibility_from_join_sql,
 )
 from services.image_assets import resolve_image_url
+from services.signal_price_history import load_card_price_history
 from services.signal_quality import (
     DEFAULT_SIGNAL_MOS_MIN_PCT,
     LATEST_VALUATION_CTE,
@@ -1361,7 +1362,10 @@ def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, onl
         LIMIT ? OFFSET ?
     """, params + [query_limit, offset]).fetchall()
 
-    conn.close()
+    try:
+        history = load_card_price_history(conn, rows[:limit], tier)
+    finally:
+        conn.close()
 
     has_more_without_total = (not include_total) and len(rows) > limit
     if not include_total:
@@ -1377,6 +1381,7 @@ def _load_signals_legacy(db_path, sources=None, wards=None, prop_types=None, onl
             ),
             tier=tier,
         )
+        | {"price_history_summary": history.get(r["id"])}
         for r in rows
     ]
     payload = {

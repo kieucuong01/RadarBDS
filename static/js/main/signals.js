@@ -786,9 +786,9 @@ function renderSignalDealCard(x, opts = {}) {
   const sourceTagHtml = window.USER_TIER === 'admin' && srcName
     ? `<span class="sc-source-tag">${escHtml(srcName)}</span>`
     : '';
-  const dropBadge = x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? `${escHtml(x.drop_pct)}%` : 'N/A'}</span>` : '';
+  const dropBadge = cardContext !== 'signal' && x.price_dropped ? `<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: ${x.drop_pct ? `${escHtml(x.drop_pct)}%` : 'N/A'}</span>` : '';
   const mosBadge = Number.isFinite(mosNum) && mosNum > 0
-    ? `<div class="mos-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="9" width="16" height="10" rx="4"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="4" r="1"/></svg> Rẻ hơn ${mosRounded}%</div>`
+    ? `<div class="mos-badge">Thấp hơn định giá ${mosRounded}%</div>`
     : '';
   const actualPpm2 = x.actual_ppm2 || x.price_per_m2 || x.ppm2 || '-';
   const fairPpm2 = x.fair_ppm2 || x.fppm2 || '-';
@@ -815,7 +815,7 @@ function renderSignalDealCard(x, opts = {}) {
 
       <div class="price-container">
         <div class="price-actual">
-          <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
+          <span class="price-label price-label-actual ${actualClass}">GIÁ RAO</span>
           <div class="price-val ${actualClass}">${escHtml(priceLabel)}</div>
           <div class="price-m2">${escHtml(actualPpm2)}${actualPpm2 !== '-' ? ' tr/m²' : ''}</div>
         </div>
@@ -825,6 +825,7 @@ function renderSignalDealCard(x, opts = {}) {
         </div>
       </div>
 
+      ${cardContext === 'signal' ? '<div class="sc-evidence">Xem lịch sử giá trong chi tiết tin.</div>' : ''}
       <div class="sc-meta-chips">
         ${metaChipsHtml}
       </div>
