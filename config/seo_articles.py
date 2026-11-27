@@ -24649,6 +24649,234 @@ SEO_ARTICLES = {
             {"name": "Phú Hòa hay Hòa Phú", "href": "/tin-tuc/phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-hoa-hay-hoa-phu-nen-xem-khu-nao-truoc"}
         ]
     },
+    "phu-tan-hay-hiep-an-nen-xem-khu-nao-truoc": {
+        "variant": "knowledge",
+        "path": "/tin-tuc/phu-tan-hay-hiep-an-nen-xem-khu-nao-truoc",
+        "category": {"key": "so-sanh-khu-vuc", "label": "So sánh phường"},
+        "title": "Phú Tân hay Hiệp An: nên xem khu nào trước? | Radar BDS",
+        "description": "So sánh Phú Tân và Hiệp An bằng dữ liệu Radar BDS: số tin và dấu hiệu trong 14 ngày, cùng giá rao trung vị đất nền trong snapshot 01–24/11/2026.",
+        "keywords": "Phú Tân hay Hiệp An, giá đất Phú Tân, giá đất Hiệp An, đất nền Thủ Dầu Một, nhà đất Bình Dương, Radar BDS",
+        "breadcrumb_label": "Phú Tân hay Hiệp An",
+        "hero_badge": "So sánh phường",
+        "hero_title": "Phú Tân hay Hiệp An: nên xem khu nào trước?",
+        "hero_text": "Nếu cần nhiều tin và dấu hiệu để lọc, nên mở Phú Tân trước: 117 tin đang theo dõi và 59 dấu hiệu, so với 79 tin và 22 dấu hiệu ở Hiệp An. Trong snapshot giá đất nền 01–24/11/2026, Hiệp An có giá rao trung vị 15,17 tr/m², thấp hơn Phú Tân 23,33 tr/m². Hai cửa sổ dữ liệu khác nhau nên không gộp thành một kết luận về giao dịch.",
+        "scope_label": "Thủ Dầu Một · Phú Tân / Hiệp An",
+        "hero_checks": [
+            "Phú Tân có 117 tin đang theo dõi; Hiệp An có 79 tin trong cửa sổ 14 ngày",
+            "Dấu hiệu đáng kiểm tra: Phú Tân 59 tin; Hiệp An 22 tin",
+            "Đất nền snapshot 01–24/11: Phú Tân 23,33 tr/m² từ 56 mẫu; Hiệp An 15,17 tr/m² từ 105 mẫu",
+            "Snapshot giá hiện chỉ có fact hợp lệ cho đất nền; không tự điền số nhà đất"
+        ],
+        "primary_cta": "Mở dashboard lọc Phú Tân",
+        "primary_href": "/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n&utm_source=seo&utm_medium=article&utm_campaign=phu_tan_vs_hiep_an",
+        "secondary_cta": "Xem trang phường Hiệp An",
+        "secondary_href": "/binh-duong/phuong-hiep-an",
+        "map_label": "Tin tức / So sánh Phú Tân và Hiệp An",
+        "hero_metric": {
+            "label": "Tin đang theo dõi",
+            "value": "196 tin",
+            "delta": "Phú Tân 117 · Hiệp An 79",
+            "note": "Tin Facebook trong cửa sổ 14 ngày · context ngày 27/11/2026"
+        },
+        "property_card": {
+            "status": "Kết luận nhanh",
+            "title": "Mở Phú Tân để có nhiều mẫu hơn; xem Hiệp An nếu ưu tiên giá rao đất nền thấp hơn trong snapshot",
+            "price": "Đất nền: Hiệp An 15,17 tr/m² · Phú Tân 23,33 tr/m²",
+            "metric_a": "Tin đang theo dõi",
+            "metric_a_value": "Phú Tân 117 · Hiệp An 79",
+            "metric_b": "Dấu hiệu",
+            "metric_b_value": "Phú Tân 59 · Hiệp An 22"
+        },
+        "value_cards": [
+            {
+                "title": "Phú Tân có nhiều tin hơn để sàng lọc",
+                "body": "Trong cửa sổ 14 ngày, Phú Tân có 117 tin Facebook đang theo dõi, cao hơn 79 tin ở Hiệp An. Nhiều tin hơn chỉ giúp mở rộng danh sách để lọc theo diện tích, tổng giá và đường vào."
+            },
+            {
+                "title": "Hiệp An thấp hơn ở giá rao đất nền trong snapshot",
+                "body": "Snapshot giá rao đất nền từ 01 đến 24/11/2026 ghi nhận Hiệp An ở mức trung vị 15,17 tr/m² từ 105 mẫu đủ điều kiện; Phú Tân là 23,33 tr/m² từ 56 mẫu. Đây là giá rao, không phải giá giao dịch."
+            },
+            {
+                "title": "Dấu hiệu không phải nhãn nên mua",
+                "body": "Phú Tân có 59 tin và Hiệp An có 22 tin thuộc nhóm dấu hiệu đáng kiểm tra trong pulse 14 ngày. Nhóm này chỉ giúp sắp thứ tự đọc tin; vẫn phải hỏi lại giấy tờ, vị trí, diện tích và hiện trạng."
+            }
+        ],
+        "dashboard_preview": {
+            "eyebrow": "Từ bài viết sang từng tin",
+            "title": "Lọc riêng Phú Tân và Hiệp An",
+            "body": "Chọn phường, tách đất nền với nhà đất, rồi xem từng tin theo giá/m² và dấu hiệu đáng kiểm tra.",
+            "image": "/static/images/seo/dashboard-preview.png",
+            "alt": "Dashboard Radar BDS lọc tin Phú Tân và Hiệp An theo loại hình",
+            "cta": "Mở dashboard",
+            "metrics": [
+                {"value": "2 phường", "label": "Phú Tân và Hiệp An"},
+                {"value": "2 loại hình", "label": "đất nền và nhà đất"},
+                {"value": "2 kỳ dữ liệu", "label": "14 ngày và snapshot MTD"}
+            ]
+        },
+        "market_snapshot": {
+            "eyebrow": "Dữ liệu Radar BDS · Facebook · 14 ngày + snapshot giá",
+            "title": "So hai phường nhưng giữ đúng kỳ dữ liệu",
+            "body": "Số tin và dấu hiệu lấy từ pulse Facebook 14 ngày tính đến context 27/11/2026. Giá đất nền lấy từ snapshot immutable 01–24/11/2026, gồm nguồn Facebook và Guland đủ điều kiện. Nhà đất không được gán số khi snapshot chưa có fact tương ứng.",
+            "columns": ["Phường", "Tin 14 ngày", "Dấu hiệu", "Đất nền · snapshot", "Nhà đất"],
+            "rows": [
+                {"ward": "Phú Tân", "tracked": "117", "signals": "59", "land": "23,33 tr/m² · 56 mẫu", "house": "Chưa có fact snapshot"},
+                {"ward": "Hiệp An", "tracked": "79", "signals": "22", "land": "15,17 tr/m² · 105 mẫu", "house": "Chưa có fact snapshot"}
+            ],
+            "cards": [
+                {"title": "Tổng tin theo dõi", "value": "196 tin", "body": "Phú Tân 117 · Hiệp An 79 trong pulse 14 ngày."},
+                {"title": "Dấu hiệu", "value": "81 tin", "body": "Phú Tân 59 · Hiệp An 22; đây là nhóm cần mở đọc kỹ hơn."},
+                {"title": "Đất nền", "value": "15,17 vs 23,33 tr/m²", "body": "Hiệp An thấp hơn Phú Tân trong snapshot 01–24/11/2026."}
+            ]
+        },
+        "local_links_title": "Đọc thêm và mở bộ lọc",
+        "local_links": [
+            {"label": "Trang phường Phú Tân", "href": "/binh-duong/phuong-phu-tan", "description": "Xem dữ liệu địa phương và mở danh sách tin Phú Tân."},
+            {"label": "Trang phường Hiệp An", "href": "/binh-duong/phuong-hiep-an", "description": "Xem dữ liệu địa phương và mở danh sách tin Hiệp An."},
+            {"label": "Giá đất Phú Tân hiện bao nhiêu?", "href": "/tin-tuc/gia-dat-phu-tan-hien-bao-nhieu", "description": "Đọc riêng giá rao theo scope dữ liệu của Phú Tân."},
+            {"label": "Giá đất Hiệp An hiện bao nhiêu?", "href": "/tin-tuc/gia-dat-hiep-an-hien-bao-nhieu", "description": "Đọc riêng giá rao theo scope dữ liệu của Hiệp An."},
+            {"label": "Công cụ định giá BĐS", "href": "/dinh-gia-bds", "description": "Ước lượng ban đầu cho từng tin trước khi hỏi sâu."}
+        ],
+        "process_title": "Cách chọn phường để mở trước",
+        "process": [
+            {"title": "1. Chọn mục tiêu", "body": "Cần nhiều tin để lọc thì mở Phú Tân trước; muốn đọc nhóm có giá rao đất nền thấp hơn trong snapshot thì mở Hiệp An."},
+            {"title": "2. Tách kỳ và loại hình", "body": "Số tin/dấu hiệu là pulse 14 ngày; giá đất nền là snapshot 01–24/11/2026. Không dùng giá đất nền để kết luận giá nhà đất."},
+            {"title": "3. Kiểm tra từng tin", "body": "Sau bước lọc, xem diện tích, đường vào, thổ cư, quy hoạch, giấy tờ và giá hiện tại trước khi liên hệ hoặc đi xem."}
+        ],
+        "faq": [
+            {"q": "Nếu cần nhiều tin để lọc thì nên mở Phú Tân hay Hiệp An trước?", "a": "Mở Phú Tân trước nếu mục tiêu là có nhiều mẫu hơn: pulse 14 ngày ghi nhận 117 tin, so với 79 tin ở Hiệp An. Nhiều tin hơn chỉ giúp có thêm lựa chọn để lọc, không có nghĩa mọi tin đều phù hợp."},
+            {"q": "Giá rao đất nền phường nào thấp hơn?", "a": "Trong snapshot immutable từ 01 đến 24/11/2026, Hiệp An có giá rao trung vị đất nền 15,17 tr/m² từ 105 mẫu đủ điều kiện; Phú Tân là 23,33 tr/m² từ 56 mẫu. Đây là giá rao tham khảo, không phải giá giao dịch đã chốt."},
+            {"q": "59 và 22 dấu hiệu đáng kiểm tra có nghĩa là gì?", "a": "Đó là số tin có cờ is_hot hoặc price_dropped trong pulse Facebook 14 ngày: Phú Tân 59 tin, Hiệp An 22 tin. Đây là thứ tự ưu tiên mở tin, không phải khuyến nghị mua hoặc xác nhận tin đang rẻ."},
+            {"q": "Vì sao bài chưa đưa giá nhà đất của hai phường?", "a": "Snapshot giá immutable dùng trong bài hiện có fact hợp lệ cho đất nền. Bài không lấy một phép tính DB khác để gắn vào cùng claim và không biến dữ liệu thiếu thành 0. Khi xem nhà đất, hãy mở dashboard và lọc đúng loại hình."},
+            {"q": "Dữ liệu trong bài lấy từ đâu?", "a": "Số tin và dấu hiệu lấy từ pulse Facebook 14 ngày của Radar BDS, context ngày 27/11/2026. Giá đất nền lấy từ snapshot asking-price-observed-mtd-v1, kỳ 01–24/11/2026, với nguồn Facebook và Guland; giá là giá rao, không phải giá giao dịch."}
+        ],
+        "article": {
+            "published_at": "2026-11-27",
+            "modified_at": "2026-11-27",
+            "intro": [
+                "Nếu cần nhiều tin để lọc, nên mở Phú Tân trước: 117 tin đang theo dõi và 59 dấu hiệu, so với 79 tin và 22 dấu hiệu ở Hiệp An. Nếu ưu tiên giá rao đất nền thấp hơn trong snapshot giá 01–24/11/2026, Hiệp An đang thấp hơn: 15,17 tr/m² so với 23,33 tr/m² tại Phú Tân.",
+                "Hai nhóm số liệu không cùng một cửa sổ: tin và dấu hiệu là pulse Facebook 14 ngày; giá đất nền là snapshot immutable MTD gồm mẫu đủ điều kiện từ Facebook và Guland. Bài không dùng các mốc này để suy ra giá giao dịch, thanh khoản hoặc mức độ phù hợp của từng tin."
+            ],
+            "summary_cards": [
+                {"label": "Tin đang theo dõi", "value": "196 tin", "note": "Phú Tân 117 · Hiệp An 79 · pulse 14 ngày"},
+                {"label": "Dấu hiệu đáng kiểm tra", "value": "81 tin", "note": "Phú Tân 59 · Hiệp An 22"},
+                {"label": "Đất nền giá rao trung vị", "value": "15,17 vs 23,33 tr/m²", "note": "Hiệp An vs Phú Tân · snapshot 01–24/11"},
+                {"label": "Nhà đất", "value": "Chưa gán số", "note": "Snapshot hiện chưa có fact tương ứng trong bài"}
+            ],
+            "data_tables": [
+                {
+                    "eyebrow": "Bảng so nhanh",
+                    "title": "Phú Tân và Hiệp An khác nhau thế nào?",
+                    "note": "Tin/dấu hiệu: pulse Facebook 14 ngày đến context 27/11/2026. Giá đất nền: snapshot immutable 01–24/11/2026; không phải giá giao dịch.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "tracked", "label": "Tin 14 ngày"},
+                        {"key": "signals", "label": "Dấu hiệu"},
+                        {"key": "land", "label": "Đất nền"},
+                        {"key": "house", "label": "Nhà đất"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Tân", "tracked": "117", "signals": "59", "land": "23,33 tr/m² · 56 mẫu", "house": "Chưa có fact snapshot"},
+                        {"ward": "Hiệp An", "tracked": "79", "signals": "22", "land": "15,17 tr/m² · 105 mẫu", "house": "Chưa có fact snapshot"}
+                    ]
+                },
+                {
+                    "eyebrow": "Chỉ đọc giá đất nền",
+                    "title": "Hiệp An thấp hơn trong snapshot giá 01–24/11/2026",
+                    "note": "Snapshot asking-price-observed-mtd-v1 có mẫu đủ điều kiện, tách riêng đất nền và không đại diện cho số bất động sản duy nhất.",
+                    "columns": [
+                        {"key": "ward", "label": "Phường"},
+                        {"key": "sample", "label": "Mẫu đủ điều kiện"},
+                        {"key": "median_m2", "label": "Giá rao trung vị/m²"},
+                        {"key": "sources", "label": "Nguồn snapshot"}
+                    ],
+                    "rows": [
+                        {"ward": "Phú Tân", "sample": "56", "median_m2": "23,33 tr/m²", "sources": "Facebook + Guland"},
+                        {"ward": "Hiệp An", "sample": "105", "median_m2": "15,17 tr/m²", "sources": "Facebook + Guland"}
+                    ]
+                }
+            ],
+            "charts": [
+                {
+                    "eyebrow": "Nguồn tin",
+                    "title": "Phú Tân có nhiều tin đang theo dõi hơn",
+                    "note": "Số tin trong pulse 14 ngày, không phải số bất động sản duy nhất.",
+                    "alt": "So số tin đang theo dõi ở Phú Tân và Hiệp An",
+                    "rows": [
+                        {"label": "Phú Tân", "value_label": "117 tin", "width": 100, "color": "#2563eb"},
+                        {"label": "Hiệp An", "value_label": "79 tin", "width": 68, "color": "#16a34a"}
+                    ]
+                },
+                {
+                    "eyebrow": "Giá rao trung vị/m²",
+                    "title": "Đất nền Hiệp An thấp hơn Phú Tân trong snapshot",
+                    "note": "Chỉ so đất nền có fact hợp lệ trong snapshot 01–24/11/2026; không suy sang nhà đất.",
+                    "alt": "So giá rao trung vị đất nền ở Phú Tân và Hiệp An",
+                    "rows": [
+                        {"label": "Đất nền · Phú Tân", "value_label": "23,33 tr/m²", "width": 100, "color": "#2563eb"},
+                        {"label": "Đất nền · Hiệp An", "value_label": "15,17 tr/m²", "width": 65, "color": "#16a34a"}
+                    ]
+                }
+            ],
+            "sections": [
+                {
+                    "id": "ket-luan-nhanh",
+                    "heading": "Kết luận nhanh: mở Phú Tân trước nếu cần nhiều mẫu",
+                    "paragraphs": [
+                        "Phú Tân có 117 tin đang theo dõi trong pulse 14 ngày, nhiều hơn 79 tin ở Hiệp An. Số dấu hiệu đáng kiểm tra cũng cao hơn: 59 so với 22. Nếu đang ở bước gom danh sách để lọc theo ngân sách, diện tích và đường vào, Phú Tân là điểm mở đầu thực dụng hơn.",
+                        "Nếu tiêu chí đầu tiên là giá rao đất nền trong snapshot MTD, Hiệp An thấp hơn với 15,17 tr/m² so với 23,33 tr/m² tại Phú Tân. Mốc này không thay cho việc đọc từng tin và không nói rằng Hiệp An phù hợp hơn cho mọi ngân sách."
+                    ],
+                    "bullets": ["Cần nhiều tin để lọc: mở Phú Tân trước", "Ưu tiên giá rao đất nền thấp hơn trong snapshot: xem Hiệp An", "Không biến số dấu hiệu thành kết luận nên mua"]
+                },
+                {
+                    "id": "so-gia-dat-nen",
+                    "heading": "Đất nền Hiệp An thấp hơn theo giá rao trung vị snapshot",
+                    "paragraphs": [
+                        "Snapshot immutable từ 01 đến 24/11/2026 có 56 mẫu đủ điều kiện ở Phú Tân và 105 mẫu ở Hiệp An. Giá rao trung vị đất nền lần lượt là 23,33 tr/m² và 15,17 tr/m². Cả hai đều vượt ngưỡng tối thiểu 15 mẫu của contract dữ liệu.",
+                        "Cần đọc thêm diện tích, tổng giá, mặt tiền, đường vào và thổ cư. Một giá rao trung vị không cho biết giá chốt, tốc độ bán hay pháp lý của từng thửa."
+                    ],
+                    "bullets": ["Đất nền Phú Tân: 56 mẫu, 23,33 tr/m²", "Đất nền Hiệp An: 105 mẫu, 15,17 tr/m²", "Nguồn snapshot: Facebook và Guland; không phải số giao dịch"]
+                },
+                {
+                    "id": "khong-gop-nha-dat",
+                    "heading": "Không dùng giá đất nền để kết luận về nhà đất",
+                    "paragraphs": [
+                        "Bài này chỉ nêu fact giá đất nền vì snapshot immutable được dùng cho claim hiện tại có property_type là dat_nen. Không đưa số nhà đất từ một truy vấn khác vào cùng bảng giúp giữ đúng kỳ, scope và nguồn của dữ liệu.",
+                        "Nếu đang tìm nhà xây sẵn, hãy mở dashboard, chọn đúng phường Hiệp An hoặc Phú Tân rồi chọn loại hình nhà đất. Sau đó kiểm tra diện tích đất, diện tích xây dựng, hiện trạng, đường vào và giấy tờ của từng tin."
+                    ],
+                    "bullets": ["Đất nền và nhà đất là hai loại hình khác nhau", "Dữ liệu thiếu không được đọc thành 0", "Giá/m² phải đi cùng loại hình và kỳ dữ liệu"]
+                },
+                {
+                    "id": "loc-hai-phuong",
+                    "heading": "Cách lọc Phú Tân và Hiệp An trên Radar BDS",
+                    "paragraphs": [
+                        "Mở dashboard, chọn Phú Tân hoặc Hiệp An, sau đó chọn đất nền hoặc nhà đất. Nếu cần nhiều mẫu để sàng lọc, bắt đầu từ Phú Tân; nếu muốn kiểm tra nhóm có giá rao đất nền thấp hơn trong snapshot, mở Hiệp An để đọc từng tin.",
+                        "Sau bước lọc, kiểm tra giá hiện tại, diện tích, đường vào, thổ cư, quy hoạch, giấy tờ và nguồn tin trước khi liên hệ hoặc đi xem. Radar BDS chỉ là bộ lọc ban đầu, không thay thẩm định pháp lý hay định giá chính thức."
+                    ],
+                    "bullets": ["Chọn phường rồi chọn loại hình", "So giá/m² cùng loại hình và cùng kỳ", "Mở từng tin có diện tích, vị trí và nguồn rõ", "Xác minh pháp lý, quy hoạch và thực địa trước khi đặt cọc"]
+                }
+            ],
+            "checklist": [
+                "Đã xác định mục tiêu: cần nhiều mẫu hay ưu tiên giá rao đất nền thấp hơn trong snapshot.",
+                "Đã tách pulse 14 ngày khỏi snapshot giá 01–24/11/2026.",
+                "Đã so đất nền với đất nền, không dùng số này để kết luận về nhà đất.",
+                "Đã mở từng tin để kiểm tra diện tích, đường vào, giấy tờ và nguồn.",
+                "Chưa đặt cọc khi chưa xác minh độc lập."
+            ]
+        },
+        "faq_note": "Giá trong bài là giá rao từ snapshot dữ liệu, không phải giá chốt giao dịch. Số tin có thể gồm bài đăng lại của cùng một bất động sản. Radar BDS là bộ lọc dữ liệu ban đầu, không thay thẩm định pháp lý, quy hoạch hay cam kết lợi nhuận.",
+        "final_cta": {
+            "title": "Mở Radar BDS để lọc Phú Tân và Hiệp An",
+            "body": "Chọn phường, tách đất nền với nhà đất, rồi mở từng tin có thông tin rõ trước khi liên hệ.",
+            "button": "Mở dashboard",
+            "button_href": "/?tab=signals&ward=Ph%C3%BA%20T%C3%A2n&utm_source=seo&utm_medium=article&utm_campaign=phu_tan_vs_hiep_an"
+        },
+        "breadcrumbs": [
+            {"name": "Trang chủ", "href": "/", "url": "https://radarbds.vn/"},
+            {"name": "Tin tức", "href": "/tin-tuc", "url": "https://radarbds.vn/tin-tuc"},
+            {"name": "Phú Tân hay Hiệp An", "href": "/tin-tuc/phu-tan-hay-hiep-an-nen-xem-khu-nao-truoc", "url": "https://radarbds.vn/tin-tuc/phu-tan-hay-hiep-an-nen-xem-khu-nao-truoc"}
+        ]
+    }
 }
 
 
