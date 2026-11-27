@@ -12,6 +12,7 @@ from services.market_data import (
     resolve_image_url,
 )
 from services.signal_quality import LATEST_VALUATION_CTE
+from services.comparison_evidence import add_comparison_evidence, comparison_summary
 
 
 def _fold(value: object) -> str:
@@ -37,25 +38,21 @@ def _jaccard(left: set[str], right: set[str]) -> float:
     return len(left & right) / len(left | right)
 
 
-def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) -> list[dict]:
-    """Return ranked signal-card records without repeating the current listing."""
+def load_listing_comparison(conn, listing_id: int, tier: str, limit: int = 18) -> dict:
     current = conn.execute(
         """
-        SELECT id, title, ward, area_m2, property_type, road_tier, price_per_m2
+        SELECT id, source, source_id, title, ward, area_m2, property_type, tx_type, road_tier, price_per_m2,
+               tho_cu_m2, duplicate_of_id
         FROM listings
         WHERE id = ?
         """,
         (listing_id,),
     ).fetchone()
-    if not current or not current["ward"]:
-        return []
+    if (not current or current["ward"] in (None, "", "unknown") or current["property_type"] in (None, "", "unknown")
+            or not current["area_m2"] or current["area_m2"] <= 0 or current.get("tx_type") != "ban"):
+        return {"comps": [], "comparison_summary": comparison_summary(None, [])}
 
-    area = float(current["area_m2"] or 0)
-    actual_ppm2 = float(current["price_per_m2"] or 0)
-    area_min = max(1.0, area * 0.75) if area else 1.0
-    area_max = area * 1.30 if area else 20_000.0
-    ppm2_min = actual_ppm2 * 0.55 if actual_ppm2 else 0.0
-    ppm2_max = actual_ppm2 * 1.45 if actual_ppm2 else 999_999.0
+    area = float(current["area_m2"])
     display_fair = _display_fair_sql("v", "sv")
     display_mos = _display_mos_sql(
         "v",
@@ -64,8 +61,14 @@ def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) 
     )
 
     where = [
-        "l.id <> ?",
+        "l.id NOT IN (?, ?)",
+        "l.duplicate_of_id IS NULL",
+        "l.tx_type = 'ban'",
+        "l.price_per_m2 > 0",
+        "COALESCE(l.suspicious_bait,0)=0",
+        "COALESCE(l.extraction_quality_flags,'') !~ 'ambiguous_price_text|multi_lot_listing|area_dimension_conflict'",
         "l.ward = ?",
+        "l.property_type = ?",
         "l.price_ty > 0",
         "l.area_m2 BETWEEN ? AND ?",
         "COALESCE(l.probably_sold,0)=0",
@@ -73,18 +76,15 @@ def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) 
         "COALESCE(l.review_hidden,0)=0",
         "COALESCE(l.possibly_duplicate,0)=0",
     ]
-    params: list[object] = [listing_id, current["ward"], area_min, area_max]
+    params: list[object] = [
+        listing_id, current.get("duplicate_of_id") or listing_id, current["ward"],
+        current["property_type"], area * 0.75, area * 1.30,
+    ]
     if tier != "admin":
         where.append("l.source <> 'guland'")
-    if current["property_type"]:
-        where.append("l.property_type = ?")
-        params.append(current["property_type"])
-    if actual_ppm2 > 0:
-        where.append("COALESCE(l.price_per_m2,0) BETWEEN ? AND ?")
-        params.extend([ppm2_min, ppm2_max])
-    if current["road_tier"] is not None:
-        where.append("(l.road_tier IS NULL OR ABS(l.road_tier - ?) <= 1)")
-        params.append(current["road_tier"])
+    if current.get("source_id"):
+        where.append("(l.source, l.source_id) IS DISTINCT FROM (?, ?)")
+        params.extend([current["source"], current["source_id"]])
 
     rows = conn.execute(
         f"""
@@ -94,7 +94,7 @@ def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) 
                l.area_m2, l.frontage_m, l.depth_m, l.price_per_m2,
                l.property_type, l.road_tier, l.road_name, l.road_type,
                l.road_width_m, l.tho_cu_m2, l.tho_cu_ratio,
-               l.posted_at, l.crawled_at, l.source, l.is_hot,
+               l.posted_at, l.crawled_at, l.last_seen_at, l.source, l.is_hot,
                l.price_dropped, l.suspicious_bait, l.price_drop_pct,
                l.price_first_ty, l.duplicate_of_id, l.has_so,
                COALESCE(v.actual_ppm2, sv.actual_ppm2, l.price_per_m2) AS actual_ppm2,
@@ -135,43 +135,40 @@ def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) 
             WHERE li.listing_id = l.id
         ) img_count ON TRUE
         WHERE {" AND ".join(where)}
-        ORDER BY ABS(l.area_m2 - ?) ASC,
-                 ABS(COALESCE(l.price_per_m2,0) - ?) ASC,
-                 COALESCE(l.posted_at, l.crawled_at) DESC
+        ORDER BY CASE WHEN l.road_tier = ? AND l.road_tier > 0 THEN 0 ELSE 1 END,
+                 ABS(l.area_m2 - ?) ASC,
+                 COALESCE(l.last_seen_at, l.crawled_at) DESC NULLS LAST, l.id DESC
         LIMIT 40
         """,
-        params + [area, actual_ppm2],
+        params + [current["road_tier"], area],
     ).fetchall()
 
     current_tokens = _title_tokens(current["title"])
     ranked = []
     for row in rows:
         candidate_area = float(row["area_m2"] or 0)
-        candidate_ppm2 = float(row["price_per_m2"] or 0)
         area_gap = abs(candidate_area - area) / area if area and candidate_area else 0.0
-        ppm2_gap = (
-            abs(candidate_ppm2 - actual_ppm2) / actual_ppm2
-            if actual_ppm2 and candidate_ppm2
-            else 0.0
-        )
-        road_gap = (
-            abs(int(row["road_tier"]) - int(current["road_tier"]))
-            if row["road_tier"] is not None and current["road_tier"] is not None
-            else 0
-        )
+        road_gap = 0
+        if current["road_tier"]:
+            road_gap = abs(row["road_tier"] - current["road_tier"]) if row["road_tier"] else 2
         score = 100.0
         score -= min(45.0, area_gap * 55.0)
-        score -= min(30.0, ppm2_gap * 30.0)
         score -= min(12.0, road_gap * 6.0)
         score += min(12.0, _jaccard(current_tokens, _title_tokens(row["title"])) * 12.0)
         ranked.append((round(max(0.0, min(99.0, score)), 1), area_gap, row))
 
-    ranked.sort(key=lambda item: (-item[0], item[1], -(item[2]["price_per_m2"] or 0)))
+    ranked.sort(key=lambda item: (-item[0], item[1]))
     output = []
     for score, _area_gap, row in ranked[: min(max(int(limit or 18), 1), 18)]:
         primary = resolve_image_url(row["primary_local_path"], row["primary_img_url"])
         item = format_signal_card_record(row, primary, tier=tier)
         item["detail_url"] = f"/listing/{int(row['id'])}"
         item["match_score"] = score
-        output.append(item)
-    return output
+        output.append(add_comparison_evidence(
+            item, row, area=area, road_tier=current["road_tier"], tho_cu=current.get("tho_cu_m2"),
+        ))
+    return {"comps": output, "comparison_summary": comparison_summary(current["price_per_m2"], output)}
+
+
+def load_listing_comparables(conn, listing_id: int, tier: str, limit: int = 18) -> list[dict]:
+    return load_listing_comparison(conn, listing_id, tier, limit)["comps"]

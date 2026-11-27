@@ -140,17 +140,19 @@
     if (loading) loading.hidden = !isLoading;
   }
 
-  function renderComparables(rows) {
+  function renderComparables(rows, summary) {
     const list = $('comparableList');
     const section = $('comparablesSection');
     if (!list || !section) return;
+    const note = section.querySelector('[data-comparison-summary]');
+    if (note) note.textContent = summary || '';
     if (
       !Array.isArray(rows)
       || !rows.length
       || !window.RadarValuationComparableCard
     ) {
       list.innerHTML = '';
-      section.hidden = true;
+      section.hidden = !summary;
       return;
     }
     list.innerHTML = window.RadarValuationComparableCard.renderGrid(rows);
@@ -178,7 +180,7 @@
     $('basisCount').textContent = `${estimate.basis_count} mẫu hợp lệ`;
     $('modelNote').textContent = `${estimate.confidence_label} · Dữ liệu cập nhật đến ${formatDataDate(estimate.data_as_of)}. Đây là giá tham khảo, không thay thế thẩm định thực tế.`;
 
-    renderComparables(payload.comparables || []);
+    renderComparables(payload.comparables || [], payload.comparison_summary);
 
     const dashboard = $('dashboardCta');
     if (dashboard) dashboard.href = payload.dashboard_url || '/';

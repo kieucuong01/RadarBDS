@@ -18,7 +18,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}?v=app-icon-20260608">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/seo.css') }}?v=product-navigation-20261103-2">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=valuation-tool-auth-20260722">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=valuation-comparable-cards-20260728">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main/cards.css') }}?v=signal-history-20261126">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/valuation_tool.css') }}?v=public-p1-p2-20261022-r2">
   <script type="application/ld+json">
   {
@@ -278,7 +278,8 @@
             <p class="panel-kicker">Dữ liệu đối chiếu</p>
             <h2>Mẫu so sánh cùng phân khúc</h2>
           </div>
-          <p>Tối đa 6 lô đã lọc trùng và ẩn thông tin liên hệ. Chọn một card để xem chi tiết.</p>
+          <div><p>Giá rao của các tin cùng phường, cùng loại và gần diện tích đã nhập. Giá chốt cần xác nhận riêng.</p>
+            <p data-comparison-summary></p></div>
         </div>
         <div class="valuation-comparable-grid" id="comparableList"></div>
       </section>
@@ -368,8 +369,8 @@
   {% include "partials/seo_tracking.html" %}
   {% include "partials/seo_lead_capture_script.html" %}
   <script src="{{ url_for('static', filename='js/auth.js') }}?v=valuation-tool-auth-20260722"></script>
-  <script src="{{ url_for('static', filename='js/valuation_comparable_card.js') }}?v=valuation-comparable-cards-20260728"></script>
-  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=public-p1-p2-20261022-r2"></script>
+  <script src="{{ url_for('static', filename='js/valuation_comparable_card.js') }}?v=comparison-20261126"></script>
+  <script src="{{ url_for('static', filename='js/valuation_tool.js') }}?v=comparison-20261126"></script>
 </body>
 
 </html>

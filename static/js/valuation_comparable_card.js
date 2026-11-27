@@ -152,7 +152,7 @@
     const isNew = finiteNumber(row.days_ago) !== null
       && finiteNumber(row.days_ago) >= 0
       && finiteNumber(row.days_ago) <= 7;
-    const actualPpm2 = formatNumber(row.actual_ppm2 || row.price_per_m2);
+    const actualPpm2 = formatNumber(row.asking_ppm2 ?? row.actual_ppm2 ?? row.price_per_m2);
     const fairPpm2 = formatNumber(row.fair_ppm2_display || row.fair_ppm2);
     const actualBelowFair = positiveNumber(row.actual_ppm2 || row.price_per_m2) !== null
       && positiveNumber(row.fair_ppm2_display || row.fair_ppm2) !== null
@@ -161,11 +161,11 @@
     const sourceTag = window.USER_TIER === 'admin' && row.source
       ? `<span class="sc-source-tag">${esc(row.source)}</span>`
       : '';
-    const mosBadge = mos !== null && mos > 0
+    const mosBadge = !('asking_ppm2' in row) && mos !== null && mos > 0
       ? `<div class="mos-badge">Rẻ hơn ${esc(Math.round(mos))}%</div>`
       : '';
     const newBadge = isNew ? '<div class="new-badge">MỚI</div>' : '';
-    const dropBadge = row.price_dropped
+    const dropBadge = !('asking_ppm2' in row) && row.price_dropped
       ? `<span class="sc-drop-tag">Chủ hạ: ${row.drop_pct ? `${esc(row.drop_pct)}%` : 'N/A'}</span>`
       : '';
     const overlays = `
@@ -190,7 +190,7 @@
           <div class="sc-title" title="${esc(row.title || '')}">${esc(row.title || `Tin #${id}`)}</div>
           <div class="price-container">
             <div class="price-actual">
-              <span class="price-label price-label-actual ${actualClass}">THỰC TẾ</span>
+              <span class="price-label price-label-actual ${actualClass}">GIÁ RAO</span>
               <div class="price-val ${actualClass}">${esc(priceLabel(row))}</div>
               <div class="price-m2">${actualPpm2 ? `${esc(actualPpm2)} tr/m²` : '-'}</div>
             </div>
@@ -200,6 +200,8 @@
               <div class="price-m2">${fairPpm2 ? `${esc(fairPpm2)} tr/m²` : '-'}</div>
             </div>
           </div>
+          <div class="sc-evidence"><div><strong>Ghi nhận</strong> ${esc(row.observed_at_label || 'Chưa rõ thời điểm')}</div>
+            <div>${esc(row.comparison_note || '')}</div></div>
           <div class="sc-meta-chips">${metaChips(row)}</div>
         </div>
       </a>

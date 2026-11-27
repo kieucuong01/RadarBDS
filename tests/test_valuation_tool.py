@@ -116,7 +116,7 @@ class ValuationToolTest(unittest.TestCase):
         self.assertIn("Định giá lô đất Bình Dương", html)
         self.assertIn("application/ld+json", html)
         self.assertIn("FAQPage", html)
-        self.assertIn("valuation-comparable-cards-20260728", html)
+        self.assertIn("valuation_comparable_card.js?v=comparison-20261126", html)
         self.assertIn("valuation-workspace", html)
         self.assertIn("Giá đang chào", html)
 

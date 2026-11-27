@@ -226,7 +226,7 @@
       title: item.title || '',
       primary: (item.imgs && item.imgs[0]) || item.primary_img || '',
       price: item.price_ty || item.price || '',
-      ppm2: item.actual_ppm2 || item.price_per_m2 || '',
+      ppm2: item.asking_ppm2 || item.actual_ppm2 || item.price_per_m2 || '',
       fair: computedFair !== '-' ? computedFair : '',
       fppm2: item.fair_ppm2_display || item.fair_ppm2 || '',
       'fair-ppm2-old': item.fair_ppm2_old || '',
@@ -269,7 +269,8 @@
     var isDefaultImage = !image;
     var imageSource = image || DEFAULT_IMAGE;
     var price = positive(item.price_ty || item.price);
-    var actual = positive(item.actual_ppm2 || item.price_per_m2);
+    var compareAsking = options.context === 'comparable' && 'asking_ppm2' in item;
+    var actual = positive(compareAsking ? item.asking_ppm2 : (item.actual_ppm2 || item.price_per_m2));
     var mos = positive(item.mos_pct_display || item.mos_pct || item.mos);
     var dateReason = String(item.card_date_reason || 'posted');
     var newListing = dateReason !== 'price_updated'
@@ -284,7 +285,7 @@
     var computedFair = fairPrice(item);
     var actualClass = actualPriceClass(item);
     var isSignal = options.context === 'signal';
-    var dropBadge = !isSignal && item.price_dropped
+    var dropBadge = !isSignal && !compareAsking && item.price_dropped
       ? '<span class="sc-drop-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="12 4 12 20"/><polyline points="6 14 12 20 18 14"/></svg> Chủ hạ: '
         + (item.drop_pct ? esc(item.drop_pct) + '%' : 'N/A') + '</span>'
       : '';
@@ -318,7 +319,7 @@
       + '" data-original-image="' + esc(item.imgs && item.imgs[0] !== imageSource ? item.imgs[0] || '' : '')
       + '" onerror="RadarSignalCard.useFallbackImage(this)">'
       + '<div class="sc-empty-media"><div class="sc-empty-media-copy"><strong>Chưa có ảnh</strong><span>Xem giá và vị trí</span></div></div>'
-      + (mos && !isSignal ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')
+      + (mos && !isSignal && !compareAsking ? '<div class="mos-badge">Rẻ hơn ' + Math.round(mos) + '%</div>' : '')
       + (priceUpdated
         ? '<div class="new-badge price-update-badge">CẬP NHẬT GIÁ</div>'
         : (newListing ? '<div class="new-badge">MỚI</div>' : ''))
@@ -336,6 +337,9 @@
       + '<div class="price-fair"><span class="price-label price-label-fair">ĐỊNH GIÁ</span>'
       + valuationHtml(item) + '</div></div>'
       + (isSignal ? signalEvidence(item, mos) : '')
+      + (compareAsking ? '<div class="sc-evidence"><div><strong>Ghi nhận</strong> '
+        + esc(item.observed_at_label || 'Chưa rõ thời điểm') + '</div><div>'
+        + esc(item.comparison_note || '') + '</div></div>' : '')
       + '<div class="sc-meta-chips">'
       + chip(item.ward || 'Chưa rõ', 'meta-chip-ward')
       + chip(areaLabel(item), 'meta-chip-area')

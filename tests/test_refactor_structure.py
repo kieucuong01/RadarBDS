@@ -59,7 +59,7 @@ def test_index_loads_main_js_feature_files_in_dependency_order():
         assert (ROOT / "static" / asset).exists(), f"missing static/{asset}"
 
     assert "window.RADAR_ASSETS" in html
-    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=maps-controls-20261028\"" in html
+    assert "modal: \"{{ url_for('static', filename='js/main/modal.js') }}?v=comparison-20261126\"" in html
     assert "market: \"{{ url_for('static', filename='js/main/market.js') }}?v=market-analysis-date-default-20261021a\"" in html
     assert "listings: \"{{ url_for('static', filename='js/main/listings.js') }}?v=listings-perf-20261021\"" in html
     assert "auth: \"{{ url_for('static', filename='js/auth.js') }}?v=" in html
@@ -380,7 +380,7 @@ def test_signal_modal_close_button_respects_mobile_safe_area():
 
     assert 'class="close-modal"' in html
     assert 'style="top:12px; right:12px; z-index:20;"' in html
-    assert "css/main/modal.css') ~ '?v=signal-detail-regression-20260729'" in html
+    assert "css/main/modal.css') ~ '?v=comparison-20261126'" in html
     header_rule = re.search(r"#signalModal::before\s*\{(?P<body>[^}]+)\}", modal_css, re.S)
     assert header_rule, "missing mobile signal modal top close zone"
     header_body = header_rule.group("body")

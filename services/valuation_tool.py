@@ -11,6 +11,7 @@ from analytics.valuation import Listing, ValuationEngine
 from config.property_types import PROPERTY_TYPE_LABELS, normalize_property_type
 from db.connection import get_conn
 from services.image_assets import resolve_image_url
+from services.comparison_evidence import add_comparison_evidence, comparison_summary
 from services.market_data import CITY_MAP, format_signal_card_record, normalize_sources_for_tier
 from services.signal_quality import split_quality_flags
 
@@ -311,10 +312,14 @@ def _load_comparables(
                        l.tho_cu_m2, l.tho_cu_ratio, l.has_so,
                        l.is_hot, l.price_dropped, l.price_drop_pct, l.price_first_ty,
                        l.suspicious_bait, l.duplicate_of_id,
-                       l.posted_at, l.crawled_at
+                       l.posted_at, l.crawled_at, l.last_seen_at
                   FROM listings l
                  WHERE l.ward = ?
                    AND l.property_type = ?
+                   AND l.tx_type = 'ban' AND l.price_ty > 0
+                   AND l.area_m2 BETWEEN ? AND ?
+                   AND COALESCE(l.possibly_duplicate,0) = 0 AND COALESCE(l.suspicious_bait,0) = 0
+                   AND COALESCE(l.extraction_quality_flags,'') !~ 'ambiguous_price_text|multi_lot_listing|area_dimension_conflict'
                    AND l.source IN ({source_placeholders})
                    AND l.duplicate_of_id IS NULL
                    AND l.price_per_m2 IS NOT NULL AND l.price_per_m2 > 0
@@ -375,6 +380,7 @@ def _load_comparables(
             (
                 target.ward,
                 target.property_type,
+                target.area_m2 * 0.75, target.area_m2 * 1.30,
                 *sources,
                 target.road_tier,
                 target.area_m2,
@@ -387,17 +393,18 @@ def _load_comparables(
     for row in rows:
         if _baseline_quality_flags(_row_value(row, "source_quality_flags", "")):
             continue
-        candidates.append(
-            format_signal_card_record(
-                row,
-                resolve_image_url(
-                    _row_value(row, "primary_local_path"),
-                    _row_value(row, "primary_img_url"),
-                    prefer_thumb=True,
-                ),
-                tier=tier,
-            )
+        card = format_signal_card_record(
+            row,
+            resolve_image_url(
+                _row_value(row, "primary_local_path"),
+                _row_value(row, "primary_img_url"),
+                prefer_thumb=True,
+            ),
+            tier=tier,
         )
+        candidates.append(add_comparison_evidence(
+            card, row, area=target.area_m2, road_tier=target.road_tier, tho_cu=target.tho_cu_m2,
+        ))
     return candidates[:limit]
 
 
@@ -479,6 +486,7 @@ def estimate_property_value(payload: dict[str, Any], *, tier: str = "guest") -> 
         "ok": True,
         "estimate": estimate,
         "comparables": comparables,
+        "comparison_summary": comparison_summary(target.price_per_m2, comparables),
         "comparables_locked": False,
         "dashboard_url": dashboard_url,
     }

@@ -132,7 +132,7 @@ from services.listing_map_overrides import (
     save_group_override as save_group_map_location_override,
     save_listing_override as save_listing_map_location_override,
 )
-from services.listing_comparables import load_listing_comparables
+from services.listing_comparables import load_listing_comparison
 from services.listing_evidence import build_listing_evidence, listing_search_preview
 from services.listing_feed import VALID_LISTING_SORTS, load_listing_feed, listing_read_model_enabled
 from services.listing_reports import (
@@ -6058,13 +6058,13 @@ def get_price_history(listing_id):
             has_last = True
 
         # Shared compact card payload used by both detail surfaces.
-        comps = load_listing_comparables(conn, listing_id, tier=tier, limit=18)
+        comparison = load_listing_comparison(conn, listing_id, tier=tier, limit=18)
 
         lot_history = _get_lot_history(conn, listing_id, tier=tier)
         # History is open for all tiers (decision 2026-05-15) — price/lot
         # timelines are not commission-sensitive, and they're a key conversion
         # driver. SĐT/URL commission protection is handled elsewhere.
-        return jsonify({'history': history, 'lot_history': lot_history, 'comps': comps, 'tier': tier})
+        return jsonify({'history': history, 'lot_history': lot_history, **comparison, 'tier': tier})
 
 
 def _get_lot_history(conn, listing_id, tier: str = "guest"):

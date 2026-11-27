@@ -33,6 +33,7 @@ def _current():
         "ward": "Phú Lợi",
         "area_m2": 100.0,
         "property_type": "dat_nen",
+        "tx_type": "ban",
         "road_tier": 2,
         "price_per_m2": 20.0,
     }
@@ -122,3 +123,33 @@ def test_comparable_service_preserves_admin_source_boundary():
 
     assert items[0]["url"] == "https://source.example/0"
     assert items[0]["detail_url"] == "/listing/2"
+
+
+def test_comparison_uses_observed_asking_prices_and_lists_the_lot_differences():
+    from services.listing_comparables import load_listing_comparison
+
+    subject = dict(_current(), road_tier=1, tho_cu_m2=80)
+    rows = [dict(_candidate(i), price_per_m2=price, actual_ppm2=999,
+                 road_tier=3, last_seen_at="2026-11-21T21:30:00+00:00")
+            for i, price in enumerate([13, 16, 22, 30, 85])]
+    result = load_listing_comparison(_ComparableConnection(subject, rows), 1, "guest")
+    assert "5 tin dưới đây: 22 triệu/m²" in result["comparison_summary"]
+    first = result["comps"][0]
+    assert first["asking_ppm2"] == 13
+    assert first["observed_at_label"] == "22/11/2026 04:30"
+    assert "hẻm xe hơi (lô đang xem: mặt tiền)" in first["comparison_note"]
+    assert "Thổ cư ít hơn 20 m²" in first["comparison_note"]
+
+
+def test_small_and_empty_comparisons_explain_available_evidence():
+    from services.listing_comparables import load_listing_comparison
+
+    row = dict(_candidate(0), crawled_at=None, posted_at="2026-11-21")
+    result = load_listing_comparison(_ComparableConnection(_current(), [row]), 1, "guest")
+    assert "Chỉ có 1 tin rao" in result["comparison_summary"]
+    assert "Trung vị" not in result["comparison_summary"]
+    assert result["comps"][0]["observed_at_label"] is None
+    assert "Chưa đủ dữ liệu đối chiếu thổ cư" in result["comps"][0]["comparison_note"]
+    conn = _ComparableConnection(dict(_current(), tx_type="thue"), [row])
+    empty = load_listing_comparison(conn, 1, "guest")
+    assert not empty["comps"] and "Chưa có tin rao" in empty["comparison_summary"]
