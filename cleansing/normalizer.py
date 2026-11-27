@@ -231,7 +231,11 @@ def _clean_named_road(value: str) -> str | None:
         return None
     if re.match(r'^(?:theo|truoc)\b', folded):
         return None
-    if re.match(r"^(?:toi\s+dat|dat\s+xe|xe\s+(?:ba|3)\s+gac)\b", folded):
+    # Ba-gac access and small-retail claims describe the road, not its name.
+    if re.match(
+        r"^(?:toi\s+dat|dat\s+xe|xe\s+(?:ba|3)\s+gac|ba\s*gac|"
+        r"(?:kd|kinh\s+doanh)\s+nho\s+le)\b", folded,
+    ):
         return None
     if re.match(r"^dx\s+(?:nhua|be\s*tong|thong|rong|duong)\b", folded):
         return None

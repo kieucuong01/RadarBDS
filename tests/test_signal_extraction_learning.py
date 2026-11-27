@@ -1450,3 +1450,54 @@ def test_nov24_complete_price_does_not_override_explicit_source_badge():
     assert extract_all(
         NOV24_PRICE_TITLE, NOV24_PRICE_DESCRIPTION, source_price_str="7 tỷ",
     )["price_total"] == 7.0
+
+
+# Two independent 20261127 reviewed descriptor patterns. Fragments are
+# contact-redacted; no seller name from the original generic-name capture.
+NOV27_ROAD_DESCRIPTOR_CASES = [
+    (89745, "Đường bagac qu", "Đường bagac quá rẻ luôn"),
+    (89923, "Bán nhà c4 MT 385 Phu Hoa. đường nhựa 6m thông - 5x20 - 3tỷ hơn xíu",
+     "Mt kd nhỏ lẻ ok"),
+]
+
+
+@pytest.mark.parametrize("listing_id,title,description", NOV27_ROAD_DESCRIPTOR_CASES)
+def test_nov27_reviewed_access_or_sales_descriptor_is_not_street_name(listing_id, title, description):
+    assert extract_road_name(title + "\n" + description) is None
+
+
+@pytest.mark.parametrize("listing_id,title,description", NOV27_ROAD_DESCRIPTOR_CASES)
+def test_nov27_reviewed_descriptors_through_full_normalization(listing_id, title, description):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/nov27-road-descriptor",
+        "title": title, "description": description,
+    })
+    assert record is not None and record["road_name"] is None
+
+
+@pytest.mark.parametrize("text", [
+    "Đường bagac quá rẻ luôn",
+    "Đường ba gác thông",
+    "Đường BA GAC",
+    "Hẻm bagac thông",
+    "MT kd nhỏ lẻ ok",
+    "Mặt tiền kinh doanh nhỏ lẻ tốt",
+])
+def test_nov27_descriptor_spelling_and_access_variants_are_not_names(text):
+    assert extract_road_name(text) is None
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("Đường bagac quá rẻ luôn; đường Hồng Hà", "Hong Ha"),
+    ("Mt kd nhỏ lẻ ok; đường Lê Hồng Phong", "Le Hong Phong"),
+    ("Đường bagac thông; cách đường Hồng Hà 50m", None),
+    ("Mt kd nhỏ lẻ ok; gần đường Lê Hồng Phong", None),
+    ("Đường Kinh Bắc", "Kinh Bac"),
+    ("Đường Nguyễn Văn Tài", "Nguyen Van Tai"),
+    ("Đường Ba Cu", "Ba Cu"),
+    ("Nhánh Tài Lộc", "Tai Loc"),
+    ("Đường Lê Hồng Phong", "Le Hong Phong"),
+    ("Mặt tiền DT744", "DT744"),
+])
+def test_nov27_descriptor_guard_preserves_real_and_proximity_only_roads(text, expected):
+    assert extract_road_name(text) == expected
