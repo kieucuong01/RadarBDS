@@ -84,6 +84,16 @@ def extract_road_name(text: str) -> str | None:
             prefix = re.match(r"[a-z]+", code.group(0), re.IGNORECASE).group(0).upper()
             suffix = code.group(2).upper() if code.re is _PROVINCIAL_ROAD_PAT else ""
             return f"{prefix}{int(code.group(1))}{suffix}"
+    # An Tây uses padded local street codes, including bare sale-address copy.
+    # Keep the code intact; measurements and nearby access are not street names.
+    for m in re.finditer(
+        r"\ban\s+tay\s+(0\d{2})(?!\w|[.,]\d|\s*(?:m|km)(?:2|²)?\b)",
+        folded,
+    ):
+        if _has_road_proximity_prefix(folded, m.start()):
+            continue
+        return f"An Tay {m.group(1)}"
+
     for road_folded, label in (("lo lu", "Lo Lu"),):
         m = re.search(rf"(?<![a-z0-9]){re.escape(road_folded)}(?![a-z0-9])", folded)
         if m and not _has_road_proximity_prefix(folded, m.start()):

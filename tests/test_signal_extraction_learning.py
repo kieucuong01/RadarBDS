@@ -1501,3 +1501,80 @@ def test_nov27_descriptor_spelling_and_access_variants_are_not_names(text):
 ])
 def test_nov27_descriptor_guard_preserves_real_and_proximity_only_roads(text, expected):
     assert extract_road_name(text) == expected
+
+
+# 20261128-150045:90072/90070/90087:road_name. Independent redacted
+# local numbered-street patterns; padded codes are not area measurements.
+AN_TAY_ROAD_CASES = [
+    (90072, "Vị trí đường An Tây 046 ra chợ An Tây", "An Tay 046"),
+    (90070, "Vị trí đất nằm đường An Tây 020 cách ĐT744 chỉ 100m", "An Tay 020"),
+    (90087, "Bán đất An Tây 047, Bến Cát sau chợ An Tây mới.", "An Tay 047"),
+]
+
+
+@pytest.mark.parametrize("listing_id,text,expected", AN_TAY_ROAD_CASES)
+def test_reviewed_an_tay_numbered_road_names(listing_id, text, expected):
+    assert extract_road_name(text) == expected
+
+
+@pytest.mark.parametrize("listing_id,text,expected", AN_TAY_ROAD_CASES)
+def test_reviewed_an_tay_roads_through_normalization(listing_id, text, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/unit-an-tay-road",
+        "title": text, "description": "",
+    })
+    assert record is not None and record["road_name"] == expected
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("ĐƯỜNG AN TÂY 046", "An Tay 046"),
+    ("Mặt tiền An Tây 020, cách DH609 100m", "An Tay 020"),
+    ("Bán đất An Tây 047. DT 150m2", "An Tay 047"),
+    ("Gần đường An Tây 046", None),
+    ("Cách An Tây 020 100m", None),
+    ("Đường thông ra An Tây 047", None),
+    ("Đất An Tây 046m2", None),
+    ("Bán đất An Tây 020 m²", None),
+    ("Bán đất An Tây 047 m", None),
+    ("Bán đất An Tây 0460", None),
+    ("Bán đất An Tây 046A", None),
+    ("Bán đất An Tây 046,5m2", None),
+    ("Bán đất An Tây 046.5m2", None),
+    ("Bán đất An Tây 46m2", None),
+    ("Mặt tiền DT744; gần đường An Tây 020", "DT744"),
+    ("Gần đường An Tây 020; mặt tiền DH609", "DH609"),
+    ("Đường An Tây 046, cách DT744 chỉ 100m", "An Tay 046"),
+    ("Gần đường An Tây 020; đường An Tây 047", "An Tay 047"),
+    ("Đường An Lạc", "An Lac"),
+    ("Đường An Tây", "An Tay"),
+])
+def test_an_tay_numbered_streets_preserve_proximity_and_measurement_guards(text, expected):
+    assert extract_road_name(text) == expected
+
+
+# Offline replay discoveries; repeated phrases are not independent evidence.
+@pytest.mark.parametrize("listing_id,text,expected", [
+    (83839, "Bán đất An Tây 047, Bến Cát sau chợ An Tây mới.", "An Tay 047"),
+    (84680, "Vị trí đường An Tây 047 thông thẳng chợ An Tây", "An Tay 047"),
+    (86120, "Nhà nằm trên trục đường nhựa An Tây 048, cách DH609 chỉ 150m.", "An Tay 048"),
+    (86050, "Trên trục đường bê tông 4m ( An Tây 047 ), gần chợ An Tây", "An Tay 047"),
+    (88021, "Vị trí đường An Tây 046 ra chợ An Tây", "An Tay 046"),
+    (88008, "Vị trí đường An Tây 047 thông thẳng chợ An Tây", "An Tay 047"),
+    (88505, "Nhà nằm trên trục đường nhựa An Tây 048, cách DH609 chỉ 150m.", "An Tay 048"),
+])
+def test_offline_an_tay_road_replay_discoveries(listing_id, text, expected):
+    record = normalize_record({
+        "source": "facebook", "url": "https://example.invalid/unit-an-tay-offline",
+        "title": text, "description": "",
+    })
+    assert record is not None and record["road_name"] == expected
+
+
+@pytest.mark.parametrize("text", [
+    "Cách trục đường nhựa An Tây 048 150m",
+    "Đường bê tông 4m (gần An Tây 047)",
+    "Đất An Tây 046 km",
+    "Đất An Tây 046 m2",
+])
+def test_an_tay_replay_context_does_not_promote_nearby_roads_or_units(text):
+    assert extract_road_name(text) is None
